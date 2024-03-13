@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Encoders;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;

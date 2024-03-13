@@ -1,6 +1,6 @@
-﻿using K4os.Compression.LZ4;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData
 {
@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.GameData
             }
 
             byte[] uncompressedData = new byte[entry.UncompressedSize];
-            LZ4Codec.Decode(entry.CompressedData, uncompressedData);
+            CompressionHelper.LZ4Decode(entry.CompressedData, uncompressedData);
             return new(uncompressedData);
         }
 

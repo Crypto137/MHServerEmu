@@ -1,12 +1,13 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+﻿using System.Reflection;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
-using System.Reflection;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -216,7 +217,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!GetPrototype(out var proto)) return false;
 
-            if (proto.AllowedConnections.IsNullOrEmpty() == false)
+            if (proto.AllowedConnections.HasValue())
             {
                 foreach (var connection in proto.AllowedConnections)
                 {
@@ -248,7 +249,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             bool failed = false;
 
-            if (!failed && proto.RequiredSuperCells.IsNullOrEmpty() == false)
+            if (!failed && proto.RequiredSuperCells.HasValue())
             {
                 foreach (var requiredCellBase in proto.RequiredSuperCells)
                 {
@@ -260,7 +261,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.NonRequiredSuperCells.IsNullOrEmpty() == false)
+            if (!failed && proto.NonRequiredSuperCells.HasValue())
             {
                 Picker<RequiredCellBasePrototype> cellPicker = new(random);
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
@@ -336,7 +337,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.RequiredCells.IsNullOrEmpty() == false)
+            if (!failed && proto.RequiredCells.HasValue())
             {
                 foreach (var requiredCellBase in proto.RequiredCells)
                 {
@@ -364,7 +365,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.NonRequiredNormalCells.IsNullOrEmpty() == false)
+            if (!failed && proto.NonRequiredNormalCells.HasValue())
             {
                 Picker<RequiredCellBasePrototype> cellPicker = new(random);
                 AddCellsToPicker(cellPicker, proto.NonRequiredNormalCells);

@@ -1,8 +1,9 @@
-﻿using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using System.Text;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -23,7 +24,7 @@ namespace MHServerEmu.Games.Generators.Population
         public Cell Cell { get; private set; }
         public MarkerState State { get; set; }
         public Vector3 MarkerPos { get; private set; }
-        public Vector3 MarkerRot { get; private set; }
+        public Orientation MarkerRot { get; private set; }
         public PrototypeId MarkerRef { get; private set; }
         public Sphere RegionSphere { get; private set; }
         public Aabb RegionBounds { get; private set; }
@@ -32,7 +33,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PopulationObjectPrototype Object { get; set; }
         public PrototypeId MissionRef { get; set; }
 
-        public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Vector3 rotation, Cell cell, int id)
+        public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Orientation rotation, Cell cell, int id)
         {
             _registry = registry;
             MarkerRef = markerRef;

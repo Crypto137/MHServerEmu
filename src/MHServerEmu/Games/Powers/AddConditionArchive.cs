@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 
@@ -33,8 +33,7 @@ namespace MHServerEmu.Games.Powers
                 Id = id,
                 SerializationFlags = serializationFlags,
                 CreatorPowerPrototypeId = prototypeId,
-                StartTime = startTime,
-                Properties = new(0)
+                StartTime = startTime
             };
         }
 

@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Games.Generators;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {

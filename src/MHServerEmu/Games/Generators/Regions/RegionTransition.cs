@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -22,10 +22,10 @@ namespace MHServerEmu.Games.Generators.Regions
         public static readonly Logger Logger = LogManager.CreateLogger();
         public RegionTransition() { }
 
-        public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Vector3 targetRot)
+        public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
         {
             targetPos = region.StartArea.RegionBounds.Center; // default
-            targetRot = Vector3.Zero;
+            targetRot = Orientation.Zero;
             RegionConnectionTargetPrototype targetDest = null;
             Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);           
 

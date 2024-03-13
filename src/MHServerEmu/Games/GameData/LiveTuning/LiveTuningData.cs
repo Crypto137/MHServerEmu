@@ -1,6 +1,6 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {

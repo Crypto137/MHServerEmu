@@ -1,9 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -12,8 +10,12 @@ using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Missions;
-using MHServerEmu.Networking;
 using MHServerEmu.Frontend;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -129,7 +131,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             Bound = settings.Bound;
             AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.IsNullOrEmpty() == false);
+            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.HasValue());
 
             SetRegionLevel();
 
@@ -160,7 +162,7 @@ namespace MHServerEmu.Games.Regions
 
             CreateParams = new((uint)RegionLevel, (DifficultyTier)settings.DifficultyTierRef); // OLD params
 
-            if (regionProto.DividedStartLocations.IsNullOrEmpty() == false)
+            if (regionProto.DividedStartLocations.HasValue())
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             // if (!NaviSystem.Initialize(this))  return false;
@@ -254,7 +256,7 @@ namespace MHServerEmu.Games.Regions
                 Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
             }
 
-            if (regionProto.AvatarPowers.IsNullOrEmpty() == false)
+            if (regionProto.AvatarPowers.HasValue())
                 foreach (var avatarPower in regionProto.AvatarPowers)
                     SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, avatarPower));
 
@@ -421,7 +423,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
             Areas[area.Id] = area;
-            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
+            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin}, seed = {RandomSeed}");
             return area;
         }
 
@@ -509,6 +511,7 @@ namespace MHServerEmu.Games.Regions
 
         public DateTime CreatedTime { get; set; }
         public DateTime VisitedTime { get; private set; }
+        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
 
         public override string ToString()
         {
@@ -628,7 +631,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             Area targetArea;
 
@@ -672,9 +675,9 @@ namespace MHServerEmu.Games.Regions
             return found;
         }
 
-        public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
+        public List<IMessage> GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
         {
-            List<GameMessage> messageList = new();
+            List<IMessage> messageList = new();
 
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(Id)
@@ -691,46 +694,46 @@ namespace MHServerEmu.Games.Regions
             // empty archive data seems to cause region loading to hang for some time
             if (ArchiveData.Length > 0) regionChangeBuilder.SetArchiveData(ByteString.CopyFrom(ArchiveData));
 
-            messageList.Add(new(regionChangeBuilder.Build()));
+            messageList.Add(regionChangeBuilder.Build());
 
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
+            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build());
 
             // TODO: prefetch other regions
             
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
-                if (client.EntityToTeleport != null) // TODO change teleport without reload Region
+                if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
-                    Vector3 position = new(client.EntityToTeleport.Location.GetPosition());
-                    Vector3 orientation = new(client.EntityToTeleport.Location.GetOrientation());
-                    if (client.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
+                    Vector3 position = new(playerConnection.EntityToTeleport.Location.GetPosition());
+                    Orientation orientation = new(playerConnection.EntityToTeleport.Location.GetOrientation());
+                    if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
-                    client.StartPositon = position;
-                    client.StartOrientation = orientation;
-                    client.EntityToTeleport = null;
+                    playerConnection.StartPositon = position;
+                    playerConnection.StartOrientation = orientation;
+                    playerConnection.EntityToTeleport = null;
                 }
-                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
+                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Orientation orientation))
                 {
-                    client.StartPositon = position;
-                    client.StartOrientation = orientation;
+                    playerConnection.StartPositon = position;
+                    playerConnection.StartOrientation = orientation;
                 }
                 else
                 {
-                    client.StartPositon = StartArea.Origin;
-                    client.StartOrientation = Vector3.Zero;
+                    playerConnection.StartPositon = StartArea.Origin;
+                    playerConnection.StartOrientation = Orientation.Zero;
                 }
 
-                client.AOI.Reset(this);
-                client.AOI.Update(client.StartPositon, true);
-                messageList.AddRange(client.AOI.Messages);
+                playerConnection.AOI.Reset(this);
+                playerConnection.AOI.Update(playerConnection.StartPositon, true);
+                messageList.AddRange(playerConnection.AOI.Messages);
             }
 
 
-            return messageList.ToArray();
+            return messageList;
         }
 
         public Cell GetCellbyId(uint cellId)
@@ -758,6 +761,38 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
+        public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
+        {
+            if (entity != null)
+            {
+                if (entity.NoCollide) return false;
+
+                bool selfBlocking = false;
+                bool otherBlocking = false;
+
+                if (blockFlags != 0)
+                {
+                    var entityProto = entity.WorldEntityPrototype;
+                    if (entityProto == null) return false;
+
+                    var boundsProto = entityProto.Bounds;
+                    if (boundsProto == null) return false;
+
+                    selfBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSelf);
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSpawns) && boundsProto.BlocksSpawns;
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckGroundMovementPowers) && (boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.Ground || boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All);
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckAllMovementPowers) && boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All;
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckLanding) && boundsProto.BlocksLanding;
+
+                    if (otherBlocking == false) return false;
+                }
+
+                Bounds entityBounds = entity.Bounds;
+                if (bounds.CanBeBlockedBy(entityBounds, selfBlocking, otherBlocking) && bounds.Intersects(entityBounds)) return true;
+            }
+
+            return false;
+        }
 
     }
 

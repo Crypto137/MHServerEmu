@@ -1,5 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Properties

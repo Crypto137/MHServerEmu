@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <InformationalVersion>0.1.0</InformationalVersion>
+    <InformationalVersion>0.2.0</InformationalVersion>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <AssemblyVersion>$(InformationalVersion).0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
@@ -21,24 +21,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LibGazillion\LibGazillion.csproj" />
+    <ProjectReference Include="..\Gazillion\Gazillion.csproj" />
+    <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Dapper">
       <HintPath>..\..\dep\Dapper\Dapper.dll</HintPath>
     </Reference>
-    <Reference Include="Free.Ports.zLib">
-      <HintPath>..\..\dep\Free.Ports.zLib\Free.Ports.zLib.dll</HintPath>
-    </Reference>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
-    </Reference>
-    <Reference Include="INIFileParser">
-      <HintPath>..\..\dep\ini-parser\INIFileParser.dll</HintPath>
-    </Reference>
-    <Reference Include="K4os.Compression.LZ4">
-      <HintPath>..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
     </Reference>
     <Reference Include="System.Data.SQLite">
       <HintPath>..\..\dep\System.Data.SQLite\System.Data.SQLite.dll</HintPath>
@@ -74,9 +66,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuningData.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Packets\NetMessageEntityCreatePlayer.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config.ini">

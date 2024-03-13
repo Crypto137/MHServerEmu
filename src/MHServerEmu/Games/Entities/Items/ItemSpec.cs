@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -18,8 +19,8 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec(CodedInputStream stream)
         {            
-            ItemProto = stream.ReadPrototypeEnum<Prototype>();
-            Rarity = stream.ReadPrototypeEnum<Prototype>();
+            ItemProto = stream.ReadPrototypeRef<Prototype>();
+            Rarity = stream.ReadPrototypeRef<Prototype>();
             ItemLevel = stream.ReadRawInt32();
             CreditsAmount = stream.ReadRawInt32();
 
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.Entities.Items
                 AffixSpec[i] = new(stream);
 
             Seed = stream.ReadRawInt32();
-            EquippableBy = stream.ReadPrototypeEnum<Prototype>();
+            EquippableBy = stream.ReadPrototypeRef<Prototype>();
         }
 
         public ItemSpec(PrototypeId itemProto, PrototypeId rarity, int itemLevel, int creditsAmount, AffixSpec[] affixSpec, int seed, PrototypeId equippableBy)
@@ -44,14 +45,14 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum<Prototype>(ItemProto);
-            stream.WritePrototypeEnum<Prototype>(Rarity);
+            stream.WritePrototypeRef<Prototype>(ItemProto);
+            stream.WritePrototypeRef<Prototype>(Rarity);
             stream.WriteRawInt32(ItemLevel);
             stream.WriteRawInt32(CreditsAmount);
             stream.WriteRawVarint64((ulong)AffixSpec.Length);
             foreach (AffixSpec affixSpec in AffixSpec) affixSpec.Encode(stream);
             stream.WriteRawInt32(Seed);
-            stream.WritePrototypeEnum<Prototype>(EquippableBy);
+            stream.WritePrototypeRef<Prototype>(EquippableBy);
         }
 
         public override string ToString()

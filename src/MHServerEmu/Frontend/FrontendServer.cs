@@ -1,8 +1,10 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Networking;
-using MHServerEmu.Networking.Tcp;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.Grouping;
+using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
 {
@@ -15,6 +17,42 @@ namespace MHServerEmu.Frontend
             if (Start(ConfigManager.Frontend.BindIP, int.Parse(ConfigManager.Frontend.Port)) == false) return;
             Logger.Info($"FrontendServer is listening on {ConfigManager.Frontend.BindIP}:{ConfigManager.Frontend.Port}...");
         }
+
+        // Shutdown implemented by TcpServer
+
+        public void Handle(ITcpClient tcpClient, GameMessage message)
+        {
+            var client = (FrontendClient)tcpClient;
+
+            switch ((FrontendProtocolMessage)message.Id)
+            {
+                case FrontendProtocolMessage.ClientCredentials:
+                    if (message.TryDeserialize<ClientCredentials>(out var credentials))
+                        OnClientCredentials(client, credentials);
+                    break;
+
+                case FrontendProtocolMessage.InitialClientHandshake:
+                    if (message.TryDeserialize<InitialClientHandshake>(out var handshake))
+                        OnInitialClientHandshake(client, handshake);
+                    break;
+
+                default:
+                    Logger.Warn($"Received unhandled message {(FrontendProtocolMessage)message.Id} (id {message.Id})");
+                    break;
+            }
+        }
+
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
+        {
+            foreach (GameMessage message in messages)
+                Handle(client, message);
+        }
+
+        public string GetStatus()
+        {
+            return "Running";
+        }
+
 
         #region Event Handling
 
@@ -34,8 +72,12 @@ namespace MHServerEmu.Frontend
             }
             else
             {
-                ServerManager.Instance.PlayerManagerService.RemovePlayer(client);
-                ServerManager.Instance.GroupingManagerService.RemovePlayer(client);
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                playerManager?.RemovePlayer(client);
+
+                var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
+                groupingManager?.RemovePlayer(client);
+
                 Logger.Info($"Client {client.Session.Account} disconnected");
             }
         }
@@ -49,47 +91,50 @@ namespace MHServerEmu.Frontend
 
         #region Message Self-Handling
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage message)
+        private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
-            switch ((FrontendProtocolMessage)message.Id)
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            if (playerManager == null)
             {
-                case FrontendProtocolMessage.ClientCredentials:
-                    if (message.TryDeserialize<ClientCredentials>(out var credentials))
-                        ServerManager.Instance.PlayerManagerService.OnClientCredentials(client, credentials);
-                    break;
-
-                case FrontendProtocolMessage.InitialClientHandshake:
-                    if (message.TryDeserialize<InitialClientHandshake>(out var handshake) == false) return;
-
-                    Logger.Info($"Received InitialClientHandshake for {handshake.ServerType} on mux channel {muxId}");
-
-                    if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-                        ServerManager.Instance.PlayerManagerService.AcceptClientHandshake(client);
-                    else if (handshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-                        ServerManager.Instance.GroupingManagerService.AcceptClientHandshake(client);
-
-                    // Add the player to a game when both handshakes are finished
-                    // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
-                    if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
-                    {
-                        // Disconnect the client if the account is already logged in
-                        // TODO: disconnect the logged in player instead?
-                        if (ServerManager.Instance.GroupingManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
-                        if (ServerManager.Instance.PlayerManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
-                    }
-
-                    break;
-
-                default:
-                    Logger.Warn($"Received unhandled message {(FrontendProtocolMessage)message.Id} (id {message.Id})");
-                    break;
+                Logger.Error($"OnClientCredentials(): Failed to connect to the player manager");
+                return;
             }
+
+            playerManager.OnClientCredentials(client, credentials);
         }
 
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
-            foreach (GameMessage message in messages)
-                Handle(client, muxId, message);
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            if (playerManager == null)
+            {
+                Logger.Error($"OnClientCredentials(): Failed to connect to the player manager");
+                return;
+            }
+
+            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
+            if (groupingManager == null)
+            {
+                Logger.Error($"OnClientCredentials(): Failed to connect to the grouping manager");
+                return;
+            }
+
+            Logger.Info($"Received InitialClientHandshake for {handshake.ServerType}");
+
+            if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
+                playerManager.AcceptClientHandshake(client);
+            else if (handshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
+                groupingManager.AcceptClientHandshake(client);
+
+            // Add the player to a game when both handshakes are finished
+            // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
+            if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
+            {
+                // Disconnect the client if the account is already logged in
+                // TODO: disconnect the logged in player instead?
+                if (groupingManager.AddPlayer(client) == false) client.Connection.Disconnect();
+                if (playerManager.AddPlayer(client) == false) client.Connection.Disconnect();
+            }
         }
 
         #endregion

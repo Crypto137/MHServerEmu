@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
@@ -282,7 +282,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool Contains(PrototypeId affixRef)
         {
-            return Modifiers.IsNullOrEmpty() == false ? Modifiers.Contains(affixRef) : false;
+            return Modifiers.HasValue() ? Modifiers.Contains(affixRef) : false;
         }
     }
 
@@ -315,14 +315,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public AffixTableEntryPrototype GetAffixSlot(int slot)
         {
-            if (Affixes.IsNullOrEmpty() == false && slot >=0 && slot < Affixes.Length)
+            if (Affixes.HasValue() && slot >=0 && slot < Affixes.Length)
                 return Affixes[slot];
             return null; // empty prototype
         }
 
         public int GetMaxAffixes()
         {
-            return (Affixes.IsNullOrEmpty() == false ? Affixes.Length : 0);
+            return (Affixes.HasValue() ? Affixes.Length : 0);
         }
     }
 

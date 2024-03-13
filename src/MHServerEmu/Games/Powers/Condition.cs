@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -55,10 +57,10 @@ namespace MHServerEmu.Games.Powers
                 UltimateCreatorId = stream.ReadRawVarint64();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeId) == false)
-                ConditionPrototypeId = stream.ReadPrototypeEnum<Prototype>();
+                ConditionPrototypeId = stream.ReadPrototypeRef<Prototype>();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeId) == false)
-                CreatorPowerPrototypeId = stream.ReadPrototypeEnum<Prototype>();
+                CreatorPowerPrototypeId = stream.ReadPrototypeRef<Prototype>();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasIndex))
                 Index = stream.ReadRawVarint32();
@@ -84,7 +86,11 @@ namespace MHServerEmu.Games.Powers
                 CancelOnFlags = (UInt32Flags)stream.ReadRawVarint32();
         }
 
-        public Condition() { }
+        public Condition() 
+        {
+            StartTime = (long)Clock.GameTime.TotalMilliseconds;
+            Properties = new();
+        }
 
         public void Encode(CodedOutputStream stream)
         {
@@ -98,10 +104,10 @@ namespace MHServerEmu.Games.Powers
                 stream.WriteRawVarint64(UltimateCreatorId);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeId) == false)
-                stream.WritePrototypeEnum<Prototype>(ConditionPrototypeId);
+                stream.WritePrototypeRef<Prototype>(ConditionPrototypeId);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeId) == false)
-                stream.WritePrototypeEnum<Prototype>(CreatorPowerPrototypeId);
+                stream.WritePrototypeRef<Prototype>(CreatorPowerPrototypeId);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasIndex))
                 stream.WriteRawVarint64(Index);

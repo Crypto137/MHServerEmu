@@ -1,9 +1,12 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
 using MHServerEmu.Auth;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement.Accounts
@@ -17,18 +20,33 @@ namespace MHServerEmu.PlayerManagement.Accounts
 
     public static class AccountManager
     {
-        public static readonly DBAccount DefaultAccount = new(
-            ConfigManager.DefaultPlayerData.PlayerName, 
-            ConfigManager.DefaultPlayerData.StartingRegionEnum, 
-            ConfigManager.DefaultPlayerData.StartingWaypointId, 
-            ConfigManager.DefaultPlayerData.StartingAvatarEnum,
-            ConfigManager.DefaultPlayerData.AOIVolume
-            );
-
         public static bool IsInitialized { get; }
+
+        public static DBAccount DefaultAccount { get; }
 
         static AccountManager()
         {
+            // Initialize default account from config
+            // Region
+            if (Enum.TryParse(ConfigManager.DefaultPlayerData.StartingRegion, out RegionPrototypeId startingRegion) == false)
+                startingRegion = RegionPrototypeId.NPEAvengersTowerHUBRegion;
+
+            // Waypoint
+            PrototypeId startingWaypoint = GameDatabase.GetPrototypeRefByName(ConfigManager.DefaultPlayerData.StartingWaypoint);
+            if (startingWaypoint == PrototypeId.Invalid)
+                startingWaypoint = (PrototypeId)10137590415717831231;  // Waypoints/HUBS/NPEAvengersTowerHub.prototype
+
+            // Avatar
+            if (Enum.TryParse(ConfigManager.DefaultPlayerData.StartingAvatar, out AvatarPrototypeId startingAvatar) == false)
+                startingAvatar = AvatarPrototypeId.BlackCat;
+
+            DefaultAccount = new(ConfigManager.DefaultPlayerData.PlayerName,
+                startingRegion,
+                startingWaypoint,
+                startingAvatar,
+                ConfigManager.DefaultPlayerData.AOIVolume
+            );
+
             IsInitialized = DBManager.IsInitialized;
         }
 
@@ -42,7 +60,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             // Check the account we queried
-            if (Cryptography.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
+            if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
@@ -148,7 +166,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
             }
 
             // Update password
-            account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
+            account.PasswordHash = CryptographyHelper.HashPassword(newPassword, out byte[] salt);
             account.Salt = salt;
             account.IsPasswordExpired = false;
             DBManager.UpdateAccount(account);

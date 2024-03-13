@@ -1,10 +1,11 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games.Generators
     public class AreaTransition
     {
         public Vector3 Position;
-        public Vector3 Rotation;
+        public Orientation Rotation;
         public AreaTransitionPrototype Prototype;
     }
 

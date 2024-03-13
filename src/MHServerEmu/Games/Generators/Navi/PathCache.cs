@@ -1,5 +1,6 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Navi
@@ -14,7 +15,7 @@ namespace MHServerEmu.Games.Generators.Navi
 
         public void AppendPathCollection(PathCollectionPrototype PathNodeCollection, Vector3 offset) 
         {
-            if (PathNodeCollection.PathNodeSets.IsNullOrEmpty() == false)
+            if (PathNodeCollection.PathNodeSets.HasValue())
             {
                 foreach (var pathNodeSet in PathNodeCollection.PathNodeSets)
                 {
@@ -84,7 +85,7 @@ namespace MHServerEmu.Games.Generators.Navi
                 {
                     int nodeA = i;
                     int nodeB = (i + 1) % pathNodeList.Count;
-                    float distanceSq = Vector3.SegmentPointDistanceSq(pathNodeList[nodeA].Position, pathNodeList[nodeB].Position, position);
+                    float distanceSq = Segment.SegmentPointDistanceSq(pathNodeList[nodeA].Position, pathNodeList[nodeB].Position, position);
                     if (distanceSq < closestDistance)
                     {
                         closestNodeA = nodeA;

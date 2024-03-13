@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
@@ -11,8 +11,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
         {
             Extents = reader.ReadVector3();
 
-            Position = reader.ReadVector3();
-            Rotation = reader.ReadVector3();
+            ReadMarker(reader);
         }
     }
 }

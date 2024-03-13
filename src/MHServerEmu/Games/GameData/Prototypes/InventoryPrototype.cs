@@ -66,6 +66,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] SoftCapacitySlotGroupsConsole { get; protected set; }  // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
         public int SoftCapacityDefaultSlotsConsole { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
+
+        public bool IsPlayerStashInventory()
+        {
+            return Category == InventoryCategory.PlayerStashAvatarSpecific || Category == InventoryCategory.PlayerStashGeneral;
+        }
     }
 
     public class InventoryExtraSlotsGroupPrototype : Prototype

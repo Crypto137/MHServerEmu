@@ -1,16 +1,30 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Encoders;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
+    [AssetEnum((int)Invalid)]
+    public enum MissionState
+    {
+        Invalid = 0,
+        Inactive = 1,
+        Available = 2,
+        Active = 3,
+        Completed = 4,
+        Failed = 5,
+    }
+
     public class Mission
     {
-        public ulong State { get; set; }
-        public ulong TimeExpireCurrentState { get; set; }
+        public MissionState State { get; set; }
+        public TimeSpan TimeExpireCurrentState { get; set; }
         public PrototypeId PrototypeId { get; set; }
         public int Random { get; set; }
         public Objective[] Objectives { get; set; }
@@ -22,9 +36,9 @@ namespace MHServerEmu.Games.Missions
 
         public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
         {            
-            State = stream.ReadRawVarint64();
-            TimeExpireCurrentState = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeEnum<Prototype>();
+            State = (MissionState)stream.ReadRawInt32();
+            TimeExpireCurrentState = Clock.GameTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
+            PrototypeId = stream.ReadPrototypeRef<Prototype>();
             Random = stream.ReadRawInt32();
 
             Objectives = new Objective[stream.ReadRawVarint64()];
@@ -38,7 +52,7 @@ namespace MHServerEmu.Games.Missions
             Suspended = boolDecoder.ReadBool(stream);
         }
 
-        public Mission(ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
+        public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeId,
             int random, Objective[] objectives, ulong[] participants, bool suspended)
         {
             State = state;
@@ -52,11 +66,11 @@ namespace MHServerEmu.Games.Missions
 
         public Mission(PrototypeId prototypeId, int random)
         {
-            State = 0x6;
-            TimeExpireCurrentState = 0x0;
+            State = MissionState.Active;
+            TimeExpireCurrentState = TimeSpan.Zero;
             PrototypeId = prototypeId;
             Random = random;
-            Objectives = new Objective[] { new(0x0, 0x2, 0x0, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) };
+            Objectives = new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) };
             Participants = Array.Empty<ulong>();
             Suspended = false;
         }
@@ -72,9 +86,9 @@ namespace MHServerEmu.Games.Missions
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {            
-            stream.WriteRawVarint64(State);
-            stream.WriteRawVarint64(TimeExpireCurrentState);
-            stream.WritePrototypeEnum<Prototype>(PrototypeId);
+            stream.WriteRawInt32((int)State);
+            stream.WriteRawInt64(TimeExpireCurrentState.Ticks / 10);
+            stream.WritePrototypeRef<Prototype>(PrototypeId);
             stream.WriteRawInt32(Random);
 
             stream.WriteRawVarint64((ulong)Objectives.Length);
@@ -89,12 +103,20 @@ namespace MHServerEmu.Games.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"State: 0x{State:X}");
-            sb.AppendLine($"TimeExpireCurrentState: 0x{TimeExpireCurrentState:X}");
+            sb.AppendLine($"State: {State}");
+            string expireTime = TimeExpireCurrentState != TimeSpan.Zero ? Clock.GameTimeToDateTime(TimeExpireCurrentState).ToString() : "0";
+            sb.AppendLine($"TimeExpireCurrentState: {expireTime}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
             sb.AppendLine($"Random: 0x{Random:X}");
-            for (int i = 0; i < Objectives.Length; i++) sb.AppendLine($"Objective{i}: {Objectives[i]}");
-            for (int i = 0; i < Participants.Length; i++) sb.AppendLine($"Participant{i}: {Participants[i]}");
+
+            for (int i = 0; i < Objectives.Length; i++)
+                sb.AppendLine($"Objectives[{i}]: {Objectives[i]}");
+
+            sb.Append("Participants: ");
+            for (int i = 0; i < Participants.Length; i++)
+                sb.Append($"{Participants[i]} ");
+            sb.AppendLine();
+
             sb.AppendLine($"Suspended: {Suspended}");
             return sb.ToString();
         }

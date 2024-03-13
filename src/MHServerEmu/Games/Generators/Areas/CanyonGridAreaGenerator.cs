@@ -1,6 +1,7 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
@@ -59,7 +60,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private static CellPrototype GetFirstCellChoiceFromPrototypePtrList(CellChoicePrototype[] bridgeChoices)
         {
-            if (bridgeChoices.IsNullOrEmpty() == false)
+            if (bridgeChoices.HasValue())
             {
                 CellChoicePrototype firstChoice = bridgeChoices[0];
                 PrototypeId cellRef = GameDatabase.GetDataRefByAsset(firstChoice.Cell);

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
@@ -9,7 +10,13 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
     public class MarkerPrototype : Prototype
     {
         public Vector3 Position { get; protected set; }
-        public Vector3 Rotation { get; protected set; }
+        public Orientation Rotation { get; protected set; }
+
+        public void ReadMarker(BinaryReader reader)
+        {
+            Position = reader.ReadVector3();
+            Rotation = reader.ReadOrientation();
+        }
     }
 
     public class MarkerFilterPrototype : Prototype
@@ -50,5 +57,23 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
                     throw new NotImplementedException($"Unknown ResourcePrototypeHash {(uint)hash}.");
             }
         }
+
+        public void GetContainedEntities(HashSet<PrototypeId> refs)
+        {
+            if (Markers.HasValue())
+            {
+                foreach (var marker in Markers)
+                {
+                    if ((marker is EntityMarkerPrototype entityMarkerProto) == false) continue;
+                    var guid = entityMarkerProto.EntityGuid;
+                    if (guid == PrototypeGuid.Invalid) continue;
+                    var entityRef = GameDatabase.GetDataRefByPrototypeGuid(guid);
+                    if (entityRef == PrototypeId.Invalid) continue;
+
+                    refs.Add(entityRef);
+                }
+            }
+        }
+
     }
 }

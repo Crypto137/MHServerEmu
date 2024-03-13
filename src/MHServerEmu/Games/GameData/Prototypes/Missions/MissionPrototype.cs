@@ -1,10 +1,11 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    using static MHServerEmu.Games.Missions.MissionManager;
     using KeywordsMask = BitList;
 
     #region Enums
@@ -136,6 +137,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Text { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public DialogStyle DialogStyle { get; protected set; }
+
+        public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
     }
 
     public class MissionObjectiveHintPrototype : Prototype
@@ -144,6 +155,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype TargetEntity { get; protected set; }
         public PrototypeId TargetArea { get; protected set; }
         public PrototypeId TargetRegion { get; protected set; }
+
+        public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (TargetEntity != null)
+            {
+                TargetEntity.GetEntityDataRefs(refs);
+                TargetEntity.GetAreaDataRefs(refs);
+                TargetEntity.GetRegionDataRefs(refs);
+            }
+
+            if (TargetRegion != PrototypeId.Invalid)
+            {
+                refs.Add(TargetRegion);
+            }
+
+            if (TargetArea != PrototypeId.Invalid)
+            {
+                refs.Add(TargetArea);
+            }
+        }
     }
 
     public class MissionObjectivePrototype : Prototype
@@ -302,6 +333,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private KeywordsMask _keywordsMask = new();
         private KeywordsMask _regionRestrictionKeywordsMask = new();
 
+        public override bool ApprovedForUse()
+        {
+            // TODO: console support            
+            if (DisabledMissions.Contains((MissionPrototypeId)DataRef)) return false;
+            if (EventMissions.Contains((MissionPrototypeId)DataRef)) return true;            
+            return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public bool IsLiveTuningEnabled()
+        {
+            // Not yet implemented
+            // TODO check mission
+            return true;
+        }
+
         bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
@@ -378,7 +424,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool HasPopulationInRegion(Region region)
         {
-            if (PopulationSpawns.IsNullOrEmpty() == false)
+            if (PopulationSpawns.HasValue())
             {
                 PrototypeId regionRef = region.PrototypeDataRef;
 
@@ -394,12 +440,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool PopulatePopulationForZoneLookups(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas)
         {
-            if (PopulationSpawns.IsNullOrEmpty() == false)
+            if (PopulationSpawns.HasValue())
             {
                 foreach (var entryProto in PopulationSpawns)
                 {
                     if (entryProto == null) continue;                    
-                    if (entryProto.RestrictToRegions.IsNullOrEmpty() == false)
+                    if (entryProto.RestrictToRegions.HasValue())
                     {
                         foreach (var restrictRef in entryProto.RestrictToRegions)
                         {
@@ -418,7 +464,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         }
                     }
 
-                    if (entryProto.RestrictToAreas.IsNullOrEmpty() == false)
+                    if (entryProto.RestrictToAreas.HasValue())
                     {
                         foreach (var areaRef in entryProto.RestrictToAreas)
                             areas.Add(areaRef);
@@ -431,7 +477,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     foreach (PrototypeId regionRef in regionList)
                     {
                         RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
-                        if (regionProto != null && regionProto.AltRegions.IsNullOrEmpty() == false)
+                        if (regionProto != null && regionProto.AltRegions.HasValue())
                         {
                             foreach (var altRegionRef in regionProto.AltRegions)
                                 regions.Add(altRegionRef);
@@ -442,7 +488,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return regions.Count > 0;
         }
-
     }
 
     public class OpenMissionPrototype : MissionPrototype

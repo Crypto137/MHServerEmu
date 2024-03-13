@@ -1,6 +1,7 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
@@ -37,7 +38,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             Vector3 origin = Area.Origin;
 
-            if (cellProto.MarkerSet.Markers.IsNullOrEmpty() == false)
+            if (cellProto.MarkerSet.Markers.HasValue())
             {      
                 foreach (var marker in cellProto.MarkerSet.Markers)
                 {
@@ -117,7 +118,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             var singleCellGeneratorProto = generatorProto as SingleCellAreaGeneratorPrototype;
 
-            if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets.IsNullOrEmpty() == false && singleCellGeneratorProto.Cell != 0)
+            if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets.HasValue() && singleCellGeneratorProto.Cell != 0)
             {
                 AssetId assetRef = singleCellGeneratorProto.Cell;
                 PrototypeId cellRef = GameDatabase.GetDataRefByAsset(assetRef);

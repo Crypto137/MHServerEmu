@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {

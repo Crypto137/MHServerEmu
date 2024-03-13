@@ -1,19 +1,20 @@
 ﻿using Gazillion;
 using MHServerEmu.Billing.Catalogs;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Billing
 {
-    public class BillingService : IMessageHandler
+    public class BillingService : IGameService
     {
         private const ushort MuxChannel = 1;
 
@@ -53,8 +54,16 @@ namespace MHServerEmu.Billing
             Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
         }
 
-        public void Handle(FrontendClient client, GameMessage message)
+        #region IGameService Implementation
+
+        public void Run() { }
+
+        public void Shutdown() { }
+
+        public void Handle(ITcpClient tcpClient, GameMessage message)
         {
+            var client = (FrontendClient)tcpClient;
+
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageGetCatalog:
@@ -72,15 +81,23 @@ namespace MHServerEmu.Billing
                     break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
             }
         }
 
-        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, message);
+            foreach (GameMessage message in messages)
+                Handle(client, message);
         }
+
+        public string GetStatus()
+        {
+            return $"Running";
+        }
+
+        #endregion
 
         private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)
         {
@@ -89,14 +106,14 @@ namespace MHServerEmu.Billing
                 return;
 
             // Send the current catalog
-            client.SendMessage(MuxChannel, new(_catalog.ToNetMessageCatalogItems(false)));
+            client.SendMessage(MuxChannel, _catalog.ToNetMessageCatalogItems(false));
         }
 
         private void OnGetCurrencyBalance(FrontendClient client)
         {
-            client.SendMessage(MuxChannel, new(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
-                .Build()));
+                .Build());
         }
 
         private void OnBuyItemFromCatalog(FrontendClient client, NetMessageBuyItemFromCatalog buyItemFromCatalog)
@@ -127,27 +144,27 @@ namespace MHServerEmu.Billing
             currentAvatar.Costume = (ulong)costumePrototype.DataRef;
 
             // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
-            client.SendMessage(MuxChannel, new(
+            client.SendMessage(MuxChannel, 
                 Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
-                ));
+                );
 
             // Update library
             PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
 
-            client.SendMessage(MuxChannel, new(
-                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef)));
+            client.SendMessage(MuxChannel,
+                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef));
 
             SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
         }
 
         private void SendBuyItemResponse(FrontendClient client, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
         {
-            client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(didSucceed)
                 .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
                 .SetErrorcode(errorCode)
                 .SetSkuId(skuId)
-                .Build()));
+                .Build());
         }
     }
 }

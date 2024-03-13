@@ -1,10 +1,10 @@
-﻿using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Common;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Generators.Regions
                         StartArea = area;
                 }
             }
-            if (staticAreas.IsNullOrEmpty() == false)
+            if (staticAreas.HasValue())
                 DoConnection(random, region, staticAreas, regionGeneratorProto);
 
         }
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             if (staticAreas.Length > 1)
             {
-                if (regionGeneratorProto.Connections.IsNullOrEmpty() == false)
+                if (regionGeneratorProto.Connections.HasValue())
                 {
                     List<AreaConnectionPrototype> workingConnectionList = new (regionGeneratorProto.Connections);
 

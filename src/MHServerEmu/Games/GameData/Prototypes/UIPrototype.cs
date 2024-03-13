@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Resources;
 

@@ -1,5 +1,6 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
+﻿using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
@@ -33,7 +34,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             Id = IdGenerator.Generate();
             Email = email;
             PlayerName = playerName;
-            PasswordHash = Cryptography.HashPassword(password, out byte[] salt);
+            PasswordHash = CryptographyHelper.HashPassword(password, out byte[] salt);
             Salt = salt;
             UserLevel = userLevel;
             IsBanned = false;

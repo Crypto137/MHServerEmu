@@ -1,13 +1,14 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Encoders;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -16,7 +17,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
-using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
@@ -59,7 +60,11 @@ namespace MHServerEmu.Games.Entities
         private string _guildName;
         private GuildMembership _guildMembership;
 
+        private List<PrototypeId> _unlockedInventoryList;
+
         private SortedSet<AvailableBadges> _badges;
+
+        private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict;
 
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
@@ -74,42 +79,50 @@ namespace MHServerEmu.Games.Entities
 
         public ReplicatedVariable<ulong> PartyId { get; set; }
         public Community Community { get; set; }
-        public bool UnkBool { get; set; }
-        public PrototypeId[] StashInventories { get; set; }
+
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState AchievementState { get; set; }
-        public StashTabOption[] StashTabOptions { get; set; }
+
+        public Player(EntityBaseData baseData) : base(baseData)
+        {
+            // Base Data
+            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            BaseData.EntityId = 14646212;
+            BaseData.PrototypeId = (PrototypeId)18307315963852687724;
+            BaseData.FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasDbId;
+            BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
+            BaseData.DbId = 867587;
+            BaseData.LocomotionState = new(0f);
+
+            // Archive Data
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+
+            Properties = new(9078332);
+
+            MissionManager = new();
+            MissionManager.Owner = this;
+            
+            AvatarProperties = new(9078333);
+            ShardId = 3;
+            _playerName = new(9078334, string.Empty);
+            _secondaryPlayerName = new(0, string.Empty);
+            
+            MatchQueueStatus = new();
+            MatchQueueStatus.SetOwner(this);
+            
+            PartyId = new(9078335, 0);
+            
+            Community = new(this);
+            Community.Initialize();
+
+            _unlockedInventoryList = new();
+            _badges = new();
+            GameplayOptions = new(this);
+            AchievementState = new();
+            _stashTabOptionsDict = new();
+        }
 
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        // note: this is ugly
-        public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
-            MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
-            ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
-            MatchQueueStatus matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
-            Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
-            GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
-        {
-            ReplicationPolicy = replicationPolicy;
-            Properties = properties;
-
-            MissionManager = missionManager;
-            AvatarProperties = avatarProperties;
-            ShardId = shardId;
-            _playerName = playerName;
-            _secondaryPlayerName = secondaryPlayerName;
-            MatchQueueStatus = matchQueueStatus;
-            EmailVerified = emailVerified;
-            AccountCreationTimestamp = accountCreationTimestamp;
-            PartyId = partyId;
-            Community = community;
-            UnkBool = unkBool;
-            StashInventories = stashInventories;
-            _badges = badges;
-            GameplayOptions = gameplayOptions;
-            AchievementState = achievementState;
-            StashTabOptions = stashTabOptions;
-        }
 
         protected override void Decode(CodedInputStream stream)
         {
@@ -138,31 +151,40 @@ namespace MHServerEmu.Games.Entities
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
 
             // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
-            string emptyString = stream.ReadRawString();
-            if (emptyString != string.Empty)
+            if (stream.ReadRawString() != string.Empty)
                 Logger.Warn($"Decode(): emptyString is not empty!");
 
-            bool hasCommunity = boolDecoder.ReadBool(stream);
-            if (hasCommunity) Community = new(stream);
+            Community = new(this);
+            Community.Initialize();
+            bool hasCommunityData = boolDecoder.ReadBool(stream);
+            if (hasCommunityData) Community.Decode(stream);
 
-            UnkBool = boolDecoder.ReadBool(stream);
+            // Unknown bool, always false
+            if (boolDecoder.ReadBool(stream))
+                Logger.Warn($"Decode(): unkBool is true!");
 
-            StashInventories = new PrototypeId[stream.ReadRawVarint64()];
-            for (int i = 0; i < StashInventories.Length; i++)
-                StashInventories[i] = stream.ReadPrototypeEnum<Prototype>();
+            _unlockedInventoryList = new();
+            ulong numUnlockedInventories = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numUnlockedInventories; i++)
+                _unlockedInventoryList.Add(stream.ReadPrototypeRef<Prototype>());
 
             _badges = new();
             ulong numBadges = stream.ReadRawVarint64();
             for (ulong i = 0; i < numBadges; i++)
                 _badges.Add((AvailableBadges)stream.ReadRawVarint32());
 
-            GameplayOptions = new(stream, boolDecoder);
+            GameplayOptions = new(this);
+            GameplayOptions.Decode(stream, boolDecoder);
 
             AchievementState = new(stream);
 
-            StashTabOptions = new StashTabOption[stream.ReadRawVarint64()];
-            for (int i = 0; i < StashTabOptions.Length; i++)
-                StashTabOptions[i] = new(stream);
+            _stashTabOptionsDict = new();
+            ulong numStashTabOptions = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numStashTabOptions; i++)
+            {
+                PrototypeId stashTabRef = stream.ReadPrototypeRef<Prototype>();
+                _stashTabOptionsDict.Add(stashTabRef, new(stream));
+            }
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -177,7 +199,7 @@ namespace MHServerEmu.Games.Entities
             boolEncoder.EncodeBool(EmailVerified);
             boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
             boolEncoder.EncodeBool(true);   // hasCommunity TODO: Check archive's replication policy and send community only to owners
-            boolEncoder.EncodeBool(UnkBool);
+            boolEncoder.EncodeBool(false);  // Unknown unused bool, always false
 
             GameplayOptions.EncodeBools(boolEncoder);
 
@@ -204,8 +226,9 @@ namespace MHServerEmu.Games.Entities
 
             boolEncoder.WriteBuffer(stream);   // UnkBool
 
-            stream.WriteRawVarint64((ulong)StashInventories.Length);
-            foreach (PrototypeId stashInventory in StashInventories) stream.WritePrototypeEnum<Prototype>(stashInventory);
+            stream.WriteRawVarint64((ulong)_unlockedInventoryList.Count);
+            foreach (PrototypeId unlockedInventory in _unlockedInventoryList)
+                stream.WritePrototypeRef<Prototype>(unlockedInventory);
 
             stream.WriteRawVarint64((ulong)_badges.Count);
             foreach (AvailableBadges badge in _badges)
@@ -215,8 +238,12 @@ namespace MHServerEmu.Games.Entities
 
             AchievementState.Encode(stream);
 
-            stream.WriteRawVarint64((ulong)StashTabOptions.Length);
-            foreach (StashTabOption option in StashTabOptions) option.Encode(stream);
+            stream.WriteRawVarint64((ulong)_stashTabOptionsDict.Count);
+            foreach (var kvp in _stashTabOptionsDict)
+            {
+                stream.WritePrototypeRef<Prototype>(kvp.Key);
+                kvp.Value.Encode(stream);
+            }
         }
 
         /// <summary>
@@ -227,7 +254,6 @@ namespace MHServerEmu.Games.Entities
             // Adjust properties
             foreach (var accountAvatar in account.Avatars.Values)
             {
-                PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
                 var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
 
                 // Set library costumes according to account data
@@ -236,48 +262,128 @@ namespace MHServerEmu.Games.Entities
                 // Set avatar levels to 60
                 // Note: setting this to above level 60 sets the prestige level as well
                 Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototype] = 60;
+            }
 
-                // Clean up team ups
-                Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarPrototype] = PrototypeId.Invalid;
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
+            }
 
-                // Unlock start avatars
-                var avatarUnlock = (AvatarUnlockType)(int)Properties[PropertyEnum.AvatarUnlock, enumValue];
-                if (avatarUnlock == AvatarUnlockType.Starter)
-                    Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
+            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(WaypointPrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.Waypoint, waypointRef] = true;
+            }
+
+            foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(VendorTypePrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
+            }
+
+            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(UISystemLockPrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
+            }
+
+            foreach (PrototypeId tutorialRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(HUDTutorialPrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.TutorialHasSeenTip, tutorialRef] = true;
             }
 
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
-            _playerName.Value = account.PlayerName;    // Used for highlighting your name in leaderboards
+            // Complete all missions
+            MissionManager.PrototypeId = (PrototypeId)account.CurrentAvatar.Prototype;
+            foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (MissionManager.ShouldCreateMission(missionPrototype))
+                {
+                    Mission mission = MissionManager.CreateMission(missionRef);
+                    mission.State = MissionState.Completed;
+                    mission.Objectives = Array.Empty<Objective>();
+                    mission.Participants = new ulong[] { BaseData.EntityId };
+                    MissionManager.InsertMission(mission);
+                }
+            }
+
+            // Set name
+            _playerName.Value = account.PlayerName;    // NOTE: This is used for highlighting your name in leaderboards
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
             EmailVerified = true;
             AccountCreationTimestamp = Clock.DateTimeToUnixTime(new(2023, 07, 16, 1, 48, 0));   // First GitHub commit date
 
-            // Hardcoded community tab easter eggs
-            CommunityMember friend = Community.CommunityMemberList[0];
-            friend.MemberName = "DavidBrevik";
-            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)15769648016960461069, (PrototypeId)4881398219179434365, 60, 6) };
-            friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
-            friend.RegionRef = (PrototypeId)10434222419069901867;
-            friend = Community.CommunityMemberList[1];
-            friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
-            friend.MemberName = "TonyStark";
-            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)7150542631074405762, 60, 5) };
-            friend.RegionRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
+            #region Hardcoded social tab easter eggs
+            Community.AddMember(1, "DavidBrevik", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(1).SetIsOnline(1)
+                .SetCurrentRegionRefId(12735255224807267622).SetCurrentDifficultyRefId((ulong)DifficultyTier.Normal)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(15769648016960461069).SetCostumeRefId(4881398219179434365).SetLevel(60).SetPrestigeLevel(6))
+                .Build());
 
-            Community.CommunityMemberList.Add(new("Doomsaw", 1, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)17750839636937086083, (PrototypeId)14098108758769669917, 60, 6) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("PizzaTime", 2, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9378552423541970369, (PrototypeId)6454902525769881598, 60, 5) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("RogueServerEnjoyer", 3, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)1660250039076459846, (PrototypeId)9447440487974639491, 60, 3) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("WhiteQueenXOXO", 4, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)412966192105395660, (PrototypeId)12724924652099869123, 60, 4) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("AlexBond", 5, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9255468350667101753, (PrototypeId)16813567318560086134, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("Crypto137", 6, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)1195778722002966150, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("yn01", 7, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12534955053251630387, (PrototypeId)14506515434462517197, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("Gazillion", 8, 0, 0, Array.Empty<AvatarSlotInfo>(), CommunityMemberOnlineStatus.Offline, "", new int[] { 0 }));
-            Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12394659164528645362, (PrototypeId)2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
-        
+            Community.AddMember(2, "TonyStark", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(2).SetIsOnline(1)
+                .SetCurrentRegionRefId((ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion).SetCurrentDifficultyRefId((ulong)DifficultyTier.Normal)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(421791326977791218).SetCostumeRefId(7150542631074405762).SetLevel(60).SetPrestigeLevel(5))
+                .Build());
+
+            Community.AddMember(3, "Doomsaw", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(3).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(17750839636937086083).SetCostumeRefId(14098108758769669917).SetLevel(60).SetPrestigeLevel(6))
+                .Build());
+
+            Community.AddMember(4, "PizzaTime", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(4).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(9378552423541970369).SetCostumeRefId(6454902525769881598).SetLevel(60).SetPrestigeLevel(5))
+                .Build());
+
+            Community.AddMember(5, "RogueServerEnjoyer", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(5).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(1660250039076459846).SetCostumeRefId(9447440487974639491).SetLevel(60).SetPrestigeLevel(3))
+                .Build());
+
+            Community.AddMember(6, "WhiteQueenXOXO", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(6).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(412966192105395660).SetCostumeRefId(12724924652099869123).SetLevel(60).SetPrestigeLevel(4))
+                .Build());
+
+            Community.AddMember(7, "AlexBond", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(7).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(9255468350667101753).SetCostumeRefId(16813567318560086134).SetLevel(60).SetPrestigeLevel(2))
+                .Build());
+
+            Community.AddMember(8, "Crypto137", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(8).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(421791326977791218).SetCostumeRefId(1195778722002966150).SetLevel(60).SetPrestigeLevel(2))
+                .Build());
+
+            Community.AddMember(9, "yn01", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(9).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(12534955053251630387).SetCostumeRefId(14506515434462517197).SetLevel(60).SetPrestigeLevel(2))
+                .Build());
+
+            Community.AddMember(10, "Gazillion", CircleId.__Friends);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(10).SetIsOnline(0).Build());
+
+            Community.AddMember(11, "FriendlyLawyer", CircleId.__Nearby);
+            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(11).SetIsOnline(1)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(12394659164528645362).SetCostumeRefId(2844257346122946366).SetLevel(99).SetPrestigeLevel(1))
+                .Build());
+            #endregion
+
+            // Initialize and unlock stash tabs
+            OnEnterGameInitStashTabOptions();
+            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(true, false))
+                UnlockInventory(stashRef);
+
             // Add all badges to admin accounts
             if (account.UserLevel == AccountUserLevel.Admin)
             {
@@ -285,6 +391,7 @@ namespace MHServerEmu.Games.Entities
                     AddBadge(badge);
             }
 
+            GameplayOptions.ResetToDefaults();
             AchievementState = account.Player.AchievementState;
         }
 
@@ -311,6 +418,194 @@ namespace MHServerEmu.Games.Entities
                 return 0;
 
             return _consoleAccountIds[(int)avatarIndex];
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the inventory with the specified <see cref="PrototypeId"/> is unlocked for this <see cref="Player"/>.
+        /// </summary>
+        public bool IsInventoryUnlocked(PrototypeId invProtoRef)
+        {
+            if (invProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"IsInventoryUnlocked(): invProtoRef == PrototypeId.Invalid");
+
+            return _unlockedInventoryList.Contains(invProtoRef);
+        }
+
+        /// <summary>
+        /// Unlocks the inventory with the specified <see cref="PrototypeId"/> for this <see cref="Player"/>.
+        /// </summary>
+        public bool UnlockInventory(PrototypeId invProtoRef)
+        {
+            // Entity::GetInventoryByRef()
+
+            if (_unlockedInventoryList.Contains(invProtoRef))
+                return Logger.WarnReturn(false, $"UnlockInventory(): {GameDatabase.GetFormattedPrototypeName(invProtoRef)} is already unlocked");
+
+            _unlockedInventoryList.Add(invProtoRef);
+
+            // Entity::addInventory()
+
+            if (Inventory.IsPlayerStashInventory(invProtoRef))
+                StashTabInsert(invProtoRef, 0);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns <see cref="PrototypeId"/> values of all locked and/or unlocked stash tabs for this <see cref="Player"/>.
+        /// </summary>
+        public IEnumerable<PrototypeId> GetStashInventoryProtoRefs(bool getLocked, bool getUnlocked)
+        {
+            var playerProto = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.PrototypeId);
+            if (playerProto == null) yield break;
+            if (playerProto.StashInventories == null) yield break;
+
+            foreach (EntityInventoryAssignmentPrototype invAssignmentProto in playerProto.StashInventories)
+            {
+                if (invAssignmentProto.Inventory == PrototypeId.Invalid) continue;
+
+                // TODO: isLocked = Entity::GetInventory() == null
+                // For now use prototype data + unlock list for this
+                var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>(invAssignmentProto.Inventory);
+                bool isLocked = true;
+                isLocked &= inventoryProto.LockedByDefault;
+                isLocked &= _unlockedInventoryList.Contains(inventoryProto.DataRef) == false;
+                // Although the unified stash from the console version is unlocked by default, we consider it always locked on PC
+                isLocked |= inventoryProto.ConvenienceLabel == ConvenienceLabel.UnifiedStash;
+
+                if (isLocked && getLocked || isLocked == false && getUnlocked)
+                    yield return invAssignmentProto.Inventory;
+            }
+        }
+
+        /// <summary>
+        /// Updates <see cref="StashTabOptions"/> with the data from a <see cref="NetMessageStashTabOptions"/>.
+        /// </summary>
+        public bool UpdateStashTabOptions(NetMessageStashTabOptions optionsMessage)
+        {
+            PrototypeId inventoryRef = (PrototypeId)optionsMessage.InventoryRefId;
+
+            if (Inventory.IsPlayerStashInventory(inventoryRef) == false)
+                return Logger.WarnReturn(false, $"UpdateStashTabOptions(): {inventoryRef} is not a player stash ref");
+
+            // Entity::GetInventoryByRef() != nullptr
+
+            if (_stashTabOptionsDict.TryGetValue(inventoryRef, out StashTabOptions options) == false)
+            {
+                options = new();
+                _stashTabOptionsDict.Add(inventoryRef, options);
+            }
+
+            // Stash tab names can be up to 30 characters long
+            if (optionsMessage.HasDisplayName)
+                options.DisplayName = optionsMessage.DisplayName.Substring(0, 30);
+
+            if (optionsMessage.HasIconPathAssetId)
+                options.IconPathAssetId = (AssetId)optionsMessage.IconPathAssetId;
+
+            if (optionsMessage.HasColor)
+                options.Color = (StashTabColor)optionsMessage.Color;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Inserts the stash tab with the specified <see cref="PrototypeId"/> into the specified position.
+        /// </summary>
+        public bool StashTabInsert(PrototypeId insertedStashRef, int newSortOrder)
+        {
+            if (newSortOrder < 0)
+                return Logger.WarnReturn(false, $"StashTabInsert(): Invalid newSortOrder {newSortOrder}");
+
+            if (insertedStashRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"StashTabInsert(): Invalid insertedStashRef {insertedStashRef}");
+
+            if (Inventory.IsPlayerStashInventory(insertedStashRef) == false)
+                return Logger.WarnReturn(false, $"StashTabInsert(): insertedStashRef {insertedStashRef} is not a player stash ref");
+
+            // Entity::GetInventoryByRef(insertedStashRef) != nullptr
+
+            // Get options for the tab we need to insert
+            if (_stashTabOptionsDict.TryGetValue(insertedStashRef, out StashTabOptions options))
+            {
+                // Only new tabs are allowed to be in the same location
+                if (options.SortOrder == newSortOrder)
+                    return Logger.WarnReturn(false, "StashTabInsert(): Inserting an existing tab at the same location");
+            }
+            else
+            {
+                // Create options of the tab if there are none yet
+                options = new();
+                _stashTabOptionsDict.Add(insertedStashRef, options);
+            }
+
+            // No need to sort if only have a single tab
+            if (_stashTabOptionsDict.Count == 1)
+                return true;
+
+            // Assign the new sort order to the tab
+            int oldSortOrder = options.SortOrder;
+            options.SortOrder = newSortOrder;
+
+            // Rearrange other tabs
+            int sortIncrement, sortStart, sortFinish;
+
+            if (oldSortOrder < newSortOrder)
+            {
+                // If the sort order is increasing we need to shift back everything in between
+                sortIncrement = -1;
+                sortStart = oldSortOrder;
+                sortFinish = newSortOrder;
+            }
+            else
+            {
+                // If the sort order is decreasing we need to shift forward everything in between
+                sortIncrement = 1;
+                sortStart = newSortOrder;
+                sortFinish = oldSortOrder;
+            }
+
+            // Fall back in case our sort order overflows for some reason
+            SortedList<int, PrototypeId> sortedTabs = new();
+            bool orderOverflow = false;
+
+            // Update sort order for all tabs
+            foreach (var kvp in _stashTabOptionsDict)
+            {
+                PrototypeId sortRef = kvp.Key;
+                StashTabOptions sortOptions = kvp.Value;
+
+                if (sortRef != insertedStashRef)
+                {
+                    // Move the tab if:
+                    // 1. We are adding a new tab and everything needs to be shifted
+                    // 2. We are within our sort range
+                    bool isNew = oldSortOrder == newSortOrder && sortOptions.SortOrder >= newSortOrder;
+                    bool isWithinSortRange = sortOptions.SortOrder >= sortStart && sortOptions.SortOrder <= sortFinish;
+
+                    if (isNew || isWithinSortRange)
+                        sortOptions.SortOrder += sortIncrement;
+                }
+
+                // Make sure our sort order does not exceed the amount of stored stash tab options
+                sortedTabs[sortOptions.SortOrder] = sortRef;
+                if (sortOptions.SortOrder >= _stashTabOptionsDict.Count)
+                    orderOverflow = true;
+            }
+
+            // Reorder if our sort order overflows
+            if (orderOverflow)
+            {
+                Logger.Warn($"StashTabInsert(): Sort order overflow, reordering");
+                int fixedOrder = 0;
+                foreach (var kvp in sortedTabs)
+                {
+                    _stashTabOptionsDict[kvp.Value].SortOrder = fixedOrder;
+                    fixedOrder++;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -352,10 +647,9 @@ namespace MHServerEmu.Games.Entities
             }
 
             sb.AppendLine($"{nameof(Community)}: {Community}");
-            sb.AppendLine($"{nameof(UnkBool)}: {UnkBool}");
 
-            for (int i = 0; i < StashInventories.Length; i++)
-                sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
+            for (int i = 0; i < _unlockedInventoryList.Count; i++)
+                sb.AppendLine($"_unlockedInventoryList[{i}]: {GameDatabase.GetPrototypeName(_unlockedInventoryList[i])}");
 
             if (_badges.Any())
             {
@@ -368,8 +662,20 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(GameplayOptions)}: {GameplayOptions}");
             sb.AppendLine($"{nameof(AchievementState)}: {AchievementState}");
 
-            for (int i = 0; i < StashTabOptions.Length; i++)
-                sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
+            foreach (var kvp in _stashTabOptionsDict)
+                sb.AppendLine($"StashTabOptions[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+        }
+
+        /// <summary>
+        /// Initializes <see cref="StashTabOptions"/> for any stash tabs that are unlocked but don't have any options yet.
+        /// </summary>
+        private void OnEnterGameInitStashTabOptions()
+        {
+            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(false, true))
+            {
+                if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
+                    StashTabInsert(stashRef, 0);
+            }
         }
     }
 }

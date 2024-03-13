@@ -1,8 +1,8 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Games.Common;
-using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             Max = new(-1, -1);
 
-            if (Entries.IsNullOrEmpty() == false)
+            if (Entries.HasValue())
             {
                 foreach (SuperCellEntryPrototype superCellEntry in Entries)
                 {
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool ContainsCell(PrototypeId cellRef)
         {
-            if (Entries.IsNullOrEmpty() == false)
+            if (Entries.HasValue())
             {
                 foreach (var entryProto in Entries)
                 {

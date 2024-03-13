@@ -106,6 +106,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public bool AllowWhenDead { get; protected set; }
+
+        public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
     }
 
     public class MissionActionEntityCreatePrototype : MissionActionPrototype

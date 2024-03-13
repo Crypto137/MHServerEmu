@@ -1,13 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using Free.Ports.zLib;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Common.Serialization;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Locales;
+using MHServerEmu.Core.System;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -186,19 +185,13 @@ namespace MHServerEmu.Games.Achievements
                 .SetAchievementNewThresholdUS((ulong)AchievementNewThresholdUS.TotalSeconds)
                 .Build().ToByteArray();
 
-            // We need to compress specifically with a port of zlib rather than various alternatives like SharpZipLib
-            // to produce the same result. zlib.compress() in Python also produces the result we need.
+            // NOTE: If you don't use the right library to compress this it's going to cause client-side errors.
+            // See CompressionHelper.ZLibDeflate() for more details.
+            byte[] compressedBuffer = CompressionHelper.ZLibDeflate(dumpBuffer);
 
-            using (MemoryStream ms = new())
-            using (ZStreamWriter writer = new(ms))
-            {
-                writer.Write(dumpBuffer);
-                writer.Close();
-
-               _cachedDump = NetMessageAchievementDatabaseDump.CreateBuilder()
-                    .SetCompressedAchievementDatabaseDump(ByteString.CopyFrom(ms.ToArray()))
-                    .Build();
-            }
+            _cachedDump = NetMessageAchievementDatabaseDump.CreateBuilder()
+                 .SetCompressedAchievementDatabaseDump(ByteString.CopyFrom(compressedBuffer))
+                 .Build();
         }
     }
 }

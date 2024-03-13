@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             KeywordsMask rusult = new();
 
-            if (keywordsList.IsNullOrEmpty() == false)
+            if (keywordsList.HasValue())
             {
                 foreach (var kerwordRef in keywordsList)
                 {
