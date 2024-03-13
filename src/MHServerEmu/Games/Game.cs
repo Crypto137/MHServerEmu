@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
 using Gazillion;
 using Google.ProtocolBuffers;
@@ -33,7 +32,7 @@ namespace MHServerEmu.Games
         public const long TickTime = 1000 / TickRate;   // ms per tick
 
         private readonly object _gameLock = new();
-        private readonly Queue<(FrontendClient, GameMessage)> _messageQueue = new();
+        private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
         private readonly Stopwatch _tickWatch = new();
 
         private int _tickCount;
@@ -45,7 +44,6 @@ namespace MHServerEmu.Games
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
-        public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
@@ -86,12 +84,11 @@ namespace MHServerEmu.Games
                 lock (_gameLock)     // lock to prevent state from being modified mid-update
                 {
                     // Handle all queued messages
-                    // TODO: CoreNetworkMailbox
-                    while (_messageQueue.Count > 0)
+                    while (_mailbox.HasMessages)
                     {
-                        var queuedMessage = _messageQueue.Dequeue();
-                        PlayerConnection connection = NetworkManager.GetPlayerConnection(queuedMessage.Item1);
-                        connection.ReceiveMessage(queuedMessage.Item2);
+                        var message = _mailbox.PopNextMessage();
+                        PlayerConnection connection = NetworkManager.GetPlayerConnection(message.Item1);
+                        connection.ReceiveMessage(message.Item2);
                     }
 
                     // Update event manager
@@ -114,7 +111,7 @@ namespace MHServerEmu.Games
         {
             lock (_gameLock)
             {
-                _messageQueue.Enqueue(new(client, message));
+                _mailbox.Post(client, message);
             }
         }
 
@@ -132,7 +129,7 @@ namespace MHServerEmu.Games
                 foreach (IMessage message in GetBeginLoadingMessages(connection))
                     SendMessage(connection, message);
 
-                Logger.Trace($"Player {client.Session.Account} added to game 0x{Id:X16}");
+                Logger.Trace($"Player {client.Session.Account} added to {this}");
             }
         }
 
@@ -141,7 +138,7 @@ namespace MHServerEmu.Games
             lock (_gameLock)
             {
                 NetworkManager.RemovePlayer(client);
-                Logger.Trace($"Player {client.Session.Account} removed from game 0x{Id:X16}");
+                Logger.Trace($"Player {client.Session.Account} removed from {this}");
             }
         }
 
