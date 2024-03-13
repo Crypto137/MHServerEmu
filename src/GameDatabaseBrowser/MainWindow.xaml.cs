@@ -3,6 +3,7 @@ using GameDatabaseBrowser.Providers;
 using GameDatabaseBrowser.Search;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Properties;
@@ -521,6 +522,9 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
+                if (Attribute.IsDefined(propInfo, typeof(DoNotCopyAttribute)))
+                    continue;
+
                 var propValue = propInfo.GetValue(property);
                 RegisterPrototypeIdIfNeeded(propValue, parent);
 
@@ -607,6 +611,9 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
+                if (Attribute.IsDefined(propInfo, typeof(DoNotCopyAttribute)))
+                    continue;
+
                 var propValue = propInfo.GetValue(property);
 
                 if (propValue is PropertyCollection)
