@@ -304,7 +304,7 @@ namespace MHServerEmu.Games.Regions
             // VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this)); SpawnMarker Prop type
 
             // SpawnMarkers not Prop type
-            var population = GetRegion().SpawnPopulation.PopulationMarkers;
+            var population = GetRegion().PopulationManager.PopulationMarkers;
             foreach (var markerProto in CellProto.MarkerSet.Markers)
             {
                 if (markerProto is EntityMarkerPrototype entityMarker)

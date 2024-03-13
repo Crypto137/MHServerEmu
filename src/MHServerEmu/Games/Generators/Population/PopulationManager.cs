@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Generators.Population
         }
     }
 
-    public class SpawnPopulationRegistry
+    public class PopulationManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Game Game { get; }
@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public List<PopulationMarker> PopulationMarkers;
 
-        public SpawnPopulationRegistry(Game game, Region region)
+        public PopulationManager(Game game, Region region)
         {
             Game = game;
             Region = region;

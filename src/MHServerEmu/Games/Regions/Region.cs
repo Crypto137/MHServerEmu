@@ -16,6 +16,7 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.MetaGames;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -89,7 +90,7 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); }
         public List<ulong> MetaGames { get; private set; } = new();
         public ConnectionNodeList Targets { get; private set; }
-        public SpawnPopulationRegistry SpawnPopulation { get; private set; }
+        public PopulationManager PopulationManager { get; private set; }
 
         public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, CreateRegionParams createParams) // Old
         {
@@ -116,7 +117,7 @@ namespace MHServerEmu.Games.Regions
 
             MissionManager = new MissionManager(Game, this);
             // CreateUIDataProvider(Game);
-            SpawnPopulation = new(Game, this);
+            PopulationManager = new(Game, this);
 
             Settings = settings;
             //Bind(this, 0xEF);
@@ -265,11 +266,28 @@ namespace MHServerEmu.Games.Regions
 
             */
 
+            if (regionProto.MetaGames.HasValue())
+                foreach (var metaGameRef in regionProto.MetaGames)
+                {
+                    MetaGame metagame = Game.EntityManager.CreateMetaGame(metaGameRef, Id);
+                    RegisterMetaGame(metagame);
+                }
+
             Bound ??= new Aabb(Vector3.Zero, Vector3.Zero);
 
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
 
             return true;
+        }
+
+        public void RegisterMetaGame(MetaGame metaGame)
+        {
+            if (metaGame != null) MetaGames.Add(metaGame.Id);
+        }
+
+        public void UnRegisterMetaGame(MetaGame metaGame)
+        {
+            if (metaGame != null) MetaGames.Remove(metaGame.Id);
         }
 
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)
@@ -538,7 +556,7 @@ namespace MHServerEmu.Games.Regions
                     {
                         /*if (worldEntity.GetRootOwner() is not Player owner)
                         {
-                            if (!worldEntity.TestStatus(1))
+                            if (worldEntity.IsDestroyed() == false)
                             {
                                 worldEntity.Destroy();
                                 found = true;
@@ -559,15 +577,14 @@ namespace MHServerEmu.Games.Regions
             /*
             if (Game != null && MissionManager != null)
                 MissionManager.Shutdown(this);
-
+            */
             while (MetaGames.Any())
             {
                 var metaGameId = MetaGames.First();
-                var metaGame = Game.EntityManager.GetEntityByPrototypeId(metaGameId);
+                var metaGame = Game.EntityManager.GetEntityById(metaGameId);
                 if (metaGame != null) metaGame.Destroy();
-
                 MetaGames.Remove(metaGameId);
-            }*/
+            }
 
             while (Areas.Any())
             {
@@ -723,7 +740,7 @@ namespace MHServerEmu.Games.Regions
                 }
                 else
                 {
-                    playerConnection.StartPositon = StartArea.Origin;
+                    playerConnection.StartPositon = StartArea.Cells.First().Value.RegionBounds.Center;
                     playerConnection.StartOrientation = Orientation.Zero;
                 }
 

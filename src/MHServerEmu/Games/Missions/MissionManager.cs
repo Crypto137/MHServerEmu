@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Missions
                 if (missionProto == null) continue;
                 if (missionProto.HasPopulationInRegion(region) == false) continue;
                 if (IsMissionValidAndApprovedForUse(missionProto))
-                    region.SpawnPopulation.MissionRegisty(missionProto);
+                    region.PopulationManager.MissionRegisty(missionProto);
             }
             GenerateMetaStateEventPopulation(region);
             return true;
@@ -178,31 +178,31 @@ namespace MHServerEmu.Games.Missions
             switch (region.PrototypeId)
             {
                 case RegionPrototypeId.XManhattanRegion1to60:
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)8946389918898723304); // MidtownAmbientPopBosses
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)5107382321921399473); // MidtownAmbientPopAmbushes
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)8946389918898723304); // MidtownAmbientPopBosses
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)5107382321921399473); // MidtownAmbientPopAmbushes
                     break;
                 case RegionPrototypeId.BrooklynPatrolRegionL60:
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)11870459760078756548); // BrooklynAmbientPopBosses
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)316413750990215776); // BrooklynAmbientPopThugs
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)4545654561571084955); // BrooklynAmbientPopMaggia
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)11191884818942400876); // BrooklynAmbientPopAIM
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)11655213795663748353); // BrooklynEventPopSpiderSlayers
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)11870459760078756548); // BrooklynAmbientPopBosses
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)316413750990215776); // BrooklynAmbientPopThugs
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)4545654561571084955); // BrooklynAmbientPopMaggia
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)11191884818942400876); // BrooklynAmbientPopAIM
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)11655213795663748353); // BrooklynEventPopSpiderSlayers
                     break;
                 case RegionPrototypeId.UpperMadripoorRegionL60:
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)16757098736138199512); // HightownAmbientPopBosses
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)2269222182043394276); // HightownAmbientPopHand
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)4726972578787632010); // HightownAmbientPopSerpentMen
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)5934622865620214361); // HightownAmbientPopSkrulls
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)15136910194948515121); // HightownAmbientPopCiviliansSewer
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)16757098736138199512); // HightownAmbientPopBosses
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)2269222182043394276); // HightownAmbientPopHand
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)4726972578787632010); // HightownAmbientPopSerpentMen
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)5934622865620214361); // HightownAmbientPopSkrulls
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)15136910194948515121); // HightownAmbientPopCiviliansSewer
                     break;
                 case RegionPrototypeId.UltronRaidRegionGreen:
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)15881336676894973567); // AgeOfUltronPopAmbushesPhase01
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)5010168349229850240); // AgeOfUltronPopAmbushesPhase02
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)13759807533451057904); // AgeOfUltronPopCivilianPhase01
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)15881336676894973567); // AgeOfUltronPopAmbushesPhase01
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)5010168349229850240); // AgeOfUltronPopAmbushesPhase02
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)13759807533451057904); // AgeOfUltronPopCivilianPhase01
                     break;
                 case RegionPrototypeId.TRGameCenterRegion:
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)13389489009387512032); // GameCenterAmbient
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)521454333584547958); // GameCenterCombat
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)13389489009387512032); // GameCenterAmbient
+                    region.PopulationManager.MetaStateRegisty((PrototypeId)521454333584547958); // GameCenterCombat
                     break;
                 /*
                 case RegionPrototypeId.AxisRaidRegionGreen:
