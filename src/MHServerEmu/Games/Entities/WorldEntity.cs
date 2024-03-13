@@ -185,35 +185,40 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public void AppendOnStartActions(PrototypeId targetRef)
+        private bool AppendStartPower(PrototypeId startPowerRef)
+        {
+            if (startPowerRef == PrototypeId.Invalid) return false;
+            //Console.WriteLine($"[{BaseData.EntityId}]{GameDatabase.GetPrototypeName(startPowerRef)}");
+            Condition condition = new()
+            {
+                SerializationFlags = ConditionSerializationFlags.NoCreatorId
+                | ConditionSerializationFlags.NoUltimateCreatorId
+                | ConditionSerializationFlags.NoConditionPrototypeId
+                | ConditionSerializationFlags.HasIndex
+                | ConditionSerializationFlags.HasAssetDataRef,
+                Id = 1,
+                CreatorPowerPrototypeId = startPowerRef
+            };             
+            ConditionCollection.Add(condition);
+            PowerCollectionRecord powerCollection = new()
+            {
+                Flags = PowerCollectionRecordFlags.PowerRefCountIsOne
+                | PowerCollectionRecordFlags.PowerRankIsZero
+                | PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel
+                | PowerCollectionRecordFlags.ItemLevelIsOne
+                | PowerCollectionRecordFlags.ItemVariationIsOne,
+                PowerPrototypeId = startPowerRef,
+                PowerRefCount = 1
+            };
+            PowerCollection.Add(powerCollection);
+            return true;
+        }
+
+        public bool AppendOnStartActions(PrototypeId targetRef)
         {
             if (GameDatabase.InteractionManager.GetStartAction(BaseData.PrototypeId, targetRef, out MissionActionEntityPerformPowerPrototype action))
-            {
-                var startPowerRef = action.PowerPrototype;
-                //Console.WriteLine($"[{BaseData.EntityId}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-                Condition condition = new()
-                {
-                    SerializationFlags = ConditionSerializationFlags.NoCreatorId
-                    | ConditionSerializationFlags.NoUltimateCreatorId
-                    | ConditionSerializationFlags.NoConditionPrototypeId
-                    | ConditionSerializationFlags.HasIndex
-                    | ConditionSerializationFlags.HasAssetDataRef,
-                    Id = 1,
-                    CreatorPowerPrototypeId = startPowerRef
-                };             
-                ConditionCollection.Add(condition);
-                PowerCollectionRecord powerCollection = new()
-                {
-                    Flags = PowerCollectionRecordFlags.PowerRefCountIsOne
-                    | PowerCollectionRecordFlags.PowerRankIsZero
-                    | PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel
-                    | PowerCollectionRecordFlags.ItemLevelIsOne
-                    | PowerCollectionRecordFlags.ItemVariationIsOne,
-                    PowerPrototypeId = startPowerRef,
-                    PowerRefCount = 1
-                };
-                PowerCollection.Add(powerCollection);
-            }            
+                return AppendStartPower(action.PowerPrototype);
+            return false;
         }
 
         public string PowerCollectionToString()
@@ -222,6 +227,24 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"Powers:");
             foreach(var power in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(power.PowerPrototypeId)}");
             return sb.ToString();
+        }
+
+        public void AppendSelectorActions(EntitySelectorActionPrototype[] entitySelectorActions)
+        {
+            foreach(var action in entitySelectorActions)
+            {
+                if (action.EventTypes.HasValue() && action.EventTypes.First() == EntitySelectorActionEventType.OnSimulated)
+                {
+                    if (action.AIOverrides.HasValue()) 
+                    {
+                        var actionAIOverrideRef = action.AIOverrides.First();
+                        if (actionAIOverrideRef == PrototypeId.Invalid) return;
+                        var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
+                        if (actionAIOverride != null) AppendStartPower(actionAIOverride.Power);
+                    }
+                    return;
+                }
+            }
         }
     }
 }
