@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Events
                 float itemVariation = _game.Random.NextFloat();
                 bowlingBall = playerConnection.Game.EntityManager.CreateInvItem(
                     bowlingBallItem,
-                    new(14646212, (PrototypeId)6731158030400100344, 0), // PlayerGeneral
+                    new(playerConnection.Player.Id, (PrototypeId)6731158030400100344, 0), // PlayerGeneral
                     itemRarities, 1,
                     itemVariation, seed,
                     affixSpec,

@@ -166,10 +166,10 @@ namespace MHServerEmu.Games.Entities
             // TODO  clear all contained
 
             ulong entityId = entity.Id;
-            if (_entityDict.ContainsKey(entityId) == false)
+            if (_entityDict.ContainsKey(entityId))
                 _entityDict.Remove(entityId);
             else
-                Logger.Warn($"Failed to remove entity id {entityId}: entity does not exist");
+                Logger.Warn($"Unknown entity id '{entityId}' to destroy");
         }
 
         public Entity GetEntityById(ulong entityId)
