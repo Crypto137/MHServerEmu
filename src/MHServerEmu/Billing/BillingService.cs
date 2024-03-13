@@ -106,14 +106,14 @@ namespace MHServerEmu.Billing
                 return;
 
             // Send the current catalog
-            client.SendMessage(MuxChannel, new(_catalog.ToNetMessageCatalogItems(false)));
+            client.SendMessage(MuxChannel, _catalog.ToNetMessageCatalogItems(false));
         }
 
         private void OnGetCurrencyBalance(FrontendClient client)
         {
-            client.SendMessage(MuxChannel, new(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
-                .Build()));
+                .Build());
         }
 
         private void OnBuyItemFromCatalog(FrontendClient client, NetMessageBuyItemFromCatalog buyItemFromCatalog)
@@ -144,27 +144,27 @@ namespace MHServerEmu.Billing
             currentAvatar.Costume = (ulong)costumePrototype.DataRef;
 
             // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
-            client.SendMessage(MuxChannel, new(
+            client.SendMessage(MuxChannel, 
                 Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
-                ));
+                );
 
             // Update library
             PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
 
-            client.SendMessage(MuxChannel, new(
-                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef)));
+            client.SendMessage(MuxChannel,
+                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef));
 
             SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
         }
 
         private void SendBuyItemResponse(FrontendClient client, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
         {
-            client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(didSucceed)
                 .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
                 .SetErrorcode(errorCode)
                 .SetSkuId(skuId)
-                .Build()));
+                .Build());
         }
     }
 }

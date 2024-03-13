@@ -105,11 +105,21 @@ namespace MHServerEmu.Frontend
             Connection.Send(packet);
         }
 
+        public void SendMessage(ushort muxId, IMessage message)
+        {
+            SendMessage(muxId, new GameMessage(message));
+        }
+
         public void SendMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
+        }
+
+        public void SendMessages(ushort muxId, IEnumerable<IMessage> messages)
+        {
+            SendMessages(muxId, messages.Select(message => new GameMessage(message)));
         }
 
         private void RouteMessages(ushort muxId, IEnumerable<GameMessage> messages)

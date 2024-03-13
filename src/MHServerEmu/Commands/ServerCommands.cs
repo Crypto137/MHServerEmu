@@ -92,7 +92,7 @@ namespace MHServerEmu.Commands
                         .SetPrestigeLevel(6)
                         .Build();
 
-                    target.SendMessage(2, new(chatMessage));
+                    target.SendMessage(2, chatMessage);
                     break;
 
                 default:

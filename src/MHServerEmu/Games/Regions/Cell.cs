@@ -1,7 +1,7 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -374,7 +374,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public GameMessage MessageCellCreate()
+        public IMessage MessageCellCreate()
         {
             var builder = NetMessageCellCreate.CreateBuilder()
                 .SetAreaId(Area.Id)
@@ -387,7 +387,7 @@ namespace MHServerEmu.Games.Regions
 
             foreach (ReservedSpawn reservedSpawn in EncounterList)
                 builder.AddEncounters(reservedSpawn.ToNetStruct());
-            return new(builder.Build());
+            return builder.Build();
         }
 
         public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)

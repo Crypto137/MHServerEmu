@@ -15,6 +15,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -674,9 +675,10 @@ namespace MHServerEmu.Games.Regions
             return found;
         }
 
-        public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
+        public List<IMessage> GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection connection)
         {
-            List<GameMessage> messageList = new();
+            FrontendClient client = connection.FrontendClient;
+            List<IMessage> messageList = new();
 
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(Id)
@@ -693,12 +695,12 @@ namespace MHServerEmu.Games.Regions
             // empty archive data seems to cause region loading to hang for some time
             if (ArchiveData.Length > 0) regionChangeBuilder.SetArchiveData(ByteString.CopyFrom(ArchiveData));
 
-            messageList.Add(new(regionChangeBuilder.Build()));
+            messageList.Add(regionChangeBuilder.Build());
 
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
+            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build());
 
             // TODO: prefetch other regions
             
@@ -732,7 +734,7 @@ namespace MHServerEmu.Games.Regions
             }
 
 
-            return messageList.ToArray();
+            return messageList;
         }
 
         public Cell GetCellbyId(uint cellId)

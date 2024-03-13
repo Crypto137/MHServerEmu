@@ -168,10 +168,10 @@ namespace MHServerEmu.PlayerManagement
 
             // Queue loading
             client.IsLoading = true;
-            client.SendMessage(MuxChannel, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
+            client.SendMessage(MuxChannel, NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build());
 
             // Send achievement database
-            client.SendMessage(MuxChannel, new(AchievementDatabase.Instance.GetDump()));
+            client.SendMessage(MuxChannel, AchievementDatabase.Instance.GetDump());
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
@@ -204,6 +204,9 @@ namespace MHServerEmu.PlayerManagement
                     Logger.Warn("Failed to remove player: not found");
                     return;
                 }
+
+                Game game = GetGameByPlayer(client);
+                game.RemovePlayer(client);
 
                 _playerList.Remove(client);
                 _sessionManager.RemoveSession(client.Session.Id);
@@ -263,18 +266,18 @@ namespace MHServerEmu.PlayerManagement
             if (ConfigManager.PlayerManager.SimulateQueue)
             {
                 Logger.Info("Responding with LoginQueueStatus message");
-                client.SendMessage(MuxChannel, new(LoginQueueStatus.CreateBuilder()
+                client.SendMessage(MuxChannel, LoginQueueStatus.CreateBuilder()
                     .SetPlaceInLine(ConfigManager.PlayerManager.QueuePlaceInLine)
                     .SetNumberOfPlayersInLine(ConfigManager.PlayerManager.QueueNumberOfPlayersInLine)
-                    .Build()));
+                    .Build());
             }
             else
             {
                 Logger.Info("Responding with SessionEncryptionChanged message");
-                client.SendMessage(MuxChannel, new(SessionEncryptionChanged.CreateBuilder()
+                client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
                     .SetRandomNumberIndex(0)
                     .SetEncryptedRandomNumber(ByteString.Empty)
-                    .Build()));
+                    .Build());
             }
         }
 
@@ -285,13 +288,13 @@ namespace MHServerEmu.PlayerManagement
 
             // Log the player in
             Logger.Info($"Logging in player {client.Session.Account}");
-            client.SendMessage(MuxChannel, new(NetMessageReadyAndLoggedIn.DefaultInstance)); // add report defect (bug) config here
+            client.SendMessage(MuxChannel, NetMessageReadyAndLoggedIn.DefaultInstance); // add report defect (bug) config here
 
             // Sync time
-            client.SendMessage(MuxChannel, new(NetMessageInitialTimeSync.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageInitialTimeSync.CreateBuilder()
                 .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
                 .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
-                .Build()));
+                .Build());
         }
 
         private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest request, TimeSpan gameTimeReceived, TimeSpan dateTimeReceived)
@@ -312,7 +315,7 @@ namespace MHServerEmu.PlayerManagement
 
             //Logger.Debug($"NetMessageSyncTimeReply:\n{reply}");
 
-            client.SendMessage(MuxChannel, new(reply));
+            client.SendMessage(MuxChannel, reply);
         }
 
         private void OnPing(FrontendClient client, NetMessagePing ping, TimeSpan gameTimeReceived)
@@ -332,7 +335,7 @@ namespace MHServerEmu.PlayerManagement
 
             //Logger.Debug($"NetMessagePingResponse:\n{response}");
 
-            client.SendMessage(MuxChannel, new(response));
+            client.SendMessage(MuxChannel, response);
         }
 
         private void OnFps(FrontendClient client, NetMessageFPS fps)
@@ -342,7 +345,7 @@ namespace MHServerEmu.PlayerManagement
 
         private void OnGracefulDisconnect(FrontendClient client)
         {
-            client.SendMessage(MuxChannel, new(NetMessageGracefulDisconnectAck.DefaultInstance));
+            client.SendMessage(MuxChannel, NetMessageGracefulDisconnectAck.DefaultInstance);
         }
 
         #endregion

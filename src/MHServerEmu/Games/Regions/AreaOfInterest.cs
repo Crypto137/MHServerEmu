@@ -1,15 +1,14 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -38,7 +37,7 @@ namespace MHServerEmu.Games.Regions
         public Region Region { get; private set; }
         public int CellsInRegion { get; set; }
         public int LoadedCellCount { get; set; } = 0;
-        public List<GameMessage> Messages { get; private set; }
+        public List<IMessage> Messages { get; private set; }
         public int LoadedEntitiesCount { get => _loadedEntities.Count; }
 
         private ulong _currentFrame;
@@ -153,9 +152,9 @@ namespace MHServerEmu.Games.Regions
 
         private void RemoveArea(Area area)
         {
-            Messages.Add(new(NetMessageRemoveArea.CreateBuilder()
+            Messages.Add(NetMessageRemoveArea.CreateBuilder()
                 .SetAreaId(area.Id)
-                .Build()));
+                .Build());
             _loadedAreas.Remove(area.Id);
         }
 
@@ -170,10 +169,10 @@ namespace MHServerEmu.Games.Regions
             var areaId = cell.Area.Id;
             if (_loadedAreas.ContainsKey(areaId))
             {
-                Messages.Add(new(NetMessageCellDestroy.CreateBuilder()
+                Messages.Add(NetMessageCellDestroy.CreateBuilder()
                     .SetAreaId(areaId)
                     .SetCellId(cell.Id)
-                    .Build()));
+                    .Build());
             }   
             _loadedCells.Remove(cell.Id);
             LoadedCellCount--;
@@ -251,7 +250,7 @@ namespace MHServerEmu.Games.Regions
 
             // Add new Entity
             if (newEntities.Count > 0)
-                Messages.AddRange(newEntities.Select(entity => new GameMessage(entity.ToNetMessageEntityCreate()))); // TODO AddEntity            
+                Messages.AddRange(newEntities.Select(entity => entity.ToNetMessageEntityCreate())); // TODO AddEntity            
 
             // Delete Entity
             List<ulong> toDelete = new();
@@ -259,7 +258,7 @@ namespace MHServerEmu.Games.Regions
             {
                 if (entity.Value.Frame < _currentFrame && entity.Value.InterestToPlayer == false)
                 {
-                    Messages.Add(new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Key).Build()));
+                    Messages.Add(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Key).Build());
                     toDelete.Add(entity.Key);
                 }
             }
@@ -318,15 +317,15 @@ namespace MHServerEmu.Games.Regions
             // update Cells
             if (UpdateCells())
             {
-                Messages.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
+                Messages.Add(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
 
                 // Mini map
                 MiniMapArchive miniMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
                 if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
 
-                Messages.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
+                Messages.Add(NetMessageUpdateMiniMap.CreateBuilder()
                     .SetArchiveData(miniMap.Serialize())
-                    .Build()));
+                    .Build());
             }
 
             bool update = Messages.Count > 0;

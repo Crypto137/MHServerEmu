@@ -88,7 +88,7 @@ namespace MHServerEmu.Grouping
                 }
 
                 _playerDict.Add(playerName, client);
-                client.SendMessage(MuxChannel, new(ChatHelper.Motd));
+                client.SendMessage(MuxChannel, ChatHelper.Motd);
                 return true;
             }
         }
@@ -136,9 +136,9 @@ namespace MHServerEmu.Grouping
                 // instance instead. CHAT_ERROR_COMMAND_NOT_RECOGNIZED works only with NetMessageChatError, so this might have to be handled by the
                 // game instance as well.
 
-                client.SendMessage(1, new(NetMessageChatError.CreateBuilder()
+                client.SendMessage(1, NetMessageChatError.CreateBuilder()
                     .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED)
-                    .Build()));
+                    .Build());
 
                 return;
             }
@@ -159,9 +159,9 @@ namespace MHServerEmu.Grouping
             Logger.Trace($"Received tell for {tell.TargetPlayerName}");
 
             // Respond with an error for now
-            client.SendMessage(MuxChannel, new(ChatErrorMessage.CreateBuilder()
+            client.SendMessage(MuxChannel, ChatErrorMessage.CreateBuilder()
                 .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
-                .Build()));
+                .Build());
         }
 
         #endregion

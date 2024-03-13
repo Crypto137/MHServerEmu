@@ -68,7 +68,7 @@ namespace MHServerEmu.Leaderboards
             foreach (PrototypeGuid guid in initializeRequest.LeaderboardIdsList)
                 response.AddLeaderboardInitDataList(_leaderboardManager.GetLeaderboardInitData(guid));
 
-            client.SendMessage(MuxChannel, new(response.Build()));
+            client.SendMessage(MuxChannel, response.Build());
         }
 
         private void OnRequest(FrontendClient client, NetMessageLeaderboardRequest request)
@@ -83,9 +83,9 @@ namespace MHServerEmu.Leaderboards
 
             Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
             
-            client.SendMessage(MuxChannel, new(NetMessageLeaderboardReportClient.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
                 .SetReport(leaderboard.GetReport(request, client.Session.Account.PlayerName))
-                .Build()));
+                .Build());
         }
     }
 }

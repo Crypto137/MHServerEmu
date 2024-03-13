@@ -17,12 +17,12 @@ namespace MHServerEmu.Grouping
 
         public static void SendMetagameMessage(FrontendClient client, string text, bool showSender = true)
         {
-            client.SendMessage(MuxChannel, new(ChatNormalMessage.CreateBuilder()
+            client.SendMessage(MuxChannel, ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
                 .SetFromPlayerName(showSender ? ConfigManager.GroupingManager.MotdPlayerName : string.Empty)
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
                 .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                .Build()));
+                .Build());
         }
 
         public static void SendMetagameMessages(FrontendClient client, IEnumerable<string> texts, bool showSender = true)

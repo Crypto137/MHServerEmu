@@ -97,23 +97,23 @@ namespace MHServerEmu.Games.Entities
             destination.Type = TransitionPrototype.Type;
         }
 
-        public void TeleportClient(FrontendClient client)
+        public void TeleportClient(PlayerConnection connection)
         {
             Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
+            connection.Game.MovePlayerToRegion(connection, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
         }
 
-        public void TeleportToEntity(FrontendClient client, ulong entityId)
+        public void TeleportToEntity(PlayerConnection connection, ulong entityId)
         {
             Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            client.CurrentGame.MovePlayerToEntity(client, Destinations[0].EntityId);
+            connection.Game.MovePlayerToEntity(connection, Destinations[0].EntityId);
         }
 
-        public void TeleportToLastTown(FrontendClient client)
+        public void TeleportToLastTown(PlayerConnection connection)
         {
             // TODO back to last saved hub
             Logger.Trace($"Destination LastTown");
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
+            connection.Game.MovePlayerToRegion(connection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
         }
     }
 

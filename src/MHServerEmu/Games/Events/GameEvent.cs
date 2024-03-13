@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Frontend;
+﻿using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Events
 {
@@ -26,17 +26,17 @@ namespace MHServerEmu.Games.Events
         private readonly DateTime _creationTime;
         private readonly TimeSpan _lifetime;
 
-        public FrontendClient Client { get; }
+        public PlayerConnection Connection { get; }
         public EventEnum Event { get; }
         public bool IsRunning { get; set; }
         public object Data { get; set; }
 
-        public GameEvent(FrontendClient client, EventEnum gameEvent, long lifetimeMs, object data)
+        public GameEvent(PlayerConnection connection, EventEnum gameEvent, long lifetimeMs, object data)
         {
             _creationTime = DateTime.Now;
             _lifetime = TimeSpan.FromMilliseconds(lifetimeMs);
 
-            Client = client;
+            Connection = connection;
             Event = gameEvent;
             Data = data;
             IsRunning = true;

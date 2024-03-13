@@ -1,8 +1,8 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -482,14 +482,14 @@ namespace MHServerEmu.Games.Regions
             return positionInArea + Origin;
         }
 
-        public GameMessage MessageAddArea(bool isStartArea)
+        public IMessage MessageAddArea(bool isStartArea)
         {
-            return new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
+            return NetMessageAddArea.CreateBuilder()
                 .SetAreaId(Id)
                 .SetAreaPrototypeId((ulong)PrototypeId)
                 .SetAreaOrigin(Origin.ToNetStructPoint3())
                 .SetIsStartArea(isStartArea)
-                .Build().ToByteArray());
+                .Build();
         }
 
         public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
