@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Entities
             _game = game;
         }
 
-        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, Vector3 position, Orientation orientation,
+        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, PropertyCollection collection, Vector3 position, Orientation orientation,
             int health, bool requiresEnterGameWorld, bool OverrideSnapToFloor = false)
         {
             if (cell == null) return default;
@@ -46,6 +46,7 @@ namespace MHServerEmu.Games.Entities
             PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
 
             ReplicatedPropertyCollection properties = new(_game.CurrentRepId);
+            if (collection != null) properties.FlattenCopyFrom(collection, false);
             properties[PropertyEnum.VariationSeed] = _game.Random.Next(1, 10000);
             properties[PropertyEnum.MapPosition] = position;
             properties[PropertyEnum.MapAreaId] = mapAreaId;
@@ -274,7 +275,7 @@ namespace MHServerEmu.Games.Entities
             if (entity.Bounds != null)
                 entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
             int health = GetRankHealth(entity);
-            WorldEntity worldEntity = CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
+            WorldEntity worldEntity = CreateWorldEntity(cell, protoRef, null, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
             if (worldEntity.WorldEntityPrototype is AgentPrototype)
                 worldEntity.AppendOnStartActions(cell.GetRegion().PrototypeDataRef);
         }
@@ -350,26 +351,6 @@ namespace MHServerEmu.Games.Entities
 
                     break;
 
-                case RegionPrototypeId.HoloSimARegion1to60:
-
-                    Cell cell = region.StartArea.Cells.First().Value;
-                    entry = cell.CellProto;
-
-                    foreach (var marker in entry.MarkerSet.Markers)
-                    {
-                        if (marker is EntityMarkerPrototype npc)
-                        {
-                            switch (npc.EntityGuid)
-                            {
-                                case (PrototypeGuid)17602051469318245682:// EncounterOpenMissionSmallV10
-                                case (PrototypeGuid)292473193813839029: // EncounterOpenMissionLargeV1
-                                    CreateWorldEntity(cell, GameDatabase.GetPrototypeRefByName("Entity/Props/Throwables/ThrowablePoliceCar.prototype"),
-                                        cell.CalcMarkerPosition(npc.Position), npc.Rotation, 100, false);
-                                    break;
-                            }
-                        }
-                    }
-                    break;
                     /*
                     case RegionPrototypeId.NPEAvengersTowerHUBRegion:
                         cell = region.StartArea.CellList.First();
