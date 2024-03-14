@@ -58,15 +58,25 @@ namespace MHServerEmu.Games.Entities
         TutorialPowerLock               = 1ul << 44,
     }
 
+    [Flags]
+    public enum EntityStatus
+    {
+        PendingDestroy = 1 << 0,
+        Destroyed = 1 << 1,
+        ToTransform = 1 << 2,
+        InGame = 1 << 3,
+        // TODO etc
+    }
+
     public class Entity
     {
         protected EntityFlags _flags;
-
+        public ulong Id => BaseData.EntityId;
         public EntityBaseData BaseData { get; set; }
         public ulong RegionId { get; set; } = 0;
-
+        public Game Game { get; set; } // TODO: add game to constructor;
+        public EntityStatus Status { get; set; }
         public ulong DatabaseUniqueId { get => BaseData.DbId; }
-
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection Properties { get; set; }
 
@@ -196,7 +206,17 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void Destroy()
         {
-            throw new NotImplementedException();
+            //CancelScheduledLifespanExpireEvent();
+            //CancelDestroyEvent();
+            if (Game == null) return;
+            var entityManager = Game.EntityManager;
+            if (entityManager == null) return;
+            entityManager.DestroyEntity(this);
+        }
+
+        public bool IsDestroyed()
+        {
+            return Status.HasFlag(EntityStatus.Destroyed);
         }
 
         // Test Dead for respawn

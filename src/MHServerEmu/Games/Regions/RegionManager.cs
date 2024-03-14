@@ -575,6 +575,16 @@ namespace MHServerEmu.Games.Regions
 
             return archive.Serialize().ToArray();
         }
+
+        public static RegionPrototypeId[] PatrolRegions = new RegionPrototypeId[]
+        {
+            RegionPrototypeId.XManhattanRegion1to60,
+            RegionPrototypeId.XManhattanRegion60Cosmic,
+            RegionPrototypeId.BrooklynPatrolRegionL60,
+            RegionPrototypeId.BrooklynPatrolRegionL60Cosmic,
+            RegionPrototypeId.UpperMadripoorRegionL60,
+            RegionPrototypeId.UpperMadripoorRegionL60Cosmic,
+        };
         #endregion
     }
 }

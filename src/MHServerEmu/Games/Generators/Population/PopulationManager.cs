@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Generators.Population
         }
     }
 
-    public class SpawnPopulationRegistry
+    public class PopulationManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Game Game { get; }
@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public List<PopulationMarker> PopulationMarkers;
 
-        public SpawnPopulationRegistry(Game game, Region region)
+        public PopulationManager(Game game, Region region)
         {
             Game = game;
             Region = region;
@@ -144,41 +144,77 @@ namespace MHServerEmu.Games.Generators.Population
 
         public void MetaStateRegisty(PrototypeId prototypeId)
         {
-            var popProto = GameDatabase.GetPrototype<MetaStatePopulationMaintainPrototype>(prototypeId);
-            if (popProto != null && popProto.PopulationObjects.HasValue())
+            var metastate = GameDatabase.GetPrototype<MetaStatePrototype>(prototypeId);
+
+            if (metastate is MetaStateMissionProgressionPrototype missionProgression) 
             {
-                List<PrototypeId> regionAreas = new();
-                List<PrototypeId> regionCell;
-                if (popProto.RestrictToAreas.IsNullOrEmpty())
+                if (missionProgression.StatesProgression.HasValue())
+                    MetaStateRegisty(missionProgression.StatesProgression.First());
+            } 
+            else if (metastate is MetaStateMissionActivatePrototype missionActivate)
+            {
+                if (missionActivate.SubStates.HasValue())
+                    foreach (var state in missionActivate.SubStates)
+                        MetaStateRegisty(state);
+
+                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
+                AddRequiredObjects(missionActivate.PopulationObjects, missionActivate.PopulationAreaRestriction, null);
+            }
+            else if (metastate is MetaStateMissionSequencerPrototype missionSequencer)
+            {
+                if (missionSequencer.Sequence.HasValue())
                 {
-                    foreach (var area in Region.IterateAreas())
-                        regionAreas.Add(area.PrototypeDataRef);
-                    regionCell = new();
-                    foreach (var cell in Region.Cells)
-                        if (cell.Area.IsDynamicArea() == false)
-                            regionCell.Add(cell.PrototypeId);
+                    var missionEntry = missionSequencer.Sequence.First();  
+                    Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
+                    AddRequiredObjects(missionEntry.PopulationObjects, missionEntry.PopulationAreaRestriction, null);
                 }
-                else
+            }
+            else if (metastate is MetaStateWaveInstancePrototype waveInstance)
+            {
+                if (waveInstance.States.HasValue())
+                    foreach (var state in waveInstance.States)
+                        MetaStateRegisty(state);               
+            }
+            else if (metastate is MetaStatePopulationMaintainPrototype popProto && popProto.PopulationObjects.HasValue())
+            {               
+                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
+                AddRequiredObjects(popProto.PopulationObjects, popProto.RestrictToAreas, popProto.RestrictToCells);
+            }
+        }
+
+        private void AddRequiredObjects(PopulationRequiredObjectPrototype[] populationObjects, PrototypeId[] restrictToAreas, AssetId[] restrictToCells)
+        {
+            List<PrototypeId> regionAreas = new();
+            List<PrototypeId> regionCell;
+            if (restrictToAreas.IsNullOrEmpty())
+            {
+                foreach (var area in Region.IterateAreas())
+                    regionAreas.Add(area.PrototypeDataRef);
+                regionCell = new();
+                foreach (var cell in Region.Cells)
+                    if (cell.Area.IsDynamicArea() == false)
+                        regionCell.Add(cell.PrototypeId);
+            }
+            else
+            {
+                foreach (var areaRef in restrictToAreas)
+                    regionAreas.Add(areaRef);
+                regionCell = AssetsToList(restrictToCells);
+            }
+
+            Picker<PopulationRequiredObjectPrototype> popPicker = new(Game.Random);
+
+            foreach (var popObject in populationObjects)
+                popPicker.Add(popObject);
+
+            if (popPicker.Empty() == false)
+            {
+                while (popPicker.PickRemove(out var popObject))
                 {
-                    foreach (var areaRef in popProto.RestrictToAreas)
-                        regionAreas.Add(areaRef);
-                    regionCell = AssetsToList(popProto.RestrictToCells);
-                }
-
-                Picker<PopulationRequiredObjectPrototype> popPicker = new(Game.Random);
-
-                foreach (var popObject in popProto.PopulationObjects)
-                    popPicker.Add(popObject);
-
-                if (popPicker.Empty() == false)
-                {
-                    while (popPicker.PickRemove(out var popObject))
-                    {
-                        int count = popObject.Count;
-                        count = 1; // Fix 
-                        var objectProto = popObject.GetPopObject();
-                        AddPopulationMarker(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
-                    }
+                    int count = popObject.Count;
+                    if (RegionManager.PatrolRegions.Contains(Region.PrototypeId)) count = 1;
+                    var objectProto = popObject.GetPopObject();
+                    AddPopulationMarker(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
                 }
             }
         }

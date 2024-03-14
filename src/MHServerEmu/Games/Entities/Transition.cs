@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.Entities
             {
                 destination = Destinations[0];
             }
-            destination.EntityId = transition.BaseData.EntityId;
+            destination.EntityId = transition.Id;
             destination.Entity = transition.BaseData.PrototypeId;
             destination.Type = TransitionPrototype.Type;
         }

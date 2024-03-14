@@ -1,11 +1,13 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -82,6 +84,19 @@ namespace MHServerEmu.Games.Entities
             return worldEntity;
         }
 
+        public MetaGame CreateMetaGame(PrototypeId metaGameRef, ulong regionId)
+        {
+            EntityBaseData baseData = new EntityBaseData(GetNextEntityId(), metaGameRef, null, null);
+            ReplicatedVariable<string> metaname = new(0, "");
+            MetaGame metaGame = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId), metaname)
+            {
+                RegionId = regionId,
+                Game = _game // TODO: to constructor
+            };
+            _entityDict.Add(baseData.EntityId, metaGame);
+            return metaGame;
+        }
+
         public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
 
             EntityBaseData baseData = new()
@@ -144,19 +159,25 @@ namespace MHServerEmu.Games.Entities
             return transition;
         }
 
-        public bool DestroyEntity(ulong entityId)
+        public void DestroyEntity(Entity entity)
         {
-            if (_entityDict.TryGetValue(entityId, out _) == false)
-            {
-                Logger.Warn($"Failed to remove entity id {entityId}: entity does not exist");
-                return false;
-            }
+            // TODO 
+            entity.Status = EntityStatus.Destroyed;
+            // TODO  clear all contained
 
-            _entityDict.Remove(entityId);
-            return true;
+            ulong entityId = entity.Id;
+            if (_entityDict.ContainsKey(entityId))
+                _entityDict.Remove(entityId);
+            else
+                Logger.Warn($"Unknown entity id '{entityId}' to destroy");
         }
 
-        public Entity GetEntityById(ulong entityId) => _entityDict[entityId];
+        public Entity GetEntityById(ulong entityId)
+        {
+            if (_entityDict.TryGetValue(entityId, out Entity entity)) return entity;
+            return null;
+        }
+
         public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
         public Entity GetEntityByPrototypeIdFromRegion(PrototypeId prototype, ulong regionId)
         {
@@ -702,6 +723,7 @@ namespace MHServerEmu.Games.Entities
             if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
             return invisibleId;
         }
+
         #endregion
     }
 }

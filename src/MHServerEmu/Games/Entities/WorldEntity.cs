@@ -125,14 +125,16 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        internal bool TestStatus(int v)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void Destroy()
         {
-            throw new NotImplementedException();
+            ExitWorld();
+            if (IsDestroyed() == false)
+            {
+                // CancelExitWorldEvent();
+                // CancelKillEvent();
+                // CancelDestroyEvent();
+                base.Destroy();
+            }
         }
 
         public virtual void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
@@ -170,7 +172,7 @@ namespace MHServerEmu.Games.Entities
             // TODO send packets for delete entities from world
             var entityManager = Game.EntityManager;
             ClearWorldLocation();
-            entityManager.DestroyEntity(BaseData.EntityId);
+            entityManager.DestroyEntity(this);
         }
 
         public void ClearWorldLocation()
@@ -188,7 +190,7 @@ namespace MHServerEmu.Games.Entities
         private bool AppendStartPower(PrototypeId startPowerRef)
         {
             if (startPowerRef == PrototypeId.Invalid) return false;
-            //Console.WriteLine($"[{BaseData.EntityId}]{GameDatabase.GetPrototypeName(startPowerRef)}");
+            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
             Condition condition = new()
             {
                 SerializationFlags = ConditionSerializationFlags.NoCreatorId

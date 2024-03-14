@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.Powers
             foreach (PrototypeId powerProtoId in powersToUnlockList)
             {
                 powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                    .SetEntityId(avatar.BaseData.EntityId)
+                    .SetEntityId(avatar.Id)
                     .SetPowerProtoId((ulong)powerProtoId)
                     //.SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Angela.AngelaFlight ? 1 : 0)
                     .SetPowerRank(0)

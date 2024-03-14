@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.Network
             Player = new(new EntityBaseData());
             Player.InitializeFromDBAccount(Account);
 
-            ulong avatarEntityId = Player.BaseData.EntityId + 1;
+            ulong avatarEntityId = Player.Id + 1;
             ulong avatarRepId = Player.PartyId.ReplicationId + 1;
             foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
                 PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network
                 if (avatarId == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 Avatar avatar = new(avatarEntityId, avatarRepId);
-                avatar.BaseData.InvLoc = new(Player.BaseData.EntityId, PrototypeId.Invalid, 0);
+                avatar.BaseData.InvLoc = new(Player.Id, PrototypeId.Invalid, 0);
                 avatarEntityId++;
                 avatarRepId += 2;
 
@@ -376,7 +376,7 @@ namespace MHServerEmu.Games.Network
                     Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                     SendMessage(NetMessageEntityPosition.CreateBuilder()
-                        .SetIdEntity(Player.CurrentAvatar.BaseData.EntityId)
+                        .SetIdEntity(Player.CurrentAvatar.Id)
                         .SetFlags(64)
                         .SetPosition(targetPos.ToNetStructPoint3())
                         .SetOrientation(targetRot.ToNetStructPoint3())
