@@ -51,8 +51,7 @@ namespace MHServerEmu.Games.Network
                 if (_connectionDict.TryGetValue(frontendClient, out PlayerConnection playerConnection) == false)
                     Logger.WarnReturn(false, $"RemovePlayer(): Not found");
 
-                // Update DBAccount
-                playerConnection.Player.SaveToDBAccount(playerConnection.Account);
+                playerConnection.UpdateDBAccount();
                 return true;
             }
         }

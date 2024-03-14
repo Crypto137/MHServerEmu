@@ -41,12 +41,13 @@ namespace MHServerEmu.Games.Network
         public int LoadedCellCount { get; set; } = 0;
         public List<IMessage> Messages { get; private set; }
         public int LoadedEntitiesCount { get => _loadedEntities.Count; }
+        public float AOIVolume { get => _AOIVolume; set => SetAOIVolume(value); }
 
         private ulong _currentFrame;
         private Vector3 _lastUpdateCenter;
 
         private float _viewOffset = 600.0f;
-        private float _AOIVolume = 4000.0f;
+        private float _AOIVolume = 3200.0f;
 
         private const float UpdateDistance = 200.0f;
         private const float ViewExpansionDistance = 600.0f;
@@ -58,7 +59,7 @@ namespace MHServerEmu.Games.Network
         private Aabb2 _invisibileVolume;
         private PrototypeId _lastCameraSetting;
 
-        public AreaOfInterest(PlayerConnection connection)
+        public AreaOfInterest(PlayerConnection connection, int AOIVolume = 3200)
         {
             _playerConnection = connection;
             _game = connection.Game;
@@ -69,6 +70,8 @@ namespace MHServerEmu.Games.Network
             LoadedCellCount = 0;
             _lastUpdateCenter = new();
             _currentFrame = 0;
+
+            SetAOIVolume(AOIVolume >= 1600 && AOIVolume <= 5000 ? AOIVolume : 3200);
         }
 
         private void CalcVolumes(Vector3 playerPosition)
@@ -113,11 +116,6 @@ namespace MHServerEmu.Games.Network
             CellsInRegion = 0;
             Region = region;
             _lastCameraSetting = 0;
-
-            int volume = 0;
-            if (_playerConnection.Account != null)
-                volume = _playerConnection.Account.Player.AOIVolume;
-            SetAOIVolume(volume >= 1600 && volume <= 5000 ? volume : 3200);
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -293,13 +291,6 @@ namespace MHServerEmu.Games.Network
                 cell.Value.Loaded = true;
         }
 
-        public void SetAOIVolume(float volume)
-        {
-            _AOIVolume = volume;
-            _viewOffset = _AOIVolume / 8; // 3200 / 8 = 400
-            InitPlayerView(_lastCameraSetting);
-        }
-
         public bool Update(Vector3 newPosition, bool isStart = false)
         {
             Messages.Clear();
@@ -339,6 +330,13 @@ namespace MHServerEmu.Games.Network
         public bool EntityLoaded(ulong entityId)
         {
             return _loadedEntities.ContainsKey(entityId);
+        }
+
+        private void SetAOIVolume(float volume)
+        {
+            _AOIVolume = volume;
+            _viewOffset = _AOIVolume / 8; // 3200 / 8 = 400
+            InitPlayerView(_lastCameraSetting);
         }
     }
 }

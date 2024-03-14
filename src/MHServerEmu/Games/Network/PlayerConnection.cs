@@ -65,8 +65,10 @@ namespace MHServerEmu.Games.Network
             Game = game;
             _frontendClient = frontendClient;
             Account = _frontendClient.Session.Account;
-            AOI = new(this);
             _powerMessageHandler = new(Game);
+
+            // Set up AOI
+            AOI = new(this, Account.Player.AOIVolume);
 
             // Create player and avatar entities
             Player = new(new EntityBaseData());
@@ -90,6 +92,19 @@ namespace MHServerEmu.Games.Network
 
             Player.SetAvatar((PrototypeId)Account.CurrentAvatar.Prototype);
         }
+
+        #region Data Management
+
+        /// <summary>
+        /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
+        /// </summary>
+        public void UpdateDBAccount()
+        {
+            Account.Player.AOIVolume = (int)AOI.AOIVolume;
+            Player.SaveToDBAccount(Account);
+        }
+
+        #endregion
 
         #region NetClient Implementation
 

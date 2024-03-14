@@ -213,18 +213,18 @@ namespace MHServerEmu.Commands
         public string AOIVolume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return $"Current AOI volume = {client.Session.Account.Player.AOIVolume}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+            if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}";
             //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (int.TryParse(@params[0], out int volume) && volume >= 1600 && volume <= 5000)
             {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                var game = playerManager.GetGameByPlayer(client);
-                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-                playerConnection.Account.Player.AOIVolume = volume;
-                playerConnection.AOI.SetAOIVolume(volume);
-
-                return $"Changes player AOI volume size to {volume}.";
+                playerConnection.AOI.AOIVolume = volume;
+                return $"Changed player AOI volume size to {volume}.";
             }
             else
             {
