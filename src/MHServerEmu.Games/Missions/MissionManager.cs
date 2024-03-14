@@ -248,10 +248,10 @@ namespace MHServerEmu.Games.Missions
         // TODO replace this mission to MetaStates
         public static readonly MissionPrototypeId[] EventMissions = new MissionPrototypeId[]
         {
-            MissionPrototypeId.LavaBugOverCiv1,
-            MissionPrototypeId.LavaBugOverCiv2,
-            MissionPrototypeId.LavaBugOverCiv3,
             MissionPrototypeId.MoloidAttackAftermath,
+            MissionPrototypeId.Moloid3AgainstLeaper,
+            MissionPrototypeId.MoloidRescueCivilian,
+            MissionPrototypeId.MoloidAmbushBreakIn,
 /*
             MissionPrototypeId.MutantsRunningGroup1,
             MissionPrototypeId.MutantsRunningGroup2,
@@ -320,6 +320,10 @@ namespace MHServerEmu.Games.Missions
             LavaBugOverCiv2 = 12951210928479411821,
             LavaBugOverCiv3 = 8229534989490265710,
             MoloidAttackAftermath = 9846291500756181529,
+            Moloid3AgainstLeaper = 7901699126451183992,
+            MoloidRescueCivilian = 2105266359721140667,
+            MoloidAmbushBreakIn = 8273714847963488577,
+
             // Ch05MutantTown
             OMMutantsUnderFire = 1307786597808155026,
             MutantsRunningGroup1 = 10873519943997006861,

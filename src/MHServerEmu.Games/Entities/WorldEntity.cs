@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public void AppendSelectorActions(EntitySelectorActionPrototype[] entitySelectorActions)
+        public bool AppendSelectorActions(EntitySelectorActionPrototype[] entitySelectorActions)
         {
             foreach(var action in entitySelectorActions)
             {
@@ -239,14 +239,16 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (action.AIOverrides.HasValue()) 
                     {
-                        var actionAIOverrideRef = action.AIOverrides.First();
-                        if (actionAIOverrideRef == PrototypeId.Invalid) return;
+                        int index = Game.Random.Next(0, action.AIOverrides.Length);
+                        var actionAIOverrideRef = action.AIOverrides[index];
+                        if (actionAIOverrideRef == PrototypeId.Invalid) return false;
                         var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
-                        if (actionAIOverride != null) AppendStartPower(actionAIOverride.Power);
+                        if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
                     }
-                    return;
+                    break;
                 }
             }
+            return false;
         }
     }
 }

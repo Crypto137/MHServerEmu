@@ -918,19 +918,16 @@ namespace MHServerEmu.Games.Generators.Population
                 pos.Z += entity.Bounds.GetBoundHalfHeight();
             var rot = tr.Orientation;
             int health = EntityManager.GetRankHealth(entity);
-            var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);      
+
+            var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, Parent.Properties, pos, rot, health, false, overrideSnap);      
             if (worldEntity == null) return;
-            bool startAction = false;
-            if (Parent.MissionRef != PrototypeId.Invalid)
-            {                
-                worldEntity.Properties[PropertyEnum.MissionPrototype] = Parent.MissionRef;
-                if (worldEntity.WorldEntityPrototype is AgentPrototype)
-                    startAction = worldEntity.AppendOnStartActions(Parent.MissionRef);
-            } 
-            if (startAction == false && EntitySelectorProto != null && EntitySelectorProto.EntitySelectorActions.HasValue())
+            if (worldEntity.WorldEntityPrototype is AgentPrototype)
             {
-                if (worldEntity.WorldEntityPrototype is AgentPrototype)
-                    worldEntity.AppendSelectorActions(EntitySelectorProto.EntitySelectorActions);
+                bool startAction = false;
+                if (EntitySelectorProto != null && EntitySelectorProto.EntitySelectorActions.HasValue())
+                    startAction = worldEntity.AppendSelectorActions(EntitySelectorProto.EntitySelectorActions);
+                if (Parent.MissionRef != PrototypeId.Invalid && startAction == false) 
+                    worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
             if (DebugLog) Logger.Debug($"Spawn [{worldEntity.Id}] {worldEntity.PrototypeName} {pos} [{oldZ}=>{pos.Z}] [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
