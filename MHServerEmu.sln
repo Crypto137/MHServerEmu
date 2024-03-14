@@ -15,9 +15,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Frontend", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Games", "src\MHServerEmu.Games\MHServerEmu.Games.csproj", "{A4C4E89A-D54B-4C48-B200-23B88589A140}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.PlayerManagement", "src\MHServerEmu.PlayerManagement\MHServerEmu.PlayerManagement.csproj", "{33518D5D-07A0-4D08-9013-6CF873CC925B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.PlayerManagement", "src\MHServerEmu.PlayerManagement\MHServerEmu.PlayerManagement.csproj", "{33518D5D-07A0-4D08-9013-6CF873CC925B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Auth", "src\MHServerEmu.Auth\MHServerEmu.Auth.csproj", "{4302339A-9C4B-47A9-8C26-F0DC66EA08F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Auth", "src\MHServerEmu.Auth\MHServerEmu.Auth.csproj", "{4302339A-9C4B-47A9-8C26-F0DC66EA08F7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Billing", "src\MHServerEmu.Billing\MHServerEmu.Billing.csproj", "{BDAA0D9D-1DDE-4F9A-84ED-FA551A4D4419}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Leaderboards", "src\MHServerEmu.Leaderboards\MHServerEmu.Leaderboards.csproj", "{2C74480B-B373-4DFD-9C9C-E652E889E9C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Grouping", "src\MHServerEmu.Grouping\MHServerEmu.Grouping.csproj", "{75020CEA-FA28-4D62-A39B-F6A0E06CA640}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +63,18 @@ Global
 		{4302339A-9C4B-47A9-8C26-F0DC66EA08F7}.Debug|x64.Build.0 = Debug|x64
 		{4302339A-9C4B-47A9-8C26-F0DC66EA08F7}.Release|x64.ActiveCfg = Release|x64
 		{4302339A-9C4B-47A9-8C26-F0DC66EA08F7}.Release|x64.Build.0 = Release|x64
+		{BDAA0D9D-1DDE-4F9A-84ED-FA551A4D4419}.Debug|x64.ActiveCfg = Debug|x64
+		{BDAA0D9D-1DDE-4F9A-84ED-FA551A4D4419}.Debug|x64.Build.0 = Debug|x64
+		{BDAA0D9D-1DDE-4F9A-84ED-FA551A4D4419}.Release|x64.ActiveCfg = Release|x64
+		{BDAA0D9D-1DDE-4F9A-84ED-FA551A4D4419}.Release|x64.Build.0 = Release|x64
+		{2C74480B-B373-4DFD-9C9C-E652E889E9C1}.Debug|x64.ActiveCfg = Debug|x64
+		{2C74480B-B373-4DFD-9C9C-E652E889E9C1}.Debug|x64.Build.0 = Debug|x64
+		{2C74480B-B373-4DFD-9C9C-E652E889E9C1}.Release|x64.ActiveCfg = Release|x64
+		{2C74480B-B373-4DFD-9C9C-E652E889E9C1}.Release|x64.Build.0 = Release|x64
+		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Debug|x64.ActiveCfg = Debug|x64
+		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Debug|x64.Build.0 = Debug|x64
+		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Release|x64.ActiveCfg = Release|x64
+		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
