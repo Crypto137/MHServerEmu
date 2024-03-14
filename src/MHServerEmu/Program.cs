@@ -66,7 +66,7 @@ namespace MHServerEmu
             serverManager.RegisterGameService(new FrontendServer(), ServerType.FrontendServer);
             serverManager.RegisterGameService(new AuthServer(), ServerType.AuthServer);
             serverManager.RegisterGameService(new PlayerManagerService(), ServerType.PlayerManager);
-            serverManager.RegisterGameService(new GroupingManagerService(), ServerType.GroupingManager);
+            serverManager.RegisterGameService(new GroupingManagerService(new CommandParser()), ServerType.GroupingManager);
             serverManager.RegisterGameService(new BillingService(), ServerType.Billing);
             serverManager.RegisterGameService(new LeaderboardService(), ServerType.Leaderboard);
 

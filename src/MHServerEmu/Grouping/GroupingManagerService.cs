@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Commands;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
@@ -18,7 +17,12 @@ namespace MHServerEmu.Grouping
         private readonly object _playerLock = new();
         private readonly Dictionary<string, FrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
-        public GroupingManagerService() { }
+        private ICommandParser _commandParser;
+
+        public GroupingManagerService(ICommandParser commandParser = null)
+        {
+            _commandParser = commandParser;
+        }
 
         #region IGameService Implementation
 
@@ -127,7 +131,8 @@ namespace MHServerEmu.Grouping
         private void OnChat(FrontendClient client, NetMessageChat chat)
         {
             // Try to parse the message as a command first
-            if (CommandManager.TryParse(chat.TheMessage.Body, client)) return;
+            if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
+                return;
 
             // Limit broadcast and metagame channels to users with moderator privileges and higher
             if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
