@@ -507,7 +507,7 @@ namespace GameDatabaseBrowser
         {
             if (!CacheDictionary.ContainsKey(key))
                 CacheDictionary[key] = new List<PrototypeId> { value };
-            else
+            else if (CacheDictionary[key].Contains(value) == false)
                 CacheDictionary[key].Add(value);
         }
 
@@ -542,6 +542,8 @@ namespace GameDatabaseBrowser
                     {
                         if (subPropertyInfo is Array)
                         {
+                            RegisterPrototypeIdIfNeeded(subPropInfo, parent);
+
                             if (IsTypeBrowsable(subPropInfo.GetType()) == false)
                                 continue;
 
@@ -619,7 +621,7 @@ namespace GameDatabaseBrowser
 
                 if (propValue is PropertyCollection)
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name }, IsExpanded = needExpand });
-                else if(propInfo.Name != "ParentDataRef")
+                else if (propInfo.Name != "ParentDataRef")
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propValue?.ToString(), TypeName = propInfo.PropertyType.Name }, IsExpanded = needExpand });
 
                 if (IsTypeBrowsable(propInfo.PropertyType) == false)
