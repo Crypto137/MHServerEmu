@@ -143,7 +143,7 @@ namespace MHServerEmu.Billing
 
             // Update player and avatar properties
             avatar.Properties[PropertyEnum.CostumeCurrent] = costumePrototype.DataRef;
-            player.Properties[PropertyEnum.AvatarLibraryCostume, avatar.BaseData.PrototypeId] = costumePrototype.DataRef;
+            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = costumePrototype.DataRef;
 
             // Send client property updates (TODO: Remove this when we have those generated automatically)
             // Avatar entity

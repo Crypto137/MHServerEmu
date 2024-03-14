@@ -273,7 +273,7 @@ namespace MHServerEmu.Commands
 
                     // Update player and avatar properties
                     avatar.Properties[PropertyEnum.CostumeCurrent] = prototypeId;
-                    player.Properties[PropertyEnum.AvatarLibraryCostume, avatar.BaseData.PrototypeId] = prototypeId;
+                    player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = prototypeId;
 
                     // Send client property updates (TODO: Remove this when we have those generated automatically)
                     // Avatar entity
