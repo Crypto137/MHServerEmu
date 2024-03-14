@@ -12,23 +12,17 @@
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Gazillion\Gazillion.csproj" />
+    <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
+    <ProjectReference Include="..\MHServerEmu.DatabaseAccess\MHServerEmu.DatabaseAccess.csproj" />
+    <ProjectReference Include="..\MHServerEmu.Frontend\MHServerEmu.Frontend.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Free.Ports.zLib">
-      <HintPath>..\..\dep\Free.Ports.zLib\Free.Ports.zLib.dll</HintPath>
-    </Reference>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
-    </Reference>
-    <Reference Include="INIFileParser">
-      <HintPath>..\..\dep\ini-parser\INIFileParser.dll</HintPath>
-    </Reference>
-    <Reference Include="K4os.Compression.LZ4">
-      <HintPath>..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-﻿using MHServerEmu.PlayerManagement.Accounts;
+﻿using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.Commands
 {

@@ -1,12 +1,12 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Commands
 {
@@ -167,7 +167,9 @@ namespace MHServerEmu.Commands
             if (ulong.TryParse(@params[1], out ulong entityId2) == false)
                 return $"Failed to parse EntityId2 {@params[1]}";
 
-            var manager = client.CurrentGame.EntityManager;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var manager = game.EntityManager;
 
             var entity = manager.GetEntityById(entityId1);
             if (entity is not WorldEntity entity1) return $"No entity found for {entityId1}";
@@ -198,7 +200,7 @@ namespace MHServerEmu.Commands
             foreach (var worldEntity in playerConnection.AOI.Region.IterateEntitiesInVolume(near, new()))
             {
                 string name = worldEntity.PrototypeName;
-                ulong entityId = worldEntity.BaseData.EntityId;
+                ulong entityId = worldEntity.Id;
                 string status = string.Empty;
                 if (playerConnection.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
@@ -252,7 +254,9 @@ namespace MHServerEmu.Commands
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";
 
-            var entity = client.CurrentGame.EntityManager.GetEntityById(entityId);
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var entity = game.EntityManager.GetEntityById(entityId);
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
