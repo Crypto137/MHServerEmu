@@ -210,6 +210,13 @@ namespace MHServerEmu.Games.Regions
 
             Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
+            if (regionProto.MetaGames.HasValue())
+                foreach (var metaGameRef in regionProto.MetaGames)
+                {
+                    MetaGame metagame = Game.EntityManager.CreateMetaGame(metaGameRef, Id);
+                    RegisterMetaGame(metagame);
+                }
+
             if (settings.GenerateAreas)
             {
                 if (GenerateAreas(settings.GenerateLog) == false)
@@ -265,13 +272,6 @@ namespace MHServerEmu.Games.Regions
                 SetProperty(regionProto.UITopPanel, PropertyEnum.RegionUITopPanel);
 
             */
-
-            if (regionProto.MetaGames.HasValue())
-                foreach (var metaGameRef in regionProto.MetaGames)
-                {
-                    MetaGame metagame = Game.EntityManager.CreateMetaGame(metaGameRef, Id);
-                    RegisterMetaGame(metagame);
-                }
 
             Bound ??= new Aabb(Vector3.Zero, Vector3.Zero);
 
@@ -395,6 +395,11 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateMissionPopulation()
         {
+            foreach(var metaGameId in MetaGames)
+            {
+                MetaGame metaGame = Game.EntityManager.GetEntityById(metaGameId) as MetaGame;                
+                metaGame?.RegistyStates();
+            }
             return MissionManager.GenerateMissionPopulation();            
         }
 

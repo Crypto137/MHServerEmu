@@ -169,48 +169,7 @@ namespace MHServerEmu.Games.Missions
                 if (IsMissionValidAndApprovedForUse(missionProto))
                     region.PopulationManager.MissionRegisty(missionProto);
             }
-            GenerateMetaStateEventPopulation(region);
             return true;
-        }
-
-        public void GenerateMetaStateEventPopulation(Region region)
-        {
-            switch (region.PrototypeId)
-            {
-                case RegionPrototypeId.XManhattanRegion1to60:
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)8946389918898723304); // MidtownAmbientPopBosses
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)5107382321921399473); // MidtownAmbientPopAmbushes
-                    break;
-                case RegionPrototypeId.BrooklynPatrolRegionL60:
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)11870459760078756548); // BrooklynAmbientPopBosses
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)316413750990215776); // BrooklynAmbientPopThugs
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)4545654561571084955); // BrooklynAmbientPopMaggia
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)11191884818942400876); // BrooklynAmbientPopAIM
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)11655213795663748353); // BrooklynEventPopSpiderSlayers
-                    break;
-                case RegionPrototypeId.UpperMadripoorRegionL60:
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)16757098736138199512); // HightownAmbientPopBosses
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)2269222182043394276); // HightownAmbientPopHand
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)4726972578787632010); // HightownAmbientPopSerpentMen
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)5934622865620214361); // HightownAmbientPopSkrulls
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)15136910194948515121); // HightownAmbientPopCiviliansSewer
-                    break;
-                case RegionPrototypeId.UltronRaidRegionGreen:
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)15881336676894973567); // AgeOfUltronPopAmbushesPhase01
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)5010168349229850240); // AgeOfUltronPopAmbushesPhase02
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)13759807533451057904); // AgeOfUltronPopCivilianPhase01
-                    break;
-                case RegionPrototypeId.TRGameCenterRegion:
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)13389489009387512032); // GameCenterAmbient
-                    region.PopulationManager.MetaStateRegisty((PrototypeId)521454333584547958); // GameCenterCombat
-                    break;
-                /*
-                case RegionPrototypeId.AxisRaidRegionGreen:
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)8015461106198257328); // AxisRaidActP1HighwaySentinels
-                    region.SpawnPopulation.MetaStateRegisty((PrototypeId)14973973650169667650); // AxisRaidActP3PlazaDefeatOnslaught
-                case RegionPrototypeId.LimboRegionL60:
-                    region.SpawnPopulation.MetagameRegisty((PrototypeId)369219822706562083); // LimboPopMaintained*/
-            }
         }
 
         /// <summary>
@@ -293,26 +252,14 @@ namespace MHServerEmu.Games.Missions
             MissionPrototypeId.LavaBugOverCiv2,
             MissionPrototypeId.LavaBugOverCiv3,
             MissionPrototypeId.MoloidAttackAftermath,
-
-            MissionPrototypeId.OMMutantsUnderFire,
-            MissionPrototypeId.OMSentinelAttack,
-            MissionPrototypeId.OMNgaraiInvasion,
+/*
             MissionPrototypeId.MutantsRunningGroup1,
             MissionPrototypeId.MutantsRunningGroup2,
             MissionPrototypeId.MutantRunningSoloF5,
 
-            MissionPrototypeId.OMRaptorVillageSurvival,
+*/          
             MissionPrototypeId.SunTribeKingLizard,
             MissionPrototypeId.SunTribeLeadingRaptors,
-            MissionPrototypeId.OMBroodSensors,
-
-            MissionPrototypeId.OMCommArray,
-            MissionPrototypeId.OMSHIELDBeachhead,
-
-            MissionPrototypeId.OMStoneCircle,
-            MissionPrototypeId.OMForgottenPyre,
-            MissionPrototypeId.OMAshesToAshes,
-            MissionPrototypeId.OMNorwaySHIELDAssist,
 
             MissionPrototypeId.NorwayFrostGolemsFaeAmbushV1,
             MissionPrototypeId.NorwayFrostGolemsFaeAmbushV2,
@@ -341,19 +288,6 @@ namespace MHServerEmu.Games.Missions
             MissionPrototypeId.NorwayFrostGolemsRangedAmbushV7,
             MissionPrototypeId.NorwayFrostGolemsRangedAmbushV8,
             MissionPrototypeId.NorwayFrostGolemsRangedAmbushV9,
-
-            MissionPrototypeId.CH9HYDRALargeV1,
-            MissionPrototypeId.CH9HYDRALargeV2,
-            MissionPrototypeId.CH9HYDRALargeV3,
-            MissionPrototypeId.CH9HYDRAMediumV1,
-            MissionPrototypeId.CH9HYDRAMediumV2,
-            MissionPrototypeId.CH9HYDRAMediumV3,
-            MissionPrototypeId.CH9HYDRAMediumV4,
-            MissionPrototypeId.CH9HYDRAMediumV5,
-            MissionPrototypeId.CH9HYDRAMediumV6,
-
-            MissionPrototypeId.OMSiegeDropshipAssault,
-            MissionPrototypeId.OMSiegeRescue,
 
             MissionPrototypeId.PoliceVsShark,
             MissionPrototypeId.CivTrappedUnderRhino,
