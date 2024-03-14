@@ -1,9 +1,6 @@
 ﻿using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
@@ -25,9 +22,9 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public bool IsPasswordExpired { get; set; }
 
         public DBPlayer Player { get; set; }
-        public Dictionary<PrototypeId, DBAvatar> Avatars { get; private set; } = new();
+        public Dictionary<long, DBAvatar> Avatars { get; private set; } = new();
 
-        public DBAvatar CurrentAvatar { get => GetAvatar((PrototypeId)Player.Avatar); }
+        public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
 
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
@@ -44,7 +41,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
         }
 
-        public DBAccount(string playerName, PrototypeId region, PrototypeId waypoint, AvatarPrototypeId avatar, int volume)
+        public DBAccount(string playerName, long region, long waypoint, long avatar, int volume)
         {
             // Default account for using with BypassAuth
             Id = 0;
@@ -54,22 +51,22 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
             InitializeData();
 
-            Player.Region = region;
-            Player.Waypoint = waypoint;
-            Player.Avatar = (PrototypeId)avatar;
+            Player.RawRegion = region;
+            Player.RawWaypoint = waypoint;
+            Player.RawAvatar = avatar;
             Player.AOIVolume = volume;
         }
 
         public DBAccount() { }
 
         /// <summary>
-        /// Retrieves the <see cref="DBAvatar"/> for the specified <see cref="PrototypeId"/>.
+        /// Retrieves the <see cref="DBAvatar"/> for the specified prototype id.
         /// </summary>
-        public DBAvatar GetAvatar(PrototypeId prototypeId)
+        public DBAvatar GetAvatar(long prototypeId)
         {
             if (Avatars.TryGetValue(prototypeId, out DBAvatar avatar) == false)
             {
-                avatar = new(Id, (AvatarPrototypeId)prototypeId);
+                avatar = new(Id, prototypeId);
                 Avatars.Add(prototypeId, avatar);
             }
 
@@ -90,8 +87,6 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         private void InitializeData()
         {
             Player = new(Id);
-            foreach (AvatarPrototypeId avatarPrototypeId in Enum.GetValues<AvatarPrototypeId>())
-                GetAvatar((PrototypeId)avatarPrototypeId);
         }
     }
 }

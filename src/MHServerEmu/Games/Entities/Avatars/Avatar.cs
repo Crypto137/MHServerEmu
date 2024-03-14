@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public void InitializeFromDBAccount(PrototypeId prototypeId, DBAccount account)
         {
-            DBAvatar dbAvatar = account.GetAvatar(prototypeId);
+            DBAvatar dbAvatar = account.GetAvatar((long)prototypeId);
             AvatarPrototype prototype = GameDatabase.GetPrototype<AvatarPrototype>(prototypeId);
 
             // Base Data
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
-            Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)dbAvatar.Costume;
+            Properties[PropertyEnum.CostumeCurrent] = dbAvatar.RawCostume;
             Properties[PropertyEnum.CharacterLevel] = 60;
             Properties[PropertyEnum.CombatLevel] = 60;
             Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
@@ -209,14 +209,22 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (++synergyCount >= 10) break;
             }
 
-            // Initialize AbilityKeyMapping if needed
-            if (dbAvatar.AbilityKeyMapping == null)
+            // Initialize AbilityKeyMapping
+            AbilityKeyMapping abilityKeyMapping;
+            if (dbAvatar.RawAbilityKeyMapping != null)
             {
-                dbAvatar.AbilityKeyMapping = new(0);
-                dbAvatar.AbilityKeyMapping.SlotDefaultAbilities(this);
+                // Deserialize existing saved mapping if there is one
+                CodedInputStream cis = CodedInputStream.CreateInstance(dbAvatar.RawAbilityKeyMapping);
+                abilityKeyMapping = new(cis, new());
+            }
+            else
+            {
+                // Initialize a new mapping
+                abilityKeyMapping = new(0);
+                abilityKeyMapping.SlotDefaultAbilities(this);
             }
 
-            AbilityKeyMappings = new AbilityKeyMapping[] { dbAvatar.AbilityKeyMapping };
+            AbilityKeyMappings = new AbilityKeyMapping[] { abilityKeyMapping };
         }
 
         protected override void BuildString(StringBuilder sb)

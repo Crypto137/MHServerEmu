@@ -1,8 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Serialization;
-using MHServerEmu.Games.Entities.Avatars;
-
-namespace MHServerEmu.PlayerManagement.Accounts.DBModels
+﻿namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
     /// <summary>
     /// Represents an avatar entity stored in the account database.
@@ -15,50 +11,21 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         // "raw" long properties for each ulong property that actually get saved to and loaded
         // from the SQLite database.
 
-        // This isn't required for AccountId, because the first byte in our id is type, and it
-        // never goes over 127 to make the account id value larger than 2^63.
+        // This isn't required for AccountId, because the first 4 bits in our id are allocated
+        // to its type, and for account ids it is never more or equal to 1 << 3 = 8;
 
         public ulong AccountId { get; set; }
 
-        public AvatarPrototypeId Prototype { get; set; }
-        public long RawPrototype { get => (long)Prototype; private set => Prototype = (AvatarPrototypeId)value; }
-
-        public ulong Costume { get; set; } = 0;
-        public long RawCostume { get => (long)Costume; private set => Costume = (ulong)value; }
-
-        public AbilityKeyMapping AbilityKeyMapping { get => DecodeAbilityKeyMapping(RawAbilityKeyMapping); set => RawAbilityKeyMapping = EncodeAbilityKeyMapping(value); }
+        public long RawPrototype { get; set; }
+        public long RawCostume { get; set; }
         public byte[] RawAbilityKeyMapping { get; set; }
-
-        public DBAvatar(ulong accountId, AvatarPrototypeId prototype)
-        {
-            AccountId = accountId;
-            Prototype = prototype;
-        }
 
         public DBAvatar() { }
 
-        private byte[] EncodeAbilityKeyMapping(AbilityKeyMapping abilityKeyMapping)
+        public DBAvatar(ulong accountId, long prototypeId)
         {
-            if (abilityKeyMapping == null) return null;
-
-            BoolEncoder boolEncoder = new();
-            boolEncoder.EncodeBool(abilityKeyMapping.ShouldPersist);
-            boolEncoder.Cook();
-
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                abilityKeyMapping.Encode(cos, boolEncoder);
-                cos.Flush();
-                return ms.ToArray();
-            }
-        }
-
-        private AbilityKeyMapping DecodeAbilityKeyMapping(byte[] data)
-        {
-            if (data == null) return null;
-            CodedInputStream cis = CodedInputStream.CreateInstance(data);
-            return new(cis, new());
+            AccountId = accountId;
+            RawPrototype = prototypeId;
         }
     }
 }

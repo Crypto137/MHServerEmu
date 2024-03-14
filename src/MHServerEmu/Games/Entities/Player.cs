@@ -257,14 +257,14 @@ namespace MHServerEmu.Games.Entities
             // Adjust properties
             foreach (var accountAvatar in account.Avatars.Values)
             {
-                var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
+                var avatarPrototypeRef = (PrototypeId)accountAvatar.RawPrototype;
 
                 // Set library costumes according to account data
-                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarPrototype] = (PrototypeId)accountAvatar.Costume;
+                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarPrototypeRef] = (PrototypeId)accountAvatar.RawCostume;
 
                 // Set avatar levels to 60
                 // Note: setting this to above level 60 sets the prestige level as well
-                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototype] = 60;
+                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototypeRef] = 60;
             }
 
             foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
@@ -302,7 +302,7 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
-            MissionManager.PrototypeId = (PrototypeId)account.CurrentAvatar.Prototype;
+            MissionManager.PrototypeId = (PrototypeId)account.CurrentAvatar.RawPrototype;
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
                 PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
             {
@@ -400,12 +400,26 @@ namespace MHServerEmu.Games.Entities
 
         public void SaveToDBAccount(DBAccount account)
         {
-            account.Player.Avatar = CurrentAvatar.EntityPrototype.DataRef;
+            account.Player.RawAvatar = (long)CurrentAvatar.EntityPrototype.DataRef;
             foreach (Avatar avatar in AvatarList)
             {
-                DBAvatar dbAvatar = account.GetAvatar(avatar.BaseData.PrototypeId);
-                dbAvatar.Costume = avatar.Properties[PropertyEnum.CostumeCurrent];
-                dbAvatar.AbilityKeyMapping = avatar.AbilityKeyMappings[0];
+                DBAvatar dbAvatar = account.GetAvatar((long)avatar.BaseData.PrototypeId);
+                dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
+
+                // Encode key mapping
+                var abilityKeyMapping = avatar.AbilityKeyMappings[0];
+
+                BoolEncoder boolEncoder = new();
+                boolEncoder.EncodeBool(abilityKeyMapping.ShouldPersist);
+                boolEncoder.Cook();
+
+                using (MemoryStream ms = new())
+                {
+                    CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+                    abilityKeyMapping.Encode(cos, boolEncoder);
+                    cos.Flush();
+                    dbAvatar.RawAbilityKeyMapping = ms.ToArray();
+                }
             }
         }
 

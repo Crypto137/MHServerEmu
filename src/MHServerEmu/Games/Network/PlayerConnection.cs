@@ -12,7 +12,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
@@ -69,8 +68,8 @@ namespace MHServerEmu.Games.Network
             _powerMessageHandler = new(Game);
 
             // Initialize from DBAccount
-            RegionDataRef = _dbAccount.Player.Region;
-            WaypointDataRef = _dbAccount.Player.Waypoint;
+            RegionDataRef = (PrototypeId)_dbAccount.Player.RawRegion;
+            WaypointDataRef = (PrototypeId)_dbAccount.Player.RawWaypoint;
             AOI = new(this, _dbAccount.Player.AOIVolume);
 
             // Create player and avatar entities
@@ -93,7 +92,7 @@ namespace MHServerEmu.Games.Network
                 Player.AvatarList.Add(avatar);
             }
 
-            Player.SetAvatar((PrototypeId)_dbAccount.CurrentAvatar.Prototype);
+            Player.SetAvatar((PrototypeId)_dbAccount.CurrentAvatar.RawPrototype);
         }
 
         #region Data Management
@@ -103,8 +102,8 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            _dbAccount.Player.Region = RegionDataRef;
-            _dbAccount.Player.Waypoint = WaypointDataRef;
+            _dbAccount.Player.RawRegion = (long)RegionDataRef;
+            _dbAccount.Player.RawWaypoint = (long)WaypointDataRef;
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
             Player.SaveToDBAccount(_dbAccount);

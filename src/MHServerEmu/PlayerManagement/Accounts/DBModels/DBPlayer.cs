@@ -1,8 +1,4 @@
-﻿using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
-
-namespace MHServerEmu.PlayerManagement.Accounts.DBModels
+﻿namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
     /// <summary>
     /// Represents a player entity stored in the account database.
@@ -15,27 +11,22 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         // "raw" long properties for each ulong property that actually get saved to and loaded
         // from the SQLite database.
 
-        // This isn't required for AccountId, because the first byte in our id is type, and it
-        // never goes over 127 to make the account id value larger than 2^63.
+        // This isn't required for AccountId, because the first 4 bits in our id are allocated
+        // to its type, and for account ids it is never more or equal to 1 << 3 = 8;
 
         public ulong AccountId { get; set; }
 
-        public PrototypeId Region { get => (PrototypeId)RawRegion; set => RawRegion = (long)value; }
         public long RawRegion { get; set; }
-
-        public PrototypeId Avatar { get => (PrototypeId)RawAvatar; set => RawAvatar = (long)value; }
         public long RawAvatar { get; set; }
-        public PrototypeId Waypoint { get => (PrototypeId)RawWaypoint; set => RawWaypoint = (long)value; }
         public long RawWaypoint { get; set; }
-        
         public int AOIVolume { get; set; }
 
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
-            Region = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
-            Avatar = (PrototypeId)AvatarPrototypeId.CaptainAmerica;
-            Waypoint = (PrototypeId)10137590415717831231; // Waypoints/HUBS/NPEAvengersTowerHub
+            RawRegion = unchecked((long)9142075282174842340);       // Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype
+            RawAvatar = unchecked((long)10617813376954079152);      // Entity/Characters/Avatars/Shipping/CaptainAmerica.prototype
+            RawWaypoint = unchecked((long)10137590415717831231);    // Waypoints/HUBS/NPEAvengersTowerHub
             AOIVolume = 3200;
         }
 
