@@ -507,7 +507,7 @@ namespace GameDatabaseBrowser
         {
             if (!CacheDictionary.ContainsKey(key))
                 CacheDictionary[key] = new List<PrototypeId> { value };
-            else
+            else if (CacheDictionary[key].Contains(value) == false)
                 CacheDictionary[key].Add(value);
         }
 
