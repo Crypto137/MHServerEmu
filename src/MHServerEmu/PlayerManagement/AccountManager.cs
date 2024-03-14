@@ -1,6 +1,5 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
-using MHServerEmu.Auth;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -10,7 +9,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 
-namespace MHServerEmu.PlayerManagement.Accounts
+namespace MHServerEmu.PlayerManagement
 {
     public static class AccountManager
     {

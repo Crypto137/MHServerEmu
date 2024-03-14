@@ -13,7 +13,6 @@ using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu
 {

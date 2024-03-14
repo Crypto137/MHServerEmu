@@ -1,11 +1,10 @@
 ﻿using System.Text;
 using Gazillion;
-using MHServerEmu.Auth;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Commands;
 using MHServerEmu.Frontend;
+using MHServerEmu.PlayerManagement;
 
-namespace MHServerEmu.PlayerManagement.Accounts
+namespace MHServerEmu.Commands
 {
     [CommandGroup("account", "Allows you to manage accounts.", AccountUserLevel.User)]
     public class AccountCommands : CommandGroup

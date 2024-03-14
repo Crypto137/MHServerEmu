@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using MHServerEmu.Auth;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -7,7 +6,6 @@ using MHServerEmu.Core.System;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.PlayerManagement
 {
