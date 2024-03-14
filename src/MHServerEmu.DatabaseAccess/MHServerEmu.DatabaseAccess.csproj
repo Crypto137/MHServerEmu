@@ -7,6 +7,12 @@
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+  </PropertyGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
   </ItemGroup>
