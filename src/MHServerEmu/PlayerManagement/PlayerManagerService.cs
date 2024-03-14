@@ -13,7 +13,7 @@ using MHServerEmu.Games.Achievements;
 
 namespace MHServerEmu.PlayerManagement
 {
-    public class PlayerManagerService : IGameService
+    public class PlayerManagerService : IGameService, IFrontendService
     {
         private const ushort MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
 
@@ -160,21 +160,19 @@ namespace MHServerEmu.PlayerManagement
 
         #endregion
 
-        #region Client Management
+        #region IFrontendService Implementation
 
-        public void AcceptClientHandshake(FrontendClient client)
+        public void ReceiveFrontendMessage(FrontendClient client, IMessage message)
         {
-            client.FinishedPlayerManagerHandshake = true;
-
-            // Queue loading
-            client.SendMessage(MuxChannel, NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build());
-
-            // Send achievement database
-            client.SendMessage(MuxChannel, AchievementDatabase.Instance.GetDump());
-            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+            switch (message)
+            {
+                case InitialClientHandshake handshake: OnInitialClientHandshake(client, handshake); break;
+                case ClientCredentials credentials: OnClientCredentials(client, credentials); break;
+                default: Logger.Warn($"ReceiveFrontendMessage(): Unhandled message {message.DescriptorForType.Name}"); break;
+            }
         }
 
-        public bool AddPlayer(FrontendClient client)
+        public bool AddFrontendClient(FrontendClient client)
         {
             lock (_playerLock)
             {
@@ -182,27 +180,22 @@ namespace MHServerEmu.PlayerManagement
                 foreach (FrontendClient player in _playerList)
                 {
                     if (player.Session.Account.Id == client.Session.Account.Id)
-                    {
-                        Logger.Warn("Failed to add player: already added");
-                        return false;
-                    }
+                        return Logger.WarnReturn(false, "Failed to add player: already added");
                 }
 
                 _playerList.Add(client);
                 _gameManager.GetAvailableGame().AddPlayer(client);
-                return true;
             }
+
+            return true;
         }
 
-        public void RemovePlayer(FrontendClient client)
+        public bool RemoveFrontendClient(FrontendClient client)
         {
             lock (_playerLock)
             {
                 if (_playerList.Contains(client) == false)
-                {
-                    Logger.Warn("Failed to remove player: not found");
-                    return;
-                }
+                    return Logger.WarnReturn(false, "Failed to remove player: not found");
 
                 Game game = GetGameByPlayer(client);
                 game.RemovePlayer(client);
@@ -212,7 +205,12 @@ namespace MHServerEmu.PlayerManagement
             }
 
             if (ConfigManager.PlayerManager.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
+            return true;
         }
+
+        #endregion
+
+        #region Player Management
 
         public void BroadcastMessage(GameMessage message)
         {
@@ -236,7 +234,19 @@ namespace MHServerEmu.PlayerManagement
             return _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out session);
         }
 
-        public void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
+        private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
+        {
+            client.FinishedPlayerManagerHandshake = true;
+
+            // Queue loading
+            client.SendMessage(MuxChannel, NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build());
+
+            // Send achievement database
+            client.SendMessage(MuxChannel, AchievementDatabase.Instance.GetDump());
+            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+        }
+
+        private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
             Logger.Info($"Received ClientCredentials");
 

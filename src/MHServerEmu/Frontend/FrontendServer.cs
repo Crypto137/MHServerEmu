@@ -3,8 +3,6 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Grouping;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
 {
@@ -37,7 +35,7 @@ namespace MHServerEmu.Frontend
                     break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(FrontendProtocolMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"Handle(): Unhandled message [{message.Id}] {(FrontendProtocolMessage)message.Id}");
                     break;
             }
         }
@@ -72,11 +70,11 @@ namespace MHServerEmu.Frontend
             }
             else
             {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                playerManager?.RemovePlayer(client);
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
+                playerManager?.RemoveFrontendClient(client);
 
-                var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
-                groupingManager?.RemovePlayer(client);
+                var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
+                groupingManager?.RemoveFrontendClient(client);
 
                 Logger.Info($"Client {client.Session.Account} disconnected");
             }
@@ -93,26 +91,26 @@ namespace MHServerEmu.Frontend
 
         private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
             if (playerManager == null)
             {
                 Logger.Error($"OnClientCredentials(): Failed to connect to the player manager");
                 return;
             }
 
-            playerManager.OnClientCredentials(client, credentials);
+            playerManager.ReceiveFrontendMessage(client, credentials);
         }
 
         private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
             if (playerManager == null)
             {
                 Logger.Error($"OnClientCredentials(): Failed to connect to the player manager");
                 return;
             }
 
-            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
+            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
             if (groupingManager == null)
             {
                 Logger.Error($"OnClientCredentials(): Failed to connect to the grouping manager");
@@ -122,9 +120,9 @@ namespace MHServerEmu.Frontend
             Logger.Info($"Received InitialClientHandshake for {handshake.ServerType}");
 
             if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-                playerManager.AcceptClientHandshake(client);
+                playerManager.ReceiveFrontendMessage(client, handshake);
             else if (handshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-                groupingManager.AcceptClientHandshake(client);
+                groupingManager.ReceiveFrontendMessage(client, handshake);
 
             // Add the player to a game when both handshakes are finished
             // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
@@ -132,8 +130,8 @@ namespace MHServerEmu.Frontend
             {
                 // Disconnect the client if the account is already logged in
                 // TODO: disconnect the logged in player instead?
-                if (groupingManager.AddPlayer(client) == false) client.Connection.Disconnect();
-                if (playerManager.AddPlayer(client) == false) client.Connection.Disconnect();
+                if (groupingManager.AddFrontendClient(client) == false) client.Connection.Disconnect();
+                if (playerManager.AddFrontendClient(client) == false) client.Connection.Disconnect();
             }
         }
 

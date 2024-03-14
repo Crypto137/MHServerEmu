@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Frontend;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -12,10 +13,11 @@ namespace MHServerEmu.PlayerManagement
         Steam
     }
 
-    public class ClientSession
+    public class ClientSession : IFrontendSession
     {
         public ulong Id { get; set; }
         public DBAccount Account { get; }
+
         public ClientDownloader Downloader { get; private set; }
         public string Locale { get; private set; }
 

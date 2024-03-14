@@ -167,7 +167,9 @@ namespace MHServerEmu.Commands
             if (ulong.TryParse(@params[1], out ulong entityId2) == false)
                 return $"Failed to parse EntityId2 {@params[1]}";
 
-            var manager = client.CurrentGame.EntityManager;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var manager = game.EntityManager;
 
             var entity = manager.GetEntityById(entityId1);
             if (entity is not WorldEntity entity1) return $"No entity found for {entityId1}";
@@ -252,7 +254,9 @@ namespace MHServerEmu.Commands
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";
 
-            var entity = client.CurrentGame.EntityManager.GetEntityById(entityId);
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var entity = game.EntityManager.GetEntityById(entityId);
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");

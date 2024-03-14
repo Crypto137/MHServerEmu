@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Commands;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -8,7 +9,7 @@ using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Grouping
 {
-    public class GroupingManagerService : IGameService
+    public class GroupingManagerService : IGameService, IFrontendService
     {
         private const ushort MuxChannel = 2;    // All messages come from GroupingManager over mux channel 2
 
@@ -70,22 +71,25 @@ namespace MHServerEmu.Grouping
 
         #region Player Management
 
-        public void AcceptClientHandshake(FrontendClient client)
+        public void ReceiveFrontendMessage(FrontendClient client, IMessage message)
         {
-            client.FinishedGroupingManagerHandshake = true;
+            if (message is InitialClientHandshake)
+            {
+                client.FinishedGroupingManagerHandshake = true;
+                return;
+            }
+
+            Logger.Warn($"ReceiveFrontendMessage(): Unhandled message {message.DescriptorForType.Name}");
         }
 
-        public bool AddPlayer(FrontendClient client)
+        public bool AddFrontendClient(FrontendClient client)
         {
             lock (_playerLock)
             {
                 string playerName = client.Session.Account.PlayerName.ToLower();
 
                 if (_playerDict.ContainsKey(playerName))
-                {
-                    Logger.Warn("AddPlayer(): Already added");
-                    return false;
-                }
+                    Logger.WarnReturn(false, "AddPlayer(): Already added");
 
                 _playerDict.Add(playerName, client);
                 client.SendMessage(MuxChannel, ChatHelper.Motd);
@@ -93,17 +97,15 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void RemovePlayer(FrontendClient client)
+        public bool RemoveFrontendClient(FrontendClient client)
         {
             lock (_playerLock)
             {
                 if (_playerDict.ContainsValue(client) == false)
-                {
-                    Logger.Warn("RemovePlayer(): Player not found");
-                    return;
-                }
+                    Logger.WarnReturn(false, "RemovePlayer(): Player not found");
 
                 _playerDict.Remove(client.Session.Account.PlayerName.ToLower());
+                return true;
             }
         }
 

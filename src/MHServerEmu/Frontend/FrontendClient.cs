@@ -2,8 +2,6 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Games;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
 {
@@ -13,20 +11,10 @@ namespace MHServerEmu.Frontend
 
         public TcpClientConnection Connection { get; set; }
 
-        public ClientSession Session { get; private set; } = null;
+        public IFrontendSession Session { get; private set; } = null;
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
-
-        // todo: improve this
-        public Game CurrentGame
-        {
-            get
-            {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                return playerManager?.GetGameByPlayer(this);
-            }
-        }
 
         public FrontendClient(TcpClientConnection connection)
         {
@@ -64,7 +52,7 @@ namespace MHServerEmu.Frontend
             }
         }
 
-        public void AssignSession(ClientSession session)
+        public void AssignSession(IFrontendSession session)
         {
             if (Session == null)
                 Session = session;
