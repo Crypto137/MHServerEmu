@@ -10,7 +10,6 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -18,7 +17,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games
 {

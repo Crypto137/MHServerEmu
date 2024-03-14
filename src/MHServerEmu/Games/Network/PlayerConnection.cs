@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -13,8 +14,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Grouping;
-using MHServerEmu.PlayerManagement.Accounts;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Network
 {

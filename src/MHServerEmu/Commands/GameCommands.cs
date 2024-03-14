@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Entities.Avatars;
@@ -11,7 +12,6 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Commands
 {

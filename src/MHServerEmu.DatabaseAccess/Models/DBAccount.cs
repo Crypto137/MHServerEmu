@@ -2,8 +2,15 @@
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System;
 
-namespace MHServerEmu.PlayerManagement.Accounts.DBModels
+namespace MHServerEmu.DatabaseAccess.Models
 {
+    public enum AccountUserLevel : byte
+    {
+        User,
+        Moderator,
+        Admin
+    }
+
     /// <summary>
     /// Represents an account stored in the account database.
     /// </summary>

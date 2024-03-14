@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Auth;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Commands;
 using MHServerEmu.Frontend;
 

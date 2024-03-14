@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
+using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.PlayerManagement
 {

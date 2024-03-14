@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu", "src\MHServer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gazillion", "src\Gazillion\Gazillion.csproj", "{7D085437-F307-49D6-AF7A-C3B3DF4E4189}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Core", "src\MHServerEmu.Core\MHServerEmu.Core.csproj", "{667BA21C-0E76-450A-9854-93D0C4C3D79E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Core", "src\MHServerEmu.Core\MHServerEmu.Core.csproj", "{667BA21C-0E76-450A-9854-93D0C4C3D79E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.DatabaseAccess", "src\MHServerEmu.DatabaseAccess\MHServerEmu.DatabaseAccess.csproj", "{061FEB4A-A747-4BEF-B6DC-9C72523E2857}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{667BA21C-0E76-450A-9854-93D0C4C3D79E}.Debug|x64.Build.0 = Debug|x64
 		{667BA21C-0E76-450A-9854-93D0C4C3D79E}.Release|x64.ActiveCfg = Release|x64
 		{667BA21C-0E76-450A-9854-93D0C4C3D79E}.Release|x64.Build.0 = Release|x64
+		{061FEB4A-A747-4BEF-B6DC-9C72523E2857}.Debug|x64.ActiveCfg = Debug|x64
+		{061FEB4A-A747-4BEF-B6DC-9C72523E2857}.Debug|x64.Build.0 = Debug|x64
+		{061FEB4A-A747-4BEF-B6DC-9C72523E2857}.Release|x64.ActiveCfg = Release|x64
+		{061FEB4A-A747-4BEF-B6DC-9C72523E2857}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

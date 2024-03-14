@@ -4,10 +4,10 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.PlayerManagement.Accounts;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement
 {

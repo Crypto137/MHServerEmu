@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.PlayerManagement.Accounts.DBModels
+﻿namespace MHServerEmu.DatabaseAccess.Models
 {
     /// <summary>
     /// Represents an avatar entity stored in the account database.

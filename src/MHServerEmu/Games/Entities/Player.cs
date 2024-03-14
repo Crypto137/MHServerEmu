@@ -5,6 +5,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -19,8 +20,6 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
-using MHServerEmu.PlayerManagement.Accounts;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities
 {

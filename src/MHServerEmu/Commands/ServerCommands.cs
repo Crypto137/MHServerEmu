@@ -1,11 +1,11 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Commands
 {

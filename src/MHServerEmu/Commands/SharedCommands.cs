@@ -1,12 +1,12 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Commands
 {

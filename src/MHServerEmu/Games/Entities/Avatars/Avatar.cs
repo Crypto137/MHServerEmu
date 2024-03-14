@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -12,7 +13,6 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social.Guilds;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
