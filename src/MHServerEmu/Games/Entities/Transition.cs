@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Entities
         public void TeleportClient(PlayerConnection connection)
         {
             Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            connection.Game.MovePlayerToRegion(connection, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
+            connection.Game.MovePlayerToRegion(connection, Destinations[0].Region, Destinations[0].Target);
         }
 
         public void TeleportToEntity(PlayerConnection connection, ulong entityId)
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO back to last saved hub
             Logger.Trace($"Destination LastTown");
-            connection.Game.MovePlayerToRegion(connection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
+            connection.Game.MovePlayerToRegion(connection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
         }
     }
 

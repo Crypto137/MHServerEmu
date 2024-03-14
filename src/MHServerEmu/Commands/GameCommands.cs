@@ -5,16 +5,13 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Commands
 {
@@ -29,7 +26,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -46,7 +43,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
 
             return "Travel to Cosmic Doop Sector";
         }
@@ -63,7 +60,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (RegionPrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
 
             return "Travel to Bovineheim";
         }
@@ -80,7 +77,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (RegionPrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
 
             return "Travel to Classified Bovine Sector.";
         }
@@ -201,7 +198,8 @@ namespace MHServerEmu.Commands
                 var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
                 playerConnection.Player.SetAvatar((PrototypeId)avatar);
-                return $"Changing avatar to {avatar}. Relog for changes to take effect.";
+                game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
+                return $"Changing avatar to {avatar}.";
             }
             else
             {
@@ -232,17 +230,20 @@ namespace MHServerEmu.Commands
             }
         }
 
-        [Command("region", "Changes player starting region.\nUsage: player region", AccountUserLevel.User)]
+        [Command("region", "Changes player region.\nUsage: player region", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
-            if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (Enum.TryParse(typeof(RegionPrototypeId), @params[0], true, out object region))
+            if (Enum.TryParse(@params[0], true, out RegionPrototypeId region))
             {
-                client.Session.Account.Player.Region = (RegionPrototypeId)region;
-                return $"Changing starting region to {client.Session.Account.Player.Region}. Relog for changes to take effect.";
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                var game = playerManager.GetGameByPlayer(client);
+                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+                game.MovePlayerToRegion(playerConnection, (PrototypeId)region, 0);
+                return $"Changing region to {region}.";
             }
             else
             {

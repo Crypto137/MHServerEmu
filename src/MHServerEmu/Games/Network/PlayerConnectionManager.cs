@@ -116,5 +116,17 @@ namespace MHServerEmu.Games.Network
                     connection.FlushMessages();
             }
         }
+
+
+        public IEnumerable<PlayerConnection> TempRemoveMeIterateConnections()
+        {
+            // TEMPORARY METHOD FOR REGION CLEANUP, MAY CAUSE DEADLOCKS
+            // TODO: Get players in regions by checking player entities
+            lock (_connectionLock)
+            {
+                foreach (PlayerConnection connection in _connectionDict.Values)
+                    yield return connection;
+            }
+        }
     }
 }

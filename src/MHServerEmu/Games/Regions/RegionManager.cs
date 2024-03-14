@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -9,7 +8,6 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.UI;
 using MHServerEmu.Games.UI.Widgets;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -194,8 +192,8 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes
-        private const int UnVisitedTime = 5; // 5 minutes
+        private const int CleanUpTime = 60 * 1000 * 1; // 5 minutes
+        private const int UnVisitedTime = 1; // 5 minutes
 
         public async Task CleanUpRegionsAsync()
         {            
@@ -216,17 +214,10 @@ namespace MHServerEmu.Games.Regions
             Logger.Debug($"CleanUp");
 
             // Get PlayerRegions
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            if (playerManager == null)
-            {
-                Logger.Error($"CleanUpRegions(): Failed to connect to the player manager");
-                return;
-            }
-
             HashSet<RegionPrototypeId> playerRegions = new();
-            foreach (var player in playerManager.IteratePlayers())
+            foreach (var playerConnection in Game.NetworkManager.TempRemoveMeIterateConnections())
             {
-                var regionRef = player.Session.Account.Player.Region; // TODO use RegionID
+                var regionRef = (RegionPrototypeId)playerConnection.RegionDataRef; // TODO use RegionID
                 playerRegions.Add(regionRef); 
             }
 

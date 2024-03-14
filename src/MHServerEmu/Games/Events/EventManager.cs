@@ -253,7 +253,7 @@ namespace MHServerEmu.Games.Events
                 .SetOrientation(targetRot.ToNetStructPoint3())
                 .SetCellId(cellid)
                 .SetAreaId(areaid)
-                .SetEntityPrototypeId((ulong)playerConnection.Account.Player.Avatar)
+                .SetEntityPrototypeId((ulong)playerConnection.Player.CurrentAvatar.EntityPrototype.DataRef)
                 .Build());
 
             playerConnection.LastPosition = targetPos;
@@ -538,7 +538,7 @@ namespace MHServerEmu.Games.Events
         private void OnGetRegion(PlayerConnection playerConnection, Region region)
         {
             Logger.Trace($"Event GetRegion");
-            var messages = region.GetLoadingMessages(playerConnection.Game.Id, playerConnection.Account.Player.Waypoint, playerConnection);
+            var messages = region.GetLoadingMessages(playerConnection.Game.Id, playerConnection.WaypointDataRef, playerConnection);
             foreach (IMessage message in messages)
                 playerConnection.SendMessage(message);
         }

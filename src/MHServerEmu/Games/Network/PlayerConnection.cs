@@ -32,16 +32,17 @@ namespace MHServerEmu.Games.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly FrontendClient _frontendClient;
+        private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
         private readonly PowerMessageHandler _powerMessageHandler;
 
         public Game Game { get; }
-        public DBAccount Account { get; }
-
-        public Region Region { get => Game.RegionManager.GetRegion(Account.Player.Region); }
 
         // Player State
         public Player Player { get; }
+
+        public PrototypeId RegionDataRef { get; set; }
+        public PrototypeId WaypointDataRef { get; set; }
 
         public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
         public Vector3 LastPosition { get; set; }
@@ -64,15 +65,17 @@ namespace MHServerEmu.Games.Network
         {
             Game = game;
             _frontendClient = frontendClient;
-            Account = _frontendClient.Session.Account;
+            _dbAccount = _frontendClient.Session.Account;
             _powerMessageHandler = new(Game);
 
-            // Set up AOI
-            AOI = new(this, Account.Player.AOIVolume);
+            // Initialize from DBAccount
+            RegionDataRef = _dbAccount.Player.Region;
+            WaypointDataRef = _dbAccount.Player.Waypoint;
+            AOI = new(this, _dbAccount.Player.AOIVolume);
 
             // Create player and avatar entities
             Player = new(new EntityBaseData());
-            Player.InitializeFromDBAccount(Account);
+            Player.InitializeFromDBAccount(_dbAccount);
 
             ulong avatarEntityId = Player.Id + 1;
             ulong avatarRepId = Player.PartyId.ReplicationId + 1;
@@ -86,11 +89,11 @@ namespace MHServerEmu.Games.Network
                 avatarEntityId++;
                 avatarRepId += 2;
 
-                avatar.InitializeFromDBAccount(avatarId, Account);
+                avatar.InitializeFromDBAccount(avatarId, _dbAccount);
                 Player.AvatarList.Add(avatar);
             }
 
-            Player.SetAvatar((PrototypeId)Account.CurrentAvatar.Prototype);
+            Player.SetAvatar((PrototypeId)_dbAccount.CurrentAvatar.Prototype);
         }
 
         #region Data Management
@@ -100,8 +103,11 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            Account.Player.AOIVolume = (int)AOI.AOIVolume;
-            Player.SaveToDBAccount(Account);
+            _dbAccount.Player.Region = RegionDataRef;
+            _dbAccount.Player.Waypoint = WaypointDataRef;
+            _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
+
+            Player.SaveToDBAccount(_dbAccount);
         }
 
         #endregion
@@ -303,11 +309,11 @@ namespace MHServerEmu.Games.Network
 
         private void OnAdminCommand(NetMessageAdminCommand command)
         {
-            if (Account.UserLevel < AccountUserLevel.Admin)
+            if (_dbAccount.UserLevel < AccountUserLevel.Admin)
             {
                 // Naughty hacker here, TODO: handle this properly
                 SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
-                    .SetResponse($"{Account.PlayerName} is not in the sudoers file. This incident will be reported.").Build());
+                    .SetResponse($"{_dbAccount.PlayerName} is not in the sudoers file. This incident will be reported.").Build());
                 return;
             }
 
@@ -362,8 +368,7 @@ namespace MHServerEmu.Games.Network
                         return;
                     }
 
-                    var currentRegion = (PrototypeId)Account.Player.Region;
-                    if (currentRegion != teleport.Destinations[0].Region)
+                    if (RegionDataRef != teleport.Destinations[0].Region)
                     {
                         teleport.TeleportClient(this);
                         return;
@@ -433,7 +438,7 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"Received UseWaypoint message");
             Logger.Trace(useWaypoint.ToString());
 
-            RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
+            PrototypeId destinationRegion = (PrototypeId)useWaypoint.RegionProtoId;
             PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
 
             Game.MovePlayerToRegion(this, destinationRegion, waypointDataRef);
@@ -445,10 +450,9 @@ namespace MHServerEmu.Games.Network
             Logger.Trace(switchAvatar.ToString());
 
             // A hack for changing avatar in-game
-            //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
             Player.SetAvatar((PrototypeId)switchAvatar.AvatarPrototypeId);
-            ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {Account.Player.Avatar}.");
-            Game.MovePlayerToRegion(this, Account.Player.Region, Account.Player.Waypoint);
+            ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {GameDatabase.GetFormattedPrototypeName(Player.CurrentAvatar.EntityPrototype.DataRef)}.");
+            Game.MovePlayerToRegion(this, RegionDataRef, WaypointDataRef);
         }
 
         private void OnAbilitySlotToAbilityBar(NetMessageAbilitySlotToAbilityBar slotToAbilityBar)

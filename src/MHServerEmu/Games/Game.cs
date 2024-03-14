@@ -170,38 +170,38 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(PlayerConnection playerConnetion, RegionPrototypeId region, PrototypeId waypointDataRef)
+        public void MovePlayerToRegion(PlayerConnection playerConnetion, PrototypeId regionDataRef, PrototypeId waypointDataRef)
         {
             lock (_gameLock)
             {
                 foreach (IMessage message in GetExitGameMessages())
                     SendMessage(playerConnetion, message);
 
-                playerConnetion.Account.Player.Region = region;
-                playerConnetion.Account.Player.Waypoint = waypointDataRef;
+                playerConnetion.RegionDataRef = regionDataRef;
+                playerConnetion.WaypointDataRef = waypointDataRef;
 
                 foreach (IMessage message in GetBeginLoadingMessages(playerConnetion))
                     SendMessage(playerConnetion, message);
             }
         }
 
-        public void MovePlayerToEntity(PlayerConnection connection, ulong entityId)
+        public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
         {   
             // TODO change Reload without exit of region
             lock (_gameLock)
             {
-                var entityManager = connection.Game.EntityManager;
+                var entityManager = playerConnection.Game.EntityManager;
                 var targetEntity = entityManager.GetEntityById(entityId);
                 if (targetEntity is not WorldEntity worldEntity) return;
 
                 foreach (IMessage message in GetExitGameMessages())
-                    SendMessage(connection, message);
+                    SendMessage(playerConnection, message);
 
-                connection.Account.Player.Region = worldEntity.Region.PrototypeId;
-                connection.EntityToTeleport = worldEntity;
+                playerConnection.RegionDataRef = (PrototypeId)worldEntity.Region.PrototypeId;
+                playerConnection.EntityToTeleport = worldEntity;
 
-                foreach (IMessage message in GetBeginLoadingMessages(connection))
-                    SendMessage(connection, message);
+                foreach (IMessage message in GetBeginLoadingMessages(playerConnection))
+                    SendMessage(playerConnection, message);
             }
         }
 
@@ -231,7 +231,6 @@ namespace MHServerEmu.Games
 
         private List<IMessage> GetBeginLoadingMessages(PlayerConnection playerConnection)
         {
-            DBAccount account = playerConnection.Account;
             List<IMessage> messageList = new();
 
             // Add server info messages
@@ -265,25 +264,24 @@ namespace MHServerEmu.Games
                 .Build());
 
             messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)account.Player.Region)
+                .SetRegionPrototypeId((ulong)playerConnection.RegionDataRef)
                 .Build());
 
             // Run region generation as a task
-            Task.Run(() => GetRegionAsync(playerConnection, account.Player.Region));
+            Task.Run(() => GetRegionAsync(playerConnection));
             playerConnection.AOI.LoadedCellCount = 0;
             playerConnection.IsLoading = true;
             return messageList;
         }
 
-        private void GetRegionAsync(PlayerConnection connection, RegionPrototypeId regionPrototypeId)
+        private void GetRegionAsync(PlayerConnection playerConnection)
         {
-            Region region = RegionManager.GetRegion(regionPrototypeId);
-            EventManager.AddEvent(connection, EventEnum.GetRegion, 0, region);
+            Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
+            EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
         }
 
         private List<IMessage> GetFinishLoadingMessages(PlayerConnection playerConnection)
         {
-            DBAccount account = playerConnection.Account;
             List<IMessage> messageList = new();
 
             Vector3 entrancePosition = new(playerConnection.StartPositon);

@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Games.Achievements;
-using MHServerEmu.Games.Entities.Avatars;
+﻿using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 
@@ -21,20 +20,20 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public ulong AccountId { get; set; }
 
-        public RegionPrototypeId Region { get; set; }
-        public long RawRegion { get => (long)Region; private set => Region = (RegionPrototypeId)value; }
+        public PrototypeId Region { get => (PrototypeId)RawRegion; set => RawRegion = (long)value; }
+        public long RawRegion { get; set; }
 
-        public PrototypeId Avatar { get; set; }
-        public long RawAvatar { get => (long)Avatar; private set => Avatar = (PrototypeId)value; }
-        public PrototypeId Waypoint { get; set; }
-        public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
+        public PrototypeId Avatar { get => (PrototypeId)RawAvatar; set => RawAvatar = (long)value; }
+        public long RawAvatar { get; set; }
+        public PrototypeId Waypoint { get => (PrototypeId)RawWaypoint; set => RawWaypoint = (long)value; }
+        public long RawWaypoint { get; set; }
         
         public int AOIVolume { get; set; }
 
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
-            Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
+            Region = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
             Avatar = (PrototypeId)AvatarPrototypeId.CaptainAmerica;
             Waypoint = (PrototypeId)10137590415717831231; // Waypoints/HUBS/NPEAvengersTowerHub
             AOIVolume = 3200;

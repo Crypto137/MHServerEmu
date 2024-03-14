@@ -400,7 +400,7 @@ namespace MHServerEmu.Games.Entities
 
         public void SaveToDBAccount(DBAccount account)
         {
-            account.Player.Avatar = CurrentAvatar.BaseData.PrototypeId;
+            account.Player.Avatar = CurrentAvatar.EntityPrototype.DataRef;
             foreach (Avatar avatar in AvatarList)
             {
                 DBAvatar dbAvatar = account.GetAvatar(avatar.BaseData.PrototypeId);

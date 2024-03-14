@@ -41,7 +41,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                 startingAvatar = AvatarPrototypeId.BlackCat;
 
             DefaultAccount = new(ConfigManager.DefaultPlayerData.PlayerName,
-                startingRegion,
+                (PrototypeId)startingRegion,
                 startingWaypoint,
                 startingAvatar,
                 ConfigManager.DefaultPlayerData.AOIVolume
