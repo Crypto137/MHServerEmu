@@ -13,7 +13,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Games.Network
 {
@@ -449,7 +448,7 @@ namespace MHServerEmu.Games.Network
 
             // A hack for changing avatar in-game
             Player.SetAvatar((PrototypeId)switchAvatar.AvatarPrototypeId);
-            ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {GameDatabase.GetFormattedPrototypeName(Player.CurrentAvatar.EntityPrototype.DataRef)}.");
+            //ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {GameDatabase.GetFormattedPrototypeName(Player.CurrentAvatar.EntityPrototype.DataRef)}.");
             Game.MovePlayerToRegion(this, RegionDataRef, WaypointDataRef);
         }
 
