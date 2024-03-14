@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Entities.Avatars;
@@ -11,7 +12,6 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Commands
 {
@@ -26,7 +26,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -43,7 +43,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
 
             return "Travel to Cosmic Doop Sector";
         }
@@ -60,7 +60,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (RegionPrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
 
             return "Travel to Bovineheim";
         }
@@ -77,7 +77,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (RegionPrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
 
             return "Travel to Classified Bovine Sector.";
         }
@@ -111,7 +111,7 @@ namespace MHServerEmu.Commands
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
-            AvatarPrototypeId avatar = client.Session.Account.Player.Avatar;
+            var avatar = (AvatarPrototypeId)playerConnection.Player.CurrentAvatar.BaseData.PrototypeId;
             switch (avatar)
             {
                 case AvatarPrototypeId.BlackPanther:
@@ -193,8 +193,13 @@ namespace MHServerEmu.Commands
 
             if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
             {
-                client.Session.Account.Player.Avatar = (AvatarPrototypeId)avatar;
-                return $"Changing avatar to {client.Session.Account.Player.Avatar}. Relog for changes to take effect.";
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                var game = playerManager.GetGameByPlayer(client);
+                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+                playerConnection.Player.SetAvatar((PrototypeId)avatar);
+                game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
+                return $"Changing avatar to {avatar}.";
             }
             else
             {
@@ -206,18 +211,18 @@ namespace MHServerEmu.Commands
         public string AOIVolume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return $"Current AOI volume = {client.Session.Account.Player.AOIVolume}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+            if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}";
             //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (int.TryParse(@params[0], out int volume) && volume >= 1600 && volume <= 5000)
             {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                var game = playerManager.GetGameByPlayer(client);
-                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-                playerConnection.Account.Player.AOIVolume = volume;
-                playerConnection.AOI.SetAOIVolume(volume);
-
-                return $"Changes player AOI volume size to {volume}.";
+                playerConnection.AOI.AOIVolume = volume;
+                return $"Changed player AOI volume size to {volume}.";
             }
             else
             {
@@ -225,17 +230,20 @@ namespace MHServerEmu.Commands
             }
         }
 
-        [Command("region", "Changes player starting region.\nUsage: player region", AccountUserLevel.User)]
+        [Command("region", "Changes player region.\nUsage: player region", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
-            if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (Enum.TryParse(typeof(RegionPrototypeId), @params[0], true, out object region))
+            if (Enum.TryParse(@params[0], true, out RegionPrototypeId region))
             {
-                client.Session.Account.Player.Region = (RegionPrototypeId)region;
-                return $"Changing starting region to {client.Session.Account.Player.Region}. Relog for changes to take effect.";
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                var game = playerManager.GetGameByPlayer(client);
+                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+                game.MovePlayerToRegion(playerConnection, (PrototypeId)region, 0);
+                return $"Changing region to {region}.";
             }
             else
             {
@@ -257,16 +265,26 @@ namespace MHServerEmu.Commands
 
                 if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                 {
-                    // Get replication id for the client avatar
-                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
+                    var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                    var game = playerManager.GetGameByPlayer(client);
+                    var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+                    var player = playerConnection.Player;
+                    var avatar = player.CurrentAvatar;
 
-                    // Update account data if needed
-                    if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = (ulong)prototypeId;
+                    // Update player and avatar properties
+                    avatar.Properties[PropertyEnum.CostumeCurrent] = prototypeId;
+                    player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = prototypeId;
 
-                    // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
-                    client.SendMessage(1, 
-                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), prototypeId)
-                        );
+                    // Send client property updates (TODO: Remove this when we have those generated automatically)
+                    // Avatar entity
+                    client.SendMessage(1, Property.ToNetMessageSetProperty(
+                        avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), prototypeId));
+
+                    // Player entity
+                    PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
+                    client.SendMessage(1, Property.ToNetMessageSetProperty(
+                        player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), prototypeId));
+
                     return $"Changing costume to {GameDatabase.GetPrototypeName(prototypeId)}";
                 }
                 else
@@ -317,7 +335,11 @@ namespace MHServerEmu.Commands
             if (info.Enabled == false)
                 return $"Achievement id {id} is disabled.";
 
-            AchievementState state = client.Session.Account.Player.AchievementState;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+            AchievementState state = playerConnection.Player.AchievementState;
             state.SetAchievementProgress(id, new(info.Threshold, Clock.UnixTime));
             client.SendMessage(1, state.ToUpdateMessage(true));
             return string.Empty;

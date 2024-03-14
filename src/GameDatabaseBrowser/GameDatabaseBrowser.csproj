@@ -22,7 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MHServerEmu\MHServerEmu.csproj" />
+    <ProjectReference Include="..\MHServerEmu.Games\MHServerEmu.Games.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Config.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
