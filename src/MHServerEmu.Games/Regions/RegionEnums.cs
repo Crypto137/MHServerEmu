@@ -169,6 +169,9 @@ namespace MHServerEmu.Games.Regions
         CosmicDoopSectorSpaceRegion = 8744981792306700722,      // Cosmic Doop Sector Space
 
         LimboRegionL60 = 4742357611317369027,
+        UpperEastSideRegion = 7309701253780479014,
+        AsgardCowLevelRegion = 17913362697985334451,
+        ClassifiedBovineSectorRegion = 12735255224807267622,
     }
 
     public enum AreaPrototypeId : ulong
