@@ -12,6 +12,7 @@
         <ContextMenu x:Key="PropertyContextMenu">
             <MenuItem Header="Copy raw value" Click="OnClickCopyRawValueMenuItem"/>
             <MenuItem Header="Copy value to PrototypeId" Click="OnClickCopyValueToPrototypeIdMenuItem"/>
+            <MenuItem Header="Copy Name = PrototypeId" Click="OnClickCopyNameWithPrototypeIdMenuItem"/>
             <MenuItem Header="Copy name" Click="OnClickCopyNameMenuItem"/>
         </ContextMenu>
     </Window.Resources>
@@ -91,7 +92,7 @@
                 <ColumnDefinition Width="60*"/>
             </Grid.ColumnDefinitions>
 
-            <TreeView Name="treeView" Grid.Row="0" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
+            <TreeView Name="treeView" Grid.Row="0" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
                 <TreeView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <src:MyVirtualizingStackPanel/>
@@ -107,7 +108,7 @@
                                     <src:MyVirtualizingStackPanel/>
                                 </ItemsPanelTemplate>
                             </Setter.Value>
-                        </Setter>
+                        </Setter>               
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
@@ -134,7 +135,7 @@
                     <TextBlock x:Name="txtParentDataRef" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
                 </ContentControl>
                 <Separator Grid.Row="2" Height="5" Background="Black"/>
-                <TreeView Name="propertytreeView" Grid.Row="3" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
+                <TreeView Name="propertytreeView" Grid.Row="3" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
                     <TreeView.ItemContainerStyle>
                         <Style TargetType="TreeViewItem">
                             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />

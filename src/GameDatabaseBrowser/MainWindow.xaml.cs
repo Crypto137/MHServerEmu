@@ -191,6 +191,19 @@ namespace GameDatabaseBrowser
             });
         }
 
+        private bool NeedRefresh()
+        {
+            bool check = false;
+            Dispatcher.Invoke(() =>
+            {
+                check = PrototypeNodes[0].Childs.Count != 34;
+                if (check == false)
+                    progressBar.Visibility = Visibility.Collapsed;
+                return check;
+            });
+            return check;
+        }
+
         /// <summary>
         /// Select an element from fullName
         /// </summary>
@@ -199,7 +212,7 @@ namespace GameDatabaseBrowser
             if (string.IsNullOrEmpty(fullName))
                 return;
 
-            RefreshPrototypeTree(GetSearchDetails());
+            if (NeedRefresh()) RefreshPrototypeTree(GetSearchDetails());
             int[] indexes = GetElementLocationInHierarchy(fullName);
             SelectTreeViewItem(indexes);
         }
@@ -403,6 +416,7 @@ namespace GameDatabaseBrowser
                 Clipboard.SetText(value);
         }
 
+
         /// <summary>
         /// Called when context menu "Copy value to PrototypeId" selected
         /// </summary>
@@ -427,6 +441,29 @@ namespace GameDatabaseBrowser
                 Clipboard.SetText(value);
             else
                 Clipboard.SetText(prototypeId.ToString());
+        }
+
+        private void OnClickCopyNameWithPrototypeIdMenuItem(object sender, RoutedEventArgs e)
+        {
+            object selected = ((FrameworkElement)e.OriginalSource).DataContext;
+
+            string value = "";
+            PrototypeId prototypeId = 0;
+            if (selected is PropertyNode propertyNode)
+            {
+                value = propertyNode?.PropertyDetails?.Value;
+                if (string.IsNullOrEmpty(value))
+                    return;
+
+                prototypeId = propertyNode.PropertyDetails.GetPrototypeIdEquivalence();
+            }
+            else if (selected is PrototypeNode prototypeNode)
+                prototypeId = prototypeNode.PrototypeDetails.PrototypeId;
+
+            if (prototypeId == 0)
+                Clipboard.SetText(value);
+            else
+                Clipboard.SetText($"{GameDatabase.GetFormattedPrototypeName(prototypeId)} = {prototypeId},");
         }
 
         /// <summary>
