@@ -108,8 +108,7 @@
                                     <src:MyVirtualizingStackPanel/>
                                 </ItemsPanelTemplate>
                             </Setter.Value>
-                        </Setter>
-                        <Setter Property="SnapsToDevicePixels" Value="True" />                   
+                        </Setter>               
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
