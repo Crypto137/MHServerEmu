@@ -203,10 +203,8 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
-        public bool IsZero()
-        {
-            return Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);
-        }
+        public bool IsZero() => Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);
+        public bool IsValid() => Min.X <= Max.X && Min.Y <= Max.Y && Min.Z <= Max.Z;
 
         public bool FullyContains(Aabb bounds)
         {
@@ -279,6 +277,7 @@ namespace MHServerEmu.Core.Collisions
         {
             return $" Box: {Max - Min}";
         }
+
     }
     public enum ContainmentType
     {

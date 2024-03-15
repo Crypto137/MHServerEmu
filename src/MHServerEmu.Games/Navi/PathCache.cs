@@ -3,17 +3,17 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Generators.Navi
+namespace MHServerEmu.Games.Navi
 {
     public class PathCache
     {
 
-		private readonly Dictionary<int, List<PathNodeSetPrototype>> _pathMap;
+        private readonly Dictionary<int, List<PathNodeSetPrototype>> _pathMap;
         private readonly Dictionary<int, List<PathNodeStruct>> _pathNodeMap;
 
         public PathCache() { _pathMap = new(); _pathNodeMap = new(); }
 
-        public void AppendPathCollection(PathCollectionPrototype PathNodeCollection, Vector3 offset) 
+        public void AppendPathCollection(PathCollectionPrototype PathNodeCollection, Vector3 offset)
         {
             if (PathNodeCollection.PathNodeSets.HasValue())
             {
@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Generators.Navi
                         _pathNodeMap[group] = pathNodeList = new();
 
                     if (pathSetList != null)
-                    {                        
+                    {
                         if (!pathSetList.Contains(pathNodeSet))
                         {
                             pathSetList.Add(pathNodeSet);
@@ -56,14 +56,14 @@ namespace MHServerEmu.Games.Generators.Navi
         }
         public bool IsLastNode(int group, int pathNode, PathMethod method)
         {
-            
+
             if (method == PathMethod.ForwardLoop || method == PathMethod.ForwardBackAndForth ||
-                method == PathMethod.ReverseLoop || method == PathMethod.ReverseBackAndForth)  return false;
+                method == PathMethod.ReverseLoop || method == PathMethod.ReverseBackAndForth) return false;
 
             if (_pathNodeMap.TryGetValue(group, out var pathNodeList))
             {
                 if (method == PathMethod.Forward && pathNode == pathNodeList.Count - 1) return true;
-                if (method == PathMethod.Reverse && pathNode == 0)  return true;
+                if (method == PathMethod.Reverse && pathNode == 0) return true;
             }
 
             return false;
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Generators.Navi
             {
                 int lastNode = pathNodeList.Count - 1;
                 if (method == PathMethod.ForwardLoop || method == PathMethod.ReverseLoop)
-                    lastNode = (pathNodeList.Count >= 2) ? pathNodeList.Count : 0;
+                    lastNode = pathNodeList.Count >= 2 ? pathNodeList.Count : 0;
 
                 float closestDistance = float.MaxValue;
                 int closestNodeA = -1;
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Generators.Navi
                         {
                             if (method == PathMethod.ForwardBackAndForth || method == PathMethod.ReverseBackAndForth)
                             {
-                                if (closestNode == 0 || closestNode == (pathNodeList.Count - 1))
+                                if (closestNode == 0 || closestNode == pathNodeList.Count - 1)
                                 {
                                     direction = -direction;
                                     reverse = !reverse;

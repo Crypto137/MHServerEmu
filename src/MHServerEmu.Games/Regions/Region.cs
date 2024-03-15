@@ -5,7 +5,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Navi;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Regions;
@@ -17,6 +16,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -84,6 +84,8 @@ namespace MHServerEmu.Games.Regions
         public MissionManager MissionManager { get; private set; } // Mission manager
         public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; } // Entity spatial partition
         public CellSpatialPartition CellSpatialPartition { get; private set; } // Cell spatial partition
+        public NaviSystem NaviSystem { get; private set; }
+        public NaviMesh NaviMesh { get; private set; }
         public List<DividedStartLocation> DividedStartLocations { get; } = new();
         public int RegionLevel { get; private set; }
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
@@ -100,6 +102,9 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = randomSeed;
             ArchiveData = archiveData;
             CreateParams = createParams;
+
+            NaviSystem = new();
+            NaviMesh = new(NaviSystem);
         }
 
         public Region(Game game)
@@ -108,6 +113,9 @@ namespace MHServerEmu.Games.Regions
             SpawnMarkerRegistry = new(this);
             Settings = new();
             PathCache = new();
+
+            NaviSystem = new();
+            NaviMesh = new(NaviSystem);
         }
 
         public bool Initialize(RegionSettings settings)
@@ -166,15 +174,13 @@ namespace MHServerEmu.Games.Regions
             if (regionProto.DividedStartLocations.HasValue())
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
-            // if (!NaviSystem.Initialize(this))  return false;
-            if (!Bound.IsZero())
-            {
+            if (NaviSystem.Initialize(this) == false) return false;
+            if (Bound.IsZero() == false)
                 if (settings.GenerateAreas == false)
                 {
                     InitializeSpacialPartition(Bound);
-                    // NaviMesh.Initialize(Bound, 1000.0f, this);
+                    NaviMesh.Initialize(Bound, 1000.0f, this);
                 }
-            }
 
             SpawnMarkerRegistry.Initialize();
             ProgressionGraph = new();
