@@ -68,9 +68,24 @@ namespace MHServerEmu.Games.MetaGames
             {
                 var gameMode = metaGameProto.GameModes.First().As<MetaGameModePrototype>();
                 if (gameMode == null) return;
+
                 if (gameMode.ApplyStates.HasValue())
                     foreach(var state in gameMode.ApplyStates)
                         popManager.MetaStateRegisty(state);
+
+                if (region.PrototypeId == RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
+                {
+                    MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
+                    int wave = Game.Random.Next(0, stateMode.States.Length);
+                    popManager.MetaStateRegisty(stateMode.States[wave]);
+                } 
+                else if (region.PrototypeId == RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
+                {
+                    MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
+                    popManager.MetaStateRegisty(stateMode.States[0]);
+                }
+                else if (region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
+                    popManager.MetaStateRegisty((PrototypeId)7730041682554854878); // CH04UpperMoloids
             }
         }
     }
