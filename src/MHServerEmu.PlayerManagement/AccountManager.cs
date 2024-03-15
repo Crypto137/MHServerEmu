@@ -8,6 +8,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -27,7 +28,7 @@ namespace MHServerEmu.PlayerManagement
             // Waypoint
             PrototypeId startingWaypoint = GameDatabase.GetPrototypeRefByName(ConfigManager.DefaultPlayerData.StartingWaypoint);
             if (startingWaypoint == PrototypeId.Invalid)
-                startingWaypoint = (PrototypeId)10137590415717831231;  // Waypoints/HUBS/NPEAvengersTowerHub.prototype
+                startingWaypoint = (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub;
 
             // Avatar
             if (Enum.TryParse(ConfigManager.DefaultPlayerData.StartingAvatar, out AvatarPrototypeId startingAvatar) == false)
