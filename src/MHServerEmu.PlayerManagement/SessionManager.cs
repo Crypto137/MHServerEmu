@@ -6,12 +6,15 @@ using MHServerEmu.Core.System;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
 {
     public class SessionManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly PlayerManagerService _playerManager;
 
         private readonly IdGenerator _idGenerator = new(IdType.Session, 0);
 
@@ -20,6 +23,11 @@ namespace MHServerEmu.PlayerManagement
         private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
 
         public int SessionCount { get => _sessionDict.Count; }
+
+        public SessionManager(PlayerManagerService playerManager)
+        {
+            _playerManager = playerManager;
+        }
 
         public AuthStatusCode TryCreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
         {
@@ -31,7 +39,7 @@ namespace MHServerEmu.PlayerManagement
                 Logger.Warn($"TryCreateSessionFromLoginDataPB(): Client version mismatch ({loginDataPB.Version} instead of {Game.Version})");
 
                 // Fail auth if version mismatch is not allowed
-                if (ConfigManager.PlayerManager.AllowClientVersionMismatch == false)
+                if (_playerManager.Config.AllowClientVersionMismatch == false)
                     return AuthStatusCode.PatchRequired;
             }
 
@@ -39,7 +47,7 @@ namespace MHServerEmu.PlayerManagement
             DBAccount account;
             AuthStatusCode statusCode;
 
-            if (ConfigManager.PlayerManager.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
+            if (_playerManager.Config.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
             {
                 account = AccountManager.DefaultAccount;
                 statusCode = AuthStatusCode.Success;

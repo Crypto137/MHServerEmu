@@ -9,6 +9,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;
+using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -23,10 +24,22 @@ namespace MHServerEmu.PlayerManagement
         private readonly object _playerLock = new();
         private readonly List<FrontendClient> _playerList = new();
 
+        private readonly string _frontendAddress;
+        private readonly string _frontendPort;
+
+        public PlayerManagerConfig Config { get; }
+
         public PlayerManagerService()
         {
-            _sessionManager = new();
+            _sessionManager = new(this);
             _gameManager = new();
+
+            // Get frontend information for AuthTickets
+            var frontendConfig = ConfigManager.Instance.GetConfig<FrontendConfig>();
+            _frontendAddress = frontendConfig.PublicAddress;
+            _frontendPort = frontendConfig.Port;
+
+            Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
 
         #region IGameService Implementation
@@ -203,7 +216,7 @@ namespace MHServerEmu.PlayerManagement
                 _sessionManager.RemoveSession(client.Session.Id);
             }
 
-            if (ConfigManager.PlayerManager.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
+            if (Config.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
             return true;
         }
 
@@ -228,9 +241,28 @@ namespace MHServerEmu.PlayerManagement
 
         #region Message Handling
 
-        public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
+        public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out AuthTicket authTicket)
         {
-            return _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out session);
+            authTicket = AuthTicket.DefaultInstance;
+
+            var statusCode = _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
+
+            if (statusCode == AuthStatusCode.Success)
+            {
+                authTicket = AuthTicket.CreateBuilder()
+                    .SetSessionKey(ByteString.CopyFrom(session.Key))
+                    .SetSessionToken(ByteString.CopyFrom(session.Token))
+                    .SetSessionId(session.Id)
+                    .SetFrontendServer(_frontendAddress)
+                    .SetFrontendPort(_frontendPort)
+                    .SetPlatformTicket("")
+                    .SetHasnews(Config.ShowNewsOnLogin)
+                    .SetNewsurl(Config.NewsUrl)
+                    .SetSuccess(true)
+                    .Build();
+            }
+
+            return statusCode;
         }
 
         private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
@@ -257,12 +289,12 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Respond on successful auth
-            if (ConfigManager.PlayerManager.SimulateQueue)
+            if (Config.SimulateQueue)
             {
                 Logger.Info("Responding with LoginQueueStatus message");
                 client.SendMessage(MuxChannel, LoginQueueStatus.CreateBuilder()
-                    .SetPlaceInLine(ConfigManager.PlayerManager.QueuePlaceInLine)
-                    .SetNumberOfPlayersInLine(ConfigManager.PlayerManager.QueueNumberOfPlayersInLine)
+                    .SetPlaceInLine(Config.QueuePlaceInLine)
+                    .SetNumberOfPlayersInLine(Config.QueueNumberOfPlayersInLine)
                     .Build());
             }
             else

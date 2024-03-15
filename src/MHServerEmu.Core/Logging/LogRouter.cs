@@ -18,7 +18,8 @@ namespace MHServerEmu.Core.Logging
         static LogRouter()
         {
             // Initialize async logging if synchronous mode is not enabled
-            if (ConfigManager.Logging.SynchronousMode == false)
+            var config = ConfigManager.Instance.GetConfig<LoggingConfig>();
+            if (config.SynchronousMode == false)
             {
                 MessageQueue = new();
                 Task.Run(async () => await RouteMessagesAsync());

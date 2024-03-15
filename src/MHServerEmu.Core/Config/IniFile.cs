@@ -12,13 +12,17 @@ namespace MHServerEmu.Core.Config
         private readonly string _path;
         private readonly IniData _iniData;
 
+        /// <summary>
+        /// Constructs a new <see cref="IniFile"/> instance for the specified path.
+        /// </summary>
         public IniFile(string path)
         {
+            _path = path;
+            _parser = new();
+
             try
             {
-                _path = path;
-                _parser = new();
-                _iniData = _parser.ReadFile(_path);
+                _iniData = File.Exists(_path) ? _parser.ReadFile(_path) : new();
             }
             catch (Exception e)
             {
@@ -27,37 +31,77 @@ namespace MHServerEmu.Core.Config
         }
 
         /// <summary>
-        /// Reads a value from the ini file as <see cref="string"/>.
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="string"/>.
         /// </summary>
-        public string ReadString(string section, string key) => _iniData[section][key];
+        public string GetString(string section, string key) => _iniData[section][key];
 
         /// <summary>
-        /// Reads a value from the ini file as <see cref="bool"/>.
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="bool"/>.
         /// </summary>
-        public bool ReadBool(string section, string key) => Convert.ToBoolean(ReadString(section, key));
+        public bool? GetBool(string section, string key)
+        {
+            string stringValue = GetString(section, key);
+
+            if (bool.TryParse(stringValue, out bool parsedValue) == false)
+                return null;
+
+            return parsedValue;
+        }
 
         /// <summary>
-        /// Reads a value from the ini file as <see cref="int"/>.
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="int"/>.
         /// </summary>
-        public int ReadInt32(string section, string key) => Convert.ToInt32(ReadString(section, key));
+        public int? GetInt32(string section, string key)
+        {
+            string stringValue = GetString(section, key);
+
+            if (int.TryParse(stringValue, out int parsedValue) == false)
+                return null;
+
+            return parsedValue;
+        }
 
         /// <summary>
-        /// Reads a value from the ini file as <see cref="uint"/>.
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="uint"/>.
         /// </summary>
-        public uint ReadUInt32(string section, string key) => Convert.ToUInt32(ReadString(section, key));
+        public uint? GetUInt32(string section, string key)
+        {
+            string stringValue = GetString(section, key);
+
+            if (uint.TryParse(stringValue, out uint parsedValue) == false)
+                return null;
+
+            return parsedValue;
+        }
 
         /// <summary>
-        /// Reads a value from the ini file as <see cref="long"/>.
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="long"/>.
         /// </summary>
-        public long ReadInt64(string section, string key) => Convert.ToInt64(ReadString(section, key));
+        public long? GetInt64(string section, string key)
+        {
+            string stringValue = GetString(section, key);
+
+            if (long.TryParse(stringValue, out long parsedValue) == false)
+                return null;
+
+            return parsedValue;
+        }
 
         /// <summary>
-        /// Reads a value from the ini file as <see cref="ulong"/>.
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="ulong"/>.
         /// </summary>
-        public ulong ReadUInt64(string section, string key) => Convert.ToUInt64(ReadString(section, key));
+        public ulong? GetUInt64(string section, string key)
+        {
+            string stringValue = GetString(section, key);
+
+            if (ulong.TryParse(stringValue, out ulong parsedValue) == false)
+                return null;
+
+            return parsedValue;
+        }
 
         /// <summary>
-        /// Writes an <see cref="object"/> value to the ini file using ToString() representation.
+        /// Writes an <see cref="object"/> value to this <see cref="IniFile"/> using its ToString() representation.
         /// </summary>
         public void WriteValue(string section, string key, object value)
         {

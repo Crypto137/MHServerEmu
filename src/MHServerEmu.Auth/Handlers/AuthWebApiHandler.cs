@@ -17,6 +17,7 @@ namespace MHServerEmu.Auth.Handlers
     public class AuthWebApiHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         private readonly string ResponseHtml;
         private readonly string AccountCreateFormHtml;
@@ -37,7 +38,7 @@ namespace MHServerEmu.Auth.Handlers
         public async Task HandleRequestAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
             // Mask end point name if needed
-            string endPointName = ConfigManager.PlayerManager.HideSensitiveInformation
+            string endPointName = HideSensitiveInformation
                 ? request.RemoteEndPoint.ToStringMasked()
                 : request.RemoteEndPoint.ToString();
 
@@ -116,7 +117,7 @@ namespace MHServerEmu.Auth.Handlers
             }
 
             bool success = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"], out string message);
-            if (ConfigManager.PlayerManager.HideSensitiveInformation == false) Logger.Trace(message);
+            if (HideSensitiveInformation == false) Logger.Trace(message);
 
             await SendResponseAsync(success ? "Success" : "Error", message, response);
             return true;

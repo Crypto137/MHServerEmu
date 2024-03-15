@@ -26,10 +26,12 @@ namespace MHServerEmu.Auth
         /// </summary>
         public AuthServer()
         {
-            _url = $"http://{ConfigManager.Auth.Address}:{ConfigManager.Auth.Port}/";
+            var config = ConfigManager.Instance.GetConfig<AuthConfig>();
+
+            _url = $"http://{config.Address}:{config.Port}/";
             _protobufHandler = new();
 
-            if (ConfigManager.Auth.EnableWebApi)
+            if (config.EnableWebApi)
                 _webApiHandler = new();
         }
 

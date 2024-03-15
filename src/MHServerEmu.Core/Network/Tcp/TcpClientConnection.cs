@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Network.Tcp
 {
@@ -10,6 +11,8 @@ namespace MHServerEmu.Core.Network.Tcp
     /// </summary>
     public class TcpClientConnection
     {
+        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
+
         private readonly TcpServer _server;
 
         public byte[] ReceiveBuffer { get; } = new byte[1024 * 8];
@@ -68,7 +71,7 @@ namespace MHServerEmu.Core.Network.Tcp
 
         public override string ToString()
         {
-            if (ConfigManager.PlayerManager.HideSensitiveInformation)
+            if (HideSensitiveInformation)
                 return RemoteEndPoint?.ToStringMasked();
 
             return RemoteEndPoint?.ToString();

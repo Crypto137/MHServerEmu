@@ -85,9 +85,11 @@ namespace MHServerEmu.Commands
                     for (int i = 3; i < @params.Length; i++)
                         message += " " + @params[i];
 
+                    var config = ConfigManager.Instance.GetConfig<GroupingManagerConfig>();
+
                     var chatMessage = ChatNormalMessage.CreateBuilder()
                         .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                        .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                        .SetFromPlayerName(config.MotdPlayerName)
                         .SetTheMessage(ChatMessage.CreateBuilder().SetBody(message))
                         .SetPrestigeLevel(6)
                         .Build();

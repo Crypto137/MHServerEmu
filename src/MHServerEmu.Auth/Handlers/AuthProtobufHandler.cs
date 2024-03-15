@@ -15,6 +15,7 @@ namespace MHServerEmu.Auth.Handlers
     public class AuthProtobufHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         /// <summary>
         /// Receives and handles an <see cref="IMessage"/>.
@@ -54,7 +55,7 @@ namespace MHServerEmu.Auth.Handlers
         private async Task<bool> OnLoginDataPB(HttpListenerRequest request, HttpListenerResponse response, GameMessage message)
         {
             // Mask the end point name to prevent sensitive information from appearing in logs in needed
-            string endPointName = ConfigManager.PlayerManager.HideSensitiveInformation
+            string endPointName = HideSensitiveInformation
                 ? request.RemoteEndPoint.ToStringMasked()
                 : request.RemoteEndPoint.ToString();
 
@@ -78,7 +79,7 @@ namespace MHServerEmu.Auth.Handlers
             if (playerManager == null)
                 return Logger.ErrorReturn(false, $"OnLoginDataPB(): Failed to connect to the player manager");
 
-            AuthStatusCode statusCode = playerManager.OnLoginDataPB(loginDataPB, out ClientSession session);
+            AuthStatusCode statusCode = playerManager.OnLoginDataPB(loginDataPB, out AuthTicket ticket);
             
             // Respond with an error if session creation didn't succeed
             if (statusCode != AuthStatusCode.Success)
@@ -88,20 +89,7 @@ namespace MHServerEmu.Auth.Handlers
             }
 
             // Send an AuthTicket if we were able to create a session
-            Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {endPointName}");
-
-            var ticket = AuthTicket.CreateBuilder()
-                .SetSessionKey(ByteString.CopyFrom(session.Key))
-                .SetSessionToken(ByteString.CopyFrom(session.Token))
-                .SetSessionId(session.Id)
-                .SetFrontendServer(ConfigManager.Frontend.PublicAddress)
-                .SetFrontendPort(ConfigManager.Frontend.Port)
-                .SetPlatformTicket("")
-                .SetHasnews(ConfigManager.PlayerManager.ShowNewsOnLogin)
-                .SetNewsurl(ConfigManager.PlayerManager.NewsUrl)
-                .SetSuccess(true)
-                .Build();
-
+            Logger.Info($"Sending AuthTicket for sessionId {ticket.SessionId} to the game client on {endPointName}");
             await SendMessageAsync(ticket, response);
             return true;
         }
