@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO back to last saved hub
             Logger.Trace($"Destination LastTown");
-            connection.Game.MovePlayerToRegion(connection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
+            connection.Game.MovePlayerToRegion(connection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
         }
     }
 
@@ -265,5 +265,19 @@ namespace MHServerEmu.Games.Entities
             };
             return destination;
         }
+    }
+    
+    public enum WaypointPrototypeId: ulong
+    {
+        NPEAvengersTowerHub = 10137590415717831231,
+        AvengersTowerHub = 15322252936284737788,
+    }
+
+    public enum TargetPrototypeId : ulong
+    {
+        CosmicDoopSectorSpaceStartTarget = 15872240608618488803,
+        AsgardCowLevelStartTarget = 12083387244127461092,
+        BovineSectorStartTarget = 2342633323497265984,
+        JailTarget = 13284513933487907420,
     }
 }

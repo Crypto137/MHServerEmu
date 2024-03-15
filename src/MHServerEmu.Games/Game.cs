@@ -55,31 +55,8 @@ namespace MHServerEmu.Games
             Id = id;
 
             // Initialize game options
-            _gameOptions = NetStructGameOptions.CreateBuilder()
-                .SetTeamUpSystemEnabled(ConfigManager.GameOptions.TeamUpSystemEnabled)
-                .SetAchievementsEnabled(ConfigManager.GameOptions.AchievementsEnabled)
-                .SetOmegaMissionsEnabled(ConfigManager.GameOptions.OmegaMissionsEnabled)
-                .SetVeteranRewardsEnabled(ConfigManager.GameOptions.VeteranRewardsEnabled)
-                .SetMultiSpecRewardsEnabled(ConfigManager.GameOptions.MultiSpecRewardsEnabled)
-                .SetGiftingEnabled(ConfigManager.GameOptions.GiftingEnabled)
-                .SetCharacterSelectV2Enabled(ConfigManager.GameOptions.CharacterSelectV2Enabled)
-                .SetCommunityNewsV2Enabled(ConfigManager.GameOptions.CommunityNewsV2Enabled)
-                .SetLeaderboardsEnabled(ConfigManager.GameOptions.LeaderboardsEnabled)
-                .SetNewPlayerExperienceEnabled(ConfigManager.GameOptions.NewPlayerExperienceEnabled)
-                .SetServerTimeOffsetUTC(-7)
-                .SetUseServerTimeOffset(true)  // Although originally this was set to false, it needs to be true because auto offset doesn't work past 2019
-                .SetMissionTrackerV2Enabled(ConfigManager.GameOptions.MissionTrackerV2Enabled)
-                .SetGiftingAccountAgeInDaysRequired(ConfigManager.GameOptions.GiftingAccountAgeInDaysRequired)
-                .SetGiftingAvatarLevelRequired(ConfigManager.GameOptions.GiftingAvatarLevelRequired)
-                .SetGiftingLoginCountRequired(ConfigManager.GameOptions.GiftingLoginCountRequired)
-                .SetInfinitySystemEnabled(ConfigManager.GameOptions.InfinitySystemEnabled)
-                .SetChatBanVoteAccountAgeInDaysRequired(ConfigManager.GameOptions.ChatBanVoteAccountAgeInDaysRequired)
-                .SetChatBanVoteAvatarLevelRequired(ConfigManager.GameOptions.ChatBanVoteAvatarLevelRequired)
-                .SetChatBanVoteLoginCountRequired(ConfigManager.GameOptions.ChatBanVoteLoginCountRequired)
-                .SetIsDifficultySliderEnabled(ConfigManager.GameOptions.IsDifficultySliderEnabled)
-                .SetOrbisTrophiesEnabled(ConfigManager.GameOptions.OrbisTrophiesEnabled)
-                .SetPlatformType((int)Platforms.PC)
-                .Build();
+            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            _gameOptions = config.ToProtobuf();
 
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;

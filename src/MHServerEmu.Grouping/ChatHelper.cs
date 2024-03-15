@@ -8,20 +8,27 @@ namespace MHServerEmu.Grouping
     {
         private const ushort MuxChannel = 2;
 
-        public static ChatBroadcastMessage Motd { get; } = ChatBroadcastMessage.CreateBuilder()
-            .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-            .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-            .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
-            .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-            .Build();
+        static ChatHelper()
+        {
+            var config = ConfigManager.Instance.GetConfig<GroupingManagerConfig>();
+
+            Motd = ChatBroadcastMessage.CreateBuilder()
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
+                .SetFromPlayerName(config.MotdPlayerName)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(config.MotdText))
+                .SetPrestigeLevel(config.MotdPrestigeLevel)
+                .Build();
+        }
+
+        public static ChatBroadcastMessage Motd { get; }
 
         public static void SendMetagameMessage(FrontendClient client, string text, bool showSender = true)
         {
             client.SendMessage(MuxChannel, ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                .SetFromPlayerName(showSender ? ConfigManager.GroupingManager.MotdPlayerName : string.Empty)
+                .SetFromPlayerName(showSender ? Motd.FromPlayerName : string.Empty)
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
-                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
+                .SetPrestigeLevel(Motd.PrestigeLevel)
                 .Build());
         }
 

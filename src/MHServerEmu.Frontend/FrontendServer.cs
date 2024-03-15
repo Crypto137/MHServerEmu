@@ -12,8 +12,10 @@ namespace MHServerEmu.Frontend
 
         public override void Run()
         {
-            if (Start(ConfigManager.Frontend.BindIP, int.Parse(ConfigManager.Frontend.Port)) == false) return;
-            Logger.Info($"FrontendServer is listening on {ConfigManager.Frontend.BindIP}:{ConfigManager.Frontend.Port}...");
+            var config = ConfigManager.Instance.GetConfig<FrontendConfig>();
+
+            if (Start(config.BindIP, int.Parse(config.Port)) == false) return;
+            Logger.Info($"FrontendServer is listening on {config.BindIP}:{config.Port}...");
         }
 
         // Shutdown implemented by TcpServer

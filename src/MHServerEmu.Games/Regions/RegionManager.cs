@@ -192,8 +192,8 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private const int CleanUpTime = 60 * 1000 * 1; // 5 minutes
-        private const int UnVisitedTime = 1; // 5 minutes
+        private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes
+        private const int UnVisitedTime = 5; // 5 minutes
 
         public async Task CleanUpRegionsAsync()
         {            
