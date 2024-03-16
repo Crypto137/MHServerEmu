@@ -13,6 +13,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Network
 {
@@ -36,10 +37,10 @@ namespace MHServerEmu.Games.Network
         public Game Game { get; }
 
         // Player State
-        public Player Player { get; }
+        public Player Player { get; private set; }
 
         public PrototypeId RegionDataRef { get; set; }
-        public PrototypeId WaypointDataRef { get; set; }
+        public PrototypeId WaypointDataRef { get; set; }    // May also refer to RegionConnectionTarget
 
         public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
         public Vector3 LastPosition { get; set; }
@@ -49,7 +50,7 @@ namespace MHServerEmu.Games.Network
         public PrototypeId ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
-        public AreaOfInterest AOI { get; }
+        public AreaOfInterest AOI { get; private set; }
         public Vector3 StartPositon { get; internal set; }
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
@@ -65,32 +66,7 @@ namespace MHServerEmu.Games.Network
             _dbAccount = _frontendClient.Session.Account;
             _powerMessageHandler = new(Game);
 
-            // Initialize from DBAccount
-            RegionDataRef = (PrototypeId)_dbAccount.Player.RawRegion;
-            WaypointDataRef = (PrototypeId)_dbAccount.Player.RawWaypoint;
-            AOI = new(this, _dbAccount.Player.AOIVolume);
-
-            // Create player and avatar entities
-            Player = new(new EntityBaseData());
-            Player.InitializeFromDBAccount(_dbAccount);
-
-            ulong avatarEntityId = Player.Id + 1;
-            ulong avatarRepId = Player.PartyId.ReplicationId + 1;
-            foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
-            {
-                if (avatarId == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-
-                Avatar avatar = new(avatarEntityId, avatarRepId);
-                avatar.BaseData.InvLoc = new(Player.Id, PrototypeId.Invalid, 0);
-                avatarEntityId++;
-                avatarRepId += 2;
-
-                avatar.InitializeFromDBAccount(avatarId, _dbAccount);
-                Player.AvatarList.Add(avatar);
-            }
-
-            Player.SetAvatar((PrototypeId)_dbAccount.CurrentAvatar.RawPrototype);
+            InitializeFromDBAccount();
         }
 
         #region Data Management
@@ -105,6 +81,60 @@ namespace MHServerEmu.Games.Network
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
             Player.SaveToDBAccount(_dbAccount);
+        }
+
+        /// <summary>
+        /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
+        /// </summary>
+        private void InitializeFromDBAccount()
+        {
+            DataDirectory dataDirectory = GameDatabase.DataDirectory;
+
+            // Initialize region
+            RegionDataRef = (PrototypeId)_dbAccount.Player.RawRegion;
+            if (dataDirectory.PrototypeIsA<RegionPrototype>(RegionDataRef) == false)
+            {
+                RegionDataRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
+                Logger.Warn($"PlayerConnection(): Invalid region data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(RegionDataRef)}");
+            }
+
+            WaypointDataRef = (PrototypeId)_dbAccount.Player.RawWaypoint;
+            if ((dataDirectory.PrototypeIsA<WaypointPrototype>(WaypointDataRef) || dataDirectory.PrototypeIsA<RegionConnectionTargetPrototype>(WaypointDataRef)) == false)
+            {
+                WaypointDataRef = GameDatabase.GetPrototype<RegionPrototype>(RegionDataRef).StartTarget;
+                Logger.Warn($"PlayerConnection(): Invalid waypoint data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(WaypointDataRef)}");
+            }
+
+            AOI = new(this, _dbAccount.Player.AOIVolume);
+
+            // Create player and avatar entities
+            Player = new(new EntityBaseData());
+            Player.InitializeFromDBAccount(_dbAccount);
+
+            ulong avatarEntityId = Player.Id + 1;
+            ulong avatarRepId = Player.PartyId.ReplicationId + 1;
+            foreach (PrototypeId avatarId in dataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                if (avatarId == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+
+                Avatar avatar = new(avatarEntityId, avatarRepId);
+                avatar.BaseData.InvLoc = new(Player.Id, PrototypeId.Invalid, 0);
+                avatarEntityId++;
+                avatarRepId += 2;
+
+                avatar.InitializeFromDBAccount(avatarId, _dbAccount);
+                Player.AvatarList.Add(avatar);
+            }
+
+            var avatarDataRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
+            if (dataDirectory.PrototypeIsA<AvatarPrototype>(avatarDataRef) == false)
+            {
+                avatarDataRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
+                Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(avatarDataRef)}");
+            }
+
+            Player.SetAvatar(avatarDataRef);
         }
 
         #endregion

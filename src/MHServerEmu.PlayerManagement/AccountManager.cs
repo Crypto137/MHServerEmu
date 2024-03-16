@@ -3,10 +3,6 @@ using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.PlayerManagement.Configs;
@@ -23,26 +19,7 @@ namespace MHServerEmu.PlayerManagement
         {
             // Initialize default account from config
             var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
-
-            // Region
-            if (Enum.TryParse(config.StartingRegion, out RegionPrototypeId startingRegion) == false)
-                startingRegion = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-
-            // Waypoint
-            PrototypeId startingWaypoint = GameDatabase.GetPrototypeRefByName(config.StartingWaypoint);
-            if (startingWaypoint == PrototypeId.Invalid)
-                startingWaypoint = (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub;
-
-            // Avatar
-            if (Enum.TryParse(config.StartingAvatar, out AvatarPrototypeId startingAvatar) == false)
-                startingAvatar = AvatarPrototypeId.BlackCat;
-
-            DefaultAccount = new(config.PlayerName,
-                (long)startingRegion,
-                (long)startingWaypoint,
-                (long)startingAvatar,
-                config.AOIVolume
-            );
+            DefaultAccount = config.InitializeDefaultAccount();
 
             IsInitialized = DBManager.IsInitialized;
         }

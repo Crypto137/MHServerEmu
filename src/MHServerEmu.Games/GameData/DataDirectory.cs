@@ -631,6 +631,26 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns <see langword="true"/> if the specified <see cref="PrototypeId"/> is bound to <typeparamref name="T"/>.
+        /// </summary>
+        public bool PrototypeIsA<T>(PrototypeId prototypeId) where T: Prototype
+        {
+            Type typeToFind = typeof(T);
+            Type prototypeType = GetPrototypeClassType(prototypeId);
+            if (prototypeType == null) return false;
+
+            do
+            {
+                if (prototypeType == typeToFind)
+                    return true;
+
+                prototypeType = prototypeType.BaseType;
+            } while (prototypeType != typeof(Prototype));
+
+            return false;
+        }
+
+        /// <summary>
         /// Returns <see langword="true"/> if the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to is <see cref="PrototypeRecordFlags.Abstract"/>.
         /// </summary>
         public bool PrototypeIsAbstract(PrototypeId prototypeId)
