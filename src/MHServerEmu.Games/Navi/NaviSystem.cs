@@ -1,7 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Regions;
-using System.Drawing;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -10,81 +8,17 @@ namespace MHServerEmu.Games.Navi
         public bool Log = true;
         public Region Region { get; private set; }
 
-        private List<NaviPoint> _naviPoints = new();
-        private List<NaviEdge> _naviEdges = new();
-        private List<NaviTriangle> _naviTriangles = new();
-        private List<NaviPathSearchState> _naviPathSearchStates = new();
-
         public bool Initialize(Region region)
         {
             Region = region;
             return true;
         }
 
-        public NaviPathSearchState NewPathSearchState()
-        {
-            var pathSearchState = new NaviPathSearchState(this);
-            _naviPathSearchStates.Add(pathSearchState);
-            return pathSearchState;
-        }
-
-        public void Delete(NaviRef navRef)
-        {
-            if (navRef is NaviPoint navPoint) 
-                _naviPoints.Remove(navPoint);
-            else if (navRef is NaviEdge navEdge) 
-                _naviEdges.Remove(navEdge);
-            else if (navRef is NaviTriangle navTriangle) 
-                _naviTriangles.Remove(navTriangle);
-            else if (navRef is NaviPathSearchState navPathSearchState) 
-                _naviPathSearchStates.Remove(navPathSearchState);
-        }
-
-        public NaviPoint CreatePoint(Vector3 pos)
-        {
-            var point = new NaviPoint(this);
-            _naviPoints.Add(point);
-            point.Pos = pos;
-            return point;
-        }
-
-        public NaviEdge CreateEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, NaviEdgePathingFlags pathingFlags)
-        {
-            var edge = new NaviEdge(this);
-            _naviEdges.Add(edge);
-            edge.EdgeFlags = edgeFlags;
-            edge.PathingFlags = pathingFlags;
-            edge.Points[0] = p0;
-            edge.Points[1] = p1;
-            return edge;
-        }
-
-        public NaviTriangle CreateTriangle(NaviEdge e0, NaviEdge e1, NaviEdge e2)
-        {
-            var triangle = new NaviTriangle(this);
-            _naviTriangles.Add(triangle);
-            triangle.Edges[0] = e0;
-            triangle.Edges[1] = e1;
-            triangle.Edges[2] = e2;
-            triangle.UpdateEdgeSideFlags();
-            triangle.Attach();
-            return triangle;
-        }
     }
 
-    [Flags]
-    public enum NaviEdgeFlags
+    public class NaviPathSearchState
     {
-        None = 0,
-        Flag0 = 1 << 0,
-        Flag1 = 1 << 1,
-        Flag2 = 1 << 2,
-        Flag3 = 1 << 3,
-    }
-
-    public class NaviPathSearchState : NaviRef
-    {
-        public NaviPathSearchState(NaviSystem navi) : base(navi)
+        public NaviPathSearchState()
         {
         }
     }
@@ -95,14 +29,20 @@ namespace MHServerEmu.Games.Navi
         Attached = 1 << 0,
     }
 
-    public class NaviTriangle : NaviRef
+    public class NaviTriangle
     {
-        public NaviEdge[] Edges { get; set; } = new NaviEdge[3];
+        public NaviEdge[] Edges { get; set; }
         public int EdgeSideFlags { get; private set; }
         public NaviTriangleFlags Flags { get; private set; }
-        
-        public NaviTriangle(NaviSystem navi) : base(navi)
+
+        public NaviTriangle(NaviEdge e0, NaviEdge e1, NaviEdge e2)
         {
+            Edges = new NaviEdge[3];
+            Edges[0] = e0;
+            Edges[1] = e1;
+            Edges[2] = e2;
+            UpdateEdgeSideFlags();
+            Attach();
         }
 
         public void Attach()
@@ -166,15 +106,31 @@ namespace MHServerEmu.Games.Navi
         }
     }
 
-    public class NaviEdge : NaviRef
+    [Flags]
+    public enum NaviEdgeFlags
+    {
+        None = 0,
+        Flag0 = 1 << 0,
+        Flag1 = 1 << 1,
+        Flag2 = 1 << 2,
+        Flag3 = 1 << 3,
+    }
+
+    public class NaviEdge
     {
         public NaviEdgeFlags EdgeFlags { get; set; }
         public NaviEdgePathingFlags PathingFlags { get; set; }
-        public NaviPoint[] Points { get; set; } = new NaviPoint[2];
-        public NaviTriangle[] Triangles { get; set; } = new NaviTriangle[2];
+        public NaviPoint[] Points { get; set; }
+        public NaviTriangle[] Triangles { get; set; }
 
-        public NaviEdge(NaviSystem navi) : base(navi)
-        {            
+        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, NaviEdgePathingFlags pathingFlags)
+        {
+            EdgeFlags = edgeFlags;
+            PathingFlags = pathingFlags;
+            Points = new NaviPoint[2];
+            Points[0] = p0;
+            Points[1] = p1;
+            Triangles = new NaviTriangle[2];
         }
 
         public void AttachTriangle(NaviTriangle triangle)
@@ -188,15 +144,9 @@ namespace MHServerEmu.Games.Navi
         public void DetachTriangle(NaviTriangle triangle)
         {
             if (Triangles[0] == triangle)
-            {
-                Triangles[0].Release();
                 Triangles[0] = null;
-            }
             else
-            {
-                Triangles[1].Release();
                 Triangles[1] = null;
-            }
         }
 
         public NaviTriangle OpposedTriangle(NaviTriangle triangle)
@@ -213,45 +163,14 @@ namespace MHServerEmu.Games.Navi
     {
     }
 
-    public class NaviPoint : NaviRef
+    public class NaviPoint
     { 
         public Vector3 Pos { get; internal set; }
 
-        public NaviPoint(NaviSystem navi) : base(navi)
+        public NaviPoint(Vector3 pos)
         {
+            Pos = pos;
         }
     }
 
-    public class NaviRef
-    {
-        protected NaviSystem _navi;
-        protected int _ref;
-
-        public NaviRef(NaviSystem navi)
-        {
-            _navi = navi;
-            _ref = 1;
-        }
-
-        public void StaticIncRef()
-        {
-            _ref++;
-        }
-
-        public void StaticDecRef()
-        {
-            _ref--;
-            if (_ref == 0) _navi.Delete(this);
-        }
-
-        public void SafeRelease()
-        {
-            Release();
-        }
-
-        public void Release()
-        {
-            StaticDecRef();
-        }
-    }
 }

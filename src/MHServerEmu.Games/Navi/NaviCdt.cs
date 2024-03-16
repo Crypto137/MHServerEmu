@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Navi
 
         public InvasiveList<NaviTriangle> TriangleList { get; private set; }
 
-        private NaviSystem _naviSystem;
+        private NaviSystem _navi;
         private int _sectorSize;
         private NaviTriangle[] _sectors;
         private NaviVertexLookupCache _vertexLookupCache;
@@ -23,9 +23,9 @@ namespace MHServerEmu.Games.Navi
         private int _serial;
         private int _triangleCount;
 
-        public NaviCdt(NaviSystem naviSystem, NaviVertexLookupCache naviVertexLookupCache)
+        public NaviCdt(NaviSystem navi, NaviVertexLookupCache naviVertexLookupCache)
         {
-            _naviSystem = naviSystem;
+            _navi = navi;
             TriangleCount = 0;
             Bounds = Aabb.Zero;
             TriangleList = new(1);
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Navi
 
             _sectorSize = sectorsX;
             _sectors = new NaviTriangle[sectorsX * sectorsY];
-            if (_naviSystem.Log) Logger.Trace($"Navi Fast Triangle Lookup: {sectorsX}x{sectorsY} = {_sectors.Length} sectors");
+            if (_navi.Log) Logger.Trace($"Navi Fast Triangle Lookup: {sectorsX}x{sectorsY} = {_sectors.Length} sectors");
         }
 
         public void Release()
@@ -63,7 +63,6 @@ namespace MHServerEmu.Games.Navi
         {
             _lastTriangle ??= triangle;
 
-            triangle.StaticIncRef();
             TriangleList.AddBack(triangle);
             _triangleCount++;
 
@@ -81,7 +80,6 @@ namespace MHServerEmu.Games.Navi
             RemoveTriangleFastLookupRef(triangle);
             triangle.Detach();
 
-            triangle.StaticDecRef();
             TriangleList.Remove(triangle);
             _triangleCount--;
 

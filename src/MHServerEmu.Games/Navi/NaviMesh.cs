@@ -44,7 +44,6 @@ namespace MHServerEmu.Games.Navi
             NaviCdt = new(navi, NaviVertexLookupCache);
             _edges = new();
             MeshConnections = new();
-            _exteriorSeedEdge = new(navi);
             _points = new();  
             _modifyMeshPatches = new();
             _modifyMeshPatchesProjZ = new();
@@ -80,20 +79,20 @@ namespace MHServerEmu.Games.Navi
             float yMin = bounds.Min.Y - padding;
             float yMax = bounds.Max.Y + padding;
 
-            NaviPoint p0 = _navi.CreatePoint(new (xMin, yMin, 0.0f));
-            NaviPoint p1 = _navi.CreatePoint(new (xMax, yMin, 0.0f));
-            NaviPoint p2 = _navi.CreatePoint(new (xMax, yMax, 0.0f));
-            NaviPoint p3 = _navi.CreatePoint(new (xMin, yMax, 0.0f));
+            NaviPoint p0 = new(new (xMin, yMin, 0.0f));
+            NaviPoint p1 = new(new (xMax, yMin, 0.0f));
+            NaviPoint p2 = new(new (xMax, yMax, 0.0f));
+            NaviPoint p3 = new(new (xMin, yMax, 0.0f));
 
-            NaviEdge e0 = _navi.CreateEdge(p0, p1, NaviEdgeFlags.Flag0, new());
-            NaviEdge e1 = _navi.CreateEdge(p1, p2, NaviEdgeFlags.Flag0, new());
-            NaviEdge e2 = _navi.CreateEdge(p2, p3, NaviEdgeFlags.Flag0, new());
-            NaviEdge e3 = _navi.CreateEdge(p3, p0, NaviEdgeFlags.Flag0, new());
+            NaviEdge e0 = new(p0, p1, NaviEdgeFlags.Flag0, new());
+            NaviEdge e1 = new(p1, p2, NaviEdgeFlags.Flag0, new());
+            NaviEdge e2 = new(p2, p3, NaviEdgeFlags.Flag0, new());
+            NaviEdge e3 = new(p3, p0, NaviEdgeFlags.Flag0, new());
 
-            NaviEdge e02 = _navi.CreateEdge(p0, p2, NaviEdgeFlags.None, new());
+            NaviEdge e02 = new(p0, p2, NaviEdgeFlags.None, new());
 
-            NaviCdt.AddTriangle(_navi.CreateTriangle(e0, e1, e02));
-            NaviCdt.AddTriangle(_navi.CreateTriangle(e2, e3, e02));
+            NaviCdt.AddTriangle(new(e0, e1, e02));
+            NaviCdt.AddTriangle(new(e2, e3, e02));
 
             _exteriorSeedEdge = e0;
         }
@@ -105,7 +104,6 @@ namespace MHServerEmu.Games.Navi
             _modifyMeshPatchesProjZ.Clear();
             DestroyMeshConnections();
             _edges.Clear();
-            _exteriorSeedEdge.SafeRelease();
             _exteriorSeedEdge = null;
             ClearGenerationCache();
             NaviCdt.Release();

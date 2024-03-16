@@ -53,9 +53,6 @@
 
         public void Clear()
         {
-            foreach (var key in _vertexCache)
-                key.Point.StaticDecRef();
-
             _vertexCache.Clear();
         }
 
