@@ -19,8 +19,6 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class ClientSession : IFrontendSession
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public ulong Id { get; set; }
         public DBAccount Account { get; }
 

@@ -13,6 +13,9 @@ using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
 {
+    /// <summary>
+    /// An <see cref="IGameService"/> that manages connected players and routes messages to relevant <see cref="Game"/> instances.
+    /// </summary>
     public class PlayerManagerService : IGameService, IFrontendService
     {
         private const ushort MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
@@ -29,6 +32,9 @@ namespace MHServerEmu.PlayerManagement
 
         public PlayerManagerConfig Config { get; }
 
+        /// <summary>
+        /// Constructs a new <see cref="PlayerManagerService"/> instance.
+        /// </summary>
         public PlayerManagerService()
         {
             _sessionManager = new(this);
@@ -59,10 +65,9 @@ namespace MHServerEmu.PlayerManagement
                 message.DateTimeReceived = Clock.UnixTime;
             }
 
+            // Self-handle or route messages
             switch ((ClientToGameServerMessage)message.Id)
             {
-                // Self-handled messages
-
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:
                     // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
                     // doesn't include it. To avoid an exception we build a partial message from the data we receive.
@@ -73,9 +78,8 @@ namespace MHServerEmu.PlayerManagement
                     }
                     catch
                     {
-                        Logger.Error("Failed to deserialize NetMessageReadyForGameJoin");
+                        Logger.Error("Handle(): Failed to deserialize NetMessageReadyForGameJoin");
                     }
-
                     break;
 
                 case ClientToGameServerMessage.NetMessageSyncTimeRequest:
@@ -93,68 +97,17 @@ namespace MHServerEmu.PlayerManagement
                         OnFps(client, fps);
                     break;
 
-                case ClientToGameServerMessage.NetMessageGracefulDisconnect:
-                    OnGracefulDisconnect(client);
-                    break;
-
-                // Routed messages
-
-                // Game
-                case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                case ClientToGameServerMessage.NetMessageCellLoaded:
-                case ClientToGameServerMessage.NetMessageAdminCommand:
-                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
-                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
-                case ClientToGameServerMessage.NetMessageTryActivatePower:
-                case ClientToGameServerMessage.NetMessagePowerRelease:
-                case ClientToGameServerMessage.NetMessageTryCancelPower:
-                case ClientToGameServerMessage.NetMessageTryCancelActivePower:
-                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                case ClientToGameServerMessage.NetMessageTryInventoryMove:
-                case ClientToGameServerMessage.NetMessageThrowInteraction:
-                case ClientToGameServerMessage.NetMessageUseInteractableObject:
-                case ClientToGameServerMessage.NetMessageUseWaypoint:
-                case ClientToGameServerMessage.NetMessageSwitchAvatar:
-                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
-                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
-                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
-                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
-                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
-                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
-                case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
-                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
-                case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
-                case ClientToGameServerMessage.NetMessageAssignStolenPower:
-                    GetGameByPlayer(client).Handle(client, message);
-                    break;
-
-                // Grouping Manager
-                case ClientToGameServerMessage.NetMessageChat:
-                case ClientToGameServerMessage.NetMessageTell:
-                case ClientToGameServerMessage.NetMessageReportPlayer:
-                case ClientToGameServerMessage.NetMessageChatBanVote:
-                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.GroupingManager);
-                    break;
-
-                // Billing
-                case ClientToGameServerMessage.NetMessageGetCatalog:
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
-                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
-                case ClientToGameServerMessage.NetMessagePurchaseUnlock:
-                case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.Billing);
-                    break;
-
-                // Leaderboards
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
-                case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
-                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.Leaderboard);
-                    break;
-
                 default:
-                    Logger.Warn($"Handle(): Unhandled message [{message.Id}] {(ClientToGameServerMessage)message.Id}");
+                    // Route the rest of messages to the game the player is currently in
+                    Game game = GetGameByPlayer(client);
+
+                    if (game == null)
+                    {
+                        Logger.Warn($"Handle(): Cannot route {(ClientToGameServerMessage)message.Id}, the player {client.Session.Account} is not in a game");
+                        return;
+                    }
+
+                    game.Handle(client, message);
                     break;
             }
         }
@@ -224,7 +177,29 @@ namespace MHServerEmu.PlayerManagement
 
         #region Player Management
 
-        public void BroadcastMessage(GameMessage message)
+        /// <summary>
+        /// Retrieves the <see cref="ClientSession"/> for the specified session id. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetSession(sessionId, out session);
+
+        /// <summary>
+        /// Retrieves the <see cref="FrontendClient"/> for the specified session id. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _sessionManager.TryGetClient(sessionId, out client);
+
+        /// <summary>
+        /// Retrieves the <see cref="Game"/> instance that the provided <see cref="FrontendClient"/> is in. Returns <see langword="null"/> if not found.
+        /// </summary>
+        public Game GetGameByPlayer(FrontendClient client)
+        {
+            // TODO: Keep track of this inside PlayerManagerService rather than relying on a client property
+            return _gameManager.GetGameById(client.GameId);
+        }
+
+        /// <summary>
+        /// Sends an <see cref="IMessage"/> to all connected <see cref="FrontendClient"/> instances.
+        /// </summary>
+        public void BroadcastMessage(IMessage message)
         {
             lock (_playerLock)
             {
@@ -233,14 +208,13 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetSession(sessionId, out session);
-        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _sessionManager.TryGetClient(sessionId, out client);
-        public Game GetGameByPlayer(FrontendClient client) => _gameManager.GetGameById(client.GameId);
-
         #endregion
 
         #region Message Handling
 
+        /// <summary>
+        /// Handles <see cref="LoginDataPB"/>.
+        /// </summary>
         public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out AuthTicket authTicket)
         {
             authTicket = AuthTicket.DefaultInstance;
@@ -265,6 +239,9 @@ namespace MHServerEmu.PlayerManagement
             return statusCode;
         }
 
+        /// <summary>
+        /// Handles <see cref="InitialClientHandshake"/>.
+        /// </summary>
         private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
             client.FinishedPlayerManagerHandshake = true;
@@ -277,6 +254,9 @@ namespace MHServerEmu.PlayerManagement
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
+        /// <summary>
+        /// Handles <see cref="ClientCredentials"/>.
+        /// </summary>
         private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
             Logger.Info($"Received ClientCredentials");
@@ -307,6 +287,9 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
+        /// <summary>
+        /// Handles <see cref="NetMessageReadyForGameJoin"/>.
+        /// </summary>
         private void OnReadyForGameJoin(FrontendClient client, NetMessageReadyForGameJoin readyForGameJoin)
         {
             Logger.Info($"Received NetMessageReadyForGameJoin from {client.Session.Account}");
@@ -323,6 +306,9 @@ namespace MHServerEmu.PlayerManagement
                 .Build());
         }
 
+        /// <summary>
+        /// Handles <see cref="NetMessageSyncTimeRequest"/>.
+        /// </summary>
         private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest request, TimeSpan gameTimeReceived, TimeSpan dateTimeReceived)
         {
             //Logger.Debug($"NetMessageSyncTimeRequest:\n{request}");
@@ -344,6 +330,9 @@ namespace MHServerEmu.PlayerManagement
             client.SendMessage(MuxChannel, reply);
         }
 
+        /// <summary>
+        /// Handles <see cref="NetMessagePing"/>.
+        /// </summary>
         private void OnPing(FrontendClient client, NetMessagePing ping, TimeSpan gameTimeReceived)
         {
             //Logger.Debug($"NetMessagePing:\n{ping}");
@@ -364,14 +353,12 @@ namespace MHServerEmu.PlayerManagement
             client.SendMessage(MuxChannel, response);
         }
 
+        /// <summary>
+        /// Handles <see cref="NetMessageFPS"/>.
+        /// </summary>
         private void OnFps(FrontendClient client, NetMessageFPS fps)
         {
             //Logger.Debug($"NetMessageFPS:\n{fps}");
-        }
-
-        private void OnGracefulDisconnect(FrontendClient client)
-        {
-            client.SendMessage(MuxChannel, NetMessageGracefulDisconnectAck.DefaultInstance);
         }
 
         #endregion

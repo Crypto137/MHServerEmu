@@ -2,6 +2,9 @@
 
 namespace MHServerEmu.PlayerManagement.Configs
 {
+    /// <summary>
+    /// Contains configuration for the <see cref="PlayerManagerService"/>.
+    /// </summary>
     public class PlayerManagerConfig : ConfigContainer
     {
         public bool BypassAuth { get; private set; } = false;

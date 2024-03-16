@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -203,11 +204,6 @@ namespace MHServerEmu.Games.Network
                         OnAdminCommand(adminCommand);
                     break;
 
-                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
-                    if (message.TryDeserialize<NetMessageChangeCameraSettings>(out var cameraSettings))
-                        OnChangeCameraSettings(cameraSettings);
-                    break;
-
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:
                     if (message.TryDeserialize<NetMessageUseInteractableObject>(out var useInteractableObject))
                         OnUseInteractableObject(useInteractableObject);
@@ -261,6 +257,10 @@ namespace MHServerEmu.Games.Network
                         OnAbilitySwapInAbilityBar(swapInAbilityBar);
                     break;
 
+                case ClientToGameServerMessage.NetMessageGracefulDisconnect:
+                        OnGracefulDisconnect();
+                    break;
+
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
                     if (message.TryDeserialize<NetMessageSetPlayerGameplayOptions>(out var setPlayerGameplayOptions))
                         OnSetPlayerGameplayOptions(setPlayerGameplayOptions);
@@ -281,15 +281,40 @@ namespace MHServerEmu.Games.Network
                         OnOmegaBonusAllocationCommit(omegaBonusAllocationCommit);
                     break;
 
+                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
+                    if (message.TryDeserialize<NetMessageChangeCameraSettings>(out var cameraSettings))
+                        OnChangeCameraSettings(cameraSettings);
+                    break;
+
+                // Grouping Manager
+                case ClientToGameServerMessage.NetMessageChat:
+                case ClientToGameServerMessage.NetMessageTell:
+                case ClientToGameServerMessage.NetMessageReportPlayer:
+                case ClientToGameServerMessage.NetMessageChatBanVote:
+                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.GroupingManager);
+                    break;
+
+                // Billing
+                case ClientToGameServerMessage.NetMessageGetCatalog:
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
+                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
+                case ClientToGameServerMessage.NetMessagePurchaseUnlock:
+                case ClientToGameServerMessage.NetMessageGetGiftHistory:
+                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Billing);
+                    break;
+
+                // Leaderboards
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
+                case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
+                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Leaderboard);
+                    break;
+
                 default:
-                    Logger.Warn($"HandleQueuedMessage(): Unhandled message [{message.Id}] {(ClientToGameServerMessage)message.Id}");
+                    Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]");
                     break;
             }
-        }
-
-        private void OnChangeCameraSettings(NetMessageChangeCameraSettings cameraSettings)
-        {
-            AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
         }
 
         private void OnUpdateAvatarState(NetMessageUpdateAvatarState updateAvatarState)
@@ -517,6 +542,11 @@ namespace MHServerEmu.Games.Network
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
         }
 
+        private void OnGracefulDisconnect()
+        {
+            SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
+        }
+
         private void OnSetPlayerGameplayOptions(NetMessageSetPlayerGameplayOptions setPlayerGameplayOptions)
         {
             Logger.Info($"Received SetPlayerGameplayOptions message");
@@ -541,6 +571,11 @@ namespace MHServerEmu.Games.Network
         private void OnOmegaBonusAllocationCommit(NetMessageOmegaBonusAllocationCommit omegaBonusAllocationCommit)
         {
             Logger.Debug(omegaBonusAllocationCommit.ToString());
+        }
+
+        private void OnChangeCameraSettings(NetMessageChangeCameraSettings cameraSettings)
+        {
+            AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
         }
 
         #endregion
