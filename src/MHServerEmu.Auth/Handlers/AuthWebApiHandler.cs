@@ -116,10 +116,10 @@ namespace MHServerEmu.Auth.Handlers
                 return false;
             }
 
-            bool success = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"], out string message);
-            if (HideSensitiveInformation == false) Logger.Trace(message);
+            (bool, string) result = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"]);
+            if (HideSensitiveInformation == false) Logger.Trace(result.Item2);
 
-            await SendResponseAsync(success ? "Success" : "Error", message, response);
+            await SendResponseAsync(result.Item1 ? "Success" : "Error", result.Item2, response);
             return true;
         }
 

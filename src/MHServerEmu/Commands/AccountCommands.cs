@@ -15,8 +15,8 @@ namespace MHServerEmu.Commands
             if (@params == null) return Fallback();
             if (@params.Length < 3) return "Invalid arguments. Type 'help account create' to get help.";
 
-            AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2], out string message);
-            return message;
+            (bool, string) result = AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
+            return result.Item2;
         }
 
         [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]", AccountUserLevel.User)]
@@ -30,8 +30,8 @@ namespace MHServerEmu.Commands
             if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
                 return "You are allowed to change player name only for your own account.";
 
-            AccountManager.ChangeAccountPlayerName(email, @params[1], out string message);
-            return message;
+            (bool, string) result = AccountManager.ChangeAccountPlayerName(email, @params[1]);
+            return result.Item2;
         }
 
         [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]", AccountUserLevel.User)]
@@ -45,8 +45,8 @@ namespace MHServerEmu.Commands
             if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
                 return "You are allowed to change password only for your own account.";
 
-            AccountManager.ChangeAccountPassword(email, @params[1], out string message);
-            return message;
+            (bool, string) result = AccountManager.ChangeAccountPassword(email, @params[1]);
+            return result.Item2;
         }
 
         [Command("userlevel", "Changes user level for the specified account.\nUsage: account userlevel [email] [0|1|2]", AccountUserLevel.Admin)]
@@ -58,8 +58,8 @@ namespace MHServerEmu.Commands
             if (byte.TryParse(@params[1], out byte userLevel))
             {
                 if (userLevel > 2) return "Invalid arguments. Type 'help account userlevel' to get help.";
-                AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel, out string message);
-                return message;
+                (bool, string) result = AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel);
+                return result.Item2;
             }
             else
             {
@@ -88,8 +88,8 @@ namespace MHServerEmu.Commands
             if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
 
-            AccountManager.BanAccount(@params[0].ToLower(), out string message);
-            return message;
+            (bool, string) result = AccountManager.BanAccount(@params[0].ToLower());
+            return result.Item2;
         }
 
         [Command("unban", "Unbans the specified account.\nUsage: account unban [email]", AccountUserLevel.Moderator)]
@@ -98,8 +98,8 @@ namespace MHServerEmu.Commands
             if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
 
-            AccountManager.UnbanAccount(@params[0].ToLower(), out string message);
-            return message;
+            (bool, string) result = AccountManager.UnbanAccount(@params[0].ToLower());
+            return result.Item2;
         }
 
         [Command("info", "Shows information for the logged in account.\nUsage: account info", AccountUserLevel.User)]
