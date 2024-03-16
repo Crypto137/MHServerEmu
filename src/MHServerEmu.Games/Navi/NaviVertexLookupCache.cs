@@ -37,27 +37,35 @@
             }
         }
 
-        private NaviSystem _naviSystem;
+        private NaviSystem _navi;
 
         public const float CellSize = 12.0f;
         public const float NaviPointBoxEpsilon = 4.0f;
 
         public HashSet<VertexCacheKey> _vertexCache;
+        private int _maxSize;
 
         public NaviVertexLookupCache(NaviSystem naviSystem)
         {
-            _naviSystem = naviSystem;
+            _navi = naviSystem;
             _vertexCache = new();
         }
 
-        internal void Clear()
+        public void Clear()
         {
-            throw new NotImplementedException();
+            foreach (var key in _vertexCache)
+                key.Point.StaticDecRef();
+
+            _vertexCache.Clear();
         }
 
-        internal void Initialize(int totalVertices)
+        public void Initialize(int size)
         {
-            throw new NotImplementedException();
+            size += (size / 10);
+            _maxSize = Math.Max(size, 1024);
+            int hashSize = (int)(size / 1.0f);
+            _vertexCache = new(hashSize);
         }
+
     }
 }

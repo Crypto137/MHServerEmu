@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Navi
             public NaviPatchPrototype Patch;
         }
 
-        private readonly NaviSystem _naviSystem;
+        private readonly NaviSystem _navi;
 
         public Aabb Bounds { get; private set; }
         public NaviVertexLookupCache NaviVertexLookupCache { get; private set; }
@@ -32,19 +32,19 @@ namespace MHServerEmu.Games.Navi
         private List<NaviPoint> _points;
         private List<NaviEdge> _edges;
         public Dictionary<NaviEdge, NaviMeshConnection> MeshConnections { get; private set; }
-        private NaviRef<NaviEdge> _exteriorSeedEdge;
+        private NaviEdge _exteriorSeedEdge;
         private List<ModifyMeshPatch> _modifyMeshPatches;
         private List<ModifyMeshPatch> _modifyMeshPatchesProjZ;
 
-        public NaviMesh(NaviSystem naviSystem)
+        public NaviMesh(NaviSystem navi)
         {
-            _naviSystem = naviSystem;
+            _navi = navi;
             Bounds = Aabb.Zero;
-            NaviVertexLookupCache = new(naviSystem);
-            NaviCdt = new(naviSystem, NaviVertexLookupCache);
+            NaviVertexLookupCache = new(navi);
+            NaviCdt = new(navi, NaviVertexLookupCache);
             _edges = new();
             MeshConnections = new();
-            _exteriorSeedEdge = new();
+            _exteriorSeedEdge = new(navi);
             _points = new();  
             _modifyMeshPatches = new();
             _modifyMeshPatchesProjZ = new();
@@ -75,7 +75,27 @@ namespace MHServerEmu.Games.Navi
 
         private void AddSuperQuad(Aabb bounds, float padding)
         {
-            throw new NotImplementedException();
+            float xMin = bounds.Min.X - padding;
+            float xMax = bounds.Max.X + padding;
+            float yMin = bounds.Min.Y - padding;
+            float yMax = bounds.Max.Y + padding;
+
+            NaviPoint p0 = _navi.CreatePoint(new (xMin, yMin, 0.0f));
+            NaviPoint p1 = _navi.CreatePoint(new (xMax, yMin, 0.0f));
+            NaviPoint p2 = _navi.CreatePoint(new (xMax, yMax, 0.0f));
+            NaviPoint p3 = _navi.CreatePoint(new (xMin, yMax, 0.0f));
+
+            NaviEdge e0 = _navi.CreateEdge(p0, p1, NaviEdgeFlags.Flag0, new());
+            NaviEdge e1 = _navi.CreateEdge(p1, p2, NaviEdgeFlags.Flag0, new());
+            NaviEdge e2 = _navi.CreateEdge(p2, p3, NaviEdgeFlags.Flag0, new());
+            NaviEdge e3 = _navi.CreateEdge(p3, p0, NaviEdgeFlags.Flag0, new());
+
+            NaviEdge e02 = _navi.CreateEdge(p0, p2, NaviEdgeFlags.None, new());
+
+            NaviCdt.AddTriangle(_navi.CreateTriangle(e0, e1, e02));
+            NaviCdt.AddTriangle(_navi.CreateTriangle(e2, e3, e02));
+
+            _exteriorSeedEdge = e0;
         }
 
         public void Release()
@@ -86,6 +106,7 @@ namespace MHServerEmu.Games.Navi
             DestroyMeshConnections();
             _edges.Clear();
             _exteriorSeedEdge.SafeRelease();
+            _exteriorSeedEdge = null;
             ClearGenerationCache();
             NaviCdt.Release();
         }

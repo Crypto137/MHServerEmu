@@ -12,6 +12,7 @@ namespace MHServerEmu.Core.Collisions
         public float Height { get => Max.Z - Min.Z; }
 
         public Vector3 Center { get => Min + (Max - Min) / 2.0f; }
+        public Vector3 SizeVec => Max - Min;
 
         public Aabb(Vector3 min, Vector3 max)
         {
@@ -275,7 +276,7 @@ namespace MHServerEmu.Core.Collisions
 
         public string BoxToString()
         {
-            return $" Box: {Max - Min}";
+            return $" Box: {SizeVec}";
         }
 
     }
