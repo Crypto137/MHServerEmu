@@ -389,14 +389,20 @@ namespace MHServerEmu.Games.Regions
 
             bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
                         && GenerateHelper(regionGenerator, GenerateFlag.PostInitialize)
-            // GenerateHelper(regionGenerator, GenerateFlag.Navi);
-            // GenerateNaviMesh()
+                        && GenerateHelper(regionGenerator, GenerateFlag.Navi)
+                        && GenerateNaviMesh()
                         && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
             // BuildObjectiveGraph()
             if (success) success &= GenerateMissionPopulation()
                         && GenerateHelper(regionGenerator, GenerateFlag.Population)
                         && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
             return success;
+        }
+
+        public bool GenerateNaviMesh()
+        {
+            NaviSystem.ClearErrorLog();
+            return NaviMesh.GenerateMesh();
         }
 
         public bool GenerateMissionPopulation()

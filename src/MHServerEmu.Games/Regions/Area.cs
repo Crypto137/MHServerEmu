@@ -241,9 +241,9 @@ namespace MHServerEmu.Games.Regions
 
         private bool GenerateNavi()
         {
-            if (!TestStatus(GenerateFlag.Background))
+            if (TestStatus(GenerateFlag.Background) == false)
             {
-                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{ToString}");
+                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{ToString()}");
                 return false;
             }
 

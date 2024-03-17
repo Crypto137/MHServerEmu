@@ -1,12 +1,16 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Regions;
+using System.Text;
 
 namespace MHServerEmu.Games.Navi
 {
     public class NaviSystem
     {
         public bool Log = true;
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public Region Region { get; private set; }
+        public List<NaviErrorReport> ErrorLog { get; private set; } = new ();
 
         public bool Initialize(Region region)
         {
@@ -14,6 +18,82 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
+        public void LogError(string msg)
+        {
+            NaviErrorReport errorReport = new()
+            {
+                Msg = msg
+            };
+            ErrorLog.Add(errorReport);
+        }
+
+        public void LogError(string msg, NaviEdge edge)
+        {
+            NaviErrorReport errorReport = new()
+            {
+                Msg = msg,
+                Edge = edge
+            };
+            ErrorLog.Add(errorReport);
+        }
+
+        public void LogError(string msg, NaviPoint point)
+        {
+            NaviErrorReport errorReport = new()
+            {
+                Msg = msg,
+                Point = point
+            };
+            ErrorLog.Add(errorReport);
+        }
+
+        public void ClearErrorLog()
+        {
+            ErrorLog.Clear();
+        }
+
+        public bool CheckErrorLog(bool clearErrorLog, string info = null)
+        {
+            bool hasErrors = HasErrors();
+            if (Log && hasErrors)
+            {
+                var error = ErrorLog.First();
+
+                Cell cell = null;
+                if (Region != null)
+                {
+                    if (error.Point != null)
+                        cell = Region.GetCellAtPosition(error.Point.Pos);
+                    else if (error.Edge != null)
+                        cell = Region.GetCellAtPosition(error.Edge.Midpoint());
+                }
+                StringBuilder sb = new();
+                sb.AppendLine($"Navigation Error: {error.Msg}");
+                sb.AppendLine($"Cell: {(cell != null ? cell.ToString() : "Unknown")}");
+                if (error.Point != null)
+                    sb.AppendLine($"Point: {error.Point}");
+                if (error.Edge != null)
+                    sb.AppendLine($"Edge: {error.Edge}");
+                if (string.IsNullOrEmpty(info) == false)
+                    sb.AppendLine($"Extra Info: {info}");
+                Logger.Error(sb.ToString());
+            }
+
+            if (clearErrorLog) ClearErrorLog();
+            return hasErrors;
+        }
+
+        private bool HasErrors()
+        {
+            return ErrorLog.Any();
+        }
+    }
+
+    public struct NaviErrorReport
+    { 
+        public string Msg;
+        public NaviPoint Point;
+        public NaviEdge Edge;
     }
 
     public class NaviPathSearchState
@@ -90,7 +170,7 @@ namespace MHServerEmu.Games.Navi
 
         private NaviPoint EdgePointCW(int edgeIndex, int point)
         {
-            int pointIndex = ((EdgeSideFlags >> edgeIndex) & 1) ^ point;
+            int pointIndex = EdgeSideFlag(edgeIndex) ^ point;
             return Edges[edgeIndex].Points[pointIndex];
         }
 
@@ -157,20 +237,45 @@ namespace MHServerEmu.Games.Navi
                 return Triangles[0];
         }
 
+        public Vector3 Midpoint()
+        {
+            return (Points[0].Pos + Points[1].Pos) / 2.0f;
+        }
+
+        public override string ToString()
+        {
+            return $"NaviEdge [p0={Points[0]} p1={Points[1]}]";
+        }
+
     }
 
     public class NaviEdgePathingFlags
     {
     }
 
+    public enum NaviPointFlags 
+    {
+        None,
+        Attached 
+    }
+
     public class NaviPoint
     { 
         public Vector3 Pos { get; internal set; }
+        public NaviPointFlags Flags { get; private set; }
+        public int Influence { get; private set; }
+        public float InfluenceRadius { get; private set; }
 
         public NaviPoint(Vector3 pos)
         {
             Pos = pos;
         }
+
+        public override string ToString()
+        {
+            return $"NaviPoint ({Pos.X:F4} {Pos.Y:F4} {Pos.Z:F4}) flg:{Flags} inf:{Influence}";
+        }
+
     }
 
 }

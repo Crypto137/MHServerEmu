@@ -124,5 +124,67 @@ namespace MHServerEmu.Games.Navi
             }
             MeshConnections.Clear();
         }
+
+        public bool GenerateMesh()
+        {
+            _isInit = false;
+
+            if (_modifyMeshPatches.Any())
+            {
+                foreach (var patch in _modifyMeshPatches)
+                    if (ModifyMesh(patch.Transform, patch.Patch, false) == false) break;
+                if (_navi.CheckErrorLog(false)) return false;
+            }
+            _modifyMeshPatches.Clear();
+
+            if (_modifyMeshPatchesProjZ.Any())
+            {
+                foreach (var patch in _modifyMeshPatchesProjZ)
+                    if (ModifyMesh(patch.Transform, patch.Patch, true) == false) break;
+                if (_navi.CheckErrorLog(false)) return false;
+            }
+            _modifyMeshPatchesProjZ.Clear();
+
+            MarkupMesh(false);
+            if (_navi.CheckErrorLog(false)) return false;
+
+            bool removeCollinearEdges = true; 
+            if (removeCollinearEdges)
+            {
+                NaviCdt.RemoveCollinearEdges();
+                if (_navi.CheckErrorLog(false)) return false;
+
+                MarkupMesh(false);
+                if (_navi.CheckErrorLog(false)) return false;
+            }
+
+            MergeMeshConnections();
+            if (_navi.CheckErrorLog(false)) return false;
+
+            _isInit = true;
+            return true;
+        }
+
+        private void MergeMeshConnections() {}
+
+        private void MarkupMesh(bool v)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool ModifyMesh(Transform3 transform, NaviPatchPrototype patch, bool projZ)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool Stitch(NaviPatchPrototype naviPatch, Transform3 cellToRegion)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool StitchProjZ(NaviPatchPrototype propPatch, Transform3 cellToRegion)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

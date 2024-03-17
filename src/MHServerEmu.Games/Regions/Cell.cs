@@ -11,6 +11,7 @@ using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
+using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -124,26 +125,22 @@ namespace MHServerEmu.Games.Regions
 
         public void AddNavigationDataToRegion()
         {
-            /* TODO NaviMesh
-
              Region region = GetRegion();
              if (region == null) return;
              NaviMesh naviMesh = region.NaviMesh;
              if (CellProto == null) return;
 
-             Transform3 cellToRegion = Transform3.Identity;
-
-             if (!CellProto.IsOffsetInMapFile)
+             Transform3 cellToRegion;
+             if (CellProto.IsOffsetInMapFile == false)
                  cellToRegion = RegionTransform;
              else
-                 cellToRegion = Transform3.BuildTransform(Area.Origin, Vector3.Zero);
+                 cellToRegion = Transform3.BuildTransform(Area.Origin, Orientation.Zero);
 
-             if (!naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, cellToRegion)) return;
-             if (!naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, cellToRegion)) return;
+             if (naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, cellToRegion) == false) return;
+             if (naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, cellToRegion) == false) return;
 
              VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, cellToRegion));
-             VisitEncounters(new NaviEncounterVisitor(naviMesh, cellToRegion));
-            */
+             VisitEncounters(new NaviEncounterVisitor(naviMesh, cellToRegion));            
         }
 
         public void AddCellConnection(uint id)
@@ -351,6 +348,11 @@ namespace MHServerEmu.Games.Regions
                     }
                 }
             }
+        }
+
+        private void VisitEncounters(NaviEncounterVisitor naviEncounterVisitor)
+        {
+            throw new NotImplementedException();
         }
 
         public void InstanceMarkerSet(MarkerSetPrototype markerSet, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions, string prefabPath)

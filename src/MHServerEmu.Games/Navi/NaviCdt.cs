@@ -115,5 +115,9 @@ namespace MHServerEmu.Games.Navi
                 return -1;
         }
 
+        internal void RemoveCollinearEdges()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
