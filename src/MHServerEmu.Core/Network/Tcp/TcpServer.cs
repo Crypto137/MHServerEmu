@@ -20,6 +20,8 @@ namespace MHServerEmu.Core.Network.Tcp
         private bool _isListening;
         private bool _isDisposed;
 
+        public int ConnectionCount { get => _connectionDict.Count; }
+
         /// <summary>
         /// Runs the server. This method should generally be executed by its own <see cref="Thread"/>.
         /// </summary>

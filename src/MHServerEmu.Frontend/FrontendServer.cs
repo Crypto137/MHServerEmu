@@ -55,7 +55,7 @@ namespace MHServerEmu.Frontend
 
         public string GetStatus()
         {
-            return "Running";
+            return $"Connections: {ConnectionCount}";
         }
 
         #endregion

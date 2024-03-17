@@ -101,7 +101,7 @@ namespace MHServerEmu.Auth
             if (_listener == null || _listener.IsListening == false)
                 return "Not listening";
             
-            return "Listening for requests";
+            return $"Protobuf Handler: {_protobufHandler != null} | Web API Handler: {_webApiHandler != null}";
         }
 
         #endregion

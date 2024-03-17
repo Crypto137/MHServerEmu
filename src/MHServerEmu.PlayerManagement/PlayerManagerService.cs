@@ -120,7 +120,7 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
-            return $"Sessions: {_sessionManager.SessionCount}";
+            return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount}";
         }
 
         #endregion

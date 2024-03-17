@@ -68,7 +68,7 @@ namespace MHServerEmu.Grouping
 
         public string GetStatus()
         {
-            return "Running";
+            return $"Players: {_playerDict.Count}";
         }
 
         #endregion

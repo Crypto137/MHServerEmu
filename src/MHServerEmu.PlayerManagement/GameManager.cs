@@ -17,6 +17,8 @@ namespace MHServerEmu.PlayerManagement
         private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
         private readonly Dictionary<ulong, Game> _gameDict = new();
 
+        public int GameCount { get => _gameDict.Count; }
+
         /// <summary>
         /// Constructs a new <see cref="GameManager"/> instance.
         /// </summary>

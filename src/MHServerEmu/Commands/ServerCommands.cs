@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using System.Text;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
@@ -13,9 +14,21 @@ namespace MHServerEmu.Commands
     public class ServerCommands : CommandGroup
     {
         [Command("status", "Usage: server status", AccountUserLevel.User)]
-        public string Info(string[] @params, FrontendClient client)
+        public string Status(string[] @params, FrontendClient client)
         {
-            return ServerManager.Instance.GetServerStatus();
+            StringBuilder sb = new();
+            sb.AppendLine("Server Status");
+            sb.AppendLine(Program.VersionInfo);
+            sb.Append(ServerManager.Instance.GetServerStatus());
+            string status = sb.ToString();
+
+            // Display in the console as is
+            if (client == null)
+                return status;
+
+            // Split for the client chat window
+            ChatHelper.SendMetagameMessages(client, status.Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
+            return string.Empty;
         }
 
         [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]

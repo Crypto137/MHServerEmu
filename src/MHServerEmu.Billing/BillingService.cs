@@ -97,7 +97,7 @@ namespace MHServerEmu.Billing
 
         public string GetStatus()
         {
-            return $"Running";
+            return $"Catalog Entries: {_catalog.Entries.Length}";
         }
 
         #endregion
