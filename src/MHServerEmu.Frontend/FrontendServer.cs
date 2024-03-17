@@ -6,9 +6,14 @@ using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Frontend
 {
+    /// <summary>
+    /// A <see cref="TcpServer"/> that clients connect to.
+    /// </summary>
     public class FrontendServer : TcpServer, IGameService
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
+
+        #region IGameService Implementation
 
         public override void Run()
         {
@@ -53,8 +58,9 @@ namespace MHServerEmu.Frontend
             return "Running";
         }
 
+        #endregion
 
-        #region Event Handling
+        #region TCP Server Event Handling
 
         protected override void OnClientConnected(TcpClientConnection connection)
         {
@@ -91,6 +97,9 @@ namespace MHServerEmu.Frontend
 
         #region Message Self-Handling
 
+        /// <summary>
+        /// Handles <see cref="ClientCredentials"/>.
+        /// </summary>
         private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
@@ -103,6 +112,9 @@ namespace MHServerEmu.Frontend
             playerManager.ReceiveFrontendMessage(client, credentials);
         }
 
+        /// <summary>
+        /// Handles <see cref="InitialClientHandshake"/>.
+        /// </summary>
         private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
