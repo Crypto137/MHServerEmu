@@ -93,7 +93,7 @@ namespace MHServerEmu.Grouping
                 string playerName = client.Session.Account.PlayerName.ToLower();
 
                 if (_playerDict.ContainsKey(playerName))
-                    return Logger.WarnReturn(false, "AddPlayer(): Already added");
+                    return Logger.WarnReturn(false, "AddFrontendClient(): Already added");
 
                 _playerDict.Add(playerName, client);
                 client.SendMessage(MuxChannel, ChatHelper.Motd);
@@ -105,10 +105,11 @@ namespace MHServerEmu.Grouping
         {
             lock (_playerLock)
             {
-                if (_playerDict.ContainsValue(client) == false)
-                    return Logger.WarnReturn(false, "RemovePlayer(): Player not found");
+                string playerName = client.Session.Account.PlayerName.ToLower();
 
-                _playerDict.Remove(client.Session.Account.PlayerName.ToLower());
+                if (_playerDict.Remove(playerName) == false)
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client.Session.Account.PlayerName} not found");
+
                 return true;
             }
         }

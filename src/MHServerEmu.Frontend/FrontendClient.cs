@@ -39,7 +39,7 @@ namespace MHServerEmu.Frontend
 
                 case MuxCommand.Disconnect:
                     Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
-                    Connection.Disconnect();
+                    Disconnect();
                     break;
 
                 case MuxCommand.ConnectWithData:
@@ -88,6 +88,8 @@ namespace MHServerEmu.Frontend
         {
             SendMessages(muxId, messages.Select(message => new GameMessage(message)));
         }
+
+        public void Disconnect() => Connection.Disconnect();
 
         private void RouteMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {

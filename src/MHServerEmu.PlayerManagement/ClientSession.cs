@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 
@@ -19,8 +20,10 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class ClientSession : IFrontendSession
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public ulong Id { get; set; }
-        public DBAccount Account { get; }
+        public DBAccount Account { get; private set; }
 
         public ClientDownloader Downloader { get; private set; }
         public string Locale { get; private set; }
@@ -43,6 +46,24 @@ namespace MHServerEmu.PlayerManagement
             Key = CryptographyHelper.GenerateAesKey();
             Token = CryptographyHelper.GenerateToken();
             CreationTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Updates <see cref="DBAccount"/> with the latest data from the database.
+        /// </summary>
+        public bool RefreshAccount()
+        {
+            if (Account == null)
+                return Logger.WarnReturn(false, $"RefreshAccount(): Account == null");
+
+            if (Account.Id == 0)
+                return Logger.InfoReturn(true, $"RefreshAccount(): Skipping for the default account");
+
+            if (DBManager.TryQueryAccountByEmail(Account.Email, out DBAccount freshAccount) == false)
+                return Logger.WarnReturn(false, $"RefreshAccount(): Failed to retrieve account data for {Account}");
+
+            Account = freshAccount;
+            return true;
         }
 
         public override string ToString()

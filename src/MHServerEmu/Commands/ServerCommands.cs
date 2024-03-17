@@ -59,7 +59,7 @@ namespace MHServerEmu.Commands
             if (groupingManager.TryGetPlayerByName(@params[0], out FrontendClient target) == false)
                 return $"Player {@params[0]} not found.";
 
-            target.Connection.Disconnect();
+            target.Disconnect();
             return $"Kicked {target.Session.Account}.";
         }
 
