@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 
 namespace MHServerEmu.DatabaseAccess.Models
@@ -16,6 +17,8 @@ namespace MHServerEmu.DatabaseAccess.Models
     /// </summary>
     public class DBAccount
     {
+        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
+
         public static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
 
         public ulong Id { get; set; }
@@ -82,7 +85,7 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public override string ToString()
         {
-            if (ConfigManager.PlayerManager.HideSensitiveInformation)
+            if (HideSensitiveInformation)
             {
                 string maskedEmail = $"{Email[0]}****{Email.Substring(Email.IndexOf('@') - 1)}";
                 return $"{PlayerName} ({maskedEmail})";

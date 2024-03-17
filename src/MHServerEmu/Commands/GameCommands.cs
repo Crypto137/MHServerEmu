@@ -5,6 +5,7 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -207,7 +208,6 @@ namespace MHServerEmu.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
-            if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
             {
@@ -324,7 +324,10 @@ namespace MHServerEmu.Commands
         public string Points(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (ConfigManager.GameOptions.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
+
+            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            if (config.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
+
             client.SendMessage(1, Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.OmegaPoints), 7500));
             return "Setting Omega points to 7500.";
         }

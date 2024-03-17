@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 
@@ -13,6 +14,9 @@ namespace MHServerEmu.PlayerManagement
         Steam
     }
 
+    /// <summary>
+    /// An implementation of <see cref="IFrontendSession"/> used by the <see cref="PlayerManagerService"/>.
+    /// </summary>
     public class ClientSession : IFrontendSession
     {
         public ulong Id { get; set; }
@@ -25,11 +29,15 @@ namespace MHServerEmu.PlayerManagement
         public byte[] Token { get; }
         public DateTime CreationTime { get; }
 
-        public ClientSession(ulong id, DBAccount account, string downloader, string locale)
+        /// <summary>
+        /// Constructs a new <see cref="ClientSession"/> with the provided data.
+        /// </summary>
+        public ClientSession(ulong id, DBAccount account, ClientDownloader downloader, string locale)
         {
             Id = id;
             Account = account;
-            Downloader = Enum.Parse<ClientDownloader>(downloader);
+
+            Downloader = downloader;
             Locale = locale;
 
             Key = CryptographyHelper.GenerateAesKey();

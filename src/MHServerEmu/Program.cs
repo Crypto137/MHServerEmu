@@ -41,13 +41,7 @@ namespace MHServerEmu
             PrintVersionInfo();
             Console.ResetColor();
 
-            // Initialize config and loggers before doing anything else
-            if (ConfigManager.IsInitialized == false)
-            {
-                Console.ReadLine();
-                return;
-            }
-
+            // Init loggers before anything else
             InitLoggers();
 
             Logger.Info("MHServerEmu starting...");
@@ -139,20 +133,26 @@ namespace MHServerEmu
         /// </summary>
         private static void InitLoggers()
         {
-            LogManager.Enabled = ConfigManager.Logging.EnableLogging;
+            var config = ConfigManager.Instance.GetConfig<LoggingConfig>();
+
+            LogManager.Enabled = config.EnableLogging;
 
             // Attach console log target
-            if (ConfigManager.Logging.EnableConsole)
-                LogManager.AttachTarget(new ConsoleTarget(ConfigManager.Logging.ConsoleIncludeTimestamps,
-                    ConfigManager.Logging.ConsoleMinLevel, ConfigManager.Logging.ConsoleMaxLevel));
+            if (config.EnableConsole)
+            {
+                ConsoleTarget target = new(config.ConsoleIncludeTimestamps, config.ConsoleMinLevel, config.ConsoleMaxLevel);
+                LogManager.AttachTarget(target);
+            }
 
             // Attach file log target
-            if (ConfigManager.Logging.EnableFile)
-                LogManager.AttachTarget(new FileTarget(ConfigManager.Logging.FileIncludeTimestamps,
-                    ConfigManager.Logging.FileMinLevel, ConfigManager.Logging.FileMaxLevel,
-                    $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
+            if (config.EnableFile)
+            {
+                FileTarget target = new(config.FileIncludeTimestamps, config.FileMinLevel, config.FileMaxLevel,
+                    $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false);
+                LogManager.AttachTarget(target);
+            }
 
-            if (ConfigManager.Logging.SynchronousMode)
+            if (config.SynchronousMode)
                 Logger.Debug($"Synchronous logging enabled");
         }
 
