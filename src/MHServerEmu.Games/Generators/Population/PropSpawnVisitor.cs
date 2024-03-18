@@ -19,44 +19,70 @@ namespace MHServerEmu.Games.Generators.Population
 
     public class PropSpawnVisitor
     {
-        public PropSpawnVisitor()
-        {
-        }
-
-        public virtual void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
-        {
-        }
+        public virtual void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, 
+            ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype) 
+        { }
     }
 
     public class NaviPropSpawnVisitor : PropSpawnVisitor
     {
         private NaviMesh _naviMesh;
-        private Transform3 _cellToRegion;
+        private Transform3 _transform;
 
-        public NaviPropSpawnVisitor(NaviMesh naviMesh, Transform3 cellToRegion)
+        public NaviPropSpawnVisitor(NaviMesh naviMesh, Transform3 transform)
         {
             _naviMesh = naviMesh;
-            _cellToRegion = cellToRegion;
+            _transform = transform;
         }
 
         public override void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
         {
+            if (_naviMesh == null || propTable == null || propGroup == null || markerPrototype == null) return;
+
+            PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
+            Vector3 position = markerPrototype.Position + randomOffset;
+            Orientation rotation = new(markerPrototype.Rotation);
+            rotation.Yaw += randomRotation;
+
+            var markerTransform = Transform3.BuildTransform(position, rotation);
+            _naviMesh.Stitch(propGroup.NaviPatchSource.NaviPatch, _transform * markerTransform);
+            _naviMesh.StitchProjZ(propGroup.NaviPatchSource.PropPatch, _transform * markerTransform);
         }
     }
 
-    public class NaviEncounterVisitor : PropSpawnVisitor
+    public class EncounterVisitor
+    {
+        public virtual void Visit( PrototypeId encounterRef, SpawnReservation reservation, PopulationEncounterPrototype populationEncounter, 
+            PrototypeId missionRef, bool useMarkerOrientation)
+        { }
+    }
+
+    public class NaviEncounterVisitor : EncounterVisitor
     {
         private NaviMesh _naviMesh;
-        private Transform3 _cellToRegion;
+        private Transform3 _transform;
 
-        public NaviEncounterVisitor(NaviMesh naviMesh, Transform3 cellToRegion)
+        public NaviEncounterVisitor(NaviMesh naviMesh, Transform3 transform)
         {
             _naviMesh = naviMesh;
-            _cellToRegion = cellToRegion;
+            _transform = transform;
         }
 
-        public override void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
+        public override void Visit(PrototypeId encounterRef, SpawnReservation reservation, PopulationEncounterPrototype populationEncounter, PrototypeId missionRef, bool useMarkerOrientation)
         {
+            if (_naviMesh == null) return;
+
+            var encounterResourceProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterRef);
+            if (encounterResourceProto == null) return;
+
+            Orientation orientation = Orientation.Zero;
+            if (useMarkerOrientation || (populationEncounter != null && populationEncounter.UseMarkerOrientation))
+                orientation = reservation.MarkerRot;
+
+            var patchSource = encounterResourceProto.NaviPatchSource;
+            var markerTransform = Transform3.BuildTransform(reservation.MarkerPos, orientation);
+            _naviMesh.Stitch(patchSource.NaviPatch, _transform * markerTransform);
+            _naviMesh.StitchProjZ(patchSource.PropPatch, _transform * markerTransform);
         }
     }
 

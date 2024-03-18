@@ -248,7 +248,6 @@ namespace MHServerEmu.Games.Regions
             }
 
             if (TestStatus(GenerateFlag.Navi)) return true;
-
             SetStatus(GenerateFlag.Navi, true);
 
             foreach (var cell in CellIterator())

@@ -29,8 +29,7 @@ namespace MHServerEmu.Games.Regions
     public class Cell
     {
         //  Old
-        public PrototypeId PrototypeId { get; private set; }        
-        public List<ReservedSpawn> EncounterList { get; } = new();
+        public PrototypeId PrototypeId { get; private set; }
 
         // New
         public uint Id { get; }      
@@ -41,10 +40,11 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId PopulationThemeOverrideRef { get; private set; }
         public Aabb RegionBounds { get; private set; }
         public Area Area { get; private set; }
-        public Game Game { get => (Area != null) ? Area.Game : null; }
+        public Game Game { get => Area?.Game; }
         public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); } // TODO: Optimize
 
         public List<uint> CellConnections = new();
+        public List<ReservedSpawn> Encounters { get; } = new();
 
         private float PlayableNavArea;
         private float SpawnableNavArea;
@@ -56,9 +56,6 @@ namespace MHServerEmu.Games.Regions
         public Orientation AreaOrientation { get; private set; }
         public Transform3 AreaTransform { get; private set; }
         public Transform3 RegionTransform { get; private set; }
-
-        public void AddEncounter(ulong asset, uint id, bool useMarkerOrientation) => EncounterList.Add(new(asset, id, useMarkerOrientation)); // Old
-        public void AddEncounter(ReservedSpawn reservedSpawn) => EncounterList.Add(reservedSpawn); // Old
 
         public Cell(Area area, uint id)
         {
@@ -130,17 +127,17 @@ namespace MHServerEmu.Games.Regions
              NaviMesh naviMesh = region.NaviMesh;
              if (CellProto == null) return;
 
-             Transform3 cellToRegion;
+             Transform3 transform;
              if (CellProto.IsOffsetInMapFile == false)
-                 cellToRegion = RegionTransform;
+                 transform = RegionTransform;
              else
-                 cellToRegion = Transform3.BuildTransform(Area.Origin, Orientation.Zero);
+                 transform = Transform3.BuildTransform(Area.Origin, Orientation.Zero);
 
-             if (naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, cellToRegion) == false) return;
-             if (naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, cellToRegion) == false) return;
+             if (naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, transform) == false) return;
+             if (naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, transform) == false) return;
 
-             VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, cellToRegion));
-             VisitEncounters(new NaviEncounterVisitor(naviMesh, cellToRegion));            
+             VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, transform));
+             VisitEncounters(new NaviEncounterVisitor(naviMesh, transform));            
         }
 
         public void AddCellConnection(uint id)
@@ -334,13 +331,13 @@ namespace MHServerEmu.Games.Regions
                     if (marker is not EntityMarkerPrototype entityMarker) continue;
                     PrototypeId propMarkerRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
 
-                    PropMarkerPrototype propMarkerProto = entityMarker.GetMarkedPrototype<PropMarkerPrototype>();
+                    var propMarkerProto = entityMarker.GetMarkedPrototype<PropMarkerPrototype>();
                     if (propMarkerProto != null && propMarkerRef != 0 && propMarkerProto.Type == MarkerType.Prop)
                     {
                         PrototypeId propDensityRef = Area.AreaPrototype.PropDensity;
-                        if (propDensityRef != 0)
+                        if (propDensityRef != PrototypeId.Invalid)
                         {
-                            PropDensityPrototype propDensityProto = GameDatabase.GetPrototype<PropDensityPrototype>(propDensityRef);
+                            var propDensityProto = GameDatabase.GetPrototype<PropDensityPrototype>(propDensityRef);
                             if (propDensityProto != null && random.Next(0, 101) > propDensityProto.GetPropDensity(propMarkerRef)) continue;
                         }
                         if (propTable.GetRandomPropMarkerOfType(random, propMarkerRef, out var propGroup))
@@ -350,9 +347,24 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private void VisitEncounters(NaviEncounterVisitor naviEncounterVisitor)
+        public void AddEncounter(AssetId asset, uint id, bool useMarkerOrientation) => Encounters.Add(new(asset, id, useMarkerOrientation));
+
+        public void VisitEncounters(EncounterVisitor visitor)
         {
-            throw new NotImplementedException();
+            // TODO: solve problem with enctounters
+
+            foreach (var encounter in Encounters)
+            {
+                var encounterResourceRef = GameDatabase.GetDataRefByAsset(encounter.Asset);
+                if (encounterResourceRef == PrototypeId.Invalid) continue;
+                var encounterProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterResourceRef);
+                if (encounterProto == null) continue;
+
+                SpawnReservation reservation = null; //GetRegion().SpawnMarkerRegistry.ReserveSpawnTypeLocationById(Id, encounter.Id, encounterResourceRef, null);
+                PopulationEncounterPrototype popProto = null;
+                PrototypeId missionRef = PrototypeId.Invalid;
+                visitor.Visit(encounterResourceRef, reservation, popProto, missionRef, encounter.UseMarkerOrientation);
+            }
         }
 
         public void InstanceMarkerSet(MarkerSetPrototype markerSet, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions, string prefabPath)
@@ -387,7 +399,7 @@ namespace MHServerEmu.Games.Regions
                 .SetBufferwidth(0)
                 .SetOverrideLocationName(0);
 
-            foreach (ReservedSpawn reservedSpawn in EncounterList)
+            foreach (ReservedSpawn reservedSpawn in Encounters)
                 builder.AddEncounters(reservedSpawn.ToNetStruct());
             return builder.Build();
         }

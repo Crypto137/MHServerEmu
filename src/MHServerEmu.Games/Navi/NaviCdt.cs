@@ -119,5 +119,20 @@ namespace MHServerEmu.Games.Navi
         {
             throw new NotImplementedException();
         }
+
+        internal void AddEdge(NaviEdge e)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal NaviPoint AddPointProjZ(Vector3 pos1)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal NaviPoint AddPoint(Vector3 pos1)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

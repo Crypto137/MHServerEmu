@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -29,7 +30,7 @@ namespace MHServerEmu.Games.Navi
         private bool _isInit;
         private float _padding;
         private Region _region;
-        private List<NaviPoint> _points;
+        private NaviPoint[] _points;
         private List<NaviEdge> _edges;
         public Dictionary<NaviEdge, NaviMeshConnection> MeshConnections { get; private set; }
         private NaviEdge _exteriorSeedEdge;
@@ -43,8 +44,7 @@ namespace MHServerEmu.Games.Navi
             NaviVertexLookupCache = new(navi);
             NaviCdt = new(navi, NaviVertexLookupCache);
             _edges = new();
-            MeshConnections = new();
-            _points = new();  
+            MeshConnections = new(); 
             _modifyMeshPatches = new();
             _modifyMeshPatchesProjZ = new();
         }
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Navi
         private void ClearGenerationCache()
         {
             NaviVertexLookupCache.Clear();
-            _points.Clear();
+            _points = null;
         }
 
         private void DestroyMeshConnections()
@@ -167,24 +167,71 @@ namespace MHServerEmu.Games.Navi
 
         private void MergeMeshConnections() {}
 
+        public bool ModifyMesh(Transform3 transform, NaviPatchPrototype patch, bool projZ)
+        {
+            if (patch.Points.IsNullOrEmpty()) return true;
+
+            _points = new NaviPoint[patch.Points.Length];
+            foreach (var edge in patch.Edges)
+            {
+                NaviPoint p0 = _points[edge.Index0];
+                if (p0 == null)
+                {
+                    Vector3 Pos0 = new (transform * new Point3(patch.Points[edge.Index0]));
+                    p0 = projZ ? NaviCdt.AddPointProjZ(Pos0) : NaviCdt.AddPoint(Pos0);
+                    _points[edge.Index0] = p0;
+                }
+
+                NaviPoint p1 = _points[edge.Index1];
+                if (p1 == null)
+                {
+                    Vector3 Pos1 = new (transform * new Point3(patch.Points[edge.Index1]));
+                    p1 = projZ ? NaviCdt.AddPointProjZ(Pos1) : NaviCdt.AddPoint(Pos1);
+                    _points[edge.Index1] = p1;
+                }
+
+                if (_navi.HasErrors() && _navi.CheckErrorLog(false, patch.ToString())) return false;
+                if (p0 == p1) continue;
+
+                NaviCdt.AddEdge(new(p0, p1, NaviEdgeFlags.Flag0, new(edge.Flags0, edge.Flags1)));
+            }
+
+            if (_navi.HasErrors() && _navi.CheckErrorLog(false, patch.ToString())) return false;
+
+            return true;
+        }
+
         private void MarkupMesh(bool v)
         {
             throw new NotImplementedException();
         }
 
-        private bool ModifyMesh(Transform3 transform, NaviPatchPrototype patch, bool projZ)
+        public bool Stitch(NaviPatchPrototype patch, Transform3 transform)
         {
-            throw new NotImplementedException();
+            if (patch.Points.HasValue())
+            {
+                ModifyMeshPatch modifyMeshPatch = new()
+                {
+                    Transform = transform,
+                    Patch = patch
+                };
+                _modifyMeshPatches.Add(modifyMeshPatch);
+            }
+            return true;
         }
 
-        internal bool Stitch(NaviPatchPrototype naviPatch, Transform3 cellToRegion)
+        public bool StitchProjZ(NaviPatchPrototype patch, Transform3 transform)
         {
-            throw new NotImplementedException();
-        }
-
-        internal bool StitchProjZ(NaviPatchPrototype propPatch, Transform3 cellToRegion)
-        {
-            throw new NotImplementedException();
+            if (patch.Points.HasValue())
+            {
+                ModifyMeshPatch modifyMeshPatch = new()
+                {
+                    Transform = transform,
+                    Patch = patch
+                };
+                _modifyMeshPatchesProjZ.Add(modifyMeshPatch);
+            }
+            return true;
         }
     }
 }
