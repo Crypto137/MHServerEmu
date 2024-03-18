@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 using System.Text;
 
@@ -83,7 +84,7 @@ namespace MHServerEmu.Games.Navi
             return hasErrors;
         }
 
-        private bool HasErrors()
+        public bool HasErrors()
         {
             return ErrorLog.Any();
         }
@@ -251,6 +252,44 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdgePathingFlags
     {
+        private readonly NaviContentFlags[] _flags;
+
+        public NaviEdgePathingFlags()
+        {
+            _flags = new NaviContentFlags[2];
+            Clear();
+        }
+
+        public NaviEdgePathingFlags(NaviContentFlags[] flags0, NaviContentFlags[] flags1)
+        {
+            _flags = new NaviContentFlags[2];
+            foreach (var flag in flags0) _flags[0] |= flag;
+            foreach (var flag in flags1) _flags[1] |= flag;
+        }
+
+        public void Clear()
+        {
+            _flags[0] = NaviContentFlags.None;
+            _flags[1] = NaviContentFlags.None;
+        }
+
+        public void Clear(int side)
+        {
+            _flags[side] = NaviContentFlags.None;
+        }
+
+        public NaviContentFlags GetContentFlagsForSide(int side)
+        {
+            return _flags[side];
+        }
+
+        public void Merge(NaviEdgePathingFlags other, bool flipEdgePathFlags)
+        {
+            int side0 = flipEdgePathFlags ? 0 : 1;
+            int side1 = flipEdgePathFlags ? 1 : 0;
+            _flags[0] |= other._flags[side0];
+            _flags[1] |= other._flags[side1];
+        }
     }
 
     public enum NaviPointFlags 
