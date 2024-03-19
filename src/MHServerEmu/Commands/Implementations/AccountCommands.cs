@@ -4,7 +4,7 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.PlayerManagement;
 
-namespace MHServerEmu.Commands
+namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("account", "Allows you to manage accounts.", AccountUserLevel.User)]
     public class AccountCommands : CommandGroup
