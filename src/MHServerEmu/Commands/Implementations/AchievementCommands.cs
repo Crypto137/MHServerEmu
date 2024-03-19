@@ -59,7 +59,7 @@ namespace MHServerEmu.Commands.Implementations
 
             // Output as a list of chat messages if the command was invoked from the in-game chat.
             ChatHelper.SendMetagameMessage(client, "Achievement Info:");
-            ChatHelper.SendMetagameMessages(client, info.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries), false);
+            ChatHelper.SendMetagameMessageSplit(client, info.ToString(), false);
             return string.Empty;
         }
     }

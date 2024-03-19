@@ -24,7 +24,7 @@ namespace MHServerEmu.Commands.Implementations
                 return status;
 
             // Split for the client chat window
-            ChatHelper.SendMetagameMessages(client, status.Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
+            ChatHelper.SendMetagameMessageSplit(client, status, false);
             return string.Empty;
         }
 
