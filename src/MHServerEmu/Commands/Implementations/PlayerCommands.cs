@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement;
@@ -20,9 +22,7 @@ namespace MHServerEmu.Commands.Implementations
 
             if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
             {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                var game = playerManager.GetGameByPlayer(client);
-                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+                CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
                 playerConnection.Player.SetAvatar((PrototypeId)avatar);
                 game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
@@ -39,9 +39,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}";
             //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
@@ -65,9 +63,7 @@ namespace MHServerEmu.Commands.Implementations
 
             if (Enum.TryParse(@params[0], true, out RegionPrototypeId region))
             {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                var game = playerManager.GetGameByPlayer(client);
-                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+                CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
                 game.MovePlayerToRegion(playerConnection, (PrototypeId)region, 0);
                 return $"Changing region to {region}.";
@@ -92,9 +88,7 @@ namespace MHServerEmu.Commands.Implementations
 
                 if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                 {
-                    var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-                    var game = playerManager.GetGameByPlayer(client);
-                    var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+                    CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
                     var player = playerConnection.Player;
                     var avatar = player.CurrentAvatar;
 

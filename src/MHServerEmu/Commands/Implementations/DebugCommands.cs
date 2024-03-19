@@ -1,12 +1,12 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -26,9 +26,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             return $"Current cell: {playerConnection.AOI.Region.GetCellAtPosition(playerConnection.LastPosition).PrototypeName}";
         }
@@ -38,9 +36,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             return $"Current seed: {playerConnection.AOI.Region.RandomSeed}";
         }
@@ -50,9 +46,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             return $"Current area: {playerConnection.AOI.Region.GetCellAtPosition(playerConnection.LastPosition).Area.PrototypeName}";
         }
@@ -62,11 +56,9 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
-            return $"Current region: {connection.AOI.Region.PrototypeName}";
+            return $"Current region: {playerConnection.AOI.Region.PrototypeName}";
         }
 
         [Command("isblocked", "Usage: debug isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
@@ -82,8 +74,7 @@ namespace MHServerEmu.Commands.Implementations
             if (ulong.TryParse(@params[1], out ulong entityId2) == false)
                 return $"Failed to parse EntityId2 {@params[1]}";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
+            CommandHelper.TryGetGame(client, out Game game);
             var manager = game.EntityManager;
 
             var entity = manager.GetEntityById(entityId1);
@@ -102,9 +93,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             if ((@params?.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
                 radius = 100;   // Default to 100 if no radius is specified
@@ -148,11 +137,9 @@ namespace MHServerEmu.Commands.Implementations
             if (int.TryParse(@params[0], out int markerId) == false)
                 return $"Failed to parse MarkerId {@params[0]}";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
-            var reservation = connection.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
+            var reservation = playerConnection.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
             if (reservation == null) return "No marker found.";
 
             ChatHelper.SendMetagameMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
@@ -169,8 +156,8 @@ namespace MHServerEmu.Commands.Implementations
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
+            CommandHelper.TryGetGame(client, out Game game);
+
             var entity = game.EntityManager.GetEntityById(entityId);
             if (entity == null) return "No entity found.";
 

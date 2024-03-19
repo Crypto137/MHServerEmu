@@ -2,11 +2,12 @@
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -18,9 +19,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
 
             return "Changing region to Avengers Tower (original)";
@@ -35,9 +34,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)TargetPrototypeId.CosmicDoopSectorSpaceStartTarget);
 
             return "Travel to Cosmic Doop Sector";
@@ -52,9 +49,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.UpperEastSideRegion, (PrototypeId)TargetPrototypeId.JailTarget);
 
             return "Travel to East Side: Detention Facility (old)";
@@ -69,9 +64,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AsgardCowLevelRegion, (PrototypeId)TargetPrototypeId.AsgardCowLevelStartTarget);
 
             return "Travel to Bovineheim";
@@ -86,9 +79,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.ClassifiedBovineSectorRegion, (PrototypeId)TargetPrototypeId.BovineSectorStartTarget);
 
             return "Travel to Classified Bovine Sector.";
@@ -103,9 +94,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             return $"Current position: {playerConnection.LastPosition.ToStringNames()}";
         }
@@ -119,9 +108,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             var avatar = (AvatarPrototypeId)playerConnection.Player.CurrentAvatar.BaseData.PrototypeId;
             switch (avatar)
@@ -157,9 +144,7 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
             if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             float x = 0f, y = 0f, z = 0f;
             foreach (string param in @params)
