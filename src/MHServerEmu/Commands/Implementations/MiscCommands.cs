@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Network;
-using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -26,21 +25,6 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("doop", "Travel to Cosmic Doop Sector.", AccountUserLevel.User)]
-    public class DoopCommand : CommandGroup
-    {
-        [DefaultCommand(AccountUserLevel.User)]
-        public string Doop(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)TargetPrototypeId.CosmicDoopSectorSpaceStartTarget);
-
-            return "Travel to Cosmic Doop Sector";
-        }
-    }
-
     [CommandGroup("jail", "Travel to East Side: Detention Facility (old).", AccountUserLevel.User)]
     public class JailCommand : CommandGroup
     {
@@ -53,36 +37,6 @@ namespace MHServerEmu.Commands.Implementations
             game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.UpperEastSideRegion, (PrototypeId)TargetPrototypeId.JailTarget);
 
             return "Travel to East Side: Detention Facility (old)";
-        }
-    }
-
-    [CommandGroup("Bovineheim", "Travel to Bovineheim.", AccountUserLevel.User)]
-    public class BovineCommand : CommandGroup
-    {
-        [DefaultCommand(AccountUserLevel.User)]
-        public string Bovineheim(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AsgardCowLevelRegion, (PrototypeId)TargetPrototypeId.AsgardCowLevelStartTarget);
-
-            return "Travel to Bovineheim";
-        }
-    }
-
-    [CommandGroup("Cow", "Travel to Classified Bovine Sector.", AccountUserLevel.User)]
-    public class CowCommand : CommandGroup
-    {
-        [DefaultCommand(AccountUserLevel.User)]
-        public string Cow(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.ClassifiedBovineSectorRegion, (PrototypeId)TargetPrototypeId.BovineSectorStartTarget);
-
-            return "Travel to Classified Bovine Sector.";
         }
     }
 

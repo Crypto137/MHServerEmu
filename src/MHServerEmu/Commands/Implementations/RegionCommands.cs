@@ -27,7 +27,7 @@ namespace MHServerEmu.Commands.Implementations
             if (matches.Count() > 1)
             {
                 ChatHelper.SendMetagameMessage(client, $"Found multiple matches for {@params[0]}:");
-                ChatHelper.SendMetagameMessages(client, matches.Select(match => GameDatabase.GetPrototypeName(match)));
+                ChatHelper.SendMetagameMessages(client, matches.Select(match => GameDatabase.GetPrototypeName(match)), false);
                 return string.Empty;
             }
 
