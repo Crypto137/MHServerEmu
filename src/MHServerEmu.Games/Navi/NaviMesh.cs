@@ -207,7 +207,6 @@ namespace MHServerEmu.Games.Navi
         public void MarkupMesh(bool removeExterior)
         {
             if (removeExterior && _exteriorSeedEdge == null)  return;
-
             ClearMarkup();
 
             Stack<MarkupState> stateStack = new ();
@@ -275,13 +274,36 @@ namespace MHServerEmu.Games.Navi
                         stateStack.Push(stateOppo);
                     }
 
-                    if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) && !edge.EdgeFlags.HasFlag(NaviEdgeFlags.Door))
+                    if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) && edge.EdgeFlags.HasFlag(NaviEdgeFlags.Door) == false)
                     {
                         bool keepEdge = false;
-                        keepEdge |= (triangle.ContentFlagCounts.RemoveWalk == 0) ^ (opposedTriangle.ContentFlagCounts.RemoveWalk == 0);
-                        keepEdge |= (triangle.ContentFlagCounts.RemoveFly == 0) ^ (opposedTriangle.ContentFlagCounts.RemoveFly == 0);
-                        keepEdge |= (triangle.ContentFlagCounts.RemovePower == 0) ^ (opposedTriangle.ContentFlagCounts.RemovePower == 0);
-                        keepEdge |= (triangle.ContentFlagCounts.RemoveSight == 0) ^ (opposedTriangle.ContentFlagCounts.RemoveSight == 0);
+                        var triFlags = triangle.ContentFlagCounts;
+                        var oppFlags = opposedTriangle.ContentFlagCounts;
+                        if ((triFlags.RemoveWalk == 0) && (oppFlags.RemoveWalk == 0))
+                            keepEdge |= (triFlags.AddWalk > 0) ^ (oppFlags.AddWalk > 0);
+                        else
+                            keepEdge |= (triFlags.RemoveWalk > 0) ^ (oppFlags.RemoveWalk > 0);
+                        if (keepEdge == false)
+                        {
+                            if ((triFlags.RemoveFly == 0) && (oppFlags.RemoveFly == 0))
+                                keepEdge |= (triFlags.AddFly > 0) ^ (oppFlags.AddFly > 0);
+                            else
+                                keepEdge |= (triFlags.RemoveFly > 0) ^ (oppFlags.RemoveFly > 0);
+                        }
+                        if (keepEdge == false)
+                        {
+                            if ((triFlags.RemovePower == 0) && (oppFlags.RemovePower == 0))
+                                keepEdge |= (triFlags.AddPower > 0) ^ (oppFlags.AddPower > 0);
+                            else
+                                keepEdge |= (triFlags.RemovePower > 0) ^ (oppFlags.RemovePower > 0);
+                        }
+                        if (keepEdge == false)
+                        {
+                            if ((triFlags.RemoveSight == 0) && (oppFlags.RemoveSight == 0))
+                                keepEdge |= (triFlags.AddSight > 0) ^ (oppFlags.AddSight > 0);
+                            else
+                                keepEdge |= (triFlags.RemoveSight > 0) ^ (oppFlags.RemoveSight > 0);
+                        }
                         if (keepEdge == false) edgeStack.Push(edge);
                     }
                 }
