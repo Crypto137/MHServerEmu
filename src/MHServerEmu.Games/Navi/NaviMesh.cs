@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
@@ -27,6 +28,7 @@ namespace MHServerEmu.Games.Navi
         public Aabb Bounds { get; private set; }
         public NaviVertexLookupCache NaviVertexLookupCache { get; private set; }
         public NaviCdt NaviCdt { get; private set; }
+        public InvasiveList<NaviTriangle> TriangleList => NaviCdt.TriangleList;
 
         private bool _isInit;
         private bool _IsMarkup;
@@ -323,12 +325,35 @@ namespace MHServerEmu.Games.Navi
 
         private void ReverseMarkupMesh()
         {
-            throw new NotImplementedException();
+            foreach (var triangle in TriangleList.Iterate())
+                for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
+                {
+                    NaviEdge edge = triangle.Edges[edgeIndex];
+                    if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) && edge.EdgeFlags.HasFlag(NaviEdgeFlags.Door) == false)
+                    {
+                        int side = triangle.EdgeSideFlag(edgeIndex);                                                
+                        edge.PathingFlags.Clear(side);
+
+                        var triFlags = triangle.ContentFlagCounts;
+                        var edgeFlags = edge.PathingFlags.ContentFlagCounts[side];
+                        if (triFlags.RemoveWalk > 0) edgeFlags.RemoveWalk = 1;
+                        else if (triFlags.AddWalk > 0) edgeFlags.AddWalk = 1;
+                        if (triFlags.RemoveFly > 0) edgeFlags.RemoveFly = 1;
+                        if (triFlags.RemovePower > 0) edgeFlags.RemovePower = 1;
+                        if (triFlags.RemoveSight > 0) edgeFlags.RemoveSight = 1;
+                    }
+                }
         }
 
         private void ClearMarkup()
         {
-            throw new NotImplementedException();
+            foreach (var triangle in TriangleList.Iterate())
+            {
+                triangle.Flags &= ~(NaviTriangleFlags.Markup);
+                triangle.PathingFlags = PathFlags.None;
+                triangle.ContentFlagCounts.Clear();
+            }
+            _IsMarkup = false;
         }
 
         public bool Stitch(NaviPatchPrototype patch, Transform3 transform)

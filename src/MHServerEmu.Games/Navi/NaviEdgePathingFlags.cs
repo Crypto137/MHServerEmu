@@ -62,6 +62,18 @@ namespace MHServerEmu.Games.Navi
             AddSight = other.AddSight;
             RemoveSight = other.RemoveSight;
         }
+
+        public void Clear()
+        {
+            AddWalk = 0;
+            RemoveWalk = 0;
+            AddFly = 0;
+            RemoveFly = 0;
+            AddPower = 0;
+            RemovePower = 0;
+            AddSight = 0;
+            RemoveSight = 0;
+        }
     }
 
     public class NaviEdgePathingFlags
@@ -95,17 +107,13 @@ namespace MHServerEmu.Games.Navi
 
         public void Clear()
         {
-            for (int flagIndex = 0; flagIndex < Navi.ContentFlagCounts.Count; flagIndex++)
-            {
-                ContentFlagCounts[0][flagIndex] = 0;
-                ContentFlagCounts[1][flagIndex] = 0;
-            }
+            ContentFlagCounts[0].Clear();
+            ContentFlagCounts[1].Clear();
         }
 
         public void Clear(int side)
         {
-            for (int flagIndex = 0; flagIndex < Navi.ContentFlagCounts.Count; flagIndex++)
-                ContentFlagCounts[side][flagIndex] = 0;
+            ContentFlagCounts[side].Clear();
         }
 
         public NaviContentFlags GetContentFlagsForSide(int side)
