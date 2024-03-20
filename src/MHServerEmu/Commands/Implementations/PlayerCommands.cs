@@ -1,11 +1,13 @@
-﻿using MHServerEmu.DatabaseAccess.Models;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -18,84 +20,95 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
 
-            if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
-            {
-                CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-
-                playerConnection.Player.SetAvatar((PrototypeId)avatar);
-                game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
-                return $"Changing avatar to {avatar}.";
-            }
-            else
-            {
+            if (Enum.TryParse(@params[0], true, out AvatarPrototypeId avatar) == false)
                 return $"Failed to change player avatar to {@params[0]}";
-            }
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+
+            playerConnection.Player.SetAvatar((PrototypeId)avatar);
+            game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
+            return $"Changing avatar to {avatar}.";
         }
 
-        [Command("AOIVolume", "Changes player AOI volume size.\nUsage: player AOIVolume", AccountUserLevel.User)]
-        public string AOIVolume(string[] @params, FrontendClient client)
+        [Command("aoi", "Changes player AOI volume size.\nUsage: player aoi [value]", AccountUserLevel.User)]
+        public string AOI(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
-            if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}";
-            //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
+            if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}.";
 
-            if (int.TryParse(@params[0], out int volume) && volume >= 1600 && volume <= 5000)
+            if (@params[0].ToLower() == "reset")
             {
-                playerConnection.AOI.AOIVolume = volume;
-                return $"Changed player AOI volume size to {volume}.";
+                playerConnection.AOI.AOIVolume = 3200;
+                return $"Resetting player AOI volume size to {playerConnection.AOI.AOIVolume}.";
             }
-            else
-            {
+
+            if ((int.TryParse(@params[0], out int volume) && volume.IsWithin(1600, 5000)) == false)
                 return $"Failed to change AOI volume size to {@params[0]}. Available range [1600..5000]";
-            }
+
+            playerConnection.AOI.AOIVolume = volume;
+            return $"Changed player AOI volume size to {volume}.";
         }
 
-        [Command("costume", "Changes costume override.\nUsage: player costume [prototypeId]", AccountUserLevel.User)]
+        [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]", AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
 
-            try
+            PrototypeId costumeId;
+
+            switch (@params[0].ToLower())
             {
-                // Try to parse costume prototype id from command
-                var prototypeId = (PrototypeId)ulong.Parse(@params[0]);
-                string prototypePath = GameDatabase.GetPrototypeName(prototypeId);
+                case "reset":
+                    costumeId = PrototypeId.Invalid;
+                    break;
 
-                if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
-                {
-                    CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-                    var player = playerConnection.Player;
-                    var avatar = player.CurrentAvatar;
+                case "default": // This undoes visual updates for most heroes
+                    costumeId = (PrototypeId)HardcodedBlueprints.Costume;
+                    break;
 
-                    // Update player and avatar properties
-                    avatar.Properties[PropertyEnum.CostumeCurrent] = prototypeId;
-                    player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = prototypeId;
+                default:
+                    var matches = GameDatabase.SearchPrototypes(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive, HardcodedBlueprints.Costume);
 
-                    // Send client property updates (TODO: Remove this when we have those generated automatically)
-                    // Avatar entity
-                    client.SendMessage(1, Property.ToNetMessageSetProperty(
-                        avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), prototypeId));
+                    if (matches.Any() == false)
+                        return $"Failed to find any costumes containing {@params[0]}.";
 
-                    // Player entity
-                    PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
-                    client.SendMessage(1, Property.ToNetMessageSetProperty(
-                        player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), prototypeId));
+                    if (matches.Count() > 1)
+                    {
+                        ChatHelper.SendMetagameMessage(client, $"Found multiple matches for {@params[0]}:");
+                        ChatHelper.SendMetagameMessages(client, matches.Select(match => GameDatabase.GetPrototypeName(match)), false);
+                        return string.Empty;
+                    }
 
-                    return $"Changing costume to {GameDatabase.GetPrototypeName(prototypeId)}";
-                }
-                else
-                {
-                    return $"{prototypeId} is not a costume prototype id";
-                }
+                    costumeId = matches.First();
+                    break;
             }
-            catch
-            {
-                return $"Failed to parse costume id {@params[0]}.";
-            }
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            var player = playerConnection.Player;
+            var avatar = player.CurrentAvatar;
+
+            // Update player and avatar properties
+            avatar.Properties[PropertyEnum.CostumeCurrent] = costumeId;
+            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = costumeId;
+
+            // Send client property updates (TODO: Remove this when we have those generated automatically)
+            // Avatar entity
+            client.SendMessage(1, Property.ToNetMessageSetProperty(
+                avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), costumeId));
+
+            // Player entity
+            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
+            client.SendMessage(1, Property.ToNetMessageSetProperty(
+                player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumeId));
+
+            if (costumeId == PrototypeId.Invalid)
+                return "Resetting costume.";
+
+            return $"Changing costume to {GameDatabase.GetPrototypeName(costumeId)}.";
         }
     }
 }
