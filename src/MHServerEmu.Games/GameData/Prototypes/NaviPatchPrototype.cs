@@ -15,6 +15,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [Flags]
+    public enum PathFlags
+    {
+        None = 0,
+        Walk = 1 << 0,
+        Fly = 1 << 1,
+        Power = 1 << 2,
+        Sight = 1 << 3,
+        TallWalk = 1 << 4,
+    }
+
+    [Flags]
     public enum NaviContentFlags
     {
         None        = 0,

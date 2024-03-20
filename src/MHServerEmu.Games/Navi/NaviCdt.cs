@@ -134,5 +134,10 @@ namespace MHServerEmu.Games.Navi
         {
             throw new NotImplementedException();
         }
+
+        internal void RemoveEdge(NaviEdge edge)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

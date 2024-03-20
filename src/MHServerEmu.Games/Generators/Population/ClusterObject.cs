@@ -27,17 +27,6 @@ namespace MHServerEmu.Games.Generators.Population
     }
 
     [Flags]
-    public enum PathFlags
-    {
-        None = 0,
-        flag1 = 1 << 0,
-        flag2 = 1 << 1,
-        flag4 = 1 << 2,
-        flag8 = 1 << 3,
-        flag16 = 1 << 4,
-    }
-
-    [Flags]
     public enum SpawnFlags
     {
         None = 0,

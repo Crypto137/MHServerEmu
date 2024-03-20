@@ -88,6 +88,28 @@ namespace MHServerEmu.Games.Navi
         {
             return ErrorLog.Any();
         }
+
+        public static PathFlags ContentFlagsToPathFlags(NaviContentFlags contentFlags)
+        {
+            PathFlags pathFlags = 0;
+            if (contentFlags.HasFlag(NaviContentFlags.AddWalk) && contentFlags.HasFlag(NaviContentFlags.RemoveWalk) == false)
+                pathFlags |= PathFlags.Walk;
+            if (contentFlags.HasFlag(NaviContentFlags.AddFly) && contentFlags.HasFlag(NaviContentFlags.RemoveFly) == false)
+                pathFlags |= PathFlags.Fly;
+            if (contentFlags.HasFlag(NaviContentFlags.AddPower) && contentFlags.HasFlag(NaviContentFlags.RemovePower) == false)
+                pathFlags |= PathFlags.Power;
+            if (contentFlags.HasFlag(NaviContentFlags.AddSight) && contentFlags.HasFlag(NaviContentFlags.RemoveSight) == false)
+                pathFlags |= PathFlags.Sight;
+            if (pathFlags.HasFlag(PathFlags.Walk | PathFlags.Fly))
+                pathFlags |= PathFlags.TallWalk;
+
+            return pathFlags;
+        }
+
+        internal static NaviContentFlags ContentFlagCountsToContentFlags(ContentFlagCounts flagCounts)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public struct NaviErrorReport
@@ -108,13 +130,16 @@ namespace MHServerEmu.Games.Navi
     public enum NaviTriangleFlags
     {
         Attached = 1 << 0,
+        Markup = 1 << 1,
     }
 
     public class NaviTriangle
     {
         public NaviEdge[] Edges { get; set; }
         public int EdgeSideFlags { get; private set; }
-        public NaviTriangleFlags Flags { get; private set; }
+        public NaviTriangleFlags Flags { get; set; }
+        public PathFlags PathingFlags { get; set; }
+        public ContentFlagCounts ContentFlagCounts { get; set; }
 
         public NaviTriangle(NaviEdge e0, NaviEdge e1, NaviEdge e2)
         {
@@ -122,6 +147,7 @@ namespace MHServerEmu.Games.Navi
             Edges[0] = e0;
             Edges[1] = e1;
             Edges[2] = e2;
+            ContentFlagCounts = new();
             UpdateEdgeSideFlags();
             Attach();
         }
@@ -169,19 +195,19 @@ namespace MHServerEmu.Games.Navi
                 EdgeSideFlags = (~EdgeSideFlags) & 0x07;
         }
 
-        private NaviPoint EdgePointCW(int edgeIndex, int point)
+        public NaviPoint EdgePointCW(int edgeIndex, int point)
         {
             int pointIndex = EdgeSideFlag(edgeIndex) ^ point;
             return Edges[edgeIndex].Points[pointIndex];
         }
 
-        private NaviPoint PointCW(int edgeIndex)
+        public NaviPoint PointCW(int edgeIndex)
         {
             int pointIndex = EdgeSideFlag(edgeIndex);
             return Edges[edgeIndex].Points[pointIndex];
         }
 
-        private int EdgeSideFlag(int edgeIndex)
+        public int EdgeSideFlag(int edgeIndex)
         {
             return (EdgeSideFlags >> edgeIndex) & 1;
         }
@@ -191,10 +217,10 @@ namespace MHServerEmu.Games.Navi
     public enum NaviEdgeFlags
     {
         None = 0,
-        Flag0 = 1 << 0,
+        Const = 1 << 0,
         Flag1 = 1 << 1,
-        Flag2 = 1 << 2,
-        Flag3 = 1 << 3,
+        Delaunay = 1 << 2,
+        Door = 1 << 3,
     }
 
     public class NaviEdge
@@ -248,48 +274,6 @@ namespace MHServerEmu.Games.Navi
             return $"NaviEdge [p0={Points[0]} p1={Points[1]}]";
         }
 
-    }
-
-    public class NaviEdgePathingFlags
-    {
-        private readonly NaviContentFlags[] _flags;
-
-        public NaviEdgePathingFlags()
-        {
-            _flags = new NaviContentFlags[2];
-            Clear();
-        }
-
-        public NaviEdgePathingFlags(NaviContentFlags[] flags0, NaviContentFlags[] flags1)
-        {
-            _flags = new NaviContentFlags[2];
-            foreach (var flag in flags0) _flags[0] |= flag;
-            foreach (var flag in flags1) _flags[1] |= flag;
-        }
-
-        public void Clear()
-        {
-            _flags[0] = NaviContentFlags.None;
-            _flags[1] = NaviContentFlags.None;
-        }
-
-        public void Clear(int side)
-        {
-            _flags[side] = NaviContentFlags.None;
-        }
-
-        public NaviContentFlags GetContentFlagsForSide(int side)
-        {
-            return _flags[side];
-        }
-
-        public void Merge(NaviEdgePathingFlags other, bool flipEdgePathFlags)
-        {
-            int side0 = flipEdgePathFlags ? 0 : 1;
-            int side1 = flipEdgePathFlags ? 1 : 0;
-            _flags[0] |= other._flags[side0];
-            _flags[1] |= other._flags[side1];
-        }
     }
 
     public enum NaviPointFlags 
