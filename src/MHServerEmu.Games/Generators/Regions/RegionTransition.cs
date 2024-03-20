@@ -1,7 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -19,7 +17,8 @@ namespace MHServerEmu.Games.Generators.Regions
 
     public class RegionTransition
     {
-        public static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public RegionTransition() { }
 
         public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
@@ -27,6 +26,14 @@ namespace MHServerEmu.Games.Generators.Regions
             targetPos = region.StartArea.RegionBounds.Center; // default
             targetRot = Orientation.Zero;
             RegionConnectionTargetPrototype targetDest = null;
+
+            // Fall back to default start target for the region
+            if (targetRef == PrototypeId.Invalid)
+            {
+                targetRef = region.RegionPrototype.StartTarget;
+                Logger.Warn($"FindStartPosition(): invalid targetRef, falling back to {GameDatabase.GetPrototypeName(targetRef)}");
+            }
+
             Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);           
 
             if (targetProto is WaypointPrototype waypointProto)

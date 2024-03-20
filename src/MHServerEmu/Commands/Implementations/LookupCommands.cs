@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
@@ -15,7 +16,7 @@ namespace MHServerEmu.Commands.Implementations
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
 
             // Find matches for the given pattern
-            return LookupPrototypes(@params[0], (BlueprintId)10774581141289766864, client);     // Entity/Items/Costumes/Costume.blueprint
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Costume, client);
         }
 
         [Command("region", "Searches prototypes that use the region blueprint.\nUsage: lookup region [pattern]", AccountUserLevel.User)]
@@ -25,7 +26,7 @@ namespace MHServerEmu.Commands.Implementations
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup region' to get help.";
 
             // Find matches for the given pattern
-            return LookupPrototypes(@params[0], (BlueprintId)1677652504589371837, client);      // Regions/Region.blueprint
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Region, client);      // Regions/Region.blueprint
         }
 
         [Command("blueprint", "Searches blueprints.\nUsage: lookup blueprint [pattern]", AccountUserLevel.User)]

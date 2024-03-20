@@ -35,6 +35,7 @@ namespace MHServerEmu.Games.Regions
         InvasionSafeAbodeRegion = 17072997612720691719,     // Fury's Toolshed
 
         // Prologue
+        TimesSquareTutorialRegion = 13422564811632352998,
         NPERaftRegion = 11602117409128454445,               // Raft Landing Pad
 
         // Chapter 1
@@ -126,6 +127,15 @@ namespace MHServerEmu.Games.Regions
         UpperMadripoorRegionL60 = 9854118440624922758,      // S.W.O.R.D. Landing Zone, S.W.O.R.D. Command Post, Hightown Patrol
         HelicarrierInvasionRegion = 6825425747905684388,
 
+        // Original Story
+        HellsKitchen01Region = 16736492562991814709,
+        NightclubRegion = 4122735557480815236,
+        BrooklynRegion = 7168803565113578942,
+        HellsKitchen02RedlightRegion = 4797431844393001110,
+        UpperEastSideRegion = 7309701253780479014,
+        FiskTowerRegion = 3083646536973818086,
+        MrSinisterBaseRegion = 4018019170947768992,
+
         // Terminals
         OpDailyBugleRegionL11To60 = 6538624689610759291,        // Daily Bugle
         DailyGTimesSquareRegionL60 = 15168170443837678687,      // Times Square
@@ -169,7 +179,6 @@ namespace MHServerEmu.Games.Regions
         CosmicDoopSectorSpaceRegion = 8744981792306700722,      // Cosmic Doop Sector Space
 
         LimboRegionL60 = 4742357611317369027,
-        UpperEastSideRegion = 7309701253780479014,
         AsgardCowLevelRegion = 17913362697985334451,
         ClassifiedBovineSectorRegion = 12735255224807267622,
     }

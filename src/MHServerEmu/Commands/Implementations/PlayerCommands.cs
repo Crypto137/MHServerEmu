@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Network;
-using MHServerEmu.DatabaseAccess.Models;
+﻿using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities.Avatars;
@@ -7,12 +6,11 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
-    public class PlayerCommand : CommandGroup
+    public class PlayerCommands : CommandGroup
     {
         [Command("avatar", "Changes player avatar.\nUsage: player avatar [avatar]", AccountUserLevel.User)]
         public string Avatar(string[] @params, FrontendClient client)
@@ -52,25 +50,6 @@ namespace MHServerEmu.Commands.Implementations
             else
             {
                 return $"Failed to change AOI volume size to {@params[0]}. Available range [1600..5000]";
-            }
-        }
-
-        [Command("region", "Changes player region.\nUsage: player region", AccountUserLevel.User)]
-        public string Region(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
-
-            if (Enum.TryParse(@params[0], true, out RegionPrototypeId region))
-            {
-                CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-
-                game.MovePlayerToRegion(playerConnection, (PrototypeId)region, 0);
-                return $"Changing region to {region}.";
-            }
-            else
-            {
-                return $"Failed to change starting region to {@params[0]}";
             }
         }
 
