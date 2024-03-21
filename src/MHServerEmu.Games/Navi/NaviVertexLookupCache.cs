@@ -1,7 +1,11 @@
-﻿namespace MHServerEmu.Games.Navi
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Games.Navi
 {
     public class NaviVertexLookupCache
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public struct VertexCacheKey
         {
             public NaviPoint Point;
@@ -62,6 +66,64 @@
             _maxSize = Math.Max(size, 1024);
             int hashSize = (int)(size / 1.0f);
             _vertexCache = new(hashSize);
+        }
+
+        public NaviPoint CacheVertex(Vector3 pos, out bool addedOut)
+        {
+            NaviPoint point = FindVertex(pos);
+            if (point != null)
+            {
+                addedOut = false;
+                return point;
+            }
+
+            point = new NaviPoint(pos);
+            VertexCacheKey entry = new()
+            {
+                Point = point,
+                X = (int)(point.Pos.X / CellSize),
+                Y = (int)(point.Pos.Y / CellSize)
+            };
+
+            addedOut = _vertexCache.Add(entry);
+            if (addedOut == false)
+            {
+                if (_navi.Log) Logger.Error($"CacheVertex failed to add point {point} due to existing point {entry.Point}");
+                return null;
+            }
+
+            return point;
+        }
+
+        private VertexCacheKey FindVertexKey(Vector3 pos)
+        {
+            int x0 = (int)((pos.X - NaviPointBoxEpsilon) / CellSize);
+            int x1 = (int)((pos.X + NaviPointBoxEpsilon) / CellSize);
+            int y0 = (int)((pos.Y - NaviPointBoxEpsilon) / CellSize);
+            int y1 = (int)((pos.Y + NaviPointBoxEpsilon) / CellSize);
+
+            VertexCacheKey entry = new()
+            {
+                Point = new NaviPoint(pos)
+            };
+
+            for (int x = x0; x <= x1; x++)
+                for (int y = y0; y <= y1; y++)
+                {
+                    entry.X = x;
+                    entry.Y = y;
+
+                    if (_vertexCache.TryGetValue(entry, out var key))
+                        return key;
+                }
+
+            return default;
+        }
+
+        public NaviPoint FindVertex(Vector3 pos)
+        {
+            VertexCacheKey key = FindVertexKey(pos);
+            return (key != default) ? key.Point : default;
         }
 
     }
