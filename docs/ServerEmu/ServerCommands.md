@@ -4,15 +4,10 @@ To see an up to date list of all commands, type !commands in the server console 
 
 ## General Commands
 
-| Command                     | Description                                   | User Level |
-| --------------------------- | --------------------------------------------- | ---------- |
-| !commands                   | Shows a list of all available commands.       | All        |
-| !help [command]             | Shows a description of the specified command. | All        |
-| !lookup costume [pattern]   | Searches for costume prototypes by name.      | All        |
-| !lookup region [pattern]    | Searches for region prototypes by name.       | All        |
-| !lookup blueprint [pattern] | Searches for blueprints by name.              | All        |
-| !lookup assettype [pattern] | Searches for asset types by name.             | All        |
-| !lookup asset [pattern]     | Searches for assets by name.                  | All        |
+| Command         | Description                                   | User Level |
+| --------------- | --------------------------------------------- | ---------- |
+| !commands       | Shows a list of all available commands.       | All        |
+| !help [command] | Shows a description of the specified command. | All        |
 
 ## Account Commands
 
@@ -27,34 +22,86 @@ To see an up to date list of all commands, type !commands in the server console 
 | !account unban [email]                          | Unbans the specified account.                                                                                 | Moderator  |
 | !account info                                   | Shows account information for the logged in client (in-game only).                                            | All        |
 
+## Achievement Commands
+
+| Command                  | Description                                    | User Level |
+| ------------------------ | ---------------------------------------------- | ---------- |
+| !achievement unlock [id] | Unlocks the specified achievement.             | All        |
+| !achievement info [id]   | Shows details about the specified achievement. | All        |
+
+## Client Commands
+
+| Command                                                 | Description                                      | User Level |
+| ------------------------------------------------------- | ------------------------------------------------ | ---------- |
+| !client info [sessionId]                                | Shows information about the specified client.    | Admin      |
+| !client kick [playerName]                               | Kicks the specified player from the game.        | Moderator  |
+| !client send [sessionId] [messageName] [messageContent] | Sends a network message to the specified client. | Admin      |
+
+## Debug Commands
+
+| Command                                  | Description                                                               | User Level |
+| ---------------------------------------- | ------------------------------------------------------------------------- | ---------- |
+| !debug test                              | Working as intended.                                                      | Admin      |
+| !debug cell                              | Shows current cell.                                                       | All        |
+| !debug seed                              | Shows current seed.                                                       | All        |
+| !debug area                              | Shows current area.                                                       | All        |
+| !debug region                            | Shows current region.                                                     | All        |
+| !debug isblocked [entityId1] [entityId2] | Checks if an entity is blocked by bounds of another entity.               | All        |
+| !debug near [radius]                     | Shows entities and markers within specified radius. Default value is 100. | All        |
+| !debug marker [markerId]                 | Displays information about the specified marker.                          | All        |
+| !debug entity [entityId]                 | Displays information about the specified entity.                          | All        |
+
+## Lookup Commands
+
+| Command                     | Description                              | User Level |
+| --------------------------- | ---------------------------------------- | ---------- |
+| !lookup costume [pattern]   | Searches for costume prototypes by name. | All        |
+| !lookup region [pattern]    | Searches for region prototypes by name.  | All        |
+| !lookup blueprint [pattern] | Searches for blueprints by name.         | All        |
+| !lookup assettype [pattern] | Searches for asset types by name.        | All        |
+| !lookup asset [pattern]     | Searches for assets by name.             | All        |
+
+## Misc Commands
+
+| Command   | Description                                            | User Level |
+| --------- | ------------------------------------------------------ | ---------- |
+| !tower    | Changes region to Avengers Tower (original).           | All        |
+| !jail     | Changes region to East Side: Detention Facility (old). | All        |
+| !position | Shows current position.                                | All        |
+| !dance    | Performs the dance emote.                              | All        |
+| !tp       | Teleports the player within the current region.        | All        |
+
+## Packet Commands
+
+| Command       | Description                            | User Level |
+| ------------- | -------------------------------------- | ---------- |
+| !packet parse | Parses messages from all packet files. | Admin      |
+
+## Player Commands
+
+| Command                 | Description                                                                                       | User Level |
+| ----------------------- | ------------------------------------------------------------------------------------------------- | ---------- |
+| !player avatar [avatar] | Changes player avatar                                                                             | All        |
+| !player aoi [value]     | Changes player AOI volume size. Range: [1600..5000].                                              | All        |
+| !player aoi reset       | Resets player AOI volume size to 3200.                                                            | All        |
+| !player costume [name]  | Changes costume for the current avatar.                                                           | All        |
+| !player costume reset   | Resets the applied costume for the current avatar.                                                | All        |
+| !player costume default | Applies the default costume to the current avatar. In most cases this reverts any visual updates. | All        |
+| !player omegapoints     | Maxes out Omega points. This requires Infinity to be disabled.                                    | All        |
+| !player infinitypoints  | Maxes out Infinity points. This requires Infinity to be enabled.                                  | All        |
+| !player fixmana         | Fixes missing primary resource visuals in the UI.                                                 | All        |
+
+## Region Commands
+
+| Command                    | Description                                                                                                                                                                          | User Level |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| !region warp [name]        | Moves the player to the specified region.                                                                                                                                            | All        |
+| !region warp [name] unsafe | Moves the player to the specified region, ignoring warnings. NOTE: This will cause the client to get stuck in an infinite loading screen if it is missing the assets for the region! | Admin      |
+| !region reload             | Reloads the current region.                                                                                                                                                          | All        |
+
 ## Server Commands
 
-| Command                                                 | Description                                       | User Level |
-| ------------------------------------------------------- | ------------------------------------------------- | ---------- |
-| !server status                                          | Shows server status information.                  | All        |
-| !server shutdown                                        | Shuts down the server.                            | Admin      |
-| !client info [sessionId]                                | Show information about the specified client.      | Admin      |
-| !client kick [playerName]                               | Kicks the specified player from the server.       | Moderator  |
-| !client send [sessionId] [messageName] [messageContent] | Sends a protobuf message to the specified client. | Admin      |
-| !packet parse                                           | Parses messages from all packet files.            | Admin      |
-
-## In-Game Commands
-
-These commands can be invoked only from in-game.
-
-| Command                     | Description                                                  | User Level |
-| --------------------------- | ------------------------------------------------------------ | ---------- |
-| !tower                      | Changes region to Avengers Tower (original).                 | All        |
-| !doop                       | Changes region to Cosmic Doop Sector.                        | All        |
-| !cow                        | Changes region to Classified Bovine Sector.                  | All        |
-| !bovineheim                 | Changes region to Bovineheim.                                | All        |
-| !dance                      | Performs the dance emote.                                    | All        |
-| !position                   | Shows current position.                                      | All        |
-| !tp                         | Teleports the player.                                        | All        |
-| !player avatar [avatar]     | Changes player avatar.                                       | All        |
-| !player region [region]     | Changes player starting region.                              | All        |
-| !player costume [costumeId] | Changes player costume.                                      | All        |
-| !player AOIVolume [value]   | Changes area of interest volume size (entity draw distance). | All        |
-| !omega points               | Adds 7500 omega points.                                      | All        |
-| !achievement unlock [id]    | Unlocks the specified achievement.                           | All        |
-| !achievement info [id]      | Shows details about the specified achievement.               | All        |
+| Command          | Description                      | User Level |
+| ---------------- | -------------------------------- | ---------- |
+| !server status   | Shows server status information. | All        |
+| !server shutdown | Shuts down the server.           | Admin      |

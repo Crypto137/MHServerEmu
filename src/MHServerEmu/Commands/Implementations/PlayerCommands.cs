@@ -130,7 +130,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Setting Omega points to {value}.";
         }
 
-        [Command("infinity", "Maxes out Infinity points.\nUsage: player infinitypoints", AccountUserLevel.User)]
+        [Command("infinitypoints", "Maxes out Infinity points.\nUsage: player infinitypoints", AccountUserLevel.User)]
         public string InfinityPoints(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
