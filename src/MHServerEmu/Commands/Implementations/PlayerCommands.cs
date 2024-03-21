@@ -110,5 +110,24 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeId)}.";
         }
+
+        [Command("fixmana", "Fixes mana display.\nUsage: player fixmana", AccountUserLevel.User)]
+        public string FixMana(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            // remove this when it works on its own
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            var avatar = playerConnection.Player.CurrentAvatar;
+
+            client.SendMessage(1, Property.ToNetMessageSetProperty(
+                avatar.Properties.ReplicationId, new(PropertyEnum.Endurance), 0f));
+
+            client.SendMessage(1, Property.ToNetMessageSetProperty(
+                avatar.Properties.ReplicationId, new(PropertyEnum.Endurance), avatar.Properties[PropertyEnum.Endurance]));
+
+            return $"Mana fixed.";
+        }
     }
 }
