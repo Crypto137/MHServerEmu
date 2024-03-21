@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {

@@ -4,7 +4,6 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Navi
@@ -228,8 +227,8 @@ namespace MHServerEmu.Games.Navi
             };
             stateStack.Push(state);
 
-            NaviContentFlags contentFlags = NaviSystem.ContentFlagCountsToContentFlags(state.FlagCounts);
-            PathFlags pathFlags = NaviSystem.ContentFlagsToPathFlags(contentFlags);
+            NaviContentFlags contentFlags = ContentFlagCounts.ToContentFlags(state.FlagCounts);
+            PathFlags pathFlags = ContentFlags.ToPathFlags(contentFlags);
 
             triangle.ContentFlagCounts.Set(state.FlagCounts);
             triangle.PathingFlags = pathFlags;
@@ -267,8 +266,8 @@ namespace MHServerEmu.Games.Navi
                             }
                         }
 
-                        contentFlags = NaviSystem.ContentFlagCountsToContentFlags(stateOppo.FlagCounts);
-                        pathFlags = NaviSystem.ContentFlagsToPathFlags(contentFlags);
+                        contentFlags = ContentFlagCounts.ToContentFlags(stateOppo.FlagCounts);
+                        pathFlags = ContentFlags.ToPathFlags(contentFlags);
 
                         opposedTriangle.ContentFlagCounts.Set(stateOppo.FlagCounts);
                         opposedTriangle.PathingFlags = pathFlags;
