@@ -14,13 +14,13 @@ namespace MHServerEmu.Games.Navi
         private float _extentsSize;
 
         public InvasiveList<NaviTriangle> TriangleList { get; private set; }
+        public uint Serial { get; set; }
 
         private NaviSystem _navi;
         private int _sectorSize;
         private NaviTriangle[] _sectors;
         private NaviVertexLookupCache _vertexLookupCache;
         private NaviTriangle _lastTriangle;
-        private int _serial;
         private int _triangleCount;
 
         public NaviCdt(NaviSystem navi, NaviVertexLookupCache naviVertexLookupCache)
@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Navi
                 RemoveTriangle(triangle);
 
             _lastTriangle = null;
-            _serial = 0;
+            Serial = 0;
             _sectors = null;
             _sectorSize = 0;
         }
@@ -115,7 +115,132 @@ namespace MHServerEmu.Games.Navi
                 return -1;
         }
 
-        internal void RemoveCollinearEdges()
+        public void RemoveCollinearEdges()
+        {
+            List<NaviEdge> checkedEdges = new ();
+            List<NaviEdge> collinearEdges = new ();
+            var naviSerialCheck = new NaviSerialCheck(this);
+
+            foreach (var triangle in TriangleList.Iterate())
+                foreach (var edge in triangle.Edges)
+                {
+                    if (edge.Triangles[0] == null || edge.Triangles[1] == null) continue;
+                    if (edge.TestOperationSerial(naviSerialCheck) == false) continue;
+                    collinearEdges.Clear();
+                    if (FindCollinearEdges(edge, collinearEdges, out NaviEdge addEdge))
+                    {
+                        foreach (var collinearEdge in collinearEdges)
+                            collinearEdge.TestOperationSerial(naviSerialCheck);
+
+                        checkedEdges.Add(edge);
+                    }
+                }
+
+            foreach (var edge in checkedEdges)
+            {
+                if (edge.IsAttached == false) continue;
+                collinearEdges.Clear();
+                if (FindCollinearEdges(edge, collinearEdges, out NaviEdge addEdge))
+                {
+                    foreach (var collinearEdge in collinearEdges)
+                        RemoveEdge(collinearEdge, true);
+
+                    if (FindTriangleContainingVertex(addEdge.Points[0]) != null && FindTriangleContainingVertex(addEdge.Points[1]) != null)
+                        AddEdge(addEdge);
+                }
+            }
+        }
+
+        private bool FindCollinearEdges(NaviEdge edge, List<NaviEdge> collinearEdges, out NaviEdge outEdge)
+        {
+            outEdge = null;
+
+            if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) == false) return false;
+
+            var points = new NaviPoint[2];
+            var dir = Vector3.Normalize2D(edge.Point(1) - edge.Point(0));
+
+            for (int i = 0; i < 2; i++)
+            {
+                NaviEdge itEdge = edge; 
+                if (i == 1) dir = -dir;
+
+                NaviPoint point = edge.Points[i];
+                points[i] = point;
+
+                while (itEdge != null)
+                {
+                    NaviEdge collinearEdge = null;
+                    NaviTriangle nextTriangle = itEdge.Triangles[0];
+                    NaviTriangle itEnd = nextTriangle;
+                    bool found = false;
+                    do
+                    {
+                        int oppIndex = nextTriangle.OpposedEdgeIndex(point);
+                        NaviEdge nextEdge = nextTriangle.Edges[(oppIndex + 1) % 3];
+
+                        if ((nextEdge != itEdge) && nextEdge.EdgeFlags.HasFlag(NaviEdgeFlags.Const))
+                        {
+                            if (found)
+                            {
+                                collinearEdge = null;
+                                break;
+                            }
+                            else
+                            {
+                                found = true;
+                            }
+
+                            var testDir = Vector3.Normalize2D(point.Pos - nextEdge.OpposedPoint(point).Pos);
+                            if (Vector3.Dot(dir, testDir) > 0.996f)
+                                collinearEdge = nextEdge;
+                        }
+
+                        nextTriangle = nextTriangle.NextTriangleSharingPoint(point);
+                    } while (nextTriangle != itEnd);
+
+                    if (collinearEdge != null)
+                    {
+                        point = collinearEdge.OpposedPoint(point);
+                        points[i] = point;
+                        collinearEdges.Add(collinearEdge);
+                    }
+
+                    itEdge = collinearEdge;
+                }
+            }
+
+            if (collinearEdges.Count > 0)
+            {
+                collinearEdges.Add(edge);
+                outEdge = new NaviEdge (points[0], points[1], NaviEdgeFlags.Const, edge.PathingFlags);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private NaviTriangle FindTriangleContainingVertex(NaviPoint point)
+        {
+            var triangle = FindTriangleAtPoint(point.Pos);
+            if (triangle != null)
+            {
+                if (triangle.Contains(point)) 
+                    return triangle;
+                else
+                    foreach (var edge in triangle.Edges)
+                    {
+                        var oppoTriangle = edge.OpposedTriangle(triangle);
+                        if (oppoTriangle != null && oppoTriangle.Contains(point))
+                            return oppoTriangle;
+                    }
+            }
+            return null;
+        }
+
+        private NaviTriangle FindTriangleAtPoint(Vector3 pos)
         {
             throw new NotImplementedException();
         }
@@ -135,7 +260,7 @@ namespace MHServerEmu.Games.Navi
             throw new NotImplementedException();
         }
 
-        internal void RemoveEdge(NaviEdge edge)
+        internal void RemoveEdge(NaviEdge edge, bool check = true)
         {
             throw new NotImplementedException();
         }
