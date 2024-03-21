@@ -114,5 +114,9 @@ namespace MHServerEmu.Games.Navi
             return edge.OpposedTriangle(this);
         }
 
+        internal object ToStringWithIntegrity()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

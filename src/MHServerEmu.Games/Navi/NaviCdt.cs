@@ -242,6 +242,38 @@ namespace MHServerEmu.Games.Navi
 
         private NaviTriangle FindTriangleAtPoint(Vector3 pos)
         {
+            if (Vector3.IsFinite(pos) == false) return null;
+
+            NaviTriangle triangle = _lastTriangle;
+            var sectorIndex = PointToSectorIndex(pos);
+            NaviTriangle sector = (sectorIndex != -1) ? _sectors[sectorIndex] : null;
+            if (sector != null && sector.Flags.HasFlag(NaviTriangleFlags.Attached))
+                triangle = sector;
+
+            int loopCount = 50000;
+            while (triangle != null && FindNextTriangleTowards(triangle, pos, ref triangle) && loopCount-- > 0)
+            {
+            }
+
+            if (loopCount <= 0)
+            {
+                if (_navi.Log)
+                {
+                    Logger.Error($"NaviCDT.FindTriangleAtPoint stuck in infinite loop. p={pos}");
+                    loopCount = 20;
+                    int loopCountLog = 1;
+                    while (triangle != null && FindNextTriangleTowards(triangle, pos, ref triangle) && loopCount-- > 0)
+                    {
+                        Logger.Error($"{loopCountLog++}: t={triangle.ToStringWithIntegrity()}");
+                    }
+                }
+                return null;
+            }
+            return triangle;
+        }
+
+        private bool FindNextTriangleTowards(NaviTriangle triangle, Vector3 pos, ref NaviTriangle outTriangle)
+        {
             throw new NotImplementedException();
         }
 

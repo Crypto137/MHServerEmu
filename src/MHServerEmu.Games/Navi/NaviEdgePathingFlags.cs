@@ -38,18 +38,18 @@ namespace MHServerEmu.Games.Navi
 
     public class ContentFlagCounts // TODO: optimize it
     {
-        public sbyte AddWalk { get; set; }
-        public sbyte RemoveWalk { get; set; }
-        public sbyte AddFly { get; set; }
-        public sbyte RemoveFly { get; set; }
-        public sbyte AddPower { get; set; }
-        public sbyte RemovePower { get; set; }
-        public sbyte AddSight { get; set; }
-        public sbyte RemoveSight { get; set; }
+        public int AddWalk { get; set; }
+        public int RemoveWalk { get; set; }
+        public int AddFly { get; set; }
+        public int RemoveFly { get; set; }
+        public int AddPower { get; set; }
+        public int RemovePower { get; set; }
+        public int AddSight { get; set; }
+        public int RemoveSight { get; set; }
 
         public static int Count { get; } = 8;
 
-        public sbyte this[int index]
+        public int this[int index]
         {
             get
             {
