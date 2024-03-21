@@ -6,6 +6,7 @@ using MHServerEmu.Games;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Grouping;
@@ -112,7 +113,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeId)}.";
         }
 
-        [Command("omegapoints", "Adds Omega points.\nUsage: player omegapoints", AccountUserLevel.User)]
+        [Command("omegapoints", "Maxes out Omega points.\nUsage: player omegapoints", AccountUserLevel.User)]
         public string OmegaPoints(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -127,6 +128,29 @@ namespace MHServerEmu.Commands.Implementations
 
             client.SendMessage(1, Property.ToNetMessageSetProperty(playerConnection.Player.Properties.ReplicationId, new(PropertyEnum.OmegaPoints), value));
             return $"Setting Omega points to {value}.";
+        }
+
+        [Command("infinity", "Maxes out Infinity points.\nUsage: player infinitypoints", AccountUserLevel.User)]
+        public string InfinityPoints(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            if (config.InfinitySystemEnabled == false) return "Set InfinitySystemEnabled to true in Config.ini to enable the Infinity system.";
+
+            long value = GameDatabase.AdvancementGlobalsPrototype.InfinityPointsCapPerGem;
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+
+            foreach (InfinityGem gem in Enum.GetValues<InfinityGem>())
+            {
+                if (gem == InfinityGem.None) continue;
+                playerConnection.Player.Properties[PropertyEnum.InfinityPoints, (int)gem] = value;
+
+                client.SendMessage(1, Property.ToNetMessageSetProperty(playerConnection.Player.Properties.ReplicationId,
+                    new(PropertyEnum.InfinityPoints, (PropertyParam)gem), value));
+            }
+            
+            return $"Setting all Infinity points to {value}.";
         }
 
         [Command("fixmana", "Fixes mana display.\nUsage: player fixmana", AccountUserLevel.User)]
