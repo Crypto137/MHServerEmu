@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.System;
+﻿using MHServerEmu.Core.System;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
@@ -14,11 +13,8 @@ namespace MHServerEmu.Commands.Implementations
         [Command("unlock", "Unlocks an achievement.\nUsage: achievement unlock [id]", AccountUserLevel.User)]
         public string Unlock(string[] @params, FrontendClient client)
         {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
-            if (@params.IsNullOrEmpty())
-                return "Invalid arguments. Type 'help achievement unlock' to get help.";
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help achievement unlock' to get help.";
 
             if (uint.TryParse(@params[0], out uint id) == false)
                 return "Failed to parse achievement id.";
@@ -42,8 +38,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]", AccountUserLevel.User)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (@params.IsNullOrEmpty())
-                return "Invalid arguments. Type 'help achievement unlock' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help achievement unlock' to get help.";
 
             if (uint.TryParse(@params[0], out uint id) == false)
                 return "Failed to parse achievement id.";

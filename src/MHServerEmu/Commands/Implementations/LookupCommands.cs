@@ -6,13 +6,12 @@ using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype] [pattern]", AccountUserLevel.User)]
+    [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype|asset] [pattern]", AccountUserLevel.User)]
     public class LookupCommands : CommandGroup
     {
         [Command("costume", "Searches prototypes that use the costume blueprint.\nUsage: lookup costume [pattern]", AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
 
             // Find matches for the given pattern
@@ -22,7 +21,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("region", "Searches prototypes that use the region blueprint.\nUsage: lookup region [pattern]", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup region' to get help.";
 
             // Find matches for the given pattern
@@ -32,7 +30,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("blueprint", "Searches blueprints.\nUsage: lookup blueprint [pattern]", AccountUserLevel.User)]
         public string Blueprint(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup blueprint' to get help.";
 
             // Find matches for the given pattern
@@ -43,7 +40,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("assettype", "Searches asset types.\nUsage: lookup assettype [pattern]", AccountUserLevel.User)]
         public string AssetType(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup assettype' to get help.";
 
             var matches = GameDatabase.SearchAssetTypes(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
@@ -53,7 +49,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("asset", "Searches assets.\nUsage: lookup asset [pattern]", AccountUserLevel.User)]
         public string Asset(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup asset' to get help.";
 
             var matches = GameDatabase.SearchAssets(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);

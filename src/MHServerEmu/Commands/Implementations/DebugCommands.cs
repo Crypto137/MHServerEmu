@@ -66,7 +66,7 @@ namespace MHServerEmu.Commands.Implementations
         public string IsBlocked(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help debug isblocked' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help debug isblocked' to get help.";
 
             if (ulong.TryParse(@params[0], out ulong entityId1) == false)
                 return $"Failed to parse EntityId1 {@params[0]}";
@@ -95,7 +95,7 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
-            if ((@params?.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
+            if ((@params.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
                 radius = 100;   // Default to 100 if no radius is specified
 
             Sphere near = new(playerConnection.LastPosition, radius);
@@ -132,7 +132,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Marker(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help debug marker' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help debug marker' to get help.";
 
             if (int.TryParse(@params[0], out int markerId) == false)
                 return $"Failed to parse MarkerId {@params[0]}";
@@ -151,7 +151,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Entity(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help debug entity' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help debug entity' to get help.";
 
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";

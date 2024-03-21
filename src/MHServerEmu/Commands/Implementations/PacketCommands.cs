@@ -10,11 +10,8 @@ namespace MHServerEmu.Commands.Implementations
         [Command("parse", "Parses messages from all packets\nUsage: packet parse", AccountUserLevel.Admin)]
         public string Parse(string[] @params, FrontendClient client)
         {
-            if (client != null)
-                return "You can only invoke this command from the server console.";
-
+            if (client != null) return "You can only invoke this command from the server console.";
             PacketHelper.ParseServerMessagesFromAllPacketFiles();
-
             return string.Empty;
         }
     }

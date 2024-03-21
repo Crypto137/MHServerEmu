@@ -17,7 +17,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Warp(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.IsNullOrEmpty()) return "Invalid arguments. Type 'help region warp' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help region warp' to get help.";
 
             var matches = GameDatabase.SearchPrototypes(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive, HardcodedBlueprints.Region);
 

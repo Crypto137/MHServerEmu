@@ -96,7 +96,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Teleport(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
@@ -128,7 +128,7 @@ namespace MHServerEmu.Commands.Implementations
                 teleportPoint += playerConnection.LastPosition;
 
             game.EventManager.AddEvent(playerConnection, Games.Events.EventEnum.ToTeleport, 0, teleportPoint);
-            return $"Teleporting to {teleportPoint.ToStringNames()}";
+            return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
     }
 }
