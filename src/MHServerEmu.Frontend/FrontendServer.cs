@@ -6,9 +6,14 @@ using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Frontend
 {
+    /// <summary>
+    /// A <see cref="TcpServer"/> that clients connect to.
+    /// </summary>
     public class FrontendServer : TcpServer, IGameService
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
+
+        #region IGameService Implementation
 
         public override void Run()
         {
@@ -50,11 +55,12 @@ namespace MHServerEmu.Frontend
 
         public string GetStatus()
         {
-            return "Running";
+            return $"Connections: {ConnectionCount}";
         }
 
+        #endregion
 
-        #region Event Handling
+        #region TCP Server Event Handling
 
         protected override void OnClientConnected(TcpClientConnection connection)
         {
@@ -91,6 +97,9 @@ namespace MHServerEmu.Frontend
 
         #region Message Self-Handling
 
+        /// <summary>
+        /// Handles <see cref="ClientCredentials"/>.
+        /// </summary>
         private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
@@ -103,6 +112,9 @@ namespace MHServerEmu.Frontend
             playerManager.ReceiveFrontendMessage(client, credentials);
         }
 
+        /// <summary>
+        /// Handles <see cref="InitialClientHandshake"/>.
+        /// </summary>
         private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
@@ -130,10 +142,9 @@ namespace MHServerEmu.Frontend
             // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
             if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
             {
-                // Disconnect the client if the account is already logged in
-                // TODO: disconnect the logged in player instead?
-                if (groupingManager.AddFrontendClient(client) == false) client.Connection.Disconnect();
-                if (playerManager.AddFrontendClient(client) == false) client.Connection.Disconnect();
+                // Add to the player manager first to handle duplicate login if there is one
+                playerManager.AddFrontendClient(client);
+                groupingManager.AddFrontendClient(client);
             }
         }
 

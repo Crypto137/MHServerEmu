@@ -14,6 +14,8 @@ namespace MHServerEmu.Leaderboards
 
         private readonly Dictionary<(PrototypeGuid, ulong), Leaderboard> _leaderboardDict = new();
 
+        public int LeaderboardCount { get => _leaderboardDict.Count; }
+
         /// <summary>
         /// Returns the specified <see cref="Leaderboard"/> instance.
         /// </summary>

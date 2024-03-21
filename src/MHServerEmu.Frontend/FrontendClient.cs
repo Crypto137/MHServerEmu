@@ -5,6 +5,9 @@ using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Frontend
 {
+    /// <summary>
+    /// Represents an <see cref="ITcpClient"/> connected to the <see cref="FrontendServer"/>.
+    /// </summary>
     public class FrontendClient : ITcpClient
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -16,11 +19,17 @@ namespace MHServerEmu.Frontend
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
 
+        /// <summary>
+        /// Constructs a new <see cref="FrontendClient"/> instance for the provided <see cref="TcpClientConnection"/>.
+        /// </summary>
         public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
         }
 
+        /// <summary>
+        /// Parses received data.
+        /// </summary>
         public void Parse(byte[] data)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
@@ -39,7 +48,7 @@ namespace MHServerEmu.Frontend
 
                 case MuxCommand.Disconnect:
                     Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
-                    Connection.Disconnect();
+                    Disconnect();
                     break;
 
                 case MuxCommand.ConnectWithData:
@@ -52,6 +61,9 @@ namespace MHServerEmu.Frontend
             }
         }
 
+        /// <summary>
+        /// Assigns an <see cref="IFrontendSession"/> to this <see cref="FrontendClient"/>.
+        /// </summary>
         public void AssignSession(IFrontendSession session)
         {
             if (Session == null)
@@ -60,11 +72,17 @@ namespace MHServerEmu.Frontend
                 Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
         }
 
+        /// <summary>
+        /// Sends a mux disconnect command over the specified mux channel.
+        /// </summary>
         public void SendMuxDisconnect(ushort muxId)
         {
             Connection.Send(new PacketOut(muxId, MuxCommand.Disconnect));
         }
 
+        /// <summary>
+        /// Sends the provided <see cref="GameMessage"/> over the specified mux channel.
+        /// </summary>
         public void SendMessage(ushort muxId, GameMessage message)
         {
             PacketOut packet = new(muxId, MuxCommand.Data);
@@ -72,11 +90,17 @@ namespace MHServerEmu.Frontend
             Connection.Send(packet);
         }
 
+        /// <summary>
+        /// Sends the provided <see cref="IMessage"/> over the specified mux channel.
+        /// </summary>
         public void SendMessage(ushort muxId, IMessage message)
         {
             SendMessage(muxId, new GameMessage(message));
         }
 
+        /// <summary>
+        /// Sends the provided <see cref="GameMessage"/> instances over the specified mux channel.
+        /// </summary>
         public void SendMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {
             PacketOut packet = new(muxId, MuxCommand.Data);
@@ -84,11 +108,22 @@ namespace MHServerEmu.Frontend
             Connection.Send(packet);
         }
 
+        /// <summary>
+        /// Sends the provided <see cref="IMessage"/> instances over the specified mux channel.
+        /// </summary>
         public void SendMessages(ushort muxId, IEnumerable<IMessage> messages)
         {
             SendMessages(muxId, messages.Select(message => new GameMessage(message)));
         }
 
+        /// <summary>
+        /// Disconnects this <see cref="FrontendClient"/>.
+        /// </summary>
+        public void Disconnect() => Connection.Disconnect();
+
+        /// <summary>
+        /// Routes <see cref="GameMessage"/> instances to the appropriate <see cref="IGameService"/>.
+        /// </summary>
         private void RouteMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {
             ServerType destination;

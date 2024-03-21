@@ -54,7 +54,7 @@ namespace MHServerEmu.Leaderboards
 
         public string GetStatus()
         {
-            return "Running";
+            return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
         }
 
         #endregion

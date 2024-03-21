@@ -166,7 +166,6 @@ namespace MHServerEmu.Core.Network
         {
             StringBuilder sb = new();
 
-            sb.AppendLine("Server Status");
             sb.AppendLine($"Uptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}");
 
             for (int i = 0; i < _services.Length; i++)

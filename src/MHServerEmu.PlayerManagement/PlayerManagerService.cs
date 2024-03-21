@@ -25,7 +25,7 @@ namespace MHServerEmu.PlayerManagement
         private readonly SessionManager _sessionManager;
         private readonly GameManager _gameManager;
         private readonly object _playerLock = new();
-        private readonly List<FrontendClient> _playerList = new();
+        private readonly Dictionary<ulong, FrontendClient> _playerDict = new();
 
         private readonly string _frontendAddress;
         private readonly string _frontendPort;
@@ -120,7 +120,7 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
-            return $"Sessions: {_sessionManager.SessionCount}";
+            return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount}";
         }
 
         #endregion
@@ -141,14 +141,20 @@ namespace MHServerEmu.PlayerManagement
         {
             lock (_playerLock)
             {
-                // TODO: make this check better
-                foreach (FrontendClient player in _playerList)
+                if (client.Session == null || client.Session.Account == null)
+                    return Logger.WarnReturn(false, "AddFrontendClient(): The client has no valid session assigned");
+
+                ulong playerId = client.Session.Account.Id;
+
+                // Handle duplicate login by disconnecting the existing player
+                if (_playerDict.TryGetValue(playerId, out FrontendClient existingClient))
                 {
-                    if (player.Session.Account.Id == client.Session.Account.Id)
-                        return Logger.WarnReturn(false, "Failed to add player: already added");
+                    Logger.Info($"Duplicate login for {client.Session.Account}, terminating existing session {existingClient.Session.Id}");
+                    existingClient.Disconnect();
+                    ((ClientSession)client.Session).RefreshAccount();   // Replace outdated data retrieved before the existing session was terminated
                 }
 
-                _playerList.Add(client);
+                _playerDict.Add(client.Session.Account.Id, client);
                 _gameManager.GetAvailableGame().AddPlayer(client);
             }
 
@@ -159,17 +165,23 @@ namespace MHServerEmu.PlayerManagement
         {
             lock (_playerLock)
             {
-                if (_playerList.Contains(client) == false)
-                    return Logger.WarnReturn(false, "Failed to remove player: not found");
+                if (client.Session == null || client.Session.Account == null)
+                    return Logger.WarnReturn(false, "RemoveFrontendClient(): The client has no valid session assigned");
 
-                Game game = GetGameByPlayer(client);
-                game.RemovePlayer(client);
+                ulong playerId = client.Session.Account.Id;
 
-                _playerList.Remove(client);
+                if (_playerDict.ContainsKey(client.Session.Account.Id) == false)
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client.Session.Account} not found");
+
+                GetGameByPlayer(client)?.RemovePlayer(client);
+
+                _playerDict.Remove(playerId);
                 _sessionManager.RemoveSession(client.Session.Id);
             }
 
-            if (Config.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
+            if (Config.BypassAuth == false)
+                DBManager.UpdateAccountData(client.Session.Account);
+
             return true;
         }
 
@@ -203,7 +215,7 @@ namespace MHServerEmu.PlayerManagement
         {
             lock (_playerLock)
             {
-                foreach (FrontendClient player in _playerList)
+                foreach (FrontendClient player in _playerDict.Values)
                     player.SendMessage(MuxChannel, message);
             }
         }
@@ -264,7 +276,7 @@ namespace MHServerEmu.PlayerManagement
             if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
             {
                 Logger.Warn($"Failed to verify client credentials, disconnecting client on {client.Connection}");
-                client.Connection.Disconnect();
+                client.Disconnect();
                 return;
             }
 
