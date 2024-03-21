@@ -114,9 +114,30 @@ namespace MHServerEmu.Games.Navi
             return edge.OpposedTriangle(this);
         }
 
-        internal object ToStringWithIntegrity()
+        public override string ToString()
         {
-            throw new NotImplementedException();
+            return $"NaviTriangle [e0={Edges[0]} e1={Edges[1]} e2={Edges[2]}]";
         }
+
+        public string ToStringWithIntegrity()
+        {
+            bool adjCheck =
+                (Edges[0].Triangles[0] == this || Edges[0].Triangles[1] == this) &&
+                (Edges[1].Triangles[0] == this || Edges[1].Triangles[1] == this) &&
+                (Edges[2].Triangles[0] == this || Edges[2].Triangles[1] == this);
+
+            bool pointsCheck =
+                (EdgePointCW(0, 1) == EdgePointCW(1, 0)) && (EdgePointCW(1, 1) == EdgePointCW(2, 0)) && (EdgePointCW(2, 1) == EdgePointCW(0, 0)) &&
+                (EdgePointCW(0, 0) == EdgePointCW(2, 1)) && (EdgePointCW(1, 0) == EdgePointCW(0, 1)) && (EdgePointCW(2, 0) == EdgePointCW(1, 1));
+
+            return string.Format("{0} [p0={1} p1={2} p2={3}] adj={4} pts={5} wnd={6} notdeg={7}",
+                ToString(),
+                PointCW(0).ToString(), PointCW(1).ToString(), PointCW(2).ToString(),
+                adjCheck ? 1 : 0,
+                pointsCheck ? 1 : 0,
+                Pred.Clockwise2D(PointCW(0), PointCW(1), PointCW(2)) ? 1 : 0,
+                Pred.IsDegenerate(PointCW(0), PointCW(1), PointCW(2)) ? 0 : 1);
+        }
+
     }
 }
