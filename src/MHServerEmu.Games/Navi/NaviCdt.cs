@@ -259,7 +259,7 @@ namespace MHServerEmu.Games.Navi
             {
                 if (_navi.Log)
                 {
-                    Logger.Error($"NaviCDT.FindTriangleAtPoint stuck in infinite loop. p={pos}");
+                    Logger.Error($"FindTriangleAtPoint stuck in infinite loop. p={pos}");
                     loopCount = 20;
                     int loopCountLog = 1;
                     while (triangle != null && FindNextTriangleTowards(triangle, pos, ref triangle) && loopCount-- > 0)
@@ -272,9 +272,27 @@ namespace MHServerEmu.Games.Navi
             return triangle;
         }
 
-        private bool FindNextTriangleTowards(NaviTriangle triangle, Vector3 pos, ref NaviTriangle outTriangle)
+        private static bool FindNextTriangleTowards(NaviTriangle triangle, Vector3 pos, ref NaviTriangle outTriangle)
         {
-            throw new NotImplementedException();
+            NaviPoint p0 = triangle.PointCW(0);
+            NaviPoint p1 = triangle.PointCW(1);
+            NaviPoint p2 = triangle.PointCW(2);
+
+            double l0 = Pred.LineRelationship2D(p0, p1, pos);
+            double l1 = Pred.LineRelationship2D(p1, p2, pos);
+            double l2 = Pred.LineRelationship2D(p2, p0, pos);
+
+            if (NaviUtil.FindMaxValue(l0, l1, l2, out int edgeIndex) > 0.0)
+            {
+                NaviEdge edge = triangle.Edge(edgeIndex);
+                outTriangle = edge.OpposedTriangle(triangle);
+                return true;
+            }
+            else
+            {
+                outTriangle = null;
+                return false;
+            }
         }
 
         internal void AddEdge(NaviEdge e)
