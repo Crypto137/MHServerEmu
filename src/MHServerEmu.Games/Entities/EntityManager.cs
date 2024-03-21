@@ -321,7 +321,7 @@ namespace MHServerEmu.Games.Entities
         #region Hardcode
         public void HardcodedEntities(Region region)
         {
-            CellPrototype entry;
+            //CellPrototype entry;
             // Vector3 entityPosition;            
 
             switch (region.PrototypeId)
