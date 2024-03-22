@@ -122,6 +122,17 @@ namespace MHServerEmu.Games.Navi
                 return 0;
         }
 
+        public NaviEdge OpposedEdge(NaviPoint point)
+        {
+            return Edges[OpposedEdgeIndex(point)];
+        }
+
+        public NaviTriangle OpposedTriangle(NaviPoint point, out NaviEdge edge)
+        {
+            edge = OpposedEdge(point);
+            return edge.OpposedTriangle(this);
+        }
+
         public NaviTriangle NextTriangleSharingPoint(NaviPoint point)
         {
             int edgeIdx = OpposedEdgeIndex(point);
@@ -171,6 +182,7 @@ namespace MHServerEmu.Games.Navi
                 if (Edges[i] == edge) return i;
             return 0;
         }
+
     }
 
     public class NaviTriangleState
