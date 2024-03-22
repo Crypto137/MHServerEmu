@@ -1,8 +1,8 @@
 ﻿using System.Text;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations

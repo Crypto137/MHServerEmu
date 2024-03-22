@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;

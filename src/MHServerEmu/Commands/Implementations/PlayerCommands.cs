@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Config;
+﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;

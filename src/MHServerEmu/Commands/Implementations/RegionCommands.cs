@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;

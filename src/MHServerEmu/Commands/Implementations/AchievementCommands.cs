@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.System;
+﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.System;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;

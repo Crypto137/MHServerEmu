@@ -10,7 +10,7 @@ namespace MHServerEmu.Commands
     {
         public bool TryParse(string message, FrontendClient client)
         {
-            return CommandManager.TryParse(message, client);
+            return CommandManager.Instance.TryParse(message, client);
         }
     }
 }

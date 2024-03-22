@@ -53,6 +53,9 @@ namespace MHServerEmu
                 return;
             }
 
+            // Initialize the command system
+            CommandManager.Instance.SetClientOutput(new FrontendClientChatOutput());
+
             // Create and register game services
             ServerManager serverManager = ServerManager.Instance;
             serverManager.Initialize();
@@ -71,7 +74,7 @@ namespace MHServerEmu
             while (true)
             {
                 string input = Console.ReadLine();
-                CommandManager.Parse(input);
+                CommandManager.Instance.Parse(input);
             }
         }
 

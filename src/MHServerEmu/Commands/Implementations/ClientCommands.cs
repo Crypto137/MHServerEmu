@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;

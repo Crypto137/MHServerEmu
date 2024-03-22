@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;

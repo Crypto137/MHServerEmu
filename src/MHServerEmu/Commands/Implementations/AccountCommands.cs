@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
