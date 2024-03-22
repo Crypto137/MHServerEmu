@@ -75,11 +75,11 @@ namespace MHServerEmu.Games.Navi
             return flip ? -d : d;
         }
 
-        private static double InternalOrient2D(Vector3 v0, Vector3 v1, Vector3 v2)
+        private static double InternalOrient2D(Vector3 a, Vector3 b, Vector3 c)
         {
-            double[] pa = { v0.X, v0.Y };
-            double[] pb = { v1.X, v1.Y };
-            double[] pc = { v2.X, v2.Y };
+            double[] pa = { a.X, a.Y };
+            double[] pb = { b.X, b.Y };
+            double[] pc = { c.X, c.Y };
             return Orient2D.Robust(pa, pb, pc);
         }
 
@@ -107,6 +107,23 @@ namespace MHServerEmu.Games.Navi
             Vector3 ba = b - a;
             Vector3 ap = a - p;
             return Vector3.LengthSquared(Vector3.Cross(ba, ap)) / Vector3.LengthSquared(ba);
+        }
+
+        public static bool CircumcircleContainsPoint(NaviPoint p0, NaviPoint p1, NaviPoint p2, NaviPoint checkPoint)
+        {
+            bool flip = SortInputs(ref p0, ref p1, ref p2);
+            double d = InternalIncircle(p0.Pos, p1.Pos, p2.Pos, checkPoint.Pos);
+            if (flip) d = -d;
+            return (d > 0.0);
+        }
+
+        private static double InternalIncircle(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+        {
+            double[] pa = { a.X, a.Y };
+            double[] pb = { b.X, b.Y };
+            double[] pc = { c.X, c.Y };
+            double[] pd = { d.X, d.Y };
+            return InCirlce.Robust(pa, pb, pc, pd);
         }
 
     }
