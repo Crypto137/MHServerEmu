@@ -3,7 +3,7 @@
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// An interface for services that handle <see cref="GameMessage"/> instances.
+    /// An interface for services that handle <see cref="MessagePackage"/> instances.
     /// </summary>
     public interface IGameService
     {
@@ -18,14 +18,14 @@ namespace MHServerEmu.Core.Network
         public void Shutdown();
 
         /// <summary>
-        /// Handles a <see cref="GameMessage"/> instance from a specific <see cref="ITcpClient"/>.
+        /// Handles a <see cref="MessagePackage"/> instance from a specific <see cref="ITcpClient"/>.
         /// </summary>
-        public void Handle(ITcpClient client, GameMessage message);
+        public void Handle(ITcpClient client, MessagePackage message);
 
         /// <summary>
-        /// Handles an <see cref="IEnumerable{T}"/> of <see cref="GameMessage"/> instances coming in from a specific <see cref="ITcpClient"/>.
+        /// Handles an <see cref="IEnumerable{T}"/> of <see cref="MessagePackage"/> instances coming in from a specific <see cref="ITcpClient"/>.
         /// </summary>
-        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages);
+        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages);
 
         /// <summary>
         /// Returns a <see cref="string"/> representing the status of this <see cref="IGameService"/>.

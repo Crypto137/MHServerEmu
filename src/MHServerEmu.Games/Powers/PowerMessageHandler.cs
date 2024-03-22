@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Powers
             _game = game;
         }
 
-        public void ReceiveMessage(PlayerConnection playerConnection, GameMessage message)
+        public void ReceiveMessage(PlayerConnection playerConnection, MessagePackage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {

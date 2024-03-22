@@ -109,14 +109,14 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        public static GameMessage[] LoadMessagesFromPacketFile(string fileName)
+        public static MessagePackage[] LoadMessagesFromPacketFile(string fileName)
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
             if (File.Exists(path) == false)
             {
                 Logger.Warn($"{fileName} not found");
-                return Array.Empty<GameMessage>();
+                return Array.Empty<MessagePackage>();
             }
 
             CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Network
             {
                 int packetCount = 0;
 
-                foreach (GameMessage message in packet.Messages)
+                foreach (MessagePackage message in packet.Messages)
                 {
                     writer.Write($"[{packetCount++}] ");
 

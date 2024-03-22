@@ -19,7 +19,7 @@ namespace MHServerEmu.Core.Network
 
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
-        public GameMessage[] Messages { get; } = Array.Empty<GameMessage>();
+        public MessagePackage[] Messages { get; } = Array.Empty<MessagePackage>();
 
         public PacketIn(CodedInputStream stream)
         {
@@ -37,7 +37,7 @@ namespace MHServerEmu.Core.Network
                     return;
                 }
 
-                List<GameMessage> messageList = new();
+                List<MessagePackage> messageList = new();
                 CodedInputStream messageInputStream = CodedInputStream.CreateInstance(stream.ReadRawBytes(bodyLength));
 
                 while (messageInputStream.IsAtEnd == false)

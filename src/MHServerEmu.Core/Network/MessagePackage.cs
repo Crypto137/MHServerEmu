@@ -6,7 +6,7 @@ namespace MHServerEmu.Core.Network
     /// <summary>
     /// Contains a serialized <see cref="IMessage"/>.
     /// </summary>
-    public class GameMessage
+    public class MessagePackage
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -16,27 +16,27 @@ namespace MHServerEmu.Core.Network
         public TimeSpan DateTimeReceived { get; set; }
 
         /// <summary>
-        /// Constructs a new <see cref="GameMessage"/> from raw data.
+        /// Constructs a new <see cref="MessagePackage"/> from raw data.
         /// </summary>
-        public GameMessage(byte id, byte[] payload)
+        public MessagePackage(byte id, byte[] payload)
         {
             Id = id;
             Payload = payload;
         }
 
         /// <summary>
-        /// Constructs a new <see cref="GameMessage"/> from an <see cref="IMessage"/>.
+        /// Constructs a new <see cref="MessagePackage"/> from an <see cref="IMessage"/>.
         /// </summary>
-        public GameMessage(IMessage message)
+        public MessagePackage(IMessage message)
         {
             Id = ProtocolDispatchTable.GetMessageId(message);
             Payload = message.ToByteArray();
         }
 
         /// <summary>
-        /// Decodes a <see cref="GameMessage"/> from the provided <see cref="CodedInputStream"/>.
+        /// Decodes a <see cref="MessagePackage"/> from the provided <see cref="CodedInputStream"/>.
         /// </summary>
-        public GameMessage(CodedInputStream stream)
+        public MessagePackage(CodedInputStream stream)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Encodes the <see cref="GameMessage"/> to the provided <see cref="CodedOutputStream"/>.
+        /// Encodes the <see cref="MessagePackage"/> to the provided <see cref="CodedOutputStream"/>.
         /// </summary>
         public void Encode(CodedOutputStream stream)
         {
@@ -62,7 +62,7 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Serializes the <see cref="GameMessage"/> instance to a byte array.
+        /// Serializes the <see cref="MessagePackage"/> instance to a byte array.
         /// </summary>
         public byte[] Serialize()
         {

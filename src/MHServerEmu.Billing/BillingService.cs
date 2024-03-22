@@ -63,7 +63,7 @@ namespace MHServerEmu.Billing
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, GameMessage message)
+        public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
             var client = (FrontendClient)tcpClient;
 
@@ -89,9 +89,9 @@ namespace MHServerEmu.Billing
             }
         }
 
-        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
         {
-            foreach (GameMessage message in messages)
+            foreach (MessagePackage message in messages)
                 Handle(client, message);
         }
 

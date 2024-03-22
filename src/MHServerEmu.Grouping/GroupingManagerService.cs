@@ -30,7 +30,7 @@ namespace MHServerEmu.Grouping
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, GameMessage message)
+        public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
             var client = (FrontendClient)tcpClient;
 
@@ -60,9 +60,9 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
         {
-            foreach (GameMessage message in messages)
+            foreach (MessagePackage message in messages)
                 Handle(client, message);
         }
 
@@ -114,7 +114,7 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void BroadcastMessage(GameMessage message)
+        public void BroadcastMessage(MessagePackage message)
         {
             lock (_playerLock)
             {

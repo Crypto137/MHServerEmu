@@ -11,7 +11,7 @@ namespace MHServerEmu.Core.Network
 
         private readonly ushort _muxId;
         private readonly MuxCommand _muxCommand;
-        private readonly List<GameMessage> _messageList = new();
+        private readonly List<MessagePackage> _messageList = new();
 
         public byte[] Data
         {
@@ -37,8 +37,8 @@ namespace MHServerEmu.Core.Network
             _muxCommand = command;
         }
 
-        public void AddMessage(GameMessage message) => _messageList.Add(message);
-        public void AddMessages(IEnumerable<GameMessage> messages) => _messageList.AddRange(messages);
+        public void AddMessage(MessagePackage message) => _messageList.Add(message);
+        public void AddMessages(IEnumerable<MessagePackage> messages) => _messageList.AddRange(messages);
 
         private byte[] SerializeBody()
         {
@@ -54,7 +54,7 @@ namespace MHServerEmu.Core.Network
             using (MemoryStream ms = new())
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                foreach (GameMessage message in _messageList) message.Encode(cos);
+                foreach (MessagePackage message in _messageList) message.Encode(cos);
                 cos.Flush();
                 return ms.ToArray();
             }
