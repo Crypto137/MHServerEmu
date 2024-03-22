@@ -98,5 +98,16 @@ namespace MHServerEmu.Games.Navi
             if (flip) d = -d;
             return d < deg;
         }
+
+        public static float RobustLinePointDistanceSq2D(Vector3 va, Vector3 vb, Vector3 vp)
+        {
+            Vector3 a = new (va.X, va.Y, 0.0f);
+            Vector3 b = new (vb.X, vb.Y, 0.0f);
+            Vector3 p = new (vp.X, vp.Y, 0.0f);
+            Vector3 ba = b - a;
+            Vector3 ap = a - p;
+            return Vector3.LengthSquared(Vector3.Cross(ba, ap)) / Vector3.LengthSquared(ba);
+        }
+
     }
 }
