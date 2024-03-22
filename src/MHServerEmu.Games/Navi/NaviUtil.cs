@@ -1,4 +1,7 @@
 ﻿
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
+
 namespace MHServerEmu.Games.Navi
 {
     public class NaviUtil
@@ -48,6 +51,14 @@ namespace MHServerEmu.Games.Navi
                 }
             }
         }
+
+        public static Vector3 ProjectToPlane(NaviTriangle triangle, Vector3 pos)
+        {            
+            Plane plane = new (triangle.PointCW(0).Pos, triangle.PointCW(1).Pos, triangle.PointCW(2).Pos);
+            float z = plane.SolveForZ(pos.X, pos.Y);
+            return new Vector3(pos.X, pos.Y, z);
+        }
+
     }
 
 }

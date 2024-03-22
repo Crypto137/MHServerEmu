@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -300,9 +301,21 @@ namespace MHServerEmu.Games.Navi
             throw new NotImplementedException();
         }
 
-        internal NaviPoint AddPointProjZ(Vector3 pos1)
+        public NaviPoint AddPointProjZ(Vector3 pos, bool split = true)
         {
-            throw new NotImplementedException();
+            NaviPoint point = _vertexLookupCache.CacheVertex(pos, out bool _);
+            if (point.TestFlag(NaviPointFlags.Attached) == false)
+            {
+                NaviTriangle triangle = FindTriangleAtPoint(point.Pos);
+                if (triangle == null)
+                {
+                    _navi.LogError("AddPointProjZ: Failed to find mesh feature at point (likely point is out of bounds).", point);
+                    return null;
+                }
+                point.Pos = NaviUtil.ProjectToPlane(triangle, point.Pos);
+                if (SplitTriangle(triangle, point, split) == false) return null;
+            }
+            return point;
         }
 
         public NaviPoint AddPoint(Vector3 pos)
