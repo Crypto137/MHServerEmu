@@ -10,7 +10,7 @@ namespace MHServerEmu.Core.Network
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public byte Id { get; }
+        public uint Id { get; }
         public byte[] Payload { get; }
         public TimeSpan GameTimeReceived { get; set; }
         public TimeSpan DateTimeReceived { get; set; }
@@ -18,7 +18,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Constructs a new <see cref="MessagePackage"/> from raw data.
         /// </summary>
-        public MessagePackage(byte id, byte[] payload)
+        public MessagePackage(uint id, byte[] payload)
         {
             Id = id;
             Payload = payload;
@@ -40,7 +40,7 @@ namespace MHServerEmu.Core.Network
         {
             try
             {
-                Id = (byte)stream.ReadRawVarint32();
+                Id = stream.ReadRawVarint32();
                 Payload = stream.ReadRawBytes((int)stream.ReadRawVarint32());
             }
             catch (Exception e)

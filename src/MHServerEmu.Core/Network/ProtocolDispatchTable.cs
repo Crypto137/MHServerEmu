@@ -13,9 +13,9 @@ namespace MHServerEmu.Core.Network
         private static readonly Type[] ParseMethodArgumentTypes = new Type[] { typeof(byte[]) };
 
         // Lookups
-        private static readonly Dictionary<(string, string), byte> DescriptorToIdDict = new();      // Proto file name + message name -> Id
+        private static readonly Dictionary<(string, string), uint> DescriptorToIdDict = new();      // Proto file name + message name -> Id
         private static readonly Dictionary<Type, ParseMessage> TypeToParseDelegateDict = new();     // Class type -> ParseMessage delegate
-        private static readonly Dictionary<(Type, byte), string> IdToNameDict = new();              // Protocol enum type + id -> message name
+        private static readonly Dictionary<(Type, uint), string> IdToNameDict = new();              // Protocol enum type + id -> message name
         private static readonly Dictionary<string, Type> NameToTypeDict = new();                    // Message name -> class type 
 
         public static bool IsInitialized { get; }
@@ -44,7 +44,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Returns the id of the provided <see cref="IMessage"/>.
         /// </summary>
-        public static byte GetMessageId(IMessage message)
+        public static uint GetMessageId(IMessage message)
         {
             return DescriptorToIdDict[(message.DescriptorForType.File.Name, message.DescriptorForType.Name)];
         }
@@ -68,7 +68,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Returns a delegate for parsing an <see cref="IMessage"/> of the specified id and protocol.
         /// </summary>
-        public static ParseMessage GetParseMessageDelegate(Type protocolEnumType, byte id)
+        public static ParseMessage GetParseMessageDelegate(Type protocolEnumType, uint id)
         {
             string messageName = IdToNameDict[(protocolEnumType, id)];
             Type messageType = NameToTypeDict[messageName];
@@ -81,10 +81,9 @@ namespace MHServerEmu.Core.Network
         private static void ParseMessageEnum(Type protocolEnumType, string protoFileName)
         {
             string[] names = Enum.GetNames(protocolEnumType);
-            if (names.Length > 255) throw new OverflowException("Message enum contains more than 255 values.");
 
             // Iterate through message ids
-            for (byte i = 0; i < names.Length; i++)
+            for (uint i = 0; i < names.Length; i++)
             {
                 // Use reflection to get message type and ParseFrom MethodInfo
                 Type messageType = LibGazillionAssembly.GetType($"Gazillion.{names[i]}") ?? throw new("Message type is null.");
