@@ -183,6 +183,15 @@ namespace MHServerEmu.Games.Navi
             return 0;
         }
 
+        internal NaviEdge FindEdge(NaviPoint a, NaviPoint b)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal NaviPoint OpposedVertex(NaviTriangle triangle)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class NaviTriangleState

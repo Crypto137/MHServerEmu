@@ -159,12 +159,22 @@ namespace MHServerEmu.Games.Navi
             SetContentFlags(flag0, flag1);
         }
 
+        public NaviEdgePathingFlags(NaviEdgePathingFlags pathingFlags)
+        {
+            ContentFlagCounts = new ContentFlagCounts[2];
+            if (pathingFlags != null)
+            {
+               ContentFlagCounts[0].Set(pathingFlags.ContentFlagCounts[0]);
+               ContentFlagCounts[1].Set(pathingFlags.ContentFlagCounts[1]);
+            }
+        }
+
         public void SetContentFlags(NaviContentFlags flag0, NaviContentFlags flag1)
         {
             for (int flagIndex = 0; flagIndex < Navi.ContentFlagCounts.Count; flagIndex++)
             {
-                ContentFlagCounts[0][flagIndex] = (sbyte)(((int)flag0 >> flagIndex) & 1);
-                ContentFlagCounts[1][flagIndex] = (sbyte)(((int)flag1 >> flagIndex) & 1);
+                ContentFlagCounts[0][flagIndex] = ((int)flag0 >> flagIndex) & 1;
+                ContentFlagCounts[1][flagIndex] = ((int)flag1 >> flagIndex) & 1;
             }
         }
 

@@ -126,5 +126,9 @@ namespace MHServerEmu.Games.Navi
             return InCirlce.Robust(pa, pb, pc, pd);
         }
 
+        internal static bool LineSide2D(NaviPoint a, NaviPoint b, Vector3 pos)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

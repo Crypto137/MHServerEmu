@@ -136,6 +136,10 @@ namespace MHServerEmu.Core.Collisions
             return Vector3.Dot(c1c2, c1c2);
         }
 
+        public static bool SegmentsIntersect2D(Vector3 a0, Vector3 b0, Vector3 a1, Vector3 b1)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

@@ -88,12 +88,12 @@ namespace MHServerEmu.Games.Navi
             NaviPoint p2 = new(new (xMax, yMax, 0.0f));
             NaviPoint p3 = new(new (xMin, yMax, 0.0f));
 
-            NaviEdge e0 = new(p0, p1, NaviEdgeFlags.Constraint, new());
-            NaviEdge e1 = new(p1, p2, NaviEdgeFlags.Constraint, new());
-            NaviEdge e2 = new(p2, p3, NaviEdgeFlags.Constraint, new());
-            NaviEdge e3 = new(p3, p0, NaviEdgeFlags.Constraint, new());
+            NaviEdge e0 = new(p0, p1, NaviEdgeFlags.Constraint);
+            NaviEdge e1 = new(p1, p2, NaviEdgeFlags.Constraint);
+            NaviEdge e2 = new(p2, p3, NaviEdgeFlags.Constraint);
+            NaviEdge e3 = new(p3, p0, NaviEdgeFlags.Constraint);
 
-            NaviEdge e02 = new(p0, p2, NaviEdgeFlags.None, new());
+            NaviEdge e02 = new(p0, p2, NaviEdgeFlags.None);
 
             NaviCdt.AddTriangle(new(e0, e1, e02));
             NaviCdt.AddTriangle(new(e2, e3, e02));

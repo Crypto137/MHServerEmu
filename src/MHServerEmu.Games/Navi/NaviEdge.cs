@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Navi
         Flag1 = 1 << 1,
         Delaunay = 1 << 2,
         Door = 1 << 3,
+        Mask = 11, // Constraint | Flag1 | Door
     }
 
     public class NaviEdge
@@ -22,10 +23,10 @@ namespace MHServerEmu.Games.Navi
 
         public uint Serial { get; private set; }
 
-        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, NaviEdgePathingFlags pathingFlags)
+        public NaviEdge(NaviPoint p0, NaviPoint p1, NaviEdgeFlags edgeFlags, NaviEdgePathingFlags pathingFlags = null)
         {
             EdgeFlags = edgeFlags;
-            PathingFlags = pathingFlags;
+            PathingFlags = new(pathingFlags);
             Points = new NaviPoint[2];
             Points[0] = p0;
             Points[1] = p1;

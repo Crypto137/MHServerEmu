@@ -9,6 +9,7 @@ namespace MHServerEmu.Games.Navi
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public const float NaviSectorSize = 1024.0f;
+        public const float SplitEpsilonSq = 6.25f;
         public int TriangleCount { get; private set; }
         public Aabb Bounds { get; private set; }
         private float _extentsSize;
@@ -172,7 +173,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     NaviEdge collinearEdge = null;
                     NaviTriangle nextTriangle = itEdge.Triangles[0];
-                    NaviTriangle itEnd = nextTriangle;
+                    NaviTriangle endTriangle = nextTriangle;
                     bool found = false;
                     do
                     {
@@ -197,7 +198,7 @@ namespace MHServerEmu.Games.Navi
                         }
 
                         nextTriangle = nextTriangle.NextTriangleSharingPoint(point);
-                    } while (nextTriangle != itEnd);
+                    } while (nextTriangle != endTriangle);
 
                     if (collinearEdge != null)
                     {
@@ -348,7 +349,7 @@ namespace MHServerEmu.Games.Navi
                 bool edgeFull = edge.Triangles[0] != null && edge.Triangles[1] != null;
 
                 splits[i] = edgeFull && edge.TestFlag(NaviEdgeFlags.Constraint) &&                                                                 
-                    (degenerates[i] || (Pred.RobustLinePointDistanceSq2D(edge.Point(0), edge.Point(1), point.Pos) < 6.25f));
+                    (degenerates[i] || (Pred.RobustLinePointDistanceSq2D(edge.Point(0), edge.Point(1), point.Pos) < SplitEpsilonSq));
 
                 if (split == false && splits[i]) return false;
 
@@ -362,9 +363,9 @@ namespace MHServerEmu.Games.Navi
             Stack<NaviTriangle> triStack = new ();
 
             NaviEdge[] pointEdges = {
-                new (point, p0, 0, new()),
-                new (point, p1, 0, new()),
-                new (point, p2, 0, new())
+                new (point, p0, NaviEdgeFlags.None),
+                new (point, p1, NaviEdgeFlags.None),
+                new (point, p2, NaviEdgeFlags.None)
             };
 
             NaviEdge[] triangleEdges = { triangle.Edges[0], triangle.Edges[1], triangle.Edges[2] };
@@ -407,7 +408,7 @@ namespace MHServerEmu.Games.Navi
                         int edgeIndex = degTriangle.EdgeIndex(edge);
                         var de1 = degTriangle.EdgeMod(edgeIndex + 1);
                         var de2 = degTriangle.EdgeMod(edgeIndex + 2);
-                        var dep = new NaviEdge(point, degTriangle.OpposedVertex(edge), 0, new());
+                        var dep = new NaviEdge(point, degTriangle.OpposedVertex(edge), NaviEdgeFlags.None);
 
                         NaviTriangleState triangleStateDeg = new (degTriangle);
                         RemoveTriangle(degTriangle);
@@ -439,7 +440,7 @@ namespace MHServerEmu.Games.Navi
 
                 if (split && edge.TestFlag(NaviEdgeFlags.Constraint))
                 {
-                    if (Segment.SegmentPointDistanceSq2D(edge.Points[0].Pos, edge.Points[1].Pos, point.Pos) < 6.25f)
+                    if (Segment.SegmentPointDistanceSq2D(edge.Points[0].Pos, edge.Points[1].Pos, point.Pos) < SplitEpsilonSq)
                     {
                         int edgeIndex = triangle.EdgeIndex(edge);
                         var e2 = triangle.EdgeMod(edgeIndex + 2);
@@ -502,7 +503,183 @@ namespace MHServerEmu.Games.Navi
             AddTriangle(outTri1);
         }
 
-        internal void AddEdge(NaviEdge edge)
+        public void AddEdge(NaviEdge edge)
+        {
+            Queue<NaviEdge> edges = new ();
+            edges.Enqueue(edge);
+
+            while (edges.Count > 0)
+            {
+                edge = edges.Dequeue();
+                AddEdge(edge, edges);
+            }
+        }
+
+        private void AddEdge(NaviEdge edge, Queue<NaviEdge> edges)
+        {
+            NaviPoint p0 = edge.Points[0];
+            NaviPoint p1 = edge.Points[1];
+
+            if (p0 == p1) return;
+
+            NaviTriangle triContainingPoint = FindTriangleContainingVertex(p0);
+            if (triContainingPoint == null) return;
+
+            Vector3 edgeDir = Vector3.Normalize2D(p1.Pos - p0.Pos);
+
+            NaviTriangle triangle = null;
+            NaviTriangle nextTriangle = triContainingPoint;
+            NaviTriangle endTriangle = triContainingPoint;
+
+            NaviPoint splitPoint;
+            NaviEdge splitEdge = null;
+            float splitEdgeDot = 0.0f;
+
+            do
+            {
+                if (nextTriangle.Contains(p1))
+                {
+                    NaviEdge maskEdge = nextTriangle.FindEdge(p0, p1);
+                    bool flip = (maskEdge.Points[0] != edge.Points[0]);
+                    maskEdge.PathingFlags.Merge(edge.PathingFlags, flip);
+                    maskEdge.SetFlag(edge.EdgeFlags & NaviEdgeFlags.Mask);
+                    return;
+                }
+
+                int oppoEdgeIndex = nextTriangle.OpposedEdgeIndex(p0);
+                NaviEdge nextEdge = nextTriangle.EdgeMod(oppoEdgeIndex + 1);
+                Vector3 nextDir = Vector3.Normalize2D(nextEdge.OpposedPoint(p0).Pos - p0.Pos);
+                float edgeDot = Vector3.Dot(edgeDir, nextDir);
+                if (edgeDot > splitEdgeDot)
+                {
+                    splitPoint = nextEdge.OpposedPoint(p0);
+                    if (Segment.SegmentPointDistanceSq2D(p0.Pos, p1.Pos, splitPoint.Pos) < SplitEpsilonSq)
+                    {
+                        splitEdge = nextEdge;
+                        splitEdgeDot = edgeDot;
+                    }
+                }
+
+                if (triangle == null)
+                {
+                    NaviEdge oppoEdge = nextTriangle.Edges[oppoEdgeIndex];
+                    if (Segment.SegmentsIntersect2D(p0.Pos, p1.Pos, oppoEdge.Points[0].Pos, oppoEdge.Points[1].Pos))
+                    {
+                        triangle = nextTriangle;
+                    }
+                }
+
+                nextTriangle = nextTriangle.NextTriangleSharingPoint(p0);
+
+            } while (nextTriangle != endTriangle);
+
+            if (splitEdge != null)
+            {
+                splitPoint = splitEdge.OpposedPoint(p0);
+                edges.Enqueue(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
+                edges.Enqueue(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                return;
+            }
+
+            if (triangle == null)
+            {
+                _navi.LogError("Failed to find triangle containing edge for AddEdge operation. This can happen when degenerate triangles are in the mesh.", edge);
+                return;
+            }
+
+            List<NaviEdge> pseudoList0 = new ();
+            List<NaviEdge> pseudoList1 = new ();
+
+            NaviPoint sidePoint0, sidePoint1;
+            NaviPoint point = p0;
+
+            NaviTriangleState triangleState = new (triangle);
+
+            splitEdge = triangle.OpposedEdge(p0);
+
+            if (splitEdge.TestFlag(NaviEdgeFlags.Constraint))
+            {
+                SplitEdge(splitEdge, edge, edges);
+                return;
+            }
+
+            bool side = Pred.LineSide2D(p0, p1, splitEdge.Points[0].Pos) == false;
+            
+            sidePoint0 = splitEdge.Points[side ? 0 : 1];
+            pseudoList0.Add(triangle.FindEdge(p0, sidePoint0));
+
+            sidePoint1 = splitEdge.Points[side ? 1 : 0];
+            pseudoList1.Insert(0, triangle.FindEdge(p0, sidePoint1));            
+
+            Stack<NaviTriangle> triStack = new ();
+
+            while (triangle.Contains(p1) == false)
+            {
+                var triOppo = triangle.OpposedTriangle(point, out splitEdge);
+
+                if (splitEdge.TestFlag(NaviEdgeFlags.Constraint))
+                {
+                    SplitEdge(splitEdge, edge, edges);
+                    return;
+                }
+
+                splitPoint = triangle.OpposedVertex(triOppo);
+
+                if (splitPoint == p1)
+                {
+                    side = Pred.LineSide2D(p0, p1, splitEdge.Points[0].Pos) == false;
+
+                    sidePoint0 = splitEdge.Points[side ? 0 : 1];
+                    pseudoList0.Add(triOppo.FindEdge(p1, sidePoint0));
+
+                    sidePoint1 = splitEdge.Points[side ? 1 : 0];
+                    pseudoList1.Insert(0, triOppo.FindEdge(p1, sidePoint1));
+
+                    triStack.Push(triangle);
+                    triStack.Push(triOppo);
+                    break;
+                }
+
+                if (Segment.SegmentPointDistanceSq2D(p0.Pos, p1.Pos, splitPoint.Pos) < SplitEpsilonSq)
+                {
+                    edges.Enqueue(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
+                    edges.Enqueue(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                    return;
+                }
+
+                side = Pred.LineSide2D(p0, p1, splitPoint.Pos) == false;
+                if (side)
+                {
+                    pseudoList0.Add(triOppo.FindEdge(sidePoint0, splitPoint));
+                    sidePoint0 = splitPoint;
+                }
+                else
+                {
+                    pseudoList1.Insert(0, triOppo.FindEdge(sidePoint1, splitPoint));
+                    sidePoint1 = splitPoint;
+                }
+
+                if (Pred.LineSide2D(p0, p1, splitEdge.Points[0].Pos))
+                    point = splitEdge.Points[side ? 1 : 0];
+                else
+                    point = splitEdge.Points[side ? 0 : 1];
+
+                triStack.Push(triangle);
+                triangle = triOppo;
+            }
+
+            while (triStack.Count > 0) RemoveTriangle(triStack.Pop());
+
+            TriangulatepseudopolygonDelaunay(pseudoList0, p0, p1, edge, triangleState);
+            TriangulatepseudopolygonDelaunay(pseudoList1, p1, p0, edge, triangleState);
+        }
+
+        private void TriangulatepseudopolygonDelaunay(List<NaviEdge> pseudoList, NaviPoint p0, NaviPoint p1, NaviEdge edge, NaviTriangleState triangleState)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SplitEdge(NaviEdge splitEdge, NaviEdge edge, Queue<NaviEdge> edges)
         {
             throw new NotImplementedException();
         }
