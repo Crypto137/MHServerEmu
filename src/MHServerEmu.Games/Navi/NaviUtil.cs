@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Navi
             do
             {
                 int oppoEdgeIndex = next.OpposedEdgeIndex(point);
-                nextEdge = next.Edge((oppoEdgeIndex + 1) % 3);
+                nextEdge = next.EdgeMod(oppoEdgeIndex + 1);
                 if (nextEdge.TestFlag(NaviEdgeFlags.Constraint)) return true;
                 next = next.NextTriangleSharingPoint(point);
             } while (next != triEnd);

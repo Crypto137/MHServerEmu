@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Navi
                 _sectors[sectorIndex] = null;
                 for (int edgeIndex = 0; edgeIndex < 3; ++edgeIndex)
                 {
-                    NaviTriangle opposed = triangle.Edge(edgeIndex).OpposedTriangle(triangle);
+                    NaviTriangle opposed = triangle.Edges[edgeIndex].OpposedTriangle(triangle);
                     if (opposed != null && PointToSectorIndex(opposed.Centroid()) == sectorIndex)
                     {
                         _sectors[sectorIndex] = opposed;
@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Navi
                     do
                     {
                         int oppIndex = nextTriangle.OpposedEdgeIndex(point);
-                        NaviEdge nextEdge = nextTriangle.Edges[(oppIndex + 1) % 3];
+                        NaviEdge nextEdge = nextTriangle.EdgeMod(oppIndex + 1);
 
                         if ((nextEdge != itEdge) && nextEdge.TestFlag(NaviEdgeFlags.Constraint))
                         {
@@ -284,7 +284,7 @@ namespace MHServerEmu.Games.Navi
 
             if (NaviUtil.FindMaxValue(l0, l1, l2, out int edgeIndex) > 0.0)
             {
-                NaviEdge edge = triangle.Edge(edgeIndex);
+                NaviEdge edge = triangle.Edges[edgeIndex];
                 outTriangle = edge.OpposedTriangle(triangle);
                 return true;
             }
@@ -344,7 +344,7 @@ namespace MHServerEmu.Games.Navi
                 var pi1 = points[(i + 1) % 3];
                 degenerates[i] = Pred.IsDegenerate(point, pi0, pi1, 1.0);
 
-                var edge = triangle.Edge(i);
+                var edge = triangle.Edges[i];
                 bool edgeFull = edge.Triangles[0] != null && edge.Triangles[1] != null;
 
                 splits[i] = edgeFull && edge.TestFlag(NaviEdgeFlags.Constraint) &&                                                                 
@@ -367,7 +367,7 @@ namespace MHServerEmu.Games.Navi
                 new (point, p2, 0, new())
             };
 
-            NaviEdge[] triangleEdges = { triangle.Edge(0), triangle.Edge(1), triangle.Edge(2) };
+            NaviEdge[] triangleEdges = { triangle.Edges[0], triangle.Edges[1], triangle.Edges[2] };
 
             NaviTriangleState triangleState = new (triangle);
             RemoveTriangle(triangle);
@@ -405,8 +405,8 @@ namespace MHServerEmu.Games.Navi
                         Pred.Clockwise2D(point, oppoPoint, points[i1]))
                     {
                         int edgeIndex = degTriangle.EdgeIndex(edge);
-                        var de1 = degTriangle.Edge((edgeIndex + 1) % 3);
-                        var de2 = degTriangle.Edge((edgeIndex + 2) % 3);
+                        var de1 = degTriangle.EdgeMod(edgeIndex + 1);
+                        var de2 = degTriangle.EdgeMod(edgeIndex + 2);
                         var dep = new NaviEdge(point, degTriangle.OpposedVertex(edge), 0, new());
 
                         NaviTriangleState triangleStateDeg = new (degTriangle);
@@ -442,8 +442,8 @@ namespace MHServerEmu.Games.Navi
                     if (Segment.SegmentPointDistanceSq2D(edge.Points[0].Pos, edge.Points[1].Pos, point.Pos) < 6.25f)
                     {
                         int edgeIndex = triangle.EdgeIndex(edge);
-                        var e2 = triangle.Edges[(edgeIndex + 2) % 3];
-                        var e1 = triangle.Edges[(edgeIndex + 1) % 3];
+                        var e2 = triangle.EdgeMod(edgeIndex + 2);
+                        var e1 = triangle.EdgeMod(edgeIndex + 1);
 
                         e2.ConstraintMerge(edge);
                         e1.ConstraintMerge(edge);
@@ -471,9 +471,35 @@ namespace MHServerEmu.Games.Navi
             return Pred.CircumcircleContainsPoint(p0, p1, p2, checkPoint);
         }
 
-        private void SwapEdge(NaviEdge edge, out NaviTriangle t0, out NaviTriangle t1)
+        private void SwapEdge(NaviEdge edge, out NaviTriangle outTri0, out NaviTriangle outTri1)
         {
-            throw new NotImplementedException();
+            NaviTriangle t0 = edge.Triangles[0];
+            NaviTriangle t1 = edge.Triangles[1];
+
+            NaviEdge newEdge = new (t0.OpposedVertex(edge), t1.OpposedVertex(edge), edge.EdgeFlags, new());
+
+            int edgeIndex0 = t0.EdgeIndex(edge);
+            int edgeIndex1 = t1.EdgeIndex(edge);
+
+            var t0e1 = t0.EdgeMod(edgeIndex0 + 1);
+            var t0e2 = t0.EdgeMod(edgeIndex0 + 2);
+            var t1e1 = t1.EdgeMod(edgeIndex1 + 1);
+            var t1e2 = t1.EdgeMod(edgeIndex1 + 2);
+
+            NaviTriangleState state0 = new (t0);
+            NaviTriangleState state1 = new (t1);
+
+            RemoveTriangle(t0);
+            RemoveTriangle(t1);
+
+            outTri0 = new (newEdge, t0e2, t1e1);
+            state0.RestoreState(outTri0);
+
+            outTri1 = new(newEdge, t1e2, t0e1);
+            state1.RestoreState(outTri1);
+
+            AddTriangle(outTri0);
+            AddTriangle(outTri1);
         }
 
         internal void AddEdge(NaviEdge edge)

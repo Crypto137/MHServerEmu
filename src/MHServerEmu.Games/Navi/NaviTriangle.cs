@@ -12,9 +12,9 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviTriangle
     {
-        public NaviEdge[] Edges { get; set; }
+        public NaviEdge[] Edges { get; private set; }
         public byte EdgeSideFlags { get; private set; }
-        public NaviTriangleFlags Flags { get; set; }
+        public NaviTriangleFlags Flags { get; private set; }
         public PathFlags PathingFlags { get; set; }
         public ContentFlagCounts ContentFlagCounts { get; set; }
 
@@ -68,9 +68,9 @@ namespace MHServerEmu.Games.Navi
             return (PointCW(0).Pos + PointCW(1).Pos + PointCW(2).Pos) / 3.0f;
         }
 
-        public NaviEdge Edge(int index)
+        public NaviEdge EdgeMod(int index)
         {
-            return Edges[index];
+            return Edges[index % 3];
         }
 
         public void UpdateEdgeSideFlags()
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Navi
         public NaviTriangle NextTriangleSharingPoint(NaviPoint point)
         {
             int edgeIdx = OpposedEdgeIndex(point);
-            var edge = Edge((edgeIdx + 1) % 3);
+            var edge = EdgeMod(edgeIdx + 1);
             return edge.OpposedTriangle(this);
         }
 
