@@ -2,7 +2,6 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -296,11 +295,6 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        internal void AddEdge(NaviEdge e)
-        {
-            throw new NotImplementedException();
-        }
-
         public NaviPoint AddPointProjZ(Vector3 pos, bool split = true)
         {
             NaviPoint point = _vertexLookupCache.CacheVertex(pos, out bool _);
@@ -435,6 +429,54 @@ namespace MHServerEmu.Games.Navi
         }
 
         private void CheckDelaunaySwap(Stack<NaviTriangle> triStack, NaviPoint point, bool split)
+        {
+            while (triStack.Count > 0)
+            {
+                var triangle = triStack.Pop();
+
+                var oppoTriangle = triangle.OpposedTriangle(point, out NaviEdge edge);
+                if (oppoTriangle == null) continue;
+
+                if (split && edge.TestFlag(NaviEdgeFlags.Constraint))
+                {
+                    if (Segment.SegmentPointDistanceSq2D(edge.Points[0].Pos, edge.Points[1].Pos, point.Pos) < 6.25f)
+                    {
+                        int edgeIndex = triangle.EdgeIndex(edge);
+                        var e2 = triangle.Edges[(edgeIndex + 2) % 3];
+                        var e1 = triangle.Edges[(edgeIndex + 1) % 3];
+
+                        e2.ConstraintMerge(edge);
+                        e1.ConstraintMerge(edge);
+                        edge.ClearFlag(NaviEdgeFlags.Constraint);
+                        edge.PathingFlags.Clear();
+                    }
+                }
+
+                if (edge.TestFlag(NaviEdgeFlags.Constraint) == false)
+                {
+                    NaviPoint checkPoint = oppoTriangle.OpposedVertex(edge);
+                    if (CircumcircleContainsPoint2D(triangle.PointCW(0), triangle.PointCW(1), triangle.PointCW(2), checkPoint))
+                    {
+                        SwapEdge(edge, out NaviTriangle t0, out NaviTriangle t1);
+
+                        triStack.Push(t0);
+                        triStack.Push(t1);
+                    }
+                }
+            }
+        }
+
+        private static bool CircumcircleContainsPoint2D(NaviPoint p0, NaviPoint p1, NaviPoint p2, NaviPoint checkPoint)
+        {
+            return Pred.CircumcircleContainsPoint(p0, p1, p2, checkPoint);
+        }
+
+        private void SwapEdge(NaviEdge edge, out NaviTriangle t0, out NaviTriangle t1)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddEdge(NaviEdge edge)
         {
             throw new NotImplementedException();
         }
