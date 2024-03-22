@@ -57,6 +57,14 @@ namespace MHServerEmu.Core.Collisions
             return dotca - dotcb * (dotcb / dotba);
         }
 
+        public static float SegmentPointDistanceSq2D(Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 a2d = new(a.X, a.Y, 0.0f);
+            Vector3 b2d = new(b.X, b.Y, 0.0f);
+            Vector3 c2d = new(c.X, c.Y, 0.0f);
+            return SegmentPointDistanceSq(a2d, b2d, c2d);
+        }
+
         public static float Cross2D(Vector3 v0, Vector3 v1)
         {
             return v0.X * v1.Y - v0.Y * v1.X;
