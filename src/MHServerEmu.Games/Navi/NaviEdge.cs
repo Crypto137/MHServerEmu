@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.Navi
     public enum NaviEdgeFlags
     {
         None = 0,
-        Const = 1 << 0,
+        Constraint = 1 << 0,
         Flag1 = 1 << 1,
         Delaunay = 1 << 2,
         Door = 1 << 3,
@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdge
     {
-        public NaviEdgeFlags EdgeFlags { get; set; }
+        public NaviEdgeFlags EdgeFlags { get; private set; }
         public NaviEdgePathingFlags PathingFlags { get; set; }
         public NaviPoint[] Points { get; set; }
         public NaviTriangle[] Triangles { get; set; }
@@ -83,6 +83,27 @@ namespace MHServerEmu.Games.Navi
                 return Points[0];
         }
 
+        public void SetFlag(NaviEdgeFlags flag)
+        {
+            EdgeFlags |= flag;
+        }
+
+        public void ClearFlag(NaviEdgeFlags flag)
+        {
+            EdgeFlags &= ~flag;
+        }
+
+        public bool TestFlag(NaviEdgeFlags flag)
+        {
+            return EdgeFlags.HasFlag(flag);
+        }
+
+        public void ConstraintMerge(NaviEdge edge)
+        {
+            bool flip = Points[0] != edge.Points[0] && Points[1] != edge.Points[1];
+            PathingFlags.Merge(edge.PathingFlags, flip);
+            SetFlag(NaviEdgeFlags.Constraint);
+        }
     }
 
 }

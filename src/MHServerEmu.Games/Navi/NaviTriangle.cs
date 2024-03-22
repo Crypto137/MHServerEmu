@@ -29,22 +29,37 @@ namespace MHServerEmu.Games.Navi
             Attach();
         }
 
+        public void SetFlag(NaviTriangleFlags flag)
+        {
+            Flags |= flag;
+        }
+
+        public void ClearFlag(NaviTriangleFlags flag)
+        {
+            Flags &= ~flag;
+        }
+
+        public bool TestFlag(NaviTriangleFlags flag)
+        {
+            return Flags.HasFlag(flag);
+        }
+
         public void Attach()
         {
             foreach (var edge in Edges)
                 edge.AttachTriangle(this);
 
-            Flags |= NaviTriangleFlags.Attached;
+            SetFlag(NaviTriangleFlags.Attached);
         }
 
         public void Detach()
         {
-            if (Flags.HasFlag(NaviTriangleFlags.Attached))
+            if (TestFlag(NaviTriangleFlags.Attached))
             {
                 foreach (var edge in Edges)
                     edge.DetachTriangle(this);
 
-                Flags &= ~NaviTriangleFlags.Attached;
+                ClearFlag(NaviTriangleFlags.Attached);
             }
         }
         
@@ -139,5 +154,34 @@ namespace MHServerEmu.Games.Navi
                 Pred.IsDegenerate(PointCW(0), PointCW(1), PointCW(2)) ? 0 : 1);
         }
 
+        public NaviPoint OpposedVertex(NaviEdge edge)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                NaviPoint point = PointCW(i);
+                if (edge.Points[0] != point && edge.Points[1] != point)
+                    return point;
+            }
+            return null;
+        }
+
+        public int EdgeIndex(NaviEdge edge)
+        {
+            for (int i = 0; i < 3; i++)
+                if (Edges[i] == edge) return i;
+            return 0;
+        }
+    }
+
+    public class NaviTriangleState
+    {
+        public NaviTriangleState(NaviTriangle triangle)
+        {
+        }
+
+        internal void RestoreState(NaviTriangle t0)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

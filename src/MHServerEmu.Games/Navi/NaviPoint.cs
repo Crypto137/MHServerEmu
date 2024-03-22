@@ -11,17 +11,17 @@ namespace MHServerEmu.Games.Navi
     public class NaviPoint : IComparable<NaviPoint>
     {
         public Vector3 Pos { get; internal set; }
-        public NaviPointFlags Flags { get; private set; }
+        public NaviPointFlags Flags { get; set; }
         public int Influence { get; private set; }
         public float InfluenceRadius { get; private set; }
 
-        private static ulong TotalCount = 0;
-        private readonly ulong _count;
+        private static ulong NextId = 0;
+        private readonly ulong _id;
 
         public NaviPoint(Vector3 pos)
         {
             Pos = pos;
-            _count = TotalCount++;
+            _id = NextId++;
         }
 
         public override string ToString()
@@ -31,7 +31,17 @@ namespace MHServerEmu.Games.Navi
 
         public int CompareTo(NaviPoint other)
         {
-            return _count.CompareTo(other._count);
+            return _id.CompareTo(other._id);
+        }
+
+        public void SetFlag(NaviPointFlags flag)
+        {
+            Flags |= flag;
+        }
+
+        public bool TestFlag(NaviPointFlags flag)
+        {
+            return Flags.HasFlag(flag);
         }
     }
 }

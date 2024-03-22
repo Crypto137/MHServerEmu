@@ -88,10 +88,10 @@ namespace MHServerEmu.Games.Navi
             NaviPoint p2 = new(new (xMax, yMax, 0.0f));
             NaviPoint p3 = new(new (xMin, yMax, 0.0f));
 
-            NaviEdge e0 = new(p0, p1, NaviEdgeFlags.Const, new());
-            NaviEdge e1 = new(p1, p2, NaviEdgeFlags.Const, new());
-            NaviEdge e2 = new(p2, p3, NaviEdgeFlags.Const, new());
-            NaviEdge e3 = new(p3, p0, NaviEdgeFlags.Const, new());
+            NaviEdge e0 = new(p0, p1, NaviEdgeFlags.Constraint, new());
+            NaviEdge e1 = new(p1, p2, NaviEdgeFlags.Constraint, new());
+            NaviEdge e2 = new(p2, p3, NaviEdgeFlags.Constraint, new());
+            NaviEdge e3 = new(p3, p0, NaviEdgeFlags.Constraint, new());
 
             NaviEdge e02 = new(p0, p2, NaviEdgeFlags.None, new());
 
@@ -197,7 +197,7 @@ namespace MHServerEmu.Games.Navi
                 if (_navi.HasErrors() && _navi.CheckErrorLog(false, patch.ToString())) return false;
                 if (p0 == p1) continue;
 
-                NaviCdt.AddEdge(new(p0, p1, NaviEdgeFlags.Const, new(edge.Flags0, edge.Flags1)));
+                NaviCdt.AddEdge(new(p0, p1, NaviEdgeFlags.Constraint, new(edge.Flags0, edge.Flags1)));
             }
 
             if (_navi.HasErrors() && _navi.CheckErrorLog(false, patch.ToString())) return false;
@@ -205,7 +205,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        public void MarkupMesh(bool removeExterior)
+        private void MarkupMesh(bool removeExterior)
         {
             if (removeExterior && _exteriorSeedEdge == null)  return;
             ClearMarkup();
@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.Navi
 
             triangle.ContentFlagCounts.Set(state.FlagCounts);
             triangle.PathingFlags = pathFlags;
-            triangle.Flags |= NaviTriangleFlags.Markup;
+            triangle.SetFlag(NaviTriangleFlags.Markup);
 
             while (stateStack.Count > 0)
             {
@@ -245,14 +245,14 @@ namespace MHServerEmu.Games.Navi
                     NaviTriangle opposedTriangle = edge.OpposedTriangle(triangle);
                     if (opposedTriangle == null ) continue;
 
-                    if (opposedTriangle.Flags.HasFlag(NaviTriangleFlags.Markup) == false)
+                    if (opposedTriangle.TestFlag(NaviTriangleFlags.Markup) == false)
                     {
                         MarkupState stateOppo = new(state)
                         {
                             Triangle = opposedTriangle
                         };
 
-                        if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const))
+                        if (edge.TestFlag(NaviEdgeFlags.Constraint))
                         {
                             bool sideIndex = triangle.EdgeSideFlag(edgeIndex) == 1;
 
@@ -271,11 +271,11 @@ namespace MHServerEmu.Games.Navi
 
                         opposedTriangle.ContentFlagCounts.Set(stateOppo.FlagCounts);
                         opposedTriangle.PathingFlags = pathFlags;
-                        opposedTriangle.Flags |= NaviTriangleFlags.Markup;
+                        opposedTriangle.SetFlag(NaviTriangleFlags.Markup);
                         stateStack.Push(stateOppo);
                     }
 
-                    if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) && edge.EdgeFlags.HasFlag(NaviEdgeFlags.Door) == false)
+                    if (edge.TestFlag(NaviEdgeFlags.Constraint) && edge.TestFlag(NaviEdgeFlags.Door) == false)
                     {
                         bool keepEdge = false;
                         var triFlags = triangle.ContentFlagCounts;
@@ -313,7 +313,7 @@ namespace MHServerEmu.Games.Navi
             while (edgeStack.Count > 0)
             {
                 var edge = edgeStack.Pop();
-                if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const))
+                if (edge.TestFlag(NaviEdgeFlags.Constraint))
                     NaviCdt.RemoveEdge(edge);
             }
 
@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.Navi
                 for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
                 {
                     NaviEdge edge = triangle.Edges[edgeIndex];
-                    if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) && edge.EdgeFlags.HasFlag(NaviEdgeFlags.Door) == false)
+                    if (edge.TestFlag(NaviEdgeFlags.Constraint) && edge.TestFlag(NaviEdgeFlags.Door) == false)
                     {
                         int side = triangle.EdgeSideFlag(edgeIndex);                                                
                         edge.PathingFlags.Clear(side);
@@ -348,7 +348,7 @@ namespace MHServerEmu.Games.Navi
         {
             foreach (var triangle in TriangleList.Iterate())
             {
-                triangle.Flags &= ~(NaviTriangleFlags.Markup);
+                triangle.ClearFlag(NaviTriangleFlags.Markup);
                 triangle.PathingFlags = PathFlags.None;
                 triangle.ContentFlagCounts.Clear();
             }
