@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.Navi
         {
             outEdge = null;
 
-            if (edge.EdgeFlags.HasFlag(NaviEdgeFlags.Const) == false) return false;
+            if (edge.TestFlag(NaviEdgeFlags.Constraint) == false) return false;
 
             var points = new NaviPoint[2];
             var dir = Vector3.Normalize2D(edge.Point(1) - edge.Point(0));
@@ -179,7 +179,7 @@ namespace MHServerEmu.Games.Navi
                         int oppIndex = nextTriangle.OpposedEdgeIndex(point);
                         NaviEdge nextEdge = nextTriangle.Edges[(oppIndex + 1) % 3];
 
-                        if ((nextEdge != itEdge) && nextEdge.EdgeFlags.HasFlag(NaviEdgeFlags.Const))
+                        if ((nextEdge != itEdge) && nextEdge.TestFlag(NaviEdgeFlags.Constraint))
                         {
                             if (found)
                             {
@@ -213,7 +213,7 @@ namespace MHServerEmu.Games.Navi
             if (collinearEdges.Count > 0)
             {
                 collinearEdges.Add(edge);
-                outEdge = new NaviEdge (points[0], points[1], NaviEdgeFlags.Const, edge.PathingFlags);
+                outEdge = new NaviEdge (points[0], points[1], NaviEdgeFlags.Constraint, edge.PathingFlags);
                 return true;
             }
             else
@@ -247,7 +247,7 @@ namespace MHServerEmu.Games.Navi
             NaviTriangle triangle = _lastTriangle;
             var sectorIndex = PointToSectorIndex(pos);
             NaviTriangle sector = (sectorIndex != -1) ? _sectors[sectorIndex] : null;
-            if (sector != null && sector.Flags.HasFlag(NaviTriangleFlags.Attached))
+            if (sector != null && sector.TestFlag(NaviTriangleFlags.Attached))
                 triangle = sector;
 
             int loopCount = 50000;
@@ -305,7 +305,123 @@ namespace MHServerEmu.Games.Navi
             throw new NotImplementedException();
         }
 
-        internal NaviPoint AddPoint(Vector3 pos1)
+        public NaviPoint AddPoint(Vector3 pos)
+        {
+            NaviPoint point = _vertexLookupCache.CacheVertex(pos, out bool _);
+            if (point.TestFlag(NaviPointFlags.Attached) == false)
+            {
+                NaviTriangle triangle = FindTriangleAtPoint(point.Pos);
+                if (triangle == null)
+                {
+                    _navi.LogError("AddPoint: Failed to find mesh feature at point (likely point is out of bounds).", point);
+                    return null;
+                }
+                if (SplitTriangle(triangle, point) == false) return null;
+            }
+            return point;
+        }
+
+        public bool SplitTriangle(NaviTriangle triangle, NaviPoint point, bool split = true)
+        {
+            var p0 = triangle.PointCW(0);
+            var p1 = triangle.PointCW(1);
+            var p2 = triangle.PointCW(2);
+            NaviPoint[] points = { p0, p1, p2 };
+
+            bool[] degenerates = new bool[3];
+            bool[] splits = new bool[3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                var pi0 = points[(i + 0) % 3];
+                var pi1 = points[(i + 1) % 3];
+                degenerates[i] = Pred.IsDegenerate(point, pi0, pi1, 1.0);
+
+                var edge = triangle.Edge(i);
+                bool edgeFull = edge.Triangles[0] != null && edge.Triangles[1] != null;
+
+                splits[i] = edgeFull && edge.TestFlag(NaviEdgeFlags.Constraint) &&                                                                 
+                    (degenerates[i] || (Pred.RobustLinePointDistanceSq2D(edge.Point(0), edge.Point(1), point.Pos) < 6.25f));
+
+                if (split == false && splits[i]) return false;
+
+                if (edge.TestFlag(NaviEdgeFlags.Door))
+                {
+                    _navi.LogError("SplitTriangle: Cannot split door edges!", point);
+                    return false;
+                }
+            }
+
+            Stack<NaviTriangle> triStack = new ();
+
+            NaviEdge[] pointEdges = {
+                new (point, p0, 0, new()),
+                new (point, p1, 0, new()),
+                new (point, p2, 0, new())
+            };
+
+            NaviEdge[] triangleEdges = { triangle.Edge(0), triangle.Edge(1), triangle.Edge(2) };
+
+            NaviTriangleState triangleState = new (triangle);
+            RemoveTriangle(triangle);
+
+            void PushStateTriangle(NaviTriangleState state, NaviEdge e0, NaviEdge e1, NaviEdge e2)
+            {
+                NaviTriangle tri = new(e0, e1, e2);
+                state.RestoreState(tri);
+                AddTriangle(tri);
+                triStack.Push(tri);
+            }
+
+            for (int i = 0; i < 3; ++i)
+            {
+                int i0 = (i + 0) % 3;
+                int i1 = (i + 1) % 3;
+
+                var pe0 = pointEdges[i0];
+                var pe1 = pointEdges[i1];
+                var edge = triangleEdges[i];
+                if (splits[i])
+                {
+                    pe0.ConstraintMerge(edge);
+                    pe1.ConstraintMerge(edge);
+                    edge.ClearFlag(NaviEdgeFlags.Constraint);
+                    edge.PathingFlags.Clear();
+                }
+
+                if (degenerates[i])
+                {
+                    NaviTriangle degTriangle = edge.Triangles[0] ?? edge.Triangles[1];
+                    var oppoPoint = degTriangle.OpposedVertex(edge);
+
+                    if (Pred.Clockwise2D(point, points[i0], oppoPoint) && 
+                        Pred.Clockwise2D(point, oppoPoint, points[i1]))
+                    {
+                        int edgeIndex = degTriangle.EdgeIndex(edge);
+                        var de1 = degTriangle.Edge((edgeIndex + 1) % 3);
+                        var de2 = degTriangle.Edge((edgeIndex + 2) % 3);
+                        var dep = new NaviEdge(point, degTriangle.OpposedVertex(edge), 0, new());
+
+                        NaviTriangleState triangleStateDeg = new (degTriangle);
+                        RemoveTriangle(degTriangle);
+
+                        PushStateTriangle(triangleStateDeg, pe0, de1, dep);
+                        PushStateTriangle(triangleStateDeg, pe1, dep, de2);
+                    }
+                    else
+                        PushStateTriangle(triangleState, pe0, edge, pe1);
+                }
+                else
+                    PushStateTriangle(triangleState, pe0, edge, pe1);
+            }
+
+            point.SetFlag(NaviPointFlags.Attached);
+            CheckDelaunaySwap(triStack, point, split);
+
+            return true;
+        }
+
+        private void CheckDelaunaySwap(Stack<NaviTriangle> triStack, NaviPoint point, bool split)
         {
             throw new NotImplementedException();
         }

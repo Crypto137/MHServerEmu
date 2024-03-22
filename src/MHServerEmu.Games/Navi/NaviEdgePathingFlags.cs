@@ -184,10 +184,10 @@ namespace MHServerEmu.Games.Navi
             return Navi.ContentFlagCounts.ToContentFlags(ContentFlagCounts[side]);
         }
 
-        public void Merge(NaviEdgePathingFlags other, bool flipEdgePathFlags)
+        public void Merge(NaviEdgePathingFlags other, bool flip)
         {
-            int side0 = flipEdgePathFlags ? 0 : 1;
-            int side1 = flipEdgePathFlags ? 1 : 0;
+            int side0 = flip ? 0 : 1;
+            int side1 = flip ? 1 : 0;
             for (int flagIndex = 0; flagIndex < Navi.ContentFlagCounts.Count; flagIndex++)
             {
                 ContentFlagCounts[0][flagIndex] += other.ContentFlagCounts[side0][flagIndex];
