@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.PlayerManagement.Configs;
@@ -14,6 +15,9 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public static class AccountManager
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly string DefaultAccountFilePath = Path.Combine(FileHelper.DataDirectory, "DefaultPlayer.json");
+
         public static bool IsInitialized { get; }
 
         public static DBAccount DefaultAccount { get; }
@@ -23,11 +27,42 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         static AccountManager()
         {
-            // Initialize default account from config
-            var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
-            DefaultAccount = config.InitializeDefaultAccount();
+            // Initialize default account if BypassAuth is enabled
+            if (ConfigManager.Instance.GetConfig<PlayerManagerConfig>().BypassAuth)
+            {
+                bool defaultAccountLoaded = false;
+                
+                if (File.Exists(DefaultAccountFilePath))
+                {
+                    try
+                    {
+                        var defaultAccount = FileHelper.DeserializeJson<DBAccount>(DefaultAccountFilePath);
+                        DefaultAccount = defaultAccount;
+                        defaultAccountLoaded = true;
+                    }
+                    catch
+                    {
+                        Logger.Warn($"Incompatible default player data, resetting");
+                    }
+                }
+
+                if (defaultAccountLoaded == false)
+                {
+                    // Initialize default account from config
+                    var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
+                    DefaultAccount = config.InitializeDefaultAccount();
+                }
+            }
 
             IsInitialized = DBManager.IsInitialized;
+        }
+
+        /// <summary>
+        /// Saves the default <see cref="DBAccount"/> to a JSON file.
+        /// </summary>
+        public static void SaveDefaultAccount()
+        {
+            FileHelper.SerializeJson(DefaultAccountFilePath, DefaultAccount);
         }
 
         /// <summary>

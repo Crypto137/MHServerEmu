@@ -163,6 +163,8 @@ namespace MHServerEmu.PlayerManagement
 
             if (Config.BypassAuth == false)
                 DBManager.UpdateAccountData(client.Session.Account);
+            else
+                AccountManager.SaveDefaultAccount();
 
             return true;
         }

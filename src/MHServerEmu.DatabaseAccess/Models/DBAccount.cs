@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Config;
+﻿using System.Text.Json.Serialization;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
@@ -32,6 +33,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         public bool IsPasswordExpired { get; set; }
 
         public DBPlayer Player { get; set; }
+        [JsonInclude]
         public Dictionary<long, DBAvatar> Avatars { get; private set; } = new();
 
         public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
