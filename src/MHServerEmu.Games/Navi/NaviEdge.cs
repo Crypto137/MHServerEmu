@@ -84,6 +84,11 @@ namespace MHServerEmu.Games.Navi
                 return Points[0];
         }
 
+        public bool Contains(NaviPoint p)
+        {
+            return Points[0] == p || Points[1] == p;
+        }
+
         public void SetFlag(NaviEdgeFlags flag)
         {
             EdgeFlags |= flag;

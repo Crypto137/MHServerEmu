@@ -183,26 +183,46 @@ namespace MHServerEmu.Games.Navi
             return 0;
         }
 
-        internal NaviEdge FindEdge(NaviPoint a, NaviPoint b)
+        public NaviEdge FindEdge(NaviPoint p0, NaviPoint p1)
         {
-            throw new NotImplementedException();
+            foreach (var edge in Edges)
+                if ((edge.Points[0] == p0 && edge.Points[1] == p1) ||
+                    (edge.Points[0] == p1 && edge.Points[1] == p0))
+                    return edge;
+            return null;
         }
 
-        internal NaviPoint OpposedVertex(NaviTriangle triangle)
+        public NaviPoint OpposedVertex(NaviTriangle triangle)
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < 3; i++)
+            {
+                NaviPoint p = triangle.PointCW(i);
+                if (PointCW(0) == p || PointCW(1) == p || PointCW(2) == p) continue;
+                return p;
+            }
+            return null;
         }
+
     }
 
     public class NaviTriangleState
     {
+        public NaviTriangleFlags Flags { get; private set; }
+        public PathFlags PathingFlags { get; private set; }
+        public ContentFlagCounts ContentFlagCounts { get; private set; }    
+        
         public NaviTriangleState(NaviTriangle triangle)
         {
+            Flags = triangle.Flags & NaviTriangleFlags.Markup;
+            PathingFlags = triangle.PathingFlags;
+            ContentFlagCounts = new(triangle.ContentFlagCounts);
         }
 
-        internal void RestoreState(NaviTriangle t0)
+        public void RestoreState(NaviTriangle triangle)
         {
-            throw new NotImplementedException();
+            triangle.SetFlag(Flags);
+            triangle.PathingFlags = PathingFlags;
+            triangle.ContentFlagCounts.Set(ContentFlagCounts);
         }
     }
 }

@@ -681,10 +681,102 @@ namespace MHServerEmu.Games.Navi
 
         private void SplitEdge(NaviEdge splitEdge, NaviEdge edge, Queue<NaviEdge> edges)
         {
-            throw new NotImplementedException();
+            if (splitEdge.TestFlag(NaviEdgeFlags.Door))
+                _navi.LogError("SplitEdge: Cannot split door edges!", edge);
+
+            NaviPoint p0 = edge.Points[0];
+            NaviPoint p1 = edge.Points[1];
+
+            if(Segment.LineLineIntersect2D(splitEdge.Points[0].Pos, splitEdge.Points[1].Pos, p0.Pos, p1.Pos, out Vector3 intersectionPos) == false) return;
+
+            var splitPoint = _vertexLookupCache.CacheVertex(intersectionPos, out _);
+
+            if (splitPoint.TestFlag(NaviPointFlags.Attached) == false)
+            {
+                SplitTriangle(splitEdge.Triangles[0], splitPoint);
+            }
+            else if (splitEdge.Contains(splitPoint) == false)
+            {
+                edges.Enqueue(new(splitEdge.Points[0], splitPoint, splitEdge.EdgeFlags, splitEdge.PathingFlags));
+                edges.Enqueue(new(splitPoint, splitEdge.Points[1], splitEdge.EdgeFlags, splitEdge.PathingFlags));
+                RemoveEdge(splitEdge, false);
+            }
+
+            if (p0 != splitPoint) edges.Enqueue(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
+            if (splitPoint != p1) edges.Enqueue(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
         }
 
-        internal void RemoveEdge(NaviEdge edge, bool check = true)
+        public void RemoveEdge(NaviEdge edge, bool check = true)
+        {
+            if (edge.TestFlag(NaviEdgeFlags.Door))
+            {
+                _navi.LogError("RemoveEdge: Cannot remove door edges!", edge);
+                return;
+            }
+
+            edge.ClearFlag(NaviEdgeFlags.Constraint);
+            edge.PathingFlags.Clear();
+
+            var p0 = edge.Points[0];
+            var p1 = edge.Points[1];
+
+            Stack<NaviEdge> edgeStack = new ();
+            edge.SetFlag(NaviEdgeFlags.Delaunay);
+            edgeStack.Push(edge);
+            CheckDelaunaySwap(edgeStack);
+
+            if (check)
+            {
+                var t0 = FindTriangleContainingVertex(p0);
+                if (t0 != null && NaviUtil.IsPointConstraint(p0, t0) == false)
+                    RemovePoint(p0, t0);
+
+                var t1 = FindTriangleContainingVertex(p1);
+                if (t1 != null && NaviUtil.IsPointConstraint(p1, t1) == false)
+                    RemovePoint(p1, t1);
+            }
+        }
+
+        private void CheckDelaunaySwap(Stack<NaviEdge> edgeStack)
+        {
+            while (edgeStack.Count > 0)
+            {
+                NaviEdge edge = edgeStack.Pop();
+                edge.ClearFlag(NaviEdgeFlags.Delaunay);
+                if (edge.TestFlag(NaviEdgeFlags.Constraint)) continue;
+
+                var t0 = edge.Triangles[0];
+                var t1 = edge.Triangles[1];
+                float at0 = Segment.SignedDoubleTriangleArea2D(t0.PointCW(0).Pos, t0.PointCW(1).Pos, t0.PointCW(2).Pos);
+                float at1 = Segment.SignedDoubleTriangleArea2D(t1.PointCW(0).Pos, t1.PointCW(1).Pos, t1.PointCW(2).Pos);
+
+                var triangle = (at0 > at1) ? t0 : t1;
+                var oppoTriangle = edge.OpposedTriangle(triangle);
+
+                NaviPoint checkPoint = oppoTriangle.OpposedVertex(edge);
+                if (CircumcircleContainsPoint2D(triangle.PointCW(0), triangle.PointCW(1), triangle.PointCW(2), checkPoint))
+                {
+                    int edgeIndex0 = t0.EdgeIndex(edge);
+                    int edgeIndex1 = t1.EdgeIndex(edge);
+
+                    NaviEdge[] edges = {
+                        t0.EdgeMod(edgeIndex0 + 1), t0.EdgeMod(edgeIndex0 + 2),
+                        t1.EdgeMod(edgeIndex1 + 1), t1.EdgeMod(edgeIndex1 + 2)
+                    };
+
+                    foreach (var e in edges)
+                        if (e.TestFlag(NaviEdgeFlags.Delaunay) == false)
+                        {
+                            e.SetFlag(NaviEdgeFlags.Delaunay);
+                            edgeStack.Push(e);
+                        }
+
+                    SwapEdge(edge, out _, out _);
+                }
+            }
+        }
+
+        private void RemovePoint(NaviPoint point, NaviTriangle triangle)
         {
             throw new NotImplementedException();
         }

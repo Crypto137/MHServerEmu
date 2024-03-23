@@ -47,7 +47,16 @@ namespace MHServerEmu.Games.Navi
         public int AddSight { get; set; }
         public int RemoveSight { get; set; }
 
-        public static int Count { get; } = 8;
+        public static int Count { get; } = 8;      
+        
+        public ContentFlagCounts()
+        {
+        }        
+        
+        public ContentFlagCounts(ContentFlagCounts flagCounts)
+        {
+            Set(flagCounts);
+        }
 
         public int this[int index]
         {

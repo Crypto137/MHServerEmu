@@ -385,6 +385,9 @@ namespace MHServerEmu.Games.Navi
 
         private class MarkupState
         {
+            public NaviTriangle Triangle { get; set; }
+            public ContentFlagCounts FlagCounts { get; set; }
+
             public MarkupState()
             {
             }
@@ -392,12 +395,8 @@ namespace MHServerEmu.Games.Navi
             public MarkupState(MarkupState state)
             {
                 Triangle = state.Triangle;
-                FlagCounts = new();
-                FlagCounts.Set(state.FlagCounts);
+                FlagCounts = new(state.FlagCounts);
             }
-
-            public NaviTriangle Triangle { get; set; }
-            public ContentFlagCounts FlagCounts { get; set; }
         }
     }
 }
