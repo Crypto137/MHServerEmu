@@ -10,6 +10,7 @@ namespace MHServerEmu.Core.Network
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public Type Protocol { get; set; }
         public uint Id { get; }
         public byte[] Payload { get; }
         public TimeSpan GameTimeReceived { get; set; }
@@ -29,7 +30,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public MessagePackage(IMessage message)
         {
-            Id = ProtocolDispatchTable.GetMessageId(message);
+            (Protocol, Id) = ProtocolDispatchTable.Instance.GetMessageProtocolId(message);
             Payload = message.ToByteArray();
         }
 
@@ -76,38 +77,22 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Deserializes the payload as <typeparamref name="T"/>.
+        /// Deserializes the payload as an <see cref="IMessage"/> using the assigned protocol. Returns <see langword="null"/> if deserialization failed.
         /// </summary>
-        public T Deserialize<T>() where T : IMessage
+        public IMessage Deserialize()
         {
+            if (Protocol == null) return Logger.WarnReturn<IMessage>(null, $"Deserialize(): Protocol == null");
+
             try
             {
-                var parse = ProtocolDispatchTable.GetParseMessageDelegate<T>();
-                return (T)parse(Payload);
+                var parse = ProtocolDispatchTable.Instance.GetParseMessageDelegate(Protocol, Id);
+                return parse(Payload);
             }
             catch (Exception e)
             {
-                Logger.ErrorException(e, $"{nameof(Deserialize)}<{nameof(T)}>");
-                return default;
+                Logger.ErrorException(e, $"{nameof(Deserialize)}");
+                return null;
             }
-        }
-
-        /// <summary>
-        /// Deserializes the payload as <typeparamref name="T"/>. The return value indicates whether the operation succeeded.
-        /// </summary>
-        public bool TryDeserialize<T>(out T message) where T : IMessage
-        {
-            message = Deserialize<T>();
-            return message != null;
-        }
-
-        /// <summary>
-        /// Deserializes the payload as an <see cref="IMessage"/> using the specified protocol.
-        /// </summary>
-        public IMessage Deserialize(Type protocolEnumType)
-        {
-            var parse = ProtocolDispatchTable.GetParseMessageDelegate(protocolEnumType, Id);
-            return parse(Payload);
         }
     }
 }

@@ -28,22 +28,14 @@ namespace MHServerEmu.Frontend
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
             var client = (FrontendClient)tcpClient;
+            message.Protocol = typeof(FrontendProtocolMessage);
 
             switch ((FrontendProtocolMessage)message.Id)
             {
-                case FrontendProtocolMessage.ClientCredentials:
-                    if (message.TryDeserialize<ClientCredentials>(out var credentials))
-                        OnClientCredentials(client, credentials);
-                    break;
+                case FrontendProtocolMessage.ClientCredentials: OnClientCredentials(client, message); break;
+                case FrontendProtocolMessage.InitialClientHandshake: OnInitialClientHandshake(client, message); break;
 
-                case FrontendProtocolMessage.InitialClientHandshake:
-                    if (message.TryDeserialize<InitialClientHandshake>(out var handshake))
-                        OnInitialClientHandshake(client, handshake);
-                    break;
-
-                default:
-                    Logger.Warn($"Handle(): Unhandled message [{message.Id}] {(FrontendProtocolMessage)message.Id}");
-                    break;
+                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
@@ -51,6 +43,11 @@ namespace MHServerEmu.Frontend
         {
             foreach (MessagePackage message in messages)
                 Handle(client, message);
+        }
+
+        public void Handle(ITcpClient client, MailboxMessage message)
+        {
+            Logger.Warn($"Handle(): Unhandled MailboxMessage");
         }
 
         public string GetStatus()
@@ -100,43 +97,38 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Handles <see cref="ClientCredentials"/>.
         /// </summary>
-        private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
+        private bool OnClientCredentials(FrontendClient client, MessagePackage message)
         {
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
-            if (playerManager == null)
-            {
-                Logger.Error($"OnClientCredentials(): Failed to connect to the player manager");
-                return;
-            }
+            var clientCredentials = message.Deserialize() as ClientCredentials;
+            if (clientCredentials == null) return Logger.WarnReturn(false, $"OnClientCredentials(): Failed to retrieve message");
 
-            playerManager.ReceiveFrontendMessage(client, credentials);
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
+            if (playerManager == null) Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the player manager");
+
+            playerManager.ReceiveFrontendMessage(client, clientCredentials);
+            return true;
         }
 
         /// <summary>
         /// Handles <see cref="InitialClientHandshake"/>.
         /// </summary>
-        private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
+        private bool OnInitialClientHandshake(FrontendClient client, MessagePackage message)
         {
+            var initialClientHandshake = message.Deserialize() as InitialClientHandshake;
+            if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
+
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
-            if (playerManager == null)
-            {
-                Logger.Error($"OnClientCredentials(): Failed to connect to the player manager");
-                return;
-            }
+            if (playerManager == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the player manager");
 
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
-            if (groupingManager == null)
-            {
-                Logger.Error($"OnClientCredentials(): Failed to connect to the grouping manager");
-                return;
-            }
+            if (groupingManager == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the grouping manager");
 
-            Logger.Info($"Received InitialClientHandshake for {handshake.ServerType}");
+            Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType}");
 
-            if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-                playerManager.ReceiveFrontendMessage(client, handshake);
-            else if (handshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-                groupingManager.ReceiveFrontendMessage(client, handshake);
+            if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
+                playerManager.ReceiveFrontendMessage(client, initialClientHandshake);
+            else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
+                groupingManager.ReceiveFrontendMessage(client, initialClientHandshake);
 
             // Add the player to a game when both handshakes are finished
             // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
@@ -146,6 +138,8 @@ namespace MHServerEmu.Frontend
                 playerManager.AddFrontendClient(client);
                 groupingManager.AddFrontendClient(client);
             }
+
+            return true;
         }
 
         #endregion

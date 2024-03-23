@@ -57,9 +57,10 @@ namespace MHServerEmu.PlayerManagement
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
             var client = (FrontendClient)tcpClient;
+            message.Protocol = typeof(ClientToGameServerMessage);
 
             // Timestamp sync messages
-            if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
+            if (message.Id == (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (uint)ClientToGameServerMessage.NetMessagePing)
             {
                 message.GameTimeReceived = Clock.GameTime;
                 message.DateTimeReceived = Clock.UnixTime;
@@ -68,34 +69,10 @@ namespace MHServerEmu.PlayerManagement
             // Self-handle or route messages
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageReadyForGameJoin:
-                    // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
-                    // doesn't include it. To avoid an exception we build a partial message from the data we receive.
-                    try
-                    {
-                        var readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
-                        OnReadyForGameJoin(client, readyForGameJoin);
-                    }
-                    catch
-                    {
-                        Logger.Error("Handle(): Failed to deserialize NetMessageReadyForGameJoin");
-                    }
-                    break;
-
-                case ClientToGameServerMessage.NetMessageSyncTimeRequest:
-                    if (message.TryDeserialize<NetMessageSyncTimeRequest>(out var syncTimeRequest))
-                        OnSyncTimeRequest(client, syncTimeRequest, message.GameTimeReceived, message.DateTimeReceived);
-                    break;
-
-                case ClientToGameServerMessage.NetMessagePing:
-                    if (message.TryDeserialize<NetMessagePing>(out var ping))
-                        OnPing(client, ping, message.GameTimeReceived);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageFPS:
-                    if (message.TryDeserialize<NetMessageFPS>(out var fps))
-                        OnFps(client, fps);
-                    break;
+                case ClientToGameServerMessage.NetMessageReadyForGameJoin:  OnReadyForGameJoin(client, message); break;
+                case ClientToGameServerMessage.NetMessageSyncTimeRequest:   OnSyncTimeRequest(client, message); break;
+                case ClientToGameServerMessage.NetMessagePing:              OnPing(client, message); break;
+                case ClientToGameServerMessage.NetMessageFPS:               OnFps(client, message); break;
 
                 default:
                     // Route the rest of messages to the game the player is currently in
@@ -116,6 +93,11 @@ namespace MHServerEmu.PlayerManagement
         {
             foreach (MessagePackage message in messages)
                 Handle(client, message);
+        }
+
+        public void Handle(ITcpClient client, MailboxMessage message)
+        {
+            Logger.Warn($"Handle(): Unhandled MailboxMessage");
         }
 
         public string GetStatus()
@@ -302,8 +284,20 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.
         /// </summary>
-        private void OnReadyForGameJoin(FrontendClient client, NetMessageReadyForGameJoin readyForGameJoin)
+        private bool OnReadyForGameJoin(FrontendClient client, MessagePackage message)
         {
+            // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
+            // doesn't include it. To avoid an exception we build a partial message from the data we receive.
+            NetMessageReadyForGameJoin readyForGameJoin;
+            try
+            {
+                readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
+            }
+            catch
+            {
+                return Logger.ErrorReturn(false, "OnReadyForGameJoin(): Failed to deserialize");
+            }
+
             Logger.Info($"Received NetMessageReadyForGameJoin from {client.Session.Account}");
             Logger.Trace(readyForGameJoin.ToString());
 
@@ -316,21 +310,26 @@ namespace MHServerEmu.PlayerManagement
                 .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
                 .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .Build());
+
+            return true;
         }
 
         /// <summary>
         /// Handles <see cref="NetMessageSyncTimeRequest"/>.
         /// </summary>
-        private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest request, TimeSpan gameTimeReceived, TimeSpan dateTimeReceived)
+        private bool OnSyncTimeRequest(FrontendClient client, MessagePackage message)
         {
+            var request = message.Deserialize() as NetMessageSyncTimeRequest;
+            if (request == null) return Logger.WarnReturn(false, $"OnSyncTimeRequest(): Failed to retrieve message");
+
             //Logger.Debug($"NetMessageSyncTimeRequest:\n{request}");
 
             var reply = NetMessageSyncTimeReply.CreateBuilder()
                 .SetGameTimeClientSent(request.GameTimeClientSent)
-                .SetGameTimeServerReceived(gameTimeReceived.Ticks / 10)
+                .SetGameTimeServerReceived(message.GameTimeReceived.Ticks / 10)
                 .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
                 .SetDateTimeClientSent(request.DateTimeClientSent)
-                .SetDateTimeServerReceived(dateTimeReceived.Ticks / 10)
+                .SetDateTimeServerReceived(message.DateTimeReceived.Ticks / 10)
                 .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .SetDialation(1.0f)
                 .SetGametimeDialationStarted(0)
@@ -340,20 +339,24 @@ namespace MHServerEmu.PlayerManagement
             //Logger.Debug($"NetMessageSyncTimeReply:\n{reply}");
 
             client.SendMessage(MuxChannel, reply);
+            return true;
         }
 
         /// <summary>
         /// Handles <see cref="NetMessagePing"/>.
         /// </summary>
-        private void OnPing(FrontendClient client, NetMessagePing ping, TimeSpan gameTimeReceived)
+        private bool OnPing(FrontendClient client, MessagePackage message)
         {
+            var ping = message.Deserialize() as NetMessagePing;
+            if (ping == null) return Logger.WarnReturn(false, $"OnPing(): Failed to retrieve message");
+
             //Logger.Debug($"NetMessagePing:\n{ping}");
 
             var response = NetMessagePingResponse.CreateBuilder()
                 .SetDisplayOutput(ping.DisplayOutput)
                 .SetRequestSentClientTime(ping.SendClientTime)
                 .SetRequestSentGameTime(ping.SendGameTime)
-                .SetRequestNetReceivedGameTime((ulong)gameTimeReceived.TotalMilliseconds)
+                .SetRequestNetReceivedGameTime((ulong)message.GameTimeReceived.TotalMilliseconds)
                 .SetResponseSendTime((ulong)Clock.GameTime.TotalMilliseconds)
                 .SetServerTickforecast(0)   // server tick time ms
                 .SetGameservername("BOPR-MHVGIS2")
@@ -363,12 +366,13 @@ namespace MHServerEmu.PlayerManagement
             //Logger.Debug($"NetMessagePingResponse:\n{response}");
 
             client.SendMessage(MuxChannel, response);
+            return true;
         }
 
         /// <summary>
         /// Handles <see cref="NetMessageFPS"/>.
         /// </summary>
-        private void OnFps(FrontendClient client, NetMessageFPS fps)
+        private void OnFps(FrontendClient client, MessagePackage message)
         {
             //Logger.Debug($"NetMessageFPS:\n{fps}");
         }

@@ -165,7 +165,7 @@ namespace MHServerEmu
         private static bool InitSystems()
         {
             return PakFileSystem.Instance.Initialize()
-                && ProtocolDispatchTable.IsInitialized
+                && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.IsInitialized
                 && AccountManager.IsInitialized;

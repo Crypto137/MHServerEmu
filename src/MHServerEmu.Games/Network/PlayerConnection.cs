@@ -2,7 +2,6 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -183,37 +182,32 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
-        /// Handles a <see cref="MessagePackage"/>.
+        /// Handles a <see cref="MailboxMessage"/>.
         /// </summary>
-        public void ReceiveMessage(MessagePackage message)
+        public void ReceiveMessage(MailboxMessage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                    if (message.TryDeserialize<NetMessageUpdateAvatarState>(out var updateAvatarState))
-                        OnUpdateAvatarState(updateAvatarState);
-                    break;
+                case ClientToGameServerMessage.NetMessageUpdateAvatarState:                 OnUpdateAvatarState(message); break;
+                case ClientToGameServerMessage.NetMessageCellLoaded:                        OnCellLoaded(message); break;
+                case ClientToGameServerMessage.NetMessageAdminCommand:                      OnAdminCommand(message); break;
+                case ClientToGameServerMessage.NetMessageUseInteractableObject:             OnUseInteractableObject(message); break;
+                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:           OnPerformPreInteractPower(message); break;
+                case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;
+                case ClientToGameServerMessage.NetMessageThrowInteraction:                  OnThrowInteraction(message); break;
+                case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;
+                case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;
+                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;
+                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;
+                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;
+                case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;
+                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
+                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;
+                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break;
+                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
+                case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
 
-                case ClientToGameServerMessage.NetMessageCellLoaded:
-                    if (message.TryDeserialize<NetMessageCellLoaded>(out var cellLoaded))
-                        OnCellLoaded(cellLoaded);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAdminCommand:
-                    if (message.TryDeserialize<NetMessageAdminCommand>(out var adminCommand))
-                        OnAdminCommand(adminCommand);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageUseInteractableObject:
-                    if (message.TryDeserialize<NetMessageUseInteractableObject>(out var useInteractableObject))
-                        OnUseInteractableObject(useInteractableObject);
-                    break;
-
-                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
-                    if (message.TryDeserialize<NetMessagePerformPreInteractPower>(out var performPreInteractPower))
-                        OnPerformPreInteractPower(performPreInteractPower);
-                    break;
-
+                // Power Messages
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
                 case ClientToGameServerMessage.NetMessagePowerRelease:
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
@@ -221,70 +215,6 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     _powerMessageHandler.ReceiveMessage(this, message); break;
-
-                case ClientToGameServerMessage.NetMessageTryInventoryMove:
-                    if (message.TryDeserialize<NetMessageTryInventoryMove>(out var tryInventoryMove))
-                        OnTryInventoryMove(tryInventoryMove);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageThrowInteraction:
-                    if (message.TryDeserialize<NetMessageThrowInteraction>(out var throwInteraction))
-                        OnThrowInteraction(throwInteraction);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageUseWaypoint:
-                    if (message.TryDeserialize<NetMessageUseWaypoint>(out var useWaypoint))
-                        OnUseWaypoint(useWaypoint);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageSwitchAvatar:
-                    if (message.TryDeserialize<NetMessageSwitchAvatar>(out var switchAvatar))
-                        OnSwitchAvatar(switchAvatar);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
-                    if (message.TryDeserialize<NetMessageAbilitySlotToAbilityBar>(out var slotToAbilityBar))
-                        OnAbilitySlotToAbilityBar(slotToAbilityBar);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
-                    if (message.TryDeserialize<NetMessageAbilityUnslotFromAbilityBar>(out var unslotFromAbilityBar))
-                        OnAbilityUnslotFromAbilityBar(unslotFromAbilityBar);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
-                    if (message.TryDeserialize<NetMessageAbilitySwapInAbilityBar>(out var swapInAbilityBar))
-                        OnAbilitySwapInAbilityBar(swapInAbilityBar);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageGracefulDisconnect:
-                        OnGracefulDisconnect();
-                    break;
-
-                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
-                    if (message.TryDeserialize<NetMessageSetPlayerGameplayOptions>(out var setPlayerGameplayOptions))
-                        OnSetPlayerGameplayOptions(setPlayerGameplayOptions);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
-                    if (message.TryDeserialize<NetMessageRequestInterestInInventory>(out var requestInterestInInventory))
-                        OnRequestInterestInInventory(requestInterestInInventory);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
-                    if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
-                        OnRequestInterestInAvatarEquipment(requestInterestInAvatarEquipment);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
-                    if (message.TryDeserialize<NetMessageOmegaBonusAllocationCommit>(out var omegaBonusAllocationCommit))
-                        OnOmegaBonusAllocationCommit(omegaBonusAllocationCommit);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
-                    if (message.TryDeserialize<NetMessageChangeCameraSettings>(out var cameraSettings))
-                        OnChangeCameraSettings(cameraSettings);
-                    break;
 
                 // Grouping Manager
                 case ClientToGameServerMessage.NetMessageChat:
@@ -311,14 +241,15 @@ namespace MHServerEmu.Games.Network
                     ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Leaderboard);
                     break;
 
-                default:
-                    Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]");
-                    break;
+                default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
-        private void OnUpdateAvatarState(NetMessageUpdateAvatarState updateAvatarState)
+        private bool OnUpdateAvatarState(MailboxMessage message)
         {
+            var updateAvatarState = message.As<NetMessageUpdateAvatarState>();
+            if (updateAvatarState == null) return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to retrieve message");
+
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
             //Vector3 oldPosition = client.LastPosition;
             LastPosition = avatarState.Position;
@@ -329,8 +260,8 @@ namespace MHServerEmu.Games.Network
                 if (AOI.Update(avatarState.Position))
                 {
                     //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
-                    foreach (IMessage message in AOI.Messages)
-                        SendMessage(message);
+                    foreach (IMessage aoiMessage in AOI.Messages)
+                        SendMessage(aoiMessage);
                 }
             }
 
@@ -338,10 +269,14 @@ namespace MHServerEmu.Games.Network
             Logger.Trace(avatarState.ToString())
             Logger.Trace(avatarState.Position.ToString());
             */
+            return true;
         }
 
-        private void OnCellLoaded(NetMessageCellLoaded cellLoaded)
+        private bool OnCellLoaded(MailboxMessage message)
         {
+            var cellLoaded = message.As<NetMessageCellLoaded>();
+            if (cellLoaded == null) return Logger.WarnReturn(false, $"OnCellLoaded(): Failed to retrieve message");
+
             AOI.OnCellLoaded(cellLoaded.CellId);
             Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{AOI.LoadedCellCount}/{AOI.CellsInRegion}]");
 
@@ -357,26 +292,34 @@ namespace MHServerEmu.Games.Network
                     AOI.ForceCellLoad();
                 }
             }
+
+            return true;
         }
 
-        private void OnAdminCommand(NetMessageAdminCommand command)
+        private bool OnAdminCommand(MailboxMessage message)
         {
             if (_dbAccount.UserLevel < AccountUserLevel.Admin)
             {
                 // Naughty hacker here, TODO: handle this properly
+                Logger.Warn($"OnAdminCommand(): Unauthorized admin command received from {_dbAccount}");
                 SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
                     .SetResponse($"{_dbAccount.PlayerName} is not in the sudoers file. This incident will be reported.").Build());
-                return;
+                return true;
             }
 
             // Basic handling
+            var command = message.As<NetMessageAdminCommand>();
             string output = $"Unhandled admin command: {command.Command.Split(' ')[0]}";
             Logger.Warn(output);
             SendMessage(NetMessageAdminCommandResponse.CreateBuilder().SetResponse(output).Build());
+            return true;
         }
 
-        private void OnPerformPreInteractPower(NetMessagePerformPreInteractPower performPreInteractPower)
+        private bool OnPerformPreInteractPower(MailboxMessage message)
         {
+            var performPreInteractPower = message.As<NetMessagePerformPreInteractPower>();
+            if (performPreInteractPower == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to retrieve message");
+
             Logger.Trace($"Received PerformPreInteractPower for {performPreInteractPower.IdTarget}");
 
             if (Game.EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
@@ -387,10 +330,15 @@ namespace MHServerEmu.Games.Network
                     Game.EventManager.AddEvent(this, EventEnum.PreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
                 }
             }
+
+            return true;
         }
 
-        private void OnUseInteractableObject(NetMessageUseInteractableObject useInteractableObject)
+        private bool OnUseInteractableObject(MailboxMessage message)
         {
+            var useInteractableObject = message.As<NetMessageUseInteractableObject>();
+            if (useInteractableObject == null) return Logger.WarnReturn(false, $"OnUseInteractableObject(): Failed to retrieve message");
+
             Logger.Info($"Received UseInteractableObject message");
             var missionPrototypeRef = (PrototypeId)useInteractableObject.MissionPrototypeRef;
 
@@ -408,34 +356,34 @@ namespace MHServerEmu.Games.Network
                     if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
                     {
                         teleport.TeleportToLastTown(this);
-                        return;
+                        return true;
                     }
-                    if (teleport.Destinations.Count == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
+                    if (teleport.Destinations.Count == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return true;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
 
                     if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||
                         teleport.Destinations[0].Type == RegionTransitionType.TowerDown)
                     {
                         teleport.TeleportToEntity(this, teleport.Destinations[0].EntityId);
-                        return;
+                        return true;
                     }
 
                     if (RegionDataRef != teleport.Destinations[0].Region)
                     {
                         teleport.TeleportClient(this);
-                        return;
+                        return true;
                     }
 
-                    if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
+                    if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return true;
 
                     if (AOI.CheckTargeCell(target))
                     {
                         teleport.TeleportClient(this);
-                        return;
+                        return true;
                     }
 
                     var teleportEntity = target.TransitionPrototype;
-                    if (teleportEntity == null) return;
+                    if (teleportEntity == null) return true;
                     Vector3 targetPos = new(target.Location.GetPosition());
                     Orientation targetRot = target.Location.GetOrientation();
 
@@ -462,10 +410,15 @@ namespace MHServerEmu.Games.Network
                 else
                     Game.EventManager.AddEvent(this, EventEnum.UseInteractableObject, 0, interactableObject);
             }
+
+            return true;
         }
 
-        private void OnTryInventoryMove(NetMessageTryInventoryMove tryInventoryMove)
+        private bool OnTryInventoryMove(MailboxMessage message)
         {
+            var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
+            if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
+
             Logger.Info($"Received TryInventoryMove message");
 
             SendMessage(NetMessageInventoryMove.CreateBuilder()
@@ -474,19 +427,28 @@ namespace MHServerEmu.Games.Network
                 .SetInvLocInventoryPrototypeId(tryInventoryMove.ToInventoryPrototype)
                 .SetInvLocSlot(tryInventoryMove.ToSlot)
                 .Build());
+
+            return true;
         }
 
-        private void OnThrowInteraction(NetMessageThrowInteraction throwInteraction)
+        private bool OnThrowInteraction(MailboxMessage message)
         {
+            var throwInteraction = message.As<NetMessageThrowInteraction>();
+            if (throwInteraction == null) return Logger.WarnReturn(false, $"OnThrowInteraction(): Failed to retrieve message");
+
             ulong idTarget = throwInteraction.IdTarget;
             int avatarIndex = throwInteraction.AvatarIndex;
             Logger.Trace($"Received ThrowInteraction message Avatar[{avatarIndex}] Target[{idTarget}]");
 
             Game.EventManager.AddEvent(this, EventEnum.StartThrowing, 0, idTarget);
+            return true;
         }
 
-        private void OnUseWaypoint(NetMessageUseWaypoint useWaypoint)
+        private bool OnUseWaypoint(MailboxMessage message)
         {
+            var useWaypoint = message.As<NetMessageUseWaypoint>();
+            if (useWaypoint == null) return Logger.WarnReturn(false, $"OnUseWaypoint(): Failed to retrieve message");
+
             Logger.Info($"Received UseWaypoint message");
             Logger.Trace(useWaypoint.ToString());
 
@@ -494,10 +456,14 @@ namespace MHServerEmu.Games.Network
             PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
 
             Game.MovePlayerToRegion(this, destinationRegion, waypointDataRef);
+            return true;
         }
 
-        private void OnSwitchAvatar(NetMessageSwitchAvatar switchAvatar)
+        private bool OnSwitchAvatar(MailboxMessage message)
         {
+            var switchAvatar = message.As<NetMessageSwitchAvatar>();
+            if (switchAvatar == null) return Logger.WarnReturn(false, $"OnSwitchAvatar(): Failed to retrieve message");
+
             Logger.Info($"Received NetMessageSwitchAvatar");
             Logger.Trace(switchAvatar.ToString());
 
@@ -505,10 +471,14 @@ namespace MHServerEmu.Games.Network
             Player.SetAvatar((PrototypeId)switchAvatar.AvatarPrototypeId);
             //ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {GameDatabase.GetFormattedPrototypeName(Player.CurrentAvatar.EntityPrototype.DataRef)}.");
             Game.MovePlayerToRegion(this, RegionDataRef, WaypointDataRef);
+            return true;
         }
 
-        private void OnAbilitySlotToAbilityBar(NetMessageAbilitySlotToAbilityBar slotToAbilityBar)
+        private bool OnAbilitySlotToAbilityBar(MailboxMessage message)
         {
+            var slotToAbilityBar = message.As<NetMessageAbilitySlotToAbilityBar>();
+            if (slotToAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySlotToAbilityBar(): Failed to retrieve message");
+
             var abilityKeyMapping = Player.CurrentAvatar.AbilityKeyMappings[0];
             PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
             AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
@@ -516,20 +486,28 @@ namespace MHServerEmu.Games.Network
 
             // Set
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
+            return true;
         }
 
-        private void OnAbilityUnslotFromAbilityBar(NetMessageAbilityUnslotFromAbilityBar unslotFromAbilityBar)
+        private bool OnAbilityUnslotFromAbilityBar(MailboxMessage message)
         {
+            var unslotFromAbilityBar = message.As<NetMessageAbilityUnslotFromAbilityBar>();
+            if (unslotFromAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilityUnslotFromAbilityBar(): Failed to retrieve message");
+
             var abilityKeyMapping = Player.CurrentAvatar.AbilityKeyMappings[0];
             AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
             Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
 
             // Remove by assigning invalid id
             abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
+            return true;
         }
 
-        private void OnAbilitySwapInAbilityBar(NetMessageAbilitySwapInAbilityBar swapInAbilityBar)
+        private bool OnAbilitySwapInAbilityBar(MailboxMessage message)
         {
+            var swapInAbilityBar = message.As<NetMessageAbilitySwapInAbilityBar>();
+            if (swapInAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySwapInAbilityBar(): Failed to retrieve message");
+
             var abilityKeyMapping = Player.CurrentAvatar.AbilityKeyMappings[0];
             AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
             AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
@@ -540,42 +518,67 @@ namespace MHServerEmu.Games.Network
             PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
+            return true;
         }
 
-        private void OnGracefulDisconnect()
+        private bool OnGracefulDisconnect(MailboxMessage message)
         {
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
+            return true;
         }
 
-        private void OnSetPlayerGameplayOptions(NetMessageSetPlayerGameplayOptions setPlayerGameplayOptions)
+        private bool OnSetPlayerGameplayOptions(MailboxMessage message)
         {
+            var setPlayerGameplayOptions = message.As<NetMessageSetPlayerGameplayOptions>();
+            if (setPlayerGameplayOptions == null) return Logger.WarnReturn(false, $"OnSetPlayerGameplayOptions(): Failed to retrieve message");
+
             Logger.Info($"Received SetPlayerGameplayOptions message");
             Logger.Trace(new GameplayOptions(setPlayerGameplayOptions.OptionsData).ToString());
+            return true;
         }
 
-        private void OnRequestInterestInInventory(NetMessageRequestInterestInInventory requestInterestInInventory)
+        private bool OnRequestInterestInInventory(MailboxMessage message)
         {
-            Logger.Info($"Received NetMessageRequestInterestInInventory {requestInterestInInventory.InventoryProtoId}");
+            var requestInterestInInventory = message.As<NetMessageRequestInterestInInventory>();
+            if (requestInterestInInventory == null) return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to retrieve message");
+
+            string inventory = GameDatabase.GetFormattedPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId);
+            Logger.Trace($"Received NetMessageRequestInterestInInventory for {inventory}");
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
                 .SetLoadState(requestInterestInInventory.LoadState)
                 .Build());
+
+            return true;
         }
 
-        private void OnRequestInterestInAvatarEquipment(NetMessageRequestInterestInAvatarEquipment requestInterestInAvatarEquipment)
+        private bool OnRequestInterestInAvatarEquipment(MailboxMessage message)
         {
-            Logger.Info($"Received NetMessageRequestInterestInAvatarEquipment");
+            var requestInterestInAvatarEquipment = message.As<NetMessageRequestInterestInAvatarEquipment>();
+            if (requestInterestInAvatarEquipment == null) return Logger.WarnReturn(false, $"OnRequestInterestInAvatarEquipment(): Failed to retrieve message");
+
+            string avatar = GameDatabase.GetFormattedPrototypeName((PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId);
+            Logger.Trace($"Received NetMessageRequestInterestInAvatarEquipment for {avatar}");
+            return true;
         }
 
-        private void OnOmegaBonusAllocationCommit(NetMessageOmegaBonusAllocationCommit omegaBonusAllocationCommit)
+        private bool OnOmegaBonusAllocationCommit(MailboxMessage message)
         {
+            var omegaBonusAllocationCommit = message.As<NetMessageOmegaBonusAllocationCommit>();
+            if (omegaBonusAllocationCommit == null) return Logger.WarnReturn(false, $"OnOmegaBonusAllocationCommit(): Failed to retrieve message");
+
             Logger.Debug(omegaBonusAllocationCommit.ToString());
+            return true;
         }
 
-        private void OnChangeCameraSettings(NetMessageChangeCameraSettings cameraSettings)
+        private bool OnChangeCameraSettings(MailboxMessage message)
         {
-            AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
+            var changeCameraSettings = message.As<NetMessageChangeCameraSettings>();
+            if (changeCameraSettings == null) return Logger.WarnReturn(false, $"OnChangeCameraSettings(): Failed to retrieve message");
+
+            AOI.InitPlayerView((PrototypeId)changeCameraSettings.CameraSettings);
+            return true;
         }
 
         #endregion

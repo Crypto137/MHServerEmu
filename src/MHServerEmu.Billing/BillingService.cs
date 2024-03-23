@@ -65,34 +65,27 @@ namespace MHServerEmu.Billing
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
-            var client = (FrontendClient)tcpClient;
-
-            switch ((ClientToGameServerMessage)message.Id)
-            {
-                case ClientToGameServerMessage.NetMessageGetCatalog:
-                    if (message.TryDeserialize<NetMessageGetCatalog>(out var getCatalog))
-                        OnGetCatalog(client, getCatalog);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
-                    OnGetCurrencyBalance(client);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
-                    if (message.TryDeserialize<NetMessageBuyItemFromCatalog>(out var buyItemFromCatalog))
-                        OnBuyItemFromCatalog(client, buyItemFromCatalog);
-                    break;
-
-                default:
-                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
-                    break;
-            }
+            Logger.Warn($"Handle(): Unhandled MessagePackage");
         }
 
         public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
         {
             foreach (MessagePackage message in messages)
                 Handle(client, message);
+        }
+
+        public void Handle(ITcpClient tcpClient, MailboxMessage message)
+        {
+            var client = (FrontendClient)tcpClient;
+
+            switch ((ClientToGameServerMessage)message.Id)
+            {
+                case ClientToGameServerMessage.NetMessageGetCatalog:            OnGetCatalog(client, message); break;
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:    OnGetCurrencyBalance(client, message); break;
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:    OnBuyItemFromCatalog(client, message); break;
+
+                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
+            }
         }
 
         public string GetStatus()
@@ -102,25 +95,32 @@ namespace MHServerEmu.Billing
 
         #endregion
 
-        private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)
+        private bool OnGetCatalog(FrontendClient client, MailboxMessage message)
         {
+            var getCatalog = message.As<NetMessageGetCatalog>();
+            if (getCatalog == null) return Logger.WarnReturn(false, $"OnGetCatalog(): Failed to retrieve message");
+
             // Bail out if the client already has an up to date catalog
             if (getCatalog.TimestampSeconds == _catalog.TimestampSeconds && getCatalog.TimestampMicroseconds == _catalog.TimestampMicroseconds)
-                return;
+                return true;
 
             // Send the current catalog
             client.SendMessage(MuxChannel, _catalog.ToNetMessageCatalogItems(false));
+            return true;
         }
 
-        private void OnGetCurrencyBalance(FrontendClient client)
+        private void OnGetCurrencyBalance(FrontendClient client, MailboxMessage message)
         {
             client.SendMessage(MuxChannel, NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(_currencyBalance)
                 .Build());
         }
 
-        private void OnBuyItemFromCatalog(FrontendClient client, NetMessageBuyItemFromCatalog buyItemFromCatalog)
+        private bool OnBuyItemFromCatalog(FrontendClient client, MailboxMessage message)
         {
+            var buyItemFromCatalog = message.As<NetMessageBuyItemFromCatalog>();
+            if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
+
             Logger.Info($"Received NetMessageBuyItemFromCatalog");
             Logger.Trace(buyItemFromCatalog.ToString());
 
@@ -135,14 +135,14 @@ namespace MHServerEmu.Billing
             if (entry == null || entry.GuidItems.Length == 0)
             {
                 SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                return;
+                return true;
             }
 
             var costumePrototype = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<CostumePrototype>();
             if (costumePrototype == null || costumePrototype.UsableBy != avatar.BaseData.PrototypeId)
             {
                 SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                return;
+                return true;
             }
 
             // Update player and avatar properties
@@ -162,6 +162,7 @@ namespace MHServerEmu.Billing
 
             // Send buy response
             SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
+            return true;
         }
 
         private void SendBuyItemResponse(FrontendClient client, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)

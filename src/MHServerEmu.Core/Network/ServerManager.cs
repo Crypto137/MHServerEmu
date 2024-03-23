@@ -128,6 +128,23 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// Routes the provided <see cref="MailboxMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// </summary>
+        public bool RouteMessage(ITcpClient client, MailboxMessage message, ServerType serverType)
+        {
+            int index = (int)serverType;
+
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn(false, $"RouteMessage(): Invalid server type {serverType}");
+
+            if (_services[index] == null)
+                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
+
+            _services[index].Handle(client, message);
+            return true;
+        }
+
+        /// <summary>
         /// Runs all registered <see cref="IGameService"/> instances.
         /// </summary>
         public void RunServices()

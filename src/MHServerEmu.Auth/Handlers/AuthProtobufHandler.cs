@@ -23,12 +23,14 @@ namespace MHServerEmu.Auth.Handlers
         public async Task HandleMessageAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
             MessagePackage message = new(CodedInputStream.CreateInstance(request.InputStream));
+            message.Protocol = typeof(FrontendProtocolMessage);
 
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.LoginDataPB:       await OnLoginDataPB(request, response, message); break;
                 case FrontendProtocolMessage.PrecacheHeaders:   await OnPrecacheHeaders(request, response, message); break;
-                default: Logger.Warn($"HandleMessageAsync(): Unhandled message [{message.Id}] {(FrontendProtocolMessage)message.Id}"); break;
+
+                default: Logger.Warn($"HandleMessageAsync(): Unhandled {(FrontendProtocolMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
@@ -54,13 +56,13 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         private async Task<bool> OnLoginDataPB(HttpListenerRequest request, HttpListenerResponse response, MessagePackage message)
         {
+            var loginDataPB = message.Deserialize() as LoginDataPB;
+            if (loginDataPB == null) return Logger.WarnReturn(false, $"OnLoginDataPB(): Failed to retrieve message");
+
             // Mask the end point name to prevent sensitive information from appearing in logs in needed
             string endPointName = HideSensitiveInformation
                 ? request.RemoteEndPoint.ToStringMasked()
                 : request.RemoteEndPoint.ToString();
-
-            if (message.TryDeserialize<LoginDataPB>(out var loginDataPB) == false)
-                return Logger.ErrorReturn(false, $"OnLoginDataPB(): Deserialization failed");
 
             // Send a TOS popup when the client uses tos@test.com as email
             if (loginDataPB.EmailAddress.ToLower() == "tos@test.com")
