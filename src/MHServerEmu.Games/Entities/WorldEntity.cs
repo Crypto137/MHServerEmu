@@ -9,9 +9,6 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Dialog;
-using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 
@@ -30,7 +27,6 @@ namespace MHServerEmu.Games.Entities
         public Bounds Bounds { get; set; } = new();
         public Region Region { get => Location.Region; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
-        public Game Game { get; private set; }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
         public string PrototypeName => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId);
@@ -127,6 +123,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void Destroy()
         {
+            if (Game == null) return;
+
             ExitWorld();
             if (IsDestroyed() == false)
             {

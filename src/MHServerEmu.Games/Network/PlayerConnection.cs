@@ -183,9 +183,9 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
-        /// Handles a <see cref="GameMessage"/>.
+        /// Handles a <see cref="MessagePackage"/>.
         /// </summary>
-        public void ReceiveMessage(GameMessage message)
+        public void ReceiveMessage(MessagePackage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {

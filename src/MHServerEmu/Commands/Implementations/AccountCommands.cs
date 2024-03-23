@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
@@ -12,7 +14,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("create", "Creates a new account.\nUsage: account create [email] [playerName] [password]", AccountUserLevel.User)]
         public string Create(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length < 3) return "Invalid arguments. Type 'help account create' to get help.";
 
             (bool, string) result = AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
@@ -22,7 +23,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]", AccountUserLevel.User)]
         public string PlayerName(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account playername' to get help.";
 
             string email = @params[0].ToLower();
@@ -37,7 +37,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]", AccountUserLevel.User)]
         public string Password(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account password' to get help.";
 
             string email = @params[0].ToLower();
@@ -52,25 +51,21 @@ namespace MHServerEmu.Commands.Implementations
         [Command("userlevel", "Changes user level for the specified account.\nUsage: account userlevel [email] [0|1|2]", AccountUserLevel.Admin)]
         public string UserLevel(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account userlevel' to get help.";
 
-            if (byte.TryParse(@params[1], out byte userLevel))
-            {
-                if (userLevel > 2) return "Invalid arguments. Type 'help account userlevel' to get help.";
-                (bool, string) result = AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel);
-                return result.Item2;
-            }
-            else
-            {
+            if (byte.TryParse(@params[1], out byte userLevel) == false)
                 return "Failed to parse user level";
-            }
+
+            if (userLevel > 2)
+                return "Invalid arguments. Type 'help account userlevel' to get help.";
+
+            (bool, string) result = AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel);
+            return result.Item2;
         }
 
         [Command("verify", "Checks if an email/password combination is valid.\nUsage: account verify [email] [password]", AccountUserLevel.Admin)]
         public string Verify(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account verify' to get help.";
 
             var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0].ToLower()).SetPassword(@params[1]).Build();
@@ -85,7 +80,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("ban", "Bans the specified account.\nUsage: account ban [email]", AccountUserLevel.Moderator)]
         public string Ban(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
 
             (bool, string) result = AccountManager.BanAccount(@params[0].ToLower());
@@ -95,7 +89,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("unban", "Unbans the specified account.\nUsage: account unban [email]", AccountUserLevel.Moderator)]
         public string Unban(string[] @params, FrontendClient client)
         {
-            if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
 
             (bool, string) result = AccountManager.UnbanAccount(@params[0].ToLower());
@@ -115,7 +108,9 @@ namespace MHServerEmu.Commands.Implementations
             sb.AppendLine($"IsBanned: {client.Session.Account.IsArchived}");
             sb.AppendLine($"IsArchived: {client.Session.Account.IsArchived}");
             sb.Append($"IsPasswordExpired: {client.Session.Account.IsPasswordExpired}");
-            return sb.ToString();
+
+            ChatHelper.SendMetagameMessageSplit(client, sb.ToString());
+            return string.Empty;
         }
     }
 }

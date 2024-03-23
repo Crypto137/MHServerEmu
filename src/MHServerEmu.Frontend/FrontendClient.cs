@@ -81,9 +81,9 @@ namespace MHServerEmu.Frontend
         }
 
         /// <summary>
-        /// Sends the provided <see cref="GameMessage"/> over the specified mux channel.
+        /// Sends the provided <see cref="MessagePackage"/> over the specified mux channel.
         /// </summary>
-        public void SendMessage(ushort muxId, GameMessage message)
+        public void SendMessage(ushort muxId, MessagePackage message)
         {
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessage(message);
@@ -95,13 +95,13 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMessage(ushort muxId, IMessage message)
         {
-            SendMessage(muxId, new GameMessage(message));
+            SendMessage(muxId, new MessagePackage(message));
         }
 
         /// <summary>
-        /// Sends the provided <see cref="GameMessage"/> instances over the specified mux channel.
+        /// Sends the provided <see cref="MessagePackage"/> instances over the specified mux channel.
         /// </summary>
-        public void SendMessages(ushort muxId, IEnumerable<GameMessage> messages)
+        public void SendMessages(ushort muxId, IEnumerable<MessagePackage> messages)
         {
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
@@ -113,7 +113,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMessages(ushort muxId, IEnumerable<IMessage> messages)
         {
-            SendMessages(muxId, messages.Select(message => new GameMessage(message)));
+            SendMessages(muxId, messages.Select(message => new MessagePackage(message)));
         }
 
         /// <summary>
@@ -122,9 +122,9 @@ namespace MHServerEmu.Frontend
         public void Disconnect() => Connection.Disconnect();
 
         /// <summary>
-        /// Routes <see cref="GameMessage"/> instances to the appropriate <see cref="IGameService"/>.
+        /// Routes <see cref="MessagePackage"/> instances to the appropriate <see cref="IGameService"/>.
         /// </summary>
-        private void RouteMessages(ushort muxId, IEnumerable<GameMessage> messages)
+        private void RouteMessages(ushort muxId, IEnumerable<MessagePackage> messages)
         {
             ServerType destination;
 

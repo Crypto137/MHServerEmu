@@ -22,7 +22,7 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         public async Task HandleMessageAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
-            GameMessage message = new(CodedInputStream.CreateInstance(request.InputStream));
+            MessagePackage message = new(CodedInputStream.CreateInstance(request.InputStream));
 
             switch ((FrontendProtocolMessage)message.Id)
             {
@@ -37,7 +37,7 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         private async Task SendMessageAsync(IMessage message, HttpListenerResponse response, int statusCode = 200)
         {
-            byte[] buffer = new GameMessage(message).Serialize();
+            byte[] buffer = new MessagePackage(message).Serialize();
 
             response.StatusCode = statusCode;
             response.KeepAlive = false;
@@ -52,7 +52,7 @@ namespace MHServerEmu.Auth.Handlers
         /// <summary>
         /// Handles a <see cref="LoginDataPB"/> message.
         /// </summary>
-        private async Task<bool> OnLoginDataPB(HttpListenerRequest request, HttpListenerResponse response, GameMessage message)
+        private async Task<bool> OnLoginDataPB(HttpListenerRequest request, HttpListenerResponse response, MessagePackage message)
         {
             // Mask the end point name to prevent sensitive information from appearing in logs in needed
             string endPointName = HideSensitiveInformation
@@ -97,7 +97,7 @@ namespace MHServerEmu.Auth.Handlers
         /// <summary>
         /// Handles a <see cref="PrecacheHeaders"/> message.
         /// </summary>
-        private async Task<bool> OnPrecacheHeaders(HttpListenerRequest request, HttpListenerResponse response, GameMessage message)
+        private async Task<bool> OnPrecacheHeaders(HttpListenerRequest request, HttpListenerResponse response, MessagePackage message)
         {
             // The client sends this message on startup
             Logger.Trace($"Received PrecacheHeaders message");

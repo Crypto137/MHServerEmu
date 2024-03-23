@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.Properties
     /// <summary>
     /// Identifies a <see cref="PropertyValue"/>.
     /// </summary>
-    public struct PropertyId : IComparable
+    public struct PropertyId : IComparable<PropertyId>
     {
         public static readonly PropertyId Invalid = new();
 
@@ -87,10 +87,9 @@ namespace MHServerEmu.Games.Properties
             Raw = raw;
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(PropertyId other)
         {
-            if (obj is not PropertyId propertyId) throw new ArgumentException("Object is not a PropertyId.");
-            return Raw.CompareTo(propertyId.Raw);
+            return Raw.CompareTo(other.Raw);
         }
 
         public override bool Equals(object obj)

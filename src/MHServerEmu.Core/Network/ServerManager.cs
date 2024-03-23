@@ -18,7 +18,7 @@ namespace MHServerEmu.Core.Network
     }
 
     /// <summary>
-    /// Manages <see cref="IGameService"/> instances and routes <see cref="GameMessage"/> instances between them.
+    /// Manages <see cref="IGameService"/> instances and routes <see cref="MessagePackage"/> instances between them.
     /// </summary>
     public class ServerManager
     {
@@ -94,9 +94,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="GameMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <see cref="MessagePackage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessage(ITcpClient client, GameMessage message, ServerType serverType)
+        public bool RouteMessage(ITcpClient client, MessagePackage message, ServerType serverType)
         {
             int index = (int)serverType;
 
@@ -111,9 +111,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="IEnumerable{T}"/> of <see cref="GameMessage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <see cref="IEnumerable{T}"/> of <see cref="MessagePackage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessages(ITcpClient client, IEnumerable<GameMessage> messages, ServerType serverType)
+        public bool RouteMessages(ITcpClient client, IEnumerable<MessagePackage> messages, ServerType serverType)
         {
             int index = (int)serverType;
 

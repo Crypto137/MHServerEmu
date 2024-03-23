@@ -86,12 +86,12 @@ namespace MHServerEmu.Auth
             _listener = null;
         }
 
-        public void Handle(ITcpClient client, GameMessage message)
+        public void Handle(ITcpClient client, MessagePackage message)
         {
             Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
         }
 
-        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
         {
             Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
         }

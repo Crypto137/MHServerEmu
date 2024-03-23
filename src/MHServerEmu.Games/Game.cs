@@ -110,7 +110,7 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void Handle(FrontendClient client, GameMessage message)
+        public void Handle(FrontendClient client, MessagePackage message)
         {
             lock (_gameLock)
             {
@@ -118,9 +118,9 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
+        public void Handle(FrontendClient client, IEnumerable<MessagePackage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, message);
+            foreach (MessagePackage message in messages) Handle(client, message);
         }
 
         public void AddPlayer(FrontendClient client)
