@@ -75,6 +75,12 @@ namespace MHServerEmu.Games.Navi
             return flip ? -d : d;
         }
 
+        public static bool LineSide2D(NaviPoint p0, NaviPoint p1, Vector3 pos)
+        {
+            double d = LineRelationship2D(p0, p1, pos);
+            return d < 0.0;
+        }
+
         private static double InternalOrient2D(Vector3 a, Vector3 b, Vector3 c)
         {
             double[] pa = { a.X, a.Y };
@@ -88,7 +94,7 @@ namespace MHServerEmu.Games.Navi
             bool flip = SortInputs(ref p0, ref p1, ref p2);
             double d = InternalOrient2D(p0.Pos, p1.Pos, p2.Pos);
             if (flip) d = -d;
-            return d > 0.0f;
+            return d > 0.0;
         }
 
         public static bool IsDegenerate(NaviPoint p0, NaviPoint p1, NaviPoint p2, double deg = 0.5)
@@ -114,7 +120,7 @@ namespace MHServerEmu.Games.Navi
             bool flip = SortInputs(ref p0, ref p1, ref p2);
             double d = InternalIncircle(p0.Pos, p1.Pos, p2.Pos, checkPoint.Pos);
             if (flip) d = -d;
-            return (d > 0.0);
+            return d > 0.0;
         }
 
         private static double InternalIncircle(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
@@ -124,11 +130,6 @@ namespace MHServerEmu.Games.Navi
             double[] pc = { c.X, c.Y };
             double[] pd = { d.X, d.Y };
             return InCirlce.Robust(pa, pb, pc, pd);
-        }
-
-        internal static bool LineSide2D(NaviPoint a, NaviPoint b, Vector3 pos)
-        {
-            throw new NotImplementedException();
         }
     }
 }
