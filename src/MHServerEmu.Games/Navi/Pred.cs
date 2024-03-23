@@ -131,5 +131,16 @@ namespace MHServerEmu.Games.Navi
             double[] pd = { d.X, d.Y };
             return InCirlce.Robust(pa, pb, pc, pd);
         }
+
+        public static float CalcEarPower(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 point)
+        {
+            double incircle = InternalIncircle(p0, p1, p2, point);
+            double orient = InternalOrient2D(p0, p1, p2);
+
+            float power = (float)(incircle / orient);
+
+            return power;
+        }
+
     }
 }

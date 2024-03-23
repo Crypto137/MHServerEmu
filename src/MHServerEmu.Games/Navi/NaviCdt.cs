@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Navi
             _sectorSize = 0;
         }
 
-        internal void AddTriangle(NaviTriangle triangle)
+        public void AddTriangle(NaviTriangle triangle)
         {
             _lastTriangle ??= triangle;
 
@@ -776,9 +776,73 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        private void RemovePoint(NaviPoint point, NaviTriangle triangle)
+        public void RemovePoint(NaviPoint point, NaviTriangle triangle)
         {
-            throw new NotImplementedException();
+            NaviTriangleState triangleState = new (triangle);
+
+            List<NaviEar> listEar = new ();
+            FixedPriorityQueue<NaviEar> queueEar = new ();
+
+            NaviTriangle it = triangle;
+            NaviTriangle nextTriangle;
+            do
+            {
+                int oppoEdgeIndex = it.OpposedEdgeIndex(point);
+                NaviEar ear = new()
+                {
+                    Point = it.EdgePointCW(oppoEdgeIndex, 0),
+                    Edge = it.Edges[oppoEdgeIndex],
+                    PrevIndex = listEar.Count - 1,
+                    NextIndex = listEar.Count + 1
+                };
+                listEar.Add(ear);
+
+                nextTriangle = it.NextTriangleSharingPoint(point);
+                RemoveTriangle(it);
+                it = nextTriangle;
+            } while (it != null);
+
+            listEar[0].PrevIndex = listEar.Count - 1;
+            listEar[^1].NextIndex = 0;
+
+            foreach (var ear in listEar)
+            {
+                ear.CalcPower(listEar, point.Pos);
+                queueEar.Push(ear);
+            }
+
+            while (queueEar.Count > 3)
+            {
+                var ear = queueEar.Pop();
+
+                var prevEar = listEar[ear.PrevIndex];
+                var nextEar = listEar[ear.NextIndex];
+
+                NaviEdge prevEdge = new(prevEar.Point, nextEar.Point, 0);
+                NaviTriangle prevTri = new(prevEar.Edge, ear.Edge, prevEdge);
+                triangleState.RestoreState(prevTri);
+                AddTriangle(prevTri);
+
+                prevEar.NextIndex = ear.NextIndex;
+                nextEar.PrevIndex = ear.PrevIndex;
+
+                prevEar.Edge = prevEdge;
+
+                prevEar.CalcPower(listEar, point.Pos);
+                nextEar.CalcPower(listEar, point.Pos);
+
+                queueEar.Heapify();
+            }
+
+            var lastEar = queueEar.Top();
+            var prevLastEar = listEar[lastEar.PrevIndex];
+            var nextLastEar = listEar[lastEar.NextIndex];
+
+            NaviTriangle lastTriangle = new(prevLastEar.Edge, lastEar.Edge, nextLastEar.Edge);
+            triangleState.RestoreState(lastTriangle);
+            AddTriangle(lastTriangle);
+
+            point.ClearFlag(NaviPointFlags.Attached);
         }
     }
 }

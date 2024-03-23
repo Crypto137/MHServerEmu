@@ -38,6 +38,10 @@ namespace MHServerEmu.Games.Navi
         {
             Flags |= flag;
         }
+        public void ClearFlag(NaviPointFlags flag)
+        {
+            Flags &= ~flag;
+        }
 
         public bool TestFlag(NaviPointFlags flag)
         {
