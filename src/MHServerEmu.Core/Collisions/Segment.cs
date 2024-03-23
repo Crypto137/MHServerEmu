@@ -136,9 +136,48 @@ namespace MHServerEmu.Core.Collisions
             return Vector3.Dot(c1c2, c1c2);
         }
 
-        public static bool SegmentsIntersect2D(Vector3 a0, Vector3 b0, Vector3 a1, Vector3 b1)
+        public static bool SegmentsIntersect2D(Vector3 a0, Vector3 a1, Vector3 b0, Vector3 b1)
         {
-            throw new NotImplementedException();
+            float s1 = SignedDoubleTriangleArea2D(a0, a1, b1);
+            float s2 = SignedDoubleTriangleArea2D(a0, a1, b0);
+            if (s1 * s2 < 0.0f)
+            {
+                float s3 = SignedDoubleTriangleArea2D(b0, b1, a0);
+                float s4 = s3 + s2 - s1;
+                if (s3 * s4 < 0.0f) return true;
+            }
+            return false;
+        }
+
+        public static float SignedDoubleTriangleArea2D(Vector3 t0, Vector3 t1, Vector3 t2)
+        {
+            Vector3 v0 = t1 - t0;
+            Vector3 v1 = t2 - t0;
+            return Cross2D(v0, v1);
+        }
+
+        public static bool LineLineIntersect2D(Vector3 a0, Vector3 a1, Vector3 b0, Vector3 b1, out Vector3 outPoint)
+        {
+            Vector3 av = a1 - a0;
+            float ax = av.X;
+            float ay = av.Y;
+
+            float bx = b1.X - b0.X;
+            float by = b1.Y - b0.Y;
+            float cross = ax * by - ay * bx;
+
+            if (cross == 0)
+            {
+                outPoint = Vector3.Zero;
+                return false;
+            }
+
+            float cx = b0.X - a0.X;
+            float cy = b0.Y - a0.Y;
+            float t = (cx * by - cy * bx) / cross;
+
+            outPoint = a0 + av * t;
+            return true;
         }
     }
 
