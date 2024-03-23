@@ -674,9 +674,70 @@ namespace MHServerEmu.Games.Navi
             TriangulatepseudopolygonDelaunay(pseudoList1, p1, p0, edge, triangleState);
         }
 
-        private void TriangulatepseudopolygonDelaunay(List<NaviEdge> pseudoList, NaviPoint p0, NaviPoint p1, NaviEdge edge, NaviTriangleState triangleState)
+        private NaviEdge TriangulatepseudopolygonDelaunay(List<NaviEdge> pseudoList, NaviPoint p0, NaviPoint p1, NaviEdge edge, NaviTriangleState triangleState)
         {
-            throw new NotImplementedException();
+            NaviEdge edge0 = null;
+            NaviEdge edge1 = null;
+
+            if (pseudoList.Count > 2)
+            {
+                NaviEdge edgeC = pseudoList[0];                
+                NaviPoint pointC = (p0 != edgeC.Points[0]) ? edgeC.Points[0] : edgeC.Points[1];
+
+                int indexC = 0;
+                int count = pseudoList.Count;
+                NaviPoint pointI = pointC;
+                for (int i = 1; i < count - 1; i++)
+                {
+                    NaviEdge edgeI = pseudoList[i];
+                    pointI = (pointI != edgeI.Points[0]) ? edgeI.Points[0] : edgeI.Points[1];
+
+                    if (CircumcircleContainsPoint2D(p0, pointC, p1, pointI))
+                    {
+                        pointC = pointI;
+                        indexC = i;
+                    }
+                }
+
+                List<NaviEdge> pseudoList0 = new(pseudoList.GetRange(0, indexC + 1));
+                pseudoList.RemoveRange(0, indexC + 1);
+
+                List<NaviEdge> pseudoList1 = new(pseudoList);
+                pseudoList.Clear();
+
+                edge0 = TriangulatepseudopolygonDelaunay(pseudoList0, p0, pointC, null, triangleState);
+                edge1 = TriangulatepseudopolygonDelaunay(pseudoList1, pointC, p1, null, triangleState);
+            }
+
+            if (pseudoList.Count == 2)
+            {
+                edge ??= new(p0, p1, 0);
+
+                var e0 = pseudoList[0];
+                pseudoList.RemoveAt(0);
+
+                var e1 = pseudoList[0];
+                pseudoList.RemoveAt(0);
+
+                NaviTriangle triangle = new(edge, e0, e1);
+                triangleState.RestoreState(triangle);
+                AddTriangle(triangle);
+            }
+            else if (pseudoList.Count == 1)
+            {
+                edge = pseudoList[0];
+                pseudoList.RemoveAt(0);
+                return edge;
+            }
+            else if (pseudoList.Count == 0)
+            {
+                edge ??= new(p0, p1, 0);
+                NaviTriangle triangle = new(edge, edge0, edge1);
+                triangleState.RestoreState(triangle);
+                AddTriangle(triangle);
+            }
+
+            return edge;
         }
 
         private void SplitEdge(NaviEdge splitEdge, NaviEdge edge, Queue<NaviEdge> edges)
