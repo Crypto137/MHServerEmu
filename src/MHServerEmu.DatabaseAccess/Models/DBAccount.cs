@@ -36,6 +36,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         [JsonInclude]
         public Dictionary<long, DBAvatar> Avatars { get; private set; } = new();
 
+        [JsonIgnore]
         public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
 
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
