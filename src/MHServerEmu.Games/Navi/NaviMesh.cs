@@ -314,7 +314,10 @@ namespace MHServerEmu.Games.Navi
             {
                 var edge = edgeStack.Pop();
                 if (edge.TestFlag(NaviEdgeFlags.Constraint))
+                {
+                    NaviSystem.Logger.Debug($"[{edgeStack.Count}] edge {edge}");
                     NaviCdt.RemoveEdge(edge);
+                }
             }
 
             if (removeExterior) _exteriorSeedEdge = null;

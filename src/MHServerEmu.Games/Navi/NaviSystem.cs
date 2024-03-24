@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.Navi
     public class NaviSystem
     {
         public bool Log = true;
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public Region Region { get; private set; }
         public List<NaviErrorReport> ErrorLog { get; private set; } = new ();
 
