@@ -290,10 +290,7 @@ namespace MHServerEmu.Games.Navi
                 return true;
             }
             else
-            {
-                outTriangle = null;
                 return false;
-            }
         }
 
         public NaviPoint AddPointProjZ(Vector3 pos, bool split = true)
