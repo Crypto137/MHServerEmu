@@ -22,7 +22,6 @@ namespace MHServerEmu.Games.Navi
         private NaviTriangle[] _sectors;
         private NaviVertexLookupCache _vertexLookupCache;
         private NaviTriangle _lastTriangle;
-        private int _triangleCount;
 
         public NaviCdt(NaviSystem navi, NaviVertexLookupCache naviVertexLookupCache)
         {
@@ -65,7 +64,7 @@ namespace MHServerEmu.Games.Navi
             _lastTriangle ??= triangle;
 
             TriangleList.AddBack(triangle);
-            _triangleCount++;
+            TriangleCount++;
 
             AddTriangleFastLookupRef(triangle);
         }
@@ -82,7 +81,7 @@ namespace MHServerEmu.Games.Navi
             triangle.Detach();
 
             TriangleList.Remove(triangle);
-            _triangleCount--;
+            TriangleCount--;
 
             if (_lastTriangle == triangle)
                 _lastTriangle = TriangleList.Head;
@@ -474,7 +473,7 @@ namespace MHServerEmu.Games.Navi
             NaviTriangle t0 = edge.Triangles[0];
             NaviTriangle t1 = edge.Triangles[1];
 
-            NaviEdge newEdge = new (t0.OpposedVertex(edge), t1.OpposedVertex(edge), edge.EdgeFlags, new());
+            NaviEdge newEdge = new (t0.OpposedVertex(edge), t1.OpposedVertex(edge), edge.EdgeFlags);
 
             int edgeIndex0 = t0.EdgeIndex(edge);
             int edgeIndex1 = t1.EdgeIndex(edge);
