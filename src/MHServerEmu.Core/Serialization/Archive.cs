@@ -24,6 +24,10 @@ namespace MHServerEmu.Core.Serialization
 
         private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
 
+        // C# coded stream implementation is buffered, so we have to use the same stream for the whole archive
+        private readonly CodedOutputStream _cos;
+        private readonly CodedInputStream _cis;
+
         public ArchiveSerializeType SerializeType { get; }
 
         public bool IsMigration { get => SerializeType == ArchiveSerializeType.Migration; }
@@ -65,6 +69,7 @@ namespace MHServerEmu.Core.Serialization
             if (serializeType != ArchiveSerializeType.Replication) throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
             _bufferStream = new(1024);
+            _cos = CodedOutputStream.CreateInstance(_bufferStream);
 
             SerializeType = serializeType;
             _replicationPolicy = replicationPolicy;
@@ -82,6 +87,7 @@ namespace MHServerEmu.Core.Serialization
             if (serializeType != ArchiveSerializeType.Replication) throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
             _bufferStream = new(buffer);
+            _cis = CodedInputStream.CreateInstance(_bufferStream);
 
             SerializeType = serializeType;
             IsPacking = false;
@@ -89,6 +95,8 @@ namespace MHServerEmu.Core.Serialization
             // BuildCurrentGameplayVersionMask()
             ReadHeader();
         }
+
+        public MemoryStream AccessAutoBuffer() => _bufferStream;
 
         private bool WriteHeader()
         {
@@ -367,19 +375,22 @@ namespace MHServerEmu.Core.Serialization
 
         public bool WriteSingleByte(byte value)
         {
-            using (BinaryWriter writer = new(_bufferStream))
-            {
-                writer.Write(value);
-                return true;
-            }
+            _cos.WriteRawByte(value);
+            _cos.Flush();
+            return true;
         }
 
-        public bool ReadSingleByte(ref byte value)
+        public bool ReadSingleByte(ref byte ioData)
         {
-            using (BinaryReader reader = new(_bufferStream))
+            try
             {
-                value = reader.ReadByte();
+                ioData = _cis.ReadRawByte();
                 return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(ReadSingleByte));
+                return false;
             }
         }
 
@@ -392,68 +403,84 @@ namespace MHServerEmu.Core.Serialization
 
         public bool WriteUnencodedStream(uint value)
         {
-            using (BinaryWriter writer = new(_bufferStream))
-            {
-                writer.Write(value);
-                return true;
-            }
+            _cos.WriteRawBytes(BitConverter.GetBytes(value));
+            return true;
         }
 
         public bool WriteUnencodedStream(ulong value)
         {
-            using (BinaryWriter writer = new(_bufferStream))
-            {
-                writer.Write(value);
-                return true;
-            }
+            _cos.WriteRawBytes(BitConverter.GetBytes(value));
+            return true;
         }
 
         public bool ReadUnencodedStream(ref uint value)
         {
-            using (BinaryReader reader = new(_bufferStream))
+            try
             {
-                value = reader.ReadUInt32();
+                value = BitConverter.ToUInt32(_cis.ReadRawBytes(4));
                 return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(ReadUnencodedStream));
+                return false;
             }
         }
 
         public bool ReadUnencodedStream(ref ulong value)
         {
-            using (BinaryReader reader = new(_bufferStream))
+            try
             {
-                value = reader.ReadUInt64();
+                value = BitConverter.ToUInt64(_cis.ReadRawBytes(8));
                 return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(ReadUnencodedStream));
+                return false;
             }
         }
 
         public bool WriteVarint(uint value)
         {
-            var cos = CodedOutputStream.CreateInstance(_bufferStream);
-            cos.WriteRawVarint32(value);
-            cos.Flush();
+            _cos.WriteRawVarint32(value);
+            _cos.Flush();
             return true;
         }
 
         public bool WriteVarint(ulong ioData)
         {
-            var cos = CodedOutputStream.CreateInstance(_bufferStream);
-            cos.WriteRawVarint64(ioData);
-            cos.Flush();
+            _cos.WriteRawVarint64(ioData);
+            _cos.Flush();
             return true;
         }
 
         public bool ReadVarint(ref uint value)
         {
-            var cis = CodedInputStream.CreateInstance(_bufferStream);
-            value = cis.ReadRawVarint32();
-            return true;
+            try
+            {
+                value = _cis.ReadRawVarint32();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(ReadVarint));
+                return false;
+            }
         }
 
         public bool ReadVarint(ref ulong ioData)
         {
-            var cis = CodedInputStream.CreateInstance(_bufferStream);
-            ioData = cis.ReadRawVarint64();
-            return true;
+            try
+            {
+                ioData = _cis.ReadRawVarint64();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(ReadVarint));
+                return false;
+            }
         }
 
         #endregion
