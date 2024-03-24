@@ -69,7 +69,7 @@ namespace MHServerEmu.PlayerManagement
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"SessionId: {Id}");
+            sb.AppendLine($"SessionId: 0x{Id:X}");
             sb.AppendLine($"Account: {Account}");
             sb.AppendLine($"Downloader: {Downloader}");
             sb.AppendLine($"Locale: {Locale}");

@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Globalization;
+using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
@@ -12,12 +13,14 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("client", "Allows you to interact with clients.", AccountUserLevel.Admin)]
     public class ClientCommands : CommandGroup
     {
+        private static readonly char[] HexPrefix = new char[] { '0', 'x' };
+
         [Command("info", "Usage: client info [sessionId]", AccountUserLevel.Admin)]
         public string Info(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help client info' to get help.";
 
-            if (ulong.TryParse(@params[0], out ulong sessionId) == false)
+            if (ulong.TryParse(@params[0].TrimStart(HexPrefix), NumberStyles.HexNumber, null, out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
@@ -25,7 +28,7 @@ namespace MHServerEmu.Commands.Implementations
                 return "Failed to connect to the player manager.";
 
             if (playerManager.TryGetSession(sessionId, out ClientSession session) == false)
-                return $"SessionId {sessionId} not found.";
+                return $"SessionId 0x{sessionId:X} not found.";
 
             return session.ToString();
         }
@@ -51,7 +54,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (@params.Length < 3) return "Invalid arguments. Type 'help client send' to get help.";
 
-            if (ulong.TryParse(@params[0], out ulong sessionId) == false)
+            if (ulong.TryParse(@params[0].TrimStart(HexPrefix), NumberStyles.HexNumber, null, out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
@@ -59,7 +62,7 @@ namespace MHServerEmu.Commands.Implementations
                 return "Failed to connect to the player manager.";
 
             if (playerManager.TryGetClient(sessionId, out FrontendClient target) == false)
-                return $"Client for sessionId {sessionId} not found";
+                return $"Client for sessionId 0x{sessionId:X} not found";
 
             switch (@params[1].ToLower())
             {
