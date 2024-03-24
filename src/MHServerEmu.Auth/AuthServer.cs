@@ -96,6 +96,11 @@ namespace MHServerEmu.Auth
             Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
         }
 
+        public void Handle(ITcpClient client, MailboxMessage message)
+        {
+            Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
+        }
+
         public string GetStatus()
         {
             if (_listener == null || _listener.IsListening == false)

@@ -25,43 +25,18 @@ namespace MHServerEmu.Games.Powers
             _game = game;
         }
 
-        public void ReceiveMessage(PlayerConnection playerConnection, MessagePackage message)
+        public void ReceiveMessage(PlayerConnection playerConnection, MailboxMessage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageTryActivatePower:
-                    if (message.TryDeserialize<NetMessageTryActivatePower>(out var tryActivatePower))
-                        OnTryActivatePower(playerConnection, tryActivatePower);
-                    break;
+                case ClientToGameServerMessage.NetMessageTryActivatePower:              OnTryActivatePower(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessagePowerRelease:                  OnPowerRelease(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageTryCancelPower:                OnTryCancelPower(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageTryCancelActivePower:          OnTryCancelActivePower(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer: OnContinuousPowerUpdate(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:             OnAssignStolenPower(playerConnection, message); break;
 
-                case ClientToGameServerMessage.NetMessagePowerRelease:
-                    if (message.TryDeserialize<NetMessagePowerRelease>(out var powerRelease))
-                        OnPowerRelease(playerConnection, powerRelease);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageTryCancelPower:
-                    if (message.TryDeserialize<NetMessageTryCancelPower>(out var tryCancelPower))
-                        OnTryCancelPower(playerConnection, tryCancelPower);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageTryCancelActivePower:
-                    if (message.TryDeserialize<NetMessageTryCancelActivePower>(out var tryCancelActivePower))
-                        OnTryCancelActivePower(playerConnection, tryCancelActivePower);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                    if (message.TryDeserialize<NetMessageContinuousPowerUpdateToServer>(out var continuousPowerUpdate))
-                        OnContinuousPowerUpdate(playerConnection, continuousPowerUpdate);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAssignStolenPower:
-                    if (message.TryDeserialize<NetMessageAssignStolenPower>(out var assignStolenPower))
-                        OnAssignStolenPower(playerConnection, assignStolenPower);
-                    break;
-
-                default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
-                    break;
+                default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
@@ -101,8 +76,11 @@ namespace MHServerEmu.Games.Powers
 
         #region Message Handling
 
-        private void OnTryActivatePower(PlayerConnection playerConnection, NetMessageTryActivatePower tryActivatePower)
+        private bool OnTryActivatePower(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var tryActivatePower = message.As<NetMessageTryActivatePower>();
+            if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
+
             /* ActivatePower using TryActivatePower data
             ActivatePowerArchive activatePowerArchive = new(tryActivatePowerMessage, client.LastPosition);
             client.SendMessage(muxId, new(NetMessageActivatePower.CreateBuilder()
@@ -119,7 +97,7 @@ namespace MHServerEmu.Games.Powers
                 Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
                 var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
                 _game.EventManager.AddEvent(playerConnection, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
-                return;
+                return true;
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
@@ -157,6 +135,8 @@ namespace MHServerEmu.Games.Powers
 
                 TestHit(playerConnection, archive.TargetEntityId, (int)archive.DamagePhysical);
             }
+
+            return true;
         }
 
         private void TestHit(PlayerConnection playerConnection, ulong entityId, int damage)
@@ -220,27 +200,40 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void OnPowerRelease(PlayerConnection playerConnection, NetMessagePowerRelease powerRelease)
+        private bool OnPowerRelease(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var powerRelease = message.As<NetMessagePowerRelease>();
+            if (powerRelease == null) return Logger.WarnReturn(false, $"OnPowerRelease(): Failed to retrieve message");
+
             Logger.Trace($"Received PowerRelease for {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
+            return true;
         }
 
-        private void OnTryCancelPower(PlayerConnection playerConnection, NetMessageTryCancelPower tryCancelPower)
+        private bool OnTryCancelPower(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var tryCancelPower = message.As<NetMessageTryCancelPower>();
+            if (tryCancelPower == null) return Logger.WarnReturn(false, $"OnTryCancelPower(): Failed to retrieve message");
+
             string powerPrototypePath = GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId);
             Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("TravelPower/"))
                 _game.EventManager.AddEvent(playerConnection, EventEnum.EndTravel, 0, tryCancelPower.PowerPrototypeId);
+
+            return true;
         }
 
-        private void OnTryCancelActivePower(PlayerConnection playerConnection, NetMessageTryCancelActivePower tryCancelActivePower)
+        private bool OnTryCancelActivePower(PlayerConnection playerConnection, MailboxMessage message)
         {
             Logger.Trace("Received TryCancelActivePower");
+            return true;
         }
 
-        private void OnContinuousPowerUpdate(PlayerConnection playerConnection, NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
+        private bool OnContinuousPowerUpdate(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var continuousPowerUpdate = message.As<NetMessageContinuousPowerUpdateToServer>();
+            if (continuousPowerUpdate == null) return Logger.WarnReturn(false, $"OnContinuousPowerUpdate(): Failed to retrieve message");
+
             var powerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
@@ -248,13 +241,20 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("TravelPower/"))
                 HandleTravelPower(playerConnection, powerPrototypeId);
             // Logger.Trace(continuousPowerUpdate.ToString());
+
+            return true;
         }
 
-        private void OnAssignStolenPower(PlayerConnection playerConnection, NetMessageAssignStolenPower assignStolenPower)
+        private bool OnAssignStolenPower(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var assignStolenPower = message.As<NetMessageAssignStolenPower>();
+            if (assignStolenPower == null) return Logger.WarnReturn(false, $"OnAssignStolenPower(): Failed to retrieve message");
+
             PropertyParam param = Property.ToParam(PropertyEnum.AvatarMappedPower, 0, (PrototypeId)assignStolenPower.StealingPowerProtoId);
             playerConnection.SendMessage(Property.ToNetMessageSetProperty((ulong)HardcodedAvatarPropertyCollectionReplicationId.Rogue,
                 new(PropertyEnum.AvatarMappedPower, param), (PrototypeId)assignStolenPower.StolenPowerProtoId));
+
+            return true;
         }
 
         #endregion

@@ -4,15 +4,16 @@ using MHServerEmu.Core.Network.Tcp;
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// Container for incoming <see cref="MessagePackage"/> instances.
+    /// Deserializes <see cref="MessagePackage"/> instances and stores them as <see cref="MailboxMessage"/> until retrieval.
     /// </summary>
     public class CoreNetworkMailbox<TClient> where TClient: ITcpClient
     {
-        // NOTE: The current implementation is just a wrapper around Queue.
-        // We should do deserialization when we receive a message rather than during game update.
+        // TODO: Optimize this for cases when there is not enough time to deserialize messages between game updates
+        // TODO: Implement mailbox serialization to offload this from game update
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Queue<(TClient, MessagePackage)> _messageQueue = new();
+        private readonly Queue<(TClient, MailboxMessage)> _messageQueue = new();
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="CoreNetworkMailbox{TClient}"/> instance has any pending messages.
@@ -24,16 +25,16 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void Post(TClient client, MessagePackage message)
         {
-            _messageQueue.Enqueue((client, message));
+            _messageQueue.Enqueue((client, new(message)));
         }
 
         /// <summary>
         /// Retrieves the next queued <see cref="MessagePackage"/> instance.
         /// </summary>
-        public (TClient, MessagePackage) PopNextMessage()
+        public (TClient, MailboxMessage) PopNextMessage()
         {
             if (_messageQueue.TryDequeue(out var result) == false)
-                return Logger.WarnReturn<(TClient, MessagePackage)>(default, $"PopNextMessage(): Failed to dequeue");
+                return Logger.WarnReturn<(TClient, MailboxMessage)>(default, $"PopNextMessage(): Failed to dequeue");
 
             return result;
         }

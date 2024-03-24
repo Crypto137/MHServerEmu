@@ -32,30 +32,15 @@ namespace MHServerEmu.Grouping
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
-            var client = (FrontendClient)tcpClient;
+            // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
+            // that includes a single message - GetPlayerInfoByName. If we ever receive it,
+            // it should end up here.
+            message.Protocol = typeof(ClientToGroupingManagerMessage);
 
-            // Handle messages routed from the PlayerManager
-            switch ((ClientToGameServerMessage)message.Id)
+            switch ((ClientToGroupingManagerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageReadyForGameJoin:
-                    // NOTE: We haven't really seen this, but there's a ClientToGroupingManager protocol
-                    // that includes a single message - GetPlayerInfoByName. If it is ever sent, it's
-                    // most likely going to end up here.
-                    Logger.Warn("Handle(): Received what is most likely unhandled GetPlayerInfoByName message");
-                    break;
-
-                case ClientToGameServerMessage.NetMessageChat:
-                    if (message.TryDeserialize<NetMessageChat>(out var chat))
-                        OnChat(client, chat);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageTell:
-                    if (message.TryDeserialize<NetMessageTell>(out var tell))
-                        OnTell(client, tell);
-                    break;
-
                 default:
-                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"Handle(): Unhandled {(ClientToGroupingManagerMessage)message.Id} [{message.Id}]");
                     break;
             }
         }
@@ -64,6 +49,20 @@ namespace MHServerEmu.Grouping
         {
             foreach (MessagePackage message in messages)
                 Handle(client, message);
+        }
+
+        public void Handle(ITcpClient tcpClient, MailboxMessage message)
+        {
+            var client = (FrontendClient)tcpClient;
+
+            // Handle messages routed from games
+            switch ((ClientToGameServerMessage)message.Id)
+            {
+                case ClientToGameServerMessage.NetMessageChat: OnChat(client, message); break;
+                case ClientToGameServerMessage.NetMessageTell: OnTell(client, message); break;
+
+                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
+            }
         }
 
         public string GetStatus()
@@ -129,11 +128,14 @@ namespace MHServerEmu.Grouping
 
         #region Message Handling
 
-        private void OnChat(FrontendClient client, NetMessageChat chat)
+        private bool OnChat(FrontendClient client, MailboxMessage message)
         {
+            var chat = message.As<NetMessageChat>();
+            if (chat == null) return Logger.WarnReturn(false, $"OnChat(): Failed to retrieve message");
+
             // Try to parse the message as a command first
             if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
-                return;
+                return true;
 
             // Limit broadcast and metagame channels to users with moderator privileges and higher
             if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
@@ -148,7 +150,7 @@ namespace MHServerEmu.Grouping
                     .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED)
                     .Build());
 
-                return;
+                return true;
             }
 
             // Broadcast the message if everything's okay
@@ -160,16 +162,23 @@ namespace MHServerEmu.Grouping
                 .SetFromPlayerName(client.Session.Account.PlayerName)
                 .SetTheMessage(chat.TheMessage)
                 .Build()));
+
+            return true;
         }
 
-        private void OnTell(FrontendClient client, NetMessageTell tell)
+        private bool OnTell(FrontendClient client, MailboxMessage message)
         {
+            var tell = message.As<NetMessageTell>();
+            if (tell == null) return Logger.WarnReturn(false, $"OnTell(): Failed to retrieve message");
+
             Logger.Trace($"Received tell for {tell.TargetPlayerName}");
 
             // Respond with an error for now
             client.SendMessage(MuxChannel, ChatErrorMessage.CreateBuilder()
                 .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
                 .Build());
+
+            return true;
         }
 
         #endregion
