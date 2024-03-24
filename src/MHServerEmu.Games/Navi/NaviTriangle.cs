@@ -1,5 +1,5 @@
 ﻿using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -10,6 +10,12 @@ namespace MHServerEmu.Games.Navi
         Markup = 1 << 1,
     }
 
+    public class TriangleList : InvasiveList<NaviTriangle>
+    {
+        public TriangleList(int maxIterators = 1) : base(maxIterators) { }
+        public override InvasiveListNode<NaviTriangle> GetInvasiveListNode(NaviTriangle element, int listId) => element.InvasiveListNode;
+    }
+
     public class NaviTriangle
     {
         public NaviEdge[] Edges { get; private set; }
@@ -17,6 +23,7 @@ namespace MHServerEmu.Games.Navi
         public NaviTriangleFlags Flags { get; private set; }
         public PathFlags PathingFlags { get; set; }
         public ContentFlagCounts ContentFlagCounts { get; set; }
+        public InvasiveListNode<NaviTriangle> InvasiveListNode { get; private set; }
 
         public NaviTriangle(NaviEdge e0, NaviEdge e1, NaviEdge e2)
         {
@@ -25,6 +32,7 @@ namespace MHServerEmu.Games.Navi
             Edges[1] = e1;
             Edges[2] = e2;
             ContentFlagCounts = new();
+            InvasiveListNode = new();
             UpdateEdgeSideFlags();
             Attach();
         }

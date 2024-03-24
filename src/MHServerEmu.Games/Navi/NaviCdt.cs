@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Navi
         public Aabb Bounds { get; private set; }
         private float _extentsSize;
 
-        public InvasiveList<NaviTriangle> TriangleList { get; private set; }
+        public TriangleList TriangleList { get; private set; }
         public uint Serial { get; set; }
 
         private NaviSystem _navi;
@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Navi
             _navi = navi;
             TriangleCount = 0;
             Bounds = Aabb.Zero;
-            TriangleList = new(1);
+            TriangleList = new();
             _vertexLookupCache = naviVertexLookupCache;
             _sectors = Array.Empty<NaviTriangle>();
         }
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Navi
             _triangleCount--;
 
             if (_lastTriangle == triangle)
-                _lastTriangle = TriangleList.Head();
+                _lastTriangle = TriangleList.Head;
         }
 
         private void RemoveTriangleFastLookupRef(NaviTriangle triangle)
@@ -713,13 +713,13 @@ namespace MHServerEmu.Games.Navi
             {
                 edge ??= new(p0, p1, 0);
 
-                var e0 = pseudoList[0];
+                edge0 = pseudoList[0];
                 pseudoList.RemoveAt(0);
 
-                var e1 = pseudoList[0];
+                edge1 = pseudoList[0];
                 pseudoList.RemoveAt(0);
 
-                NaviTriangle triangle = new(edge, e0, e1);
+                NaviTriangle triangle = new(edge, edge0, edge1);
                 triangleState.RestoreState(triangle);
                 AddTriangle(triangle);
             }
@@ -727,7 +727,6 @@ namespace MHServerEmu.Games.Navi
             {
                 edge = pseudoList[0];
                 pseudoList.RemoveAt(0);
-                return edge;
             }
             else if (pseudoList.Count == 0)
             {
