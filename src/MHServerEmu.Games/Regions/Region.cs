@@ -175,12 +175,11 @@ namespace MHServerEmu.Games.Regions
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             if (NaviSystem.Initialize(this) == false) return false;
-            if (Bound.IsZero() == false)
-                if (settings.GenerateAreas == false)
-                {
-                    InitializeSpacialPartition(Bound);
-                    NaviMesh.Initialize(Bound, 1000.0f, this);
-                }
+            if (Bound.IsZero() == false) {
+                if (settings.GenerateAreas) Logger.Warn("Bound is not Zero with GenerateAreas On");                
+                InitializeSpacialPartition(Bound);
+                NaviMesh.Initialize(Bound, 1000.0f, this);
+            }
 
             SpawnMarkerRegistry.Initialize();
             ProgressionGraph = new();
@@ -339,7 +338,7 @@ namespace MHServerEmu.Games.Regions
 
             Bound = boundingBox;
 
-            // NaviMesh.Initialize(Bound, 1000.0f, this);
+            NaviMesh.Initialize(Bound, 1000.0f, this);
             InitializeSpacialPartition(Bound);
         }
 

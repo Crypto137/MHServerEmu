@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Common
             if (element == null) return false;
             var node = GetInvasiveListNode(element, Id);
             if (node == null) return false;
-            return node.Next != null || node.Prev != null || Head.Equals(element);
+            return node.Next != null || node.Prev != null || element.Equals(Head);
         }
 
         private void RegisterIterator(Iterator iterator)

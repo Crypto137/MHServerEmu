@@ -6,13 +6,13 @@ namespace MHServerEmu.Games.Navi
     public class NaviVertexLookupCache
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public struct VertexCacheKey
+        public class VertexCacheKey
         {
             public NaviPoint Point;
             public int X;
             public int Y;
 
-            public override readonly bool Equals(object obj)
+            public override bool Equals(object obj)
             {
                 if (obj is not VertexCacheKey other) return false;
                 if (X != other.X || Y != other.Y) return false;
@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Navi
                 return Pred.NaviPointCompare2D(Point.Pos, other.Point.Pos);
             }
 
-            public override readonly int GetHashCode()
+            public override int GetHashCode()
             {
                 const ulong Magic = 3636507997UL;
                 ulong xm = (ulong)X * Magic;
@@ -31,13 +31,13 @@ namespace MHServerEmu.Games.Navi
             }
 
             public static bool operator ==(VertexCacheKey left, VertexCacheKey right)
-            {
+            {                
                 return left.Equals(right);
             }
 
             public static bool operator !=(VertexCacheKey left, VertexCacheKey right)
-            {
-                return !(left == right);
+            { 
+                return !left.Equals(right);
             }
         }
 
@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Navi
         public NaviPoint FindVertex(Vector3 pos)
         {
             VertexCacheKey key = FindVertexKey(pos);
-            return (key != default) ? key.Point : default;
+            return key?.Point;
         }
 
     }

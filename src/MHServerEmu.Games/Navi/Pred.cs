@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Navi
         public static double LineRelationship2D(NaviPoint p0, NaviPoint p1, Vector3 pos)
         {
             bool flip = SortInputs(ref p0, ref p1);
-            double d = InternalOrient2D(p1.Pos, p0.Pos, pos);
+            double d = InternalOrient2D(p1.Pos, p0.Pos, pos); // Debug Crashed here!!!
             return flip ? -d : d;
         }
 
