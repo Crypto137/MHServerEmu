@@ -216,7 +216,40 @@ namespace MHServerEmu.Core.Serialization
 
         public bool Transfer(ref Vector3 ioData)
         {
-            throw new NotImplementedException();
+            // TODO: FavorSpeed
+            bool success = true;
+
+            if (IsPacking)
+            {
+                uint x = BitConverter.SingleToUInt32Bits(ioData.X);
+                uint y = BitConverter.SingleToUInt32Bits(ioData.Y);
+                uint z = BitConverter.SingleToUInt32Bits(ioData.Z);
+
+                success &= Transfer_(ref x);
+                success &= Transfer_(ref y);
+                success &= Transfer_(ref z);
+
+                return success;
+            }
+            else
+            {
+                uint x = 0;
+                uint y = 0;
+                uint z = 0;
+
+                success &= Transfer_(ref x);
+                success &= Transfer_(ref y);
+                success &= Transfer_(ref z);
+
+                if (success)
+                {
+                    ioData.X = BitConverter.UInt32BitsToSingle(x);
+                    ioData.Y = BitConverter.UInt32BitsToSingle(y);
+                    ioData.Z = BitConverter.UInt32BitsToSingle(z);
+                }
+
+                return success;
+            }
         }
 
         public bool TransferFloatFixed(ref float ioData, int precision)
