@@ -550,6 +550,7 @@ namespace MHServerEmu.Core.Serialization
         public bool WriteUnencodedStream(uint value)
         {
             _cos.WriteRawBytes(BitConverter.GetBytes(value));
+            _cos.Flush();
             return true;
         }
 
@@ -559,6 +560,7 @@ namespace MHServerEmu.Core.Serialization
         public bool WriteUnencodedStream(ulong value)
         {
             _cos.WriteRawBytes(BitConverter.GetBytes(value));
+            _cos.Flush();
             return true;
         }
 
