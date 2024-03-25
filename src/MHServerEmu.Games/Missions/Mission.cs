@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Missions
         public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
         {            
             State = (MissionState)stream.ReadRawInt32();
-            TimeExpireCurrentState = Clock.GameTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
+            TimeExpireCurrentState = new(stream.ReadRawInt64() * 10);
             PrototypeId = stream.ReadPrototypeRef<Prototype>();
             Random = stream.ReadRawInt32();
 

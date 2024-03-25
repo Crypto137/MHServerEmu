@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Missions
             ObjectivesIndex = stream.ReadRawByte();
             ObjectiveIndex = stream.ReadRawByte();
             ObjectiveState = (MissionObjectiveState)stream.ReadRawInt32();
-            ObjectiveStateExpireTime = Clock.GameTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
+            ObjectiveStateExpireTime = new(stream.ReadRawInt64() * 10);
 
             InteractedEntities = new InteractionTag[stream.ReadRawVarint64()];
             for (int i = 0; i < InteractedEntities.Length; i++)
