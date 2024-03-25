@@ -5,7 +5,7 @@ using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Core.VectorMath
 {
-    public class Orientation
+    public class Orientation : IEquatable<Orientation>
     {
         public float Yaw { get; set; }
         public float Pitch { get; set; }
@@ -85,6 +85,23 @@ namespace MHServerEmu.Core.VectorMath
         public static Orientation operator +(Orientation a, Orientation b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch, a.Roll + b.Roll);
         public static Orientation operator -(Orientation a, Orientation b) => new(a.Yaw - b.Yaw, a.Pitch - b.Pitch, a.Roll - b.Roll);
 
+        public override int GetHashCode() => (Yaw, Pitch, Roll).GetHashCode();
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            Orientation other = obj as Orientation;
+            if (other == null) return false;
+            return Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
+        }
+
+        public bool Equals(Orientation other)
+        {
+            if (ReferenceEquals(this, other)) return true;
+            if (other == null) return false;
+            return Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
+        }
+
         public static bool IsFinite(Orientation v)
         {
             return float.IsFinite(v.Yaw) && float.IsFinite(v.Pitch) && float.IsFinite(v.Roll);
@@ -131,6 +148,5 @@ namespace MHServerEmu.Core.VectorMath
         public override string ToString() => $"({Yaw:0.00}, {Pitch:0.00}, {Roll:0.00})";
 
         public string ToStringNames() => $"yaw :{Yaw:0.00} pich:{Pitch:0.00} roll:{Roll:0.00}";
-
     }
 }
