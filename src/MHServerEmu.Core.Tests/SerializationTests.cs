@@ -16,15 +16,16 @@ namespace MHServerEmu.Core.Tests
             _testOutputHelper = testOutputHelper;
         }
 
-        [Fact]
-        public void Archive_Transfer_PacksAndUnpacksPrimitives()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(5)]
+        [InlineData(6)]
+        [InlineData(64)]
+        public void Archive_Transfer_PacksAndUnpacksBools(int numBools)
         {
-            const ushort TestUShort = 1111;
-            const int TestInt = 2222;
-            const uint TestUInt = 3333;
-            const long TestLong = 4444;
-            const ulong TestULong = 5555;
-            const float TestFloat = 6666.666f;
+            bool[] testBools = new bool[numBools];
+            for (int i = 0; i < testBools.Length; i++)
+                testBools[i] = i % 2 == 0;  // true/false/true/false pattern
 
             byte[] buffer;
 
@@ -32,24 +33,49 @@ namespace MHServerEmu.Core.Tests
             {
                 bool success = true;
 
-                ushort ushortToPack = TestUShort;
+                for (int i = 0; i < testBools.Length; i++)
+                {
+                    bool boolToEncode = testBools[i];
+                    success &= archive.Transfer(ref boolToEncode);
+                }
+
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                for (int i = 0; i < testBools.Length; i++)
+                {
+                    bool boolToDecode = false;
+                    success &= archive.Transfer(ref boolToDecode);
+                    Assert.Equal(testBools[i], boolToDecode);
+                }
+
+                Assert.True(success);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(100)]
+        public void Archive_Transfer_PacksAndUnpacksUShort(ushort testUShort)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                ushort ushortToPack = testUShort;
                 success &= archive.Transfer(ref ushortToPack);
-
-                int intToPack = TestInt;
-                success &= archive.Transfer(ref intToPack);
-
-                uint uintToPack = TestUInt;
-                success &= archive.Transfer(ref uintToPack);
-
-                long longToPack = TestLong;
-                success &= archive.Transfer(ref longToPack);
-
-                ulong ulongToPack = TestULong;
-                success &= archive.Transfer(ref ulongToPack);
-
-                float floatToPack = TestFloat;
-                success &= archive.Transfer(ref floatToPack);
-
                 Assert.True(success);
 
                 buffer = archive.AccessAutoBuffer().ToArray();
@@ -65,41 +91,303 @@ namespace MHServerEmu.Core.Tests
 
                 ushort ushortToUnpack = 0;
                 success &= archive.Transfer(ref ushortToUnpack);
-                Assert.Equal(TestUShort, ushortToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testUShort, ushortToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(100)]
+        [InlineData(-200)]
+        public void Archive_Transfer_PacksAndUnpacksInt(int testInt)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                int intToPack = testInt;
+                success &= archive.Transfer(ref intToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
                 int intToUnpack = 0;
                 success &= archive.Transfer(ref intToUnpack);
-                Assert.Equal(TestInt, intToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testInt, intToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(100)]
+        public void Archive_Transfer_PacksAndUnpacksUInt(uint testUInt)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                uint uintToPack = testUInt;
+                success &= archive.Transfer(ref uintToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
                 uint uintToUnpack = 0;
                 success &= archive.Transfer(ref uintToUnpack);
-                Assert.Equal(TestUInt, uintToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testUInt, uintToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(100)]
+        [InlineData(429496729600)]
+        [InlineData(-200)]
+        public void Archive_Transfer_PacksAndUnpacksLong(long testLong)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                long longToPack = testLong;
+                success &= archive.Transfer(ref longToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
                 long longToUnpack = 0;
                 success &= archive.Transfer(ref longToUnpack);
-                Assert.Equal(TestLong, longToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testLong, longToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(100)]
+        [InlineData(429496729600)]
+        public void Archive_Transfer_PacksAndUnpacksULong(ulong testULong)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                ulong ulongToPack = testULong;
+                success &= archive.Transfer(ref ulongToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
                 ulong ulongToUnpack = 0;
                 success &= archive.Transfer(ref ulongToUnpack);
-                Assert.Equal(TestULong, ulongToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testULong, ulongToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(0f)]
+        [InlineData(100f)]
+        [InlineData(222.222f)]
+        [InlineData(-333.33f)]
+        public void Archive_Transfer_PacksAndUnpacksFloat(float testFloat)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                float floatToPack = testFloat;
+                success &= archive.Transfer(ref floatToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                float floatToUnpack = 0;
+                success &= archive.Transfer(ref floatToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testFloat, floatToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("hello world")]
+        [InlineData("привет мир")]
+        [InlineData("1234567890")]
+        public void Archive_Transfer_PacksAndUnpacksString(string testString)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                string stringToPack = testString;
+                success &= archive.Transfer(ref stringToPack);
+
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                string stringToUnpack = null;
+                success &= archive.Transfer(ref stringToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testString, stringToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(2000f, 1250f, 750f)]
+        [InlineData(128.333f, -524.12f, 423.1253f)]
+        public void Archive_Transfer_PacksAndUnpacksVector(float x, float y, float z)
+        {
+            Vector3 testVector = new(x, y, z);
+
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                Vector3 vectorToPack = new(testVector);
+                success &= archive.Transfer(ref vectorToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                Vector3 vectorToUnpack = Vector3.Zero;
+                success &= archive.Transfer(ref vectorToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testVector, vectorToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(1f, 0)]
+        [InlineData(2.125f, 3)]
+        [InlineData(3.328125f, 6)]
+        [InlineData(-3.328125f, 6)]
+        public void Archive_Transfer_PacksAndUnpacksFixedFloat(float testFloat, int precision)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                float floatToPack = testFloat;
+                success &= archive.TransferFloatFixed(ref floatToPack, precision);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
                 float floatToUnpack = 0f;
-                success &= archive.Transfer(ref floatToUnpack);
-                Assert.Equal(TestFloat, floatToUnpack);
-
+                success &= archive.TransferFloatFixed(ref floatToUnpack, precision);
                 Assert.True(success);
+
+                Assert.Equal(testFloat, floatToUnpack);
             }
         }
 
-        [Fact]
-        public void Archive_Transfer_PacksAndUnpacksBools()
+        [Theory]
+        [InlineData(4.375f, 5.500f, 6.625f, 3)]
+        [InlineData(-4.375f, -5.500f, -6.625f, 3)]
+        public void Archive_Transfer_PacksAndUnpacksFixedVector(float x, float y, float z, int precision)
         {
-            const bool TestBool1 = true;
-            const bool TestBool2 = false;
-            const bool TestBool3 = true;
-            const bool TestBool4 = false;
-            const bool TestBool5 = true;
-            const bool TestBool6 = false;
+            Vector3 testVector = new(x, y, z);
 
             byte[] buffer;
 
@@ -107,24 +395,8 @@ namespace MHServerEmu.Core.Tests
             {
                 bool success = true;
 
-                bool bool1 = TestBool1;
-                success &= archive.Transfer(ref bool1);
-
-                bool bool2 = TestBool2;
-                success &= archive.Transfer(ref bool2);
-
-                bool bool3 = TestBool3;
-                success &= archive.Transfer(ref bool3);
-
-                bool bool4 = TestBool4;
-                success &= archive.Transfer(ref bool4);
-
-                bool bool5 = TestBool5;
-                success &= archive.Transfer(ref bool5);
-
-                bool bool6 = TestBool6;
-                success &= archive.Transfer(ref bool6);
-
+                Vector3 vectorToPack = new(testVector);
+                success &= archive.TransferVectorFixed(ref vectorToPack, precision);
                 Assert.True(success);
 
                 buffer = archive.AccessAutoBuffer().ToArray();
@@ -138,39 +410,21 @@ namespace MHServerEmu.Core.Tests
 
                 Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
-                bool bool1 = false;
-                success &= archive.Transfer(ref bool1);
-                Assert.Equal(TestBool1, bool1);
-
-                bool bool2 = false;
-                success &= archive.Transfer(ref bool2);
-                Assert.Equal(TestBool2, bool2);
-
-                bool bool3 = false;
-                success &= archive.Transfer(ref bool3);
-                Assert.Equal(TestBool3, bool3);
-
-                bool bool4 = false;
-                success &= archive.Transfer(ref bool4);
-                Assert.Equal(TestBool4, bool4);
-
-                bool bool5 = false;
-                success &= archive.Transfer(ref bool5);
-                Assert.Equal(TestBool5, bool5);
-
-                bool bool6 = false;
-                success &= archive.Transfer(ref bool6);
-                Assert.Equal(TestBool6, bool6);
-
+                Vector3 vectorToUnpack = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref vectorToUnpack, precision);
                 Assert.True(success);
+
+                Assert.Equal(testVector, vectorToUnpack);
             }
         }
 
-        [Fact]
-        public void Archive_Transfer_PacksAndUnpacksVectors()
+        [Theory]
+        [InlineData(0.765625f, 0.875000f, 0.984375f, true, 6)]
+        [InlineData(0.765625f, 0.875000f, 0.984375f, false, 6)]
+        [InlineData(-0.765625f, -0.875000f, -0.984375f, false, 6)]
+        public void Archive_Transfer_PacksAndUnpacksFixedOrientation(float yaw, float pitch, float roll, bool yawOnly, int precision)
         {
-            Vector3 TestVector1 = new(2000f, 1250f, 750f);
-            Vector3 TestVector2 = new(128.333f, 524.12f, 423.1253f);
+            Orientation testOrientation = new(yaw, pitch, roll);
 
             byte[] buffer;
 
@@ -178,9 +432,8 @@ namespace MHServerEmu.Core.Tests
             {
                 bool success = true;
 
-                success &= archive.Transfer(ref TestVector1);
-                success &= archive.Transfer(ref TestVector2);
-
+                Orientation orientationToPack = new(testOrientation);
+                success &= archive.TransferOrientationFixed(ref orientationToPack, yawOnly, precision);
                 Assert.True(success);
 
                 buffer = archive.AccessAutoBuffer().ToArray();
@@ -194,41 +447,30 @@ namespace MHServerEmu.Core.Tests
 
                 Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
-                Vector3 vector1 = Vector3.Zero;
-                success &= archive.Transfer(ref vector1);
-                Assert.Equal(TestVector1.X, vector1.X);
-                Assert.Equal(TestVector1.Y, vector1.Y);
-                Assert.Equal(TestVector1.Z, vector1.Z);
-
-                Vector3 vector2 = Vector3.Zero;
-                success &= archive.Transfer(ref vector2);
-                Assert.Equal(TestVector2.X, vector2.X);
-                Assert.Equal(TestVector2.Y, vector2.Y);
-                Assert.Equal(TestVector2.Z, vector2.Z);
-
+                Orientation orientationToUnpack = Orientation.Zero;
+                success &= archive.TransferOrientationFixed(ref orientationToUnpack, yawOnly, precision);
                 Assert.True(success);
+
+                if (yawOnly)
+                    Assert.Equal(testOrientation.Yaw, orientationToUnpack.Yaw);
+                else
+                    Assert.Equal(testOrientation, orientationToUnpack);
             }
         }
 
-        [Fact]
-        public void Archive_Transfer_PacksAndUnpacksStrings()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(111)]
+        public void Archive_Transfer_PacksAndUnpacksUnencodedSingleByte(byte testByte)
         {
-            string TestString1 = string.Empty;
-            string TestString2 = "hello world";
-            string TestString3 = "привет мир";
-            string TestString4 = "1234567890";
-
             byte[] buffer;
 
             using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
             {
                 bool success = true;
 
-                success &= archive.Transfer(ref TestString1);
-                success &= archive.Transfer(ref TestString2);
-                success &= archive.Transfer(ref TestString3);
-                success &= archive.Transfer(ref TestString4);
-
+                byte byteToWrite = testByte;
+                success &= archive.WriteSingleByte(byteToWrite);
                 Assert.True(success);
 
                 buffer = archive.AccessAutoBuffer().ToArray();
@@ -242,54 +484,27 @@ namespace MHServerEmu.Core.Tests
 
                 Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
-                string string1 = null;
-                success &= archive.Transfer(ref string1);
-                Assert.Equal(TestString1, string1);
-
-                string string2 = null;
-                success &= archive.Transfer(ref string2);
-                Assert.Equal(TestString2, string2);
-
-                string string3 = null;
-                success &= archive.Transfer(ref string3);
-                Assert.Equal(TestString3, string3);
-
-                string string4 = null;
-                success &= archive.Transfer(ref string4);
-                Assert.Equal(TestString4, string4);
-
+                byte byteToRead = 0;
+                success &= archive.ReadSingleByte(ref byteToRead);
                 Assert.True(success);
+
+                Assert.Equal(testByte, byteToRead);
             }
         }
 
-        [Fact]
-        public void Archive_Transfer_PacksAndUnpacksFixedFloat()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(111)]
+        public void Archive_Transfer_PacksAndUnpacksUnencodedUInt(uint testUInt)
         {
-            const float TestFloatPrecision0 = 1f;
-            const float TestFloatPrecision3 = 2.125f;
-            const float TestFloatPrecision6 = 3.328125f;
-            Vector3 TestVector = new(4.375f, 5.500f, 6.625f);
-            Orientation TestOrientation = new(0.765625f, 0.875000f, 0.984375f);
-
             byte[] buffer;
 
             using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
             {
                 bool success = true;
 
-                float floatPrecision0 = TestFloatPrecision0;
-                success &= archive.TransferFloatFixed(ref floatPrecision0, 0);
-
-                float floatPrecision3 = TestFloatPrecision3;
-                success &= archive.TransferFloatFixed(ref floatPrecision3, 3);
-
-                float floatPrecision6 = TestFloatPrecision6;
-                success &= archive.TransferFloatFixed(ref floatPrecision6, 6);
-
-                success &= archive.TransferVectorFixed(ref TestVector, 3);
-                success &= archive.TransferOrientationFixed(ref TestOrientation, true, 6);
-                success &= archive.TransferOrientationFixed(ref TestOrientation, false, 6);
-
+                uint uintToWrite = testUInt;
+                success &= archive.WriteUnencodedStream(uintToWrite);
                 Assert.True(success);
 
                 buffer = archive.AccessAutoBuffer().ToArray();
@@ -303,42 +518,51 @@ namespace MHServerEmu.Core.Tests
 
                 Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
-                float floatPrecision0 = 0f;
-                success &= archive.TransferFloatFixed(ref floatPrecision0, 0);
-                Assert.Equal(TestFloatPrecision0, floatPrecision0);
-
-                float floatPrecision3 = 0f;
-                success &= archive.TransferFloatFixed(ref floatPrecision3, 3);
-                Assert.Equal(TestFloatPrecision3, floatPrecision3);
-
-                float floatPrecision6 = 0f;
-                success &= archive.TransferFloatFixed(ref floatPrecision6, 6);
-                Assert.Equal(TestFloatPrecision6, floatPrecision6);
-
-                Vector3 vector = Vector3.Zero;
-                success &= archive.TransferVectorFixed(ref vector, 3);
-                Assert.Equal(TestVector.X, vector.X);
-                Assert.Equal(TestVector.Y, vector.Y);
-                Assert.Equal(TestVector.Z, vector.Z);
-
-                Orientation orientationYawOnly = Orientation.Zero;
-                success &= archive.TransferOrientationFixed(ref orientationYawOnly, true, 6);
-                Assert.Equal(TestOrientation.Yaw, orientationYawOnly.Yaw);
-                Assert.Equal(0f, orientationYawOnly.Pitch);
-                Assert.Equal(0f, orientationYawOnly.Roll);
-
-                Orientation orientationFull = Orientation.Zero;
-                success &= archive.TransferOrientationFixed(ref orientationFull, false, 6);
-                Assert.Equal(TestOrientation.Yaw, orientationFull.Yaw);
-                Assert.Equal(TestOrientation.Pitch, orientationFull.Pitch);
-                Assert.Equal(TestOrientation.Roll, orientationFull.Roll);
-
+                uint uintToRead = 0;
+                success &= archive.ReadUnencodedStream(ref uintToRead);
                 Assert.True(success);
+
+                Assert.Equal(testUInt, uintToRead);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(111)]
+        [InlineData(429496729600)]
+        public void Archive_Transfer_PacksAndUnpacksUnencodedULong(ulong testULong)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                ulong ulongToWrite = testULong;
+                success &= archive.WriteUnencodedStream(ulongToWrite);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                ulong ulongToRead = 0;
+                success &= archive.ReadUnencodedStream(ref ulongToRead);
+                Assert.True(success);
+
+                Assert.Equal(testULong, ulongToRead);
             }
         }
 
         [Fact]
-        public void Archive_Transfer_PacksAndUnpacksISerialize()
+        public void Archive_Serialize_PacksAndUnpacksISerialize()
         {
             TestISerialize TestISerialize = new()
             {
@@ -350,8 +574,9 @@ namespace MHServerEmu.Core.Tests
                 FloatField2 = -44.44f,
                 BoolField3 = true,
                 BoolField4 = false,
+                StringField = "test",
                 BoolField5 = false,
-                ULongField = 5555 << 33,
+                ULongField = 5555 << 32,
                 BoolField6 = true
             };
 
@@ -360,7 +585,7 @@ namespace MHServerEmu.Core.Tests
             using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
             {
                 bool success = true;
-                ISerialize iserializeToPack = TestISerialize;
+                ISerialize iserializeToPack = TestISerialize.Clone();
                 success &= archive.Transfer(ref iserializeToPack);
                 Assert.True(success);
 
@@ -377,97 +602,14 @@ namespace MHServerEmu.Core.Tests
 
                 ISerialize iserializeToUnpack = new TestISerialize();
                 success &= archive.Transfer(ref iserializeToUnpack);
-                TestISerialize testISerialize = (TestISerialize)iserializeToUnpack;
-
-                Assert.Equal(TestISerialize.BoolField1, testISerialize.BoolField1);
-                Assert.Equal(TestISerialize.IntField1, testISerialize.IntField1);
-                Assert.Equal(TestISerialize.IntField2, testISerialize.IntField2);
-                Assert.Equal(TestISerialize.FloatField1, testISerialize.FloatField1);
-                Assert.Equal(TestISerialize.BoolField2, testISerialize.BoolField2);
-                Assert.Equal(TestISerialize.FloatField2, testISerialize.FloatField2);
-                Assert.Equal(TestISerialize.ULongField, testISerialize.ULongField);
-                Assert.Equal(TestISerialize.BoolField3, testISerialize.BoolField3);
-                Assert.Equal(TestISerialize.BoolField4, testISerialize.BoolField4);
-                Assert.Equal(TestISerialize.BoolField5, testISerialize.BoolField5);
-                Assert.Equal(TestISerialize.BoolField6, testISerialize.BoolField6);
-
                 Assert.True(success);
+
+                Assert.Equal(TestISerialize, (TestISerialize)iserializeToUnpack);
             }
         }
 
         [Fact]
-        public void Archive_Transfer_PacksAndUnpacksUnencoded()
-        {
-            const byte TestByte = 111;
-            const uint TestUInt = 2222;
-            const ulong TestULong = 3333 << 33;
-
-            byte[] buffer;
-
-            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
-            {
-                bool success = true;
-
-                success &= archive.WriteSingleByte(TestByte);
-                success &= archive.WriteSingleByte(TestByte);
-                success &= archive.WriteUnencodedStream(TestUInt);
-                success &= archive.WriteSingleByte(TestByte);
-                success &= archive.WriteSingleByte(TestByte);
-                success &= archive.WriteUnencodedStream(TestULong);
-                success &= archive.WriteSingleByte(TestByte);
-                success &= archive.WriteSingleByte(TestByte);
-
-                Assert.True(success);
-
-                buffer = archive.AccessAutoBuffer().ToArray();
-            }
-
-            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
-
-            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
-            {
-                bool success = true;
-
-                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
-
-                byte testByte1 = 0;
-                success &= archive.ReadSingleByte(ref testByte1);
-                Assert.Equal(TestByte, testByte1);
-
-                byte testByte2 = 0;
-                success &= archive.ReadSingleByte(ref testByte2);
-                Assert.Equal(TestByte, testByte2);
-
-                uint testUInt = 0;
-                success &= archive.ReadUnencodedStream(ref testUInt);
-                Assert.Equal(TestUInt, testUInt);
-
-                byte testByte3 = 0;
-                success &= archive.ReadSingleByte(ref testByte3);
-                Assert.Equal(TestByte, testByte3);
-
-                byte testByte4 = 0;
-                success &= archive.ReadSingleByte(ref testByte4);
-                Assert.Equal(TestByte, testByte4);
-
-                ulong testULong = 0;
-                success &= archive.ReadUnencodedStream(ref testULong);
-                Assert.Equal(TestULong, testULong);
-
-                byte testByte5 = 0;
-                success &= archive.ReadSingleByte(ref testByte5);
-                Assert.Equal(TestByte, testByte5);
-
-                byte testByte6 = 0;
-                success &= archive.ReadSingleByte(ref testByte6);
-                Assert.Equal(TestByte, testByte6);
-
-                Assert.True(success);
-            }
-        }
-
-        [Fact]
-        public void Archive_Transfer_UnpacksAvatarStateUpdates()
+        public void Archive_Serialize_UnpacksAvatarStateUpdates()
         {
             byte[] MouseInputUpdate = Convert.FromHexString("0100C9F7FD0601012CF453FE02801605010102F453FE02801000AC3A81030600");
             byte[] GamepadInputUpdate = Convert.FromHexString("0100C9F7FD068101248A4AD50180167401028A4AD501801600BC329641FD0500");
@@ -610,51 +752,8 @@ namespace MHServerEmu.Core.Tests
                 int vertexSideRadius1 = 0;
                 success &= archive.Transfer(ref vertexSideRadius1);
                 Assert.Equal(0, vertexSideRadius1);
-            }
-        }
 
-        class TestISerialize : ISerialize
-        {
-            private bool _boolField1;
-            private int _intField1;
-            private int _intField2;
-            private float _floatField1;
-            private bool _boolField2;
-            private float _floatField2;
-            private bool _boolField3;
-            private bool _boolField4;
-            private bool _boolField5;
-            private ulong _ulongField;
-            private bool _boolField6;
-
-            public bool BoolField1 { get => _boolField1; set => _boolField1 = value; }
-            public int IntField1 { get => _intField1; set => _intField1 = value; }
-            public int IntField2 { get => _intField2; set => _intField2 = value; }
-            public float FloatField1 { get => _floatField1; set => _floatField1 = value; }
-            public bool BoolField2 { get => _boolField2; set => _boolField2 = value; }
-            public float FloatField2 { get => _floatField2; set => _floatField2 = value; }
-            public bool BoolField3 { get => _boolField3; set => _boolField3 = value; }
-            public bool BoolField4 { get => _boolField4; set => _boolField4 = value; }
-            public bool BoolField5 { get => _boolField5; set => _boolField5 = value; }
-            public ulong ULongField { get => _ulongField; set => _ulongField = value; }
-            public bool BoolField6 { get => _boolField6; set => _boolField6 = value; }
-
-            public bool Serialize(Archive archive)
-            {
-                bool success = true;
-                success &= archive.Transfer(ref _boolField1);
-                success &= archive.Transfer(ref _intField1);
-                success &= archive.Transfer(ref _intField2);
-                success &= archive.Transfer(ref _floatField1);
-                success &= archive.Transfer(ref _boolField2);
-                success &= archive.Transfer(ref _floatField2);
-                success &= archive.Transfer(ref _boolField3);
-                success &= archive.Transfer(ref _boolField4);
-                success &= archive.Transfer(ref _boolField5);
-                success &= archive.Transfer(ref _ulongField);
-                success &= archive.Transfer(ref _boolField6);
-
-                return success;
+                Assert.True(success);
             }
         }
     }
