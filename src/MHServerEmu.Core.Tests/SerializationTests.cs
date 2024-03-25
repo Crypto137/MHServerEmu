@@ -92,6 +92,81 @@ namespace MHServerEmu.Core.Tests
         }
 
         [Fact]
+        public void Archive_Transfer_PacksAndUnpacksBools()
+        {
+            const bool TestBool1 = true;
+            const bool TestBool2 = false;
+            const bool TestBool3 = true;
+            const bool TestBool4 = false;
+            const bool TestBool5 = true;
+            const bool TestBool6 = false;
+
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                bool bool1 = TestBool1;
+                success &= archive.Transfer(ref bool1);
+
+                bool bool2 = TestBool2;
+                success &= archive.Transfer(ref bool2);
+
+                bool bool3 = TestBool3;
+                success &= archive.Transfer(ref bool3);
+
+                bool bool4 = TestBool4;
+                success &= archive.Transfer(ref bool4);
+
+                bool bool5 = TestBool5;
+                success &= archive.Transfer(ref bool5);
+
+                bool bool6 = TestBool6;
+                success &= archive.Transfer(ref bool6);
+
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                bool bool1 = false;
+                success &= archive.Transfer(ref bool1);
+                Assert.Equal(TestBool1, bool1);
+
+                bool bool2 = false;
+                success &= archive.Transfer(ref bool2);
+                Assert.Equal(TestBool2, bool2);
+
+                bool bool3 = false;
+                success &= archive.Transfer(ref bool3);
+                Assert.Equal(TestBool3, bool3);
+
+                bool bool4 = false;
+                success &= archive.Transfer(ref bool4);
+                Assert.Equal(TestBool4, bool4);
+
+                bool bool5 = false;
+                success &= archive.Transfer(ref bool5);
+                Assert.Equal(TestBool5, bool5);
+
+                bool bool6 = false;
+                success &= archive.Transfer(ref bool6);
+                Assert.Equal(TestBool6, bool6);
+
+                Assert.True(success);
+            }
+        }
+
+        [Fact]
         public void Archive_Transfer_PacksAndUnpacksVectors()
         {
             Vector3 TestVector1 = new(2000f, 1250f, 750f);
@@ -215,11 +290,17 @@ namespace MHServerEmu.Core.Tests
         {
             TestISerialize TestISerialize = new()
             {
+                BoolField1 = true,
                 IntField1 = 100,
                 IntField2 = -200,
                 FloatField1 = 33.333f,
+                BoolField2 = false,
                 FloatField2 = -44.44f,
-                ULongField = 5555 << 33
+                BoolField3 = true,
+                BoolField4 = false,
+                BoolField5 = false,
+                ULongField = 5555 << 33,
+                BoolField6 = true
             };
 
             byte[] buffer;
@@ -246,11 +327,17 @@ namespace MHServerEmu.Core.Tests
                 success &= archive.Transfer(ref iserializeToUnpack);
                 TestISerialize testISerialize = (TestISerialize)iserializeToUnpack;
 
+                Assert.Equal(TestISerialize.BoolField1, testISerialize.BoolField1);
                 Assert.Equal(TestISerialize.IntField1, testISerialize.IntField1);
                 Assert.Equal(TestISerialize.IntField2, testISerialize.IntField2);
                 Assert.Equal(TestISerialize.FloatField1, testISerialize.FloatField1);
+                Assert.Equal(TestISerialize.BoolField2, testISerialize.BoolField2);
                 Assert.Equal(TestISerialize.FloatField2, testISerialize.FloatField2);
                 Assert.Equal(TestISerialize.ULongField, testISerialize.ULongField);
+                Assert.Equal(TestISerialize.BoolField3, testISerialize.BoolField3);
+                Assert.Equal(TestISerialize.BoolField4, testISerialize.BoolField4);
+                Assert.Equal(TestISerialize.BoolField5, testISerialize.BoolField5);
+                Assert.Equal(TestISerialize.BoolField6, testISerialize.BoolField6);
 
                 Assert.True(success);
             }
@@ -329,26 +416,45 @@ namespace MHServerEmu.Core.Tests
 
         class TestISerialize : ISerialize
         {
+            private bool _boolField1;
             private int _intField1;
             private int _intField2;
             private float _floatField1;
+            private bool _boolField2;
             private float _floatField2;
+            private bool _boolField3;
+            private bool _boolField4;
+            private bool _boolField5;
             private ulong _ulongField;
+            private bool _boolField6;
 
+            public bool BoolField1 { get => _boolField1; set => _boolField1 = value; }
             public int IntField1 { get => _intField1; set => _intField1 = value; }
             public int IntField2 { get => _intField2; set => _intField2 = value; }
             public float FloatField1 { get => _floatField1; set => _floatField1 = value; }
+            public bool BoolField2 { get => _boolField2; set => _boolField2 = value; }
             public float FloatField2 { get => _floatField2; set => _floatField2 = value; }
+            public bool BoolField3 { get => _boolField3; set => _boolField3 = value; }
+            public bool BoolField4 { get => _boolField4; set => _boolField4 = value; }
+            public bool BoolField5 { get => _boolField5; set => _boolField5 = value; }
             public ulong ULongField { get => _ulongField; set => _ulongField = value; }
+            public bool BoolField6 { get => _boolField6; set => _boolField6 = value; }
 
             public bool Serialize(Archive archive)
             {
                 bool success = true;
+                success &= archive.Transfer(ref _boolField1);
                 success &= archive.Transfer(ref _intField1);
                 success &= archive.Transfer(ref _intField2);
                 success &= archive.Transfer(ref _floatField1);
+                success &= archive.Transfer(ref _boolField2);
                 success &= archive.Transfer(ref _floatField2);
+                success &= archive.Transfer(ref _boolField3);
+                success &= archive.Transfer(ref _boolField4);
+                success &= archive.Transfer(ref _boolField5);
                 success &= archive.Transfer(ref _ulongField);
+                success &= archive.Transfer(ref _boolField6);
+
                 return success;
             }
         }

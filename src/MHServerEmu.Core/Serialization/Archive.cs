@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 
@@ -27,6 +28,11 @@ namespace MHServerEmu.Core.Serialization
         // C# coded stream implementation is buffered, so we have to use the same stream for the whole archive
         private readonly CodedOutputStream _cos;
         private readonly CodedInputStream _cis;
+
+        // Bool encoding (see EncodeBoolIntoByte() for details)
+        private byte _encodedBitBuffer = 0;
+        private byte _encodedBitsRead = 0;
+        private long _lastBitEncodedOffset = 0;
 
         public ArchiveSerializeType SerializeType { get; }
 
@@ -126,7 +132,45 @@ namespace MHServerEmu.Core.Serialization
 
         public bool Transfer(ref bool ioData)
         {
-            throw new NotImplementedException();
+            // TODO: FavorSpeed
+
+            if (IsPacking)
+            {
+                byte? lastBitEncoded = GetLastBitEncoded();
+                byte bitBuffer = lastBitEncoded == null ? (byte)0 : (byte)lastBitEncoded;
+
+                byte numEncodedBits = EncodeBoolIntoByte(ref bitBuffer, ioData);
+                if (numEncodedBits == 0)
+                    return Logger.ErrorReturn(false, "Transfer(): Bool encoding failed");
+
+                if (lastBitEncoded == null)
+                {
+                    _lastBitEncodedOffset = _cos.Position;
+                    WriteSingleByte(bitBuffer);
+                }
+                else
+                {
+                    _bufferStream.WriteByteAt(_lastBitEncodedOffset, bitBuffer);
+                    if (numEncodedBits >= 5)
+                        _lastBitEncodedOffset = 0;
+                }
+            }
+            else
+            {
+                if (_encodedBitBuffer == 0)
+                    ReadSingleByte(ref _encodedBitBuffer);
+
+                if (DecodeBoolFromByte(ref _encodedBitBuffer, ref ioData, out byte numRemainingBits) == false)
+                    return Logger.ErrorReturn(false, "Transfer(): Bool decoding failed");
+
+                if (numRemainingBits == 0)
+                {
+                    _encodedBitBuffer = 0;
+                    _encodedBitsRead = 0;
+                }
+            }
+
+            return true;
         }
 
         public bool Transfer(ref ushort ioData)
@@ -514,6 +558,61 @@ namespace MHServerEmu.Core.Serialization
                 Logger.ErrorException(e, nameof(ReadVarint));
                 return false;
             }
+        }
+
+        #endregion
+
+        #region Bool Encoding
+
+        private byte? GetLastBitEncoded()
+        {
+            if (_lastBitEncodedOffset == 0) return null;
+
+            if (_bufferStream.ReadByteAt(_lastBitEncodedOffset, out byte lastBitEncoded) == false)
+                return Logger.ErrorReturn<byte?>(null, $"GetLastBitEncoded(): Failed to get last bit encoded");
+                
+            return lastBitEncoded;
+        }
+
+        private byte EncodeBoolIntoByte(ref byte bitBuffer, bool value)
+        {
+            // Examples
+            // Bits  | Num Encoded  Hex     Values
+            // 10000 | 001          0x81    true
+            // 00000 | 001          0x1     false
+            // 11000 | 010          0xC2    true, true
+            // 01000 | 010          0x42    false, true
+            // 00000 | 011          0x3     false, false, false
+            // 10100 | 011          0xA3    true, false, true
+            // 11111 | 101          0xFD    true, true, true, true, true
+
+            byte numEncodedBits = (byte)(bitBuffer & 0x7); // 00000 111
+            if (numEncodedBits >= 5)
+                return 0;   // Bit buffer is full
+
+            // Encode a new bit and update the number of encoded bits
+            bitBuffer |= (byte)(Convert.ToUInt32(value) << (7 - numEncodedBits));
+            bitBuffer &= 0xF8; // 11111 000
+            bitBuffer |= ++numEncodedBits;
+
+            return numEncodedBits;
+        }
+
+        private bool DecodeBoolFromByte(ref byte bitBuffer, ref bool value, out byte numRemainingBits)
+        {
+            numRemainingBits = (byte)(bitBuffer & 0x7);
+
+            if (numRemainingBits > 5 || _encodedBitsRead > 5 || numRemainingBits - _encodedBitsRead > 5)
+                return false;
+
+            // Decode a bit and update the number of encoded bits
+            value = (bitBuffer & 1 << 7 - _encodedBitsRead) != 0;
+
+            bitBuffer &= 0xF8;
+            bitBuffer |= --numRemainingBits;
+            _encodedBitsRead++;
+
+            return true;
         }
 
         #endregion
