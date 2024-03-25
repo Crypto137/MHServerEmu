@@ -414,6 +414,153 @@ namespace MHServerEmu.Core.Tests
             }
         }
 
+        [Fact]
+        public void Archive_Transfer_UnpacksAvatarStateUpdates()
+        {
+            byte[] MouseInputUpdate = Convert.FromHexString("0100C9F7FD0601012CF453FE02801605010102F453FE02801000AC3A81030600");
+            byte[] GamepadInputUpdate = Convert.FromHexString("0100C9F7FD068101248A4AD50180167401028A4AD501801600BC329641FD0500");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, MouseInputUpdate))
+            {
+                bool success = true;
+
+                Assert.Equal(0x1ul, archive.ReplicationPolicy);     // Proximity
+
+                int avatarIndex = 0;
+                success &= archive.Transfer(ref avatarIndex);
+                Assert.Equal(0, avatarIndex);
+
+                ulong entityId = 0;
+                success &= archive.Transfer(ref entityId);
+                Assert.Equal(14646217ul, entityId);
+
+                bool isUsingGamepadInput = false;
+                success &= archive.Transfer(ref isUsingGamepadInput);
+                Assert.False(isUsingGamepadInput);
+
+                uint avatarWorldInstanceId = 0;
+                success &= archive.Transfer(ref avatarWorldInstanceId);
+                Assert.Equal(1u, avatarWorldInstanceId);
+
+                uint fieldFlags = 0;
+                success &= archive.Transfer(ref fieldFlags);
+                Assert.Equal(0x2cu, fieldFlags);    // Flag2, HasLocomotionFlags, UpdatePathNodes
+
+                Vector3 position = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref position, 3);
+                Assert.Equal(671.25f, position.X);
+                Assert.Equal(23.875f, position.Y);
+                Assert.Equal(176f, position.Z);
+
+                Orientation orientation = Orientation.Zero;
+                success &= archive.TransferOrientationFixed(ref orientation, true, 6);
+                Assert.Equal(-0.046875f, orientation.Yaw);
+                Assert.Equal(0f, orientation.Pitch);
+                Assert.Equal(0f, orientation.Roll);
+
+                ulong locomotionFlags = 0;
+                success &= archive.Transfer(ref locomotionFlags);
+                Assert.Equal(0x1ul, locomotionFlags);   // Flag0
+
+                uint pathGoalNodeIndex = 0;
+                success &= archive.Transfer(ref pathGoalNodeIndex);
+                Assert.Equal(0x1u, pathGoalNodeIndex);
+
+                uint numPathNodes = 0;
+                success &= archive.Transfer(ref numPathNodes);
+                Assert.Equal(0x2u, numPathNodes);
+
+                Vector3 vertex0 = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref vertex0, 3);
+                Assert.Equal(671.25f, vertex0.X);
+                Assert.Equal(23.875f, vertex0.Y);
+                Assert.Equal(128f, vertex0.Z);
+
+                int vertexSideRadius0 = 0;
+                success &= archive.Transfer(ref vertexSideRadius0);
+                Assert.Equal(0, vertexSideRadius0);
+
+                Vector3 vertex1 = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref vertex1, 3);
+                Assert.Equal(466.75f, vertex1.X);
+                Assert.Equal(-24.125f, vertex1.Y);
+                Assert.Equal(0.375f, vertex1.Z);
+
+                int vertexSideRadius1 = 0;
+                success &= archive.Transfer(ref vertexSideRadius1);
+                Assert.Equal(0, vertexSideRadius1);
+
+                Assert.True(success);
+            }
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, GamepadInputUpdate))
+            {
+                bool success = true;
+
+                Assert.Equal(0x1ul, archive.ReplicationPolicy);     // Proximity
+
+                int avatarIndex = 0;
+                success &= archive.Transfer(ref avatarIndex);
+                Assert.Equal(0, avatarIndex);
+
+                ulong entityId = 0;
+                success &= archive.Transfer(ref entityId);
+                Assert.Equal(14646217ul, entityId);
+
+                bool isUsingGamepadInput = false;
+                success &= archive.Transfer(ref isUsingGamepadInput);
+                Assert.True(isUsingGamepadInput);
+
+                uint avatarWorldInstanceId = 0;
+                success &= archive.Transfer(ref avatarWorldInstanceId);
+                Assert.Equal(1u, avatarWorldInstanceId);
+
+                uint fieldFlags = 0;
+                success &= archive.Transfer(ref fieldFlags);
+                Assert.Equal(0x24u, fieldFlags);    // Flag2, UpdatePathNodes
+
+                Vector3 position = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref position, 3);
+                Assert.Equal(592.625f, position.X);
+                Assert.Equal(-13.375f, position.Y);
+                Assert.Equal(176f, position.Z);
+
+                Orientation orientation = Orientation.Zero;
+                success &= archive.TransferOrientationFixed(ref orientation, true, 6);
+                Assert.Equal(0.90625f, orientation.Yaw);
+                Assert.Equal(0f, orientation.Pitch);
+                Assert.Equal(0f, orientation.Roll);
+
+                uint pathGoalNodeIndex = 0;
+                success &= archive.Transfer(ref pathGoalNodeIndex);
+                Assert.Equal(0x1u, pathGoalNodeIndex);
+
+                uint numPathNodes = 0;
+                success &= archive.Transfer(ref numPathNodes);
+                Assert.Equal(0x2u, numPathNodes);
+
+                Vector3 vertex0 = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref vertex0, 3);
+                Assert.Equal(592.625f, vertex0.X);
+                Assert.Equal(-13.375f, vertex0.Y);
+                Assert.Equal(176f, vertex0.Z);
+
+                int vertexSideRadius0 = 0;
+                success &= archive.Transfer(ref vertexSideRadius0);
+                Assert.Equal(0, vertexSideRadius0);
+
+                Vector3 vertex1 = Vector3.Zero;
+                success &= archive.TransferVectorFixed(ref vertex1, 3);
+                Assert.Equal(403.75f, vertex1.X);
+                Assert.Equal(521.375f, vertex1.Y);
+                Assert.Equal(-47.875f, vertex1.Z);
+
+                int vertexSideRadius1 = 0;
+                success &= archive.Transfer(ref vertexSideRadius1);
+                Assert.Equal(0, vertexSideRadius1);
+            }
+        }
+
         class TestISerialize : ISerialize
         {
             private bool _boolField1;
