@@ -455,19 +455,22 @@ namespace MHServerEmu.Core.Serialization
 
             if (IsPacking)
             {
-                uint length = (uint)ioData.Length;
-                success &= Transfer_(ref length);
+                if (ioData == null) return false;
 
-                using (BinaryWriter writer = new(_bufferStream))
-                    writer.Write(Encoding.UTF8.GetBytes(ioData));
+                byte[] bytes = Encoding.UTF8.GetBytes(ioData);
+
+                uint size = (uint)bytes.Length;
+                success &= Transfer_(ref size);
+
+                _cos.WriteRawBytes(bytes);
+                _cos.Flush();
             }
             else
             {
-                uint length = 0;
-                success &= Transfer_(ref length);
+                uint size = 0;
+                success &= Transfer_(ref size);
 
-                using (BinaryReader reader = new(_bufferStream))
-                    ioData = Encoding.UTF8.GetString(reader.ReadBytes((int)length));
+                ioData = Encoding.UTF8.GetString(_cis.ReadRawBytes((int)size));
             }
 
             return success;

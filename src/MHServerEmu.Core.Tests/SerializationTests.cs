@@ -211,6 +211,58 @@ namespace MHServerEmu.Core.Tests
         }
 
         [Fact]
+        public void Archive_Transfer_PacksAndUnpacksStrings()
+        {
+            string TestString1 = string.Empty;
+            string TestString2 = "hello world";
+            string TestString3 = "привет мир";
+            string TestString4 = "1234567890";
+
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                success &= archive.Transfer(ref TestString1);
+                success &= archive.Transfer(ref TestString2);
+                success &= archive.Transfer(ref TestString3);
+                success &= archive.Transfer(ref TestString4);
+
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                string string1 = null;
+                success &= archive.Transfer(ref string1);
+                Assert.Equal(TestString1, string1);
+
+                string string2 = null;
+                success &= archive.Transfer(ref string2);
+                Assert.Equal(TestString2, string2);
+
+                string string3 = null;
+                success &= archive.Transfer(ref string3);
+                Assert.Equal(TestString3, string3);
+
+                string string4 = null;
+                success &= archive.Transfer(ref string4);
+                Assert.Equal(TestString4, string4);
+
+                Assert.True(success);
+            }
+        }
+
+        [Fact]
         public void Archive_Transfer_PacksAndUnpacksFixedFloat()
         {
             const float TestFloatPrecision0 = 1f;
