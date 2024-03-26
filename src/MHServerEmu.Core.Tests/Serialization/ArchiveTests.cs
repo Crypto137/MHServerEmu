@@ -3,15 +3,15 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Core.Tests
+namespace MHServerEmu.Core.Tests.Serialization
 {
-    public class SerializationTests
+    public class ArchiveTests
     {
         const ulong TestReplicationPolicy = 0xEF;
 
         private readonly ITestOutputHelper _testOutputHelper;
 
-        public SerializationTests(ITestOutputHelper testOutputHelper)
+        public ArchiveTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
         }
@@ -21,7 +21,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(5)]
         [InlineData(6)]
         [InlineData(64)]
-        public void Archive_Transfer_PacksAndUnpacksBools(int numBools)
+        public void Transfer_Bool_PacksAndUnpacks(int numBools)
         {
             bool[] testBools = new bool[numBools];
             for (int i = 0; i < testBools.Length; i++)
@@ -66,7 +66,7 @@ namespace MHServerEmu.Core.Tests
         [Theory]
         [InlineData(0)]
         [InlineData(100)]
-        public void Archive_Transfer_PacksAndUnpacksUShort(ushort testUShort)
+        public void Transfer_UShort_PacksAndUnpacks(ushort testUShort)
         {
             byte[] buffer;
 
@@ -101,7 +101,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(0)]
         [InlineData(100)]
         [InlineData(-200)]
-        public void Archive_Transfer_PacksAndUnpacksInt(int testInt)
+        public void Transfer_Int_PacksAndUnpacks(int testInt)
         {
             byte[] buffer;
 
@@ -135,7 +135,7 @@ namespace MHServerEmu.Core.Tests
         [Theory]
         [InlineData(0)]
         [InlineData(100)]
-        public void Archive_Transfer_PacksAndUnpacksUInt(uint testUInt)
+        public void Transfer_UInt_PacksAndUnpacks(uint testUInt)
         {
             byte[] buffer;
 
@@ -171,7 +171,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(100)]
         [InlineData(429496729600)]
         [InlineData(-200)]
-        public void Archive_Transfer_PacksAndUnpacksLong(long testLong)
+        public void Transfer_Long_PacksAndUnpacks(long testLong)
         {
             byte[] buffer;
 
@@ -206,7 +206,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(0)]
         [InlineData(100)]
         [InlineData(429496729600)]
-        public void Archive_Transfer_PacksAndUnpacksULong(ulong testULong)
+        public void Transfer_ULong_PacksAndUnpacks(ulong testULong)
         {
             byte[] buffer;
 
@@ -242,7 +242,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(100f)]
         [InlineData(222.222f)]
         [InlineData(-333.33f)]
-        public void Archive_Transfer_PacksAndUnpacksFloat(float testFloat)
+        public void Transfer_Float_PacksAndUnpacks(float testFloat)
         {
             byte[] buffer;
 
@@ -278,7 +278,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData("hello world")]
         [InlineData("привет мир")]
         [InlineData("1234567890")]
-        public void Archive_Transfer_PacksAndUnpacksString(string testString)
+        public void Transfer_String_PacksAndUnpacks(string testString)
         {
             byte[] buffer;
 
@@ -313,7 +313,7 @@ namespace MHServerEmu.Core.Tests
         [Theory]
         [InlineData(2000f, 1250f, 750f)]
         [InlineData(128.333f, -524.12f, 423.1253f)]
-        public void Archive_Transfer_PacksAndUnpacksVector(float x, float y, float z)
+        public void Transfer_Vector_PacksAndUnpacks(float x, float y, float z)
         {
             Vector3 testVector = new(x, y, z);
 
@@ -351,7 +351,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(2.125f, 3)]
         [InlineData(3.328125f, 6)]
         [InlineData(-3.328125f, 6)]
-        public void Archive_Transfer_PacksAndUnpacksFixedFloat(float testFloat, int precision)
+        public void Transfer_FixedFloat_PacksAndUnpacks(float testFloat, int precision)
         {
             byte[] buffer;
 
@@ -385,7 +385,7 @@ namespace MHServerEmu.Core.Tests
         [Theory]
         [InlineData(4.375f, 5.500f, 6.625f, 3)]
         [InlineData(-4.375f, -5.500f, -6.625f, 3)]
-        public void Archive_Transfer_PacksAndUnpacksFixedVector(float x, float y, float z, int precision)
+        public void Transfer_FixedVector_PacksAndUnpacks(float x, float y, float z, int precision)
         {
             Vector3 testVector = new(x, y, z);
 
@@ -422,7 +422,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(0.765625f, 0.875000f, 0.984375f, true, 6)]
         [InlineData(0.765625f, 0.875000f, 0.984375f, false, 6)]
         [InlineData(-0.765625f, -0.875000f, -0.984375f, false, 6)]
-        public void Archive_Transfer_PacksAndUnpacksFixedOrientation(float yaw, float pitch, float roll, bool yawOnly, int precision)
+        public void Transfer_FixedOrientation_PacksAndUnpacks(float yaw, float pitch, float roll, bool yawOnly, int precision)
         {
             Orientation testOrientation = new(yaw, pitch, roll);
 
@@ -461,7 +461,7 @@ namespace MHServerEmu.Core.Tests
         [Theory]
         [InlineData(0)]
         [InlineData(111)]
-        public void Archive_Transfer_PacksAndUnpacksUnencodedSingleByte(byte testByte)
+        public void WriteUnencoded_Byte_PacksAndUnpacks(byte testByte)
         {
             byte[] buffer;
 
@@ -495,7 +495,8 @@ namespace MHServerEmu.Core.Tests
         [Theory]
         [InlineData(0)]
         [InlineData(111)]
-        public void Archive_Transfer_PacksAndUnpacksUnencodedUInt(uint testUInt)
+        [InlineData(7274496)]
+        public void WriteUnencoded_UInt_PacksAndUnpacks(uint testUInt)
         {
             byte[] buffer;
 
@@ -530,7 +531,7 @@ namespace MHServerEmu.Core.Tests
         [InlineData(0)]
         [InlineData(111)]
         [InlineData(429496729600)]
-        public void Archive_Transfer_PacksAndUnpacksUnencodedULong(ulong testULong)
+        public void WriteUnencoded_ULong_PacksAndUnpacks(ulong testULong)
         {
             byte[] buffer;
 
@@ -562,9 +563,9 @@ namespace MHServerEmu.Core.Tests
         }
 
         [Fact]
-        public void Archive_Serialize_PacksAndUnpacksISerialize()
+        public void Serialize_FakeISerialize_PacksAndUnpacks()
         {
-            TestISerialize TestISerialize = new()
+            FakeISerialize fakeISerialize = new()
             {
                 BoolField1 = true,
                 IntField1 = 100,
@@ -585,7 +586,7 @@ namespace MHServerEmu.Core.Tests
             using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
             {
                 bool success = true;
-                ISerialize iserializeToPack = TestISerialize.Clone();
+                ISerialize iserializeToPack = fakeISerialize.Clone();
                 success &= archive.Transfer(ref iserializeToPack);
                 Assert.True(success);
 
@@ -600,21 +601,20 @@ namespace MHServerEmu.Core.Tests
 
                 Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
 
-                ISerialize iserializeToUnpack = new TestISerialize();
+                ISerialize iserializeToUnpack = new FakeISerialize();
                 success &= archive.Transfer(ref iserializeToUnpack);
                 Assert.True(success);
 
-                Assert.Equal(TestISerialize, (TestISerialize)iserializeToUnpack);
+                Assert.Equal(fakeISerialize, (FakeISerialize)iserializeToUnpack);
             }
         }
 
         [Fact]
-        public void Archive_Serialize_UnpacksAvatarStateUpdates()
+        public void Serialize_UpdateAvatarState_UnpacksWithMouseInput()
         {
-            byte[] MouseInputUpdate = Convert.FromHexString("0100C9F7FD0601012CF453FE02801605010102F453FE02801000AC3A81030600");
-            byte[] GamepadInputUpdate = Convert.FromHexString("0100C9F7FD068101248A4AD50180167401028A4AD501801600BC329641FD0500");
+            byte[] buffer = Convert.FromHexString("0100C9F7FD0601012CF453FE02801605010102F453FE02801000AC3A81030600");
 
-            using (Archive archive = new(ArchiveSerializeType.Replication, MouseInputUpdate))
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
             {
                 bool success = true;
 
@@ -686,8 +686,14 @@ namespace MHServerEmu.Core.Tests
 
                 Assert.True(success);
             }
+        }
 
-            using (Archive archive = new(ArchiveSerializeType.Replication, GamepadInputUpdate))
+        [Fact]
+        public void Serialize_UpdateAvatarState_UnpacksWithGamepadInput()
+        {
+            byte[] buffer = Convert.FromHexString("0100C9F7FD068101248A4AD50180167401028A4AD501801600BC329641FD0500");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
             {
                 bool success = true;
 

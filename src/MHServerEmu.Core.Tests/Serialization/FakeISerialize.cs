@@ -1,8 +1,11 @@
 ﻿using MHServerEmu.Core.Serialization;
 
-namespace MHServerEmu.Core.Tests
+namespace MHServerEmu.Core.Tests.Serialization
 {
-    internal class TestISerialize : ISerialize, IEquatable<TestISerialize>
+    /// <summary>
+    /// Fake <see cref="ISerialize"/> implementation for testing.
+    /// </summary>
+    internal class FakeISerialize : ISerialize, IEquatable<FakeISerialize>
     {
         private bool _boolField1;
         private int _intField1;
@@ -56,9 +59,9 @@ namespace MHServerEmu.Core.Tests
             return success;
         }
 
-        public TestISerialize Clone() => (TestISerialize)MemberwiseClone();
+        public FakeISerialize Clone() => (FakeISerialize)MemberwiseClone();
 
-        public bool Equals(TestISerialize other)
+        public bool Equals(FakeISerialize other)
         {
             bool equals = true;
             equals &= _boolField1 == other._boolField1;
