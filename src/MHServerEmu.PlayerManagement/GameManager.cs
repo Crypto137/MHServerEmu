@@ -24,7 +24,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public GameManager()
         {
-            CreateGame();
+            
         }
 
         /// <summary>
