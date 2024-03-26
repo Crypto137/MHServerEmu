@@ -227,7 +227,7 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
-        public static bool Transfer<T>(Archive archive, ref long[] ioData)
+        public static bool Transfer(Archive archive, ref long[] ioData)
         {
             bool success = true;
 
@@ -304,6 +304,48 @@ namespace MHServerEmu.Games.Common
                 for (ulong i = (ulong)ioData.Length; i < numElements; i++)
                 {
                     ulong value = 0;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer<T>(Archive archive, ref T[] ioData) where T: ISerialize, new()
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Length;
+                success &= Transfer(archive, ref numElements);
+                for (int i = 0; i < ioData.Length; i++)
+                {
+                    ISerialize value = ioData[i];
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                Array.Clear(ioData);
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                if (ioData.Length < (int)numElements)
+                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+
+                for (int i = 0; i < ioData.Length; i++)
+                {
+                    ISerialize value = new T();
+                    success &= Transfer(archive, ref value);
+                    ioData[i] = (T)value;
+                }
+
+                // Elements outside the range of the provided array are discarded
+                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                {
+                    ISerialize value = new T();
                     success &= Transfer(archive, ref value);
                 }
             }
