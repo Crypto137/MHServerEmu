@@ -1,17 +1,9 @@
-﻿using Xunit.Abstractions;
-using MHServerEmu.Core.System.Random;
+﻿using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Core.Tests.System.Random
 {
     public class RandMwcTests
     {
-        private readonly ITestOutputHelper _testOutputHelper;
-
-        public RandMwcTests(ITestOutputHelper testOutputHelper)
-        {
-            _testOutputHelper = testOutputHelper;
-        }
-
         [Fact]
         public void SetSeed_RandomSeed_ReturnsExpectedLeadingBytes()
         {
