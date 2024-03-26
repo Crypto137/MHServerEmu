@@ -1,9 +1,12 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Common
@@ -13,6 +16,8 @@ namespace MHServerEmu.Games.Common
     /// </summary>
     public static class Serializer
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         #region Old
 
         /// <summary>
@@ -176,6 +181,9 @@ namespace MHServerEmu.Games.Common
         }
 
         // Collections
+        // TODO: Find a good way to make this more DRY without sacrificing performance
+
+        #region Arrays
 
         public static bool Transfer(Archive archive, ref ulong[] ioData)
         {
@@ -183,8 +191,8 @@ namespace MHServerEmu.Games.Common
 
             if (archive.IsPacking)
             {
-                ulong length = (ulong)ioData.Length;
-                success &= Transfer(archive, ref length);
+                ulong numElements = (ulong)ioData.Length;
+                success &= Transfer(archive, ref numElements);
                 for (int i = 0; i < ioData.Length; i++)
                 {
                     ulong value = ioData[i];
@@ -193,14 +201,146 @@ namespace MHServerEmu.Games.Common
             }
             else
             {
-                ulong length = 0;
-                success &= Transfer(archive, ref length);
-                ioData = new ulong[(int)length];
+                Array.Clear(ioData);
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                if (ioData.Length < (int)numElements)
+                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+                
                 for (int i = 0; i < ioData.Length; i++)
                 {
                     ulong value = 0;
                     success &= Transfer(archive, ref value);
                     ioData[i] = value;
+                }
+
+                // Elements outside the range of the provided array are discarded
+                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                {
+                    ulong value = 0;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer<T>(Archive archive, ref long[] ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Length;
+                success &= Transfer(archive, ref numElements);
+                for (int i = 0; i < ioData.Length; i++)
+                {
+                    long value = ioData[i];
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                Array.Clear(ioData);
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                if (ioData.Length < (int)numElements)
+                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+
+                for (int i = 0; i < ioData.Length; i++)
+                {
+                    long value = 0;
+                    success &= Transfer(archive, ref value);
+                    ioData[i] = value;
+                }
+
+                // Elements outside the range of the provided array are discarded
+                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                {
+                    long value = 0;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer(Archive archive, ref PrototypeId[] ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Length;
+                success &= Transfer(archive, ref numElements);
+                for (int i = 0; i < ioData.Length; i++)
+                {
+                    PrototypeId value = ioData[i];
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                Array.Clear(ioData);
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                if (ioData.Length < (int)numElements)
+                    Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
+
+                for (int i = 0; i < ioData.Length; i++)
+                {
+                    PrototypeId value = PrototypeId.Invalid;
+                    success &= Transfer(archive, ref value);
+                    ioData[i] = value;
+                }
+
+                // Elements outside the range of the provided array are discarded
+                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                {
+                    ulong value = 0;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+
+            return success;
+        }
+
+        #endregion
+
+        #region Lists
+
+        public static bool Transfer(Archive archive, ref List<ulong> ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (ulong data in ioData)
+                {
+                    ulong value = data;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ulong value = 0;
+                    success &= Transfer(archive, ref value);
+                    ioData.Add(value);
                 }
             }
 
@@ -213,32 +353,319 @@ namespace MHServerEmu.Games.Common
 
             if (archive.IsPacking)
             {
-                ulong count = (ulong)ioData.Count;
-                success &= Transfer(archive, ref count);
-                for (int i = 0; i < ioData.Count; i++)
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (PrototypeId prototypeRef in ioData)
                 {
-                    ulong value = (ulong)ioData[i];
+                    PrototypeId value = prototypeRef;
                     success &= Transfer(archive, ref value);
                 }
             }
             else
             {
-                ulong count = 0;
-                success &= Transfer(archive, ref count);
-                ioData = new((int)count);
-                for (ulong i = 0; i < count; i++)
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
                 {
-                    ulong value = 0;
+                    PrototypeId value = 0;
                     success &= Transfer(archive, ref value);
-                    ioData.Add((PrototypeId)value);
+                    ioData.Add(value);
                 }
             }
 
             return success;
         }
 
+        public static bool Transfer(Archive archive, ref List<PrototypeGuid> ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (PrototypeGuid prototypeGuid in ioData)
+                {
+                    ulong value = (ulong)prototypeGuid;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ulong value = 0;
+                    success &= Transfer(archive, ref value);
+                    ioData.Add((PrototypeGuid)value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer<T>(Archive archive, ref List<T> ioData) where T: ISerialize, new()
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (T data in ioData)
+                {
+                    ISerialize value = data;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ISerialize value = new T();
+                    success &= Transfer(archive, ref value);
+                    ioData.Add((T)value);
+                }
+            }
+
+            return success;
+        }
+
+        #endregion
+
+        #region Dictionaries
+
+        public static bool Transfer<T>(Archive archive, ref Dictionary<PrototypeId, T> ioData) where T: ISerialize, new()
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (var kvp in ioData)
+                {
+                    PrototypeId key = kvp.Key;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = kvp.Value;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    PrototypeId key = 0;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = new T();
+                    success &= Transfer(archive, ref value);
+
+                    ioData.Add(key, (T)value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer<T>(Archive archive, ref SortedDictionary<uint, T> ioData) where T : ISerialize, new()
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+
+                foreach (var kvp in ioData)
+                {
+                    uint key = kvp.Key;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = kvp.Value;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    uint key = 0;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = new T();
+                    success &= Transfer(archive, ref value);
+                    ioData.Add(key, (T)value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer<T>(Archive archive, ref SortedDictionary<PrototypeGuid, T> ioData) where T : ISerialize, new()
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+
+                foreach (var kvp in ioData)
+                {
+                    ulong key = (ulong)kvp.Key;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = kvp.Value;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ulong key = 0;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = new T();
+                    success &= Transfer(archive, ref value);
+                    ioData.Add((PrototypeGuid)key, (T)value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer(Archive archive, ref SortedDictionary<PrototypeId, bool> ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+
+                foreach (var kvp in ioData)
+                {
+                    PrototypeId key = kvp.Key;
+                    success &= Transfer(archive, ref key);
+                    bool value = kvp.Value;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    PrototypeId key = PrototypeId.Invalid;
+                    success &= Transfer(archive, ref key);
+                    bool value = false;
+                    success &= Transfer(archive, ref value);
+                    ioData.Add(key, value);
+                }
+            }
+
+            return success;
+        }
+
+        public static bool Transfer(Archive archive, ref SortedDictionary<EquipmentInvUISlot, PrototypeId> ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+
+                foreach (var kvp in ioData)
+                {
+                    ulong key = (ulong)kvp.Key;
+                    success &= Transfer(archive, ref key);
+                    PrototypeId value = kvp.Value;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ulong key = 0;
+                    success &= Transfer(archive, ref key);
+                    PrototypeId value = PrototypeId.Invalid;
+                    success &= Transfer(archive, ref value);
+                    ioData.Add((EquipmentInvUISlot)key, value);
+                }
+            }
+
+            return success;
+        }
+
+        #endregion
 
         // Class-specific
-        
+        public static bool Transfer(Archive archive, ref SortedSet<AvailableBadges> ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+
+                foreach (AvailableBadges data in ioData)
+                {
+                    uint value = (uint)data;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numBadges = 0;
+                success &= Transfer(archive, ref numBadges);
+
+                for (ulong i = 0; i < numBadges; i++)
+                {
+                    uint value = 0;
+                    success &= Transfer(archive, ref value);
+                    ioData.Add((AvailableBadges)value);
+                }
+            }
+
+            return success;
+        }
     }
 }
