@@ -577,7 +577,7 @@ namespace MHServerEmu.Core.Tests.Serialization
                 BoolField4 = false,
                 StringField = "test",
                 BoolField5 = false,
-                ULongField = 5555 << 32,
+                ULongField = 5555ul << 32,
                 BoolField6 = true
             };
 
