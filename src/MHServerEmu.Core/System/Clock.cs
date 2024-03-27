@@ -22,8 +22,6 @@ namespace MHServerEmu.Core.System
         private static readonly DateTime _utcBase;
         private static readonly Stopwatch _utcStopwatch;
 
-        public const long MicrosecondsPerSecond = 1000000;
-
         static Clock()
         {
             _utcBase = DateTime.UtcNow;
@@ -64,22 +62,6 @@ namespace MHServerEmu.Core.System
         }
 
         /// <summary>
-        /// Returns a <see cref="TimeSpan"/> corresponding to the provided millisecond Unix time timestamp.
-        /// </summary>
-        public static TimeSpan UnixTimeMillisecondsToTimeSpan(long timestamp)
-        {
-            return UnixEpoch.AddMilliseconds(timestamp) - UnixEpoch;
-        }
-
-        /// <summary>
-        /// Returns a <see cref="TimeSpan"/> corresponding to the provided microsecond Unix time timestamp.
-        /// </summary>
-        public static TimeSpan UnixTimeMicrosecondsToTimeSpan(long timestamp)
-        {
-            return UnixEpoch.AddTicks(timestamp * 10) - UnixEpoch;
-        }
-
-        /// <summary>
         /// Returns a <see cref="DateTime"/> corresponding to the provided millisecond game time timestamp.
         /// </summary>
         public static DateTime GameTimeMillisecondsToDateTime(long timestamp)
@@ -93,22 +75,6 @@ namespace MHServerEmu.Core.System
         public static DateTime GameTimeMicrosecondsToDateTime(long timestamp)
         {
             return GameTimeEpoch.AddTicks(timestamp * 10);
-        }
-
-        /// <summary>
-        /// Returns a <see cref="TimeSpan"/> corresponding to the provided millisecond game time timestamp.
-        /// </summary>
-        public static TimeSpan GameTimeMillisecondsToTimeSpan(long timestamp)
-        {
-            return GameTimeEpoch.AddMilliseconds(timestamp) - GameTimeEpoch;
-        }
-
-        /// <summary>
-        /// Returns a <see cref="TimeSpan"/> corresponding to the provided microsecond game time timestamp.
-        /// </summary>
-        public static TimeSpan GameTimeMicrosecondsToTimeSpan(long timestamp)
-        {
-            return GameTimeEpoch.AddTicks(timestamp * 10) - GameTimeEpoch;
         }
 
         /// <summary>

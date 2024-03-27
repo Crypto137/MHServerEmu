@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Entities
             MatchQueueStatus.SetOwner(this);
 
             EmailVerified = boolDecoder.ReadBool(stream);
-            AccountCreationTimestamp = Clock.UnixTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
+            AccountCreationTimestamp = new(stream.ReadRawInt64() * 10);
 
             PartyId = new(stream);
 

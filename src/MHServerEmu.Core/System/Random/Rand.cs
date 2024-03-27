@@ -50,7 +50,7 @@
             return max == 0 ? 0 : (long)(Get64() & 0x7fffffffffffffffUL) % max;
         }
 
-        public long Get(ulong min, long max)
+        public long Get(ulong min, long max)    // ulong min <-- same as in the client
         {
             if (max < (long)min)
                 return max;

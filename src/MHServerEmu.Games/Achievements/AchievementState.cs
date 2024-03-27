@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Achievements
                 uint count = stream.ReadRawVarint32();
                 long completedDate = stream.ReadRawInt64();
 
-                AchievementProgressMap[id] = new(count, Clock.UnixTimeMicrosecondsToTimeSpan(completedDate), false);
+                AchievementProgressMap[id] = new(count, new(completedDate * 10), false);
             }
         }
 

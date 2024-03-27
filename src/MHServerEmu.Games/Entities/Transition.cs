@@ -58,6 +58,7 @@ namespace MHServerEmu.Games.Entities
 
             TransitionName = stream.ReadRawString();
 
+            Destinations = new();
             int destinationsCount = (int)stream.ReadRawVarint64();
             for (int i = 0; i < destinationsCount; i++)
                 Destinations.Add(new(stream));

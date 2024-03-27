@@ -21,9 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Auth", "src\MHS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Billing", "src\MHServerEmu.Billing\MHServerEmu.Billing.csproj", "{BDAA0D9D-1DDE-4F9A-84ED-FA551A4D4419}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Leaderboards", "src\MHServerEmu.Leaderboards\MHServerEmu.Leaderboards.csproj", "{2C74480B-B373-4DFD-9C9C-E652E889E9C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Leaderboards", "src\MHServerEmu.Leaderboards\MHServerEmu.Leaderboards.csproj", "{2C74480B-B373-4DFD-9C9C-E652E889E9C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Grouping", "src\MHServerEmu.Grouping\MHServerEmu.Grouping.csproj", "{75020CEA-FA28-4D62-A39B-F6A0E06CA640}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Grouping", "src\MHServerEmu.Grouping\MHServerEmu.Grouping.csproj", "{75020CEA-FA28-4D62-A39B-F6A0E06CA640}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Core.Tests", "src\MHServerEmu.Core.Tests\MHServerEmu.Core.Tests.csproj", "{E650FD2B-D145-43FE-B3A5-4E03E986DED4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Debug|x64.Build.0 = Debug|x64
 		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Release|x64.ActiveCfg = Release|x64
 		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Release|x64.Build.0 = Release|x64
+		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Debug|x64.ActiveCfg = Debug|x64
+		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Debug|x64.Build.0 = Debug|x64
+		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Release|x64.ActiveCfg = Release|x64
+		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

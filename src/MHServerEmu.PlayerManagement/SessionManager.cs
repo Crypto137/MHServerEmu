@@ -94,7 +94,7 @@ namespace MHServerEmu.PlayerManagement
         {
             // Check if the session exists
             if (_sessionDict.TryGetValue(credentials.Sessionid, out ClientSession session) == false)
-                return Logger.WarnReturn (false, $"VerifyClientCredentials(): SessionId {credentials.Sessionid} not found");
+                return Logger.WarnReturn (false, $"VerifyClientCredentials(): SessionId 0x{credentials.Sessionid:X} not found");
 
             // Verify the token if auth is enabled
             if (_playerManager.Config.BypassAuth == false)
@@ -104,18 +104,18 @@ namespace MHServerEmu.PlayerManagement
                     credentials.Iv.ToByteArray(), out byte[] decryptedToken) == false)
                 {
                     lock (_sessionLock) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for sessionId {session.Id}"); ;
+                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for sessionId 0x{session.Id:X}"); ;
                 }
 
                 // Verify the token
                 if (CryptographyHelper.VerifyToken(decryptedToken, session.Token) == false)
                 {
                     lock (_sessionLock) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to verify token for sessionId {session.Id}"); ;
+                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to verify token for sessionId 0x{session.Id:X}"); ;
                 }
             }
 
-            Logger.Info($"Verified client for sessionId {session.Id} - account {session.Account}");
+            Logger.Info($"Verified client for sessionId 0x{session.Id:X} - account {session.Account}");
 
             // Assign the session to the client if the token is valid
             lock (_sessionLock)

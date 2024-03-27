@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Achievements
             Threshold = info.Threshold;
             DependentAchievementId = info.DependentAchievementId;
             UIProgressDisplayOption = (AchievementUIProgressDisplayOption)info.UiProgressDisplayOption;
-            PublishedDateUS = Clock.UnixTimeMicrosecondsToTimeSpan((long)info.PublishedDateUS * Clock.MicrosecondsPerSecond);
+            PublishedDateUS = new((long)info.PublishedDateUS * TimeSpan.TicksPerSecond);
             IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;

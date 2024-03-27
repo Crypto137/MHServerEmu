@@ -59,7 +59,6 @@ namespace MHServerEmu.Games
 
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
-            Logger.Debug($"Initial repId: {_currentRepId}");
 
             NetworkManager = new(this);
             EventManager = new(this);
@@ -74,6 +73,8 @@ namespace MHServerEmu.Games
             // Start main game loop
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             gameThread.Start();
+
+            Logger.Info($"Game 0x{Id:X} created, initial replication id: {_currentRepId}");
         }
 
         public void Update()

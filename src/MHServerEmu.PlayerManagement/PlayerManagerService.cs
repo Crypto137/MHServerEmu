@@ -50,9 +50,15 @@ namespace MHServerEmu.PlayerManagement
 
         #region IGameService Implementation
 
-        public void Run() { }
+        public void Run()
+        {
+            _gameManager.CreateGame();
+        }
 
-        public void Shutdown() { }
+        public void Shutdown()
+        {
+            // TODO: Shut down all games
+        }
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
