@@ -2,6 +2,8 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using System.Globalization;
+using System.Text;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -899,6 +901,51 @@ namespace MHServerEmu.Games.Navi
             AddTriangle(lastTriangle);
 
             point.ClearFlag(NaviPointFlags.Attached);
+        }
+
+        public void SaveObjMesh(string fileName)
+        {
+            StringBuilder objVertex = new ();
+            StringBuilder objFaces = new();
+            Dictionary<ulong, int> idMap = new ();
+            
+            int newId = 1;
+            foreach (var triangle in TriangleList.Iterate())
+            {
+                foreach (var edge in triangle.Edges)
+                {
+                    foreach (var point in edge.Points)
+                    {
+                        if (idMap.ContainsKey(point.Id) == false)
+                        {
+                            idMap.Add(point.Id, newId++);
+                            objVertex.AppendLine($"v {point.Pos.Y.ToString(CultureInfo.InvariantCulture)} " +
+                                              $"{point.Pos.X.ToString(CultureInfo.InvariantCulture)} " +
+                                              $"{point.Pos.Z.ToString(CultureInfo.InvariantCulture)}");
+                        }
+                    }
+                }
+            }
+            foreach (var triangle in TriangleList.Iterate())
+            {
+                if (triangle.PathingFlags.HasFlag(PathFlags.Walk))
+                {
+                    var p0 = triangle.PointCW(0);
+                    var p1 = triangle.PointCW(1);
+                    var p2 = triangle.PointCW(2);
+                    bool flip = Pred.SortInputs(ref p0, ref p1, ref p2);
+                    if (!flip)
+                        objFaces.AppendLine($"f {idMap[p2.Id]} " +
+                                          $"{idMap[p1.Id]} " +
+                                          $"{idMap[p0.Id]}");
+                    else
+                        objFaces.AppendLine($"f {idMap[p0.Id]} " +
+                                          $"{idMap[p1.Id]} " +
+                                          $"{idMap[p2.Id]}");
+                }
+            }
+
+            File.WriteAllText(fileName, objVertex.ToString() + objFaces.ToString());
         }
     }
 }

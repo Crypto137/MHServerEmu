@@ -14,14 +14,13 @@ namespace MHServerEmu.Games.Navi
         public NaviPointFlags Flags { get; set; }
         public int Influence { get; private set; }
         public float InfluenceRadius { get; private set; }
-
+        public ulong Id { get; private set; }
         private static ulong NextId = 0;
-        private readonly ulong _id;
 
         public NaviPoint(Vector3 pos)
         {
             Pos = pos;
-            _id = NextId++;
+            Id = NextId++;
         }
 
         public override string ToString()
@@ -31,7 +30,7 @@ namespace MHServerEmu.Games.Navi
 
         public int CompareTo(NaviPoint other)
         {
-            return _id.CompareTo(other._id);
+            return Id.CompareTo(other.Id);
         }
 
         public void SetFlag(NaviPointFlags flag)

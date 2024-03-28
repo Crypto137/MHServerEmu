@@ -130,7 +130,7 @@ namespace MHServerEmu.Games.Regions
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            settings.Seed = 1210027349;
+            // settings.Seed = 1210027349;
             // GRandom random = new(settings.Seed);//Game.Random.Next()
             int tries = 10;
             Region region = null;
@@ -169,7 +169,7 @@ namespace MHServerEmu.Games.Regions
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
-            prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
+            //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             lock (_managerLock)
             {
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
