@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
@@ -63,6 +64,11 @@ namespace MHServerEmu.Core.Collisions
             Vector3 b2d = new(b.X, b.Y, 0.0f);
             Vector3 c2d = new(c.X, c.Y, 0.0f);
             return SegmentPointDistanceSq(a2d, b2d, c2d);
+        }
+
+        public static float SegmentPointDistance2D(Vector3 a, Vector3 b, Vector3 c)
+        {
+            return MathHelper.SquareRoot(SegmentPointDistanceSq2D(a, b, c));
         }
 
         public static float Cross2D(Vector3 v0, Vector3 v1)
@@ -179,6 +185,7 @@ namespace MHServerEmu.Core.Collisions
             outPoint = a0 + av * t;
             return true;
         }
+
     }
 
 }

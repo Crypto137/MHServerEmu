@@ -59,6 +59,39 @@ namespace MHServerEmu.Games.Navi
             return new Vector3(pos.X, pos.Y, z);
         }
 
+        public static bool NaviInteriorContainsCircle<T>(NaviCdt naviCdt, Vector3 position, float radius, NaviTriangle triangle, T flagsCheck) where T : IContainsPathFlagsCheck
+        {
+            if (flagsCheck.PathingFlagsCheck(triangle.PathingFlags) == false) return false;
+            if (radius > 0.0f)
+            {
+                NaviSerialCheck naviSerialCheck = new(naviCdt);
+                for (int i = 0; i < 3; ++i)
+                {
+                    if (NaviInteriorContainsCircleInternal(naviSerialCheck, position, radius, triangle, triangle.Edges[i], flagsCheck) == false)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public static bool NaviInteriorContainsCircleInternal<T>(NaviSerialCheck serialCheck, Vector3 position, float radius, NaviTriangle triangle, NaviEdge edge, T flagsCheck) where T : IContainsPathFlagsCheck
+        {
+            if (edge.TestOperationSerial(serialCheck) == false) return true;
+
+            if (Segment.SegmentPointDistance2D(edge.Points[0].Pos, edge.Points[1].Pos, position) > radius) return true;
+
+            NaviTriangle triOppo = edge.OpposedTriangle(triangle);
+
+            if (edge.TestFlag(NaviEdgeFlags.Constraint))
+                if (triOppo == null || flagsCheck.PathingFlagsCheck(triOppo.PathingFlags) == false)
+			        return false;
+
+            int edgeIndex = triOppo.EdgeIndex(edge);
+            bool contains = NaviInteriorContainsCircleInternal(serialCheck, position, radius, triOppo, triOppo.EdgeMod(edgeIndex + 1), flagsCheck);
+            if (contains) contains = NaviInteriorContainsCircleInternal(serialCheck, position, radius, triOppo, triOppo.EdgeMod(edgeIndex + 2), flagsCheck);
+
+            return contains;
+        }
     }
 
 }

@@ -387,6 +387,18 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
+        public bool Contains<T>(Vector3 position, float radius, T flagsCheck) where T: IContainsPathFlagsCheck
+        {
+            // Inverted here for make more sense, also removed bool outValue because always return false
+            if (flagsCheck.CanBypassCheck() == false) return false; 
+
+            NaviTriangle triangle = NaviCdt.FindTriangleAtPoint(position);
+            if (triangle != null)
+                return NaviUtil.NaviInteriorContainsCircle(NaviCdt, position, radius, triangle, flagsCheck);
+
+            return false;
+        }
+
         private class MarkupState
         {
             public NaviTriangle Triangle { get; set; }

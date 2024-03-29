@@ -847,7 +847,9 @@ namespace MHServerEmu.Games.Generators.Population
             if (Vector3.IsFinite(regionPos) == false) 
                 return false;
 
-            // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
+            if (PathFlags != PathFlags.None && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false) 
+                return false;
+
             Bounds bounds = new(Bounds)
             {
                 Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight)

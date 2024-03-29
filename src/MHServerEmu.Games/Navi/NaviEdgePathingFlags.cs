@@ -36,6 +36,32 @@ namespace MHServerEmu.Games.Navi
         Obstacle = 6
     }
 
+    public interface IContainsPathFlagsCheck
+    {
+        bool CanBypassCheck(); // Inverted return
+        bool PathingFlagsCheck(PathFlags pathingFlags);
+    }
+
+    public class DefaultContainsPathFlagsCheck : IContainsPathFlagsCheck
+    {
+        public PathFlags PathFlags { get; set; }
+
+        public DefaultContainsPathFlagsCheck(PathFlags pathFlags)
+        {
+            PathFlags = pathFlags;
+        }
+
+        public bool CanBypassCheck() 
+        {
+            return PathFlags != PathFlags.None;
+        }
+
+        public bool PathingFlagsCheck(PathFlags pathingFlags)
+        {
+            return pathingFlags.HasFlag(PathFlags);
+        }
+    }
+
     public class ContentFlagCounts // TODO: optimize it
     {
         public int AddWalk { get; set; }

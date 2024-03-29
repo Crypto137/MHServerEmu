@@ -242,7 +242,7 @@ namespace MHServerEmu.Games.Navi
             return null;
         }
 
-        private NaviTriangle FindTriangleAtPoint(Vector3 pos)
+        public NaviTriangle FindTriangleAtPoint(Vector3 pos)
         {
             if (Vector3.IsFinite(pos) == false) return null;
 
