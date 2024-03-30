@@ -903,6 +903,18 @@ namespace MHServerEmu.Games.Navi
             point.ClearFlag(NaviPointFlags.Attached);
         }
 
+        public void SaveHashTriangles(string fileName)
+        {
+            StringBuilder hashes = new();
+            Dictionary<ulong, int> idMap = new();
+
+            int id = 0;
+            foreach (var triangle in TriangleList.Iterate()) {
+                hashes.AppendLine($"[{id++}] {triangle.ToHashString()}");
+            }
+            File.WriteAllText(fileName, hashes.ToString());
+        }
+
         public void SaveObjMesh(string fileName, PathFlags filterFlags = PathFlags.Walk)
         {
             StringBuilder objVertex = new ();

@@ -323,6 +323,7 @@ namespace MHServerEmu.Games.Navi
             }
 
             if (removeExterior) _exteriorSeedEdge = null;
+            NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server].txt");
             ReverseMarkupMesh();
             IsMarkupValid = true;
         }
