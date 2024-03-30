@@ -37,8 +37,8 @@ namespace MHServerEmu.Games.Navi
         {
             uint hash = 2166136261;
             hash = (hash ^ (byte)EdgeFlags) * 16777619;
-            hash = hash ^ PathingFlags.GetHash();
-            hash = hash ^ Points[0].GetHash();
+            hash = (hash ^ PathingFlags.GetHash()) * 16777619;
+            hash = (hash ^ Points[0].GetHash()) * 16777619;
             hash = hash ^ Points[1].GetHash();
             return hash;
         }

@@ -278,7 +278,7 @@ namespace MHServerEmu.Games.Navi
         public uint GetHash()
         {
             uint hash = 2166136261;
-            hash = hash ^ ContentFlagCounts[0].GetHash();
+            hash = (hash ^ ContentFlagCounts[0].GetHash()) * 16777619;
             hash = hash ^ ContentFlagCounts[1].GetHash();
             return hash;
         }
