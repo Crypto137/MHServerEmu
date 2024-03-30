@@ -903,7 +903,7 @@ namespace MHServerEmu.Games.Navi
             point.ClearFlag(NaviPointFlags.Attached);
         }
 
-        public void SaveObjMesh(string fileName)
+        public void SaveObjMesh(string fileName, PathFlags filterFlags = PathFlags.Walk)
         {
             StringBuilder objVertex = new ();
             StringBuilder objFaces = new();
@@ -911,24 +911,19 @@ namespace MHServerEmu.Games.Navi
             
             int newId = 1;
             foreach (var triangle in TriangleList.Iterate())
-            {
-                foreach (var edge in triangle.Edges)
-                {
-                    foreach (var point in edge.Points)
-                    {
-                        if (idMap.ContainsKey(point.Id) == false)
-                        {
-                            idMap.Add(point.Id, newId++);
-                            objVertex.AppendLine($"v {point.Pos.Y.ToString(CultureInfo.InvariantCulture)} " +
-                                              $"{point.Pos.X.ToString(CultureInfo.InvariantCulture)} " +
-                                              $"{point.Pos.Z.ToString(CultureInfo.InvariantCulture)}");
-                        }
-                    }
-                }
-            }
+                if (triangle.PathingFlags.HasFlag(filterFlags))
+                    foreach (var edge in triangle.Edges)
+                        foreach (var point in edge.Points)
+                            if (idMap.ContainsKey(point.Id) == false)
+                            {
+                                idMap.Add(point.Id, newId++);
+                                objVertex.AppendLine($"v {point.Pos.Y.ToString(CultureInfo.InvariantCulture)} " +
+                                                  $"{point.Pos.X.ToString(CultureInfo.InvariantCulture)} " +
+                                                  $"{point.Pos.Z.ToString(CultureInfo.InvariantCulture)}");
+                            }
+
             foreach (var triangle in TriangleList.Iterate())
-            {
-                if (triangle.PathingFlags.HasFlag(PathFlags.Walk))
+                if (triangle.PathingFlags.HasFlag(filterFlags))
                 {
                     var p0 = triangle.PointCW(0);
                     var p1 = triangle.PointCW(1);
@@ -943,7 +938,6 @@ namespace MHServerEmu.Games.Navi
                                           $"{idMap[p1.Id]} " +
                                           $"{idMap[p2.Id]}");
                 }
-            }
 
             File.WriteAllText(fileName, objVertex.ToString() + objFaces.ToString());
         }

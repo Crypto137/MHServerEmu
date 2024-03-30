@@ -23,6 +23,21 @@ namespace MHServerEmu.Games.Navi
             Id = NextId++;
         }
 
+        public uint GetHash()
+        {
+            uint hash = 2166136261;
+            hash = (hash ^ BitConverter.SingleToUInt32Bits(Pos.X)) * 16777619;
+            hash = (hash ^ BitConverter.SingleToUInt32Bits(Pos.Y)) * 16777619;
+            hash = (hash ^ BitConverter.SingleToUInt32Bits(Pos.Z)) * 16777619;
+            hash = (hash ^ (byte)Flags) * 16777619;
+            return hash;
+        }
+
+        public string ToHashString()
+        {
+            return $"{GetHash()}:X";
+        }
+
         public override string ToString()
         {
             return $"NaviPoint ({Pos.X:F4} {Pos.Y:F4} {Pos.Z:F4}) flg:{Flags} inf:{Influence}";

@@ -84,6 +84,22 @@ namespace MHServerEmu.Games.Navi
             Set(flagCounts);
         }
 
+        public uint GetHash()
+        {
+            uint hash = 2166136261;
+
+            hash = (hash ^ (uint)AddWalk) * 16777619;
+            hash = (hash ^ (uint)RemoveWalk) * 16777619;
+            hash = (hash ^ (uint)AddFly) * 16777619;
+            hash = (hash ^ (uint)RemoveFly) * 16777619;
+            hash = (hash ^ (uint)AddPower) * 16777619;
+            hash = (hash ^ (uint)RemovePower) * 16777619;
+            hash = (hash ^ (uint)AddSight) * 16777619;
+            hash = (hash ^ (uint)RemoveSight) * 16777619;
+
+            return hash;
+        }
+
         public int this[int index]
         {
             get
@@ -257,6 +273,14 @@ namespace MHServerEmu.Games.Navi
         public override string ToString()
         {
             return $"[0][{ContentFlagCounts[0]}] [1][{ContentFlagCounts[1]}]";
+        }
+
+        public uint GetHash()
+        {
+            uint hash = 2166136261;
+            hash = hash ^ ContentFlagCounts[0].GetHash();
+            hash = hash ^ ContentFlagCounts[1].GetHash();
+            return hash;
         }
     }
 }

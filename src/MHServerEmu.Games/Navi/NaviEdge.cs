@@ -33,6 +33,16 @@ namespace MHServerEmu.Games.Navi
             Triangles = new NaviTriangle[2];
         }
 
+        public uint GetHash()
+        {
+            uint hash = 2166136261;
+            hash = (hash ^ (byte)EdgeFlags) * 16777619;
+            hash = hash ^ PathingFlags.GetHash();
+            hash = hash ^ Points[0].GetHash();
+            hash = hash ^ Points[1].GetHash();
+            return hash;
+        }
+
         public void AttachTriangle(NaviTriangle triangle)
         {
             if (Triangles[0] == null)
@@ -109,6 +119,19 @@ namespace MHServerEmu.Games.Navi
             bool flip = Points[0] != edge.Points[0] && Points[1] != edge.Points[1];
             PathingFlags.Merge(edge.PathingFlags, flip);
             SetFlag(NaviEdgeFlags.Constraint);
+        }
+
+        public uint GetHashOpposedTriangle(NaviTriangle triangle)
+        {
+            var triOppo = OpposedTriangle(triangle);
+            return triOppo != null ? triOppo.GetHash() : 0;
+        }
+
+        public string ToHashString()
+        {
+            uint tri0 = Triangles[0] != null ? Triangles[0].GetHash() : 0;
+            uint tri1 = Triangles[1] != null ? Triangles[0].GetHash() : 0;
+            return $"{GetHash()}:X T[{tri0}:X  {tri1}:X]";
         }
     }
 

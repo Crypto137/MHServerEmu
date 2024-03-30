@@ -29,8 +29,8 @@ namespace MHServerEmu.Games.Navi
         public NaviCdt NaviCdt { get; private set; }
         public InvasiveList<NaviTriangle> TriangleList => NaviCdt.TriangleList;
 
-        private bool _isInit;
-        private bool _IsMarkup;
+        public bool IsMeshValid { get; private set; }
+        public bool IsMarkupValid { get; private set; }
         private float _padding;
         private Region _region;
         private NaviPoint[] _points;
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Navi
 
         public void Release()
         {
-            _isInit = false;
+            IsMeshValid = false;
             _modifyMeshPatches.Clear();
             _modifyMeshPatchesProjZ.Clear();
             DestroyMeshConnections();
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Navi
 
         public bool GenerateMesh()
         {
-            _isInit = false;
+            IsMeshValid = false;
 
             if (_modifyMeshPatches.Any())
             {
@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Navi
                 if (_navi.CheckErrorLog(false)) return false;
             }
             _modifyMeshPatchesProjZ.Clear();
-
+            NaviCdt.SaveObjMesh($"{_navi.Region.PrototypeName}[All].obj", PathFlags.None);
             MarkupMesh(false);
             if (_navi.CheckErrorLog(false)) return false;
 
@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.Navi
             if (_navi.CheckErrorLog(false)) return false;
 
             NaviCdt.SaveObjMesh($"{_navi.Region.PrototypeName}.obj");
-            _isInit = true;
+            IsMeshValid = true;
             return true;
         }
 
@@ -323,7 +323,7 @@ namespace MHServerEmu.Games.Navi
 
             if (removeExterior) _exteriorSeedEdge = null;
             ReverseMarkupMesh();
-            _IsMarkup = true;
+            IsMarkupValid = true;
         }
 
         private void ReverseMarkupMesh()
@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.Navi
                 triangle.PathingFlags = PathFlags.None;
                 triangle.ContentFlagCounts.Clear();
             }
-            _IsMarkup = false;
+            IsMarkupValid = false;
         }
 
         public bool Stitch(NaviPatchPrototype patch, Transform3 transform)

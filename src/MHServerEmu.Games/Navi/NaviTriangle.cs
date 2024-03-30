@@ -37,6 +37,24 @@ namespace MHServerEmu.Games.Navi
             Attach();
         }
 
+        public uint GetHash()
+        {
+            uint hash = 2166136261;
+            hash = (hash ^ Edges[0].GetHash()) * 16777619;
+            hash = (hash ^ Edges[1].GetHash()) * 16777619;
+            hash = (hash ^ EdgeSideFlags) * 16777619;
+            hash = (hash ^ (byte)Flags) * 16777619;
+            hash = (hash ^ (byte)PathingFlags) * 16777619;
+            hash = hash ^ ContentFlagCounts.GetHash();
+
+            return hash;
+        }
+
+        public string ToHashString()
+        {
+            return $"{GetHash()}:X E[{Edges[0].GetHashOpposedTriangle(this)}:X  {Edges[1].GetHashOpposedTriangle(this)}:X  {Edges[2].GetHashOpposedTriangle(this)}:X]";
+        }
+
         public void SetFlag(NaviTriangleFlags flag)
         {
             Flags |= flag;
