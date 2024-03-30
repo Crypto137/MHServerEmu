@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Navi
         {
             uint tri0 = Triangles[0] != null ? Triangles[0].GetHash() : 0;
             uint tri1 = Triangles[1] != null ? Triangles[1].GetHash() : 0;
-            return $"{GetHash():X} T[{tri0:X}  {tri1:X}]";
+            return $"{GetHash():X} T[{tri0:X} {tri1:X}]";
         }
     }
 

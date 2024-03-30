@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Navi
 
         public string ToHashString()
         {
-            return $"{GetHash():X} E[{Edges[0].GetHashOpposedTriangle(this):X}  {Edges[1].GetHashOpposedTriangle(this):X}  {Edges[2].GetHashOpposedTriangle(this):X]}";
+            return $"{GetHash():X} E[{Edges[0].GetHashOpposedTriangle(this):X} {Edges[1].GetHashOpposedTriangle(this):X} {Edges[2].GetHashOpposedTriangle(this):X}]";
         }
 
         public void SetFlag(NaviTriangleFlags flag)
