@@ -306,7 +306,8 @@ namespace MHServerEmu.Games.Navi
                             else
                                 keepEdge |= (triFlags.RemoveSight > 0) ^ (oppFlags.RemoveSight > 0);
                         }
-                        if (keepEdge == false) edgeStack.Push(edge);
+                        if (keepEdge == false) 
+                            edgeStack.Push(edge);
                     }
                 }
             }

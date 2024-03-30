@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Navi
 
         public string ToHashString()
         {
-            return $"{GetHash()}:X";
+            return $"{GetHash():X}";
         }
 
         public override string ToString()
