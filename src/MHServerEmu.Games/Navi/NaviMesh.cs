@@ -5,6 +5,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
+using System.Text;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -170,6 +171,17 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
+        public void SaveHashPoints(string fileName)
+        {
+            StringBuilder hashes = new();
+            int id = 0;
+            foreach (var point in _points)
+            {
+                hashes.AppendLine($"[{id++}] {point.ToHashString()}");
+            }
+            File.WriteAllText(fileName, hashes.ToString());
+        }
+
         private void MergeMeshConnections() {}
 
         public bool ModifyMesh(Transform3 transform, NaviPatchPrototype patch, bool projZ)
@@ -186,7 +198,6 @@ namespace MHServerEmu.Games.Navi
                     p0 = projZ ? NaviCdt.AddPointProjZ(Pos0) : NaviCdt.AddPoint(Pos0);
                     _points[edge.Index0] = p0;
                 }
-
                 NaviPoint p1 = _points[edge.Index1];
                 if (p1 == null)
                 {
@@ -208,6 +219,8 @@ namespace MHServerEmu.Games.Navi
 
         private void MarkupMesh(bool removeExterior)
         {
+            NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server_markup].txt");
+
             if (removeExterior && _exteriorSeedEdge == null)  return;
             ClearMarkup();
 
@@ -323,7 +336,7 @@ namespace MHServerEmu.Games.Navi
             }
 
             if (removeExterior) _exteriorSeedEdge = null;
-            NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server].txt");
+            NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server_].txt");
             ReverseMarkupMesh();
             IsMarkupValid = true;
         }

@@ -906,12 +906,18 @@ namespace MHServerEmu.Games.Navi
         public void SaveHashTriangles(string fileName)
         {
             StringBuilder hashes = new();
-            Dictionary<ulong, int> idMap = new();
-
             int id = 0;
-            foreach (var triangle in TriangleList.Iterate()) {
+            foreach (var triangle in TriangleList.Iterate())
                 hashes.AppendLine($"[{id++}] {triangle.ToHashString()}");
-            }
+            File.WriteAllText(fileName, hashes.ToString());
+        }
+
+        public void SaveHashTriangles2(string fileName)
+        {
+            StringBuilder hashes = new();
+            int id = 0;
+            foreach (var triangle in TriangleList.Iterate())
+                hashes.AppendLine($"[{id++}] {triangle.ToHashString2()}");
             File.WriteAllText(fileName, hashes.ToString());
         }
 
