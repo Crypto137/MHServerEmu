@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Navi
             MarkupMesh(false);
             if (_navi.CheckErrorLog(false)) return false;
 
-            bool removeCollinearEdges = true; 
+            bool removeCollinearEdges = false; 
             if (removeCollinearEdges)
             {
                 NaviCdt.RemoveCollinearEdges();
