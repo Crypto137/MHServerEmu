@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Navi
                 if (_navi.CheckErrorLog(false)) return false;
             }
             _modifyMeshPatchesProjZ.Clear();
-            NaviCdt.SaveObjMesh($"{_navi.Region.PrototypeName}[All].obj", PathFlags.None);
+            //NaviCdt.SaveObjMesh($"{_navi.Region.PrototypeName}[All].obj", PathFlags.None);
             MarkupMesh(false);
             if (_navi.CheckErrorLog(false)) return false;
 
@@ -219,14 +219,11 @@ namespace MHServerEmu.Games.Navi
 
         private void MarkupMesh(bool removeExterior)
         {
-            NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server_markup].txt");
-
             if (removeExterior && _exteriorSeedEdge == null)  return;
             ClearMarkup();
 
             Stack<MarkupState> stateStack = new ();
             Stack<NaviEdge> edgeStack = new ();
-
             NaviTriangle triangle = _exteriorSeedEdge.Triangles[0] ?? _exteriorSeedEdge.Triangles[1];
 
             MarkupState state = new()
@@ -247,12 +244,11 @@ namespace MHServerEmu.Games.Navi
             triangle.ContentFlagCounts.Set(state.FlagCounts);
             triangle.PathingFlags = pathFlags;
             triangle.SetFlag(NaviTriangleFlags.Markup);
-
+            //int t = 0; int e = 0;
             while (stateStack.Count > 0)
             {
                 state = stateStack.Pop();
                 triangle = state.Triangle;
-                
                 for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
                 {
                     var edge = triangle.Edges[edgeIndex];
@@ -319,24 +315,28 @@ namespace MHServerEmu.Games.Navi
                             else
                                 keepEdge |= (triFlags.RemoveSight > 0) ^ (oppFlags.RemoveSight > 0);
                         }
-                        if (keepEdge == false) 
+                        if (keepEdge == false)
+                        {
+                            //NaviSystem.Logger.Debug($"Edge Push[{e++}]{edge.ToHashString()}");
                             edgeStack.Push(edge);
+                        }
                     }
                 }
             }
-
+            
             while (edgeStack.Count > 0)
             {
                 var edge = edgeStack.Pop();
                 if (edge.TestFlag(NaviEdgeFlags.Constraint))
                 {
-                    NaviSystem.Logger.Debug($"[{edgeStack.Count}] edge {edge}");
+                    //NaviSystem.Logger.Debug($"RemoveEdge edge {edge.ToHashString()}");
                     NaviCdt.RemoveEdge(edge);
+                    //NaviCdt.SaveHashTriangles2($"{_navi.Region.PrototypeName}[{edgeStack.Count}].txt");
                 }
             }
 
             if (removeExterior) _exteriorSeedEdge = null;
-            NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server_].txt");
+            //NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server_].txt");
             ReverseMarkupMesh();
             IsMarkupValid = true;
         }

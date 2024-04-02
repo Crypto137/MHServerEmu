@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Navi
             if (Pred.IsDegenerate(p0, p1, p2) == false)
                 Power = Pred.CalcEarPower(p0.Pos, p1.Pos, p2.Pos, point);
             else
-                Power = float.MinValue;
+                Power = float.MaxValue;
         }
     }
 }
