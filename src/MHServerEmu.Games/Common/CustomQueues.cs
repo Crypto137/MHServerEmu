@@ -1,6 +1,4 @@
-﻿using static MHServerEmu.Games.Powers.PowerPrototypes;
-
-namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Games.Common
 {
     public class FixedPriorityQueue<T> where T : IComparable<T>
     {
@@ -12,38 +10,7 @@ namespace MHServerEmu.Games.Common
         public void Push(T value)
         {
             _items.Add(value);
-            int index = _items.Count - 1;
-            HeapifyUp(index);
-        }
-
-        private void HeapifyUp(int index)
-        {
-            while (index > 0)
-            {
-                int parentIndex = (index - 1) / 2;
-                if (_items[index].CompareTo(_items[parentIndex]) > 0)
-                    Swap(index, parentIndex);
-                else break;
-                index = parentIndex;
-            }
-        }
-
-        private void HeapifyDown(int index)
-        {
-            int left = 2 * index + 1;
-            int right = 2 * index + 2;
-            int maxIndex = index;
-
-            if (left < _items.Count && _items[left].CompareTo(_items[maxIndex]) > 0)
-                maxIndex = left;
-            if (right < _items.Count && _items[right].CompareTo(_items[maxIndex]) > 0)
-                maxIndex = right;
-
-            if (maxIndex != index)
-            {
-                Swap(index, maxIndex);
-                HeapifyDown(maxIndex);
-            }
+            HeapFunctions.PushHeap(_items);
         }
 
         public void Pop()
@@ -51,22 +18,85 @@ namespace MHServerEmu.Games.Common
             if (_items.Count == 0)
                 throw new InvalidOperationException("Queue is empty");
 
-            _items[0] = _items[_items.Count - 1];
+            HeapFunctions.PopHeap(_items);
             _items.RemoveAt(_items.Count - 1);
-            HeapifyDown(0);
         }
 
         public void Clear() => _items.Clear();
 
         public void Heapify()
         {
-            for (int i = _items.Count / 2 - 1; i >= 0; i--)
-                HeapifyDown(i);
+            HeapFunctions.MakeHeap(_items);
+        }
+    }
+
+    public static class HeapFunctions
+    {
+        public static void PushHeap<T>(List<T> list) where T : IComparable<T>
+        {
+            int last = list.Count - 1;
+            int holeIndex = last;
+            T value = list[last];
+            PushHeapIndex(list, holeIndex, 0, value);
         }
 
-        private void Swap(int index1, int index2)
+        private static void PushHeapIndex<T>(List<T> list, int holeIndex, int topIndex, T value) where T : IComparable<T>
         {
-            (_items[index2], _items[index1]) = (_items[index1], _items[index2]);
+            int parent = (holeIndex - 1) / 2;
+            while (holeIndex > topIndex && list[parent].CompareTo(value) < 0)
+            {
+                list[holeIndex] = list[parent];
+                holeIndex = parent;
+                parent = (holeIndex - 1) / 2;
+            }
+            list[holeIndex] = value;
+        }
+
+        public static void PopHeap<T>(List<T> list) where T : IComparable<T>
+        {
+            if (list.Count > 1)
+            {
+                int last = list.Count - 1;
+                T value = list[last];
+                list[last] = list[0];
+                AdjustHeap(list, 0, last, value);
+            }
+        }
+
+        public static void MakeHeap<T>(List<T> list) where T : IComparable<T>
+        {
+            if (list.Count < 2) return;
+
+            int len = list.Count;
+            int parent = (len - 2) / 2;
+            while (true)
+            {
+                T value = list[parent];
+                AdjustHeap(list, parent, len, value);
+                if (parent == 0) return;
+                parent--;
+            }
+        }
+
+        private static void AdjustHeap<T>(List<T> list, int holeIndex, int len, T value) where T : IComparable<T>
+        {
+            int topIndex = holeIndex;
+            int secondChild = 2 * (holeIndex + 1);
+            while (secondChild < len)
+            {
+                if (list[secondChild].CompareTo(list[secondChild - 1]) < 0)
+                    secondChild--;
+                list[holeIndex] = list[secondChild];
+                holeIndex = secondChild;
+                secondChild = 2 * (secondChild + 1);
+            }
+            if (secondChild == len)
+            {              
+                list[holeIndex] = list[secondChild - 1];
+                holeIndex = secondChild - 1;
+            }
+
+            PushHeapIndex(list, holeIndex, topIndex, value);
         }
     }
 }
