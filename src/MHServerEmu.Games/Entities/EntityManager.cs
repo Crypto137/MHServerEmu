@@ -252,33 +252,7 @@ namespace MHServerEmu.Games.Entities
 
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
 
-        #region OldSpawnSystem
-
-        public void AddEntityMarker(Cell cell, EntityMarkerPrototype entityMarker)
-        {
-            CellPrototype cellProto = cell.CellProto;
-
-            Vector3 entityPosition = cell.CalcMarkerPosition(entityMarker.Position);
-
-            PrototypeId protoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(protoRef);
-
-            bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
-            snapToFloor ??= entity.SnapToFloorOnSpawn;
-            bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
-            if (snapToFloor == true) // Fix Boxes in Axis Raid
-            {
-                float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cellProto, entityMarker.Position);
-                if (entityPosition.Z > projectHeight)
-                    entityPosition.Z = projectHeight;
-            }
-            if (entity.Bounds != null)
-                entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
-            int health = GetRankHealth(entity);
-            WorldEntity worldEntity = CreateWorldEntity(cell, protoRef, null, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
-            if (worldEntity.WorldEntityPrototype is AgentPrototype)
-                worldEntity.AppendOnStartActions(cell.GetRegion().PrototypeDataRef);
-        }
+        #region HardCodeRank
 
         public static int GetRankHealth(WorldEntityPrototype entity)
         {

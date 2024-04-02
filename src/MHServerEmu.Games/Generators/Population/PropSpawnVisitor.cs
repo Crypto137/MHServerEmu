@@ -4,6 +4,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -38,7 +39,7 @@ namespace MHServerEmu.Games.Generators.Population
         public override void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
         {
             if (_naviMesh == null || propTable == null || propGroup == null || markerPrototype == null) return;
-
+            if (propGroup.NaviPatchSource.NaviPatch.Points.IsNullOrEmpty()) return; // skip
             PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
             Vector3 position = markerPrototype.Position + randomOffset;
             Orientation rotation = new(markerPrototype.Rotation);
@@ -102,19 +103,17 @@ namespace MHServerEmu.Games.Generators.Population
                 MarkerSetPrototype markerSet = propGroup.Objects;
 
                 PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
-
                 Vector3 position = new(markerPrototype.Position);
                 position += randomOffset;
-
                 Orientation rotation = new(markerPrototype.Rotation);
                 rotation.Yaw += randomRotation;
 
                 Transform3 transform = Transform3.BuildTransform(position, rotation);
 
                 MarkerSetOptions instanceMarkerSetOptions = MarkerSetOptions.Default;
-                if (!_cell.CellProto.IsOffsetInMapFile) instanceMarkerSetOptions |= MarkerSetOptions.NoOffset;
+                if (_cell.CellProto.IsOffsetInMapFile == false) instanceMarkerSetOptions |= MarkerSetOptions.NoOffset;
 
-                _cell.InstanceMarkerSet(markerSet, transform, instanceMarkerSetOptions, propGroup.PrefabPath);
+                _cell.InstanceMarkerSet(markerSet, transform, instanceMarkerSetOptions/*, propGroup.PrefabPath*/);
             }
         }
 

@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -136,7 +137,7 @@ namespace MHServerEmu.Games.Regions
              if (naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, transform) == false) return;
              if (naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, transform) == false) return;
 
-            // VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, transform)); infinity Loop
+             VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, transform)); 
             // VisitEncounters(new NaviEncounterVisitor(naviMesh, transform));            
         }
 
@@ -218,22 +219,66 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public void SpawnMarkers() 
+        public void InstanceMarkerSet(MarkerSetPrototype markerSet, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions)
         {
-            var entityManager = Game.EntityManager;
-            foreach (var markerProto in CellProto.MarkerSet.Markers)
-            {
-                if (markerProto is EntityMarkerPrototype entityMarker)
-                {                    
-                    PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                    if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) continue; // Invisible Domino NPC
-                    Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
+            if (instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated | MarkerSetOptions.NoSpawnMissionAssociated)) return;
+            if (markerSet.Markers.HasValue())
+                foreach (var marker in markerSet.Markers)
+                    if (marker != null)
+                        SpawnMarker(marker, transform, instanceMarkerSetOptions);
+        }
 
-                    // Spawn Entity from Cell
-                    if (entity is WorldEntityPrototype)
-                        entityManager.AddEntityMarker(this, entityMarker);
-                }
+        public void SpawnMarker(MarkerPrototype marker, Transform3 transform, MarkerSetOptions options)
+        {
+            if (marker is EntityMarkerPrototype entityMarker)
+            {
+                PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) return; // Invisible Domino NPC
+                Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
+
+                // Spawn Entity from Cell
+                if (entity is WorldEntityPrototype)
+                    SpawnEntityMarker(entityMarker, transform, options);
             }
+        }
+
+        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options)
+        {
+            CellPrototype cellProto = CellProto;
+            var entityManager = Game.EntityManager;
+
+            CalcMarkerTransform(entityMarker, transform, options, out Vector3 markerPosition, out Orientation markerOrientation);
+
+            Vector3 entityPosition = CalcMarkerPosition(markerPosition);
+            Orientation entityOrientation = markerOrientation;
+            PrototypeId protoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(protoRef);
+
+            bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
+            snapToFloor ??= entity.SnapToFloorOnSpawn;
+            bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
+            if (snapToFloor == true) // Fix Boxes in Axis Raid
+            {
+                float projectHeight = RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cellProto, markerPosition);
+                if (entityPosition.Z > projectHeight)
+                    entityPosition.Z = projectHeight;
+            }
+            if (entity.Bounds != null)
+                entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
+            int health = EntityManager.GetRankHealth(entity);
+            WorldEntity worldEntity = entityManager.CreateWorldEntity(this, protoRef, null, entityPosition, entityOrientation, health, false, overrideSnap);
+            if (worldEntity.WorldEntityPrototype is AgentPrototype)
+                worldEntity.AppendOnStartActions(GetRegion().PrototypeDataRef);
+        }
+
+        public static void CalcMarkerTransform(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options,
+            out Vector3 markerPosition, out Orientation markerOrientation)
+        {
+            Transform3 markerTransform = Transform3.BuildTransform(entityMarker.Position, entityMarker.Rotation);
+            markerTransform = transform * markerTransform;
+
+            markerPosition = new (markerTransform.Translation);
+            markerOrientation = new (Orientation.FromTransform3(markerTransform));
         }
 
         public static Type BuildTypeFromWalls(Walls walls)
@@ -295,7 +340,8 @@ namespace MHServerEmu.Games.Regions
 
         public void PostGenerate()
         {
-            // VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this)); SpawnMarker Prop type
+            // SpawnMarker Prop type
+            VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this)); 
 
             // SpawnMarkers not Prop type
             var population = GetRegion().PopulationManager.PopulationMarkers;
@@ -320,7 +366,7 @@ namespace MHServerEmu.Games.Regions
             if (propTable != null)
             {
                 int randomSeed = Seed;
-                Random random = new(randomSeed);
+                GRandom random = new(randomSeed);
                 int randomNext = 0;
 
                 CellPrototype cellProto = CellProto;
@@ -332,7 +378,7 @@ namespace MHServerEmu.Games.Regions
                     PrototypeId propMarkerRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
 
                     var propMarkerProto = entityMarker.GetMarkedPrototype<PropMarkerPrototype>();
-                    if (propMarkerProto != null && propMarkerRef != 0 && propMarkerProto.Type == MarkerType.Prop)
+                    if (propMarkerProto != null && propMarkerRef != PrototypeId.Invalid && propMarkerProto.Type == MarkerType.Prop)
                     {
                         PrototypeId propDensityRef = Area.AreaPrototype.PropDensity;
                         if (propDensityRef != PrototypeId.Invalid)
@@ -364,27 +410,6 @@ namespace MHServerEmu.Games.Regions
                 PopulationEncounterPrototype popProto = null;
                 PrototypeId missionRef = PrototypeId.Invalid;
                 visitor.Visit(encounterResourceRef, reservation, popProto, missionRef, encounter.UseMarkerOrientation);
-            }
-        }
-
-        public void InstanceMarkerSet(MarkerSetPrototype markerSet, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions, string prefabPath)
-        {
-            if (!(instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated)
-                && instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated)))
-            {
-                if (markerSet.Markers.HasValue())
-                    foreach (var marker in markerSet.Markers)
-                        if (marker != null)
-                            SpawnMarker(marker, transform, instanceMarkerSetOptions, prefabPath);
-            }
-        }
-
-        public void SpawnMarker(MarkerPrototype marker, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions, string prefabPath)
-        {
-            if (marker is EntityMarkerPrototype entityMarker)
-            {
-                // TODO Check Entity Prototype, Add transform to Marker position
-                Game.EntityManager.AddEntityMarker(this, entityMarker);
             }
         }
 

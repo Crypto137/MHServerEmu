@@ -233,8 +233,12 @@ namespace MHServerEmu.Games.Regions
         private bool GeneratePopulation()
         {
             if (Region.Settings.GenerateEntities)
-                foreach (var cell in CellIterator())
-                    cell.SpawnMarkers();
+                foreach (var cell in CellIterator()) {
+                    MarkerSetOptions options = MarkerSetOptions.Default;
+                    var cellProto = cell.CellProto;
+                    if (cellProto.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
+                    cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
+                }
 
             return true;
         }
