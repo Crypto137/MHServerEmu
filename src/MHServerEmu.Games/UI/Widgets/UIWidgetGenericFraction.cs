@@ -15,8 +15,10 @@ namespace MHServerEmu.Games.UI.Widgets
         public bool TimePaused { get; set; }
 
         public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas,
-            int currentCount, int totalCount, long timeStart, long timeEnd, bool timePaused) : base(widgetR, contextR, areas)
+            int currentCount, int totalCount, long timeStart, long timeEnd, bool timePaused) : base(null, widgetR, contextR)
         {
+            _areas = areas;
+
             CurrentCount = currentCount;
             TotalCount = totalCount;
             TimeStart = timeStart;
@@ -24,8 +26,12 @@ namespace MHServerEmu.Games.UI.Widgets
             TimePaused = timePaused;
         }
 
-        public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
+        public UIWidgetGenericFraction(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
+            base.Decode(stream, boolDecoder);
+
             CurrentCount = stream.ReadRawInt32();
             TotalCount = stream.ReadRawInt32();
             TimeStart = stream.ReadRawInt64();

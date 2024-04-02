@@ -10,14 +10,20 @@ namespace MHServerEmu.Games.UI.Widgets
         public LocaleStringId MissionName { get; set; }
         public LocaleStringId MissionObjectiveName { get; set; }
 
-        public UIWidgetMissionText(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, LocaleStringId missionName, LocaleStringId missionObjectiveName) : base(widgetR, contextR, areas)
+        public UIWidgetMissionText(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, LocaleStringId missionName, LocaleStringId missionObjectiveName) : base(null, widgetR, contextR)
         {
+            _areas = areas;
+
             MissionName = missionName;
             MissionObjectiveName = missionObjectiveName;
         }
 
-        public UIWidgetMissionText(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
+        public UIWidgetMissionText(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
+            base.Decode(stream, boolDecoder);
+
             MissionName = (LocaleStringId)stream.ReadRawVarint64();
             MissionObjectiveName = (LocaleStringId)stream.ReadRawVarint64();
         }

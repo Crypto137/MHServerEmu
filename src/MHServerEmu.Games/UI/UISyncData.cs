@@ -10,28 +10,36 @@ namespace MHServerEmu.Games.UI
 {
     public class UISyncData
     {
-        public PrototypeId WidgetR { get; set; }
-        public PrototypeId ContextR { get; set; }
-        public PrototypeId[] Areas { get; set; }
+        protected readonly UIDataProvider _uiDataProvider;
+        protected readonly PrototypeId _widgetRef;
+        protected readonly PrototypeId _contextRef;
 
-        public UISyncData(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas)
+        protected PrototypeId[] _areas = Array.Empty<PrototypeId>();
+
+        public UISyncData(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef)
         {
-            WidgetR = widgetR;
-            ContextR = contextR;
-            Areas = areas;
+            _uiDataProvider = uiDataProvider;
+            _widgetRef = widgetRef;
+            _contextRef = contextRef;
+        }
+
+        public virtual void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
+        {
+            _areas = new PrototypeId[stream.ReadRawInt32()];
+            for (int i = 0; i < _areas.Length; i++)
+                _areas[i] = stream.ReadPrototypeRef<Prototype>();
         }
 
         public virtual void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WritePrototypeRef<Prototype>(WidgetR);
-            stream.WritePrototypeRef<Prototype>(ContextR);
-
-            stream.WriteRawInt32(Areas.Length);
-            for (int i = 0; i < Areas.Length; i++)
-                stream.WritePrototypeRef<Prototype>(Areas[i]);
+            stream.WriteRawInt32(_areas.Length);
+            for (int i = 0; i < _areas.Length; i++)
+                stream.WritePrototypeRef<Prototype>(_areas[i]);
         }
 
         public virtual void EncodeBools(BoolEncoder boolEncoder) { }
+
+        public virtual void UpdateUI() { }
 
         public override string ToString()
         {
@@ -42,9 +50,8 @@ namespace MHServerEmu.Games.UI
 
         protected virtual void BuildString(StringBuilder sb)
         {
-            sb.AppendLine($"WidgetR: {GameDatabase.GetPrototypeName(WidgetR)}");
-            sb.AppendLine($"ContextR: {GameDatabase.GetPrototypeName(ContextR)}");
-            for (int i = 0; i < Areas.Length; i++) sb.AppendLine($"Area{i}: {Areas[i]}");
+            for (int i = 0; i < _areas.Length; i++)
+                sb.AppendLine($"_areas[{i}]: {_areas[i]}");
         }
     }
 }

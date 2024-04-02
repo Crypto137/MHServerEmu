@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Powers
             ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy;
             Properties = new(replicationId);
             MissionManager = new();
-            UIDataProvider = new(Array.Empty<UISyncData>());
+            UIDataProvider = new();
             ObjectiveGraph = new();
         }
 
