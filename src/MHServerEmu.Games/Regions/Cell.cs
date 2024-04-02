@@ -136,8 +136,8 @@ namespace MHServerEmu.Games.Regions
              if (naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, transform) == false) return;
              if (naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, transform) == false) return;
 
-             VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, transform));
-             VisitEncounters(new NaviEncounterVisitor(naviMesh, transform));            
+            // VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, transform)); infinity Loop
+            // VisitEncounters(new NaviEncounterVisitor(naviMesh, transform));            
         }
 
         public void AddCellConnection(uint id)
