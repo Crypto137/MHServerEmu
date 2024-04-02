@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.Navi
             MergeMeshConnections();
             if (_navi.CheckErrorLog(false)) return false;
 
-            NaviCdt.SaveObjMesh($"{_navi.Region.PrototypeName}.obj");
+            //NaviCdt.SaveObjMesh($"{_navi.Region.PrototypeName}.obj");
             IsMeshValid = true;
             return true;
         }

@@ -6,6 +6,7 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
 
@@ -61,9 +62,26 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Current region: {playerConnection.AOI.Region.PrototypeName}";
         }
+        
+
+        [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].", AccountUserLevel.User)]
+        public string Navi2Obj(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+
+            var region = playerConnection.AOI.Region;
+
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], out PathFlags flags)) == false)
+                flags = PathFlags.Walk;   // Default Walk
+
+            string filename = $"{region.PrototypeName}[{flags}].obj";
+            region.NaviMesh.NaviCdt.SaveObjMesh(filename, flags);
+            return $"NaviMesh saved as {filename}";
+        }
 
         [Command("isblocked", "Usage: debug isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
-
         public string IsBlocked(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
