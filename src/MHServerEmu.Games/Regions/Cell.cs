@@ -244,14 +244,9 @@ namespace MHServerEmu.Games.Regions
 
         public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options)
         {
-            CellPrototype cellProto = CellProto;
-            var entityManager = Game.EntityManager;
+            CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
 
-            CalcMarkerTransform(entityMarker, transform, options, out Vector3 markerPosition, out Orientation markerOrientation);
-
-            Vector3 entityPosition = CalcMarkerPosition(markerPosition);
-            Orientation entityOrientation = markerOrientation;
-            PrototypeId protoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+            var protoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
             var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(protoRef);
 
             bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
@@ -259,23 +254,28 @@ namespace MHServerEmu.Games.Regions
             bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
             if (snapToFloor == true) // Fix Boxes in Axis Raid
             {
-                float projectHeight = RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cellProto, markerPosition);
+                float projectHeight = RegionBounds.Center.Z + RegionLocation.ProjectToFloor(CellProto, entityPosition);
                 if (entityPosition.Z > projectHeight)
                     entityPosition.Z = projectHeight;
             }
             if (entity.Bounds != null)
                 entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
+
             int health = EntityManager.GetRankHealth(entity);
-            WorldEntity worldEntity = entityManager.CreateWorldEntity(this, protoRef, null, entityPosition, entityOrientation, health, false, overrideSnap);
+            WorldEntity worldEntity = Game.EntityManager.CreateWorldEntity(this, protoRef, null, entityPosition, entityOrientation, health, false, overrideSnap);
             if (worldEntity.WorldEntityPrototype is AgentPrototype)
                 worldEntity.AppendOnStartActions(GetRegion().PrototypeDataRef);
         }
 
-        public static void CalcMarkerTransform(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options,
+        public void CalcMarkerTransform(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options,
             out Vector3 markerPosition, out Orientation markerOrientation)
         {
-            Transform3 markerTransform = Transform3.BuildTransform(entityMarker.Position, entityMarker.Rotation);
-            markerTransform = transform * markerTransform;
+            Transform3 markerTransform = transform * Transform3.BuildTransform(entityMarker.Position, entityMarker.Rotation);
+
+            if (options.HasFlag(MarkerSetOptions.NoOffset))
+                markerTransform = RegionTransform * markerTransform;
+            else
+                markerTransform = Transform3.BuildTransform(AreaOffset, Orientation.Zero) * markerTransform;
 
             markerPosition = new (markerTransform.Translation);
             markerOrientation = new (Orientation.FromTransform3(markerTransform));
