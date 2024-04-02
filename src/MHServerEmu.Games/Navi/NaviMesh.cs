@@ -316,10 +316,7 @@ namespace MHServerEmu.Games.Navi
                                 keepEdge |= (triFlags.RemoveSight > 0) ^ (oppFlags.RemoveSight > 0);
                         }
                         if (keepEdge == false)
-                        {
-                            //NaviSystem.Logger.Debug($"Edge Push[{e++}]{edge.ToHashString()}");
                             edgeStack.Push(edge);
-                        }
                     }
                 }
             }
@@ -328,15 +325,10 @@ namespace MHServerEmu.Games.Navi
             {
                 var edge = edgeStack.Pop();
                 if (edge.TestFlag(NaviEdgeFlags.Constraint))
-                {
-                    //NaviSystem.Logger.Debug($"RemoveEdge edge {edge.ToHashString()}");
                     NaviCdt.RemoveEdge(edge);
-                    //NaviCdt.SaveHashTriangles2($"{_navi.Region.PrototypeName}[{edgeStack.Count}].txt");
-                }
             }
 
             if (removeExterior) _exteriorSeedEdge = null;
-            //NaviCdt.SaveHashTriangles($"{_navi.Region.PrototypeName}[server_].txt");
             ReverseMarkupMesh();
             IsMarkupValid = true;
         }

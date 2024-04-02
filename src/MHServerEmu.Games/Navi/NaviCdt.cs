@@ -472,8 +472,6 @@ namespace MHServerEmu.Games.Navi
 
         private void SwapEdge(NaviEdge edge, out NaviTriangle outTri0, out NaviTriangle outTri1)
         {
-            //NaviSystem.Logger.Debug($"SwapEdge {edge.ToHashString()}");
-
             NaviTriangle t0 = edge.Triangles[0];
             NaviTriangle t1 = edge.Triangles[1];
 
@@ -490,7 +488,6 @@ namespace MHServerEmu.Games.Navi
             NaviTriangleState state0 = new (t0);
             NaviTriangleState state1 = new (t1);
 
-            //NaviSystem.Logger.Debug($"RemoveTriangle t0 {t0.ToHashString2()} t1 {t1.ToHashString2()}");
             RemoveTriangle(t0);
             RemoveTriangle(t1);
 
@@ -500,7 +497,6 @@ namespace MHServerEmu.Games.Navi
             outTri1 = new(newEdge, t1e2, t0e1);
             state1.RestoreState(outTri1);
 
-            //NaviSystem.Logger.Debug($"AddTriangle outTri0 {outTri0.ToHashString2()} outTri1 {outTri1.ToHashString2()}");
             AddTriangle(outTri0);
             AddTriangle(outTri1);
         }
@@ -785,36 +781,26 @@ namespace MHServerEmu.Games.Navi
             Stack<NaviEdge> edgeStack = new ();
             edge.SetFlag(NaviEdgeFlags.Delaunay);
             edgeStack.Push(edge);
-            //NaviSystem.Logger.Debug($"CheckDelaunaySwap push {edge.ToHashString()}");
+
             CheckDelaunaySwap(edgeStack);
 
             if (check)
             {
                 var t0 = FindTriangleContainingVertex(p0);
-                //NaviSystem.Logger.Debug($"FindTriangleContainingVertex p0 {p0.ToHashString()} t0 {t0.ToHashString2()}");
                 if (t0 != null && NaviUtil.IsPointConstraint(p0, t0) == false)
-                {
-                    //NaviSystem.Logger.Debug($"RemovePoint p0 {p0.ToHashString()}");
                     RemovePoint(p0, t0);
-                }
 
                 var t1 = FindTriangleContainingVertex(p1);
-                //NaviSystem.Logger.Debug($"FindTriangleContainingVertex p1 {p1.ToHashString()} t1 {t1.ToHashString2()}");
                 if (t1 != null && NaviUtil.IsPointConstraint(p1, t1) == false)
-                {
-                    //NaviSystem.Logger.Debug($"RemovePoint p1 {p1.ToHashString()}");
                     RemovePoint(p1, t1);
-                }
             }
         }
 
         private void CheckDelaunaySwap(Stack<NaviEdge> edgeStack)
         {
-            //int ei = 0;
             while (edgeStack.Count > 0)
             {
                 NaviEdge edge = edgeStack.Pop();
-                //NaviSystem.Logger.Debug($"CheckDelaunaySwap [{ei++}]{edge.ToHashString()}");
                 edge.ClearFlag(NaviEdgeFlags.Delaunay);
                 if (edge.TestFlag(NaviEdgeFlags.Constraint)) continue;
 
@@ -822,15 +808,12 @@ namespace MHServerEmu.Games.Navi
                 var t1 = edge.Triangles[1];
                 float at0 = Segment.SignedDoubleTriangleArea2D(t0.PointCW(0).Pos, t0.PointCW(1).Pos, t0.PointCW(2).Pos);
                 float at1 = Segment.SignedDoubleTriangleArea2D(t1.PointCW(0).Pos, t1.PointCW(1).Pos, t1.PointCW(2).Pos);
-                //NaviSystem.Logger.Debug($"SignedDoubleTriangleArea2D {at0} > {at1}");
                 var triangle = (at0 > at1) ? t0 : t1;
                 var oppoTriangle = edge.OpposedTriangle(triangle);
-
                 NaviPoint checkPoint = oppoTriangle.OpposedVertex(edge);
-                //NaviSystem.Logger.Debug($"checkPoint {checkPoint.ToHashString()}");
+
                 if (CircumcircleContainsPoint2D(triangle.PointCW(0), triangle.PointCW(1), triangle.PointCW(2), checkPoint))
                 {
-                    //NaviSystem.Logger.Debug($"CircumcircleContainsPoint2D {triangle.ToHashString2()}");
                     int edgeIndex0 = t0.EdgeIndex(edge);
                     int edgeIndex1 = t1.EdgeIndex(edge);
 
@@ -843,7 +826,6 @@ namespace MHServerEmu.Games.Navi
                         if (e.TestFlag(NaviEdgeFlags.Delaunay) == false)
                         {
                             e.SetFlag(NaviEdgeFlags.Delaunay);
-                            //NaviSystem.Logger.Debug($"Delaunay edgeStack push {e.ToHashString()}");
                             edgeStack.Push(e);
                         }
 
@@ -874,7 +856,6 @@ namespace MHServerEmu.Games.Navi
                 listEar.Add(ear);
 
                 nextTriangle = it.NextTriangleSharingPoint(point);
-                //NaviSystem.Logger.Debug($"RemoveTriangle it {it.ToHashString2()}");
                 RemoveTriangle(it);
                 it = nextTriangle;
             } while (it != null);
@@ -899,7 +880,6 @@ namespace MHServerEmu.Games.Navi
                 NaviEdge prevEdge = new(prevEar.Point, nextEar.Point, 0);
                 NaviTriangle prevTri = new(prevEar.Edge, ear.Edge, prevEdge);
                 triangleState.RestoreState(prevTri);
-                //NaviSystem.Logger.Debug($"AddTriangle prevTri {prevTri.ToHashString2()}");
                 AddTriangle(prevTri);
 
                 prevEar.NextIndex = ear.NextIndex;
@@ -919,7 +899,6 @@ namespace MHServerEmu.Games.Navi
 
             NaviTriangle lastTriangle = new(prevLastEar.Edge, lastEar.Edge, nextLastEar.Edge);
             triangleState.RestoreState(lastTriangle);
-            //NaviSystem.Logger.Debug($"AddTriangle lastTriangle {lastTriangle.ToHashString2()}");
             AddTriangle(lastTriangle);
 
             point.ClearFlag(NaviPointFlags.Attached);
