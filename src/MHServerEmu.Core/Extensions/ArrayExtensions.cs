@@ -56,7 +56,7 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static ByteString ToByteString(this string hexString)
         {
-            return hexString.ToByteArray().ToByteString();
+            return ByteString.CopyFrom(Convert.FromHexString(hexString));
         }
 
         #endregion
@@ -64,7 +64,7 @@ namespace MHServerEmu.Core.Extensions
         #region Bit/Byte Manipulation
 
         /// <summary>
-        /// Reverses the order of bytes in a ulong value.
+        /// Reverses the order of bytes in this <see cref="ulong"/> value.
         /// </summary>
         public static ulong ReverseBytes(this ulong value)
         {
@@ -74,7 +74,7 @@ namespace MHServerEmu.Core.Extensions
         }
 
         /// <summary>
-        /// Reverses the order of bits in a ulong value.
+        /// Reverses the order of bits in this <see cref="ulong"/> value.
         /// </summary>
         public static ulong ReverseBits(this ulong value)
         {
