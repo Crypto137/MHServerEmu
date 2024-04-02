@@ -874,8 +874,7 @@ namespace MHServerEmu.Games.Generators.Population
             Vector3 position = RegionLocation.ProjectToFloor(region, regionPos);
             if (DebugLog) Logger.Debug($"ProjectPostions [{GameDatabase.GetFormattedPrototypeName(EntityRef)}] {regionPos} {position}");
             // Debug.Assert(Vector3.DistanceSquared2D(regionPos, position) < Segment.Epsilon);
-            if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) 
-                return new(float.NaN, 0f, 0f); // Navi test
+
             Vector3 offset = position - regionPos;
             Vector3 relativePosition = GetParentRelativePosition();
             SetParentRelativePosition(relativePosition + offset);
