@@ -10,8 +10,12 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public PlayerReadyState[] PlayerReadyStates { get; set; }
 
-        public UIWidgetReadyCheck(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
+        public UIWidgetReadyCheck(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
+            base.Decode(stream, boolDecoder);
+
             PlayerReadyStates = new PlayerReadyState[stream.ReadRawVarint64()];
             for (int i = 0; i < PlayerReadyStates.Length; i++)
                 PlayerReadyStates[i] = new(stream);

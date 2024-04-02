@@ -10,8 +10,12 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public FilterEntry[] FilterEntries { get; set; }
 
-        public UIWidgetEntityIconsSyncData(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
+        public UIWidgetEntityIconsSyncData(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
+            base.Decode(stream, boolDecoder);
+
             FilterEntries = new FilterEntry[stream.ReadRawVarint64()];
             for (int i = 0; i < FilterEntries.Length; i++)
                 FilterEntries[i] = new(stream, boolDecoder);
@@ -36,7 +40,8 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             base.BuildString(sb);
 
-            for (int i = 0; i < FilterEntries.Length; i++) sb.AppendLine($"FilterEntry{i}: {FilterEntries[i]}");
+            for (int i = 0; i < FilterEntries.Length; i++)
+                sb.AppendLine($"FilterEntry{i}: {FilterEntries[i]}");
         }
     }
 

@@ -550,17 +550,20 @@ namespace MHServerEmu.Games.Regions
 
                     #endregion
 
-                    archive.UIDataProvider = new(new UISyncData[] {
-                        // Widget: UI/MetaGame/MissionName.prototype
-                        // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
-                        new UIWidgetMissionText((PrototypeId)7164846210465729875, (PrototypeId)10490887443555427166, Array.Empty<PrototypeId>(),
-                            (LocaleStringId)8188822000559654203, LocaleStringId.Invalid),
-                        
-                        // Widget: UI/MetaGame/TimeRemainingStoryMode2.prototype
-                        // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
-                        new UIWidgetGenericFraction((PrototypeId)11932510257277768241, (PrototypeId)10490887443555427166, Array.Empty<PrototypeId>(),
-                            1, 1, 0, (long)Clock.GameTime.TotalMilliseconds + 251550, false)   // 161351934500 (Currentservergametime) - 161351682950 = 251550
-                    });
+                    // Widget: UI/MetaGame/MissionName.prototype
+                    // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
+                    var missionTextWidget = archive.UIDataProvider.GetWidget<UIWidgetMissionText>((PrototypeId)7164846210465729875, (PrototypeId)10490887443555427166);
+                    missionTextWidget.MissionName = (LocaleStringId)8188822000559654203;
+                    missionTextWidget.MissionObjectiveName = LocaleStringId.Invalid;
+
+                    // Widget: UI/MetaGame/TimeRemainingStoryMode2.prototype
+                    // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
+                    var genericFractionWidget = archive.UIDataProvider.GetWidget<UIWidgetGenericFraction>((PrototypeId)11932510257277768241, (PrototypeId)10490887443555427166);
+                    genericFractionWidget.CurrentCount = 1;
+                    genericFractionWidget.TotalCount = 1;
+                    genericFractionWidget.TimeStart = 0;
+                    genericFractionWidget.TimeEnd = (long)Clock.GameTime.TotalMilliseconds + 251550;
+                    genericFractionWidget.TimePaused = false;
 
                     break;
             }

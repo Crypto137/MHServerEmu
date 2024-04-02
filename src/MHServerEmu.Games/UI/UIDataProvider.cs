@@ -1,83 +1,134 @@
 ﻿using System.Text;
+using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.UI
 {
     public class UIDataProvider
     {
-        public UISyncData[] UISyncData { get; set; }
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public UIDataProvider(UISyncData[] uiSyncData)
-        {
-            UISyncData = uiSyncData;
-        }
+        private readonly Dictionary<(PrototypeId, PrototypeId), UISyncData> _dataDict = new();
+
+        public Game Game { get; }
+        public Region Region { get; }
+
+        public UIDataProvider() { }
 
         public UIDataProvider(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            UISyncData = new UISyncData[stream.ReadRawVarint32()];
-            for (int i = 0; i < UISyncData.Length; i++)
+            ulong numWidgets = stream.ReadRawVarint64();
+
+            for (ulong i = 0; i < numWidgets; i++)
             {
-                PrototypeId widgetR = stream.ReadPrototypeRef<Prototype>();
-                PrototypeId contextR = stream.ReadPrototypeRef<Prototype>();
-
-                PrototypeId[] areas = new PrototypeId[stream.ReadRawInt32()];
-                for (int j = 0; j < areas.Length; j++)
-                    areas[j] = stream.ReadPrototypeRef<Prototype>();
-
-                string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBindingClassType.Name;
-
-                switch (className)
-                {
-                    case "UIWidgetButtonPrototype":
-                        UISyncData[i] = new UIWidgetButton(widgetR, contextR, areas, stream);
-                        break;
-
-                    case "UIWidgetEntityIconsSyncDataPrototype":
-                        UISyncData[i] = new UIWidgetEntityIconsSyncData(widgetR, contextR, areas, stream, boolDecoder);
-                        break;
-
-                    case "UIWidgetGenericFractionPrototype":
-                        UISyncData[i] = new UIWidgetGenericFraction(widgetR, contextR, areas, stream, boolDecoder);
-                        break;
-
-                    case "UIWidgetMissionTextPrototype":
-                        UISyncData[i] = new UIWidgetMissionText(widgetR, contextR, areas, stream);
-                        break;
-
-                    case "UIWidgetReadyCheckPrototype":
-                        UISyncData[i] = new UIWidgetReadyCheck(widgetR, contextR, areas, stream);
-                        break;
-
-                    default:
-                        throw new($"Unsupported UISyncData type {className}.");
-                }
+                PrototypeId widgetRef = stream.ReadPrototypeRef<Prototype>();
+                PrototypeId contextRef = stream.ReadPrototypeRef<Prototype>();
+                UpdateOrCreateUIWidget(widgetRef, contextRef, stream, boolDecoder);                
             }
         }
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WriteRawVarint32((uint)UISyncData.Length);
-            foreach (UISyncData data in UISyncData)
-                data.Encode(stream, boolEncoder);
+            stream.WriteRawVarint64((ulong)_dataDict.Count);
+            foreach (var kvp in _dataDict)
+            {
+                stream.WritePrototypeRef<Prototype>(kvp.Key.Item1);
+                stream.WritePrototypeRef<Prototype>(kvp.Key.Item2);
+                kvp.Value.Encode(stream, boolEncoder);
+            }
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)
         {
-            foreach (UISyncData data in UISyncData)
-                data.EncodeBools(boolEncoder);
+            foreach (UISyncData uiData in _dataDict.Values)
+                uiData.EncodeBools(boolEncoder);
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            for (int i = 0; i < UISyncData.Length; i++) sb.AppendLine($"UISyncData{i}: {UISyncData[i]}");
+
+            foreach (var kvp in _dataDict)
+            {
+                string widgetName = GameDatabase.GetFormattedPrototypeName(kvp.Key.Item1);
+                string contextName = GameDatabase.GetFormattedPrototypeName(kvp.Key.Item2);
+                sb.AppendLine($"_dataDict[{widgetName}][{contextName}]: {kvp.Value}");
+            }
+
             return sb.ToString();
+        }
+
+        public T GetWidget<T>(PrototypeId widgetRef, PrototypeId contextRef) where T: UISyncData
+        {
+            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData widget) == false)
+                widget = AllocateUIWidget(widgetRef, contextRef);
+
+            return widget as T;
+        }
+
+        public void DeleteWidget(PrototypeId widgetRef, PrototypeId contextRef)
+        {
+            if (_dataDict.Remove((widgetRef, contextRef)) == false)
+                Logger.Warn($"DeleteWidget(): Widget not found, widgetRef={widgetRef}, contextRef={contextRef}");
+
+            // todo: send a NetMessageUISyncDataRemove to clients when a widget is removed server-side
+        }
+
+        public void DeleteWidget(NetMessageUISyncDataRemove removeMessage)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates a <see cref="UISyncData"/> inst
+        /// </summary>
+        private UISyncData AllocateUIWidget(PrototypeId widgetRef, PrototypeId contextRef)
+        {
+            if (widgetRef == PrototypeId.Invalid)
+                return Logger.WarnReturn<UISyncData>(null, "AllocateUIWidget(): widgetRef == PrototypeId.Invalid");
+
+            if (_dataDict.ContainsKey((widgetRef, contextRef)))
+                return Logger.WarnReturn<UISyncData>(null, $"AllocateUIWidget(): Widget already exists, widgetRef={widgetRef}, contextRef={contextRef}");
+
+            MetaGameDataPrototype metaGameDataPrototype = GameDatabase.GetPrototype<MetaGameDataPrototype>(widgetRef);
+
+            if (metaGameDataPrototype == null)
+                return Logger.WarnReturn<UISyncData>(null, "AllocateUIWidget(): metaGameDataPrototype == null");
+
+            UISyncData uiSyncData = metaGameDataPrototype switch
+            {
+                UIWidgetButtonPrototype => new UIWidgetButton(this, widgetRef, contextRef),
+                UIWidgetEntityIconsPrototype => new UIWidgetEntityIconsSyncData(this, widgetRef, contextRef),
+                UIWidgetGenericFractionPrototype => new UIWidgetGenericFraction(this, widgetRef, contextRef),
+                UIWidgetMissionTextPrototype => new UIWidgetMissionText(this, widgetRef, contextRef),
+                UIWidgetReadyCheckPrototype => new UIWidgetReadyCheck(this, widgetRef, contextRef),
+                _ => null,
+            };
+
+            if (uiSyncData == null)
+                return Logger.WarnReturn<UISyncData>(null, "AllocateUIWidget(): Trying to allocate widget of the base type");
+
+            _dataDict.Add((widgetRef, contextRef), uiSyncData);
+            return uiSyncData;
+        }
+
+        // TODO: stream + decoder -> archive
+        private UISyncData UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, CodedInputStream stream, BoolDecoder boolDecoder)
+        {
+            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData uiData) == false)
+                uiData = AllocateUIWidget(widgetRef, contextRef);
+
+            uiData.Decode(stream, boolDecoder);
+            uiData.UpdateUI();
+
+            return uiData;
         }
     }
 }

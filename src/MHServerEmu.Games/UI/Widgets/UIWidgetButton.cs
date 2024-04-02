@@ -9,8 +9,12 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public ulong[] Callbacks { get; set; }      // PlayerGuid
 
-        public UIWidgetButton(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
+        public UIWidgetButton(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
+            base.Decode(stream, boolDecoder);
+
             Callbacks = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < Callbacks.Length; i++)
                 Callbacks[i] = stream.ReadRawVarint64();
@@ -29,7 +33,8 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             base.BuildString(sb);
 
-            for (int i = 0; i < Callbacks.Length; i++) sb.AppendLine($"Callback{i}: {Callbacks[i]}");
+            for (int i = 0; i < Callbacks.Length; i++)
+                sb.AppendLine($"Callback{i}: {Callbacks[i]}");
         }
     }
 }
