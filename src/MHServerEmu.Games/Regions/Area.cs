@@ -233,22 +233,25 @@ namespace MHServerEmu.Games.Regions
         private bool GeneratePopulation()
         {
             if (Region.Settings.GenerateEntities)
-                foreach (var cell in CellIterator())
-                    cell.SpawnMarkers();
+                foreach (var cell in CellIterator()) {
+                    MarkerSetOptions options = MarkerSetOptions.Default;
+                    var cellProto = cell.CellProto;
+                    if (cellProto.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
+                    cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
+                }
 
             return true;
         }
 
         private bool GenerateNavi()
         {
-            if (!TestStatus(GenerateFlag.Background))
+            if (TestStatus(GenerateFlag.Background) == false)
             {
-                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{ToString}");
+                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{ToString()}");
                 return false;
             }
 
             if (TestStatus(GenerateFlag.Navi)) return true;
-
             SetStatus(GenerateFlag.Navi, true);
 
             foreach (var cell in CellIterator())

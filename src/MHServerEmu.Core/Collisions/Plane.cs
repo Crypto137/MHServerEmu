@@ -21,6 +21,12 @@ namespace MHServerEmu.Core.Collisions
             D = d;
         }
 
+        public Plane(Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            Normal = Vector3.Cross(p1 - p0, p2 - p0);
+            D = Vector3.Dot(Normal, p0);
+        }
+
         public IntersectionType Intersects(Aabb bound)
         {
             IntersectionType[] intersection = new IntersectionType[8];
@@ -51,6 +57,14 @@ namespace MHServerEmu.Core.Collisions
         public float SignedDistanceToPoint(Vector3 point)
         {
             return Vector3.Dot(point, Normal) - D;
+        }
+
+        public float SolveForZ(float x, float y)
+        {
+            if (Normal.Z != 0.0f)
+                return (D - (Normal.X * x + Normal.Y * y)) / Normal.Z;
+            else
+                return 0.0f;
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
@@ -55,6 +56,19 @@ namespace MHServerEmu.Core.Collisions
             if (dotcb >= dotba) return Vector3.Dot(cb, cb);
             float dotca = Vector3.Dot(ca, ca);
             return dotca - dotcb * (dotcb / dotba);
+        }
+
+        public static float SegmentPointDistanceSq2D(Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 a2d = new(a.X, a.Y, 0.0f);
+            Vector3 b2d = new(b.X, b.Y, 0.0f);
+            Vector3 c2d = new(c.X, c.Y, 0.0f);
+            return SegmentPointDistanceSq(a2d, b2d, c2d);
+        }
+
+        public static float SegmentPointDistance2D(Vector3 a, Vector3 b, Vector3 c)
+        {
+            return MathHelper.SquareRoot(SegmentPointDistanceSq2D(a, b, c));
         }
 
         public static float Cross2D(Vector3 v0, Vector3 v1)
@@ -126,6 +140,50 @@ namespace MHServerEmu.Core.Collisions
             c2 = a2 + ba2 * t;
             Vector3 c1c2 = c1 - c2;
             return Vector3.Dot(c1c2, c1c2);
+        }
+
+        public static bool SegmentsIntersect2D(Vector3 a0, Vector3 a1, Vector3 b0, Vector3 b1)
+        {
+            float s1 = SignedDoubleTriangleArea2D(a0, a1, b1);
+            float s2 = SignedDoubleTriangleArea2D(a0, a1, b0);
+            if (s1 * s2 < 0.0f)
+            {
+                float s3 = SignedDoubleTriangleArea2D(b0, b1, a0);
+                float s4 = s3 + s2 - s1;
+                if (s3 * s4 < 0.0f) return true;
+            }
+            return false;
+        }
+
+        public static float SignedDoubleTriangleArea2D(Vector3 t0, Vector3 t1, Vector3 t2)
+        {
+            Vector3 v0 = t1 - t0;
+            Vector3 v1 = t2 - t0;
+            return Cross2D(v0, v1);
+        }
+
+        public static bool LineLineIntersect2D(Vector3 a0, Vector3 a1, Vector3 b0, Vector3 b1, out Vector3 outPoint)
+        {
+            Vector3 av = a1 - a0;
+            float ax = av.X;
+            float ay = av.Y;
+
+            float bx = b1.X - b0.X;
+            float by = b1.Y - b0.Y;
+            float cross = ax * by - ay * bx;
+
+            if (cross == 0)
+            {
+                outPoint = Vector3.Zero;
+                return false;
+            }
+
+            float cx = b0.X - a0.X;
+            float cy = b0.Y - a0.Y;
+            float t = (cx * by - cy * bx) / cross;
+
+            outPoint = a0 + av * t;
+            return true;
         }
 
     }

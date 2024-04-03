@@ -1,5 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {
@@ -9,10 +9,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             return naviMethod switch
             {
-                LocomotorMethod.Ground or LocomotorMethod.Airborne => PathFlags.flag1,
-                LocomotorMethod.TallGround => PathFlags.flag16,
-                LocomotorMethod.Missile or LocomotorMethod.MissileSeeking => PathFlags.flag4,
-                LocomotorMethod.HighFlying => PathFlags.flag2,
+                LocomotorMethod.Ground or LocomotorMethod.Airborne => PathFlags.Walk,
+                LocomotorMethod.TallGround => PathFlags.TallWalk,
+                LocomotorMethod.Missile or LocomotorMethod.MissileSeeking => PathFlags.Power,
+                LocomotorMethod.HighFlying => PathFlags.Fly,
                 _ => PathFlags.None,
             };
         }

@@ -108,9 +108,10 @@ namespace MHServerEmu.Games.Regions
 
         public Region EmptyRegion(RegionPrototypeId prototype)
         {
-            Region region = new(prototype, 1038711701,
+            Region region = new(prototype, 1210027349,
              Array.Empty<byte>(),
              new(10, DifficultyTier.Normal));
+            region.Bound = Aabb.Zero;
             return region;
         }
 
@@ -168,7 +169,7 @@ namespace MHServerEmu.Games.Regions
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
-            //  prototype = (RegionPrototypeId)7735172603194383419;
+            //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             lock (_managerLock)
             {
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)

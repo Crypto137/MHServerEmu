@@ -209,6 +209,7 @@ namespace MHServerEmu.Core.VectorMath
             Z = MathF.Round(Z);
         }
 
+        public float MaxElem() => Math.Max(Z, Math.Max(X, Y));
 
         // static vectors
 

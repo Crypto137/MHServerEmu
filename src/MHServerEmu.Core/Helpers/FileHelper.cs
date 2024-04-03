@@ -31,5 +31,13 @@ namespace MHServerEmu.Core.Helpers
             string json = JsonSerializer.Serialize(@object, options);
             File.WriteAllText(path, json);
         }
+
+        /// <summary>
+        /// Saves the provided <see cref="string"/> to a text file in the server root directory.
+        /// </summary>
+        public static void SaveTextFileToRoot(string fileName, string text)
+        {
+            File.WriteAllText(Path.Combine(ServerRoot, fileName), text);
+        }
     }
 }

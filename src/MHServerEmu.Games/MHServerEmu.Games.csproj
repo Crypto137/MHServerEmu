@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -24,6 +24,9 @@
   <ItemGroup>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
+    </Reference>
+    <Reference Include="RobustPredicates">
+      <HintPath>..\..\dep\RobustPredicates\RobustPredicates.dll</HintPath>
     </Reference>
   </ItemGroup>
 

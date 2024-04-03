@@ -10,6 +10,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -24,17 +25,6 @@ namespace MHServerEmu.Games.Generators.Population
         Hostile             = 1 << 3,
         ProjectToFloor      = 1 << 4,
         SkipFormation       = 1 << 5,
-    }
-
-    [Flags]
-    public enum PathFlags
-    {
-        None = 0,
-        flag1 = 1 << 0,
-        flag2 = 1 << 1,
-        flag4 = 1 << 2,
-        flag8 = 1 << 3,
-        flag16 = 1 << 4,
     }
 
     [Flags]
@@ -857,7 +847,9 @@ namespace MHServerEmu.Games.Generators.Population
             if (Vector3.IsFinite(regionPos) == false) 
                 return false;
 
-            // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
+            if (PathFlags != PathFlags.None && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false) 
+                return false;
+
             Bounds bounds = new(Bounds)
             {
                 Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight)
@@ -882,8 +874,7 @@ namespace MHServerEmu.Games.Generators.Population
             Vector3 position = RegionLocation.ProjectToFloor(region, regionPos);
             if (DebugLog) Logger.Debug($"ProjectPostions [{GameDatabase.GetFormattedPrototypeName(EntityRef)}] {regionPos} {position}");
             // Debug.Assert(Vector3.DistanceSquared2D(regionPos, position) < Segment.Epsilon);
-            if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) 
-                return new(float.NaN, 0f, 0f); // Navi test
+
             Vector3 offset = position - regionPos;
             Vector3 relativePosition = GetParentRelativePosition();
             SetParentRelativePosition(relativePosition + offset);
