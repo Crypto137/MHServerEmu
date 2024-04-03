@@ -8,8 +8,8 @@ namespace MHServerEmu.Games.UI.Widgets
 {
     public class UIWidgetGenericFraction : UISyncData
     {
-        public int CurrentCount { get; set; }
-        public int TotalCount { get; set; }
+        private int _currentCount;
+        private int _totalCount;
 
         public UIWidgetGenericFraction(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
 
@@ -17,8 +17,8 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             base.Decode(stream, boolDecoder);
 
-            CurrentCount = stream.ReadRawInt32();
-            TotalCount = stream.ReadRawInt32();
+            _currentCount = stream.ReadRawInt32();
+            _totalCount = stream.ReadRawInt32();
 
             _timeStart = stream.ReadRawInt64();
             _timeEnd = stream.ReadRawInt64();
@@ -29,8 +29,8 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             base.Encode(stream, boolEncoder);
 
-            stream.WriteRawInt32(CurrentCount);
-            stream.WriteRawInt32(TotalCount);
+            stream.WriteRawInt32(_currentCount);
+            stream.WriteRawInt32(_totalCount);
 
             stream.WriteRawInt64(_timeStart);
             stream.WriteRawInt64(_timeEnd);
@@ -46,8 +46,14 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"CurrentCount: {CurrentCount}");
-            sb.AppendLine($"TotalCount: {TotalCount}");
+            sb.AppendLine($"Count: {_currentCount} / {_totalCount}");
+        }
+
+        public void SetCount(int current, int total)
+        {
+            _currentCount = current;
+            _totalCount = total;
+            UpdateUI();
         }
     }
 }

@@ -559,8 +559,7 @@ namespace MHServerEmu.Games.Regions
                     // Widget: UI/MetaGame/TimeRemainingStoryMode2.prototype
                     // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
                     var genericFractionWidget = archive.UIDataProvider.GetWidget<UIWidgetGenericFraction>((PrototypeId)11932510257277768241, (PrototypeId)10490887443555427166);
-                    genericFractionWidget.CurrentCount = 1;
-                    genericFractionWidget.TotalCount = 1;
+                    genericFractionWidget.SetCount(1, 1);
                     genericFractionWidget.SetTimeRemaining(251550);
 
                     break;
