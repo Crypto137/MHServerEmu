@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.UI.Widgets
 {
     public class UIWidgetMissionText : UISyncData
     {
-        public LocaleStringId MissionName { get; set; }
-        public LocaleStringId MissionObjectiveName { get; set; }
+        private LocaleStringId _missionName;
+        private LocaleStringId _missionObjectiveName;
 
         public UIWidgetMissionText(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
 
@@ -16,24 +16,31 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             base.Decode(stream, boolDecoder);
 
-            MissionName = (LocaleStringId)stream.ReadRawVarint64();
-            MissionObjectiveName = (LocaleStringId)stream.ReadRawVarint64();
+            _missionName = (LocaleStringId)stream.ReadRawVarint64();
+            _missionObjectiveName = (LocaleStringId)stream.ReadRawVarint64();
         }
 
         public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
             base.Encode(stream, boolEncoder);
 
-            stream.WriteRawVarint64((ulong)MissionName);
-            stream.WriteRawVarint64((ulong)MissionObjectiveName);
+            stream.WriteRawVarint64((ulong)_missionName);
+            stream.WriteRawVarint64((ulong)_missionObjectiveName);
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"{nameof(MissionName)}: {MissionName}");
-            sb.AppendLine($"{nameof(MissionObjectiveName)}: {MissionObjectiveName}");
+            sb.AppendLine($"{nameof(_missionName)}: {_missionName}");
+            sb.AppendLine($"{nameof(_missionObjectiveName)}: {_missionObjectiveName}");
+        }
+
+        public void SetText(LocaleStringId missionName, LocaleStringId missionObjectiveName)
+        {
+            _missionName = missionName;
+            _missionObjectiveName = missionObjectiveName;
+            UpdateUI();
         }
     }
 }

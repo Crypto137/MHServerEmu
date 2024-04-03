@@ -553,8 +553,7 @@ namespace MHServerEmu.Games.Regions
                     // Widget: UI/MetaGame/MissionName.prototype
                     // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
                     var missionTextWidget = archive.UIDataProvider.GetWidget<UIWidgetMissionText>((PrototypeId)7164846210465729875, (PrototypeId)10490887443555427166);
-                    missionTextWidget.MissionName = (LocaleStringId)8188822000559654203;
-                    missionTextWidget.MissionObjectiveName = LocaleStringId.Invalid;
+                    missionTextWidget.SetText((LocaleStringId)8188822000559654203, LocaleStringId.Invalid);
 
                     // Widget: UI/MetaGame/TimeRemainingStoryMode2.prototype
                     // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
