@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -910,7 +911,7 @@ namespace MHServerEmu.Games.Navi
             int id = 0;
             foreach (var triangle in TriangleList.Iterate())
                 hashes.AppendLine($"[{id++}] {triangle.ToHashString()}");
-            File.WriteAllText(fileName, hashes.ToString());
+            FileHelper.SaveTextFileToRoot(fileName, hashes.ToString());
         }
 
         public void SaveHashTriangles2(string fileName)
@@ -919,15 +920,15 @@ namespace MHServerEmu.Games.Navi
             int id = 0;
             foreach (var triangle in TriangleList.Iterate())
                 hashes.AppendLine($"[{id++}] {triangle.ToHashString2()}");
-            File.WriteAllText(fileName, hashes.ToString());
+            FileHelper.SaveTextFileToRoot(fileName, hashes.ToString());
         }
 
-        public void SaveObjMesh(string fileName, PathFlags filterFlags = PathFlags.Walk)
+        public string MeshToObj(PathFlags filterFlags = PathFlags.Walk)
         {
-            StringBuilder objVertex = new ();
-            StringBuilder objFaces = new();
-            Dictionary<ulong, int> idMap = new ();
+            StringBuilder sb = new();
+            Dictionary<ulong, int> idMap = new();
             
+            // Vertices
             int newId = 1;
             foreach (var triangle in TriangleList.Iterate())
                 if (triangle.PathingFlags.HasFlag(filterFlags))
@@ -936,11 +937,12 @@ namespace MHServerEmu.Games.Navi
                             if (idMap.ContainsKey(point.Id) == false)
                             {
                                 idMap.Add(point.Id, newId++);
-                                objVertex.AppendLine($"v {point.Pos.Y.ToString(CultureInfo.InvariantCulture)} " +
+                                sb.AppendLine($"v {point.Pos.Y.ToString(CultureInfo.InvariantCulture)} " +
                                                   $"{point.Pos.X.ToString(CultureInfo.InvariantCulture)} " +
                                                   $"{point.Pos.Z.ToString(CultureInfo.InvariantCulture)}");
                             }
 
+            // Faces
             foreach (var triangle in TriangleList.Iterate())
                 if (triangle.PathingFlags.HasFlag(filterFlags))
                 {
@@ -949,16 +951,16 @@ namespace MHServerEmu.Games.Navi
                     var p2 = triangle.PointCW(2);
                     bool flip = Pred.SortInputs(ref p0, ref p1, ref p2);
                     if (!flip)
-                        objFaces.AppendLine($"f {idMap[p2.Id]} " +
+                        sb.AppendLine($"f {idMap[p2.Id]} " +
                                           $"{idMap[p1.Id]} " +
                                           $"{idMap[p0.Id]}");
                     else
-                        objFaces.AppendLine($"f {idMap[p0.Id]} " +
+                        sb.AppendLine($"f {idMap[p0.Id]} " +
                                           $"{idMap[p1.Id]} " +
                                           $"{idMap[p2.Id]}");
                 }
 
-            File.WriteAllText(fileName, objVertex.ToString() + objFaces.ToString());
+            return sb.ToString();
         }
     }
 }

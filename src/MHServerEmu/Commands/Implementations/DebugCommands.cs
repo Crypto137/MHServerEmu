@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -77,7 +78,8 @@ namespace MHServerEmu.Commands.Implementations
                 flags = PathFlags.Walk;   // Default Walk
 
             string filename = $"{region.PrototypeName}[{flags}].obj";
-            region.NaviMesh.NaviCdt.SaveObjMesh(filename, flags);
+            string obj = region.NaviMesh.NaviCdt.MeshToObj(flags);
+            FileHelper.SaveTextFileToRoot(filename, obj);
             return $"NaviMesh saved as {filename}";
         }
 
