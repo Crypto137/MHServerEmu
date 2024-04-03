@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Entities
             else if (proto is TransitionPrototype transitionProto)
                 worldEntity = new Transition(baseData, properties, Destination.FindDestination(cell, transitionProto));
             else
-                worldEntity = new(baseData, AOINetworkPolicyValues.AOIChannelDiscovery, properties);
+                worldEntity = new WorldEntity(baseData, AOINetworkPolicyValues.AOIChannelDiscovery, properties);
             worldEntity.RegionId = regionId;
             worldEntity.EnterWorld(cell, position, orientation);
             _entityDict.Add(baseData.EntityId, worldEntity);
@@ -78,8 +78,8 @@ namespace MHServerEmu.Games.Entities
 
         public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Orientation orientation)
         {
-            EntityBaseData baseData = new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation);
-            WorldEntity worldEntity = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId));
+            EntityBaseData baseData = new (GetNextEntityId(), prototypeId, position, orientation);
+            WorldEntity worldEntity = new (baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId));
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
@@ -87,7 +87,7 @@ namespace MHServerEmu.Games.Entities
 
         public MetaGame CreateMetaGame(PrototypeId metaGameRef, ulong regionId)
         {
-            EntityBaseData baseData = new EntityBaseData(GetNextEntityId(), metaGameRef, null, null);
+            EntityBaseData baseData = new (GetNextEntityId(), metaGameRef, null, null);
             ReplicatedVariable<string> metaname = new(0, "");
             MetaGame metaGame = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId), metaname)
             {
@@ -123,41 +123,6 @@ namespace MHServerEmu.Games.Entities
             Item item = new(baseData, _game.CurrentRepId, defRank, itemLevel, rarity, itemVariation, itemSpec);
             _entityDict.Add(baseData.EntityId, item);
             return item;
-        }
-
-        public Transition SpawnTargetTeleport(Cell cell, TransitionPrototype transitionProto, Vector3 position, Orientation orientation,
-            bool requiresEnterGameWorld, PrototypeId targetRef, bool OverrideSnapToFloor)
-        {
-            if (cell == null) return default;
-            Region region = cell.GetRegion();
-            ulong regionId = region.Id;
-            int mapAreaId = (int)cell.Area.Id;
-            int mapCellId = (int)cell.Id;
-            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
-
-            EntityBaseData baseData = (requiresEnterGameWorld == false)
-                ? new EntityBaseData(GetNextEntityId(), transitionProto.DataRef, position, orientation, OverrideSnapToFloor)
-                : new EntityBaseData(GetNextEntityId(), transitionProto.DataRef, null, null);
-
-            Destination destination = null;
-
-            if (targetRef != PrototypeId.Invalid)
-                destination = Destination.DestinationFromTarget(targetRef, region, transitionProto);
-
-            ReplicatedPropertyCollection properties = new(_game.CurrentRepId);
-            properties[PropertyEnum.MapPosition] = position;
-            properties[PropertyEnum.MapAreaId] = mapAreaId;
-            properties[PropertyEnum.MapRegionId] = regionId;
-            properties[PropertyEnum.MapCellId] = mapCellId;
-            properties[PropertyEnum.ContextAreaRef] = contextAreaRef;
-
-            Transition transition = new(baseData, properties, destination);
-
-            transition.RegionId = regionId;
-            transition.EnterWorld(cell, position, orientation);
-            _entityDict.Add(baseData.EntityId, transition);
-
-            return transition;
         }
 
         public void DestroyEntity(Entity entity)

@@ -182,39 +182,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool PostInitialize()
         {
-            var region = GetRegion();
-            var entityManager = Game.EntityManager;
-            PrototypeId areaRef = Area.PrototypeDataRef;
-            ConnectionNodeList targets = region.Targets;
-
-            foreach (var marker in CellProto.InitializeSet.Markers)
-            {
-                if (marker is EntityMarkerPrototype entityMarker)
-                {
-                    PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                    Prototype entity = GameDatabase.GetPrototype<Prototype>(protoId);
-                    
-                    // Spawn Teleports
-                    if (entity is TransitionPrototype transition)
-                    {
-                        bool snap = entityMarker.OverrideSnapToFloor;
-                        Vector3 position = CalcMarkerPosition(entityMarker.Position);
-                        position.Z += transition.Bounds.GetBoundHalfHeight();
-                        PrototypeId targetRef = PrototypeId.Invalid;
-                        if (transition.Waypoint != 0)
-                        {
-                            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(transition.Waypoint);
-                            targetRef = waypointProto.Destination;
-                        }
-                        else
-                        {
-                            TargetObject node = RegionTransition.GetTargetNode(targets, areaRef, this.PrototypeId, entityMarker.EntityGuid);
-                            if (node != null) targetRef = node.TargetId;
-                        }
-                        entityManager.SpawnTargetTeleport(this, transition, position, entityMarker.Rotation, false, targetRef, snap);
-                    }
-                }
-            }
+            MarkerSetOptions options = MarkerSetOptions.Default;
+            if (CellProto.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
+            InstanceMarkerSet(CellProto.InitializeSet, Transform3.Identity(), options);
 
             return true;
         }
@@ -235,19 +205,23 @@ namespace MHServerEmu.Games.Regions
                 PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                 if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) return; // Invisible Domino NPC
                 Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
-
-                // Spawn Entity from Cell
-                if (entity is WorldEntityPrototype)
-                    SpawnEntityMarker(entityMarker, transform, options);
+                                
+                if (entity is BlackOutZonePrototype blackOutZone)   // Spawn Blackout zone
+                    SpawnBlackOutZone(entityMarker, blackOutZone, transform, options);
+                else if (entity is WorldEntityPrototype worldEntity) // Spawn Entity from Cell
+                    SpawnEntityMarker(entityMarker, worldEntity, transform, options);
             }
         }
 
-        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options)
+        private void SpawnBlackOutZone(EntityMarkerPrototype entityMarker, BlackOutZonePrototype blackOutZone, Transform3 transform, MarkerSetOptions options)
+        {
+            CalcMarkerTransform(entityMarker, transform, options, out Vector3 position, out _);
+            GetRegion().PopulationManager.SpawnBlackOutZone(position, blackOutZone.BlackOutRadius, PrototypeId.Invalid);
+        }
+
+        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entity, Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
-
-            var protoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(protoRef);
 
             bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
             snapToFloor ??= entity.SnapToFloorOnSpawn;
@@ -262,7 +236,7 @@ namespace MHServerEmu.Games.Regions
                 entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
 
             int health = EntityManager.GetRankHealth(entity);
-            WorldEntity worldEntity = Game.EntityManager.CreateWorldEntity(this, protoRef, null, entityPosition, entityOrientation, health, false, overrideSnap);
+            WorldEntity worldEntity = Game.EntityManager.CreateWorldEntity(this, entity.DataRef, null, entityPosition, entityOrientation, health, false, overrideSnap);
             if (worldEntity.WorldEntityPrototype is AgentPrototype)
                 worldEntity.AppendOnStartActions(GetRegion().PrototypeDataRef);
         }
@@ -451,6 +425,15 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
+        public void BlackOutZonesRebuild()
+        {
+            var zones = GetRegion().PopulationManager.IterateBlackOutZoneInVolume(RegionBounds);
+            foreach (var zone in zones)
+            {
+                // Set BlackOutZone for cell
+            }
+        }
+
         #region Enums
 
         [AssetEnum((int)None)]      // DRAG/RegionGenerators/Edges.type
@@ -561,5 +544,19 @@ namespace MHServerEmu.Games.Regions
         }
 
         #endregion
+    }
+
+    public class CellRegionSpatialPartitionLocation : QuadtreeLocation<Cell>
+    {
+        public CellRegionSpatialPartitionLocation(Cell element) : base(element) { }
+        public override Aabb GetBounds() => Element.RegionBounds;
+    }
+
+    public class CellSpatialPartition : Quadtree<Cell>
+    {
+        public CellSpatialPartition(Aabb bound) : base(bound, 128.0f) { }
+
+        public override QuadtreeLocation<Cell> GetLocation(Cell element) => element.SpatialPartitionLocation;
+        public override Aabb GetElementBounds(Cell element) => element.RegionBounds;
     }
 }

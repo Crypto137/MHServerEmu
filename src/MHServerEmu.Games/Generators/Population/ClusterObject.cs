@@ -693,7 +693,22 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override void Spawn()
         {
-            foreach (var obj in Objects) obj.Spawn();            
+            foreach (var obj in Objects) obj.Spawn();
+            var manager = Region.PopulationManager;
+            var position = GetAbsolutePosition();
+            if (ObjectProto.Riders.HasValue())
+                foreach (var rider in ObjectProto.Riders)
+                    if (rider is PopulationRiderBlackOutPrototype blackOutProto)
+                    {
+                        var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(blackOutProto.BlackOutZone);
+                        manager.SpawnBlackOutZone(position, blackout.BlackOutRadius, MissionRef);
+                    }
+
+            if (BlackOutZone.Key != PrototypeId.Invalid)
+            {
+                var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(BlackOutZone.Key);
+                manager.SpawnBlackOutZone(position, blackout.BlackOutRadius, MissionRef);
+            }
         }
 
         public bool PickPositionInSector(Vector3 position, Orientation orientation, int minDistance, int maxDistance)
@@ -849,6 +864,13 @@ namespace MHServerEmu.Games.Generators.Population
 
             if (PathFlags != PathFlags.None && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false) 
                 return false;
+
+            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false)
+                if (Region.PopulationManager.InBlackOutZone(regionPos, Radius, Parent.MissionRef))
+                {
+                    Logger.Debug($"InBlackOutZone {EntityProto} pos {regionPos}");
+                    return false;
+                }
 
             Bounds bounds = new(Bounds)
             {

@@ -1,6 +1,8 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -55,11 +57,18 @@ namespace MHServerEmu.Games.Generators.Population
 
         public List<PopulationMarker> PopulationMarkers;
 
+        private int _blackOutId;
+        private BlackOutSpatialPartition _blackOutSpatialPartition;
+        private Dictionary<int, BlackOutZone> _blackOutZones;
+        private int NextBlackOutId() => _blackOutId++;
+
         public PopulationManager(Game game, Region region)
         {
             Game = game;
             Region = region;
             PopulationMarkers = new();
+            _blackOutZones = new();
+            _blackOutId = 1;
         }
 
         public void MissionRegisty(MissionPrototype missionProto)
@@ -219,6 +228,48 @@ namespace MHServerEmu.Games.Generators.Population
                     AddPopulationMarker(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
                 }
             }
+        }
+
+        public int SpawnBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
+        {
+            var id = NextBlackOutId();
+            BlackOutZone zone = new(id, position, radius, missionRef);
+            _blackOutZones[id] = zone;
+            _blackOutSpatialPartition.Insert(zone);
+            // TODO BlackOutZonesRebuild
+            return id;
+        }
+
+        public IEnumerable<BlackOutZone> IterateBlackOutZoneInVolume<B>(B bound) where B : IBounds
+        {
+            if (_blackOutSpatialPartition != null)
+                return _blackOutSpatialPartition.IterateElementsInVolume(bound);
+            else
+                return Enumerable.Empty<BlackOutZone>();
+        }
+
+        public void InitializeSpacialPartition(Aabb bound)
+        {
+            if (_blackOutSpatialPartition != null) return;
+            _blackOutSpatialPartition = new (bound);
+
+            foreach (var zone in _blackOutZones)
+                if (zone.Value != null) _blackOutSpatialPartition.Insert(zone.Value);
+        }
+
+        public bool InBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
+        {
+            Sphere sphere = new(position, radius);
+            if (missionRef != PrototypeId.Invalid)
+            {
+                foreach (var zone in IterateBlackOutZoneInVolume(sphere))
+                    if (zone.MissionRef != missionRef) 
+                        return false;
+            }
+            else if (IterateBlackOutZoneInVolume(sphere).Any() == false) 
+                return false;
+
+            return true;
         }
     }
 }

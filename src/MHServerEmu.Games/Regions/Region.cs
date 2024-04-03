@@ -354,6 +354,7 @@ namespace MHServerEmu.Games.Regions
                     PartitionCell(cellItr.Value, PartitionContext.Insert);
 
             SpawnMarkerRegistry.InitializeSpacialPartition(bound);
+            PopulationManager.InitializeSpacialPartition(bound);
 
             return true;
         }

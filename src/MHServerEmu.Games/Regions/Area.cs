@@ -232,15 +232,32 @@ namespace MHServerEmu.Games.Regions
 
         private bool GeneratePopulation()
         {
+            if (TestStatus(GenerateFlag.Background) == false)
+            {
+                Logger.Warn($"Generate population should have background generator \nRegion:{Region}\nArea:{ToString()}");
+                return false;
+            }
+
+            if (TestStatus(GenerateFlag.Population)) return true;
+            SetStatus(GenerateFlag.Population, true);
+
+            BlackOutZonesRebuild();
+
             if (Region.Settings.GenerateEntities)
                 foreach (var cell in CellIterator()) {
-                    MarkerSetOptions options = MarkerSetOptions.Default;
+                    MarkerSetOptions options = MarkerSetOptions.Default | MarkerSetOptions.SpawnMissionAssociated;
                     var cellProto = cell.CellProto;
                     if (cellProto.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
                     cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
                 }
 
             return true;
+        }
+
+        private void BlackOutZonesRebuild()
+        {
+            foreach (var cell in CellIterator())
+                cell.BlackOutZonesRebuild();
         }
 
         private bool GenerateNavi()
