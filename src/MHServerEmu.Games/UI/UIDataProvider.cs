@@ -87,7 +87,7 @@ namespace MHServerEmu.Games.UI
         }
 
         /// <summary>
-        /// Creates a <see cref="UISyncData"/> inst
+        /// Creates a <see cref="UISyncData"/> instance of the appropriate subtype for the specified widget prototype.
         /// </summary>
         private UISyncData AllocateUIWidget(PrototypeId widgetRef, PrototypeId contextRef)
         {
@@ -104,12 +104,12 @@ namespace MHServerEmu.Games.UI
 
             UISyncData uiSyncData = metaGameDataPrototype switch
             {
-                UIWidgetButtonPrototype => new UIWidgetButton(this, widgetRef, contextRef),
-                UIWidgetEntityIconsPrototype => new UIWidgetEntityIconsSyncData(this, widgetRef, contextRef),
-                UIWidgetGenericFractionPrototype => new UIWidgetGenericFraction(this, widgetRef, contextRef),
-                UIWidgetMissionTextPrototype => new UIWidgetMissionText(this, widgetRef, contextRef),
-                UIWidgetReadyCheckPrototype => new UIWidgetReadyCheck(this, widgetRef, contextRef),
-                _ => null,
+                UIWidgetButtonPrototype             => new UIWidgetButton(this, widgetRef, contextRef),
+                UIWidgetEntityIconsPrototype        => new UIWidgetEntityIconsSyncData(this, widgetRef, contextRef),
+                UIWidgetGenericFractionPrototype    => new UIWidgetGenericFraction(this, widgetRef, contextRef),
+                UIWidgetMissionTextPrototype        => new UIWidgetMissionText(this, widgetRef, contextRef),
+                UIWidgetReadyCheckPrototype         => new UIWidgetReadyCheck(this, widgetRef, contextRef),
+                _ => null
             };
 
             if (uiSyncData == null)

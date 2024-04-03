@@ -10,21 +10,6 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public int CurrentCount { get; set; }
         public int TotalCount { get; set; }
-        public long TimeStart { get; set; }
-        public long TimeEnd { get; set; }
-        public bool TimePaused { get; set; }
-
-        public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas,
-            int currentCount, int totalCount, long timeStart, long timeEnd, bool timePaused) : base(null, widgetR, contextR)
-        {
-            _areas = areas;
-
-            CurrentCount = currentCount;
-            TotalCount = totalCount;
-            TimeStart = timeStart;
-            TimeEnd = timeEnd;
-            TimePaused = timePaused;
-        }
 
         public UIWidgetGenericFraction(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
 
@@ -34,9 +19,10 @@ namespace MHServerEmu.Games.UI.Widgets
 
             CurrentCount = stream.ReadRawInt32();
             TotalCount = stream.ReadRawInt32();
-            TimeStart = stream.ReadRawInt64();
-            TimeEnd = stream.ReadRawInt64();
-            TimePaused = boolDecoder.ReadBool(stream);
+
+            _timeStart = stream.ReadRawInt64();
+            _timeEnd = stream.ReadRawInt64();
+            _timePaused = boolDecoder.ReadBool(stream);
         }
 
         public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
@@ -45,14 +31,15 @@ namespace MHServerEmu.Games.UI.Widgets
 
             stream.WriteRawInt32(CurrentCount);
             stream.WriteRawInt32(TotalCount);
-            stream.WriteRawInt64(TimeStart);
-            stream.WriteRawInt64(TimeEnd);
+
+            stream.WriteRawInt64(_timeStart);
+            stream.WriteRawInt64(_timeEnd);
             boolEncoder.WriteBuffer(stream);   // TimePaused
         }
 
         public override void EncodeBools(BoolEncoder boolEncoder)
         {
-            boolEncoder.EncodeBool(TimePaused);
+            boolEncoder.EncodeBool(_timePaused);
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -61,9 +48,6 @@ namespace MHServerEmu.Games.UI.Widgets
 
             sb.AppendLine($"CurrentCount: {CurrentCount}");
             sb.AppendLine($"TotalCount: {TotalCount}");
-            sb.AppendLine($"TimeStart: {TimeStart}");
-            sb.AppendLine($"TimeEnd: {TimeEnd}");
-            sb.AppendLine($"TimePaused: {TimePaused}");
         }
     }
 }

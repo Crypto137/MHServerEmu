@@ -561,9 +561,7 @@ namespace MHServerEmu.Games.Regions
                     var genericFractionWidget = archive.UIDataProvider.GetWidget<UIWidgetGenericFraction>((PrototypeId)11932510257277768241, (PrototypeId)10490887443555427166);
                     genericFractionWidget.CurrentCount = 1;
                     genericFractionWidget.TotalCount = 1;
-                    genericFractionWidget.TimeStart = 0;
-                    genericFractionWidget.TimeEnd = (long)Clock.GameTime.TotalMilliseconds + 251550;
-                    genericFractionWidget.TimePaused = false;
+                    genericFractionWidget.SetTimeRemaining(251550);
 
                     break;
             }
