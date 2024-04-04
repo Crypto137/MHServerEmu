@@ -86,6 +86,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return sb.ToString();
         }
 
+        public virtual float GetAverageSize() => 0.0f;
     }
 
     public class PopulationEntityPrototype : PopulationObjectPrototype
@@ -109,6 +110,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (unwrapEntitySelectors == false || UnwrapEntitySelector(Entity, entities) == 0)
                     entities.Add(Entity);
         }
+
+        public override float GetAverageSize() => 1.0f;
 
     }
 
@@ -146,6 +149,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.GetContainedEntities(entities, unwrapEntitySelectors);
             InternalGetContainedEntities(entities, unwrapEntitySelectors);
+        }
+
+        public override float GetAverageSize() 
+        {
+            float count = 0.0f;
+            if (Entities.HasValue())
+                count += Entities.Length;
+
+            if (EntityEntries.HasValue())
+                foreach (var entry in EntityEntries)
+                    count += entry.Count;
+            return count;
         }
 
         private void InternalGetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors)
@@ -202,6 +217,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (unwrapEntitySelectors == false || UnwrapEntitySelector(Entity, entities) == 0)
                     entities.Add(Entity);
         }
+
+        public override float GetAverageSize() => (Min + Max) / 2.0f;
     }
 
     public class PopulationClusterMixedPrototype : PopulationObjectPrototype
@@ -246,6 +263,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InternalGetContainedEntities(entities, unwrapEntitySelectors);
         }
 
+        public override float GetAverageSize() => (Min + Max) / 2.0f;
+
         private void InternalGetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors)
         {
             if (Choices.HasValue())
@@ -285,6 +304,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.GetContainedEntities(entities, unwrapEntitySelectors);
             InternalGetContainedEntities(entities, unwrapEntitySelectors);
+        }
+
+        public override float GetAverageSize()
+        {
+            float count = 0.0f;
+            if (Henchmen.HasValue())
+            {
+                foreach (var henchmen in Henchmen)
+                    if (henchmen != null) count += henchmen.GetAverageSize();
+                count /= Henchmen.Length;
+            }
+            return count + 1.0f;
         }
 
         private void InternalGetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors)
@@ -365,6 +396,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (encounterProtoRef == PrototypeId.Invalid) return null;
             return GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterProtoRef);
         }
+
+        public override float GetAverageSize() => 1.0f;
 
         private PrototypeId GetEncounterRef()
         {
