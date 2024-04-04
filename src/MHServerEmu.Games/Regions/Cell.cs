@@ -326,10 +326,10 @@ namespace MHServerEmu.Games.Regions
                     PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
 
-                    // Spawn Entity from Missions
+                    // Spawn Entity from Missions, Themes, MetaStates
                     if (entity is SpawnMarkerPrototype spawnMarker && spawnMarker.Type != MarkerType.Prop)
                         foreach (var spawn in population)
-                            if (spawn.MarkerRef == spawnMarker.DataRef) spawn.Spawn(this);
+                            if (spawn.MarkerRef == spawnMarker.DataRef && spawn.SpawnByMarker(this)) break;
                 }
             }
         }

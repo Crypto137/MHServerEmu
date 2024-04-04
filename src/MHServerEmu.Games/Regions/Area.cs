@@ -132,6 +132,24 @@ namespace MHServerEmu.Games.Regions
 
             MinimapRevealGroupId = AreaPrototype.MinimapRevealGroupId;
 
+            var emptyPopulation = GameDatabase.PopulationGlobalsPrototype.EmptyPopulation;
+            var populationOverrides = Region.RegionPrototype.PopulationOverrides;
+
+            if (populationOverrides.HasValue() && AreaPrototype.Population != emptyPopulation)
+            {
+                GRandom random = new(RandomSeed);
+                var regionPopulation = populationOverrides[random.Next(0, populationOverrides.Length)];
+                if (regionPopulation != GameData.PrototypeId.Invalid)
+                    PopulationRef = regionPopulation;
+                else
+                    PopulationRef = AreaPrototype.Population;
+            } 
+            else if (AreaPrototype.Population != GameData.PrototypeId.Invalid)
+                PopulationRef = AreaPrototype.Population;
+
+            if (PopulationRef != GameData.PrototypeId.Invalid)
+                PopulationArea = new (this, PopulationRef);
+
             return true;
         }
 
@@ -250,6 +268,8 @@ namespace MHServerEmu.Games.Regions
                     if (cellProto.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
                     cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
                 }
+
+            PopulationArea?.Generate();
 
             return true;
         }
@@ -442,6 +462,9 @@ namespace MHServerEmu.Games.Regions
         }
 
         public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
+
+        public PrototypeId PopulationRef { get; private set; }
+        public PopulationArea PopulationArea { get; private set; }
 
         public void Shutdown()
         {

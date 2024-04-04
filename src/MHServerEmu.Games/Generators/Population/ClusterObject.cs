@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PopulationObjectPrototype ObjectProto { get; private set; }
         public PropertyCollection Properties { get; private set; }
         public float SubObjectRadiusMax { get; private set; }
-        public SpawnFlags SpawnFlags { get; private set; }
+        public SpawnFlags SpawnFlags { get; set; }
         public List<ClusterObject> Objects { get; private set; }
         public PrototypeId MissionRef { get; private set; }
         public KeyValuePair<PrototypeId, Vector3> BlackOutZone { get; internal set; }
@@ -856,21 +856,18 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override bool TestLayout()
         {
-
             Vector3 regionPos = ProjectToFloor(Region);
          
             if (Vector3.IsFinite(regionPos) == false) 
                 return false;
 
-            if (PathFlags != PathFlags.None && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false) 
+            if (PathFlags != PathFlags.None 
+                && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false)
                 return false;
 
-            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false)
-                if (Region.PopulationManager.InBlackOutZone(regionPos, Radius, Parent.MissionRef))
-                {
-                    Logger.Debug($"InBlackOutZone {EntityProto} pos {regionPos}");
-                    return false;
-                }
+            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false 
+                && Region.PopulationManager.InBlackOutZone(regionPos, Radius, Parent.MissionRef))
+                return false;
 
             Bounds bounds = new(Bounds)
             {
