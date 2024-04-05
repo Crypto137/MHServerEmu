@@ -581,6 +581,11 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        public void Disconnect()
+        {
+            _frontendClient.Disconnect();
+        }
+
         #endregion
     }
 }

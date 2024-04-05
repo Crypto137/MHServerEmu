@@ -252,7 +252,8 @@ namespace MHServerEmu.Games
         private void GetRegionAsync(PlayerConnection playerConnection)
         {
             Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
-            EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
+            if (region != null) EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
+            else EventManager.AddEvent(playerConnection, EventEnum.ErrorInRegion, 0, playerConnection.RegionDataRef);
         }
 
         private List<IMessage> GetFinishLoadingMessages(PlayerConnection playerConnection)

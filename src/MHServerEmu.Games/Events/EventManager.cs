@@ -11,6 +11,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Games.Events
 {
@@ -89,6 +90,7 @@ namespace MHServerEmu.Games.Events
                 case EventEnum.StartMagikUltimate:      OnStartMagikUltimate(playerConnection, (NetStructPoint3)queuedEvent.Data); break;
                 case EventEnum.EndMagikUltimate:        OnEndMagikUltimate(playerConnection); break;
                 case EventEnum.GetRegion:               OnGetRegion(playerConnection, (Region)queuedEvent.Data); break;
+                case EventEnum.ErrorInRegion:               OnErrorInRegion(playerConnection, (PrototypeId)queuedEvent.Data); break;
             }
 
             queuedEvent.IsRunning = false;
@@ -541,6 +543,12 @@ namespace MHServerEmu.Games.Events
             var messages = region.GetLoadingMessages(playerConnection.Game.Id, playerConnection.WaypointDataRef, playerConnection);
             foreach (IMessage message in messages)
                 playerConnection.SendMessage(message);
+        }
+
+        private void OnErrorInRegion(PlayerConnection playerConnection, PrototypeId regionProtoId)
+        {
+            Logger.Error($"Event ErrorInRegion {GameDatabase.GetFormattedPrototypeName(regionProtoId)}");
+            playerConnection.Disconnect();
         }
     }
 }
