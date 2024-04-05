@@ -87,5 +87,15 @@
         {
             return _rand.ToString();
         }
+
+        public void ShuffleList<T>(List<T> list)
+        {
+            if (list.Count > 1)
+                for (int i = 0; i < list.Count; i++)
+                {
+                    int j = Next(i, list.Count);
+                    (list[j], list[i]) = (list[i], list[j]);
+                }
+        }
     }
 }

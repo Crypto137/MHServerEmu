@@ -1,5 +1,6 @@
 ﻿
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -9,6 +10,7 @@ namespace MHServerEmu.Games.Generators.Population
 {
     public class PopulationArea
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public const float PopulationClusterSq = 3600.0f; // 60 * 60 , 60 - Average Cluster size
         public Game Game { get; }
         public Area Area { get; }
@@ -126,15 +128,19 @@ namespace MHServerEmu.Games.Generators.Population
         {
             if (populationObjects.Count == 0) return;
             var areaRef = Area.PrototypeDataRef;
-            Picker<Cell> picker = new(Game.Random);            
-
+            Picker<Cell> picker = new(Game.Random);
+            var populationProto = GameDatabase.GetPrototype<PopulationPrototype>(PopulationRef);
+            float dencity = populationProto.ClusterDensityPct / 100.0f;
             foreach (var kvp in Area.Cells)
             {
                 Cell cell = kvp.Value;
-                int weight = (int)(cell.SpawnableArea / 1000.0f);
-                picker.Add(cell, weight);
+                float cellDencity = cell.SpawnableArea / PopulationClusterSq * dencity;
+                if (populationProto.ClusterDensityPct > 0 && cellDencity >= 1.0f)
+                {
+                    int weight = (int)(cell.SpawnableArea / 1000.0f);
+                    picker.Add(cell, weight);
+                }
             }
-
             foreach (var populationObject in populationObjects)
                 if (populationObject.SpawnAreas.Contains(areaRef) && picker.Pick(out var cell))
                     populationObject.SpawnInCell(cell);

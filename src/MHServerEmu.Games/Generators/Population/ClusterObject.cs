@@ -776,15 +776,15 @@ namespace MHServerEmu.Games.Generators.Population
             var min = bound.Min;
             var max = bound.Max;
             var center = bound.Center;
+            float clusterSize = Radius;
             List<Point2> points = new();
 
-            float clusterSize = Radius * 2.0f;
             for (float x = min.X; x < max.X; x += clusterSize)
                 for (float y = min.Y; y < max.Y; y += clusterSize)
                     points.Add(new(x, y));
 
-            points.Sort((x, y) => Random.Next(-1, 2));
-            int tries = Math.Min(points.Count, 200);
+            Random.ShuffleList(points);
+            int tries = Math.Min(points.Count, 256);
 
             for (int i = 0; i < tries; i++)
             {
