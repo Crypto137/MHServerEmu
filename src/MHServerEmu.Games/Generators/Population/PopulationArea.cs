@@ -26,10 +26,10 @@ namespace MHServerEmu.Games.Generators.Population
             var populationProto = GameDatabase.GetPrototype<PopulationPrototype>(PopulationRef);
             if (populationProto == null || Area.PlayableNavArea <= 0.0f) return;
             if (Area.SpawnableNavArea > 0.0f)
-                Spawn(populationProto);
+                PopulationRegisty(populationProto);
         }
 
-        private void Spawn(PopulationPrototype populationProto)
+        private void PopulationRegisty(PopulationPrototype populationProto)
         {
             var manager = Area.Region.PopulationManager;
             float spawnableNavArea = Area.SpawnableNavArea;
@@ -105,9 +105,6 @@ namespace MHServerEmu.Games.Generators.Population
                     encounters.Add(objectInstance);
                 else if (proto is PopulationObjectListPrototype populationObjectList)
                     GetContainedEncounters(populationObjectList.List, encounters);
-
-                var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(objectInstance.Object);
-                if (objectProto == null) continue;
             }
         }
 
@@ -123,6 +120,24 @@ namespace MHServerEmu.Games.Generators.Population
             }
 
             return picker;
+        }
+
+        public void SpawnPopulation(List<PopulationObject> populationObjects)
+        {
+            if (populationObjects.Count == 0) return;
+            var areaRef = Area.PrototypeDataRef;
+            Picker<Cell> picker = new(Game.Random);            
+
+            foreach (var kvp in Area.Cells)
+            {
+                Cell cell = kvp.Value;
+                int weight = (int)(cell.SpawnableArea / 1000.0f);
+                picker.Add(cell, weight);
+            }
+
+            foreach (var populationObject in populationObjects)
+                if (populationObject.SpawnAreas.Contains(areaRef) && picker.Pick(out var cell))
+                    populationObject.SpawnInCell(cell);
         }
     }
 

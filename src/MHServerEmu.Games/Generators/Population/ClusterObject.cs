@@ -769,12 +769,43 @@ namespace MHServerEmu.Games.Generators.Population
             return false;
         }
 
+        public bool PickPositionInBounds(Aabb bound)
+        {
+            if (Radius == 0 || bound.Width < Radius || bound.Length < Radius) return false;
+
+            var min = bound.Min;
+            var max = bound.Max;
+            var center = bound.Center;
+            List<Point2> points = new();
+
+            float clusterSize = Radius * 2.0f;
+            for (float x = min.X; x < max.X; x += clusterSize)
+                for (float y = min.Y; y < max.Y; y += clusterSize)
+                    points.Add(new(x, y));
+
+            points.Sort((x, y) => Random.Next(-1, 2));
+            int tries = Math.Min(points.Count, 200);
+
+            for (int i = 0; i < tries; i++)
+            {
+                var point = points[i];
+                Vector3 testPosition = new(point.X, point.Y, center.Z);
+                Orientation orientation = new(-1.57f, 0.0f, 0.0f);
+                SetParentRelativePosition(testPosition);
+                SetParentRelativeOrientation(orientation);
+                if (TestLayout()) return true;
+            }
+
+            return false;
+        }
+
         public override bool TestLayout()
         {
             foreach (var obj in Objects)
                 if (obj?.TestLayout() == false) return false;
             return true;
         }
+
     }
 
     public class ClusterEntity : ClusterObject

@@ -241,10 +241,13 @@ namespace MHServerEmu.Games.Regions
 
         private bool PostGenerate()
         {
+            if (IsDynamicArea()) 
+                return true;
             // if (AreaPrototype.FullyGenerateCells) // only TheRaft
             foreach (var cell in CellIterator())
                 cell.PostGenerate(); // can be here?
-            
+            // TODO call PostGenerate not global
+            PopulationArea.SpawnPopulation(Region.PopulationManager.PopulationObjects);
             return true;
         }
 

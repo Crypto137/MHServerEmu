@@ -49,6 +49,23 @@ namespace MHServerEmu.Games.Generators.Population
             }
             return false;
         }
+
+        public bool SpawnInCell(Cell cell)
+        {
+            while (Count > 0)
+            {
+                Region region = cell.GetRegion();
+                ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
+                clusterGroup.Initialize();
+                // calc group position
+                bool picked = clusterGroup.PickPositionInBounds(cell.RegionBounds);
+                // spawn Entity from Group
+                if (picked) clusterGroup.Spawn();
+                Count--;                
+            }
+            if (Count == 0) return true;
+            return false;
+        }
     }
 
     public class PopulationManager
