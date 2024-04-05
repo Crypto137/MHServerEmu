@@ -760,8 +760,7 @@ namespace MHServerEmu.Games.Generators.Population
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
                     SetParentRelativePosition(testPosition);
                     if (DebugLog) Logger.Debug($"testPostions = {testPosition}");
-                    // TODO Face Orientation
-                    SetParentRelativeOrientation(orientation);
+                    SetParentRandomOrientation(orientation);
                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
                     if (TestLayout()) return true;
                 }
@@ -789,14 +788,20 @@ namespace MHServerEmu.Games.Generators.Population
             for (int i = 0; i < tries; i++)
             {
                 var point = points[i];
-                Vector3 testPosition = new(point.X, point.Y, center.Z);
-                Orientation orientation = new(-1.57f, 0.0f, 0.0f);
-                SetParentRelativePosition(testPosition);
-                SetParentRelativeOrientation(orientation);
+                Vector3 testPosition = new(point.X, point.Y, center.Z);  
+                SetParentRelativePosition(testPosition);                
+                Orientation orientation = new(-MathHelper.PiOver2, 0.0f, 0.0f);
+                SetParentRandomOrientation(orientation);
                 if (TestLayout()) return true;
             }
 
             return false;
+        }
+
+        private void SetParentRandomOrientation(Orientation orientation)
+        {
+            Orientation.Yaw += Random.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4);
+            SetParentRelativeOrientation(orientation);
         }
 
         public override bool TestLayout()
