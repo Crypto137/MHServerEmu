@@ -33,9 +33,11 @@ namespace MHServerEmu.Games.Generators.Population
 
         private void PopulationRegisty(PopulationPrototype populationProto)
         {
+            int objCount = 0;
+            int markerCount = 0;
             var manager = Area.Region.PopulationManager;
             float spawnableNavArea = Area.SpawnableNavArea;
-            if (populationProto.SpawnMapEnabled || (populationProto.SpawnMapDensityMin > 0.0 && populationProto.SpawnMapDensityMax > 0.0f)) return;
+            //if (populationProto.SpawnMapEnabled || (populationProto.SpawnMapDensityMin > 0.0 && populationProto.SpawnMapDensityMax > 0.0f)) return;
             if (populationProto.Themes == null || populationProto.Themes.List.IsNullOrEmpty()) return;
 
             List<PrototypeId> areas = new()
@@ -51,6 +53,7 @@ namespace MHServerEmu.Games.Generators.Population
             {
                 density -= objectProto.GetAverageSize();
                 manager.AddPopulationObject(PrototypeId.Invalid, objectProto, 1, areas, cells, PrototypeId.Invalid);
+                objCount++;
             }
 
             List<PopulationObjectInstancePrototype> encounters = new();
@@ -94,7 +97,9 @@ namespace MHServerEmu.Games.Generators.Population
                 if (spawnPicker.Picker == null) continue;
                 var objectProto = spawnPicker.Picker.Pick();
                 manager.AddPopulationObject(markerRef, objectProto, spawnPicker.Count, areas, cells, PrototypeId.Invalid);
-            }            
+                markerCount++;
+            }
+            Logger.Debug($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(PopulationRef)}][{objCount}][{markerCount}]");
         }
 
         public static void GetContainedEncounters(PopulationObjectInstancePrototype[] objectList, List<PopulationObjectInstancePrototype> encounters)
