@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Navi
         Power = 1 << 2,
         Sight = 1 << 3,
         TallWalk = 1 << 4,
+        BlackOutZone = 1 << 5,
     }
 
     [Flags]

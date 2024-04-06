@@ -423,11 +423,14 @@ namespace MHServerEmu.Games.Regions
 
         public void BlackOutZonesRebuild()
         {
-            var zones = GetRegion().PopulationManager.IterateBlackOutZoneInVolume(RegionBounds);
+            if (PlayableArea == 0.0f) return;
+            var region = GetRegion();
+            var naviMesh = region.NaviMesh;
+            var zones = region.PopulationManager.IterateBlackOutZoneInVolume(RegionBounds);
             foreach (var zone in zones)
-            {
-                // Set BlackOutZone for cell
-            }
+                naviMesh.SetBlackOutZone(zone.Sphere.Center, zone.Sphere.Radius);
+            SpawnableNavArea = naviMesh.CalcSpawnableArea(RegionBounds);
+            PopulationArea.UpdateSpawnCell(this);
         }
 
         public void EnemySpawn()

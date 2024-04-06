@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -33,9 +32,6 @@ namespace MHServerEmu.Games.Generators.Population
             if (PopulationPrototype == null || Area.PlayableNavArea <= 0.0f) return;
             if (Area.SpawnableNavArea > 0.0f)
                 PopulationRegisty();
-            // Update SpawnCells
-            foreach(var kvp in Area.Cells)
-                UpdateSpawnCell(kvp.Value, PopulationPrototype);
         }
 
         private void PopulationRegisty()
@@ -165,10 +161,10 @@ namespace MHServerEmu.Games.Generators.Population
                 SpawnCells.Add(cell, new(cell, PopulationPrototype));
         }
 
-        public void UpdateSpawnCell(Cell cell, PopulationPrototype populationProto)
+        public void UpdateSpawnCell(Cell cell)
         {
             if (SpawnCells.TryGetValue(cell, out var spawnCell))
-                spawnCell.CalcDensity(cell, populationProto);
+                spawnCell.CalcDensity(cell, PopulationPrototype);
             else
                 SpawnCells.Add(cell, new(cell, PopulationPrototype, 0));
         }
