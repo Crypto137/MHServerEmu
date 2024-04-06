@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Generators.Population
                         spawnPicker = new(null, 0);
                     else
                     {
-                        float density = populationProto.GetEncounterDensity(markerRef) / 100.0f;
+                        density = populationProto.GetEncounterDensity(markerRef) / 100.0f;
                         int count = Math.Max(1, (int)(slots * density));
                         spawnPicker = new(new(Game.Random), count);
                     }
@@ -160,15 +160,6 @@ namespace MHServerEmu.Games.Generators.Population
                 spawnCell.Weight++;
            else
                 SpawnCells.Add(cell, new(cell, PopulationPrototype));
-        }
-
-        public static int GetSpawnedWeight(Cell cell)
-        {
-            int count = 0;
-            foreach(var entity in cell.Entities)
-                if (entity is WorldEntity worldEntity 
-                    && worldEntity.EntityPrototype is AgentPrototype) count++;
-            return count;
         }
     }
 
