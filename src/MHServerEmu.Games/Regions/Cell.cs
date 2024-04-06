@@ -227,13 +227,9 @@ namespace MHServerEmu.Games.Regions
             bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
             snapToFloor ??= entity.SnapToFloorOnSpawn;
             bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
-            if (snapToFloor == true) // Fix Boxes in Axis Raid
-            {
-                /*float projectHeight = RegionBounds.Center.Z + RegionLocation.ProjectToFloor(CellProto, entityPosition);
-                if (entityPosition.Z > projectHeight)
-                    entityPosition.Z = projectHeight;*/
+            if (snapToFloor == true) 
                 entityPosition = RegionLocation.ProjectToFloor(GetRegion(), entityPosition);
-            }
+                // if (oldZ < entityPosition.Z) entityPosition.Z = oldZ;
             if (entity.Bounds != null)
                 entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
 
@@ -318,22 +314,20 @@ namespace MHServerEmu.Games.Regions
         {
             // SpawnMarker Prop type
             VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this)); 
+        }
 
-            // SpawnMarkers not Prop type
-            var population = GetRegion().PopulationManager.PopulationMarkers;
+        public void SpawnPopulation(List<PopulationObject> population)
+        {
             foreach (var markerProto in CellProto.MarkerSet.Markers)
-            {
                 if (markerProto is EntityMarkerPrototype entityMarker)
                 {
                     PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
 
-                    // Spawn Entity from Missions, Themes, MetaStates
                     if (entity is SpawnMarkerPrototype spawnMarker && spawnMarker.Type != MarkerType.Prop)
                         foreach (var spawn in population)
                             if (spawn.MarkerRef == spawnMarker.DataRef && spawn.SpawnByMarker(this)) break;
                 }
-            }
         }
 
         private void VisitPropSpawns(PropSpawnVisitor visitor)

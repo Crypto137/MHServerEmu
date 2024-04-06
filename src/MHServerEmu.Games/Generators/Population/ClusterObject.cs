@@ -943,7 +943,6 @@ namespace MHServerEmu.Games.Generators.Population
         public override void Spawn()
         {
             EntityManager entityManager = Region.Game.EntityManager;
-            // TODO check Navi, collission 
             // PropertyCollection, events
             var tr = GetAbsoluteTransform();
             var pos = tr.Translation;
@@ -956,9 +955,6 @@ namespace MHServerEmu.Games.Generators.Population
             if (SnapToFloor == false) 
             {
                 pos = ProjectToFloor(Region);
-                /*float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cell.CellProto, pos);
-                if (pos.Z > projectHeight && Segment.EpsilonTest(pos.Z, projectHeight, 500)) // Fix for Door Lower Asgard
-                    pos.Z = projectHeight;*/
                 if (oldZ < pos.Z) pos.Z = oldZ;
                 overrideSnap = false; // Fix for District
             }
