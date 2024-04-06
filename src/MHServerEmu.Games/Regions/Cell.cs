@@ -229,9 +229,10 @@ namespace MHServerEmu.Games.Regions
             bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
             if (snapToFloor == true) // Fix Boxes in Axis Raid
             {
-                float projectHeight = RegionBounds.Center.Z + RegionLocation.ProjectToFloor(CellProto, entityPosition);
+                /*float projectHeight = RegionBounds.Center.Z + RegionLocation.ProjectToFloor(CellProto, entityPosition);
                 if (entityPosition.Z > projectHeight)
-                    entityPosition.Z = projectHeight;
+                    entityPosition.Z = projectHeight;*/
+                entityPosition = RegionLocation.ProjectToFloor(GetRegion(), entityPosition);
             }
             if (entity.Bounds != null)
                 entityPosition.Z += entity.Bounds.GetBoundHalfHeight();

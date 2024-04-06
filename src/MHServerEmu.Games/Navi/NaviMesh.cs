@@ -406,6 +406,12 @@ namespace MHServerEmu.Games.Navi
             return false;
         }
 
+        public Vector3 ProjectToMesh(Vector3 regionPos)
+        {
+            var triangle = NaviCdt.FindTriangleAtPoint(regionPos);
+            return NaviUtil.ProjectToPlane(triangle, regionPos);
+        }
+
         private class MarkupState
         {
             public NaviTriangle Triangle { get; set; }

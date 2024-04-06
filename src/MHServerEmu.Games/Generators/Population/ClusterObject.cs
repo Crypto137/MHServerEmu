@@ -955,9 +955,11 @@ namespace MHServerEmu.Games.Generators.Population
             bool overrideSnap = SnapToFloor != entity.SnapToFloorOnSpawn;
             if (SnapToFloor == false) 
             {
-                float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cell.CellProto, pos);
+                pos = ProjectToFloor(Region);
+                /*float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cell.CellProto, pos);
                 if (pos.Z > projectHeight && Segment.EpsilonTest(pos.Z, projectHeight, 500)) // Fix for Door Lower Asgard
-                    pos.Z = projectHeight;
+                    pos.Z = projectHeight;*/
+                if (oldZ < pos.Z) pos.Z = oldZ;
                 overrideSnap = false; // Fix for District
             }
             if (entity.Bounds != null) 
