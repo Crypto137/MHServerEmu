@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Generators.Population
             _blackOutId = 1;
         }
 
-        public void MissionRegisty(MissionPrototype missionProto)
+        public void MissionRegistry(MissionPrototype missionProto)
         {
             if (missionProto == null) return;
 

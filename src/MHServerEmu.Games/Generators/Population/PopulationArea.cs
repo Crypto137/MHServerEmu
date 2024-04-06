@@ -83,8 +83,8 @@ namespace MHServerEmu.Games.Generators.Population
                         spawnPicker = new(null, 0);
                     else
                     {
-                        float dencity = populationProto.GetEncounterDensity(markerRef) / 100.0f;
-                        int count = Math.Max(1, (int)(slots * dencity));
+                        float density = populationProto.GetEncounterDensity(markerRef) / 100.0f;
+                        int count = Math.Max(1, (int)(slots * density));
                         spawnPicker = new(new(Game.Random), count);
                     }
 
@@ -147,7 +147,7 @@ namespace MHServerEmu.Games.Generators.Population
                     foreach (var kvp in SpawnCells)
                     {
                         SpawnCell spawnCell = kvp.Value;
-                        if (spawnCell.CheckDencity(PopulationPrototype))
+                        if (spawnCell.CheckDensity(PopulationPrototype))
                             picker.Add(kvp.Key, spawnCell.CellWeight);
                     }
                     if (picker.Pick(out var cell)) populationObject.SpawnInCell(cell);
@@ -174,24 +174,24 @@ namespace MHServerEmu.Games.Generators.Population
 
     public class SpawnCell
     {
-        public float Dencity;
-        public float DencityPeak;
+        public float Density;
+        public float DensityPeak;
         public int CellWeight;
         public int Weight;
 
         public SpawnCell(Cell cell, PopulationPrototype populationProto)
         {
-            float dencity = populationProto.ClusterDensityPct / 100.0f;
-            float dencityPeak = populationProto.ClusterDensityPeak / 100.0f;
-            Dencity = cell.SpawnableArea / PopulationArea.PopulationClusterSq * dencity;
-            DencityPeak = cell.SpawnableArea / PopulationArea.PopulationClusterSq * dencityPeak;
+            float density = populationProto.ClusterDensityPct / 100.0f;
+            float densityPeak = populationProto.ClusterDensityPeak / 100.0f;
+            Density = cell.SpawnableArea / PopulationArea.PopulationClusterSq * density;
+            DensityPeak = cell.SpawnableArea / PopulationArea.PopulationClusterSq * densityPeak;
             CellWeight = (int)(cell.SpawnableArea / 1000.0f);
             Weight = 1;
         }
 
-        public bool CheckDencity(PopulationPrototype populationProto)
+        public bool CheckDensity(PopulationPrototype populationProto)
         {
-            return populationProto.ClusterDensityPct > 0 && Dencity >= 1.0f && Weight <= DencityPeak;
+            return populationProto.ClusterDensityPct > 0 && Density >= 1.0f && Weight <= DensityPeak;
         }
 
         // TODO recalc if SpawnableArea changed

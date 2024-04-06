@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Missions
                 if (missionProto == null) continue;
                 if (missionProto.HasPopulationInRegion(region) == false) continue;
                 if (IsMissionValidAndApprovedForUse(missionProto))
-                    region.PopulationManager.MissionRegisty(missionProto);
+                    region.PopulationManager.MissionRegistry(missionProto);
             }
             return true;
         }
