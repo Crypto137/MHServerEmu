@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Entities
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
             if (proto is HotspotPrototype) _flags |= EntityFlags.IsHotspot;
-
+            if (proto is AgentPrototype) cell.EnemySpawn();
             Location.Region = cell.GetRegion();
             Location.Cell = cell; // Set directly
             Location.SetPosition(position);

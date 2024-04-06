@@ -1,7 +1,7 @@
-﻿
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -15,26 +15,31 @@ namespace MHServerEmu.Games.Generators.Population
         public Game Game { get; }
         public Area Area { get; }
         public PrototypeId PopulationRef { get; }
+        public PopulationPrototype PopulationPrototype { get; }
+        public Dictionary<Cell, SpawnCell> SpawnCells { get; }
 
         public PopulationArea(Area area, PrototypeId populationRef)
         {
             Game = area.Game;
             Area = area;
             PopulationRef = populationRef;
+
+            PopulationPrototype = GameDatabase.GetPrototype<PopulationPrototype>(PopulationRef);
+            SpawnCells = new();
         }
 
         public void Generate()
         {
-            var populationProto = GameDatabase.GetPrototype<PopulationPrototype>(PopulationRef);
-            if (populationProto == null || Area.PlayableNavArea <= 0.0f) return;
+            if (PopulationPrototype == null || Area.PlayableNavArea <= 0.0f) return;
             if (Area.SpawnableNavArea > 0.0f)
-                PopulationRegisty(populationProto);
+                PopulationRegisty();
         }
 
-        private void PopulationRegisty(PopulationPrototype populationProto)
+        private void PopulationRegisty()
         {
             int objCount = 0;
             int markerCount = 0;
+            var populationProto = PopulationPrototype;
             var manager = Area.Region.PopulationManager;
             float spawnableNavArea = Area.SpawnableNavArea;
             //if (populationProto.SpawnMapEnabled || (populationProto.SpawnMapDensityMin > 0.0 && populationProto.SpawnMapDensityMax > 0.0f)) return;
@@ -134,22 +139,62 @@ namespace MHServerEmu.Games.Generators.Population
             if (populationObjects.Count == 0) return;
             var areaRef = Area.PrototypeDataRef;
             Picker<Cell> picker = new(Game.Random);
-            var populationProto = GameDatabase.GetPrototype<PopulationPrototype>(PopulationRef);
-            float dencity = populationProto.ClusterDensityPct / 100.0f;
-            foreach (var kvp in Area.Cells)
-            {
-                Cell cell = kvp.Value;
-                float cellDencity = cell.SpawnableArea / PopulationClusterSq * dencity;
-                if (populationProto.ClusterDensityPct > 0 && cellDencity >= 1.0f)
-                {
-                    int weight = (int)(cell.SpawnableArea / 1000.0f);
-                    picker.Add(cell, weight);
-                }
-            }
+
             foreach (var populationObject in populationObjects)
-                if (populationObject.SpawnAreas.Contains(areaRef) && picker.Pick(out var cell))
-                    populationObject.SpawnInCell(cell);
+                if (populationObject.SpawnAreas.Contains(areaRef))
+                {
+                    picker.Clear();
+                    foreach (var kvp in SpawnCells)
+                    {
+                        SpawnCell spawnCell = kvp.Value;
+                        if (spawnCell.CheckDencity(PopulationPrototype))
+                            picker.Add(kvp.Key, spawnCell.CellWeight);
+                    }
+                    if (picker.Pick(out var cell)) populationObject.SpawnInCell(cell);
+                }
         }
+
+        public void AddEnemyWeight(Cell cell)
+        {
+            if (SpawnCells.TryGetValue(cell, out var spawnCell))
+                spawnCell.Weight++;
+           else
+                SpawnCells.Add(cell, new(cell, PopulationPrototype));
+        }
+
+        public static int GetSpawnedWeight(Cell cell)
+        {
+            int count = 0;
+            foreach(var entity in cell.Entities)
+                if (entity is WorldEntity worldEntity 
+                    && worldEntity.EntityPrototype is AgentPrototype) count++;
+            return count;
+        }
+    }
+
+    public class SpawnCell
+    {
+        public float Dencity;
+        public float DencityPeak;
+        public int CellWeight;
+        public int Weight;
+
+        public SpawnCell(Cell cell, PopulationPrototype populationProto)
+        {
+            float dencity = populationProto.ClusterDensityPct / 100.0f;
+            float dencityPeak = populationProto.ClusterDensityPeak / 100.0f;
+            Dencity = cell.SpawnableArea / PopulationArea.PopulationClusterSq * dencity;
+            DencityPeak = cell.SpawnableArea / PopulationArea.PopulationClusterSq * dencityPeak;
+            CellWeight = (int)(cell.SpawnableArea / 1000.0f);
+            Weight = 1;
+        }
+
+        public bool CheckDencity(PopulationPrototype populationProto)
+        {
+            return populationProto.ClusterDensityPct > 0 && Dencity >= 1.0f && Weight <= DencityPeak;
+        }
+
+        // TODO recalc if SpawnableArea changed
     }
 
     public class SpawnPicker

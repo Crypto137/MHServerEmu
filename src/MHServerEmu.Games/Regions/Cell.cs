@@ -51,6 +51,7 @@ namespace MHServerEmu.Games.Regions
         private float SpawnableNavArea;
         public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
+        public PopulationArea PopulationArea { get => Area.PopulationArea ; }
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Vector3 AreaOffset { get; private set; }
         public Vector3 AreaPosition { get; private set; }
@@ -432,6 +433,11 @@ namespace MHServerEmu.Games.Regions
             {
                 // Set BlackOutZone for cell
             }
+        }
+
+        public void EnemySpawn()
+        {
+            PopulationArea.AddEnemyWeight(this);
         }
 
         #region Enums

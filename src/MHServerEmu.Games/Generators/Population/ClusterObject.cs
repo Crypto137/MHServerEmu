@@ -800,7 +800,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         private void SetParentRandomOrientation(Orientation orientation)
         {
-            Orientation.Yaw += Random.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4);
+            orientation.Yaw += Random.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4);
             SetParentRelativeOrientation(orientation);
         }
 
