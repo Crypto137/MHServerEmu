@@ -117,6 +117,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId UIColor { get; protected set; }
         public LocaleStringId UIDisplayName { get; protected set; }
         public int BonusItemFindBonusDifficultyMult { get; protected set; }
+
+        public static bool InRange(PrototypeId value, PrototypeId min, PrototypeId max)
+        {
+            var valueProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(value);
+            if (valueProto == null) return false;
+            var minProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(min);
+            if (minProto == null || valueProto.Tier < minProto.Tier) return false;
+            else
+            {
+                var maxProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(max);
+                if (maxProto == null || valueProto.Tier > maxProto.Tier) return false;
+            }
+            return true;
+        }
     }
 
     public class DifficultyGlobalsPrototype : Prototype

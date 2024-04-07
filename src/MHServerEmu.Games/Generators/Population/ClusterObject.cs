@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PopulationObjectPrototype ObjectProto { get; private set; }
         public PropertyCollection Properties { get; private set; }
         public float SubObjectRadiusMax { get; private set; }
-        public SpawnFlags SpawnFlags { get; private set; }
+        public SpawnFlags SpawnFlags { get; set; }
         public List<ClusterObject> Objects { get; private set; }
         public PrototypeId MissionRef { get; private set; }
         public KeyValuePair<PrototypeId, Vector3> BlackOutZone { get; internal set; }
@@ -693,7 +693,22 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override void Spawn()
         {
-            foreach (var obj in Objects) obj.Spawn();            
+            foreach (var obj in Objects) obj.Spawn();
+            var manager = Region.PopulationManager;
+            var position = GetAbsolutePosition();
+            if (ObjectProto.Riders.HasValue())
+                foreach (var rider in ObjectProto.Riders)
+                    if (rider is PopulationRiderBlackOutPrototype blackOutProto)
+                    {
+                        var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(blackOutProto.BlackOutZone);
+                        manager.SpawnBlackOutZone(position, blackout.BlackOutRadius, MissionRef);
+                    }
+
+            if (BlackOutZone.Key != PrototypeId.Invalid)
+            {
+                var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(BlackOutZone.Key);
+                manager.SpawnBlackOutZone(position, blackout.BlackOutRadius, MissionRef);
+            }
         }
 
         public bool PickPositionInSector(Vector3 position, Orientation orientation, int minDistance, int maxDistance)
@@ -745,13 +760,48 @@ namespace MHServerEmu.Games.Generators.Population
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
                     SetParentRelativePosition(testPosition);
                     if (DebugLog) Logger.Debug($"testPostions = {testPosition}");
-                    // TODO Face Orientation
-                    SetParentRelativeOrientation(orientation);
+                    SetParentRandomOrientation(orientation);
                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
                     if (TestLayout()) return true;
                 }
             }
             return false;
+        }
+
+        public bool PickPositionInBounds(Aabb bound)
+        {
+            if (Radius == 0 || bound.Width < Radius || bound.Length < Radius) return false;
+
+            var min = bound.Min;
+            var max = bound.Max;
+            var center = bound.Center;
+            float clusterSize = Radius;
+            List<Point2> points = new();
+
+            for (float x = min.X; x < max.X; x += clusterSize)
+                for (float y = min.Y; y < max.Y; y += clusterSize)
+                    points.Add(new(x, y));
+
+            Random.ShuffleList(points);
+            int tries = Math.Min(points.Count, 256);
+
+            for (int i = 0; i < tries; i++)
+            {
+                var point = points[i];
+                Vector3 testPosition = new(point.X, point.Y, center.Z);  
+                SetParentRelativePosition(testPosition);                
+                Orientation orientation = new(-MathHelper.PiOver2, 0.0f, 0.0f);
+                SetParentRandomOrientation(orientation);
+                if (TestLayout()) return true;
+            }
+
+            return false;
+        }
+
+        private void SetParentRandomOrientation(Orientation orientation)
+        {
+            orientation.Yaw += Random.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4);
+            SetParentRelativeOrientation(orientation);
         }
 
         public override bool TestLayout()
@@ -760,6 +810,7 @@ namespace MHServerEmu.Games.Generators.Population
                 if (obj?.TestLayout() == false) return false;
             return true;
         }
+
     }
 
     public class ClusterEntity : ClusterObject
@@ -841,13 +892,17 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override bool TestLayout()
         {
-
             Vector3 regionPos = ProjectToFloor(Region);
          
             if (Vector3.IsFinite(regionPos) == false) 
                 return false;
 
-            if (PathFlags != PathFlags.None && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false) 
+            if (PathFlags != PathFlags.None 
+                && Region.NaviMesh.Contains(regionPos, Radius, new DefaultContainsPathFlagsCheck(PathFlags)) == false)
+                return false;
+
+            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false 
+                && Region.PopulationManager.InBlackOutZone(regionPos, Radius, Parent.MissionRef))
                 return false;
 
             Bounds bounds = new(Bounds)
@@ -888,7 +943,6 @@ namespace MHServerEmu.Games.Generators.Population
         public override void Spawn()
         {
             EntityManager entityManager = Region.Game.EntityManager;
-            // TODO check Navi, collission 
             // PropertyCollection, events
             var tr = GetAbsoluteTransform();
             var pos = tr.Translation;
@@ -900,9 +954,8 @@ namespace MHServerEmu.Games.Generators.Population
             bool overrideSnap = SnapToFloor != entity.SnapToFloorOnSpawn;
             if (SnapToFloor == false) 
             {
-                float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cell.CellProto, pos);
-                if (pos.Z > projectHeight && Segment.EpsilonTest(pos.Z, projectHeight, 500)) // Fix for Door Lower Asgard
-                    pos.Z = projectHeight;
+                pos = ProjectToFloor(Region);
+                if (oldZ < pos.Z) pos.Z = oldZ;
                 overrideSnap = false; // Fix for District
             }
             if (entity.Bounds != null) 

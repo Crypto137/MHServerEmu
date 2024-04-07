@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Navi
@@ -235,6 +236,12 @@ namespace MHServerEmu.Games.Navi
             return null;
         }
 
+        public float CalcSpawnableArea()
+        {
+            if (PathingFlags.HasFlag(PathFlags.Walk) && PathingFlags.HasFlag(PathFlags.BlackOutZone) == false)
+                return Segment.SignedDoubleTriangleArea2D(PointCW(0).Pos, PointCW(1).Pos, PointCW(2).Pos) / 2.0f;
+            return 0.0f;
+        }
     }
 
     public class NaviTriangleState

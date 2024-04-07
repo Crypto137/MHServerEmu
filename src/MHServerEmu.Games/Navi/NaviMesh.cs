@@ -406,6 +406,65 @@ namespace MHServerEmu.Games.Navi
             return false;
         }
 
+        public Vector3 ProjectToMesh(Vector3 regionPos)
+        {
+            var triangle = NaviCdt.FindTriangleAtPoint(regionPos);
+            return NaviUtil.ProjectToPlane(triangle, regionPos);
+        }
+
+        public void SetBlackOutZone(Vector3 center, float radius)
+        {
+            var triangle = NaviCdt.FindTriangleAtPoint(center);
+            if (triangle == null) return;
+            triangle.PathingFlags |= PathFlags.BlackOutZone;
+            Stack<NaviTriangle> triStack = new();
+            var naviSerialCheck = new NaviSerialCheck(NaviCdt);
+            float radiousSq = radius * radius;
+            triStack.Push(triangle);
+            while (triStack.Count > 0)
+            {
+                var tri = triStack.Pop();
+                for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
+                {
+                    var edge = tri.Edges[edgeIndex];
+                    if (edge.TestOperationSerial(naviSerialCheck) == false) continue;
+                    var triOppo = edge.OpposedTriangle(tri);
+                    if (triOppo != null && Vector3.DistanceSquared2D(center, triOppo.Centroid()) < radiousSq) 
+                    {
+                        triOppo.PathingFlags |= PathFlags.BlackOutZone;
+                        triStack.Push(triOppo);
+                    }
+                }
+            }
+        }
+
+        public float CalcSpawnableArea(Aabb bound)
+        {
+            float spawnableArea = 0.0f;
+            var triangle = NaviCdt.FindTriangleAtPoint(bound.Center);
+            if (triangle == null) return spawnableArea;
+            spawnableArea += triangle.CalcSpawnableArea();
+            Stack<NaviTriangle> triStack = new();
+            var naviSerialCheck = new NaviSerialCheck(NaviCdt);
+            triStack.Push(triangle);
+            while (triStack.Count > 0)
+            {
+                var tri = triStack.Pop();
+                for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
+                {
+                    var edge = tri.Edges[edgeIndex];
+                    if (edge.TestOperationSerial(naviSerialCheck) == false) continue;
+                    var triOppo = edge.OpposedTriangle(tri);
+                    if (triOppo!= null && bound.IntersectsXY(triOppo.Centroid()))
+                    {
+                        spawnableArea += tri.CalcSpawnableArea();
+                        triStack.Push(triOppo);
+                    }
+                }
+            }
+            return spawnableArea;
+        }
+
         private class MarkupState
         {
             public NaviTriangle Triangle { get; set; }

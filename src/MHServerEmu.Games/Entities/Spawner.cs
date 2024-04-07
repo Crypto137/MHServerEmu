@@ -82,9 +82,18 @@ namespace MHServerEmu.Games.Entities
             clusterGroup.Initialize();
             Vector3 pos = new(Location.GetPosition());
             var rot = Location.GetOrientation();
-            clusterGroup.PickPositionInSector(pos, rot, spawnerProto.SpawnDistanceMin, spawnerProto.SpawnDistanceMax);
+            if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout)
+                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce)) 
+                clusterGroup.SpawnFlags |= SpawnFlags.IgnoreBlackout;
+
+            bool success = clusterGroup.PickPositionInSector(pos, rot, spawnerProto.SpawnDistanceMin, spawnerProto.SpawnDistanceMax);
+            if (success == false && spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
+            {
+                clusterGroup.SetParentRelativePosition(pos);
+                success = true;
+            }
             // spawn Entity from Group
-            clusterGroup.Spawn();
+            if (success) clusterGroup.Spawn();
         }
     }
 }

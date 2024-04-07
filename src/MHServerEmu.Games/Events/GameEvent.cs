@@ -18,7 +18,8 @@ namespace MHServerEmu.Games.Events
         PreInteractPower,
         PreInteractPowerEnd,
         UseInteractableObject,
-        GetRegion
+        GetRegion,
+        ErrorInRegion
     }
 
     public class GameEvent

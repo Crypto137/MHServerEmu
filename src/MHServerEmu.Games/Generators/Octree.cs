@@ -1,12 +1,9 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.Regions;
 using System.Collections;
 
 namespace MHServerEmu.Games.Generators
 {
-    // Node
     public class Node<T>
     {
         public Quadtree<T> Tree;
@@ -80,7 +77,6 @@ namespace MHServerEmu.Games.Generators
         }
     }
 
-    // QuadtreeLocation
     public class QuadtreeLocation<T>
     {
         public T Element { get; }
@@ -98,21 +94,6 @@ namespace MHServerEmu.Games.Generators
         public virtual Aabb GetBounds() => default;
     }
 
-    // QuadtreeLocation<Cell,CellRegionSpatialPartitionElementOps<Cell>,24>
-    public class CellRegionSpatialPartitionLocation : QuadtreeLocation<Cell> 
-    {
-        public CellRegionSpatialPartitionLocation(Cell element) : base(element) { }
-        public override Aabb GetBounds() => Element.RegionBounds;
-    }
-
-    // QuadtreeLocation<SpawnReservation,SpawnReservationSpatialPartitionElementOps<SpawnReservation>,24>
-    public class SpawnReservationSpatialPartitionLocation : QuadtreeLocation<SpawnReservation>
-    {
-        public SpawnReservationSpatialPartitionLocation(SpawnReservation element) : base(element) { }
-        public override Aabb GetBounds() => Element.RegionBounds;
-    }
-
-    // Quadtree
     public class Quadtree<T>
     {
         public Node<T> Root;
@@ -538,23 +519,4 @@ namespace MHServerEmu.Games.Generators
         private void IncrementIteratorCount() => _outstandingIteratorCount++;
 
     }
-
-    // Quadtree<SpawnReservation,SpawnReservationSpatialPartitionElementOps<SpawnReservation>,24>
-    public class SpawnReservationSpatialPartition : Quadtree<SpawnReservation>  
-    {
-        public SpawnReservationSpatialPartition(Aabb bound): base (bound, 128.0f) { }
-
-        public override QuadtreeLocation<SpawnReservation> GetLocation(SpawnReservation element) => element.SpatialPartitionLocation;
-        public override Aabb GetElementBounds(SpawnReservation element) => element.RegionBounds;
-    }
-
-    // Quadtree<Cell,CellRegionSpatialPartitionElementOps<Cell>,24>
-    public class CellSpatialPartition : Quadtree<Cell>  
-    {
-        public CellSpatialPartition(Aabb bound) : base(bound, 128.0f) { }
-
-        public override QuadtreeLocation<Cell> GetLocation(Cell element) => element.SpatialPartitionLocation;
-        public override Aabb GetElementBounds(Cell element) => element.RegionBounds;
-    }
-
 }

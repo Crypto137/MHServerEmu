@@ -79,4 +79,18 @@ namespace MHServerEmu.Games.Generators.Population
             return (int)Cell.Id * 1000 + Id;
         }
     }
+
+    public class SpawnReservationSpatialPartitionLocation : QuadtreeLocation<SpawnReservation>
+    {
+        public SpawnReservationSpatialPartitionLocation(SpawnReservation element) : base(element) { }
+        public override Aabb GetBounds() => Element.RegionBounds;
+    }
+
+    public class SpawnReservationSpatialPartition : Quadtree<SpawnReservation>
+    {
+        public SpawnReservationSpatialPartition(Aabb bound) : base(bound, 128.0f) { }
+
+        public override QuadtreeLocation<SpawnReservation> GetLocation(SpawnReservation element) => element.SpatialPartitionLocation;
+        public override Aabb GetElementBounds(SpawnReservation element) => element.RegionBounds;
+    }
 }

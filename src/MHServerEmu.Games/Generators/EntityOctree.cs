@@ -216,14 +216,12 @@ namespace MHServerEmu.Games.Generators
         }
     }
 
-    // QuadtreeLocation<WorldEntity,EntityRegionSpatialPartitionElementOps<WorldEntity>,24>
     public class EntityRegionSpatialPartitionLocation : QuadtreeLocation<WorldEntity>
     {
         public EntityRegionSpatialPartitionLocation(WorldEntity element) : base(element) { }
         public override Aabb GetBounds() => Element.RegionBounds;
     }
 
-    // Quadtree<WorldEntity,EntityRegionSpatialPartitionElementOps<WorldEntity>,24>
     public class WorldEntityRegionSpatialPartition : Quadtree<WorldEntity>
     {
         public WorldEntityRegionSpatialPartition(Aabb bound, float minRadius, EntityRegionSPContextFlags flag) : base(bound, minRadius) 

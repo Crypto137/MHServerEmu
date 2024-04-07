@@ -345,6 +345,16 @@ namespace MHServerEmu.Games.Generators.Population
 
             return null;
         }
+
+        public int CalcFreeReservation(PrototypeId markerRef, PrototypeId spawnAreaRef)
+        {
+            int count = 0;
+            if (_areaLookup.TryGetValue(spawnAreaRef, out var spawnMap) && spawnMap != null)
+                if (spawnMap.TryGetValue(markerRef, out var list) == false && list != null) 
+                    foreach (var testReservation in list)
+                        if (testReservation.State == MarkerState.Free) count++;
+            return count;
+        }
     }
 
     public class SpawnSpec

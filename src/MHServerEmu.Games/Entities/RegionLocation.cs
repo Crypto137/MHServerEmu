@@ -66,7 +66,13 @@ namespace MHServerEmu.Games.Entities
             Cell cell = region.GetCellAtPosition(regionPos);
             if (cell == null) return regionPos;
             Vector3 postion = new(regionPos);
-            postion.Z = cell.RegionBounds.Center.Z + ProjectToFloor(cell.CellProto, postion);
+
+            var height = ProjectToFloor(cell.CellProto, postion);
+            if (height > Int16.MinValue) 
+                postion.Z = cell.RegionBounds.Center.Z + height;
+            else if (region.NaviMesh.IsMeshValid)
+                return region.NaviMesh.ProjectToMesh(regionPos);
+
             return postion;
         }
 

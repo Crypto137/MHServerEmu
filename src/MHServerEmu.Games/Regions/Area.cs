@@ -132,6 +132,24 @@ namespace MHServerEmu.Games.Regions
 
             MinimapRevealGroupId = AreaPrototype.MinimapRevealGroupId;
 
+            var emptyPopulation = GameDatabase.PopulationGlobalsPrototype.EmptyPopulation;
+            var populationOverrides = Region.RegionPrototype.PopulationOverrides;
+
+            if (populationOverrides.HasValue() && AreaPrototype.Population != emptyPopulation)
+            {
+                GRandom random = new(RandomSeed);
+                var regionPopulation = populationOverrides[random.Next(0, populationOverrides.Length)];
+                if (regionPopulation != GameData.PrototypeId.Invalid)
+                    PopulationRef = regionPopulation;
+                else
+                    PopulationRef = AreaPrototype.Population;
+            } 
+            else if (AreaPrototype.Population != GameData.PrototypeId.Invalid)
+                PopulationRef = AreaPrototype.Population;
+
+            if (PopulationRef != GameData.PrototypeId.Invalid)
+                PopulationArea = new (this, PopulationRef);
+
             return true;
         }
 
@@ -223,24 +241,51 @@ namespace MHServerEmu.Games.Regions
 
         private bool PostGenerate()
         {
+            if (IsDynamicArea()) return true;
             // if (AreaPrototype.FullyGenerateCells) // only TheRaft
             foreach (var cell in CellIterator())
                 cell.PostGenerate(); // can be here?
-            
+
+            // Spawn Entity from Missions, MetaStates
+            var population = Region.PopulationManager.PopulationMarkers;
+            foreach (var cell in CellIterator())
+                cell.SpawnPopulation(population);
+            // Spawn Themes
+            PopulationArea.SpawnPopulation(Region.PopulationManager.PopulationObjects);
+
             return true;
         }
 
         private bool GeneratePopulation()
         {
+            if (TestStatus(GenerateFlag.Background) == false)
+            {
+                Logger.Warn($"Generate population should have background generator \nRegion:{Region}\nArea:{ToString()}");
+                return false;
+            }
+
+            if (TestStatus(GenerateFlag.Population)) return true;
+            SetStatus(GenerateFlag.Population, true);
+
+            BlackOutZonesRebuild();
+
             if (Region.Settings.GenerateEntities)
                 foreach (var cell in CellIterator()) {
-                    MarkerSetOptions options = MarkerSetOptions.Default;
+                    MarkerSetOptions options = MarkerSetOptions.Default | MarkerSetOptions.SpawnMissionAssociated;
                     var cellProto = cell.CellProto;
                     if (cellProto.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
                     cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
                 }
 
+            PopulationArea?.Generate();
+
             return true;
+        }
+
+        private void BlackOutZonesRebuild()
+        {
+            foreach (var cell in CellIterator())
+                cell.BlackOutZonesRebuild();
         }
 
         private bool GenerateNavi()
@@ -425,6 +470,9 @@ namespace MHServerEmu.Games.Regions
         }
 
         public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
+
+        public PrototypeId PopulationRef { get; private set; }
+        public PopulationArea PopulationArea { get; private set; }
 
         public void Shutdown()
         {
