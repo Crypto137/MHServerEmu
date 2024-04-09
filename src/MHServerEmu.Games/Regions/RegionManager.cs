@@ -282,6 +282,7 @@ namespace MHServerEmu.Games.Regions
 
             switch (prototype)
             {
+                // dumped
                 case RegionPrototypeId.NPEAvengersTowerHUBRegion:
                     archive.Properties[PropertyEnum.BonusItemFindBonusDifficultyMult] = 6;
                     archive.Properties[PropertyEnum.DifficultyTier] = (PrototypeId)DifficultyTier.Normal;   // Difficulty/Tiers/Tier1Normal.prototype
@@ -309,6 +310,7 @@ namespace MHServerEmu.Games.Regions
                     */
                     break;
 
+                // dumped
                 case RegionPrototypeId.DangerRoomHubRegion:
                     archive.Properties[PropertyEnum.BonusItemFindBonusDifficultyMult] = 9;
                     archive.Properties[PropertyEnum.DamageRegionMobToPlayer] = 4f;
@@ -320,6 +322,7 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
+                // dumped
                 case RegionPrototypeId.XManhattanRegion60Cosmic:
                     archive.Properties[PropertyEnum.BonusItemFindBonusDifficultyMult] = 13;
                     archive.Properties[PropertyEnum.DamageRegionMobToPlayer] = 8f;
@@ -569,6 +572,15 @@ namespace MHServerEmu.Games.Regions
                     var genericFractionWidget = archive.UIDataProvider.GetWidget<UIWidgetGenericFraction>((PrototypeId)11932510257277768241, (PrototypeId)10490887443555427166);
                     genericFractionWidget.SetCount(1, 1);
                     genericFractionWidget.SetTimeRemaining(251550);
+
+                    break;
+
+                // custom
+                case RegionPrototypeId.SurturRaidRegionGreen:
+                    var deathsWidget = archive.UIDataProvider.GetWidget<UIWidgetGenericFraction>((PrototypeId)11858833950498362027, PrototypeId.Invalid);
+                    deathsWidget.SetCount(30, 30);
+                    archive.UIDataProvider.GetWidget<UIWidgetEntityIconsSyncData>((PrototypeId)1133155547537679647, PrototypeId.Invalid);
+                    archive.UIDataProvider.GetWidget<UIWidgetEntityIconsSyncData>((PrototypeId)478583290767352422, PrototypeId.Invalid);
 
                     break;
             }
