@@ -140,25 +140,6 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
-        public static bool Transfer(Archive archive, ref PropertyValue ioData)
-        {
-            bool success = true;
-
-            if (archive.IsPacking)
-            {
-                ulong value = ioData;
-                success &= Transfer(archive, ref value);
-            }
-            else
-            {
-                ulong value = 0;
-                success &= Transfer(archive, ref value);
-                ioData = value;
-            }
-
-            return success;
-        }
-
         // Other
 
         public static bool Transfer(Archive archive, ref TimeSpan ioData)

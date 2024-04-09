@@ -2,7 +2,9 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -12,7 +14,7 @@ namespace MHServerEmu.Games.Properties
     /// <summary>
     /// An aggregatable collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/>.
     /// </summary>
-    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
+    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize
     {
         // TODO: Eval
         // TODO: PropertyChangeWatcher API: AttachWatcher(), RemoveWatcher(), RemoveAllWatchers()
@@ -25,7 +27,7 @@ namespace MHServerEmu.Games.Properties
         private readonly Dictionary<PropertyId, CurveProperty> _curveList = new();
 
         // Parent and child collections
-        // NOTE: The client uses a tabletree structure to store those with PropertyCollection as key and an empty struct called EmptyDummyValue as value.
+        // NOTE: The client uses a tabletree structure to store these with PropertyCollection as key and an empty struct called EmptyDummyValue as value.
         // I'm not sure what the intention there was, but it makes zero sense for us to do it the same way.
         private readonly HashSet<PropertyCollection> _parentCollections = new();
         private readonly HashSet<PropertyCollection> _childCollections = new();
@@ -399,7 +401,52 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
-        // TODO: PropertyCollection::serializeWithDefault
+        public virtual bool Serialize(Archive archive)
+        {
+            return SerializeWithDefault(archive, null);
+        }
+
+        public virtual bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
+        {
+            bool success = true;
+
+            // TODO: skip properties that match the default collection
+
+            if (archive.IsPacking)
+            {
+                // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
+                // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
+                // and updates the number. This is most likely a side effect of not all properties being saved to the database in the
+                // original implementation.
+                archive.WriteUnencodedStream((uint)_baseList.Count);
+
+                foreach (var kvp in _baseList)
+                    success &= SerializePropertyForPacking(kvp, archive, defaultCollection);
+            }
+            else
+            {
+                uint numProperties = 0;
+                success &= archive.ReadUnencodedStream(ref numProperties);
+
+                for (uint i = 0; i < numProperties; i++)
+                {
+                    PropertyId id = new();
+                    success &= Serializer.Transfer(archive, ref id);
+
+                    PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+
+                    ulong bits = 0;
+                    success &= Serializer.Transfer(archive, ref bits);
+
+                    if (success)
+                        SetPropertyValue(id, ConvertBitsToValue(bits, info.DataType));
+                }
+            }
+
+            return success;
+        }
+
+        #region REMOVEME: Old Serialization
 
         /// <summary>
         /// Decodes <see cref="PropertyCollection"/> data from a <see cref="CodedInputStream"/>.
@@ -423,8 +470,23 @@ namespace MHServerEmu.Games.Properties
         {
             stream.WriteRawUInt32((uint)_baseList.Count);
             foreach (var kvp in _baseList)
-                SerializePropertyForPacking(kvp, stream);
+                OLD_SerializePropertyForPacking(kvp, stream);
         }
+
+        /// <summary>
+        /// Serializes a key/value pair of <see cref="PropertyId"/> and <see cref="PropertyValue"/> to a <see cref="CodedOutputStream"/>.
+        /// </summary>
+        protected static bool OLD_SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
+        {
+            // TODO: Serialize only properties that are different from the base collection for replication 
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+            ulong valueBits = ConvertValueToBits(kvp.Value, info.DataType);
+            stream.WriteRawVarint64(kvp.Key.Raw.ReverseBytes());
+            stream.WriteRawVarint64(valueBits);
+            return true;
+        }
+
+        #endregion
 
         /// <summary>
         /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
@@ -474,17 +536,19 @@ namespace MHServerEmu.Games.Properties
             return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
         }
 
-        /// <summary>
-        /// Serializes a key/value pair of <see cref="PropertyId"/> and <see cref="PropertyValue"/> to a <see cref="CodedOutputStream"/>.
-        /// </summary>
-        protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
+        protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, Archive archive, PropertyCollection defaultCollection)
         {
+            bool success = true;
+
             // TODO: Serialize only properties that are different from the base collection for replication 
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-            ulong valueBits = ConvertValueToBits(kvp.Value, info.DataType);
-            stream.WriteRawVarint64(kvp.Key.Raw.ReverseBytes());    // Id is reversed so that it can be efficiently encoded into varint when all params are 0
-            stream.WriteRawVarint64(valueBits);
-            return true;
+
+            ulong id = kvp.Key.Raw.ReverseBytes();  // Id is reversed so that it can be efficiently encoded into varint when all params are 0
+            ulong value = ConvertValueToBits(kvp.Value, info.DataType);
+            success &= Serializer.Transfer(archive, ref id);
+            success &= Serializer.Transfer(archive, ref value);
+
+            return success;
         }
 
         // TODO: make value <-> bits conversion protected once we no longer need it for hacks
