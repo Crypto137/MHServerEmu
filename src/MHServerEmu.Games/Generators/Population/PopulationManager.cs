@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -10,64 +11,6 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Population
 {
-    public class PopulationObject
-    {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-        public PrototypeId MarkerRef;
-        public PrototypeId MissionRef;
-        public GRandom Random;
-        public PropertyCollection Properties;
-        public SpawnFlags SpawnFlags;
-        public PopulationObjectPrototype Object;
-        public List<PrototypeId> SpawnAreas;
-        public List<PrototypeId> SpawnCells;
-        public int Count;       
-
-        public bool SpawnByMarker(Cell cell)
-        {
-            // TODO add fast check markerRef for cell
-            if (Count == 0) return false;
-            Region region = cell.GetRegion();
-            SpawnMarkerRegistry registry = region.SpawnMarkerRegistry;
-            SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, cell, SpawnAreas, SpawnCells);
-            if (reservation != null)
-            {               
-                reservation.Object = Object;
-                reservation.MissionRef = MissionRef;
-                
-                //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {GameDatabase.GetFormattedPrototypeName(MarkerRef)} {pos}");
-                ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
-                clusterGroup.Initialize();
-                // set group position
-                var pos = reservation.GetRegionPosition();
-                clusterGroup.SetParentRelativePosition(pos);
-                clusterGroup.SetParentRelativeOrientation(reservation.MarkerRot); // can be random?
-                // spawn Entity from Group
-                clusterGroup.Spawn();
-                Count--;
-                return true;
-            }
-            return false;
-        }
-
-        public bool SpawnInCell(Cell cell)
-        {
-            while (Count > 0)
-            {
-                Region region = cell.GetRegion();
-                ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
-                clusterGroup.Initialize();
-                // calc group position
-                bool picked = clusterGroup.PickPositionInBounds(cell.RegionBounds);
-                // spawn Entity from Group
-                if (picked) clusterGroup.Spawn();
-                Count--;                
-            }
-            if (Count == 0) return true;
-            return false;
-        }
-    }
-
     public class PopulationManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -82,6 +25,14 @@ namespace MHServerEmu.Games.Generators.Population
         private Dictionary<int, BlackOutZone> _blackOutZones;
         private int NextBlackOutId() => _blackOutId++;
 
+        private int _nextSpawnGroupId;
+        private Dictionary<int, SpawnGroup> _spawnGroups;
+        private int NextSpawnGroupId() => _nextSpawnGroupId++;
+
+        private int _nextSpawnSpecId;
+        private Dictionary<int, SpawnSpec> _spawnSpecs;
+        private int NextSpawnSpecId() => _nextSpawnSpecId++;
+
         public PopulationManager(Game game, Region region)
         {
             Game = game;
@@ -91,6 +42,10 @@ namespace MHServerEmu.Games.Generators.Population
             PopulationObjects = new();
             _blackOutZones = new();
             _blackOutId = 1;
+            _spawnGroups = new();
+            _nextSpawnGroupId = 1;
+            _spawnSpecs = new();
+            _nextSpawnSpecId = 1;
         }
 
         public void MissionRegistry(MissionPrototype missionProto)
@@ -145,7 +100,7 @@ namespace MHServerEmu.Games.Generators.Population
             return list;
         }
 
-        public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, List<PrototypeId> restrictToAreas, List<PrototypeId> restrictToCellsRef, PrototypeId missionRef)
+        public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, List<PrototypeId> restrictToAreas, List<PrototypeId> restrictToCells, PrototypeId missionRef)
         {
             //Logger.Warn($"SpawnMarker[{count}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");
             GRandom random = Game.Random;
@@ -164,7 +119,7 @@ namespace MHServerEmu.Games.Generators.Population
                 SpawnFlags = SpawnFlags.None,
                 Object = population,
                 SpawnAreas = restrictToAreas,
-                SpawnCells = restrictToCellsRef,
+                SpawnCells = restrictToCells,
                 Count = count
             };
 
@@ -174,6 +129,40 @@ namespace MHServerEmu.Games.Generators.Population
                 PopulationObjects.Add(populationObject);
 
             return populationObject;
+        }
+
+        public void SpawnObject(PopulationObjectPrototype popObject, RegionLocation location, PropertyCollection properties, SpawnFlags spawnFlags, SpawnerPrototype spawnerProto, out List<WorldEntity> entities)
+        {
+            var region = location.Region;
+            GRandom random = Game.Random;
+            SpawnTarget spawnTarget = new(region);
+            if (popObject.UsePopulationMarker != PrototypeId.Invalid)
+            {
+                spawnTarget.Type = SpawnTargetType.Marker;
+                spawnTarget.Cell = location.Cell;
+            }
+            else
+            {
+                spawnTarget.Type = SpawnTargetType.Spawner;
+                spawnTarget.Location = location;
+                spawnTarget.SpawnerProto = spawnerProto;
+            }
+            List<PrototypeId> spawnArea = new()
+            {
+                location.Area.PrototypeDataRef
+            };
+            PopulationObject populationObject = new()
+            {
+                MarkerRef = popObject.UsePopulationMarker,
+                Random = random,
+                Properties = properties,
+                SpawnFlags = spawnFlags,
+                Object = popObject,
+                SpawnAreas = spawnArea,
+                SpawnCells = new(),
+                Count = 1
+            };
+            populationObject.SpawnObject(spawnTarget, out entities);
         }
 
         public void MetaStateRegisty(PrototypeId prototypeId)
@@ -296,5 +285,23 @@ namespace MHServerEmu.Games.Generators.Population
 
             return true;
         }
+
+        public SpawnGroup CreateSpawnGroup()
+        {
+            int id = NextSpawnGroupId();
+            SpawnGroup group = new(id, this);
+            _spawnGroups[id] = group;
+            return group;
+        }
+
+        public SpawnSpec CreateSpawnSpec(SpawnGroup group)
+        {
+            int id = NextSpawnSpecId();
+            SpawnSpec spec = new(id, group);
+            group.AddSpec(spec);
+            _spawnSpecs[id] = spec;
+            return spec;
+        }
+
     }
 }
