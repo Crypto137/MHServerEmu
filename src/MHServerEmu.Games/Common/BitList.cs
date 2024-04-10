@@ -71,8 +71,8 @@ namespace MHServerEmu.Games.Common
 
         public bool this[int index]
         {
-            get => _bits[index];
-            set => _bits[index] = value;
+            get => Get(index);
+            set => Set(index, value);
         }
 
         public static BitList operator &(BitList left, BitList right)
