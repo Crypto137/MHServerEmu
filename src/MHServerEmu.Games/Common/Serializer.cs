@@ -52,6 +52,7 @@ namespace MHServerEmu.Games.Common
         public static bool TransferFloatFixed(Archive archive, ref float ioData, int precision) => archive.TransferFloatFixed(ref ioData, precision);
         public static bool TransferVectorFixed(Archive archive, ref Vector3 ioData, int precision) => archive.TransferVectorFixed(ref ioData, precision);
         public static bool TransferOrientationFixed(Archive archive, ref Orientation ioData, bool yawOnly, int precision) => archive.TransferOrientationFixed(ref ioData, yawOnly, precision);
+        public static bool Transfer(Archive archive, ref string ioData) => archive.Transfer(ref ioData);
 
         // Data Refs
 
@@ -92,6 +93,27 @@ namespace MHServerEmu.Games.Common
                 uint enumValue = 0;
                 success &= Transfer(archive, ref enumValue);
                 ioData = GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)enumValue);
+            }
+
+            return success;
+        }
+
+        public static bool Transfer(Archive archive, ref LocaleStringId ioData)
+        {
+            bool success = true;
+
+            // TODO: IsPersistent
+
+            if (archive.IsPacking)
+            {
+                ulong dataId = (ulong)ioData;
+                success &= Transfer(archive, ref dataId);
+            }
+            else
+            {
+                ulong dataId = 0;
+                success &= Transfer(archive, ref dataId);
+                ioData = (LocaleStringId)dataId;
             }
 
             return success;
@@ -469,6 +491,43 @@ namespace MHServerEmu.Games.Common
         #endregion
 
         #region Dictionaries
+
+        public static bool Transfer<T>(Archive archive, ref Dictionary<ulong, T> ioData) where T : ISerialize, new()
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (var kvp in ioData)
+                {
+                    ulong key = kvp.Key;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = kvp.Value;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ulong key = 0;
+                    success &= Transfer(archive, ref key);
+                    ISerialize value = new T();
+                    success &= Transfer(archive, ref value);
+
+                    ioData.Add(key, (T)value);
+                }
+            }
+
+            return success;
+        }
 
         public static bool Transfer<T>(Archive archive, ref Dictionary<PrototypeId, T> ioData) where T: ISerialize, new()
         {

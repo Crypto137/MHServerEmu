@@ -11,7 +11,7 @@ using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.UI
 {
-    public class UIDataProvider
+    public class UIDataProvider : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -22,7 +22,40 @@ namespace MHServerEmu.Games.UI
 
         public UIDataProvider() { }
 
-        public UIDataProvider(CodedInputStream stream, BoolDecoder boolDecoder)
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            uint numWidgets = (uint)_dataDict.Count;
+            success &= Serializer.Transfer(archive, ref numWidgets);
+
+            if (archive.IsPacking)
+            {
+                foreach (var kvp in _dataDict)
+                {
+                    PrototypeId widgetRef = kvp.Key.Item1;
+                    PrototypeId contextRef = kvp.Key.Item2;
+                    success &= Serializer.Transfer(archive, ref widgetRef);
+                    success &= Serializer.Transfer(archive, ref contextRef);
+                    success &= kvp.Value.Serialize(archive);
+                }
+            }
+            else
+            {
+                for (uint i = 0; i < numWidgets; i++)
+                {
+                    PrototypeId widgetRef = PrototypeId.Invalid;
+                    PrototypeId contextRef = PrototypeId.Invalid;
+                    success &= Serializer.Transfer(archive, ref widgetRef);
+                    success &= Serializer.Transfer(archive, ref contextRef);
+                    success &= UpdateOrCreateUIWidget(widgetRef, contextRef, archive) != null;
+                }
+            }
+
+            return success;
+        }
+
+        public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             ulong numWidgets = stream.ReadRawVarint64();
 
@@ -30,7 +63,7 @@ namespace MHServerEmu.Games.UI
             {
                 PrototypeId widgetRef = stream.ReadPrototypeRef<Prototype>();
                 PrototypeId contextRef = stream.ReadPrototypeRef<Prototype>();
-                UpdateOrCreateUIWidget(widgetRef, contextRef, stream, boolDecoder);                
+                OLD_UpdateOrCreateUIWidget(widgetRef, contextRef, stream, boolDecoder);
             }
         }
 
@@ -119,8 +152,19 @@ namespace MHServerEmu.Games.UI
             return uiSyncData;
         }
 
-        // TODO: stream + decoder -> archive
-        private UISyncData UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, CodedInputStream stream, BoolDecoder boolDecoder)
+        private UISyncData UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, Archive archive)
+        {
+            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData uiData) == false)
+                uiData = AllocateUIWidget(widgetRef, contextRef);
+
+            uiData.Serialize(archive);
+            uiData.UpdateUI();
+
+            return uiData;
+        }
+
+
+        private UISyncData OLD_UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, CodedInputStream stream, BoolDecoder boolDecoder)
         {
             if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData uiData) == false)
                 uiData = AllocateUIWidget(widgetRef, contextRef);

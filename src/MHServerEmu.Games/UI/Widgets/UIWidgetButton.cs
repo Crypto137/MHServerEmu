@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
@@ -17,6 +18,38 @@ namespace MHServerEmu.Games.UI.Widgets
         private readonly List<CallbackBase> _callbackList = new();
 
         public UIWidgetButton(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            success &= base.Serialize(archive);
+
+            uint numCallbacks = (uint)_callbackList.Count;
+            success &= Serializer.Transfer(archive, ref numCallbacks);
+
+            if (archive.IsPacking)
+            {
+                foreach (CallbackBase callback in _callbackList)
+                {
+                    ulong playerGuid = callback.PlayerGuid;
+                    success &= Serializer.Transfer(archive, ref playerGuid);
+                }
+            }
+            else
+            {
+                _callbackList.Clear();
+                for (uint i = 0; i < numCallbacks; i++)
+                {
+                    ulong playerGuid = 0;
+                    success &= Serializer.Transfer(archive, ref playerGuid);
+                    CallbackBase callback = new(playerGuid);
+                    _callbackList.Add(callback);
+                }
+            }
+
+            return success;
+        }
 
         public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {

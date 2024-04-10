@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
@@ -14,9 +15,20 @@ namespace MHServerEmu.Games.UI.Widgets
 
     public class UIWidgetReadyCheck : UISyncData
     {
-        private readonly Dictionary<ulong, PlayerReadyState> _playerReadyStateDict = new();
+        private Dictionary<ulong, PlayerReadyState> _playerReadyStateDict = new();
 
         public UIWidgetReadyCheck(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            success &= Serializer.Transfer(archive, ref _playerReadyStateDict);
+            
+            // UIWidgetReadyCheck::calculateNumberReady()
+            
+            return success;
+        }
 
         public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
@@ -66,12 +78,33 @@ namespace MHServerEmu.Games.UI.Widgets
             UpdateUI();
         }
 
-        class PlayerReadyState   // ISerialize
+        class PlayerReadyState : ISerialize
         {
-            public string PlayerName { get; set; }
-            public PlayerReadyStateValue StateValue { get; set; }
+            public string PlayerName;
+            public PlayerReadyStateValue StateValue;
 
             public PlayerReadyState() { }
+
+            public bool Serialize(Archive archive)
+            {
+                bool success = true;
+
+                success &= Serializer.Transfer(archive, ref PlayerName);
+
+                if (archive.IsPacking)
+                {
+                    int stateValue = (int)StateValue;
+                    success &= Serializer.Transfer(archive, ref stateValue);
+                }
+                else
+                {
+                    int stateValue = 0;
+                    success &= Serializer.Transfer(archive, ref stateValue);
+                    StateValue = (PlayerReadyStateValue)stateValue;
+                }
+
+                return success;
+            }
 
             public void Decode(CodedInputStream stream)
             {

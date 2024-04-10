@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
@@ -12,6 +13,19 @@ namespace MHServerEmu.Games.UI.Widgets
         private int _totalCount;
 
         public UIWidgetGenericFraction(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            success &= Serializer.Transfer(archive, ref _currentCount);
+            success &= Serializer.Transfer(archive, ref _totalCount);
+            success &= Serializer.Transfer(archive, ref _timeStart);
+            success &= Serializer.Transfer(archive, ref _timeEnd);
+            success &= Serializer.Transfer(archive, ref _timePaused);
+
+            return success;
+        }
 
         public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
