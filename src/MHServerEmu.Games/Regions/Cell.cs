@@ -13,6 +13,7 @@ using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -52,6 +53,7 @@ namespace MHServerEmu.Games.Regions
         public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
         public PopulationArea PopulationArea { get => Area.PopulationArea ; }
+        public PopulationManager PopulationManager { get => GetRegion().PopulationManager; }
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Vector3 AreaOffset { get; private set; }
         public Vector3 AreaPosition { get; private set; }
@@ -217,26 +219,51 @@ namespace MHServerEmu.Games.Regions
         private void SpawnBlackOutZone(EntityMarkerPrototype entityMarker, BlackOutZonePrototype blackOutZone, Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 position, out _);
-            GetRegion().PopulationManager.SpawnBlackOutZone(position, blackOutZone.BlackOutRadius, PrototypeId.Invalid);
+            PopulationManager.SpawnBlackOutZone(position, blackOutZone.BlackOutRadius, PrototypeId.Invalid);
         }
 
-        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entity, Transform3 transform, MarkerSetOptions options)
+        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entityProto, Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
 
-            bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
-            snapToFloor ??= entity.SnapToFloorOnSpawn;
-            bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
-            if (snapToFloor == true) 
-                entityPosition = RegionLocation.ProjectToFloor(GetRegion(), entityPosition);
-                // if (oldZ < entityPosition.Z) entityPosition.Z = oldZ;
-            if (entity.Bounds != null)
-                entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
+            var region = GetRegion();
+            var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword.As<KeywordPrototype>();            
+            if (region.RegionPrototype.RespawnDestructibles == true && entityProto.HasKeyword(destructibleKeyword))
+            {
+                SpawnGroup group = PopulationManager.CreateSpawnGroup();
+                group.Transform = Transform3.BuildTransform(entityPosition, entityOrientation);
 
-            int health = EntityManager.GetRankHealth(entity);
-            WorldEntity worldEntity = Game.EntityManager.CreateWorldEntity(this, entity.DataRef, null, entityPosition, entityOrientation, health, false, overrideSnap);
-            if (worldEntity.WorldEntityPrototype is AgentPrototype)
-                worldEntity.AppendOnStartActions(GetRegion().PrototypeDataRef);
+                SpawnSpec spec = PopulationManager.CreateSpawnSpec(group);
+                spec.EntityRef = entityProto.DataRef;
+                spec.Transform = Transform3.Identity();
+                spec.SnapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
+                spec.Spawn();
+                return;
+            }
+
+            EntitySettings settings = new();
+            settings.EntityRef = entityProto.DataRef;
+
+            settings.OverrideSnapToFloor = entityMarker.OverrideSnapToFloor;
+            settings.OverrideSnapToFloorValue = entityMarker.OverrideSnapToFloorValue;
+
+            if (entityProto.Bounds != null)
+                entityPosition.Z += entityProto.Bounds.GetBoundHalfHeight();
+
+            settings.Properties = new PropertyCollection();
+            int level = Area.GetCharacterLevel(entityProto); 
+            settings.Properties[PropertyEnum.CharacterLevel] = level;
+            settings.Properties[PropertyEnum.CombatLevel] = level;
+
+            settings.Position = entityPosition;
+            settings.Orientation = entityOrientation;
+            settings.RegionId = region.Id;
+            settings.Cell = this;
+
+            Entity newentity = Game.EntityManager.CreateEntity(settings);
+
+            if (entityProto is AgentPrototype)
+                (newentity as WorldEntity).AppendOnStartActions(GetRegion().PrototypeDataRef);
         }
 
         public void CalcMarkerTransform(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options,
