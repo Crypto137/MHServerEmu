@@ -1,12 +1,17 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    using KeywordsMask = BitList;
+
     #region Enums
 
     [AssetEnum((int)None)]
@@ -197,6 +202,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int LifespanMS { get; protected set; }
         public AssetId IconPathTooltipHeader { get; protected set; }                     // A Entity/Types/EntityIconPathType.type
         public AssetId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
+
+        [DoNotCopy]
+        public AOINetworkPolicyValues ReplicateNetwork { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            ReplicateNetwork = AOINetworkPolicyValues.AOIChannelNone;
+            if (ReplicateToProximity)   ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelProximity;
+            if (ReplicateToParty)       ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelParty;
+            if (ReplicateToOwner)       ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelOwner;
+            if (ReplicateToDiscovered)  ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelDiscovery;
+            if (ReplicateToTrader)      ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelTrader;
+        }
     }
 
     public class WorldEntityPrototype : EntityPrototype
@@ -255,10 +275,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public RankPrototype RankPrototype { get => Rank.As<RankPrototype>(); }
 
+        private KeywordsMask keywordsMask;
+        private bool isVacuumable;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
+            isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
+
+            //if (DataRef != GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)13337309842336122384))
+            //    worldEntityPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetWorldEntityBlueprintDataRef());
+        }
+
         public override bool ApprovedForUse()
         {
             // Add settings for using DesignStatePS4 or DesignStateXboxOne here if we end up supporting console clients
             return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(keywordsMask, keywordProto);
         }
     }
 
