@@ -831,6 +831,11 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
+        public int GetAreaLevel(Area area)
+        {
+            if (RegionPrototype.LevelUseAreaOffset) return area.GetAreaLevel();
+            return RegionLevel;
+        }
     }
 
     public class DividedStartLocation

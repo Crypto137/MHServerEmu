@@ -12,6 +12,7 @@ using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Areas;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -88,6 +89,7 @@ namespace MHServerEmu.Games.Regions
             Origin = new();
             LocalBounds = Aabb.InvertedLimit;
             RegionBounds = Aabb.InvertedLimit;
+            AreaLevel = -1;
         }
 
         public bool Initialize(AreaSettings settings)
@@ -473,6 +475,7 @@ namespace MHServerEmu.Games.Regions
 
         public PrototypeId PopulationRef { get; private set; }
         public PopulationArea PopulationArea { get; private set; }
+        public int AreaLevel { get; private set; }
 
         public void Shutdown()
         {
@@ -561,6 +564,28 @@ namespace MHServerEmu.Games.Regions
             return GameDatabase.GlobalsPrototype.DynamicArea == PrototypeDataRef;
         }
 
+        public int GetCharacterLevel(WorldEntityPrototype entityProto)
+        {
+            int characterLevel = entityProto.Properties[PropertyEnum.CharacterLevel];
+            int areaLevel = Region.GetAreaLevel(this);
+            if (characterLevel > 0 && areaLevel > 0)
+            {
+                if (Region.RegionPrototype.LevelOverridesCharacterLevel) 
+                    characterLevel = areaLevel;
+            }
+            else
+                characterLevel = Math.Max(characterLevel, areaLevel);
+            return characterLevel;
+        }
+
+        public int GetAreaLevel()
+        {
+            if (AreaLevel > 0) return AreaLevel;
+            if (AreaPrototype == null) return 1;
+            if (AreaPrototype.LevelOffset != 0) AreaLevel = Region.RegionLevel + AreaPrototype.LevelOffset;
+            else AreaLevel = Region.RegionLevel;
+            return AreaLevel;
+        }
     }
 
     public class AreaConnectionPoint
