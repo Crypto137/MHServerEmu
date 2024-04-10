@@ -12,6 +12,18 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
+    public class EntitySettings
+    {
+        public PrototypeId EntityRef;
+        public ulong RegionId;
+        public Vector3 Position;
+        public Orientation Orientation;
+        public bool OverrideSnapToFloor;
+        public bool OverrideSnapToFloorValue;
+        public PropertyCollection Properties;
+        public Cell Cell;
+    }
+
     public class EntityManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -26,6 +38,25 @@ namespace MHServerEmu.Games.Entities
         public EntityManager(Game game)
         {
             _game = game;
+        }
+
+        public Entity CreateEntity(EntitySettings settings)
+        {
+            // OldCreate
+            var entity = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
+            int health = GetRankHealth(entity);
+            bool snapToFloor = false;
+            if (entity is WorldEntityPrototype worldEntityProto)
+            {
+                snapToFloor = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : worldEntityProto.SnapToFloorOnSpawn;
+                snapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
+            }
+            
+            var worldEntity = CreateWorldEntity(settings.Cell, settings.EntityRef, settings.Properties, 
+                settings.Position, settings.Orientation, health, false, snapToFloor);
+
+            // TODO  AllocateEntity, SetStatus, PreInitialize, Initialize, finalizeEntity
+            return worldEntity;
         }
 
         public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, PropertyCollection collection, Vector3 position, Orientation orientation,
@@ -56,10 +87,6 @@ namespace MHServerEmu.Games.Entities
                 properties[PropertyEnum.Health] = health;
                 properties[PropertyEnum.HealthMaxOther] = healthMaxOther;
             }
-            /*
-            int combatLevel = characterLevel;
-            worldEntity.Properties[PropertyEnum.CharacterLevel] = characterLevel;
-            worldEntity.Properties[PropertyEnum.CombatLevel] = combatLevel;*/
             var proto = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
             WorldEntity worldEntity;
             if (proto is SpawnerPrototype)
@@ -217,7 +244,7 @@ namespace MHServerEmu.Games.Entities
 
         #region HardCodeRank
 
-        public static int GetRankHealth(WorldEntityPrototype entity)
+        public static int GetRankHealth(EntityPrototype entity)
         {
             if (entity is PropPrototype)
             {
@@ -227,19 +254,20 @@ namespace MHServerEmu.Games.Entities
             {
                 return 0;
             }
-            else
+            else if (entity is WorldEntityPrototype worldEntity)
             {
-                switch ((RankPrototypeId)entity.Rank)
+                return (RankPrototypeId)worldEntity.Rank switch
                 {
-                    case RankPrototypeId.Popcorn: return 600;
-                    case RankPrototypeId.Champion: return 800;
-                    case RankPrototypeId.Elite: return 1000;
-                    case RankPrototypeId.MiniBoss: return 1500;
-                    case RankPrototypeId.Boss: return 2000;
-                    default: return 1000;
-                }
-
+                    RankPrototypeId.Popcorn => 600,
+                    RankPrototypeId.Champion => 800,
+                    RankPrototypeId.Elite => 1000,
+                    RankPrototypeId.MiniBoss => 1500,
+                    RankPrototypeId.Boss => 2000,
+                    _ => 1000,
+                };
             }
+            return 0;
+
         }
 
         public enum RankPrototypeId : ulong
