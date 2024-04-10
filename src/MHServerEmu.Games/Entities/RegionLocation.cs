@@ -49,16 +49,17 @@ namespace MHServerEmu.Games.Entities
             if (Orientation.IsFinite(orientation)) _orientation = orientation;
         }
 
-        public static float ProjectToFloor(CellPrototype cell, Vector3 position)
+        public static float ProjectToFloor(Cell cell, Vector3 position)
         {
-            Vector3 cellPos = position - cell.BoundingBox.Min;
-            cellPos.X /= cell.BoundingBox.Width;
-            cellPos.Y /= cell.BoundingBox.Length;
-            int mapX = (int)cell.HeightMap.HeightMapSize.X;
-            int mapY = (int)cell.HeightMap.HeightMapSize.Y;
+            Vector3 cellPos = position - cell.RegionBounds.Min;
+            var cellProto = cell.CellProto;
+            cellPos.X /= cellProto.BoundingBox.Width;
+            cellPos.Y /= cellProto.BoundingBox.Length;
+            int mapX = (int)cellProto.HeightMap.HeightMapSize.X;
+            int mapY = (int)cellProto.HeightMap.HeightMapSize.Y;
             int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
             int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
-            return cell.HeightMap.HeightMapData[y * mapX + x];
+            return cellProto.HeightMap.HeightMapData[y * mapX + x];
         }
 
         public static Vector3 ProjectToFloor(Region region, Vector3 regionPos)
@@ -67,7 +68,7 @@ namespace MHServerEmu.Games.Entities
             if (cell == null) return regionPos;
             Vector3 postion = new(regionPos);
 
-            var height = ProjectToFloor(cell.CellProto, postion);
+            var height = ProjectToFloor(cell, postion);
             if (height > Int16.MinValue) 
                 postion.Z = cell.RegionBounds.Center.Z + height;
             else if (region.NaviMesh.IsMeshValid)
