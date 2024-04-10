@@ -356,12 +356,4 @@ namespace MHServerEmu.Games.Generators.Population
             return count;
         }
     }
-
-    public class SpawnSpec
-    {
-        public static bool? SnapToFloorConvert(bool overrideSnapToFloor, bool overrideSnapToFloorValue)
-        {
-            return overrideSnapToFloor ? overrideSnapToFloorValue : null;
-        }
-    }
 }
