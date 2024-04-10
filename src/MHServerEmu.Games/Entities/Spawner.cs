@@ -75,25 +75,17 @@ namespace MHServerEmu.Games.Entities
 
         private void SpawnObject(PopulationObjectPrototype popObject)
         {
-            var region = Location.Region;
-            var random = _random;
+            var populationManager = Region.PopulationManager;
             var spawnerProto = SpawnerPrototype;
-            ClusterGroup clusterGroup = new(region, random, popObject, null, Properties, SpawnFlags.None);
-            clusterGroup.Initialize();
-            Vector3 pos = new(Location.GetPosition());
-            var rot = Location.GetOrientation();
+            SpawnFlags spawnFlags = SpawnFlags.None;
             if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout)
-                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce)) 
-                clusterGroup.SpawnFlags |= SpawnFlags.IgnoreBlackout;
+                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
+                spawnFlags |= SpawnFlags.IgnoreBlackout;
+            PropertyCollection properties = new();
+            if (spawnerProto.SpawnsInheritMissionPrototype)
+                properties[PropertyEnum.MissionPrototype] = Properties[PropertyEnum.MissionPrototype];
 
-            bool success = clusterGroup.PickPositionInSector(pos, rot, spawnerProto.SpawnDistanceMin, spawnerProto.SpawnDistanceMax);
-            if (success == false && spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
-            {
-                clusterGroup.SetParentRelativePosition(pos);
-                success = true;
-            }
-            // spawn Entity from Group
-            if (success) clusterGroup.Spawn();
+            populationManager.SpawnObject(popObject, Location, properties, spawnFlags, spawnerProto, out _);
         }
     }
 }
