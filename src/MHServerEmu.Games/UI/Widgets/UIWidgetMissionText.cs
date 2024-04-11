@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
@@ -18,6 +19,16 @@ namespace MHServerEmu.Games.UI.Widgets
 
             _missionName = (LocaleStringId)stream.ReadRawVarint64();
             _missionObjectiveName = (LocaleStringId)stream.ReadRawVarint64();
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            success &= Serializer.Transfer(archive, ref _missionName);
+            success &= Serializer.Transfer(archive, ref _missionObjectiveName);
+
+            return success;
         }
 
         public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
