@@ -4,9 +4,10 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions.ObjectiveGraphs;
 using MHServerEmu.Games.UI;
 
-namespace MHServerEmu.Games.Powers
+namespace MHServerEmu.Games.Regions
 {
     public class RegionArchive
     {
@@ -26,7 +27,8 @@ namespace MHServerEmu.Games.Powers
             MissionManager = new(stream, boolDecoder);
             UIDataProvider = new();
             UIDataProvider.Decode(stream, boolDecoder);
-            ObjectiveGraph = new(stream);
+            ObjectiveGraph = new();
+            ObjectiveGraph.Decode(stream);
         }
 
         public RegionArchive(ulong replicationId)
