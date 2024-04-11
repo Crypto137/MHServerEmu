@@ -11,6 +11,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using System.Xml.Linq;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -31,6 +32,45 @@ namespace MHServerEmu.Games.Entities
         public bool TrackAfterDiscovery { get; private set; }
         public string PrototypeName => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId);
 
+        public bool ShouldSnapToFloorOnSpawn { get; private set; }
+
+        // New
+        public WorldEntity(Game game): base(game) 
+        {
+            SpatialPartitionLocation = new(this);
+        }
+
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            var proto = WorldEntityPrototype;
+            ShouldSnapToFloorOnSpawn = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : proto.SnapToFloorOnSpawn;
+            // Old
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
+            ReplicatedPropertyCollection properties = new(Game.CurrentRepId);
+            if (settings.Properties != null) properties.FlattenCopyFrom(settings.Properties, false);
+            properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
+            properties[PropertyEnum.MapPosition] = settings.Position;
+
+
+            int health = EntityManager.GetRankHealth(proto);
+            if (health > 0)
+            {
+                properties[PropertyEnum.Health] = health;
+                properties[PropertyEnum.HealthMaxOther] = health;
+            }
+
+            if (proto.Bounds != null)
+                Bounds.InitializeFromPrototype(proto.Bounds);
+
+            Properties = properties;
+            TrackingContextMap = new();
+            ConditionCollection = new();
+            PowerCollection = new();
+            UnkEvent = 0;
+        }
+
+        // Old
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
@@ -135,21 +175,27 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
+        public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation)
         {
             var proto = WorldEntityPrototype;
-            Game = cell.Game; // TODO: Init Game to constructor
+            Game ??= region.Game; // Fix for old constructor
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
-            if (proto is HotspotPrototype) _flags |= EntityFlags.IsHotspot;
-            if (proto is AgentPrototype) cell.EnemySpawn();
-            Location.Region = cell.GetRegion();
-            Location.Cell = cell; // Set directly
+
+            Location.Region = region;
+            ChangeRegionPosition(position, orientation);
+        }
+
+        public void ChangeRegionPosition(Vector3 position, Orientation orientation)
+        {
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
-            // TODO ChangeRegionPosition
-            if (proto.Bounds != null)
-                Bounds.InitializeFromPrototype(proto.Bounds);
+            // Old
+            Properties[PropertyEnum.MapAreaId] = Location.AreaId;
+            Properties[PropertyEnum.MapRegionId] = Location.RegionId;
+            Properties[PropertyEnum.MapCellId] = Location.CellId;
+            Properties[PropertyEnum.ContextAreaRef] = Location.Area.PrototypeDataRef;
+
             Bounds.Center = position;
             UpdateRegionBounds(); // Add to Quadtree
         }
@@ -247,6 +293,15 @@ namespace MHServerEmu.Games.Entities
                 }
             }
             return false;
+        }
+
+        public Vector3 FloorToCenter(Vector3 position)
+        {
+            Vector3 resultPosition = new(position);
+            if (Bounds.Geometry != GeometryType.None)
+                resultPosition.Z += Bounds.HalfHeight;
+            // TODO Locomotor.GetCurrentFlyingHeight
+            return resultPosition;
         }
     }
 }

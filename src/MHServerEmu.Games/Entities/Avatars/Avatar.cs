@@ -28,7 +28,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ulong OwnerPlayerDbId { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
-        public Avatar(ulong entityId, ulong replicationId) : base(new())
+        // new
+        public Avatar(Game game) : base(game) { }
+
+        // old
+        public Avatar(ulong entityId, ulong replicationId) : base(new EntityBaseData())
         {
             // Entity
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;

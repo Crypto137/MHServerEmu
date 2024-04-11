@@ -17,6 +17,10 @@ namespace MHServerEmu.Games.MetaGames
         public static readonly Logger Logger = LogManager.CreateLogger();
         public ReplicatedVariable<string> Name { get; set; }
 
+        // new
+        public MetaGame(Game game) : base(game) { }
+
+        // old 
         public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public MetaGame(EntityBaseData baseData) : base(baseData) { }

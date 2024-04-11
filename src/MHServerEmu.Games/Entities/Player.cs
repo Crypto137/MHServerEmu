@@ -85,6 +85,10 @@ namespace MHServerEmu.Games.Entities
         public Avatar CurrentAvatar { get; private set; }
         public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
 
+        // new
+        public Player(Game game): base(game) { }
+
+        // old
         public Player(EntityBaseData baseData) : base(baseData)
         {
             // Base Data

@@ -1,7 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
@@ -16,8 +15,22 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
         public bool DebugLog;
 
-        private GRandom _random;
         public SpawnerPrototype SpawnerPrototype => EntityPrototype as SpawnerPrototype;
+
+        // New
+        public Spawner(Game game) : base(game) 
+        {
+        }
+
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            // old
+            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
+            _flags |= EntityFlags.NoCollide;
+        }
+
+        // Old
         public Spawner(EntityBaseData baseData) : base(baseData)
         {
         }
@@ -31,15 +44,14 @@ namespace MHServerEmu.Games.Entities
         {           
         }
 
-        public override void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
+        public override void EnterWorld(Region region, Vector3 position, Orientation orientation)
         {
-            base.EnterWorld(cell, position, orientation);
-            _flags |= EntityFlags.NoCollide;
+            base.EnterWorld(region, position, orientation);            
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
             if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
             if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
-            _random = Game.Random; //new(cell.Seed);
+            
             // if (spawnerProto.StartEnabled)
             Spawn();
         }

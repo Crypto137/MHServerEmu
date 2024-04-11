@@ -11,6 +11,10 @@ namespace MHServerEmu.Games.Entities.Items
     {
         public ItemSpec ItemSpec { get; set; }
 
+        // new
+        public Item(Game game) : base(game) { }
+
+        // old
         public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)

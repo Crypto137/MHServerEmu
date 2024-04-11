@@ -14,6 +14,7 @@ namespace MHServerEmu.Games.Entities
 {
     public class EntitySettings
     {
+        public ulong Id;
         public PrototypeId EntityRef;
         public ulong RegionId;
         public Vector3 Position;
@@ -22,6 +23,7 @@ namespace MHServerEmu.Games.Entities
         public bool OverrideSnapToFloorValue;
         public PropertyCollection Properties;
         public Cell Cell;
+        public bool EnterGameWorld;
     }
 
     public class EntityManager
@@ -42,63 +44,34 @@ namespace MHServerEmu.Games.Entities
 
         public Entity CreateEntity(EntitySettings settings)
         {
-            // OldCreate
-            var entity = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
-            int health = GetRankHealth(entity);
-            bool snapToFloor = false;
-            if (entity is WorldEntityPrototype worldEntityProto)
-            {
-                snapToFloor = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : worldEntityProto.SnapToFloorOnSpawn;
-                snapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
-            }
-            
-            var worldEntity = CreateWorldEntity(settings.Cell, settings.EntityRef, settings.Properties, 
-                settings.Position, settings.Orientation, health, false, snapToFloor);
+            Entity entity = _game.AllocateEntity(settings.EntityRef);
 
-            // TODO  AllocateEntity, SetStatus, PreInitialize, Initialize, finalizeEntity
-            return worldEntity;
+            if (settings.Id == 0)
+                settings.Id = GetNextEntityId();
+            // TODO  SetStatus
+
+            _entityDict.Add(settings.Id, entity);
+
+            entity.PreInitialize(settings);
+            entity.Initialize(settings);
+            FinalizeEntity(entity, settings);
+
+            return entity;
         }
 
-        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, PropertyCollection collection, Vector3 position, Orientation orientation,
-            int health, bool requiresEnterGameWorld, bool OverrideSnapToFloor = false)
+        private void FinalizeEntity(Entity entity, EntitySettings settings)
         {
-            if (cell == null) return default;
-
-            EntityBaseData baseData = (requiresEnterGameWorld == false)
-                ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
-                : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
-
-            ulong regionId = cell.GetRegion().Id;
-            int healthMaxOther = health;
-            int mapAreaId = (int)cell.Area.Id;
-            int mapCellId = (int)cell.Id;
-            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
-
-            ReplicatedPropertyCollection properties = new(_game.CurrentRepId);
-            if (collection != null) properties.FlattenCopyFrom(collection, false);
-            properties[PropertyEnum.VariationSeed] = _game.Random.Next(1, 10000);
-            properties[PropertyEnum.MapPosition] = position;
-            properties[PropertyEnum.MapAreaId] = mapAreaId;
-            properties[PropertyEnum.MapRegionId] = regionId;
-            properties[PropertyEnum.MapCellId] = mapCellId;
-            properties[PropertyEnum.ContextAreaRef] = contextAreaRef;
-
-            if (health > 0) {
-                properties[PropertyEnum.Health] = health;
-                properties[PropertyEnum.HealthMaxOther] = healthMaxOther;
+            if (entity is WorldEntity worldEntity)
+            {
+                Region region = _game.RegionManager.GetRegion(settings.RegionId);
+                var position = settings.Position;
+                if (worldEntity.ShouldSnapToFloorOnSpawn)
+                {
+                    position = RegionLocation.ProjectToFloor(region, position);
+                    position = worldEntity.FloorToCenter(position);
+                }
+                worldEntity.EnterWorld(region, position, settings.Orientation);
             }
-            var proto = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
-            WorldEntity worldEntity;
-            if (proto is SpawnerPrototype)
-                worldEntity = new Spawner(baseData, AOINetworkPolicyValues.AOIChannelProximity, properties);
-            else if (proto is TransitionPrototype transitionProto)
-                worldEntity = new Transition(baseData, properties, Destination.FindDestination(cell, transitionProto));
-            else
-                worldEntity = new WorldEntity(baseData, AOINetworkPolicyValues.AOIChannelDiscovery, properties);
-            worldEntity.RegionId = regionId;
-            worldEntity.EnterWorld(cell, position, orientation);
-            _entityDict.Add(baseData.EntityId, worldEntity);
-            return worldEntity;
         }
 
         public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Orientation orientation)

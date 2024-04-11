@@ -5,6 +5,8 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -74,7 +76,7 @@ namespace MHServerEmu.Games.Entities
         public ulong Id => BaseData.EntityId;
         public EntityBaseData BaseData { get; set; }
         public ulong RegionId { get; set; } = 0;
-        public Game Game { get; set; } // TODO: add game to constructor;
+        public Game Game { get; set; } 
         public EntityStatus Status { get; set; }
         public ulong DatabaseUniqueId { get => BaseData.DbId; }
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
@@ -148,6 +150,31 @@ namespace MHServerEmu.Games.Entities
             BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData.ToByteArray());
             Decode(stream);
+        }
+
+        public Entity(Game game)
+        {
+            Game = game;
+        }
+
+        public virtual void Initialize(EntitySettings settings)
+        {   
+            // Old
+            var entity = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
+            bool OverrideSnapToFloor = false;
+            if (entity is WorldEntityPrototype worldEntityProto)
+            {
+                bool snapToFloor = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : worldEntityProto.SnapToFloorOnSpawn;
+                OverrideSnapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
+            }
+
+            BaseData = (settings.EnterGameWorld == false)
+                ? new EntityBaseData(settings.Id, settings.EntityRef, settings.Position, settings.Orientation, OverrideSnapToFloor)
+                : new EntityBaseData(settings.Id, settings.EntityRef, null, null);
+
+            RegionId = settings.RegionId;
+
+            // New
         }
 
         // Base data is required for all entities, so there's no parameterless constructor
@@ -241,5 +268,8 @@ namespace MHServerEmu.Games.Entities
 
             return false;
         }
+
+        public virtual void PreInitialize(EntitySettings settings) {}
+
     }
 }
