@@ -487,10 +487,10 @@ namespace MHServerEmu.Games.Dialog
             {
                 if (_interaсtionMap.TryGetValue(entityRef, out var data))
                 {
-                    var option = data.StartPowerOption(missionProto);
-                    if (option != null && option.Proto is MissionActionEntityPerformPowerPrototype actionEntityPerformPowerProto)
+                    var actionPower = data.GetStartPower(missionProto);
+                    if (actionPower != null)
                     {
-                        action = actionEntityPerformPowerProto;
+                        action = actionPower;
                         return true;
                     }
                 }
@@ -501,10 +501,10 @@ namespace MHServerEmu.Games.Dialog
                 {
                     if (_interaсtionMap.TryGetValue(targetRef, out var targetData))
                     {
-                        var option = entityData.StartPowerOptionIntersect(targetData);
-                        if (option != null && option.Proto is MissionActionEntityPerformPowerPrototype actionEntityPerformPowerProto)
+                        var actionPower = entityData.GetStartPowerIntersect(targetData);
+                        if (actionPower != null)
                         {
-                            action = actionEntityPerformPowerProto;
+                            action = actionPower;
                             return true;
                         }
                     }
@@ -534,24 +534,26 @@ namespace MHServerEmu.Games.Dialog
             _optionFlags |= option.OptimizationFlags;
         }
 
-        public MissionActionEntityTargetOption StartPowerOption(MissionPrototype missionProto)
+        public MissionActionEntityPerformPowerPrototype GetStartPower(MissionPrototype missionProto)
         {            
             foreach(var option in Options)
             {
                 if (option is not MissionActionEntityTargetOption targetOption) continue;
                 if (targetOption.MissionProto != missionProto) continue;
-                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart)) return targetOption;
+                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart) == false) continue;
+                if (targetOption.Proto is MissionActionEntityPerformPowerPrototype performPower) return performPower;
             }
             return null;
         }
 
-        public MissionActionEntityTargetOption StartPowerOptionIntersect(InteractionData targetData)
+        public MissionActionEntityPerformPowerPrototype GetStartPowerIntersect(InteractionData targetData)
         {
             var intersectingOptions = Options.Intersect(targetData.Options);
             foreach (var option in intersectingOptions)
             {
                 if (option is not MissionActionEntityTargetOption targetOption) continue;
-                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart)) return targetOption;
+                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart) == false) continue;
+                if (targetOption.Proto is MissionActionEntityPerformPowerPrototype performPower) return performPower;
             }
             return null;
         }
