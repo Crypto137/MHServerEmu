@@ -11,7 +11,6 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using System.Xml.Linq;
 
 namespace MHServerEmu.Games.Entities
 {

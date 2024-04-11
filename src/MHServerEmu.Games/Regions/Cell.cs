@@ -225,6 +225,7 @@ namespace MHServerEmu.Games.Regions
         public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entityProto, Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
+            if (RegionBounds.Intersects(entityPosition) == false) entityPosition.RoundToNearestInteger();
 
             var region = GetRegion();
             var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword.As<KeywordPrototype>();            

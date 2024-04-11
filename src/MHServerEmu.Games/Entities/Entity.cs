@@ -7,6 +7,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -72,6 +73,8 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity
     {
+        protected static readonly Logger Logger = LogManager.CreateLogger();
+
         protected EntityFlags _flags;
         public ulong Id => BaseData.EntityId;
         public EntityBaseData BaseData { get; set; }
