@@ -17,8 +17,9 @@ namespace MHServerEmu.Games.Generators.Population
         public PropertyCollection Properties { get; set; }
         public Transform3 Transform { get; set; }
         public bool? SnapToFloor { get; set; }
-        public EntitySelectorPrototype EntitySelectorProto { get; internal set; }
-        public PrototypeId MissionRef { get; internal set; }
+        public EntitySelectorPrototype EntitySelectorProto { get; set; }
+        public PrototypeId MissionRef { get; set; }
+        public List<EntitySelectorActionPrototype> Actions { get; private set; }
 
         public SpawnSpec(int id, SpawnGroup group)
         {
@@ -63,21 +64,25 @@ namespace MHServerEmu.Games.Generators.Population
             settings.RegionId = region.Id;
             settings.Cell = cell;
 
-            ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;
+            settings.Actions = Actions;
+            settings.ActionsTarget = MissionRef;
 
-            if (ActiveEntity.WorldEntityPrototype is AgentPrototype)
-            {
-                bool startAction = false;
-                if (EntitySelectorProto != null && EntitySelectorProto.EntitySelectorActions.HasValue())
-                    startAction = ActiveEntity.AppendSelectorActions(EntitySelectorProto.EntitySelectorActions);
-                if (MissionRef != PrototypeId.Invalid && startAction == false)
-                    ActiveEntity.AppendOnStartActions(MissionRef);
-            }
+            ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;
         }
 
         public static bool? SnapToFloorConvert(bool overrideSnapToFloor, bool overrideSnapToFloorValue)
         {
             return overrideSnapToFloor ? overrideSnapToFloorValue : null;
+        }
+
+        public void AppendActions(EntitySelectorActionPrototype[] entitySelectorActions)
+        {
+            if (entitySelectorActions.HasValue())
+            {
+                Actions ??= new();
+                foreach (var action in entitySelectorActions)
+                    Actions.Add(action);
+            }
         }
     }
 

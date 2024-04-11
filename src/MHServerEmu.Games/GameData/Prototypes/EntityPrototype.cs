@@ -27,31 +27,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public enum EntitySelectorActionEventType
     {
         None = 0,
-        OnDetectedEnemy = 1,
-        OnGotAttacked = 2,
-        OnGotDamaged = 4,
-        OnGotDefeated = 8,
-        OnGotKilled = 16,
-        OnAllyDetectedEnemy = 32,
-        OnAllyGotAttacked = 64,
-        OnAllyGotKilled = 128,
-        OnMetLeashDistance = 256,
-        OnEnteredCombat = 512,
-        OnExitedCombat = 1024,
-        OnKilledOther = 2048,
-        OnDetectedFriend = 4096,
-        OnSimulated = 8192,
-        OnEnemyProximity = 16384,
-        OnDetectedPlayer = 32768,
-        OnDetectedNonPlayer = 65536,
-        OnAllyDetectedPlayer = 131072,
-        OnAllyDetectedNonPlayer = 262144,
-        OnClusterEnemiesCleared = 524288,
-        OnPlayerInteract = 1048576,
-        OnPlayerProximity = 2097152,
-        OnGotAttackedByPlayer = 4194304,
-        OnAllyGotAttackedByPlayer = 8388608,
-        OnMissionBroadcast = 16777216,
+        OnDetectedEnemy = 1 << 0,
+        OnGotAttacked = 1 << 1,
+        OnGotDamaged = 1 << 2,
+        OnGotDefeated = 1 << 3,
+        OnGotKilled = 1 << 4,
+        OnAllyDetectedEnemy = 1 << 5,
+        OnAllyGotAttacked = 1 << 6,
+        OnAllyGotKilled = 1 << 7,
+        OnMetLeashDistance = 1 << 8,
+        OnEnteredCombat = 1 << 9,
+        OnExitedCombat = 1 << 10,
+        OnKilledOther = 1 << 11,
+        OnDetectedFriend = 1 << 12,
+        OnSimulated = 1 << 13,
+        OnEnemyProximity = 1 << 14,
+        OnDetectedPlayer = 1 << 15,
+        OnDetectedNonPlayer = 1 << 16,
+        OnAllyDetectedPlayer = 1 << 17,
+        OnAllyDetectedNonPlayer = 1 << 18,
+        OnClusterEnemiesCleared = 1 << 19,
+        OnPlayerInteract = 1 << 20,
+        OnPlayerProximity = 1 << 21,
+        OnGotAttackedByPlayer = 1 << 22,
+        OnAllyGotAttackedByPlayer = 1 << 23,
+        OnMissionBroadcast = 1 << 24,
     }
 
     [AssetEnum((int)Invalid)]
@@ -382,6 +382,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SpawnerTrigger { get; protected set; }
         public PrototypeId AllianceOverride { get; protected set; }
         public PrototypeId BroadcastEvent { get; protected set; }
+
+        [DoNotCopy]
+        public bool RequiresBrain { get; protected set; }
+
+        public override void PostProcess()
+        {
+            if (EventTypes.HasValue())
+            {
+                var needBrainEventTypes =
+                    EntitySelectorActionEventType.OnDetectedEnemy |
+                    EntitySelectorActionEventType.OnDetectedFriend |
+                    EntitySelectorActionEventType.OnEnemyProximity |
+                    EntitySelectorActionEventType.OnPlayerProximity;
+
+                foreach (var eventType in EventTypes)
+                    if (needBrainEventTypes.HasFlag(eventType))
+                    {
+                        RequiresBrain = true;
+                        return;
+                    }
+            }
+        }
     }
 
     public class EntitySelectorActionSetPrototype : Prototype

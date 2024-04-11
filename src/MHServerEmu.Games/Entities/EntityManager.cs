@@ -24,6 +24,8 @@ namespace MHServerEmu.Games.Entities
         public PropertyCollection Properties;
         public Cell Cell;
         public bool EnterGameWorld;
+        public List<EntitySelectorActionPrototype> Actions;
+        public PrototypeId ActionsTarget;
     }
 
     public class EntityManager
@@ -61,16 +63,24 @@ namespace MHServerEmu.Games.Entities
 
         private void FinalizeEntity(Entity entity, EntitySettings settings)
         {
+            entity.OnPostInit(settings);
+
             if (entity is WorldEntity worldEntity)
             {
-                Region region = _game.RegionManager.GetRegion(settings.RegionId);
-                var position = settings.Position;
-                if (worldEntity.ShouldSnapToFloorOnSpawn)
+                worldEntity.RegisterActions(settings.Actions);
+                // custom StartAction
+                worldEntity.AppendStartAction(settings.ActionsTarget);
+                if (settings.RegionId != 0)
                 {
-                    position = RegionLocation.ProjectToFloor(region, position);
-                    position = worldEntity.FloorToCenter(position);
+                    Region region = _game.RegionManager.GetRegion(settings.RegionId);
+                    var position = settings.Position;
+                    if (worldEntity.ShouldSnapToFloorOnSpawn)
+                    {
+                        position = RegionLocation.ProjectToFloor(region, position);
+                        position = worldEntity.FloorToCenter(position);
+                    }
+                    worldEntity.EnterWorld(region, position, settings.Orientation);
                 }
-                worldEntity.EnterWorld(region, position, settings.Orientation);
             }
         }
 

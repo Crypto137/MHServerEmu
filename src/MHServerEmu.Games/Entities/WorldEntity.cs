@@ -33,6 +33,7 @@ namespace MHServerEmu.Games.Entities
         public string PrototypeName => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId);
 
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
+        public EntityActionComponent EntityActionComponent { get; protected set; }
 
         // New
         public WorldEntity(Game game): base(game) 
@@ -231,68 +232,12 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        private bool AppendStartPower(PrototypeId startPowerRef)
-        {
-            if (startPowerRef == PrototypeId.Invalid) return false;
-            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-            Condition condition = new()
-            {
-                SerializationFlags = ConditionSerializationFlags.NoCreatorId
-                | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeId
-                | ConditionSerializationFlags.HasIndex
-                | ConditionSerializationFlags.HasAssetDataRef,
-                Id = 1,
-                CreatorPowerPrototypeId = startPowerRef
-            };             
-            ConditionCollection.Add(condition);
-            PowerCollectionRecord powerCollection = new()
-            {
-                Flags = PowerCollectionRecordFlags.PowerRefCountIsOne
-                | PowerCollectionRecordFlags.PowerRankIsZero
-                | PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel
-                | PowerCollectionRecordFlags.ItemLevelIsOne
-                | PowerCollectionRecordFlags.ItemVariationIsOne,
-                PowerPrototypeId = startPowerRef,
-                PowerRefCount = 1
-            };
-            PowerCollection.Add(powerCollection);
-            return true;
-        }
-
-        public bool AppendOnStartActions(PrototypeId targetRef)
-        {
-            if (GameDatabase.InteractionManager.GetStartAction(BaseData.PrototypeId, targetRef, out MissionActionEntityPerformPowerPrototype action))
-                return AppendStartPower(action.PowerPrototype);
-            return false;
-        }
-
         public string PowerCollectionToString()
         {
             StringBuilder sb = new();
             sb.AppendLine($"Powers:");
             foreach(var power in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(power.PowerPrototypeId)}");
             return sb.ToString();
-        }
-
-        public bool AppendSelectorActions(EntitySelectorActionPrototype[] entitySelectorActions)
-        {
-            foreach(var action in entitySelectorActions)
-            {
-                if (action.EventTypes.HasValue() && action.EventTypes.First() == EntitySelectorActionEventType.OnSimulated)
-                {
-                    if (action.AIOverrides.HasValue()) 
-                    {
-                        int index = Game.Random.Next(0, action.AIOverrides.Length);
-                        var actionAIOverrideRef = action.AIOverrides[index];
-                        if (actionAIOverrideRef == PrototypeId.Invalid) return false;
-                        var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
-                        if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
-                    }
-                    break;
-                }
-            }
-            return false;
         }
 
         public Vector3 FloorToCenter(Vector3 position)
@@ -303,5 +248,14 @@ namespace MHServerEmu.Games.Entities
             // TODO Locomotor.GetCurrentFlyingHeight
             return resultPosition;
         }
+
+        public void RegisterActions(List<EntitySelectorActionPrototype> actions)
+        {
+            if (actions == null) return;
+            EntityActionComponent ??= new(this);
+            EntityActionComponent.Register(actions);
+        }
+
+        public virtual void AppendStartAction(PrototypeId actionsTarget) {}
     }
 }

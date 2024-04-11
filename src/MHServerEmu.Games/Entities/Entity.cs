@@ -271,5 +271,9 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void PreInitialize(EntitySettings settings) {}
 
+        public virtual void OnPostInit(EntitySettings settings)
+        {
+            // TODO init
+        }
     }
 }

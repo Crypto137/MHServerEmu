@@ -974,7 +974,10 @@ namespace MHServerEmu.Games.Generators.Population
             spec.EntityRef = EntityRef;
             spec.Transform = Transform3.BuildTransform(offsetPos, rot);
             spec.SnapToFloor = SnapToFloor;
-            spec.EntitySelectorProto = EntitySelectorProto;
+            if (EntityProto != null)
+                spec.AppendActions(EntityProto.EntitySelectorActions);
+            if (EntitySelectorProto != null)
+                spec.AppendActions(EntitySelectorProto.EntitySelectorActions);
             spec.MissionRef = Parent.MissionRef;
             spec.Properties = new();
             spec.Properties.FlattenCopyFrom(Parent.Properties, false);

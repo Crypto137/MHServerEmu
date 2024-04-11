@@ -259,11 +259,9 @@ namespace MHServerEmu.Games.Regions
             settings.Orientation = entityOrientation;
             settings.RegionId = region.Id;
             settings.Cell = this;
+            settings.ActionsTarget = region.PrototypeDataRef;
 
-            Entity newentity = Game.EntityManager.CreateEntity(settings);
-
-            if (entityProto is AgentPrototype)
-                (newentity as WorldEntity).AppendOnStartActions(GetRegion().PrototypeDataRef);
+            Game.EntityManager.CreateEntity(settings);
         }
 
         public void CalcMarkerTransform(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options,
