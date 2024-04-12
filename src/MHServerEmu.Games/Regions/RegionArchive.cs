@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Regions
             MissionManager = new(stream, boolDecoder);
             UIDataProvider = new();
             UIDataProvider.Decode(stream, boolDecoder);
-            ObjectiveGraph = new();
+            ObjectiveGraph = new(null, null);
             ObjectiveGraph.Decode(stream);
         }
 
@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Regions
             Properties = new(replicationId);
             MissionManager = new();
             UIDataProvider = new();
-            ObjectiveGraph = new();
+            ObjectiveGraph = new(null, null);
         }
 
         public ByteString Serialize()

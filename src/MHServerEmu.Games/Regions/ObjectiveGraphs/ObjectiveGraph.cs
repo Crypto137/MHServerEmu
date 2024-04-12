@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Regions.ObjectiveGraphs
 {
@@ -13,14 +14,6 @@ namespace MHServerEmu.Games.Regions.ObjectiveGraphs
         private readonly Region _region;
 
         private readonly List<ObjectiveGraphNode> _nodeList = new();
-
-        public ObjectiveGraphConnection[] Connections { get; set; }
-
-        public ObjectiveGraph()
-        {
-            // TODO: Remove this constructor
-            Connections = Array.Empty<ObjectiveGraphConnection>();
-        }
 
         public ObjectiveGraph(Game game, Region region)
         {
@@ -104,7 +97,7 @@ namespace MHServerEmu.Games.Regions.ObjectiveGraphs
 
         private ObjectiveGraphNode PushNode(CodedInputStream stream)     // TODO: CodedInputStream -> Archive
         {
-            ObjectiveGraphNode node = new();
+            ObjectiveGraphNode node = new(_game, _region, 0, Vector3.Zero, ObjectiveGraphType.Invalid);
             node.Decode(stream);
 
             // This method is called only during deserialization, and existing nodes are cleared before deserialization.

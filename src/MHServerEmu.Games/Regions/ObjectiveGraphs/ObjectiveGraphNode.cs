@@ -1,72 +1,89 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Regions.ObjectiveGraphs
 {
     public class ObjectiveGraphNode : IComparable<ObjectiveGraphNode>
     {
+        // Note: the client uses a SortedVector here
+        private readonly List<ulong> _areaList = new();
+        private readonly List<ulong> _cellList = new();
+
         private readonly Dictionary<ObjectiveGraphNode, float> _connectionDict = new();
+
+        private Game _game;
+        private Region _region;
+
+        private ulong _id;
+        private Vector3 _position;
+        private ObjectiveGraphType _type;
 
         private float _shortestDistance = float.MaxValue;
 
         // replacement for pointer sort
         private static long _globalInstanceCount = 0;
-  
         public long InstanceNumber { get; }
 
-        public ulong Id { get; set; }
-        public Vector3 Position { get; set; }
-        public ulong[] Areas { get; set; }
-        public ulong[] Cells { get; set; }
-        public int Type { get; set; }
-
-        public ObjectiveGraphNode()
+        public ObjectiveGraphNode(Game game, Region region, ulong id, Vector3 position, ObjectiveGraphType type)
         {
             InstanceNumber = _globalInstanceCount++;
+            _game = game;
+            _region = region;
+            _id = id;
+            _position = position;
+            _type = type;
         }
 
         public void Decode(CodedInputStream stream)
         {
-            Id = stream.ReadRawVarint64();
-            Position = new(stream);
+            _id = stream.ReadRawVarint64();
+            _position = new(stream);
 
-            Areas = new ulong[stream.ReadRawVarint64()];
-            for (int i = 0; i < Areas.Length; i++)
-                Areas[i] = stream.ReadRawVarint64();
+            _areaList.Clear();
+            ulong numAreas = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numAreas; i++)
+                _areaList.Add(stream.ReadRawVarint64());
+            _areaList.Sort();  // The client uses a sorted vector, does this actually need to be sorted?
 
-            Cells = new ulong[stream.ReadRawVarint64()];
-            for (int i = 0; i < Cells.Length; i++)
-                Cells[i] = stream.ReadRawVarint64();
+            _cellList.Clear();
+            ulong numCells = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numCells; i++)
+                _cellList.Add(stream.ReadRawVarint64());
+            _cellList.Sort();  // See above ^
 
-            Type = stream.ReadRawInt32();
+            _type = (ObjectiveGraphType)stream.ReadRawVarint32();
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(Id);
-            Position.Encode(stream);
+            stream.WriteRawVarint64(_id);
+            _position.Encode(stream);
 
-            stream.WriteRawVarint64((ulong)Areas.Length);
-            for (int i = 0; i < Areas.Length; i++)
-                stream.WriteRawVarint64(Areas[i]);
+            stream.WriteRawVarint64((ulong)_areaList.Count);
+            foreach (ulong area in _areaList)
+                stream.WriteRawVarint64(area);
 
-            stream.WriteRawVarint64((ulong)Cells.Length);
-            for (int i = 0; i < Cells.Length; i++)
-                stream.WriteRawVarint64(Cells[i]);
+            stream.WriteRawVarint64((ulong)_cellList.Count);
+            foreach (ulong cell in _cellList)
+                stream.WriteRawVarint64(cell);
 
-            stream.WriteRawInt32(Type);
+            stream.WriteRawVarint32((uint)_type);
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Id: {Id}");
-            sb.AppendLine($"Position: {Position}");
-            for (int i = 0; i < Areas.Length; i++) sb.AppendLine($"Area{i}: {Areas[i]}");
-            for (int i = 0; i < Cells.Length; i++) sb.AppendLine($"Cell{i}: {Cells[i]}");
-            sb.AppendLine($"Type: {Type}");
+            sb.AppendLine($"{nameof(_id)}: {_id}");
+            sb.AppendLine($"{nameof(_position)}: {_position}");
+
+            for (int i = 0; i < _areaList.Count; i++)
+                sb.AppendLine($"{nameof(_areaList)}[{i}]: {_areaList[i]}");
+
+            for (int i = 0; i < _cellList.Count; i++)
+                sb.AppendLine($"{nameof(_cellList)}[{i}]: {_cellList[i]}");
+
+            sb.AppendLine($"{nameof(_type)}: {_type}");
             return sb.ToString();
         }
 
