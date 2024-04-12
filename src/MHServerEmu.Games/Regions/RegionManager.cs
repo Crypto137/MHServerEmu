@@ -338,7 +338,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)3667304362440335589,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventNinjas.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
@@ -350,7 +350,7 @@ namespace MHServerEmu.Games.Regions
                         new(1613518100500000),
                         (PrototypeId)5751045088227960741,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownPlayingBaseball.prototype
                         0x7912D38B,
-                        new Objective[] { new(0x0, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
+                        new MissionObjective[] { new(0x0, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         Array.Empty<ulong>(),
                         false));
 
@@ -358,7 +358,7 @@ namespace MHServerEmu.Games.Regions
                         new(1613518149500000),
                         (PrototypeId)9358696252006540917,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownCalisthenics.prototype
                         0x6A7A309C,
-                        new Objective[] { new(0x0, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
+                        new MissionObjective[] { new(0x0, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         Array.Empty<ulong>(),
                         false));
 
@@ -366,7 +366,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)3672161157557464473,   // Missions/Prototypes/PVEEndgame/StaticScenarios/ControllerChecks/CivilWarDeathCheckOpenWorldCrossbones.prototype
                         0x62300577,
-                        new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         new ulong[] { 491876, 535777, 561178, 572318, 594073, 596593, 600031, 601433, 609423, },
                         false));
@@ -375,7 +375,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)5826455758384603593,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventDoombots.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x5, 0x5, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x5, 0x5, 0x0, 0x0),
                             new(0x1, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         new ulong[] { 491876, 516140, 535777, 545031, 547169, 561178, 572318, 573260, 579997, 594073, 596593, 600031, 601433, 609423, },
                         false));
@@ -384,7 +384,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)9898965535468037097,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventFrightfulFour.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
@@ -396,7 +396,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)15008190206338409193,  // Missions/Prototypes/Achievements/Challenges/AchievementPunisherMidtownTimed.prototype
                         0x5957A7E7,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x14, 0x0, 0x0) },
                         new ulong[] { 491876, 516140, 535777, 545031, 547169, 561178, 572318, 573260, 579997, 594073, 596593, 600031, 601433, 609423, },
@@ -406,7 +406,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)4425023419088315138,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventBrotherhood.prototype
                         0x48F91EAB,
-                        new Objective[] { new(0x0, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x1, 0x0, 0x0),
@@ -419,7 +419,7 @@ namespace MHServerEmu.Games.Regions
                         new(1613518186500000),
                         (PrototypeId)7753181439701952032,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownTrafficStop.prototype
                         0x460C3BFD,
-                        new Objective[] { new(0x0, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
+                        new MissionObjective[] { new(0x0, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         Array.Empty<ulong>(),
                         false));
 
@@ -427,7 +427,7 @@ namespace MHServerEmu.Games.Regions
                         new(1613518556500000),
                         (PrototypeId)8164724054894847468,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownCarAccident.prototype
                         0x75A7CBA2,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, 0x0, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         new ulong[] { 594073, },
                         false));
@@ -436,7 +436,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)8733075101353582604,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventHood.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
@@ -447,7 +447,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)15924448993393518092,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownBankRobbery.prototype
                         0x743466DB,
-                        new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x3, 0x3, 0x0, 0x0) },
                         Array.Empty<ulong>(),
@@ -457,7 +457,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)8492342449826966212,   // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownArsonistsAgainstPolice.prototype
                         0x187EEF19,
-                        new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         Array.Empty<ulong>(),
@@ -467,7 +467,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)10149215495678468529,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMalekith.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
@@ -479,7 +479,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)10315340690132511222,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownGroceryThugsStandoff.prototype
                         0xF48EB45,
-                        new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         Array.Empty<ulong>(),
@@ -489,7 +489,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)10490887443555427166,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
                         0x39D7DF60,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x2, 0x4, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Active, new(1613519345000000), Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         new ulong[] { 491876, 516140, 535777, 545031, 547169, 561178, 572318, 573260, 579997, 594073, 596593, 600031, 601433, 609423, },
@@ -499,7 +499,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)10686139501369173095,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMisterSinister.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
@@ -511,7 +511,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)15354703907328566055,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventSinisterSix.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
@@ -525,7 +525,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)11060757254749691901,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventBase.prototype
                         0x0,
-                        Array.Empty<Objective>(),
+                        Array.Empty<MissionObjective>(),
                         new ulong[] { 491876, 516140, 535777, 545031, 547169, 561178, 572318, 573260, 579997, 594073, 596593, 600031, 601433, 609423, },
                         false));
 
@@ -533,7 +533,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)12166721969729972671,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownMaggiaShakedownStand.prototype
                         0x140643F5,
-                        new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Available, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         Array.Empty<ulong>(),
@@ -543,7 +543,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)15669697143252068358,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Discoveries/Midtown/MidtownMaggiaKidnapping.prototype
                         0x33D3263B,
-                        new Objective[] { new(0x0, MissionObjectiveState.Skipped, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Skipped, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Skipped, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },
                         new ulong[] { 572318, 601433, },
@@ -553,7 +553,7 @@ namespace MHServerEmu.Games.Regions
                         TimeSpan.Zero,
                         (PrototypeId)17742095572202693358,  // Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventGreenGoblin.prototype
                         0x0,
-                        new Objective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
+                        new MissionObjective[] { new(0x0, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x1, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x2, MissionObjectiveState.Completed, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x1, 0x1, 0x0, 0x0),
                             new(0x3, MissionObjectiveState.Invalid, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) },

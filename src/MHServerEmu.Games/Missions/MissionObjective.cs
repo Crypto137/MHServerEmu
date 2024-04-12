@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Missions
         Skipped = 5
     }
 
-    public class Objective
+    public class MissionObjective
     {
         public ulong ObjectivesIndex { get; set; }
         public ulong ObjectiveIndex { get; set; }                   // NetMessageMissionObjectiveUpdate
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Missions
         public ulong FailCurrentCount { get; set; }
         public ulong FailRequiredCount { get; set; }
 
-        public Objective(CodedInputStream stream)
+        public MissionObjective(CodedInputStream stream)
         {
             ObjectivesIndex = stream.ReadRawByte();
             ObjectiveIndex = stream.ReadRawByte();
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Missions
             FailRequiredCount = stream.ReadRawVarint64();
         }
 
-        public Objective(ulong objectiveIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
+        public MissionObjective(ulong objectiveIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
             InteractionTag[] interactedEntities, ulong currentCount, ulong requiredCount, ulong failCurrentCount, 
             ulong failRequiredCount)
         {

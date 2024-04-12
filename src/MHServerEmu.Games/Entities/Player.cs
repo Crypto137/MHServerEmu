@@ -311,7 +311,7 @@ namespace MHServerEmu.Games.Entities
                 {
                     Mission mission = MissionManager.CreateMission(missionRef);
                     mission.State = MissionState.Completed;
-                    mission.Objectives = Array.Empty<Objective>();
+                    mission.Objectives = Array.Empty<MissionObjective>();
                     mission.Participants = new ulong[] { BaseData.EntityId };
                     MissionManager.InsertMission(mission);
                 }

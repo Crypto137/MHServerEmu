@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Missions
         public TimeSpan TimeExpireCurrentState { get; set; }
         public PrototypeId PrototypeId { get; set; }
         public int Random { get; set; }
-        public Objective[] Objectives { get; set; }
+        public MissionObjective[] Objectives { get; set; }
         public ulong[] Participants { get; set; }
         public bool Suspended { get; set; }
 
@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Missions
             PrototypeId = stream.ReadPrototypeRef<Prototype>();
             Random = stream.ReadRawInt32();
 
-            Objectives = new Objective[stream.ReadRawVarint64()];
+            Objectives = new MissionObjective[stream.ReadRawVarint64()];
             for (int i = 0; i < Objectives.Length; i++)
                 Objectives[i] = new(stream);
 
@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Missions
         }
 
         public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeId,
-            int random, Objective[] objectives, ulong[] participants, bool suspended)
+            int random, MissionObjective[] objectives, ulong[] participants, bool suspended)
         {
             State = state;
             TimeExpireCurrentState = timeExpireCurrentState;
@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Missions
             TimeExpireCurrentState = TimeSpan.Zero;
             PrototypeId = prototypeId;
             Random = random;
-            Objectives = new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) };
+            Objectives = new MissionObjective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) };
             Participants = Array.Empty<ulong>();
             Suspended = false;
         }
@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.Missions
             stream.WriteRawInt32(Random);
 
             stream.WriteRawVarint64((ulong)Objectives.Length);
-            foreach (Objective objective in Objectives) objective.Encode(stream);
+            foreach (MissionObjective objective in Objectives) objective.Encode(stream);
 
             stream.WriteRawVarint64((ulong)Participants.Length);
             foreach (ulong Participant in Participants) stream.WriteRawVarint64(Participant);
