@@ -1,11 +1,9 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -91,19 +89,6 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
-        }
-
-        public MetaGame CreateMetaGame(PrototypeId metaGameRef, ulong regionId)
-        {
-            EntityBaseData baseData = new (GetNextEntityId(), metaGameRef, null, null);
-            ReplicatedVariable<string> metaname = new(0, "");
-            MetaGame metaGame = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId), metaname)
-            {
-                RegionId = regionId,
-                Game = _game // TODO: to constructor
-            };
-            _entityDict.Add(baseData.EntityId, metaGame);
-            return metaGame;
         }
 
         public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
@@ -223,8 +208,6 @@ namespace MHServerEmu.Games.Entities
                     yield return entity;
         }
 
-        // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
-
         #region HardCodeRank
 
         public static int GetRankHealth(EntityPrototype entity)
@@ -298,15 +281,6 @@ namespace MHServerEmu.Games.Entities
                     };*/
 
                     break;
-
-                    /*
-                    case RegionPrototypeId.NPEAvengersTowerHUBRegion:
-                        cell = region.StartArea.CellList.First();
-
-                        _entityManager.CreateWorldEntity(cell, GameDatabase.GetPrototypeRefByName("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
-                            new(736f, -352f, 177f), new(-2.15625f, 0f, 0f), 608, false);
-
-                        break;     */
 
             }
 

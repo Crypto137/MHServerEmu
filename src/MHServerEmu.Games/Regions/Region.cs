@@ -218,8 +218,10 @@ namespace MHServerEmu.Games.Regions
             if (regionProto.MetaGames.HasValue())
                 foreach (var metaGameRef in regionProto.MetaGames)
                 {
-                    MetaGame metagame = Game.EntityManager.CreateMetaGame(metaGameRef, Id);
-                    RegisterMetaGame(metagame);
+                    EntitySettings metaSettings = new();
+                    metaSettings.RegionId = Id;
+                    metaSettings.EntityRef = metaGameRef;
+                    MetaGame metagame = Game.EntityManager.CreateEntity(metaSettings) as MetaGame;                    
                 }
 
             if (settings.GenerateAreas)

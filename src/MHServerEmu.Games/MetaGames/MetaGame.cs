@@ -19,6 +19,14 @@ namespace MHServerEmu.Games.MetaGames
 
         // new
         public MetaGame(Game game) : base(game) { }
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
+            Name = new(0, "");
+            Region region = Game.RegionManager.GetRegion(settings.RegionId);
+            region.RegisterMetaGame(this);
+        }
 
         // old 
         public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
