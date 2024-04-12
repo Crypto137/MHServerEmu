@@ -47,23 +47,19 @@ namespace MHServerEmu.Games.Entities
             ShouldSnapToFloorOnSpawn = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : proto.SnapToFloorOnSpawn;
             // Old
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
-            ReplicatedPropertyCollection properties = new(Game.CurrentRepId);
-            if (settings.Properties != null) properties.FlattenCopyFrom(settings.Properties, false);
-            properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
-            properties[PropertyEnum.MapPosition] = settings.Position;
-
+            if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
+            Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
             int health = EntityManager.GetRankHealth(proto);
             if (health > 0)
             {
-                properties[PropertyEnum.Health] = health;
-                properties[PropertyEnum.HealthMaxOther] = health;
+                Properties[PropertyEnum.Health] = health;
+                Properties[PropertyEnum.HealthMaxOther] = health;
             }
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);
 
-            Properties = properties;
             TrackingContextMap = new();
             ConditionCollection = new();
             PowerCollection = new();
@@ -191,6 +187,8 @@ namespace MHServerEmu.Games.Entities
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
             // Old
+            Properties[PropertyEnum.MapPosition] = position;
+            Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
             Properties[PropertyEnum.MapAreaId] = Location.AreaId;
             Properties[PropertyEnum.MapRegionId] = Location.RegionId;
             Properties[PropertyEnum.MapCellId] = Location.CellId;

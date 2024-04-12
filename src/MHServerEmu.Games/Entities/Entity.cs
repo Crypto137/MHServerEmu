@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity
     {
-        protected static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         protected EntityFlags _flags;
         public ulong Id => BaseData.EntityId;
@@ -178,6 +178,9 @@ namespace MHServerEmu.Games.Entities
             RegionId = settings.RegionId;
 
             // New
+            Properties = new(Game.CurrentRepId);
+            //if (entity.Properties != null) // We need to add a filter to the property serialization first
+            //    Properties.FlattenCopyFrom(entity.Properties, true); 
         }
 
         // Base data is required for all entities, so there's no parameterless constructor
