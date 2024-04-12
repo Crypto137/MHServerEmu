@@ -24,7 +24,8 @@ namespace MHServerEmu.Games.Regions
 
             ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             Properties = new(stream);
-            MissionManager = new(stream, boolDecoder);
+            MissionManager = new();
+            MissionManager.Decode(stream, boolDecoder);
             UIDataProvider = new();
             UIDataProvider.Decode(stream, boolDecoder);
             ObjectiveGraph = new(null, null);
