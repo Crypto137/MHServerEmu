@@ -247,6 +247,8 @@ namespace MHServerEmu.Games.Regions
 
             settings.OverrideSnapToFloor = entityMarker.OverrideSnapToFloor;
             settings.OverrideSnapToFloorValue = entityMarker.OverrideSnapToFloorValue;
+            if (PrototypeId == (PrototypeId)13763955919309774578 && entityProto.DataRef == (PrototypeId)3814814281271024430)
+                settings.OverrideSnapToFloor = true; // Fix Mandarin
 
             if (entityProto.Bounds != null)
                 entityPosition.Z += entityProto.Bounds.GetBoundHalfHeight();
