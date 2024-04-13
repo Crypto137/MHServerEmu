@@ -25,6 +25,8 @@ namespace MHServerEmu.Games.Missions
 
     public class Mission
     {
+        // Relevant protobuf: NetMessageMissionUpdate
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private MissionState _state;
@@ -62,7 +64,7 @@ namespace MHServerEmu.Games.Missions
             _unkRandom = unkRandom;
 
             foreach (MissionObjective objective in objectives)
-                _objectiveDict.Add(objective.ObjectiveIndex, objective);
+                _objectiveDict.Add(objective.PrototypeIndex, objective);
 
             _participants.UnionWith(participants);
             _isSuspended = isSuspended;

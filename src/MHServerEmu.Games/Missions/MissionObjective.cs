@@ -1,7 +1,8 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -17,70 +18,128 @@ namespace MHServerEmu.Games.Missions
 
     public class MissionObjective
     {
-        private readonly Mission _mission;
+        // Relevant protobuf: NetMessageMissionObjectiveUpdate
 
-        public uint ObjectiveIndex { get; set; }                   // NetMessageMissionObjectiveUpdate
-        public MissionObjectiveState ObjectiveState { get; set; }
-        public TimeSpan ObjectiveStateExpireTime { get; set; }
-        public InteractionTag[] InteractedEntities { get; set; }
-        public ulong CurrentCount { get; set; }
-        public ulong RequiredCount { get; set; }
-        public ulong FailCurrentCount { get; set; }
-        public ulong FailRequiredCount { get; set; }
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public MissionObjective(Mission mission, uint index)
+        private uint _prototypeIndex;
+
+        private MissionObjectiveState _objectiveState;
+        private TimeSpan _objectiveStateExpireTime;
+
+        private readonly List<InteractionTag> _interactedEntityList = new();
+
+        private ushort _currentCount;
+        private ushort _requiredCount;
+        private ushort _failCurrentCount;
+        private ushort _failRequiredCount;
+
+        public Mission Mission { get; }
+        public Game Game { get => Mission.Game; }
+
+        public uint PrototypeIndex { get => _prototypeIndex; }
+        public MissionObjectiveState State { get => _objectiveState; }
+        public TimeSpan TimeExpire { get => _objectiveStateExpireTime; }
+        public TimeSpan TimeRemainingForObjective { get => _objectiveStateExpireTime - Clock.GameTime; }
+
+        public MissionObjective(Mission mission, uint prototypeIndex)
         {
-            _mission = mission;
-            ObjectiveIndex = index;
+            Mission = mission;
+            _prototypeIndex = prototypeIndex;
         }
 
-        public MissionObjective(uint objectiveIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
-            InteractionTag[] interactedEntities, ulong currentCount, ulong requiredCount, ulong failCurrentCount, 
-            ulong failRequiredCount)
+        public MissionObjective(uint prototypeIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
+            IEnumerable<InteractionTag> interactedEntities, ushort currentCount, ushort requiredCount, ushort failCurrentCount, 
+            ushort failRequiredCount)
         {
-            ObjectiveIndex = objectiveIndex;            
-            ObjectiveState = objectiveState;
-            ObjectiveStateExpireTime = objectiveStateExpireTime;
-            InteractedEntities = interactedEntities;
-            CurrentCount = currentCount;
-            RequiredCount = requiredCount;
-            FailCurrentCount = failCurrentCount;
-            FailRequiredCount = failRequiredCount;
+            _prototypeIndex = prototypeIndex;            
+            _objectiveState = objectiveState;
+            _objectiveStateExpireTime = objectiveStateExpireTime;
+            _interactedEntityList.AddRange(interactedEntities);
+            _currentCount = currentCount;
+            _requiredCount = requiredCount;
+            _failCurrentCount = failCurrentCount;
+            _failRequiredCount = failRequiredCount;
         }
 
         public void Decode(CodedInputStream stream)
         {
-            ObjectiveIndex = stream.ReadRawByte();
-            ObjectiveState = (MissionObjectiveState)stream.ReadRawInt32();
-            ObjectiveStateExpireTime = new(stream.ReadRawInt64() * 10);
+            _interactedEntityList.Clear();
 
-            InteractedEntities = new InteractionTag[stream.ReadRawVarint64()];
-            for (int i = 0; i < InteractedEntities.Length; i++)
-                InteractedEntities[i] = new(stream);
+            _prototypeIndex = stream.ReadRawByte();
+            _objectiveState = (MissionObjectiveState)stream.ReadRawInt32();
+            _objectiveStateExpireTime = new(stream.ReadRawInt64() * 10);
 
-            CurrentCount = stream.ReadRawVarint64();
-            RequiredCount = stream.ReadRawVarint64();
-            FailCurrentCount = stream.ReadRawVarint64();
-            FailRequiredCount = stream.ReadRawVarint64();
+            ulong numInteractedEntities = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numInteractedEntities; i++)
+            {
+                ulong entityId = stream.ReadRawVarint64();
+                ulong regionId = stream.ReadRawVarint64();
+                // timestamp - ignored in replication
+                _interactedEntityList.Add(new(entityId, regionId));
+            }
+
+            _currentCount = (ushort)stream.ReadRawVarint32();
+            _requiredCount = (ushort)stream.ReadRawVarint32();
+            _failCurrentCount = (ushort)stream.ReadRawVarint32();
+            _failRequiredCount = (ushort)stream.ReadRawVarint32();
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawByte((byte)ObjectiveIndex);
-            stream.WriteRawInt32((int)ObjectiveState);
-            stream.WriteRawInt64(ObjectiveStateExpireTime.Ticks / 10);
-            stream.WriteRawVarint64((ulong)InteractedEntities.Length);
-            foreach (InteractionTag tag in InteractedEntities) tag.Encode(stream);
-            stream.WriteRawVarint64(CurrentCount);
-            stream.WriteRawVarint64(RequiredCount);
-            stream.WriteRawVarint64(FailCurrentCount);
-            stream.WriteRawVarint64(FailRequiredCount);
+            stream.WriteRawByte((byte)_prototypeIndex);
+            stream.WriteRawInt32((int)_objectiveState);
+            stream.WriteRawInt64(_objectiveStateExpireTime.Ticks / 10);
+            stream.WriteRawVarint32((uint)_interactedEntityList.Count);
+
+            foreach (InteractionTag tag in _interactedEntityList)
+            {
+                stream.WriteRawVarint64(tag.EntityId);
+                stream.WriteRawVarint64(tag.RegionId);
+                // timestamp - ignored in replication
+            }
+                
+            stream.WriteRawVarint32(_currentCount);
+            stream.WriteRawVarint32(_requiredCount);
+            stream.WriteRawVarint32(_failCurrentCount);
+            stream.WriteRawVarint32(_failRequiredCount);
         }
 
         public override string ToString()
         {
-            string expireTime = ObjectiveStateExpireTime != TimeSpan.Zero ? Clock.GameTimeToDateTime(ObjectiveStateExpireTime).ToString() : "0";
-            return $"state={ObjectiveState}, expireTime={expireTime}, count={CurrentCount}/{RequiredCount}, failCount={FailCurrentCount}/{FailRequiredCount}";
+            string expireTime = _objectiveStateExpireTime != TimeSpan.Zero ? Clock.GameTimeToDateTime(_objectiveStateExpireTime).ToString() : "0";
+            return $"state={_objectiveState}, expireTime={expireTime}, numInteractions={_interactedEntityList.Count}, count={_currentCount}/{_requiredCount}, failCount={_failCurrentCount}/{_failRequiredCount}";
+        }
+
+        public bool HasInteractedWithEntity(WorldEntity entity)
+        {
+            ulong entityId = entity.Id;
+            ulong regionId = 0;     // TODO: WorldEntity::IsInWorld, WorldEntity::GetRegionLocation(), WorldEntity::GetExitWorldRegionLocation
+
+            if (_interactedEntityList.Count >= 20)
+                Logger.Warn("HasInteractedWithEntity(): _interactedEntityList.Count >= 20");    // same check as the client
+
+            foreach (InteractionTag tag in _interactedEntityList)
+            {
+                if (tag.EntityId == entityId && tag.RegionId == regionId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool GetCompletionCount(ref ushort currentCount, ref ushort requiredCount)
+        {
+            currentCount = _currentCount;
+            requiredCount = _requiredCount;
+            return requiredCount > 1;
+        }
+
+        public bool GetFailCount(ref ushort currentCount, ref ushort requiredCount)
+        {
+            currentCount = _failCurrentCount;
+            requiredCount = _failRequiredCount;
+            return requiredCount > 1;
         }
     }
 }

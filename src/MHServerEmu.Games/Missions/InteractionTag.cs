@@ -1,38 +1,28 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Games.Missions
 {
-    public class InteractionTag
+    public readonly struct InteractionTag
     {
-        public ulong EntityId { get; set; }
-        public ulong RegionId { get; set; }
-        public ulong GameTime { get; set; }     // unused
+        // Relevant protobuf: NetStructMissionInteractionTag
 
-        public InteractionTag(CodedInputStream stream)
-        {
-            EntityId = stream.ReadRawVarint64();
-            RegionId = stream.ReadRawVarint64();
-        }
+        public ulong EntityId { get; }
+        public ulong RegionId { get; }
+        //public TimeSpan Timestamp { get; }     // GameTime, used only in non-replication archives, tags older than 1 day are discarded during deserialization
 
         public InteractionTag(ulong entityId, ulong regionId)
         {
             EntityId = entityId;
             RegionId = regionId;
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64(EntityId);
-            stream.WriteRawVarint64(RegionId);
+            //Timestamp = TimeSpan.Zero;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"EntityId: {EntityId}");
-            sb.AppendLine($"RegionId: {RegionId}");
-            //sb.AppendLine($"GameTime: {GameTime}");
+            sb.AppendLine($"{nameof(EntityId)}: {EntityId}");
+            sb.AppendLine($"{nameof(RegionId)}: {RegionId}");
+            //sb.AppendLine($"{nameof(Timestamp)}: {Clock.GameTimeToDateTime(Timestamp)}");
             return sb.ToString();
         }
     }
