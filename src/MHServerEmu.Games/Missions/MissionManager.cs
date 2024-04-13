@@ -38,10 +38,9 @@ namespace MHServerEmu.Games.Missions
             for (ulong i = 0; i < numMissions; i++)
             {
                 PrototypeGuid missionGuid = (PrototypeGuid)stream.ReadRawVarint64();
-                var missionRef = GameDatabase.GetDataRefByPrototypeGuid(missionGuid);
-                // Mission mission = CreateMission(missionRef);
-                // mission.Decode(stream, boolDecoder) TODO
-                Mission mission = new(stream, boolDecoder);
+                PrototypeId missionRef = GameDatabase.GetDataRefByPrototypeGuid(missionGuid);
+                Mission mission = CreateMission(missionRef);
+                mission.Decode(stream, boolDecoder);
                 InsertMission(mission);
             }
 
@@ -58,7 +57,7 @@ namespace MHServerEmu.Games.Missions
         public void EncodeBools(BoolEncoder boolEncoder)
         {
             foreach (var mission in _missionDict)
-                boolEncoder.EncodeBool(mission.Value.Suspended);
+                boolEncoder.EncodeBool(mission.Value.IsSuspended);
         }
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
@@ -158,7 +157,7 @@ namespace MHServerEmu.Games.Missions
         public Mission InsertMission(Mission mission)
         {
             if (mission == null) return null;
-            _missionDict.Add(mission.PrototypeId, mission); 
+            _missionDict.Add(mission.PrototypeDataRef, mission); 
             return mission;
         }
 

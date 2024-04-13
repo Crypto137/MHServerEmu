@@ -17,8 +17,9 @@ namespace MHServerEmu.Games.Missions
 
     public class MissionObjective
     {
-        public ulong ObjectivesIndex { get; set; }
-        public ulong ObjectiveIndex { get; set; }                   // NetMessageMissionObjectiveUpdate
+        private readonly Mission _mission;
+
+        public uint ObjectiveIndex { get; set; }                   // NetMessageMissionObjectiveUpdate
         public MissionObjectiveState ObjectiveState { get; set; }
         public TimeSpan ObjectiveStateExpireTime { get; set; }
         public InteractionTag[] InteractedEntities { get; set; }
@@ -27,9 +28,28 @@ namespace MHServerEmu.Games.Missions
         public ulong FailCurrentCount { get; set; }
         public ulong FailRequiredCount { get; set; }
 
-        public MissionObjective(CodedInputStream stream)
+        public MissionObjective(Mission mission, uint index)
         {
-            ObjectivesIndex = stream.ReadRawByte();
+            _mission = mission;
+            ObjectiveIndex = index;
+        }
+
+        public MissionObjective(uint objectiveIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
+            InteractionTag[] interactedEntities, ulong currentCount, ulong requiredCount, ulong failCurrentCount, 
+            ulong failRequiredCount)
+        {
+            ObjectiveIndex = objectiveIndex;            
+            ObjectiveState = objectiveState;
+            ObjectiveStateExpireTime = objectiveStateExpireTime;
+            InteractedEntities = interactedEntities;
+            CurrentCount = currentCount;
+            RequiredCount = requiredCount;
+            FailCurrentCount = failCurrentCount;
+            FailRequiredCount = failRequiredCount;
+        }
+
+        public void Decode(CodedInputStream stream)
+        {
             ObjectiveIndex = stream.ReadRawByte();
             ObjectiveState = (MissionObjectiveState)stream.ReadRawInt32();
             ObjectiveStateExpireTime = new(stream.ReadRawInt64() * 10);
@@ -44,24 +64,8 @@ namespace MHServerEmu.Games.Missions
             FailRequiredCount = stream.ReadRawVarint64();
         }
 
-        public MissionObjective(ulong objectiveIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
-            InteractionTag[] interactedEntities, ulong currentCount, ulong requiredCount, ulong failCurrentCount, 
-            ulong failRequiredCount)
-        {
-            ObjectivesIndex = objectiveIndex;
-            ObjectiveIndex = objectiveIndex;            
-            ObjectiveState = objectiveState;
-            ObjectiveStateExpireTime = objectiveStateExpireTime;
-            InteractedEntities = interactedEntities;
-            CurrentCount = currentCount;
-            RequiredCount = requiredCount;
-            FailCurrentCount = failCurrentCount;
-            FailRequiredCount = failRequiredCount;
-        }
-
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawByte((byte)ObjectivesIndex);
             stream.WriteRawByte((byte)ObjectiveIndex);
             stream.WriteRawInt32((int)ObjectiveState);
             stream.WriteRawInt64(ObjectiveStateExpireTime.Ticks / 10);
