@@ -141,6 +141,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
 
+        private KeywordsMask _keywordsMask;
+
         public static bool Equivalent(RegionPrototype regionA, RegionPrototype regionB)
         {
             if (regionA == null || regionB == null) return false;
@@ -185,8 +187,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return difficultyGlobals.RegionSettingsDefault;
         }
 
+        public override void PostProcess()
+        {
+            base.PostProcess();
 
-}
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            // TODO others
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+    }
 
     public class RegionConnectionTargetPrototype : Prototype
     {

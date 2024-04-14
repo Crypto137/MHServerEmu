@@ -1,12 +1,12 @@
 ﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Regions;
+using System;
+using System.Collections.Generic;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     using static MHServerEmu.Games.Missions.MissionManager;
-    using KeywordsMask = BitList;
 
     #region Enums
 
@@ -230,6 +230,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public InteractionSpecPrototype[] InteractionsWhenFailed { get; protected set; }
         public bool PlayerHUDShowObjsOnEntityAbove { get; protected set; }
         public MissionActionPrototype[] OnAvailableActions { get; protected set; }
+
+        public void EnumerateConditions(ref int index)
+        {
+            MissionPrototype.EnumerateConditionList(ref index, ActivateConditions);
+            MissionPrototype.EnumerateConditionList(ref index, FailureConditions);
+            MissionPrototype.EnumerateConditionList(ref index, SuccessConditions);
+        }
+
+        public bool GetConditionsOfType(Type conditionType, List<MissionConditionPrototype> conditions)
+        {
+            MissionPrototype.GetConditionsOfTypeFromConditionList(conditionType, conditions, ActivateConditions);
+            MissionPrototype.GetConditionsOfTypeFromConditionList(conditionType, conditions, FailureConditions);
+            MissionPrototype.GetConditionsOfTypeFromConditionList(conditionType, conditions, SuccessConditions);
+
+            return conditions.Count > 0;
+        }
     }
 
     public class MissionNamedObjectivePrototype : MissionObjectivePrototype
@@ -330,8 +346,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private readonly SortedSet<PrototypeId> PopulationRegions = new();
         private readonly SortedSet<PrototypeId> PopulationAreas = new();
-        private KeywordsMask _keywordsMask = new();
-        private KeywordsMask _regionRestrictionKeywordsMask = new();
+        private KeywordsMask _keywordsMask;
+        private KeywordsMask _regionRestrictionKeywordsMask;
 
         public override bool ApprovedForUse()
         {
@@ -348,12 +364,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
-        bool HasKeyword(KeywordPrototype keywordProto)
+        public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
 
-        bool HasRegionRestrictionKeyword(KeywordPrototype keywordProto)
+        public bool HasRegionRestrictionKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_regionRestrictionKeywordsMask, keywordProto);
         }
@@ -364,7 +380,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
             _regionRestrictionKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(RegionRestrictionKeywords);
-            /*
+            
             EnumerateConditions();
 
             HotspotConditionList = new List<MissionConditionPrototype>();
@@ -373,7 +389,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (HotspotConditionList.Count == 0)
                 HotspotConditionList = null;
-
+            /*
             if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef) == false)
                 FirstMarker = FindFirstMarker();
             else
@@ -412,14 +428,45 @@ namespace MHServerEmu.Games.GameData.Prototypes
             throw new NotImplementedException();
         }
 
-        private void GetConditionsOfType(Type type, List<MissionConditionPrototype> hotspotConditionList)
+        private bool GetConditionsOfType(Type conditionType, List<MissionConditionPrototype> conditions)
         {
-            throw new NotImplementedException();
+            GetConditionsOfTypeFromConditionList(conditionType, conditions, ActivateConditions);
+            GetConditionsOfTypeFromConditionList(conditionType, conditions, ActivateNowConditions);
+            GetConditionsOfTypeFromConditionList(conditionType, conditions, FailureConditions);
+            GetConditionsOfTypeFromConditionList(conditionType, conditions, PrereqConditions);
+
+            if (Objectives.HasValue())
+                foreach (var missionObjectiveProto in Objectives)
+                    missionObjectiveProto?.GetConditionsOfType(conditionType, conditions);
+
+            return conditions.Count > 0;
         }
 
-        private void EnumerateConditions()
+        public static void GetConditionsOfTypeFromConditionList(Type conditionType, List<MissionConditionPrototype> conditions, MissionConditionListPrototype conditionList)
         {
-            throw new NotImplementedException();
+            if (conditionList != null)
+                foreach (var prototype in conditionList.IteratePrototypes(conditionType))
+                    conditions.Add(prototype);
+        }
+
+        public void EnumerateConditions()
+        {
+            int index = 0;
+            EnumerateConditionList(ref index, ActivateConditions);
+            EnumerateConditionList(ref index, ActivateNowConditions);
+            EnumerateConditionList(ref index, FailureConditions);
+            EnumerateConditionList(ref index, PrereqConditions);
+
+            if (Objectives.HasValue())
+                foreach (var missionObjectivePrototype in Objectives)
+                    missionObjectivePrototype?.EnumerateConditions(ref index);
+        }
+
+        public static void EnumerateConditionList(ref int index, MissionConditionListPrototype conditionList)
+        {
+            if (conditionList != null)
+                foreach (var prototype in conditionList.IteratePrototypes())
+                    if (prototype != null) prototype.Index = index++;
         }
 
         public bool HasPopulationInRegion(Region region)

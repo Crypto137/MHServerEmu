@@ -1,8 +1,11 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -22,31 +25,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public enum EntitySelectorActionEventType
     {
         None = 0,
-        OnDetectedEnemy = 1,
-        OnGotAttacked = 2,
-        OnGotDamaged = 4,
-        OnGotDefeated = 8,
-        OnGotKilled = 16,
-        OnAllyDetectedEnemy = 32,
-        OnAllyGotAttacked = 64,
-        OnAllyGotKilled = 128,
-        OnMetLeashDistance = 256,
-        OnEnteredCombat = 512,
-        OnExitedCombat = 1024,
-        OnKilledOther = 2048,
-        OnDetectedFriend = 4096,
-        OnSimulated = 8192,
-        OnEnemyProximity = 16384,
-        OnDetectedPlayer = 32768,
-        OnDetectedNonPlayer = 65536,
-        OnAllyDetectedPlayer = 131072,
-        OnAllyDetectedNonPlayer = 262144,
-        OnClusterEnemiesCleared = 524288,
-        OnPlayerInteract = 1048576,
-        OnPlayerProximity = 2097152,
-        OnGotAttackedByPlayer = 4194304,
-        OnAllyGotAttackedByPlayer = 8388608,
-        OnMissionBroadcast = 16777216,
+        OnDetectedEnemy = 1 << 0,
+        OnGotAttacked = 1 << 1,
+        OnGotDamaged = 1 << 2,
+        OnGotDefeated = 1 << 3,
+        OnGotKilled = 1 << 4,
+        OnAllyDetectedEnemy = 1 << 5,
+        OnAllyGotAttacked = 1 << 6,
+        OnAllyGotKilled = 1 << 7,
+        OnMetLeashDistance = 1 << 8,
+        OnEnteredCombat = 1 << 9,
+        OnExitedCombat = 1 << 10,
+        OnKilledOther = 1 << 11,
+        OnDetectedFriend = 1 << 12,
+        OnSimulated = 1 << 13,
+        OnEnemyProximity = 1 << 14,
+        OnDetectedPlayer = 1 << 15,
+        OnDetectedNonPlayer = 1 << 16,
+        OnAllyDetectedPlayer = 1 << 17,
+        OnAllyDetectedNonPlayer = 1 << 18,
+        OnClusterEnemiesCleared = 1 << 19,
+        OnPlayerInteract = 1 << 20,
+        OnPlayerProximity = 1 << 21,
+        OnGotAttackedByPlayer = 1 << 22,
+        OnAllyGotAttackedByPlayer = 1 << 23,
+        OnMissionBroadcast = 1 << 24,
     }
 
     [AssetEnum((int)Invalid)]
@@ -197,6 +200,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int LifespanMS { get; protected set; }
         public AssetId IconPathTooltipHeader { get; protected set; }                     // A Entity/Types/EntityIconPathType.type
         public AssetId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
+
+        [DoNotCopy]
+        public AOINetworkPolicyValues ReplicateNetwork { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            ReplicateNetwork = AOINetworkPolicyValues.AOIChannelNone;
+            if (ReplicateToProximity)   ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelProximity;
+            if (ReplicateToParty)       ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelParty;
+            if (ReplicateToOwner)       ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelOwner;
+            if (ReplicateToDiscovered)  ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelDiscovery;
+            if (ReplicateToTrader)      ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelTrader;
+        }
     }
 
     public class WorldEntityPrototype : EntityPrototype
@@ -255,10 +273,67 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public RankPrototype RankPrototype { get => Rank.As<RankPrototype>(); }
 
+        private KeywordsMask _keywordsMask;
+        private bool isVacuumable;
+
+        private object _interactionDataLock;
+        private bool _interactionDataCached;
+        [DoNotCopy]
+        public InteractionData InteractionData { get; set; }
+        [DoNotCopy]
+        public List<InteractionData> KeywordsInteractionData { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
+            isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
+
+            //if (DataRef != GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)13337309842336122384))
+            //    worldEntityPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetWorldEntityBlueprintDataRef());
+        }
+
         public override bool ApprovedForUse()
         {
             // Add settings for using DesignStatePS4 or DesignStateXboxOne here if we end up supporting console clients
             return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+
+        public InteractionData GetInteractionData()
+        {
+            if (_interactionDataCached == false)
+            {
+                _interactionDataLock = new();
+                KeywordsInteractionData = new();
+                BuildInteractionDataCache();
+            }
+            return InteractionData;
+        }
+
+        private void BuildInteractionDataCache()
+        {
+            lock (_interactionDataLock)
+            {
+                if (_interactionDataCached == false)
+                {
+                    GameDatabase.InteractionManager.BuildEntityPrototypeCachedData(this);
+                    _interactionDataCached = true;
+                }
+            }
+        }
+
+        public List<InteractionData> GetKeywordsInteractionData()
+        {
+            if (_interactionDataCached == false) BuildInteractionDataCache();
+            return KeywordsInteractionData;
         }
     }
 
@@ -341,6 +416,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SpawnerTrigger { get; protected set; }
         public PrototypeId AllianceOverride { get; protected set; }
         public PrototypeId BroadcastEvent { get; protected set; }
+
+        [DoNotCopy]
+        public bool RequiresBrain { get; protected set; }
+
+        public override void PostProcess()
+        {
+            if (EventTypes.HasValue())
+            {
+                var needBrainEventTypes =
+                    EntitySelectorActionEventType.OnDetectedEnemy |
+                    EntitySelectorActionEventType.OnDetectedFriend |
+                    EntitySelectorActionEventType.OnEnemyProximity |
+                    EntitySelectorActionEventType.OnPlayerProximity;
+
+                foreach (var eventType in EventTypes)
+                    if (needBrainEventTypes.HasFlag(eventType))
+                    {
+                        RequiresBrain = true;
+                        return;
+                    }
+            }
+        }
     }
 
     public class EntitySelectorActionSetPrototype : Prototype

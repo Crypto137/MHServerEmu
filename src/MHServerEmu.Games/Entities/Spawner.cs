@@ -1,8 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Random;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
@@ -16,8 +14,22 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
         public bool DebugLog;
 
-        private GRandom _random;
         public SpawnerPrototype SpawnerPrototype => EntityPrototype as SpawnerPrototype;
+
+        // New
+        public Spawner(Game game) : base(game) 
+        {
+        }
+
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            // old
+            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
+            _flags |= EntityFlags.NoCollide;
+        }
+
+        // Old
         public Spawner(EntityBaseData baseData) : base(baseData)
         {
         }
@@ -31,15 +43,14 @@ namespace MHServerEmu.Games.Entities
         {           
         }
 
-        public override void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
+        public override void OnEnteredWorld(EntitySettings settings)
         {
-            base.EnterWorld(cell, position, orientation);
-            _flags |= EntityFlags.NoCollide;
+            base.OnEnteredWorld(settings);            
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
-            if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
+            if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}]");
             if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
-            _random = Game.Random; //new(cell.Seed);
+            
             // if (spawnerProto.StartEnabled)
             Spawn();
         }
@@ -75,25 +86,17 @@ namespace MHServerEmu.Games.Entities
 
         private void SpawnObject(PopulationObjectPrototype popObject)
         {
-            var region = Location.Region;
-            var random = _random;
+            var populationManager = Region.PopulationManager;
             var spawnerProto = SpawnerPrototype;
-            ClusterGroup clusterGroup = new(region, random, popObject, null, Properties, SpawnFlags.None);
-            clusterGroup.Initialize();
-            Vector3 pos = new(Location.GetPosition());
-            var rot = Location.GetOrientation();
+            SpawnFlags spawnFlags = SpawnFlags.None;
             if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout)
-                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce)) 
-                clusterGroup.SpawnFlags |= SpawnFlags.IgnoreBlackout;
+                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
+                spawnFlags |= SpawnFlags.IgnoreBlackout;
+            PropertyCollection properties = new();
+            if (spawnerProto.SpawnsInheritMissionPrototype)
+                properties[PropertyEnum.MissionPrototype] = Properties[PropertyEnum.MissionPrototype];
 
-            bool success = clusterGroup.PickPositionInSector(pos, rot, spawnerProto.SpawnDistanceMin, spawnerProto.SpawnDistanceMax);
-            if (success == false && spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
-            {
-                clusterGroup.SetParentRelativePosition(pos);
-                success = true;
-            }
-            // spawn Entity from Group
-            if (success) clusterGroup.Spawn();
+            populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
         }
     }
 }

@@ -50,9 +50,11 @@ namespace MHServerEmu.Games.Common
                 _bits[i] = false;
         }
 
-        public BitList Copy()
+        public T Copy<T>() where T : BitList, new()
         {
-            return new(_bits);
+            T result = new ();
+            result._bits.AddRange(_bits);
+            return result;
         }
 
         public void Resize(int newSize)
@@ -71,13 +73,13 @@ namespace MHServerEmu.Games.Common
 
         public bool this[int index]
         {
-            get => _bits[index];
-            set => _bits[index] = value;
+            get => Get(index);
+            set => Set(index, value);
         }
 
-        public static BitList operator &(BitList left, BitList right)
+        public static T And<T>(T left, T right) where T: BitList, new()
         {
-            var result = left.Copy();
+            T result = left.Copy<T>();
             result.Reserve(right.Size);
 
             for (int i = 0; i < right.Size; i++)
@@ -86,9 +88,14 @@ namespace MHServerEmu.Games.Common
             return result;
         }
 
-        public static BitList operator |(BitList left, BitList right)
+        public static BitList operator &(BitList left, BitList right)
         {
-            var result = left.Copy();
+            return And(left, right);
+        }
+
+        public static T Or<T>(T left, T right) where T : BitList, new()
+        {
+            T result = left.Copy<T>();
             result.Reserve(right.Size);
 
             for (int i = 0; i < right.Size; i++)
@@ -97,9 +104,14 @@ namespace MHServerEmu.Games.Common
             return result;
         }
 
-        public static BitList operator ^(BitList left, BitList right)
+        public static BitList operator |(BitList left, BitList right)
         {
-            var result = left.Copy();
+            return Or(left, right);
+        }
+
+        public static T Xor<T>(T left, T right) where T : BitList, new()
+        {
+            T result = left.Copy<T>();
             result.Reserve(right.Size);
 
             for (int i = 0; i < right.Size; i++)
@@ -108,5 +120,9 @@ namespace MHServerEmu.Games.Common
             return result;
         }
 
+        public static BitList operator ^(BitList left, BitList right)
+        {
+            return Xor(left, right);
+        }
     }
 }

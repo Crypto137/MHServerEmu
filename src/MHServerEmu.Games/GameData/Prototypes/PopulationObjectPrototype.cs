@@ -399,7 +399,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override float GetAverageSize() => 1.0f;
 
-        private PrototypeId GetEncounterRef()
+        public PrototypeId GetEncounterRef()
         {
             if (EncounterResource == AssetId.Invalid)
             {

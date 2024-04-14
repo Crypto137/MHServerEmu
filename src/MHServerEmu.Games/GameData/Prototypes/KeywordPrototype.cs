@@ -3,7 +3,23 @@ using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    using KeywordsMask = BitList;
+    public class KeywordsMask : BitList
+    {
+        public static KeywordsMask operator &(KeywordsMask left, KeywordsMask right)
+        {
+            return And(left, right);
+        }
+
+        public static KeywordsMask operator |(KeywordsMask left, KeywordsMask right)
+        {
+            return Or(left, right);
+        }
+
+        public static KeywordsMask operator ^(KeywordsMask left, KeywordsMask right)
+        {
+            return Xor(left, right);
+        }
+    }
 
     public class KeywordPrototype : Prototype
     {

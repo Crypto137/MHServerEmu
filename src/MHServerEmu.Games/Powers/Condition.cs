@@ -153,5 +153,11 @@ namespace MHServerEmu.Games.Powers
 
             return sb.ToString();
         }
+
+        public bool IsANegativeStatusEffect()
+        {
+            // TODO for Crypto
+            throw new NotImplementedException();
+        }
     }
 }

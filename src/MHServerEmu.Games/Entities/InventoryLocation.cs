@@ -8,37 +8,44 @@ namespace MHServerEmu.Games.Entities
 {
     public class InventoryLocation
     {
-        public ulong ContainerEntityId { get; set; }
-        public PrototypeId InventoryPrototypeId { get; set; }
+        public ulong ContainerId { get; set; }          // invLocContainerEntityId
+        public PrototypeId InventoryRef { get; set; }   // invLocInventoryPrototypeId
         public uint Slot { get; set; }
 
         public InventoryLocation(CodedInputStream stream)
         {
-            ContainerEntityId = stream.ReadRawVarint64();
-            InventoryPrototypeId = stream.ReadPrototypeRef<InventoryPrototype>();
+            ContainerId = stream.ReadRawVarint64();
+            InventoryRef = stream.ReadPrototypeRef<InventoryPrototype>();
             Slot = stream.ReadRawVarint32();
         }
 
-        public InventoryLocation(ulong containerEntityId, PrototypeId inventoryPrototypeId, uint slot)
+        public InventoryLocation(ulong containerId, PrototypeId inventoryRef, uint slot)
         {
-            ContainerEntityId = containerEntityId;
-            InventoryPrototypeId = inventoryPrototypeId;
+            ContainerId = containerId;
+            InventoryRef = inventoryRef;
             Slot = slot;
+        }
+
+        public InventoryLocation()
+        {
+            ContainerId = 0;
+            InventoryRef = PrototypeId.Invalid;
+            Slot = 0xFFFFFFFF; // -1
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(ContainerEntityId);
-            stream.WritePrototypeRef<InventoryPrototype>(InventoryPrototypeId);
+            stream.WriteRawVarint64(ContainerId);
+            stream.WritePrototypeRef<InventoryPrototype>(InventoryRef);
             stream.WriteRawVarint64(Slot);
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ContainerEntityId: {ContainerEntityId}");
-            sb.AppendLine($"InventoryPrototypeId: {GameDatabase.GetPrototypeName(InventoryPrototypeId)}");
-            sb.AppendLine($"Slot: {Slot}");
+            sb.AppendLine($"{nameof(ContainerId)}: {ContainerId}");
+            sb.AppendLine($"{nameof(InventoryRef)}: {GameDatabase.GetPrototypeName(InventoryRef)}");
+            sb.AppendLine($"{nameof(Slot)}: {Slot}");
             return sb.ToString();
         }
     }

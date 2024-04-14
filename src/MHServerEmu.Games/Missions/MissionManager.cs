@@ -315,6 +315,49 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
+        public static Mission FindMissionForPlayer(Player player, PrototypeId missionRef)
+        {
+            MissionManager missionManager = FindMissionManagerForMission(player, player.GetRegion(), missionRef);
+            if (missionManager == null)
+            {
+                Console.WriteLine($"Couldn't find appropriate mission manager on player {player} for mission [{GameDatabase.GetPrototypeName(missionRef)}].");
+                return null;
+            }
+            return missionManager.FindMissionByDataRef(missionRef);
+        }
+
+        private static MissionManager FindMissionManagerForMission(Player player, Region region, PrototypeId missionRef)
+        {
+            return FindMissionManagerForMission(player, region, missionRef.As<MissionPrototype>());
+        }
+
+        private static MissionManager FindMissionManagerForMission(Player player, Region region, MissionPrototype missionProto)
+        {
+            if (player != null)
+            {
+                MissionManager playerMissionManager = player.MissionManager;
+                if (playerMissionManager != null && playerMissionManager.ShouldCreateMission(missionProto))
+                    return playerMissionManager;
+            }
+
+            if (region != null)
+            {
+                MissionManager regionMissionManager = region.MissionManager;
+                if (regionMissionManager != null && regionMissionManager.ShouldCreateMission(missionProto))
+                    return regionMissionManager;
+            }
+
+            return null;
+        }
+
+        private Mission FindMissionByDataRef(PrototypeId missionRef)
+        {
+            if (_missionDict.TryGetValue(missionRef, out var mission))
+                return mission;
+            else
+                return null;
+        }
+
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
         {
             MissionPrototypeId.CH00TrainingPathingController,
@@ -341,18 +384,12 @@ namespace MHServerEmu.Games.Missions
         // TODO replace this mission to MetaStates
         public static readonly MissionPrototypeId[] EventMissions = new MissionPrototypeId[]
         {
+            /*
             MissionPrototypeId.MoloidAttackAftermath,
             MissionPrototypeId.Moloid3AgainstLeaper,
             MissionPrototypeId.MoloidRescueCivilian,
             MissionPrototypeId.MoloidAmbushBreakIn,
-/*
-            MissionPrototypeId.MutantsRunningGroup1,
-            MissionPrototypeId.MutantsRunningGroup2,
-            MissionPrototypeId.MutantRunningSoloF5,
-
-*/          
-            MissionPrototypeId.SunTribeKingLizard,
-            MissionPrototypeId.SunTribeLeadingRaptors,
+            */
 
             MissionPrototypeId.NorwayFrostGolemsFaeAmbushV1,
             MissionPrototypeId.NorwayFrostGolemsFaeAmbushV2,

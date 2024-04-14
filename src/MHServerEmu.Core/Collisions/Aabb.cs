@@ -167,6 +167,15 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
+        public bool Intersects(Vector3 point)
+        {
+            if (Max.X < point.X || Min.X > point.X ||
+                Max.Y < point.Y || Min.Y > point.Y ||
+                Max.Z < point.Z || Min.Z > point.Z)
+                return false;
+            return true;
+        }
+
         public bool Intersects(Aabb bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||

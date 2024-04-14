@@ -232,5 +232,10 @@ namespace MHServerEmu.Games.Missions
 
             return success;
         }
+
+        public bool HasParticipant(Player player)
+        {
+            return Participants.Contains(player.Id);
+        }
     }
 }

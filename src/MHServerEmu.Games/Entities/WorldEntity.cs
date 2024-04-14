@@ -11,26 +11,70 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Generators.Population;
 
 namespace MHServerEmu.Games.Entities
 {
     public class WorldEntity : Entity
     {
+        public AlliancePrototype AllianceProto { get; private set; }
+
         public List<EntityTrackingContextMap> TrackingContextMap { get; set; }
-        public List<Condition> ConditionCollection { get; set; }
+        public ConditionCollection ConditionCollection { get; set; }
         public List<PowerCollectionRecord> PowerCollection { get; set; }
         public int UnkEvent { get; set; }
-        public RegionLocation Location { get; private set; } = new(); // TODO init;
-        public Cell Cell { get => Location.Cell; }
+        public RegionLocation RegionLocation { get; private set; } = new(); 
+        public Cell Cell { get => RegionLocation.Cell; }
+        public Area Area { get => RegionLocation.Area; }
+        public RegionLocationSafe ExitWorldRegionLocation { get; private set; } = new();
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
         public Bounds Bounds { get; set; } = new();
-        public Region Region { get => Location.Region; }
+        public Region Region { get => RegionLocation.Region; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
-        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId);
+        public bool ShouldSnapToFloorOnSpawn { get; private set; }
+        public EntityActionComponent EntityActionComponent { get; protected set; }
+        public SpawnSpec SpawnSpec { get; private set; }
+        public SpawnGroup SpawnGroup { get => SpawnSpec?.Group; }
 
+        // New
+        public WorldEntity(Game game): base(game) 
+        {
+            SpatialPartitionLocation = new(this);
+        }
+
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            var proto = WorldEntityPrototype;
+            ShouldSnapToFloorOnSpawn = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : proto.SnapToFloorOnSpawn;
+            OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
+            RegionLocation.Initialize(this);
+            SpawnSpec = settings.SpawnSpec;
+
+            // Old
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
+            Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
+
+            int health = EntityManager.GetRankHealth(proto);
+            if (health > 0)
+            {
+                Properties[PropertyEnum.Health] = health;
+                Properties[PropertyEnum.HealthMaxOther] = health;
+            }
+
+            if (proto.Bounds != null)
+                Bounds.InitializeFromPrototype(proto.Bounds);
+
+            TrackingContextMap = new();
+            ConditionCollection = new();
+            PowerCollection = new();
+            UnkEvent = 0;
+        }
+
+        // Old
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
@@ -135,21 +179,64 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
+        private void OnAllianceChanged(PrototypeId allianceRef)
+        {
+            if (allianceRef != PrototypeId.Invalid)
+            {
+                var allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
+                if (allianceProto != null)
+                    AllianceProto = allianceProto;
+            }
+            else
+            {
+                var worldEntityProto = WorldEntityPrototype;
+                if (worldEntityProto != null)
+                    AllianceProto = GameDatabase.GetPrototype<AlliancePrototype>(worldEntityProto.Alliance);
+            }
+        }
+
+        public PrototypeId GetAlliance()
+        {
+            if (AllianceProto == null) return PrototypeId.Invalid;
+
+            PrototypeId allianceRef = AllianceProto.DataRef;
+            if (IsControlledEntity && AllianceProto.WhileControlled != PrototypeId.Invalid)
+                allianceRef = AllianceProto.WhileControlled;
+            if (IsConfused && AllianceProto.WhileConfused != PrototypeId.Invalid)
+                allianceRef = AllianceProto.WhileConfused;
+
+            return allianceRef;
+        }
+
+        public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             var proto = WorldEntityPrototype;
-            Game = cell.Game; // TODO: Init Game to constructor
+            Game ??= region.Game; // Fix for old constructor
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
-            if (proto is HotspotPrototype) _flags |= EntityFlags.IsHotspot;
-            if (proto is AgentPrototype) cell.EnemySpawn();
-            Location.Region = cell.GetRegion();
-            Location.Cell = cell; // Set directly
-            Location.SetPosition(position);
-            Location.SetOrientation(orientation);
-            // TODO ChangeRegionPosition
-            if (proto.Bounds != null)
-                Bounds.InitializeFromPrototype(proto.Bounds);
+
+            RegionLocation.Region = region;
+            ChangeRegionPosition(position, orientation);
+            OnEnteredWorld(settings);
+        }
+
+        public virtual void OnEnteredWorld(EntitySettings settings)
+        {
+            // TODO CanInfluenceNavigationMesh
+        }
+
+        public void ChangeRegionPosition(Vector3 position, Orientation orientation)
+        {
+            RegionLocation.SetPosition(position);
+            RegionLocation.SetOrientation(orientation);
+            // Old
+            Properties[PropertyEnum.MapPosition] = position;
+            Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
+            Properties[PropertyEnum.MapAreaId] = RegionLocation.AreaId;
+            Properties[PropertyEnum.MapRegionId] = RegionLocation.RegionId;
+            Properties[PropertyEnum.MapCellId] = RegionLocation.CellId;
+            Properties[PropertyEnum.ContextAreaRef] = RegionLocation.Area.PrototypeDataRef;
+
             Bounds.Center = position;
             UpdateRegionBounds(); // Add to Quadtree
         }
@@ -163,7 +250,7 @@ namespace MHServerEmu.Games.Entities
                 Region.UpdateEntityInSpatialPartition(this);
         }
 
-        public bool IsInWorld() => Location.IsValid();
+        public bool IsInWorld() => RegionLocation.IsValid();
 
         public void ExitWorld()
         {
@@ -175,50 +262,14 @@ namespace MHServerEmu.Games.Entities
 
         public void ClearWorldLocation()
         {
-            if(Location.IsValid()) LastLocation = Location;
+            if(RegionLocation.IsValid()) LastLocation = RegionLocation;
             if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
-            Location = null;
+            RegionLocation = null;
         }
 
         internal void EmergencyRegionCleanup(Region region)
         {
             throw new NotImplementedException();
-        }
-
-        private bool AppendStartPower(PrototypeId startPowerRef)
-        {
-            if (startPowerRef == PrototypeId.Invalid) return false;
-            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-            Condition condition = new()
-            {
-                SerializationFlags = ConditionSerializationFlags.NoCreatorId
-                | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeId
-                | ConditionSerializationFlags.HasIndex
-                | ConditionSerializationFlags.HasAssetDataRef,
-                Id = 1,
-                CreatorPowerPrototypeId = startPowerRef
-            };             
-            ConditionCollection.Add(condition);
-            PowerCollectionRecord powerCollection = new()
-            {
-                Flags = PowerCollectionRecordFlags.PowerRefCountIsOne
-                | PowerCollectionRecordFlags.PowerRankIsZero
-                | PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel
-                | PowerCollectionRecordFlags.ItemLevelIsOne
-                | PowerCollectionRecordFlags.ItemVariationIsOne,
-                PowerPrototypeId = startPowerRef,
-                PowerRefCount = 1
-            };
-            PowerCollection.Add(powerCollection);
-            return true;
-        }
-
-        public bool AppendOnStartActions(PrototypeId targetRef)
-        {
-            if (GameDatabase.InteractionManager.GetStartAction(BaseData.PrototypeId, targetRef, out MissionActionEntityPerformPowerPrototype action))
-                return AppendStartPower(action.PowerPrototype);
-            return false;
         }
 
         public string PowerCollectionToString()
@@ -229,24 +280,37 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public bool AppendSelectorActions(EntitySelectorActionPrototype[] entitySelectorActions)
+        public Vector3 FloorToCenter(Vector3 position)
         {
-            foreach(var action in entitySelectorActions)
-            {
-                if (action.EventTypes.HasValue() && action.EventTypes.First() == EntitySelectorActionEventType.OnSimulated)
-                {
-                    if (action.AIOverrides.HasValue()) 
-                    {
-                        int index = Game.Random.Next(0, action.AIOverrides.Length);
-                        var actionAIOverrideRef = action.AIOverrides[index];
-                        if (actionAIOverrideRef == PrototypeId.Invalid) return false;
-                        var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
-                        if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
-                    }
-                    break;
-                }
-            }
-            return false;
+            Vector3 resultPosition = new(position);
+            if (Bounds.Geometry != GeometryType.None)
+                resultPosition.Z += Bounds.HalfHeight;
+            // TODO Locomotor.GetCurrentFlyingHeight
+            return resultPosition;
         }
+
+        public void RegisterActions(List<EntitySelectorActionPrototype> actions)
+        {
+            if (actions == null) return;
+            EntityActionComponent ??= new(this);
+            EntityActionComponent.Register(actions);
+        }
+
+        public virtual void AppendStartAction(PrototypeId actionsTarget) {}
+
+        public ScriptRoleKeyEnum GetScriptRoleKey()
+        {
+            if (SpawnSpec != null)
+                return SpawnSpec.RoleKey;
+            else
+                return (ScriptRoleKeyEnum)(uint)Properties[PropertyEnum.ScriptRoleKey];
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
+        }
+
+
     }
 }

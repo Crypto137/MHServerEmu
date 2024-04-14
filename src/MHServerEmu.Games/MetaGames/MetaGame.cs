@@ -17,6 +17,18 @@ namespace MHServerEmu.Games.MetaGames
         public static readonly Logger Logger = LogManager.CreateLogger();
         public ReplicatedVariable<string> Name { get; set; }
 
+        // new
+        public MetaGame(Game game) : base(game) { }
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
+            Name = new(0, "");
+            Region region = Game.RegionManager.GetRegion(settings.RegionId);
+            region.RegisterMetaGame(this);
+        }
+
+        // old 
         public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public MetaGame(EntityBaseData baseData) : base(baseData) { }

@@ -10,9 +10,13 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
@@ -21,6 +25,9 @@ namespace MHServerEmu.Games
 {
     public partial class Game
     {
+        [ThreadStatic]
+        internal static Game Current;
+
         public const string Version = "1.52.0.1700";
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -73,12 +80,14 @@ namespace MHServerEmu.Games
             // Start main game loop
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             gameThread.Start();
-
+            
             Logger.Info($"Game 0x{Id:X} created, initial replication id: {_currentRepId}");
         }
 
         public void Update()
         {
+            Current = this;
+
             while (true)
             {
                 _tickWatch.Restart();
@@ -262,9 +271,11 @@ namespace MHServerEmu.Games
 
             Vector3 entrancePosition = new(playerConnection.StartPositon);
             Orientation entranceOrientation = new(playerConnection.StartOrientation);
-            entrancePosition.Z += 42; // TODO project to floor
+            var player = playerConnection.Player;
+            var avatar = player.CurrentAvatar;
+            entrancePosition = avatar.FloorToCenter(entrancePosition);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)playerConnection.Player.CurrentAvatar.BaseData.EntityId, entrancePosition, entranceOrientation.Yaw, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, entranceOrientation.Yaw, 350f);
             messageList.Add(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build());
@@ -278,6 +289,9 @@ namespace MHServerEmu.Games
             // Dequeue loading screen
             messageList.Add(NetMessageDequeueLoadingScreen.DefaultInstance);
 
+            // Load KismetSeq for Region
+            messageList.AddRange(player.OnLoadAndPlayKismetSeq(playerConnection));
+
             return messageList;
         }
 
@@ -288,6 +302,48 @@ namespace MHServerEmu.Games
                 NetMessageBeginExitGame.DefaultInstance,
                 NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build()
             };
+        }
+
+        public Entity AllocateEntity(PrototypeId entityRef)
+        {
+            var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);
+
+            Entity entity;
+            if (proto is SpawnerPrototype)
+                entity = new Spawner(this);
+            else if (proto is TransitionPrototype)
+                entity = new Transition(this);
+            else if (proto is AvatarPrototype)
+                entity = new Avatar(this);
+            else if (proto is MissilePrototype)
+                entity = new Missile(this);
+            else if (proto is PropPrototype) // DestructiblePropPrototype
+                entity = new WorldEntity(this);
+            else if (proto is AgentPrototype) // AgentTeamUpPrototype OrbPrototype SmartPropPrototype
+                entity = new Agent(this);
+            else if (proto is ItemPrototype) // CharacterTokenPrototype BagItemPrototype CostumePrototype CraftingIngredientPrototype
+                                             // CostumeCorePrototype CraftingRecipePrototype ArmorPrototype ArtifactPrototype
+                                             // LegendaryPrototype MedalPrototype RelicPrototype TeamUpGearPrototype
+                                             // InventoryStashTokenPrototype EmoteTokenPrototype
+                entity = new Item(this);
+            else if (proto is KismetSequenceEntityPrototype)
+                entity = new KismetSequenceEntity(this);
+            else if (proto is HotspotPrototype)
+                entity = new Hotspot(this);
+            else if (proto is WorldEntityPrototype)
+                entity = new WorldEntity(this);
+            else if (proto is MissionMetaGamePrototype)
+                entity = new MissionMetaGame(this);
+            else if (proto is PvPPrototype)
+                entity = new PvP(this);
+            else if (proto is MetaGamePrototype) // MatchMetaGamePrototype
+                entity = new MetaGame(this);
+            else if (proto is PlayerPrototype)
+                entity = new Player(this);
+            else
+                entity = new Entity(this);
+
+            return entity;
         }
     }
 }

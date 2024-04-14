@@ -23,6 +23,23 @@ namespace MHServerEmu.Games.Entities
 
         public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
 
+        // New
+        public Transition(Game game) : base(game) { }
+
+        public override void Initialize(EntitySettings settings)
+        {
+            base.Initialize(settings);
+            // old
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
+            Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
+
+            TransitionName = "";
+            Destinations = new();
+            if (destination != null)
+                Destinations.Add(destination);
+        }
+
+        // Old
         public Transition(EntityBaseData baseData, ReplicatedPropertyCollection properties, Destination destination) : base(baseData)
         {
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
@@ -40,7 +57,7 @@ namespace MHServerEmu.Games.Entities
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Transition(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, List<Condition> conditionCollection,
+        public Transition(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, ConditionCollection conditionCollection,
             List<PowerCollectionRecord> powerCollection, int unkEvent, 
             string transitionName, List<Destination> destinations) : base(baseData)
         {

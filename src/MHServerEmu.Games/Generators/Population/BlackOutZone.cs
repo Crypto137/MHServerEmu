@@ -6,14 +6,14 @@ namespace MHServerEmu.Games.Generators.Population
 {
     public class BlackOutZone
     {
-        public int Id { get; private set; }
+        public ulong Id { get; private set; }
         public Sphere Sphere { get; private set; }
         public Aabb RegionBounds { get; private set; }
         public PrototypeId MissionRef { get; private set; }
 
         public BlackOutSpatialPartitionLocation SpatialPartitionLocation { get; internal set; }
 
-        public BlackOutZone(int id, Vector3 position, float radius, PrototypeId missionRef)
+        public BlackOutZone(ulong id, Vector3 position, float radius, PrototypeId missionRef)
         {
             Id = id;
             Sphere = new Sphere(position, radius);

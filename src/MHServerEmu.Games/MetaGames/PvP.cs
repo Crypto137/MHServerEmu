@@ -10,6 +10,10 @@ namespace MHServerEmu.Games.MetaGames
         public ReplicatedVariable<int> Team1 { get; set; }
         public ReplicatedVariable<int> Team2 { get; set; }
 
+        // new
+        public PvP(Game game) : base(game) { }
+
+        // old
         public PvP(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public PvP(EntityBaseData baseData) : base(baseData) { }

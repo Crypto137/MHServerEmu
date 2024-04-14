@@ -38,6 +38,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int LevelOffset { get; protected set; }
         public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
+
+        private KeywordsMask _keywordsMask;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // TODO GetEnumValueFromBlueprint
+
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
     }
 
     public class AreaTransitionPrototype : Prototype

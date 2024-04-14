@@ -161,6 +161,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var costume = GameDatabase.GetPrototype<CostumePrototype>(costumeId);
             return costume != null && GameDatabase.DesignStateOk(costume.DesignState);
         }
+
+        public bool IsMemberOfSuperteam(PrototypeId superteamProtoRef)
+        {
+            if (superteamProtoRef == PrototypeId.Invalid) return false;
+            if (SuperteamMemberships != null)
+                return SuperteamMemberships.Contains(superteamProtoRef);
+            return false;
+        }
+
     }
 
     public class ItemAssignmentPrototype : Prototype

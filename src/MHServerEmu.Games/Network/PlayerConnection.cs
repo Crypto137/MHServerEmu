@@ -206,6 +206,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break;
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
+                case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnNetMessagePlayKismetSeqDone(message); break;
 
                 // Power Messages
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -243,6 +244,14 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnNetMessagePlayKismetSeqDone(MailboxMessage message)
+        {
+            var playKismetSeqDone = message.As<NetMessagePlayKismetSeqDone>();
+            if (playKismetSeqDone == null) return Logger.WarnReturn(false, $"OnNetMessagePlayKismetSeqDone(): Failed to retrieve message");
+            Player.OnPlayKismetSeqDone(this, (PrototypeId)playKismetSeqDone.KismetSeqPrototypeId);
+            return true;
         }
 
         private bool OnUpdateAvatarState(MailboxMessage message)
@@ -284,7 +293,10 @@ namespace MHServerEmu.Games.Network
             {
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
+                {
                     Game.FinishLoading(this);
+
+                }
                 else
                 {
                     // set timer 5 seconds for wait client answer
@@ -384,8 +396,8 @@ namespace MHServerEmu.Games.Network
 
                     var teleportEntity = target.TransitionPrototype;
                     if (teleportEntity == null) return true;
-                    Vector3 targetPos = new(target.Location.GetPosition());
-                    Orientation targetRot = target.Location.GetOrientation();
+                    Vector3 targetPos = new(target.RegionLocation.GetPosition());
+                    Orientation targetRot = target.RegionLocation.GetOrientation();
 
                     teleportEntity.CalcSpawnOffset(targetRot, targetPos);
 

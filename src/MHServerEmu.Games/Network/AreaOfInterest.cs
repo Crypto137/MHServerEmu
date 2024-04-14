@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Network
             // Update Entity
             foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, new()))
             {
-                if (_loadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
+                if (_loadedCells.TryGetValue(worldEntity.RegionLocation.Cell.Id, out var status))
                     if (status.Loaded == false) continue;
 
                 bool interest = GetEntityInterest(worldEntity);
@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Network
 
         public bool CheckTargeCell(Transition target)
         {
-            if (_loadedCells.TryGetValue(target.Location.Cell.Id, out var cell))
+            if (_loadedCells.TryGetValue(target.RegionLocation.Cell.Id, out var cell))
                 return cell.Loaded == false;
             return true;
         }

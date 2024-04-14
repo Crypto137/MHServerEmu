@@ -1,17 +1,33 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
+    public class EntitySettings
+    {
+        public ulong Id;
+        public PrototypeId EntityRef;
+        public ulong RegionId;
+        public Vector3 Position;
+        public Orientation Orientation;
+        public bool OverrideSnapToFloor;
+        public bool OverrideSnapToFloorValue;
+        public PropertyCollection Properties;
+        public Cell Cell;
+        public bool EnterGameWorld;
+        public List<EntitySelectorActionPrototype> Actions;
+        public PrototypeId ActionsTarget;
+        public SpawnSpec SpawnSpec;
+    }
+
     public class EntityManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -28,50 +44,44 @@ namespace MHServerEmu.Games.Entities
             _game = game;
         }
 
-        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, PropertyCollection collection, Vector3 position, Orientation orientation,
-            int health, bool requiresEnterGameWorld, bool OverrideSnapToFloor = false)
+        public Entity CreateEntity(EntitySettings settings)
         {
-            if (cell == null) return default;
+            Entity entity = _game.AllocateEntity(settings.EntityRef);
 
-            EntityBaseData baseData = (requiresEnterGameWorld == false)
-                ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
-                : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
+            if (settings.Id == 0)
+                settings.Id = GetNextEntityId();
+            // TODO  SetStatus
 
-            ulong regionId = cell.GetRegion().Id;
-            int healthMaxOther = health;
-            int mapAreaId = (int)cell.Area.Id;
-            int mapCellId = (int)cell.Id;
-            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
+            _entityDict.Add(settings.Id, entity);
 
-            ReplicatedPropertyCollection properties = new(_game.CurrentRepId);
-            if (collection != null) properties.FlattenCopyFrom(collection, false);
-            properties[PropertyEnum.VariationSeed] = _game.Random.Next(1, 10000);
-            properties[PropertyEnum.MapPosition] = position;
-            properties[PropertyEnum.MapAreaId] = mapAreaId;
-            properties[PropertyEnum.MapRegionId] = regionId;
-            properties[PropertyEnum.MapCellId] = mapCellId;
-            properties[PropertyEnum.ContextAreaRef] = contextAreaRef;
+            entity.PreInitialize(settings);
+            entity.Initialize(settings);
+            FinalizeEntity(entity, settings);
 
-            if (health > 0) {
-                properties[PropertyEnum.Health] = health;
-                properties[PropertyEnum.HealthMaxOther] = healthMaxOther;
+            return entity;
+        }
+
+        private void FinalizeEntity(Entity entity, EntitySettings settings)
+        {
+            entity.OnPostInit(settings);
+
+            if (entity is WorldEntity worldEntity)
+            {
+                worldEntity.RegisterActions(settings.Actions);
+                // custom StartAction
+                worldEntity.AppendStartAction(settings.ActionsTarget);
+                if (settings.RegionId != 0)
+                {
+                    Region region = _game.RegionManager.GetRegion(settings.RegionId);
+                    var position = settings.Position;
+                    if (worldEntity.ShouldSnapToFloorOnSpawn)
+                    {
+                        position = RegionLocation.ProjectToFloor(region, position);
+                        position = worldEntity.FloorToCenter(position);
+                    }
+                    worldEntity.EnterWorld(region, position, settings.Orientation, settings);
+                }
             }
-            /*
-            int combatLevel = characterLevel;
-            worldEntity.Properties[PropertyEnum.CharacterLevel] = characterLevel;
-            worldEntity.Properties[PropertyEnum.CombatLevel] = combatLevel;*/
-            var proto = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
-            WorldEntity worldEntity;
-            if (proto is SpawnerPrototype)
-                worldEntity = new Spawner(baseData, AOINetworkPolicyValues.AOIChannelProximity, properties);
-            else if (proto is TransitionPrototype transitionProto)
-                worldEntity = new Transition(baseData, properties, Destination.FindDestination(cell, transitionProto));
-            else
-                worldEntity = new WorldEntity(baseData, AOINetworkPolicyValues.AOIChannelDiscovery, properties);
-            worldEntity.RegionId = regionId;
-            worldEntity.EnterWorld(cell, position, orientation);
-            _entityDict.Add(baseData.EntityId, worldEntity);
-            return worldEntity;
         }
 
         public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Orientation orientation)
@@ -81,19 +91,6 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
-        }
-
-        public MetaGame CreateMetaGame(PrototypeId metaGameRef, ulong regionId)
-        {
-            EntityBaseData baseData = new (GetNextEntityId(), metaGameRef, null, null);
-            ReplicatedVariable<string> metaname = new(0, "");
-            MetaGame metaGame = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId), metaname)
-            {
-                RegionId = regionId,
-                Game = _game // TODO: to constructor
-            };
-            _entityDict.Add(baseData.EntityId, metaGame);
-            return metaGame;
         }
 
         public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
@@ -143,24 +140,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
-        public Entity GetEntityByPrototypeIdFromRegion(PrototypeId prototype, ulong regionId)
-        {
-            return _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype && entity.RegionId == regionId);
-        }
-        public Entity FindEntityByDestination(Destination destination, ulong regionId)
-        {
-            foreach (KeyValuePair<ulong, Entity> entity in _entityDict)
-            {
-                if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
-                {
-                    if (destination.Area == 0) return entity.Value;
-                    PrototypeId area = entity.Value.Properties[PropertyEnum.ContextAreaRef];
-                    if (area == destination.Area)
-                        return entity.Value;
-                }
-            }
-            return null;
-        }
+
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
             PrototypeId areaRef = destination.Area;
@@ -170,8 +150,8 @@ namespace MHServerEmu.Games.Entities
                 if (entity.RegionId == regionId)
                 {
                     if (entity is not Transition transition) continue;
-                    if (areaRef != 0 && areaRef != (PrototypeId)transition.Location.Area.PrototypeId) continue;
-                    if (cellRef != 0 && cellRef != transition.Location.Cell.PrototypeId) continue;
+                    if (areaRef != 0 && areaRef != (PrototypeId)transition.RegionLocation.Area.PrototypeId) continue;
+                    if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeId) continue;
                     if (transition.BaseData.PrototypeId == entityRef)
                         return transition;
                 }
@@ -213,11 +193,9 @@ namespace MHServerEmu.Games.Entities
                     yield return entity;
         }
 
-        // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
-
         #region HardCodeRank
 
-        public static int GetRankHealth(WorldEntityPrototype entity)
+        public static int GetRankHealth(EntityPrototype entity)
         {
             if (entity is PropPrototype)
             {
@@ -227,19 +205,20 @@ namespace MHServerEmu.Games.Entities
             {
                 return 0;
             }
-            else
+            else if (entity is WorldEntityPrototype worldEntity)
             {
-                switch ((RankPrototypeId)entity.Rank)
+                return (RankPrototypeId)worldEntity.Rank switch
                 {
-                    case RankPrototypeId.Popcorn: return 600;
-                    case RankPrototypeId.Champion: return 800;
-                    case RankPrototypeId.Elite: return 1000;
-                    case RankPrototypeId.MiniBoss: return 1500;
-                    case RankPrototypeId.Boss: return 2000;
-                    default: return 1000;
-                }
-
+                    RankPrototypeId.Popcorn => 600,
+                    RankPrototypeId.Champion => 800,
+                    RankPrototypeId.Elite => 1000,
+                    RankPrototypeId.MiniBoss => 1500,
+                    RankPrototypeId.Boss => 2000,
+                    _ => 1000,
+                };
             }
+            return 0;
+
         }
 
         public enum RankPrototypeId : ulong
@@ -287,15 +266,6 @@ namespace MHServerEmu.Games.Entities
                     };*/
 
                     break;
-
-                    /*
-                    case RegionPrototypeId.NPEAvengersTowerHUBRegion:
-                        cell = region.StartArea.CellList.First();
-
-                        _entityManager.CreateWorldEntity(cell, GameDatabase.GetPrototypeRefByName("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
-                            new(736f, -352f, 177f), new(-2.15625f, 0f, 0f), 608, false);
-
-                        break;     */
 
             }
 

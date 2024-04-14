@@ -85,6 +85,10 @@ namespace MHServerEmu.Games.Entities
         public Avatar CurrentAvatar { get; private set; }
         public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
 
+        // new
+        public Player(Game game): base(game) { }
+
+        // old
         public Player(EntityBaseData baseData) : base(baseData)
         {
             // Base Data
@@ -662,12 +666,12 @@ namespace MHServerEmu.Games.Entities
                 if (avatar.BaseData.PrototypeId == prototypeId)
                 {
                     CurrentAvatar = avatar;
-                    avatar.BaseData.InvLoc.InventoryPrototypeId = (PrototypeId)9555311166682372646;
+                    avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)9555311166682372646;
                     avatar.BaseData.InvLoc.Slot = 0;
                     continue;
                 }
 
-                avatar.BaseData.InvLoc.InventoryPrototypeId = (PrototypeId)5235960671767829134;
+                avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)5235960671767829134;
                 avatar.BaseData.InvLoc.Slot = librarySlot++;
             }
         }
@@ -727,6 +731,55 @@ namespace MHServerEmu.Games.Entities
                 if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
                     StashTabInsert(stashRef, 0);
             }
+        }
+
+        public List<IMessage> OnLoadAndPlayKismetSeq(PlayerConnection playerConnection)
+        {
+            
+            List<IMessage> messageList = new();
+            
+            if (playerConnection.RegionDataRef != PrototypeId.Invalid)
+            {
+                KismetSeqPrototypeId kismetSeqRef = 0;
+                RegionPrototypeId regionPrototypeId = (RegionPrototypeId)playerConnection.RegionDataRef;
+                if (regionPrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
+                if (regionPrototypeId == RegionPrototypeId.TimesSquareTutorialRegion) kismetSeqRef = KismetSeqPrototypeId.Times01CaptainAmericaLanding;
+                if (kismetSeqRef != 0)
+                    messageList.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+            }
+            return messageList;
+        }
+
+        public Region GetRegion()
+        {
+            // TODO check work
+            if (Game == null) return null;
+            var manager = Game.RegionManager;
+            if (manager == null) return null;
+            return manager.GetRegion(RegionId);
+        }
+
+        public override ulong GetPartyId()
+        {
+            return PartyId.Value;
+        }
+
+        public void OnPlayKismetSeqDone(PlayerConnection playerConnection, PrototypeId kismetSeqPrototypeId)
+        {
+            List<IMessage> messages = new();
+            if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
+            
+            if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
+            {
+                // TODO trigger by hotspot
+                KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
+                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+                kismetSeqRef = KismetSeqPrototypeId.RaftNPEJuggernautEscape;
+                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+            }
+            if (messages.Count > 0)
+                foreach( var message in messages)
+                    playerConnection.PostMessage(message);
         }
     }
 }

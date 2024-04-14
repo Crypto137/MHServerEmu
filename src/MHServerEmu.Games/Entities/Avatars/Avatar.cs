@@ -27,8 +27,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ReplicatedVariable<string> PlayerName { get; set; }
         public ulong OwnerPlayerDbId { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
+        public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
+        public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
+        // new
+        public Avatar(Game game) : base(game) { }
 
-        public Avatar(ulong entityId, ulong replicationId) : base(new())
+        // old
+        public Avatar(ulong entityId, ulong replicationId) : base(new EntityBaseData())
         {
             // Entity
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
@@ -53,7 +58,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Avatar(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, List<Condition> conditionCollection, List<PowerCollectionRecord> powerCollection, int unkEvent,
+        public Avatar(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, ConditionCollection conditionCollection, List<PowerCollectionRecord> powerCollection, int unkEvent,
             ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
