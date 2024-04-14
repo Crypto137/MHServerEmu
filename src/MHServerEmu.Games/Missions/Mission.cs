@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Missions
         Failed = 5,
     }
 
-    public class Mission
+    public class Mission : ISerialize
     {
         // Relevant protobuf: NetMessageMissionUpdate
 
@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Missions
         private TimeSpan _timeExpireCurrentState;
         private PrototypeId _prototypeDataRef;
         private int _unkRandom;     // random integer rolled for each mission
-        private SortedDictionary<uint, MissionObjective> _objectiveDict = new();
+        private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
         private SortedSet<ulong> _participants = new();
         private bool _isSuspended;
 
@@ -80,6 +80,27 @@ namespace MHServerEmu.Games.Missions
             _objectiveDict.Add(0, new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0));
         }
 
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            int state = (int)_state;
+            success &= Serializer.Transfer(archive, ref state);
+            _state = (MissionState)state;
+
+            success &= Serializer.Transfer(archive, ref _timeExpireCurrentState);
+            success &= Serializer.Transfer(archive, ref _prototypeDataRef);
+            // old versions contain an ItemSpec map here
+            success &= Serializer.Transfer(archive, ref _unkRandom);
+
+            // Objectives, participants, and suspension status are serialized only for replication
+            success &= SerializeObjectives(archive);
+            success &= Serializer.Transfer(archive, ref _participants);
+            success &= Serializer.Transfer(archive, ref _isSuspended);
+
+            return success;
+        }
+
         public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             _state = (MissionState)stream.ReadRawInt32();
@@ -91,7 +112,7 @@ namespace MHServerEmu.Games.Missions
             ulong numObjectives = stream.ReadRawVarint64();
             for (ulong i = 0; i < numObjectives; i++)
             {
-                uint index = stream.ReadRawByte();
+                byte index = stream.ReadRawByte();
                 MissionObjective objective = new(this, index);
                 objective.Decode(stream);
                 _objectiveDict.Add(index, objective);
@@ -152,7 +173,7 @@ namespace MHServerEmu.Games.Missions
             _state = newState;
         }
 
-        public MissionObjective GetObjectiveByObjectiveIndex(uint objectiveIndex)
+        public MissionObjective GetObjectiveByObjectiveIndex(byte objectiveIndex)
         {
             if (_objectiveDict.TryGetValue(objectiveIndex, out MissionObjective objective) == false)
                 return Logger.WarnReturn<MissionObjective>(null, $"GetObjectiveByObjectiveIndex(): Objective index {objectiveIndex} is not valid");
@@ -160,7 +181,12 @@ namespace MHServerEmu.Games.Missions
             return objective;
         }
 
-        public MissionObjective InsertObjective(uint objectiveIndex, MissionObjective objective)
+        public MissionObjective CreateObjective(byte objectiveIndex)
+        {
+            return new(this, objectiveIndex);
+        }
+
+        public MissionObjective InsertObjective(byte objectiveIndex, MissionObjective objective)
         {
             if (_objectiveDict.TryAdd(objectiveIndex, objective) == false)
                 return Logger.WarnReturn<MissionObjective>(null, $"InsertObjective(): Failed to insert objective with index {objectiveIndex}");
@@ -171,6 +197,40 @@ namespace MHServerEmu.Games.Missions
         public bool AddParticipant(Player player)
         {
             return _participants.Add(player.Id);
+        }
+
+        private bool SerializeObjectives(Archive archive)
+        {
+            bool success = true;
+
+            ulong numObjectives = (ulong)_objectiveDict.Count;
+            success &= Serializer.Transfer(archive, ref numObjectives);
+
+            if (archive.IsPacking)
+            {
+                foreach (var kvp in _objectiveDict)
+                {
+                    byte index = kvp.Key;
+                    ISerialize objective = kvp.Value;
+                    success &= Serializer.Transfer(archive, ref index);
+                    success &= Serializer.Transfer(archive, ref objective);
+                }
+            }
+            else
+            {
+                for (uint i = 0; i < numObjectives; i++)
+                {
+                    byte index = 0;
+                    success &= Serializer.Transfer(archive, ref index);
+
+                    ISerialize objective = CreateObjective(index);
+                    success &= Serializer.Transfer(archive, ref objective);
+
+                    InsertObjective(index, (MissionObjective)objective);
+                }
+            }
+
+            return success;
         }
     }
 }

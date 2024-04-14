@@ -41,6 +41,7 @@ namespace MHServerEmu.Games.Common
         // Basic types supported by archives
 
         public static bool Transfer(Archive archive, ref bool ioData) => archive.Transfer(ref ioData);
+        public static bool Transfer(Archive archive, ref byte ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref ushort ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref int ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref uint ioData) => archive.Transfer(ref ioData);
@@ -715,6 +716,40 @@ namespace MHServerEmu.Games.Common
         }
 
         #endregion
+
+        // Sets
+        public static bool Transfer(Archive archive, ref SortedSet<ulong> ioData)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                ulong numElements = (ulong)ioData.Count;
+                success &= Transfer(archive, ref numElements);
+                foreach (ulong data in ioData)
+                {
+                    ulong value = data;
+                    success &= Transfer(archive, ref value);
+                }
+            }
+            else
+            {
+                ioData.Clear();
+
+                ulong numElements = 0;
+                success &= Transfer(archive, ref numElements);
+
+                for (ulong i = 0; i < numElements; i++)
+                {
+                    ulong value = 0;
+                    success &= Transfer(archive, ref value);
+                    ioData.Add(value);
+                }
+            }
+
+            return success;
+        }
+
 
         // Class-specific
         public static bool Transfer(Archive archive, ref SortedSet<AvailableBadges> ioData)

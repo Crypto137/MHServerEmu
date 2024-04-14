@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Missions
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private uint _prototypeIndex;
+        private byte _prototypeIndex;
 
         private MissionObjectiveState _objectiveState;
         private TimeSpan _objectiveStateExpireTime;
@@ -39,18 +39,18 @@ namespace MHServerEmu.Games.Missions
         public Mission Mission { get; }
         public Game Game { get => Mission.Game; }
 
-        public uint PrototypeIndex { get => _prototypeIndex; }
+        public byte PrototypeIndex { get => _prototypeIndex; }
         public MissionObjectiveState State { get => _objectiveState; }
         public TimeSpan TimeExpire { get => _objectiveStateExpireTime; }
         public TimeSpan TimeRemainingForObjective { get => _objectiveStateExpireTime - Clock.GameTime; }
 
-        public MissionObjective(Mission mission, uint prototypeIndex)
+        public MissionObjective(Mission mission, byte prototypeIndex)
         {
             Mission = mission;
             _prototypeIndex = prototypeIndex;
         }
 
-        public MissionObjective(uint prototypeIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
+        public MissionObjective(byte prototypeIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
             IEnumerable<InteractionTag> interactedEntities, ushort currentCount, ushort requiredCount, ushort failCurrentCount, 
             ushort failRequiredCount)
         {
