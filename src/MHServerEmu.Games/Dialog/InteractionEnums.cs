@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Dialog
 {
@@ -181,5 +183,62 @@ namespace MHServerEmu.Games.Dialog
             if(spawnedByMission.HasValue())
                 foreach (var mission in spawnedByMission) _missionRefs.Add(mission);
         }
+
+        public bool EvaluateEntity(WorldEntity entity)
+        {
+            if (entity == null) return false;
+
+            if (_regionRefs.Any())
+            {
+                Region region = entity.Region;
+                if (region == null)
+                {
+                    RegionLocation ownerLocation = entity.GetOwnerLocation();
+                    if (ownerLocation != null)
+                        region = ownerLocation.Region;
+                    else
+                        region = entity.ExitWorldRegionLocation.GetRegion();
+                }
+
+                if (region == null) return false;
+
+                bool found = false;
+                foreach (var regionRef in _regionRefs)
+                    if (RegionPrototype.Equivalent(regionRef.As<RegionPrototype>(), region.RegionPrototype))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                if (found == false) return false;
+            }
+
+            if (_encounterRefs.Any())
+            {
+                var ecounterRef = entity.EncounterResourcePrototype;
+                if (ecounterRef == PrototypeId.Invalid || _encounterRefs.Contains(ecounterRef) == false) return false;
+            }
+
+            if (_missionRefs.Any())
+            {
+                PrototypeId missionRef = entity.MissionPrototype;
+                if (missionRef == PrototypeId.Invalid || _missionRefs.Contains(missionRef) == false) return false;
+            }
+
+            if (_clusterRefs.Any())
+            {
+                PrototypeId clusterRef = entity.ClusterPrototype;
+                if (clusterRef == PrototypeId.Invalid || _clusterRefs.Contains(clusterRef) == false) return false;
+            }
+
+            if (_entityFilters.Any())
+            {
+                foreach (var filter in _entityFilters)
+                    if (filter.Evaluate(entity, new (FilterContextMissionRef)) == false) return false;
+            }
+
+            return true;
+        }
+
     }
 }
