@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Dialog
 {
@@ -46,6 +48,16 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags |= InteractionOptimizationFlags.Hint;
             EntityTrackingFlags |= EntityTrackingFlag.HUD;
         }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.TargetEntity != null && Proto.TargetEntity.Evaluate(entity, new(MissionProto.DataRef))) 
+            {
+                map.Insert(MissionProto.DataRef, EntityTrackingFlag.HUD);
+                return EntityTrackingFlag.HUD;                 
+            }
+            return EntityTrackingFlag.None;
+        }
     }
 
     public class BaseMissionConditionOption : BaseMissionOption
@@ -56,6 +68,20 @@ namespace MHServerEmu.Games.Dialog
         {
             EntityTrackingFlags |= EntityTrackingFlag.MissionCondition;
         }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.NoTrackingOptimization)
+                return EntityTrackingFlag.None;
+
+            if (EntityFilterWrapper.EvaluateEntity(entity))
+            {
+                map.Insert(MissionProto.DataRef, EntityTrackingFlags);
+                return EntityTrackingFlags;
+            }
+            return EntityTrackingFlag.None;
+        }
+
     }
 
     public class MissionConditionMissionCompleteOption : BaseMissionConditionOption
@@ -87,6 +113,31 @@ namespace MHServerEmu.Games.Dialog
         {
             return _missionRefs;
         }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            EntityTrackingFlag trackingFlag = EntityTrackingFlag.None;
+
+            if (checkList.Contains(this))
+                return trackingFlag;
+            else
+                checkList.Add(this);
+
+            var manager = GameDatabase.InteractionManager;
+            var completeMissions = GetCompleteMissionRefs();
+            foreach (var completeMissionRef in completeMissions)
+            {
+                var missionData = manager.GetMissionData(completeMissionRef);
+                if (missionData != null)
+                    foreach (var option in missionData.Options)
+                        trackingFlag |= option.InterestedInEntity(map, entity, checkList);
+            }
+
+            if (trackingFlag != EntityTrackingFlag.None)
+                map.Insert(MissionProto.DataRef, trackingFlag);
+
+            return trackingFlag;
+        }
     }
 
     public class MissionConditionRegionOption : BaseMissionConditionOption
@@ -94,6 +145,21 @@ namespace MHServerEmu.Games.Dialog
         public MissionConditionRegionOption()
         {
             EntityTrackingFlags |= EntityTrackingFlag.TransitionRegion;
+        }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (entity is Transition transition && InterestRegions.Any())
+            {
+                List<Destination> destinations = transition.Destinations;
+                foreach (var destination in destinations)
+                    if (destination.Region != PrototypeId.Invalid && InterestRegions.Contains(destination.Region))
+                    {
+                        map.Insert(MissionProto.DataRef, EntityTrackingFlags);
+                        return EntityTrackingFlags;
+                    }
+            }
+            return EntityTrackingFlag.None;
         }
     }
 
@@ -105,6 +171,7 @@ namespace MHServerEmu.Games.Dialog
             EntityTrackingFlags |= EntityTrackingFlag.Hotspot;
         }
     }
+
     public class MissionConditionEntityInteractOption : BaseMissionConditionOption
     {
 
@@ -118,11 +185,31 @@ namespace MHServerEmu.Games.Dialog
         {
             OptimizationFlags |= InteractionOptimizationFlags.Visibility;
         }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new(MissionProto.DataRef)))
+            {
+                map.Insert(MissionProto.DataRef, EntityTrackingFlag.Appearance);
+                return EntityTrackingFlag.Appearance;
+            }
+            return EntityTrackingFlag.None;
+        }
     }
 
     public class MissionDialogOption : BaseMissionOption
     {
         public MissionDialogTextPrototype Proto { get; internal set; }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new(MissionProto.DataRef)))
+            {
+                map.Insert(MissionProto.DataRef, EntityTrackingFlag.MissionDialog);
+                return EntityTrackingFlag.MissionDialog;
+            }
+            return EntityTrackingFlag.None;
+        }
     }
 
     public class MissionConnectionTargetEnableOption : BaseMissionOption
@@ -132,6 +219,25 @@ namespace MHServerEmu.Games.Dialog
         public MissionConnectionTargetEnableOption()
         {
             OptimizationFlags |= InteractionOptimizationFlags.ConnectionTargetEnable;
+        }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.ConnectionTarget != PrototypeId.Invalid)
+            {
+                if (entity is Transition transition)
+                {
+                    var targetRef = Proto.ConnectionTarget;
+                    List<Destination> destinations = transition.Destinations;
+                    foreach (var destination in destinations)
+                        if (destination.Target == targetRef)
+                        {
+                            map.Insert(targetRef, EntityTrackingFlag.Appearance);
+                            return EntityTrackingFlag.Appearance;
+                        }
+                }
+            }
+            return EntityTrackingFlag.None;
         }
     }
 
@@ -143,6 +249,16 @@ namespace MHServerEmu.Games.Dialog
         {
             OptimizationFlags |= InteractionOptimizationFlags.Appearance;
         }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new(MissionProto.DataRef)))
+            {
+                map.Insert(MissionProto.DataRef, EntityTrackingFlag.Appearance);
+                return EntityTrackingFlag.Appearance;
+            }
+            return EntityTrackingFlag.None;
+        }
     }
 
     public class MissionActionEntityTargetOption: BaseMissionOption
@@ -152,6 +268,16 @@ namespace MHServerEmu.Games.Dialog
         public MissionActionEntityTargetOption()
         {
             OptimizationFlags |= InteractionOptimizationFlags.ActionEntityTarget;
+        }
+
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new (MissionProto.DataRef)))
+            {
+                map.Insert(MissionProto.DataRef, EntityTrackingFlag.MissionAction);
+                return EntityTrackingFlag.MissionAction;
+            }
+            return EntityTrackingFlag.None;
         }
     }
 }

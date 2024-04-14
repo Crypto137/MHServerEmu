@@ -1,4 +1,6 @@
-﻿
+﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+
 namespace MHServerEmu.Games.Dialog
 {
     public class InteractionOption : IComparable<InteractionOption>
@@ -23,6 +25,12 @@ namespace MHServerEmu.Games.Dialog
         public int CompareTo(InteractionOption other)
         {
             return Priority.CompareTo(other.Priority);
+        }
+
+        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        {
+            checkList.Add(this);
+            return EntityTrackingFlag.None;
         }
     }
 }
