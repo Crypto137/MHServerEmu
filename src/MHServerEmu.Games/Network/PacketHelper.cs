@@ -14,6 +14,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Network
 {
@@ -251,7 +252,15 @@ namespace MHServerEmu.Games.Network
                             case NetMessageRegionChange regionChange:
                                 writer.WriteLine(protobufMessage);
                                 if (regionChange.ArchiveData.Length > 0)
-                                    writer.WriteLine($"ArchiveDataHex: {new RegionArchive(regionChange.ArchiveData)}");
+                                {
+                                    using (Archive archive = new(ArchiveSerializeType.Replication, regionChange.ArchiveData.ToByteArray()))
+                                    {
+                                        RegionArchive regionArchive = new();
+                                        regionArchive.Serialize(archive);
+                                        writer.WriteLine($"ArchiveData: {regionArchive}");
+                                    }
+                                }
+                                    
                                 break;
 
                             case NetMessageEntityEnterGameWorld entityEnterGameWorld:
