@@ -733,15 +733,17 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public List<IMessage> FindAndPlayKismetSeq(Region region)
+        public List<IMessage> OnLoadAndPlayKismetSeq(PlayerConnection playerConnection)
         {
+            
             List<IMessage> messageList = new();
-            if (region != null)
+            
+            if (playerConnection.RegionDataRef != PrototypeId.Invalid)
             {
                 KismetSeqPrototypeId kismetSeqRef = 0;
-
-                if (region.PrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
-
+                RegionPrototypeId regionPrototypeId = (RegionPrototypeId)playerConnection.RegionDataRef;
+                if (regionPrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
+                if (regionPrototypeId == RegionPrototypeId.TimesSquareTutorialRegion) kismetSeqRef = KismetSeqPrototypeId.Times01CaptainAmericaLanding;
                 if (kismetSeqRef != 0)
                     messageList.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
             }
@@ -760,6 +762,24 @@ namespace MHServerEmu.Games.Entities
         public override ulong GetPartyId()
         {
             return PartyId.Value;
+        }
+
+        public void OnPlayKismetSeqDone(PlayerConnection playerConnection, PrototypeId kismetSeqPrototypeId)
+        {
+            List<IMessage> messages = new();
+            if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
+            
+            if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
+            {
+                // TODO trigger by hotspot
+                KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
+                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+                kismetSeqRef = KismetSeqPrototypeId.RaftNPEJuggernautEscape;
+                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+            }
+            if (messages.Count > 0)
+                foreach( var message in messages)
+                    playerConnection.PostMessage(message);
         }
     }
 }

@@ -206,6 +206,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break;
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
+                case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnNetMessagePlayKismetSeqDone(message); break;
 
                 // Power Messages
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -243,6 +244,14 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnNetMessagePlayKismetSeqDone(MailboxMessage message)
+        {
+            var playKismetSeqDone = message.As<NetMessagePlayKismetSeqDone>();
+            if (playKismetSeqDone == null) return Logger.WarnReturn(false, $"OnNetMessagePlayKismetSeqDone(): Failed to retrieve message");
+            Player.OnPlayKismetSeqDone(this, (PrototypeId)playKismetSeqDone.KismetSeqPrototypeId);
+            return true;
         }
 
         private bool OnUpdateAvatarState(MailboxMessage message)

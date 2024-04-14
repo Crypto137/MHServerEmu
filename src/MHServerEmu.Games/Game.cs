@@ -290,7 +290,7 @@ namespace MHServerEmu.Games
             messageList.Add(NetMessageDequeueLoadingScreen.DefaultInstance);
 
             // Load KismetSeq for Region
-            messageList.AddRange(player.FindAndPlayKismetSeq(playerConnection.AOI.Region));
+            messageList.AddRange(player.OnLoadAndPlayKismetSeq(playerConnection));
 
             return messageList;
         }

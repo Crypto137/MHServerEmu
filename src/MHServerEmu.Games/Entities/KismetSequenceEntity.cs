@@ -27,5 +27,7 @@ namespace MHServerEmu.Games.Entities
         RaftTutorialCellBTurnOffAlarm = 15989927550533966647,
         RaftVenomTransformMoment = 4814459009646270785,
         SEQMonitorsOnSwitch01 = 10049226102883358615,
+
+        Times01CaptainAmericaLanding = 4747023203178650586,
     }
 }
