@@ -136,8 +136,8 @@ namespace MHServerEmu.Games.UI
             for (int i = 0; i < _areaList.Count; i++)
                 sb.AppendLine($"{nameof(_areaList)}[{i}]: {_areaList[i]}");
 
-            sb.AppendLine($"{nameof(_timeStart)}: {_timeStart}");
-            sb.AppendLine($"{nameof(_timeEnd)}: {_timeEnd}");
+            sb.AppendLine($"{nameof(_timeStart)}: {(_timeStart != 0 ? Clock.GameTimeMillisecondsToDateTime(_timeStart) : 0)}");
+            sb.AppendLine($"{nameof(_timeEnd)}: {(_timeEnd != 0 ? Clock.GameTimeMillisecondsToDateTime(_timeEnd) : 0)}");
             sb.AppendLine($"{nameof(_timePaused)}: {_timePaused}");
         }
     }

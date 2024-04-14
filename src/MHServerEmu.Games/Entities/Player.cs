@@ -136,7 +136,8 @@ namespace MHServerEmu.Games.Entities
 
             BoolDecoder boolDecoder = new();
 
-            MissionManager = new(stream, boolDecoder);
+            MissionManager = new();
+            MissionManager.Decode(stream, boolDecoder);
             AvatarProperties = new(stream);
 
             ShardId = stream.ReadRawVarint64();
@@ -305,7 +306,7 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
-            MissionManager.PrototypeId = (PrototypeId)account.CurrentAvatar.RawPrototype;
+            MissionManager.SetAvatar((PrototypeId)account.CurrentAvatar.RawPrototype);
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
                 PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
             {
@@ -313,9 +314,8 @@ namespace MHServerEmu.Games.Entities
                 if (MissionManager.ShouldCreateMission(missionPrototype))
                 {
                     Mission mission = MissionManager.CreateMission(missionRef);
-                    mission.State = MissionState.Completed;
-                    mission.Objectives = Array.Empty<Objective>();
-                    mission.Participants = new ulong[] { BaseData.EntityId };
+                    mission.SetState(MissionState.Completed);
+                    mission.AddParticipant(this);
                     MissionManager.InsertMission(mission);
                 }
             }

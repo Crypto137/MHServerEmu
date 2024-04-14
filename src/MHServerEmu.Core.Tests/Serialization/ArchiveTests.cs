@@ -66,6 +66,40 @@ namespace MHServerEmu.Core.Tests.Serialization
         [Theory]
         [InlineData(0)]
         [InlineData(100)]
+        public void Transfer_Byte_PacksAndUnpacks(byte testByte)
+        {
+            byte[] buffer;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, TestReplicationPolicy))
+            {
+                bool success = true;
+
+                byte byteToPack = testByte;
+                success &= archive.Transfer(ref byteToPack);
+                Assert.True(success);
+
+                buffer = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _testOutputHelper.WriteLine($"ArchiveData: {buffer.ToHexString()}");
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                bool success = true;
+
+                Assert.Equal(TestReplicationPolicy, archive.ReplicationPolicy);
+
+                ushort byteToUnpack = 0;
+                success &= archive.Transfer(ref byteToUnpack);
+                Assert.True(success);
+
+                Assert.Equal(testByte, byteToUnpack);
+            }
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(100)]
         public void Transfer_UShort_PacksAndUnpacks(ushort testUShort)
         {
             byte[] buffer;

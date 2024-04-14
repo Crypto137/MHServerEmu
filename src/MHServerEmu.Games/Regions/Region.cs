@@ -2,21 +2,20 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.Generators;
-using MHServerEmu.Games.Generators.Regions;
-using MHServerEmu.Games.Missions;
-using MHServerEmu.Frontend;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
 namespace MHServerEmu.Games.Regions
 {
