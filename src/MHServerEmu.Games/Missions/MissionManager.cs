@@ -268,7 +268,7 @@ namespace MHServerEmu.Games.Missions
 
         private Mission FindMissionByDataRef(PrototypeId missionRef)
         {
-            if (Missions.TryGetValue(missionRef, out var mission))
+            if (_missionDict.TryGetValue(missionRef, out var mission))
                 return mission;
             else
                 return null;
