@@ -586,6 +586,11 @@ namespace MHServerEmu.Games.Regions
             else AreaLevel = Region.RegionLevel;
             return AreaLevel;
         }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && AreaPrototype.HasKeyword(keywordProto);
+        }
     }
 
     public class AreaConnectionPoint
