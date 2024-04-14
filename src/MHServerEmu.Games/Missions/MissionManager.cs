@@ -11,13 +11,13 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
-    public class MissionManager
+    public class MissionManager : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private PrototypeId _avatarPrototypeRef;
         private Dictionary<PrototypeId, Mission> _missionDict = new();
-        private SortedDictionary<PrototypeGuid, LegendaryMissionBlacklist> _legendaryMissionBlacklistDict = new();
+        private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklist = new();
 
         public Player Player { get; private set; }       
         public Game Game { get; private set; }
@@ -27,6 +27,14 @@ namespace MHServerEmu.Games.Missions
         private HashSet<ulong> _missionInterestEntities = new();
 
         public MissionManager() { }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+            success &= Serializer.Transfer(archive, ref _avatarPrototypeRef);
+            success &= SerializeMissions(archive);
+            return success;
+        }
 
         public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
@@ -44,13 +52,18 @@ namespace MHServerEmu.Games.Missions
                 InsertMission(mission);
             }
 
-            _legendaryMissionBlacklistDict.Clear();
+            _legendaryMissionBlacklist.Clear();
             int numCategories = stream.ReadRawInt32();
             for (int i = 0; i < numCategories; i++)
             {
                 PrototypeGuid category = (PrototypeGuid)stream.ReadRawVarint64();
-                LegendaryMissionBlacklist legendaryMission = new(stream);
-                _legendaryMissionBlacklistDict.Add(category, legendaryMission);
+
+                List<PrototypeGuid> categoryMissionList = new();
+                ulong numBlacklistCategoryMissions = stream.ReadRawVarint64();
+                for (ulong j = 0; j < numBlacklistCategoryMissions; j++)
+                    categoryMissionList.Add((PrototypeGuid)stream.ReadRawVarint64());
+
+                _legendaryMissionBlacklist.Add(category, categoryMissionList);
             }
         }
 
@@ -73,11 +86,15 @@ namespace MHServerEmu.Games.Missions
                 kvp.Value.Encode(stream, boolEncoder);
             }
 
-            stream.WriteRawInt32(_legendaryMissionBlacklistDict.Count);
-            foreach (var kvp in _legendaryMissionBlacklistDict)
+            stream.WriteRawInt32(_legendaryMissionBlacklist.Count);
+            foreach (var kvp in _legendaryMissionBlacklist)
             {
                 stream.WriteRawVarint64((ulong)kvp.Key);        // category
-                kvp.Value.Encode(stream);
+
+                List<PrototypeGuid> categoryMissionList = kvp.Value;
+                stream.WriteRawVarint64((ulong)categoryMissionList.Count);
+                foreach (PrototypeGuid guid in categoryMissionList)
+                    stream.WriteRawVarint64((ulong)guid);
             }
         }
 
@@ -89,8 +106,13 @@ namespace MHServerEmu.Games.Missions
             foreach (var kvp in _missionDict)
                 sb.AppendLine($"{nameof(_missionDict)}[{kvp.Key}]: {kvp.Value}");
 
-            foreach (var kvp in _legendaryMissionBlacklistDict)
-                sb.AppendLine($"{nameof(_legendaryMissionBlacklistDict)}[{kvp.Key}]: {kvp.Value}");
+            foreach (var kvp in _legendaryMissionBlacklist)
+            {
+                string categoryName = Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeNameByGuid(kvp.Key));
+                sb.AppendLine($"{nameof(_legendaryMissionBlacklist)}[{categoryName}]:");
+                foreach (PrototypeGuid guid in kvp.Value)
+                    sb.AppendLine(GameDatabase.GetPrototypeNameByGuid(guid));
+            }
 
             return sb.ToString();
         }
@@ -201,6 +223,68 @@ namespace MHServerEmu.Games.Missions
             }
 
             return IsMissionValidAndApprovedForUse(missionPrototype);
+        }
+
+        private bool SerializeMissions(Archive archive)
+        {
+            bool success = true;
+
+            ulong numMissions = (ulong)_missionDict.Count;
+            success &= Serializer.Transfer(archive, ref numMissions);
+
+            if (archive.IsPacking)
+            {
+                foreach (var kvp in _missionDict)
+                {
+                    ulong guid = (ulong)GameDatabase.GetPrototypeGuid(kvp.Key);
+                    success &= Serializer.Transfer(archive, ref guid);
+
+                    ISerialize mission = kvp.Value;
+                    success &= Serializer.Transfer(archive, ref mission);
+                }
+
+                int numBlacklistCategories = _legendaryMissionBlacklist.Count;
+                success &= Serializer.Transfer(archive, ref numBlacklistCategories);
+                foreach (var kvp in _legendaryMissionBlacklist)
+                {
+                    ulong categoryGuid = (ulong)kvp.Key;
+                    success &= Serializer.Transfer(archive, ref categoryGuid);
+
+                    List<PrototypeGuid> categoryMissionList = kvp.Value;
+                    success &= Serializer.Transfer(archive, ref categoryMissionList);
+                }
+            }
+            else
+            {
+                for (ulong i = 0; i < numMissions; i++)
+                {
+                    ulong guid = 0;
+                    success &= Serializer.Transfer(archive, ref guid);
+
+                    PrototypeId missionRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)guid);
+                    Mission mission = CreateMission(missionRef);
+                    success &= mission.Serialize(archive);
+                    InsertMission(mission);
+                }
+
+                int numBlacklistCategories = 0;
+                success &= Serializer.Transfer(archive, ref numBlacklistCategories);
+                if (numBlacklistCategories == 0) return success;
+
+                _legendaryMissionBlacklist.Clear();
+                for (int i = 0; i < numBlacklistCategories; i++)
+                {
+                    ulong categoryGuid = 0;
+                    success &= Serializer.Transfer(archive, ref categoryGuid);
+
+                    List<PrototypeGuid> categoryMissionList = new();
+                    success &= Serializer.Transfer(archive, ref categoryMissionList);
+
+                    _legendaryMissionBlacklist.Add((PrototypeGuid)categoryGuid, categoryMissionList);
+                }
+            }
+
+            return success;
         }
 
         /// <summary>

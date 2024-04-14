@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
@@ -9,7 +8,7 @@ using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class RegionArchive
+    public class RegionArchive : ISerialize
     {
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection Properties { get; set; }
@@ -17,22 +16,7 @@ namespace MHServerEmu.Games.Regions
         public UIDataProvider UIDataProvider { get; set; }
         public ObjectiveGraph ObjectiveGraph { get; set; }
 
-        public RegionArchive(ByteString data)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
-            BoolDecoder boolDecoder = new();
-
-            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            Properties = new(stream);
-            MissionManager = new();
-            MissionManager.Decode(stream, boolDecoder);
-            UIDataProvider = new();
-            UIDataProvider.Decode(stream, boolDecoder);
-            ObjectiveGraph = new(null, null);
-            ObjectiveGraph.Decode(stream);
-        }
-
-        public RegionArchive(ulong replicationId)
+        public RegionArchive(ulong replicationId = 0)
         {
             ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy;
             Properties = new(replicationId);
@@ -41,39 +25,27 @@ namespace MHServerEmu.Games.Regions
             ObjectiveGraph = new(null, null);
         }
 
-        public ByteString Serialize()
+        public bool Serialize(Archive archive)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            bool success = true;
 
-                // Prepare bool encoder
-                BoolEncoder boolEncoder = new();
-                MissionManager.EncodeBools(boolEncoder);
-                UIDataProvider.EncodeBools(boolEncoder);
-                boolEncoder.Cook();
+            success &= Properties.Serialize(archive);
+            success &= MissionManager.Serialize(archive);
+            success &= UIDataProvider.Serialize(archive);
+            success &= ObjectiveGraph.Serialize(archive);
 
-                // Encode
-                cos.WriteRawVarint32((uint)ReplicationPolicy);
-                Properties.Encode(cos);
-                MissionManager.Encode(cos, boolEncoder);
-                UIDataProvider.Encode(cos, boolEncoder);
-                ObjectiveGraph.Encode(cos);
-
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
-            }
+            return success;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
 
-            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"PropertyCollection: {Properties}");
-            sb.AppendLine($"MissionManager: {MissionManager}");
-            sb.AppendLine($"UIDataProvider: {UIDataProvider}");
-            sb.AppendLine($"ObjectiveGraph: {ObjectiveGraph}");
+            sb.AppendLine($"{nameof(ReplicationPolicy)}: {ReplicationPolicy}");
+            sb.AppendLine($"{nameof(Properties)}: {Properties}");
+            sb.AppendLine($"{nameof(MissionManager)}: {MissionManager}");
+            sb.AppendLine($"{nameof(UIDataProvider)}: {UIDataProvider}");
+            sb.AppendLine($"{nameof(ObjectiveGraph)}: {ObjectiveGraph}");
 
             return sb.ToString();
         }
