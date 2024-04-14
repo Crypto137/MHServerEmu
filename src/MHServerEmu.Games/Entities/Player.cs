@@ -666,12 +666,12 @@ namespace MHServerEmu.Games.Entities
                 if (avatar.BaseData.PrototypeId == prototypeId)
                 {
                     CurrentAvatar = avatar;
-                    avatar.BaseData.InvLoc.Inventory = (PrototypeId)9555311166682372646;
+                    avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)9555311166682372646;
                     avatar.BaseData.InvLoc.Slot = 0;
                     continue;
                 }
 
-                avatar.BaseData.InvLoc.Inventory = (PrototypeId)5235960671767829134;
+                avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)5235960671767829134;
                 avatar.BaseData.InvLoc.Slot = librarySlot++;
             }
         }
