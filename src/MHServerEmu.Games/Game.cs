@@ -25,6 +25,9 @@ namespace MHServerEmu.Games
 {
     public partial class Game
     {
+        [ThreadStatic]
+        internal static Game Current;
+
         public const string Version = "1.52.0.1700";
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -77,12 +80,14 @@ namespace MHServerEmu.Games
             // Start main game loop
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             gameThread.Start();
-
+            
             Logger.Info($"Game 0x{Id:X} created, initial replication id: {_currentRepId}");
         }
 
         public void Update()
         {
+            Current = this;
+
             while (true)
             {
                 _tickWatch.Restart();
@@ -266,9 +271,11 @@ namespace MHServerEmu.Games
 
             Vector3 entrancePosition = new(playerConnection.StartPositon);
             Orientation entranceOrientation = new(playerConnection.StartOrientation);
-            entrancePosition.Z += 42; // TODO project to floor
+            var player = playerConnection.Player;
+            var avatar = player.CurrentAvatar;
+            entrancePosition = avatar.FloorToCenter(entrancePosition);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)playerConnection.Player.CurrentAvatar.BaseData.EntityId, entrancePosition, entranceOrientation.Yaw, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, entranceOrientation.Yaw, 350f);
             messageList.Add(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build());
@@ -281,6 +288,9 @@ namespace MHServerEmu.Games
 
             // Dequeue loading screen
             messageList.Add(NetMessageDequeueLoadingScreen.DefaultInstance);
+
+            // Load KismetSeq for Region
+            messageList.AddRange(player.FindAndPlayKismetSeq(playerConnection.AOI.Region));
 
             return messageList;
         }

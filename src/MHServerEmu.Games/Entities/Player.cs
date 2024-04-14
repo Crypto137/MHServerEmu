@@ -666,12 +666,12 @@ namespace MHServerEmu.Games.Entities
                 if (avatar.BaseData.PrototypeId == prototypeId)
                 {
                     CurrentAvatar = avatar;
-                    avatar.BaseData.InvLoc.InventoryPrototypeId = (PrototypeId)9555311166682372646;
+                    avatar.BaseData.InvLoc.Inventory = (PrototypeId)9555311166682372646;
                     avatar.BaseData.InvLoc.Slot = 0;
                     continue;
                 }
 
-                avatar.BaseData.InvLoc.InventoryPrototypeId = (PrototypeId)5235960671767829134;
+                avatar.BaseData.InvLoc.Inventory = (PrototypeId)5235960671767829134;
                 avatar.BaseData.InvLoc.Slot = librarySlot++;
             }
         }
@@ -731,6 +731,35 @@ namespace MHServerEmu.Games.Entities
                 if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
                     StashTabInsert(stashRef, 0);
             }
+        }
+
+        public List<IMessage> FindAndPlayKismetSeq(Region region)
+        {
+            List<IMessage> messageList = new();
+            if (region != null)
+            {
+                KismetSeqPrototypeId kismetSeqRef = 0;
+
+                if (region.PrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
+
+                if (kismetSeqRef != 0)
+                    messageList.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+            }
+            return messageList;
+        }
+
+        public Region GetRegion()
+        {
+            // TODO check work
+            if (Game == null) return null;
+            var manager = Game.RegionManager;
+            if (manager == null) return null;
+            return manager.GetRegion(RegionId);
+        }
+
+        public override ulong GetPartyId()
+        {
+            return PartyId.Value;
         }
     }
 }
