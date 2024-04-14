@@ -284,7 +284,10 @@ namespace MHServerEmu.Games.Network
             {
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
+                {
                     Game.FinishLoading(this);
+
+                }
                 else
                 {
                     // set timer 5 seconds for wait client answer
@@ -384,8 +387,8 @@ namespace MHServerEmu.Games.Network
 
                     var teleportEntity = target.TransitionPrototype;
                     if (teleportEntity == null) return true;
-                    Vector3 targetPos = new(target.Location.GetPosition());
-                    Orientation targetRot = target.Location.GetOrientation();
+                    Vector3 targetPos = new(target.RegionLocation.GetPosition());
+                    Orientation targetRot = target.RegionLocation.GetOrientation();
 
                     teleportEntity.CalcSpawnOffset(targetRot, targetPos);
 

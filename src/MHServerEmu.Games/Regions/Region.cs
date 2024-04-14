@@ -747,8 +747,8 @@ namespace MHServerEmu.Games.Regions
             {
                 if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
-                    Vector3 position = new(playerConnection.EntityToTeleport.Location.GetPosition());
-                    Orientation orientation = new(playerConnection.EntityToTeleport.Location.GetOrientation());
+                    Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.GetPosition());
+                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.GetOrientation());
                     if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
                     playerConnection.StartPositon = position;
@@ -838,6 +838,12 @@ namespace MHServerEmu.Games.Regions
             if (RegionPrototype.LevelUseAreaOffset) return area.GetAreaLevel();
             return RegionLevel;
         }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {            
+            return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
+        }
+
     }
 
     public class DividedStartLocation

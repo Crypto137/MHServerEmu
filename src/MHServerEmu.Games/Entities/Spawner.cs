@@ -1,7 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
@@ -44,12 +43,12 @@ namespace MHServerEmu.Games.Entities
         {           
         }
 
-        public override void EnterWorld(Region region, Vector3 position, Orientation orientation)
+        public override void OnEnteredWorld(EntitySettings settings)
         {
-            base.EnterWorld(region, position, orientation);            
+            base.OnEnteredWorld(settings);            
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
-            if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
+            if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}]");
             if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
             
             // if (spawnerProto.StartEnabled)
@@ -97,7 +96,7 @@ namespace MHServerEmu.Games.Entities
             if (spawnerProto.SpawnsInheritMissionPrototype)
                 properties[PropertyEnum.MissionPrototype] = Properties[PropertyEnum.MissionPrototype];
 
-            populationManager.SpawnObject(popObject, Location, properties, spawnFlags, spawnerProto, out _);
+            populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
         }
     }
 }

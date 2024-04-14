@@ -4,6 +4,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -24,6 +25,7 @@ namespace MHServerEmu.Games.Entities
         public bool EnterGameWorld;
         public List<EntitySelectorActionPrototype> Actions;
         public PrototypeId ActionsTarget;
+        public SpawnSpec SpawnSpec;
     }
 
     public class EntityManager
@@ -77,7 +79,7 @@ namespace MHServerEmu.Games.Entities
                         position = RegionLocation.ProjectToFloor(region, position);
                         position = worldEntity.FloorToCenter(position);
                     }
-                    worldEntity.EnterWorld(region, position, settings.Orientation);
+                    worldEntity.EnterWorld(region, position, settings.Orientation, settings);
                 }
             }
         }
@@ -138,24 +140,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
-        public Entity GetEntityByPrototypeIdFromRegion(PrototypeId prototype, ulong regionId)
-        {
-            return _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype && entity.RegionId == regionId);
-        }
-        public Entity FindEntityByDestination(Destination destination, ulong regionId)
-        {
-            foreach (KeyValuePair<ulong, Entity> entity in _entityDict)
-            {
-                if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
-                {
-                    if (destination.Area == 0) return entity.Value;
-                    PrototypeId area = entity.Value.Properties[PropertyEnum.ContextAreaRef];
-                    if (area == destination.Area)
-                        return entity.Value;
-                }
-            }
-            return null;
-        }
+
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
             PrototypeId areaRef = destination.Area;
@@ -165,8 +150,8 @@ namespace MHServerEmu.Games.Entities
                 if (entity.RegionId == regionId)
                 {
                     if (entity is not Transition transition) continue;
-                    if (areaRef != 0 && areaRef != (PrototypeId)transition.Location.Area.PrototypeId) continue;
-                    if (cellRef != 0 && cellRef != transition.Location.Cell.PrototypeId) continue;
+                    if (areaRef != 0 && areaRef != (PrototypeId)transition.RegionLocation.Area.PrototypeId) continue;
+                    if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeId) continue;
                     if (transition.BaseData.PrototypeId == entityRef)
                         return transition;
                 }

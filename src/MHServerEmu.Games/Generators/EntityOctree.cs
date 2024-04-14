@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Generators
 
         public static bool DoesSphereContainAvatar(Sphere sphere, Avatar avatar)
         {
-            if (avatar != null && sphere.Intersects(avatar.Location.GetPosition())) return true;
+            if (avatar != null && sphere.Intersects(avatar.RegionLocation.GetPosition())) return true;
             return false;
         }
 
