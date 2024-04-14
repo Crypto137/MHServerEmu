@@ -391,7 +391,7 @@ namespace MHServerEmu.Games.Regions
             GRandom random = new(RandomSeed);
 
             bool success = Generator.Generate(random, regionGenerator, areas);
-            if (!success) Logger.Error($"Area {ToString()} in region {Region} failed to generate");
+            if (success == false) Logger.Warn($"Area {ToString()} in region {Region} failed to generate");
 
             Generator = null;
 
