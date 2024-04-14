@@ -384,18 +384,12 @@ namespace MHServerEmu.Games.Missions
         // TODO replace this mission to MetaStates
         public static readonly MissionPrototypeId[] EventMissions = new MissionPrototypeId[]
         {
+            /*
             MissionPrototypeId.MoloidAttackAftermath,
             MissionPrototypeId.Moloid3AgainstLeaper,
             MissionPrototypeId.MoloidRescueCivilian,
             MissionPrototypeId.MoloidAmbushBreakIn,
-/*
-            MissionPrototypeId.MutantsRunningGroup1,
-            MissionPrototypeId.MutantsRunningGroup2,
-            MissionPrototypeId.MutantRunningSoloF5,
-
-*/          
-            MissionPrototypeId.SunTribeKingLizard,
-            MissionPrototypeId.SunTribeLeadingRaptors,
+            */
 
             MissionPrototypeId.NorwayFrostGolemsFaeAmbushV1,
             MissionPrototypeId.NorwayFrostGolemsFaeAmbushV2,
