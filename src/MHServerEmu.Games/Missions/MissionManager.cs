@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Missions
 
         private PrototypeId _avatarPrototypeRef;
         private Dictionary<PrototypeId, Mission> _missionDict = new();
-        private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklistDict = new();
+        private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklist = new();
 
         public Player Player { get; private set; }       
         public Game Game { get; private set; }
@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Missions
                 InsertMission(mission);
             }
 
-            _legendaryMissionBlacklistDict.Clear();
+            _legendaryMissionBlacklist.Clear();
             int numCategories = stream.ReadRawInt32();
             for (int i = 0; i < numCategories; i++)
             {
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Missions
                 for (ulong j = 0; j < numBlacklistCategoryMissions; j++)
                     categoryMissionList.Add((PrototypeGuid)stream.ReadRawVarint64());
 
-                _legendaryMissionBlacklistDict.Add(category, categoryMissionList);
+                _legendaryMissionBlacklist.Add(category, categoryMissionList);
             }
         }
 
@@ -86,8 +86,8 @@ namespace MHServerEmu.Games.Missions
                 kvp.Value.Encode(stream, boolEncoder);
             }
 
-            stream.WriteRawInt32(_legendaryMissionBlacklistDict.Count);
-            foreach (var kvp in _legendaryMissionBlacklistDict)
+            stream.WriteRawInt32(_legendaryMissionBlacklist.Count);
+            foreach (var kvp in _legendaryMissionBlacklist)
             {
                 stream.WriteRawVarint64((ulong)kvp.Key);        // category
 
@@ -106,9 +106,10 @@ namespace MHServerEmu.Games.Missions
             foreach (var kvp in _missionDict)
                 sb.AppendLine($"{nameof(_missionDict)}[{kvp.Key}]: {kvp.Value}");
 
-            foreach (var kvp in _legendaryMissionBlacklistDict)
+            foreach (var kvp in _legendaryMissionBlacklist)
             {
-                sb.Append($"{nameof(_legendaryMissionBlacklistDict)}[{kvp.Key}]: ");
+                string categoryName = Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeNameByGuid(kvp.Key));
+                sb.AppendLine($"{nameof(_legendaryMissionBlacklist)}[{categoryName}]:");
                 foreach (PrototypeGuid guid in kvp.Value)
                     sb.AppendLine(GameDatabase.GetPrototypeNameByGuid(guid));
             }
@@ -242,9 +243,9 @@ namespace MHServerEmu.Games.Missions
                     success &= Serializer.Transfer(archive, ref mission);
                 }
 
-                int numBlacklistCategories = _legendaryMissionBlacklistDict.Count;
+                int numBlacklistCategories = _legendaryMissionBlacklist.Count;
                 success &= Serializer.Transfer(archive, ref numBlacklistCategories);
-                foreach (var kvp in _legendaryMissionBlacklistDict)
+                foreach (var kvp in _legendaryMissionBlacklist)
                 {
                     ulong categoryGuid = (ulong)kvp.Key;
                     success &= Serializer.Transfer(archive, ref categoryGuid);
@@ -270,7 +271,7 @@ namespace MHServerEmu.Games.Missions
                 success &= Serializer.Transfer(archive, ref numBlacklistCategories);
                 if (numBlacklistCategories == 0) return success;
 
-                _legendaryMissionBlacklistDict.Clear();
+                _legendaryMissionBlacklist.Clear();
                 for (int i = 0; i < numBlacklistCategories; i++)
                 {
                     ulong categoryGuid = 0;
@@ -279,7 +280,7 @@ namespace MHServerEmu.Games.Missions
                     List<PrototypeGuid> categoryMissionList = new();
                     success &= Serializer.Transfer(archive, ref categoryMissionList);
 
-                    _legendaryMissionBlacklistDict.Add((PrototypeGuid)categoryGuid, categoryMissionList);
+                    _legendaryMissionBlacklist.Add((PrototypeGuid)categoryGuid, categoryMissionList);
                 }
             }
 
