@@ -1,15 +1,15 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
     public class Agent : WorldEntity
     {
+        public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
+
         // New
         public Agent(Game game) : base(game) { }
 
@@ -18,10 +18,10 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
         }
 
-        public override void EnterWorld(Region region, Vector3 position, Orientation orientation)
+        public override void OnEnteredWorld(EntitySettings settings)
         {
-            base.EnterWorld(region, position, orientation);
-            Location.Cell.EnemySpawn(); // Calc Enemy
+            base.OnEnteredWorld(settings);
+            RegionLocation.Cell.EnemySpawn(); // Calc Enemy
         }
 
         public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this

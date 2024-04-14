@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Entities
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Transition(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, List<Condition> conditionCollection,
+        public Transition(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, ConditionCollection conditionCollection,
             List<PowerCollectionRecord> powerCollection, int unkEvent, 
             string transitionName, List<Destination> destinations) : base(baseData)
         {

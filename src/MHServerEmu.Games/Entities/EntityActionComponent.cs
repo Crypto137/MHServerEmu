@@ -1,6 +1,4 @@
-﻿
-
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 

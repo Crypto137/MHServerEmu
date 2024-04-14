@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -323,6 +324,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int TravelPowerUnlockLevel { get; protected set; }
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
+
+        public int GetMaxPrestigeLevel() => PrestigeLevels.Length;
+
+        public int GetPrestigeLevelIndex(PrestigeLevelPrototype prestigeLevelProto)
+        {
+            return GetPrestigeLevelIndex(prestigeLevelProto.DataRef);
+        }
+        public int GetPrestigeLevelIndex(PrototypeId prestigeLevel)
+        {
+            if (PrestigeLevels.IsNullOrEmpty()) return 0;
+
+            for (int i = 0; i < GetMaxPrestigeLevel(); i++)
+                if (PrestigeLevels[i] == prestigeLevel)
+                    return i + 1;
+
+            return 0;
+        }
     }
 
     public class AIGlobalsPrototype : Prototype

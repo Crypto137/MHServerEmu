@@ -8,6 +8,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -87,6 +88,10 @@ namespace MHServerEmu.Games.Entities
 
         public DateTime DeadTime { get; private set; }
         public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
+        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId); }
+        public PrototypeId PrototypeDataRef { get => BaseData.PrototypeId; }
+        public InventoryLocation InventoryLocation { get; private set; } = new();
+        public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
         #region Flag Properties
 
@@ -181,6 +186,15 @@ namespace MHServerEmu.Games.Entities
             Properties = new(Game.CurrentRepId);
             //if (entity.Properties != null) // We need to add a filter to the property serialization first
             //    Properties.FlattenCopyFrom(entity.Properties, true); 
+            if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
+            OnPropertyChange(); // Template solve for _flags
+        }
+
+        public virtual void OnPropertyChange()
+        {
+            if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
+            if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
+            if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
         }
 
         // Base data is required for all entities, so there's no parameterless constructor
@@ -274,12 +288,66 @@ namespace MHServerEmu.Games.Entities
 
             return false;
         }
+        public bool IsAPrototype(PrototypeId protoRef)
+        {
+            return GameDatabase.DataDirectory.PrototypeIsAPrototype(PrototypeDataRef, protoRef);
+        }
 
         public virtual void PreInitialize(EntitySettings settings) {}
 
         public virtual void OnPostInit(EntitySettings settings)
         {
             // TODO init
+        }
+
+        public RegionLocation GetOwnerLocation()
+        {
+            Entity owner = GetOwner();
+            while (owner != null)
+            {
+                if (owner is WorldEntity worldEntity)
+                {
+                    if (worldEntity.IsInWorld())
+                        return worldEntity.RegionLocation;
+                }
+                else
+                {
+                    if (owner is Player player)
+                    {
+                        Avatar avatar = player.CurrentAvatar;
+                        if (avatar != null && avatar.IsInWorld())
+                            return avatar.RegionLocation;
+                    }
+                }
+
+                owner = owner.GetOwner();
+            }
+
+            return null;
+        }
+
+        public Entity GetOwner()
+        {
+            return Game.EntityManager.GetEntityById(OwnerId);
+        }
+
+        public T GetOwnerOfType<T>() where T : Entity
+        {
+            Entity owner = GetOwner();
+            while (owner != null)
+            {
+                if (owner is T currentCast)
+                    return currentCast;
+                owner = owner.GetOwner();
+            }
+            return null;
+        }
+
+        public virtual ulong GetPartyId()
+        {
+            var ownerPlayer = GetOwnerOfType<Player>();
+            if (ownerPlayer != null) return ownerPlayer.GetPartyId();
+            return 0;
         }
     }
 }

@@ -11,28 +11,33 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Generators.Population;
 
 namespace MHServerEmu.Games.Entities
 {
     public class WorldEntity : Entity
     {
+        public AlliancePrototype AllianceProto { get; private set; }
+
         public List<EntityTrackingContextMap> TrackingContextMap { get; set; }
-        public List<Condition> ConditionCollection { get; set; }
+        public ConditionCollection ConditionCollection { get; set; }
         public List<PowerCollectionRecord> PowerCollection { get; set; }
         public int UnkEvent { get; set; }
-        public RegionLocation Location { get; private set; } = new(); // TODO init;
-        public Cell Cell { get => Location.Cell; }
+        public RegionLocation RegionLocation { get; private set; } = new(); 
+        public Cell Cell { get => RegionLocation.Cell; }
+        public Area Area { get => RegionLocation.Area; }
+        public RegionLocationSafe ExitWorldRegionLocation { get; private set; } = new();
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
         public Bounds Bounds { get; set; } = new();
-        public Region Region { get => Location.Region; }
+        public Region Region { get => RegionLocation.Region; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
-        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId);
-
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
+        public SpawnSpec SpawnSpec { get; private set; }
+        public SpawnGroup SpawnGroup { get => SpawnSpec?.Group; }
 
         // New
         public WorldEntity(Game game): base(game) 
@@ -45,9 +50,12 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
             var proto = WorldEntityPrototype;
             ShouldSnapToFloorOnSpawn = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : proto.SnapToFloorOnSpawn;
+            OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
+            RegionLocation.Initialize(this);
+            SpawnSpec = settings.SpawnSpec;
+
             // Old
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
-            if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
             int health = EntityManager.GetRankHealth(proto);
@@ -171,28 +179,63 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation)
+        private void OnAllianceChanged(PrototypeId allianceRef)
+        {
+            if (allianceRef != PrototypeId.Invalid)
+            {
+                var allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
+                if (allianceProto != null)
+                    AllianceProto = allianceProto;
+            }
+            else
+            {
+                var worldEntityProto = WorldEntityPrototype;
+                if (worldEntityProto != null)
+                    AllianceProto = GameDatabase.GetPrototype<AlliancePrototype>(worldEntityProto.Alliance);
+            }
+        }
+
+        public PrototypeId GetAlliance()
+        {
+            if (AllianceProto == null) return PrototypeId.Invalid;
+
+            PrototypeId allianceRef = AllianceProto.DataRef;
+            if (IsControlledEntity && AllianceProto.WhileControlled != PrototypeId.Invalid)
+                allianceRef = AllianceProto.WhileControlled;
+            if (IsConfused && AllianceProto.WhileConfused != PrototypeId.Invalid)
+                allianceRef = AllianceProto.WhileConfused;
+
+            return allianceRef;
+        }
+
+        public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             var proto = WorldEntityPrototype;
             Game ??= region.Game; // Fix for old constructor
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
 
-            Location.Region = region;
+            RegionLocation.Region = region;
             ChangeRegionPosition(position, orientation);
+            OnEnteredWorld(settings);
+        }
+
+        public virtual void OnEnteredWorld(EntitySettings settings)
+        {
+            // TODO CanInfluenceNavigationMesh
         }
 
         public void ChangeRegionPosition(Vector3 position, Orientation orientation)
         {
-            Location.SetPosition(position);
-            Location.SetOrientation(orientation);
+            RegionLocation.SetPosition(position);
+            RegionLocation.SetOrientation(orientation);
             // Old
             Properties[PropertyEnum.MapPosition] = position;
             Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
-            Properties[PropertyEnum.MapAreaId] = Location.AreaId;
-            Properties[PropertyEnum.MapRegionId] = Location.RegionId;
-            Properties[PropertyEnum.MapCellId] = Location.CellId;
-            Properties[PropertyEnum.ContextAreaRef] = Location.Area.PrototypeDataRef;
+            Properties[PropertyEnum.MapAreaId] = RegionLocation.AreaId;
+            Properties[PropertyEnum.MapRegionId] = RegionLocation.RegionId;
+            Properties[PropertyEnum.MapCellId] = RegionLocation.CellId;
+            Properties[PropertyEnum.ContextAreaRef] = RegionLocation.Area.PrototypeDataRef;
 
             Bounds.Center = position;
             UpdateRegionBounds(); // Add to Quadtree
@@ -207,7 +250,7 @@ namespace MHServerEmu.Games.Entities
                 Region.UpdateEntityInSpatialPartition(this);
         }
 
-        public bool IsInWorld() => Location.IsValid();
+        public bool IsInWorld() => RegionLocation.IsValid();
 
         public void ExitWorld()
         {
@@ -219,9 +262,9 @@ namespace MHServerEmu.Games.Entities
 
         public void ClearWorldLocation()
         {
-            if(Location.IsValid()) LastLocation = Location;
+            if(RegionLocation.IsValid()) LastLocation = RegionLocation;
             if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
-            Location = null;
+            RegionLocation = null;
         }
 
         internal void EmergencyRegionCleanup(Region region)
@@ -254,5 +297,20 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual void AppendStartAction(PrototypeId actionsTarget) {}
+
+        public ScriptRoleKeyEnum GetScriptRoleKey()
+        {
+            if (SpawnSpec != null)
+                return SpawnSpec.RoleKey;
+            else
+                return (ScriptRoleKeyEnum)(uint)Properties[PropertyEnum.ScriptRoleKey];
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
+        }
+
+
     }
 }
