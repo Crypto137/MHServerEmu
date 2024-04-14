@@ -7,14 +7,14 @@ namespace MHServerEmu.Games.Missions
     public class MissionConditionPrototypeIterator : IEnumerable<MissionConditionPrototype>
     {
         private readonly MissionConditionPrototype[] _conditions;
-        private readonly Type _type;
+        private readonly Type _conditionType;
         private int _currentIndex;
         private MissionConditionPrototypeIterator _sublistIterator;
 
-        public MissionConditionPrototypeIterator(MissionConditionListPrototype list, Type type = null)
+        public MissionConditionPrototypeIterator(MissionConditionListPrototype list, Type conditionType = null)
         {
             _conditions = list?.Conditions;
-            _type = type;
+            _conditionType = conditionType;
             if (_conditions.HasValue())
             {
                 _currentIndex = 0;
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Missions
                     if (condition is MissionConditionListPrototype conditionList)
                     {
                         if (_sublistIterator != null) return;
-                        _sublistIterator = new(conditionList, _type);
+                        _sublistIterator = new(conditionList, _conditionType);
                     }
                     ++_currentIndex;
                 }
@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.Missions
             if (End()) return false;
             var condition = GetMissionConditionPrototype();
             if (condition == null) return false;
-            if (_type != null && condition.GetType() != _type) return false;
+            if (_conditionType != null && condition.GetType() != _conditionType) return false;
             else if (condition is MissionConditionListPrototype) return false;
             return true;
         }

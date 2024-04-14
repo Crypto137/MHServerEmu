@@ -62,6 +62,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool NoTrackingOptimization { get; protected set; }
         public long MissionConditionGuid { get; protected set; }
 
+        [DoNotCopy]
+        public int Index { get; set; }
+
         public virtual void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef) { }
         public virtual void GetPrototypeContextRefs(HashSet<PrototypeId> refs) { }
         public virtual void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells) { }
@@ -77,10 +80,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MissionConditionPrototype[] Conditions { get; protected set; }
 
-        public IEnumerable<MissionConditionPrototype> IteratePrototypes()
+        public IEnumerable<MissionConditionPrototype> IteratePrototypes(Type conditionType = null)
         {            
-            return new MissionConditionPrototypeIterator(this);
+            return new MissionConditionPrototypeIterator(this, conditionType);
         }
+
     }
 
     public class MissionConditionAndPrototype : MissionConditionListPrototype
