@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -35,6 +35,18 @@ namespace MHServerEmu.Games.Common
             sb.AppendLine($"Context: {GameDatabase.GetPrototypeName(Context)}");
             sb.AppendLine($"Flag: 0x{Flag:X}");
             return sb.ToString();
+        }
+    }
+
+    // TODO Merge
+    public class EntityTrackingContextMap2 : Dictionary<PrototypeId, EntityTrackingFlag>
+    {
+        public void Insert(PrototypeId contextRef, EntityTrackingFlag flag)
+        {
+            if (ContainsKey(contextRef))
+                this[contextRef] |= flag;
+            else
+                Add(contextRef, flag);
         }
     }
 }
