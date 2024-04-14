@@ -106,6 +106,9 @@ namespace MHServerEmu.Games
                     // Update event manager
                     EventManager.Update();
 
+                    // Update physics manager
+                    EntityManager.PhysicsResolveEntities();
+
                     // Send responses to all clients
                     NetworkManager.SendAllPendingMessages();
                 }
@@ -344,6 +347,12 @@ namespace MHServerEmu.Games
                 entity = new Entity(this);
 
             return entity;
+        }
+
+        public IEnumerable<Region> RegionIterator()
+        {            
+            foreach (Region region in RegionManager.AllRegions) 
+                yield return region;
         }
     }
 }

@@ -843,6 +843,10 @@ namespace MHServerEmu.Games.Regions
             return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
         }
 
+        internal void ClearCollidedEntities()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class DividedStartLocation

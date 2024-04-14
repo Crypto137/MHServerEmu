@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Regions
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
         public static void ClearRegionDict() => _regionDict?.Clear();
-
+        public IEnumerable<Region> AllRegions => _allRegions.Values;
         //----------
         private uint _cellId;
         private uint _areaId;
@@ -236,7 +236,7 @@ namespace MHServerEmu.Games.Regions
             List<Region> toShutdown = new();
             lock (_managerLock)
             {
-                foreach (Region region in _allRegions.Values)
+                foreach (Region region in AllRegions)
                 {
                     DateTime visitedTime;
                     lock (region.Lock)

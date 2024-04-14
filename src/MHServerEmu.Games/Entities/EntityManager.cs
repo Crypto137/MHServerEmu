@@ -39,9 +39,17 @@ namespace MHServerEmu.Games.Entities
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
+        public PhysicsManager PhysicsManager { get; set; }
+
         public EntityManager(Game game)
-        {
+        {            
             _game = game;
+            PhysicsManager = new(game);
+        }
+
+        public void PhysicsResolveEntities()
+        {
+            PhysicsManager.ResolveEntities();
         }
 
         public Entity CreateEntity(EntitySettings settings)
