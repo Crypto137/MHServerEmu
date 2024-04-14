@@ -189,6 +189,17 @@ namespace MHServerEmu.Core.Serialization
         }
 
         /// <summary>
+        /// Transfers a <see cref="byte"/> value to or from this <see cref="Archive"/> instance. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool Transfer(ref byte ioData)
+        {
+            if (IsPacking)
+                return WriteSingleByte(ioData);
+            else
+                return ReadSingleByte(ref ioData);
+        }
+
+        /// <summary>
         /// Transfers a <see cref="ushort"/> value to or from this <see cref="Archive"/> instance. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool Transfer(ref ushort ioData)
