@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PropertyCollection Properties;
         public SpawnFlags SpawnFlags;
         public PopulationObjectPrototype Object;
+        public WorldEntity Spawner;
         public List<PrototypeId> SpawnAreas;
         public List<PrototypeId> SpawnCells;
         public int Count;
@@ -56,9 +57,9 @@ namespace MHServerEmu.Games.Generators.Population
             return false;
         }
 
-        public int SpawnObject(SpawnTarget spawnTarget, out List<WorldEntity> entities)
+        public ulong SpawnObject(SpawnTarget spawnTarget, out List<WorldEntity> entities)
         {
-            int groupId = 0;
+            ulong groupId = 0;
             entities = new();
 
             if (spawnTarget.Type == SpawnTargetType.Marker)
@@ -78,7 +79,7 @@ namespace MHServerEmu.Games.Generators.Population
             ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
             clusterGroup.Initialize();
             bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
-            if (success) groupId = clusterGroup.Spawn(null, entities);
+            if (success) groupId = clusterGroup.Spawn(null, Spawner, entities);
             return groupId;
         }
     }

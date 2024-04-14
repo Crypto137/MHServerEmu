@@ -20,18 +20,18 @@ namespace MHServerEmu.Games.Generators.Population
         public List<PopulationObject> PopulationMarkers { get; }
         public List<PopulationObject> PopulationObjects { get; }
 
-        private int _blackOutId;
+        private ulong _blackOutId;
         private BlackOutSpatialPartition _blackOutSpatialPartition;
-        private Dictionary<int, BlackOutZone> _blackOutZones;
-        private int NextBlackOutId() => _blackOutId++;
+        private Dictionary<ulong, BlackOutZone> _blackOutZones;
+        private ulong NextBlackOutId() => _blackOutId++;
 
-        private int _nextSpawnGroupId;
-        private Dictionary<int, SpawnGroup> _spawnGroups;
-        private int NextSpawnGroupId() => _nextSpawnGroupId++;
+        private ulong _nextSpawnGroupId;
+        private Dictionary<ulong, SpawnGroup> _spawnGroups;
+        private ulong NextSpawnGroupId() => _nextSpawnGroupId++;
 
-        private int _nextSpawnSpecId;
-        private Dictionary<int, SpawnSpec> _spawnSpecs;
-        private int NextSpawnSpecId() => _nextSpawnSpecId++;
+        private ulong _nextSpawnSpecId;
+        private Dictionary<ulong, SpawnSpec> _spawnSpecs;
+        private ulong NextSpawnSpecId() => _nextSpawnSpecId++;
 
         public PopulationManager(Game game, Region region)
         {
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Generators.Population
             return populationObject;
         }
 
-        public void SpawnObject(PopulationObjectPrototype popObject, RegionLocation location, PropertyCollection properties, SpawnFlags spawnFlags, SpawnerPrototype spawnerProto, out List<WorldEntity> entities)
+        public void SpawnObject(PopulationObjectPrototype popObject, RegionLocation location, PropertyCollection properties, SpawnFlags spawnFlags, WorldEntity spawner, out List<WorldEntity> entities)
         {
             var region = location.Region;
             GRandom random = Game.Random;
@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Generators.Population
             {
                 spawnTarget.Type = SpawnTargetType.Spawner;
                 spawnTarget.Location = location;
-                spawnTarget.SpawnerProto = spawnerProto;
+                spawnTarget.SpawnerProto = spawner.EntityPrototype as SpawnerPrototype;
             }
             List<PrototypeId> spawnArea = new()
             {
@@ -158,6 +158,7 @@ namespace MHServerEmu.Games.Generators.Population
                 Properties = properties,
                 SpawnFlags = spawnFlags,
                 Object = popObject,
+                Spawner = spawner,
                 SpawnAreas = spawnArea,
                 SpawnCells = new(),
                 Count = 1
@@ -244,7 +245,7 @@ namespace MHServerEmu.Games.Generators.Population
             }
         }
 
-        public int SpawnBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
+        public ulong SpawnBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
         {
             var id = NextBlackOutId();
             BlackOutZone zone = new(id, position, radius, missionRef);
@@ -288,7 +289,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public SpawnGroup CreateSpawnGroup()
         {
-            int id = NextSpawnGroupId();
+            ulong id = NextSpawnGroupId();
             SpawnGroup group = new(id, this);
             _spawnGroups[id] = group;
             return group;
@@ -296,7 +297,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public SpawnSpec CreateSpawnSpec(SpawnGroup group)
         {
-            int id = NextSpawnSpecId();
+            ulong id = NextSpawnSpecId();
             SpawnSpec spec = new(id, group);
             group.AddSpec(spec);
             _spawnSpecs[id] = spec;

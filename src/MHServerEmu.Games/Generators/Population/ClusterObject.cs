@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Generators.Population
         public virtual void SetLocationDirty() { }
         public virtual bool IsFormationObject() => false;
         public virtual bool Initialize() => false;
-        public virtual int Spawn(SpawnGroup group, List<WorldEntity> entities) { return 0; }
+        public virtual ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities) { return 0; }
         public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes){ }
         public virtual bool TestLayout() => false;
@@ -691,7 +691,7 @@ namespace MHServerEmu.Games.Generators.Population
             Parent?.UpdateBounds(this);
         }
 
-        public override int Spawn(SpawnGroup group, List<WorldEntity> entities)
+        public override ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities)
         {
             var manager = Region.PopulationManager;
 
@@ -702,10 +702,11 @@ namespace MHServerEmu.Games.Generators.Population
                 if (ObjectProto is PopulationEncounterPrototype populationEncounter)
                     group.EncounterRef = populationEncounter.GetEncounterRef();
                 group.MissionRef = MissionRef;
+                group.SpawnerId = spawner != null ? spawner.Id : 0;
             }
             if (group == null) return 0;
 
-            foreach (var obj in Objects) obj.Spawn(group, entities);
+            foreach (var obj in Objects) obj.Spawn(group, spawner, entities);
 
             var position = GetAbsolutePosition();
             if (ObjectProto.Riders.HasValue())
@@ -953,7 +954,7 @@ namespace MHServerEmu.Games.Generators.Population
         }
 
 
-        public override int Spawn(SpawnGroup group, List<WorldEntity> entities)
+        public override ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities)
         {
             var manager = Region.PopulationManager;
             if (group == null) return 0;

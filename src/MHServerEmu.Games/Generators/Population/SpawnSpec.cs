@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Generators.Population
 {
     public class SpawnSpec
     {
-        public int Id { get; }
+        public ulong Id { get; }
         public SpawnGroup Group { get; set; }
         public PrototypeId EntityRef { get; set; }
         public WorldEntity ActiveEntity { get; set; }
@@ -20,8 +20,9 @@ namespace MHServerEmu.Games.Generators.Population
         public EntitySelectorPrototype EntitySelectorProto { get; set; }
         public PrototypeId MissionRef { get; set; }
         public List<EntitySelectorActionPrototype> Actions { get; private set; }
+        public ScriptRoleKeyEnum RoleKey { get; internal set; }
 
-        public SpawnSpec(int id, SpawnGroup group)
+        public SpawnSpec(ulong id, SpawnGroup group)
         {
             Id = id;
             Group = group;
@@ -49,7 +50,11 @@ namespace MHServerEmu.Games.Generators.Population
                 settings.OverrideSnapToFloorValue = SnapToFloor == true;
             }
             if (entityProto.Bounds != null)
-                position.Z += entityProto.Bounds.GetBoundHalfHeight();
+            {
+                bool isMissionHotspot = entityProto.Properties != null && entityProto.Properties[PropertyEnum.MissionHotspot];
+                if (isMissionHotspot == false)
+                    position.Z += entityProto.Bounds.GetBoundHalfHeight();
+            }
 
             settings.Properties = new PropertyCollection();
             settings.Properties.FlattenCopyFrom(Properties, false);
@@ -66,6 +71,7 @@ namespace MHServerEmu.Games.Generators.Population
 
             settings.Actions = Actions;
             settings.ActionsTarget = MissionRef;
+            settings.SpawnSpec = this;
 
             ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;
         }
@@ -88,13 +94,15 @@ namespace MHServerEmu.Games.Generators.Population
 
     public class SpawnGroup
     {
-        public int Id { get; }
+        public ulong Id { get; }
         public Transform3 Transform { get; set; }
         public List<SpawnSpec> Specs { get; set; }
         public PrototypeId MissionRef { get; set; }
         public PrototypeId EncounterRef {  get; set; }
         public PopulationManager PopulationManager { get; set; }
-        public SpawnGroup(int id, PopulationManager populationManager)
+        public ulong SpawnerId { get; set; }
+
+        public SpawnGroup(ulong id, PopulationManager populationManager)
         {
             Id = id;
             PopulationManager = populationManager;
