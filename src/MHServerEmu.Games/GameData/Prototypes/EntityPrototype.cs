@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -10,8 +10,6 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    using KeywordsMask = BitList;
-
     #region Enums
 
     [AssetEnum((int)None)]
@@ -275,14 +273,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public RankPrototype RankPrototype { get => Rank.As<RankPrototype>(); }
 
-        private KeywordsMask keywordsMask;
+        private KeywordsMask _keywordsMask;
         private bool isVacuumable;
+
+        private object _interactionDataLock;
+        private bool _interactionDataCached;
+        [DoNotCopy]
+        public InteractionData InteractionData { get; set; }
+        [DoNotCopy]
+        public List<InteractionData> KeywordsInteractionData { get; protected set; }
 
         public override void PostProcess()
         {
             base.PostProcess();
 
-            keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
             isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
@@ -299,7 +304,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
-            return keywordProto != null && KeywordPrototype.TestKeywordBit(keywordsMask, keywordProto);
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+
+        public InteractionData GetInteractionData()
+        {
+            if (_interactionDataCached == false)
+            {
+                _interactionDataLock = new();
+                KeywordsInteractionData = new();
+                BuildInteractionDataCache();
+            }
+            return InteractionData;
+        }
+
+        private void BuildInteractionDataCache()
+        {
+            lock (_interactionDataLock)
+            {
+                if (_interactionDataCached == false)
+                {
+                    GameDatabase.InteractionManager.BuildEntityPrototypeCachedData(this);
+                    _interactionDataCached = true;
+                }
+            }
+        }
+
+        public List<InteractionData> GetKeywordsInteractionData()
+        {
+            if (_interactionDataCached == false) BuildInteractionDataCache();
+            return KeywordsInteractionData;
         }
     }
 
