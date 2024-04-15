@@ -746,8 +746,8 @@ namespace MHServerEmu.Games.Regions
             {
                 if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
-                    Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.GetPosition());
-                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.GetOrientation());
+                    Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.Position);
+                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.Orientation);
                     if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
                     playerConnection.StartPositon = position;

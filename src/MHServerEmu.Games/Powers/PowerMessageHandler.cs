@@ -165,7 +165,7 @@ namespace MHServerEmu.Games.Powers
                             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                             EntityId = entityId,
                             FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                            Position = new(entity.RegionLocation.GetPosition()),
+                            Position = new(entity.RegionLocation.Position),
                             Orientation = new(),
                             LocomotionState = new(0)
                         };

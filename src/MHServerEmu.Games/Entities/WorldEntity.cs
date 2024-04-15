@@ -227,8 +227,8 @@ namespace MHServerEmu.Games.Entities
 
         public void ChangeRegionPosition(Vector3 position, Orientation orientation)
         {
-            RegionLocation.SetPosition(position);
-            RegionLocation.SetOrientation(orientation);
+            RegionLocation.Position = position;
+            RegionLocation.Orientation = orientation;
             // Old
             Properties[PropertyEnum.MapPosition] = position;
             Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
@@ -311,6 +311,9 @@ namespace MHServerEmu.Games.Entities
             return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
         }
 
-
+        public bool TestStatus(EntityStatus status)
+        {
+            return Status.HasFlag(status);
+        }
     }
 }

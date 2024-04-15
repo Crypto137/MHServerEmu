@@ -21,33 +21,37 @@ namespace MHServerEmu.Games.Entities
         public bool IsValid() => _region != null;
 
         private Vector3 _position;
-        public Vector3 GetPosition() => IsValid() ? _position : Vector3.Zero;
-        public bool SetPosition(Vector3 position)
+        public Vector3 Position
         {
-            if (!Vector3.IsFinite(position))
+            get => IsValid() ? _position : Vector3.Zero;
+            set 
             {
-                Logger.Warn($"Non-finite position ({position}) given to region location: {ToString()}");
-                return false;
-            }
-            if (_region == null) return false;
+                if (!Vector3.IsFinite(value))
+                {
+                    Logger.Warn($"Non-finite position ({value}) given to region location: {ToString()}");
+                    return;
+                }
+                if (_region == null) return;
 
-            Cell oldCell = Cell;
-            if (oldCell == null || !oldCell.IntersectsXY(position))
-            {
-                Cell newCell = _region.GetCellAtPosition(position);
-                if (newCell == null) return false;
-                else Cell = newCell;
+                Cell oldCell = Cell;
+                if (oldCell == null || !oldCell.IntersectsXY(value))
+                {
+                    Cell newCell = _region.GetCellAtPosition(value);
+                    if (newCell == null) return;
+                    else Cell = newCell;
+                }
+                _position = value;
             }
-            _position = position;
-            return true;
         }
 
         private Orientation _orientation;
-        public Orientation GetOrientation() => IsValid() ? _orientation : Orientation.Zero;
-
-        public void SetOrientation(Orientation orientation)
+        public Orientation Orientation
         {
-            if (Orientation.IsFinite(orientation)) _orientation = orientation;
+            get => IsValid() ? _orientation : Orientation.Zero;
+            set
+            {
+                if (Orientation.IsFinite(value)) _orientation = value;
+            }
         }
 
         public static float ProjectToFloor(Cell cell, Vector3 position)
@@ -166,8 +170,8 @@ namespace MHServerEmu.Games.Entities
                 CellRef = PrototypeId.Invalid;
             }
 
-            Position = new(regionLocation.GetPosition());
-            Orientation = new(regionLocation.GetOrientation());
+            Position = new(regionLocation.Position);
+            Orientation = new(regionLocation.Orientation);
 
             return this;
         }
