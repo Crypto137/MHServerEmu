@@ -27,8 +27,8 @@ namespace MHServerEmu.Core.Network
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
 
-        public IEnumerable<MessagePackage> Messages => _messageList;
-        public int NumMessages => _messageList != null ? _messageList.Count : 0;
+        public IEnumerable<MessagePackage> Messages { get => _messageList; }
+        public int NumMessages { get => _messageList != null ? _messageList.Count : 0; }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessagePackage"/> instances.
