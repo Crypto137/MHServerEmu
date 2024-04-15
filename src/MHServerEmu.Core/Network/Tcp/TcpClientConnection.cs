@@ -64,7 +64,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         public int Send(IPacket packet, SocketFlags flags = SocketFlags.None)
         {
-            return Send(packet.Data, flags);
+            return Send(packet.Serialize(), flags);
         }
 
         #endregion

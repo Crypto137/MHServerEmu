@@ -32,14 +32,15 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void Parse(byte[] data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
-            PacketIn packet = new(stream);
+            MuxPacket packet;
+            using (MemoryStream ms = new(data))
+                packet = new(ms);
 
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
                     Logger.Trace($"Connected on mux channel {packet.MuxId}");
-                    Connection.Send(new PacketOut(packet.MuxId, MuxCommand.ConnectAck));
+                    Connection.Send(new MuxPacket(packet.MuxId, MuxCommand.ConnectAck));
                     break;
 
                 case MuxCommand.ConnectAck:
@@ -77,7 +78,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMuxDisconnect(ushort muxId)
         {
-            Connection.Send(new PacketOut(muxId, MuxCommand.Disconnect));
+            Connection.Send(new MuxPacket(muxId, MuxCommand.Disconnect));
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMessage(ushort muxId, MessagePackage message)
         {
-            PacketOut packet = new(muxId, MuxCommand.Data);
+            MuxPacket packet = new(muxId, MuxCommand.Data);
             packet.AddMessage(message);
             Connection.Send(packet);
         }
@@ -103,7 +104,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMessages(ushort muxId, IEnumerable<MessagePackage> messages)
         {
-            PacketOut packet = new(muxId, MuxCommand.Data);
+            MuxPacket packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
         }
