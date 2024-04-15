@@ -529,8 +529,8 @@ namespace MHServerEmu.Games.Events
                 .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
                 .Build());
 
-                    var entity = _game.EntityManager.GetEntityById(arenaEntityId);
-                    entity?.Destroy();
+            var entity = _game.EntityManager.GetEntityById(arenaEntityId);
+            entity?.Destroy();
 
             playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
                 .SetIdEntity(arenaEntityId)

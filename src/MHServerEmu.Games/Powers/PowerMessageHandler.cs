@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (damage > 0)
             {
-                WorldEntity entity = (WorldEntity)playerConnection.Game.EntityManager.GetEntityById(entityId);
+                var entity = playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
                 if (entity != null)
                 {
                     var proto = entity.WorldEntityPrototype;

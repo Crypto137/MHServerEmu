@@ -472,8 +472,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 var manager = entity.Game?.EntityManager;
                 if (manager == null) return false;
-                if (manager.GetEntityById(spawnGroup.SpawnerId) is Spawner spawner
-                    && spawner.PrototypeDataRef == SpawnerPrototype)
+                var spawner = manager.GetEntity<Spawner>(spawnGroup.SpawnerId);
+                if (spawner != null && spawner.PrototypeDataRef == SpawnerPrototype)
                     return true;
             }
             return false;

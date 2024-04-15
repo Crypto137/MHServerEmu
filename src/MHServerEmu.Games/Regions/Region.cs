@@ -410,7 +410,7 @@ namespace MHServerEmu.Games.Regions
         {
             foreach(var metaGameId in MetaGames)
             {
-                MetaGame metaGame = Game.EntityManager.GetEntityById(metaGameId) as MetaGame;                
+                var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);                
                 metaGame?.RegistyStates();
             }
             return MissionManager.GenerateMissionPopulation();            
@@ -603,7 +603,7 @@ namespace MHServerEmu.Games.Regions
             {
                 var metaGameId = MetaGames.First();
                 var metaGame = Game.EntityManager.GetEntityById(metaGameId);
-                if (metaGame != null) metaGame.Destroy();
+                metaGame?.Destroy();
                 MetaGames.Remove(metaGameId);
             }
 

@@ -147,6 +147,11 @@ namespace MHServerEmu.Games.Entities
             return null;
         }
 
+        public T GetEntity<T>(ulong entityId) where T : Entity
+        {
+            return GetEntityById(entityId) as T;
+        }
+
         public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)

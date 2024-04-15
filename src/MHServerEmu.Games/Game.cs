@@ -178,8 +178,8 @@ namespace MHServerEmu.Games
             lock (_gameLock)
             {
                 var entityManager = playerConnection.Game.EntityManager;
-                var targetEntity = entityManager.GetEntityById(entityId);
-                if (targetEntity is not WorldEntity worldEntity) return;
+                var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
+                if (worldEntity == null) return;
 
                 foreach (IMessage message in GetExitGameMessages())
                     SendMessage(playerConnection, message);

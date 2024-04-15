@@ -98,11 +98,11 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetGame(client, out Game game);
             var manager = game.EntityManager;
 
-            var entity = manager.GetEntityById(entityId1);
-            if (entity is not WorldEntity entity1) return $"No entity found for {entityId1}";
+            var entity1 = manager.GetEntity<WorldEntity>(entityId1);
+            if (entity1 == null) return $"No entity found for {entityId1}";
 
-            entity = manager.GetEntityById(entityId2);
-            if (entity is not WorldEntity entity2) return $"No entity found for {entityId2}";
+            var entity2 = manager.GetEntity<WorldEntity>(entityId2);
+            if (entity2 == null) return $"No entity found for {entityId2}";
 
             Bounds bounds = entity1.Bounds;
             bool isBlocked = Games.Regions.Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
