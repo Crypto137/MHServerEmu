@@ -45,6 +45,8 @@ namespace MHServerEmu.Core.Collisions
             return val1 >= val2 - epsilon && val1 <= val2 + epsilon;
         }
 
+        public static bool IsNearZero(float value, float epsilon = Epsilon) => EpsilonTest(value, 0.0f, epsilon);
+
         public static float SegmentPointDistanceSq(Vector3 a, Vector3 b, Vector3 c)
         {
             Vector3 ba = b - a;
