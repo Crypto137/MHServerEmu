@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
 
-        public ReplicatedVariable<string> PlayerName { get; set; }
+        public ReplicatedVariable<string> PlayerName { get; set; } = new();
         public ulong OwnerPlayerDbId { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
         public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }

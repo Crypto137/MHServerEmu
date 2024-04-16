@@ -85,6 +85,15 @@ namespace MHServerEmu.Games.Entities
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection Properties { get; set; } = new();
 
+        public virtual ulong PartyId
+        {
+            get
+            {
+                var ownerPlayer = GetOwnerOfType<Player>();
+                return ownerPlayer != null ? ownerPlayer.PartyId : 0;
+            }
+        }
+
         public DateTime DeadTime { get; private set; }
         public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId); }
@@ -346,13 +355,6 @@ namespace MHServerEmu.Games.Entities
                 owner = owner.GetOwner();
             }
             return null;
-        }
-
-        public virtual ulong GetPartyId()
-        {
-            var ownerPlayer = GetOwnerOfType<Player>();
-            if (ownerPlayer != null) return ownerPlayer.GetPartyId();
-            return 0;
         }
     }
 }

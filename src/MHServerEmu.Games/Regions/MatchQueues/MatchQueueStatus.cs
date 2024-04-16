@@ -23,12 +23,12 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
         private Player _owner;
 
-        public MatchQueueStatus() { }
-
         /// <summary>
         /// Constructs a new <see cref="MatchQueueStatus"/> instance.
         /// </summary>
-        public MatchQueueStatus(CodedInputStream stream)
+        public MatchQueueStatus() { }
+
+        public void Decode(CodedInputStream stream)
         {
             ulong numRegionStatuses = stream.ReadRawVarint64();
 

@@ -80,7 +80,8 @@ namespace MHServerEmu.Games.Powers
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
                 UpdateInterval = stream.ReadRawInt32();
 
-            Properties = new(stream);
+            Properties = new();
+            Properties.Decode(stream);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
                 CancelOnFlags = (UInt32Flags)stream.ReadRawVarint32();

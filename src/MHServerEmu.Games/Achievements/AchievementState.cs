@@ -2,7 +2,6 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.System;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -18,11 +17,14 @@ namespace MHServerEmu.Games.Achievements
         /// </summary>
         public AchievementState() { }
 
+
         /// <summary>
-        /// Constructs an <see cref="AchievementState"/> from the provided <see cref="CodedInputStream"/>.
+        /// Decodes <see cref="AchievementState"/> data from the provided <see cref="CodedInputStream"/>.
         /// </summary>
-        public AchievementState(CodedInputStream stream)
+        public void Decode(CodedInputStream stream)
         {
+            AchievementProgressMap.Clear();
+
             ulong numProgress = stream.ReadRawVarint64();
             for (ulong i = 0; i < numProgress; i++)
             {

@@ -17,12 +17,6 @@ namespace MHServerEmu.Games.Properties
             _replicationId = replicationId;
         }
 
-        public ReplicatedPropertyCollection(CodedInputStream stream)
-        {
-            _replicationId = stream.ReadRawVarint64();
-            Decode(stream);
-        }
-
         public override bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
         {
             bool success = true;
@@ -36,6 +30,12 @@ namespace MHServerEmu.Games.Properties
             
             success &= base.SerializeWithDefault(archive, defaultCollection);
             return success;
+        }
+
+        public override void Decode(CodedInputStream stream)
+        {
+            _replicationId = stream.ReadRawVarint64();
+            base.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)

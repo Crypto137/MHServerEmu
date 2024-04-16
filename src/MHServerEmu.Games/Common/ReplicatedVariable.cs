@@ -34,13 +34,7 @@ namespace MHServerEmu.Games.Common
             EncodeValue(stream);
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(ReplicationId)}: {ReplicationId}");
-            sb.AppendLine($"{nameof(Value)}: {Value}");
-            return sb.ToString();
-        }
+        public override string ToString() => $"[{_replicationId}] {_value}";
 
         public bool Serialize(Archive archive)
         {

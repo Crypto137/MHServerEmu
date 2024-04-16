@@ -390,7 +390,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
             if (entity == null) return false;
-            return context.PartyId != 0 && entity.GetPartyId() == context.PartyId;
+            return context.PartyId != 0 && entity.PartyId == context.PartyId;
         }
     }
 
