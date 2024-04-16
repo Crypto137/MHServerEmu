@@ -36,6 +36,10 @@ namespace MHServerEmu.Frontend
             using (MemoryStream ms = new(data))
                 packet = new(ms);
 
+            // We should be receiving packets only from mux channels 1 and 2
+            if (packet.MuxId == 0 || packet.MuxId > 2)
+                Logger.Warn($"Received a MuxPacket with unexpected mux channel {packet.MuxId} from {Connection}");
+
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
@@ -58,6 +62,10 @@ namespace MHServerEmu.Frontend
 
                 case MuxCommand.Data:
                     RouteMessages(packet.MuxId, packet.Messages);
+                    break;
+
+                default:
+                    Logger.Error($"Received a malformed MuxPacket with command {packet.Command} from {Connection}");
                     break;
             }
         }

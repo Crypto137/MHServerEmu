@@ -8,6 +8,7 @@ namespace MHServerEmu.Core.Network
 {
     public enum MuxCommand
     {
+        Invalid = 0x00,
         Connect = 0x01,
         ConnectAck = 0x02,
         Disconnect = 0x03,
@@ -51,18 +52,27 @@ namespace MHServerEmu.Core.Network
         {
             using (BinaryReader reader = new(stream))
             {
-                // 6-byte mux header
-                MuxId = reader.ReadUInt16();
-                int bodyLength = reader.ReadUInt24();
-                Command = (MuxCommand)reader.ReadByte();
-
-                if (IsDataPacket)
+                try
                 {
-                    _messageList = new();
+                    // 6-byte mux header
+                    MuxId = reader.ReadUInt16();
+                    int bodyLength = reader.ReadUInt24();
+                    Command = (MuxCommand)reader.ReadByte();
 
-                    CodedInputStream cis = CodedInputStream.CreateInstance(reader.ReadBytes(bodyLength));
-                    while (cis.IsAtEnd == false)
-                        _messageList.Add(new(cis));
+                    if (IsDataPacket)
+                    {
+                        _messageList = new();
+
+                        CodedInputStream cis = CodedInputStream.CreateInstance(reader.ReadBytes(bodyLength));
+                        while (cis.IsAtEnd == false)
+                            _messageList.Add(new(cis));
+                    }
+                }
+                catch (Exception e)
+                {
+                    MuxId = 1;      // Set muxId to 1 to avoid triggering the mux channel check that happens later on
+                    Command = MuxCommand.Invalid;
+                    Logger.Error($"Failed to parse MuxPacket, {e.Message}");
                 }
             }
         }
