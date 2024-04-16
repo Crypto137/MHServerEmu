@@ -5,6 +5,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
 {
     public class Locomotor
     {
+        public bool MovementImpeded { get; set; }
+
         public static PathFlags GetPathFlags(LocomotorMethod naviMethod)
         {
             return naviMethod switch
@@ -16,5 +18,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 _ => PathFlags.None,
             };
         }
+
+        internal bool IsMissile()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }
