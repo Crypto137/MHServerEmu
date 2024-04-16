@@ -20,6 +20,8 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public readonly struct MuxPacket : IPacket
     {
+        private const int HeaderLength = 6;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly List<MessagePackage> _messageList = null;
@@ -107,16 +109,17 @@ namespace MHServerEmu.Core.Network
         public byte[] Serialize()
         {
             byte[] bodyBuffer = SerializeBody();
+            int bodyLength = bodyBuffer.Length;
 
-            using (MemoryStream ms = new())
+            using (MemoryStream ms = new(HeaderLength + bodyLength))
             using (BinaryWriter writer = new(ms))
             {
                 writer.Write(MuxId);
-                writer.WriteUInt24(bodyBuffer.Length);
+                writer.WriteUInt24(bodyLength);
                 writer.Write((byte)Command);
 
                 // Write the body buffer only if there is something to write to avoid unnecessary overhead.
-                if (bodyBuffer.Length > 0)
+                if (bodyLength > 0)
                     writer.Write(bodyBuffer);
 
                 // Flushing is not needed for the MemoryStream / BinaryWriter combo.
