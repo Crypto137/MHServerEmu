@@ -117,9 +117,9 @@ namespace MHServerEmu.Core.VectorMath
         public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
-        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => LengthSqr(v1 - v2) < epsilon;
+        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon = Segment.Epsilon) => LengthSqr(v1 - v2) < epsilon;
         public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
-        public static bool IsNearZero(Vector3 v, float epsilon = 0.000001f) => LengthSqr(v) < epsilon;
+        public static bool IsNearZero(Vector3 v, float epsilon = Segment.Epsilon) => LengthSqr(v) < epsilon;
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
