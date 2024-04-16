@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        public ReplicatedVariable<int> Team1 { get; set; }
-        public ReplicatedVariable<int> Team2 { get; set; }
+        public ReplicatedVariable<int> Team1 { get; set; } = new();
+        public ReplicatedVariable<int> Team2 { get; set; } = new();
 
         // new
         public PvP(Game game) : base(game) { }
@@ -22,8 +22,8 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.Decode(stream);
 
-            Team1 = new(stream);
-            Team2 = new(stream);
+            Team1.Decode(stream);
+            Team2.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)

@@ -15,10 +15,12 @@ namespace MHServerEmu.Games.MetaGames
     public class MetaGame : Entity
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public ReplicatedVariable<string> Name { get; set; }
+
+        public ReplicatedVariable<string> Name { get; private set; } = new();
 
         // new
         public MetaGame(Game game) : base(game) { }
+
         public override void Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
@@ -52,7 +54,7 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.Decode(stream);
 
-            Name = new(stream);
+            Name.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)

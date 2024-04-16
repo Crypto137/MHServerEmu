@@ -29,6 +29,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
         public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
+
         // new
         public Avatar(Game game) : base(game) { }
 
@@ -80,7 +81,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             BoolDecoder boolDecoder = new();
 
-            PlayerName = new(stream);
+            PlayerName.Decode(stream);
             OwnerPlayerDbId = stream.ReadRawVarint64();
 
             // Similar throwaway string to Player entity

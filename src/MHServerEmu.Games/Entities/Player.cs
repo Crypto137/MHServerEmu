@@ -51,6 +51,7 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ulong _shardId;
         private ReplicatedVariable<string> _playerName;
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
         private ReplicatedVariable<string> _secondaryPlayerName;
@@ -67,7 +68,7 @@ namespace MHServerEmu.Games.Entities
 
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
-        public ulong ShardId { get; set; }
+        public ulong ShardId { get => _shardId; }
         public MatchQueueStatus MatchQueueStatus { get; set; }
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
@@ -109,7 +110,7 @@ namespace MHServerEmu.Games.Entities
             MissionManager.Owner = this;
             
             AvatarProperties = new(9078333);
-            ShardId = 3;
+            _shardId = 3;
             _playerName = new(9078334, string.Empty);
             _secondaryPlayerName = new(0, string.Empty);
             
@@ -140,12 +141,12 @@ namespace MHServerEmu.Games.Entities
             MissionManager.Decode(stream, boolDecoder);
             AvatarProperties = new(stream);
 
-            ShardId = stream.ReadRawVarint64();
+            _shardId = stream.ReadRawVarint64();
 
-            _playerName = new(stream);
+            _playerName.Decode(stream);
             _consoleAccountIds[0] = stream.ReadRawVarint64();
             _consoleAccountIds[1] = stream.ReadRawVarint64();
-            _secondaryPlayerName = new(stream);
+            _secondaryPlayerName.Decode(stream);
 
             MatchQueueStatus = new(stream);
             MatchQueueStatus.SetOwner(this);
@@ -153,7 +154,7 @@ namespace MHServerEmu.Games.Entities
             EmailVerified = boolDecoder.ReadBool(stream);
             AccountCreationTimestamp = new(stream.ReadRawInt64() * 10);
 
-            PartyId = new(stream);
+            PartyId.Decode(stream);
 
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
 
@@ -216,7 +217,7 @@ namespace MHServerEmu.Games.Entities
             MissionManager.Encode(stream, boolEncoder);
             AvatarProperties.Encode(stream);
 
-            stream.WriteRawVarint64(ShardId);
+            stream.WriteRawVarint64(_shardId);
             _playerName.Encode(stream);
             stream.WriteRawVarint64(_consoleAccountIds[0]);
             stream.WriteRawVarint64(_consoleAccountIds[1]);
@@ -684,7 +685,7 @@ namespace MHServerEmu.Games.Entities
 
             sb.AppendLine($"{nameof(MissionManager)}: {MissionManager}");
             sb.AppendLine($"{nameof(AvatarProperties)}: {AvatarProperties}");
-            sb.AppendLine($"{nameof(ShardId)}: {ShardId}");
+            sb.AppendLine($"{nameof(_shardId)}: {_shardId}");
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
