@@ -12,6 +12,8 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Entities.Locomotion;
+using Gazillion;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -38,6 +40,7 @@ namespace MHServerEmu.Games.Entities
         public EntityActionComponent EntityActionComponent { get; protected set; }
         public SpawnSpec SpawnSpec { get; private set; }
         public SpawnGroup SpawnGroup { get => SpawnSpec?.Group; }
+        public Locomotor Locomotor { get; private set; }
 
         // New
         public WorldEntity(Game game): base(game) 
@@ -225,7 +228,7 @@ namespace MHServerEmu.Games.Entities
             // TODO CanInfluenceNavigationMesh
         }
 
-        public void ChangeRegionPosition(Vector3 position, Orientation orientation)
+        public virtual void ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
             RegionLocation.Position = position;
             RegionLocation.Orientation = orientation;
@@ -315,5 +318,27 @@ namespace MHServerEmu.Games.Entities
         {
             return Status.HasFlag(status);
         }
+
+        internal void UpdateNavigationInfluence()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [Flags]
+    public enum ChangePositionFlags
+    {
+        None = 0,
+        Update = 1 << 0,
+        NoSendToOwner = 1 << 1,
+        NoSendToServer = 1 << 2,
+        NoSendToClients = 1 << 3,
+        Orientation = 1 << 4,
+        Force = 1 << 5,
+        Teleport = 1 << 6,
+        HighFlying = 1 << 7,
+        PhysicsResolve = 1 << 8,
+        SkipAOI = 1 << 9,
+        EnterWorld = 1 << 10,
     }
 }

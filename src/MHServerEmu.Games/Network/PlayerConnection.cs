@@ -409,7 +409,7 @@ namespace MHServerEmu.Games.Network
 
                     SendMessage(NetMessageEntityPosition.CreateBuilder()
                         .SetIdEntity(Player.CurrentAvatar.Id)
-                        .SetFlags(64)
+                        .SetFlags((uint)ChangePositionFlags.Teleport)
                         .SetPosition(targetPos.ToNetStructPoint3())
                         .SetOrientation(targetRot.ToNetStructPoint3())
                         .SetCellId(cellid)
