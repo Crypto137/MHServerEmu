@@ -53,7 +53,8 @@ namespace MHServerEmu.Games
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
-        
+        public TimeSpan FixedTimeBetweenUpdates { get; private set; }
+
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
         public Game(ulong id)
@@ -103,6 +104,7 @@ namespace MHServerEmu.Games
                         connection.ReceiveMessage(message.Item2);
                     }
 
+                    FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(TickTime); // TODO UpdateFixedTime();
                     // Update event manager
                     EventManager.Update();
 
