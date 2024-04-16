@@ -27,7 +27,14 @@ namespace MHServerEmu.Core.Network
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
 
+        /// <summary>
+        /// Returns an <see cref="IEnumerable"/> collection of <see cref="MessagePackage"/> instances contained in this <see cref="MuxPacket"/>.
+        /// </summary>
         public IEnumerable<MessagePackage> Messages { get => _messageList; }
+
+        /// <summary>
+        /// Returns the number of <see cref="MessagePackage"/> instances contained in this <see cref="MuxPacket"/>.
+        /// </summary>
         public int NumMessages { get => _messageList != null ? _messageList.Count : 0; }
 
         /// <summary>
@@ -36,7 +43,7 @@ namespace MHServerEmu.Core.Network
         public bool IsDataPacket { get => Command == MuxCommand.Data || Command == MuxCommand.ConnectWithData; }
 
         /// <summary>
-        /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream">.
+        /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream"/>.
         /// </summary>
         public MuxPacket(Stream stream)
         {
@@ -59,7 +66,7 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Constructs a <see cref="MuxPacket"/> to be serialized and sent.
+        /// Constructs a <see cref="MuxPacket"/> to be serialized and sent out.
         /// </summary>
         public MuxPacket(ushort muxId, MuxCommand command)
         {
@@ -107,11 +114,12 @@ namespace MHServerEmu.Core.Network
                 writer.Write(MuxId);
                 writer.WriteUInt24(bodyBuffer.Length);
                 writer.Write((byte)Command);
-                writer.Write(bodyBuffer);
-                // flush not needed
 
-                //Logger.Debug(ms.ToArray().ToHexString());
+                // Write the body buffer only if there is something to write to avoid unnecessary overhead.
+                if (bodyBuffer.Length > 0)
+                    writer.Write(bodyBuffer);
 
+                // Flushing is not needed for the MemoryStream / BinaryWriter combo.
                 return ms.ToArray();
             }
         }
@@ -125,7 +133,7 @@ namespace MHServerEmu.Core.Network
                 return Array.Empty<byte>();
 
             if (_messageList.Count == 0)
-                Logger.WarnReturn(Array.Empty<byte>(), "SerializeBody(): Data packet contains no messages");
+                return Logger.WarnReturn(Array.Empty<byte>(), "SerializeBody(): Data packet contains no messages");
 
             using (MemoryStream ms = new())
             {
