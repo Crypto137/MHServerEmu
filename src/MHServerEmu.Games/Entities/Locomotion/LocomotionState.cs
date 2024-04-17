@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {
@@ -24,12 +24,30 @@ namespace MHServerEmu.Games.Entities.Locomotion
         HasEntityPrototypeId    = 1 << 11
     }
 
+    [Flags]
+    public enum LocomotionFlags : ulong
+    {
+        None = 0,
+        IsLocomoting = 1ul << 0,
+        IsWalking = 1ul << 1,
+        IsLooking = 1ul << 2,
+        SkipCurrentSpeedRate = 1ul << 3,
+        LocomotionNoEntityCollide = 1ul << 4,
+        IsMovementPower = 1ul << 5,
+        DisableOrientation = 1ul << 6,
+        IsDrivingMovementMode = 1ul << 7,
+        ForwardMove = 1ul << 8,
+        MoveTo = 1ul << 9,
+        IsSyncMoving = 1ul << 10,
+        IgnoresWorldCollision = 1ul << 11,
+    }
+
     public class LocomotionState
     {
-        public UInt64Flags LocomotionFlags { get; set; }
-        public uint Method { get; set; }
+        public LocomotionFlags LocomotionFlags { get; set; }
+        public LocomotorMethod Method { get; set; }
         public float MoveSpeed { get; set; }
-        public uint Height { get; set; }
+        public int Height { get; set; }
         public ulong FollowEntityId { get; set; }
         public Vector2 FollowEntityRange { get; set; }
         public uint PathGoalNodeIndex { get; set; }     // This was signed in old protocols
@@ -38,16 +56,16 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public LocomotionState(CodedInputStream stream, LocomotionMessageFlags flags)
         {
             if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
-                LocomotionFlags = (UInt64Flags)stream.ReadRawVarint64();
+                LocomotionFlags = (LocomotionFlags)stream.ReadRawVarint64();
 
             if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
-                Method = stream.ReadRawVarint32();
+                Method = (LocomotorMethod)stream.ReadRawVarint32();
 
             if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
                 MoveSpeed = stream.ReadRawZigZagFloat(0);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
-                Height = stream.ReadRawVarint32();
+                Height = (int)stream.ReadRawVarint32();
 
             if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
                 FollowEntityId = stream.ReadRawVarint64();
@@ -69,7 +87,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             MoveSpeed = moveSpeed;
         }
 
-        public LocomotionState(UInt64Flags locomotionFlags, uint method, float moveSpeed, uint height,
+        public LocomotionState(LocomotionFlags locomotionFlags, LocomotorMethod method, float moveSpeed, int height,
             ulong followEntityId, Vector2 followEntityRange, uint pathGoalNodeIndex, LocomotionPathNode[] locomotionPathNodes)
         {
             LocomotionFlags = locomotionFlags;
@@ -88,13 +106,13 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 stream.WriteRawVarint64((ulong)LocomotionFlags);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
-                stream.WriteRawVarint32(Method);
+                stream.WriteRawVarint32((uint)Method);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
                 stream.WriteRawZigZagFloat(MoveSpeed, 0);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
-                stream.WriteRawVarint32(Height);
+                stream.WriteRawVarint32((uint)Height);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
                 stream.WriteRawVarint64(FollowEntityId);
