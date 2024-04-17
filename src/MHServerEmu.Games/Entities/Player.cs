@@ -132,6 +132,59 @@ namespace MHServerEmu.Games.Entities
             _gameplayOptions.SetOwner(this);
         }
 
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            success &= Serializer.Transfer(archive, ref _missionManager);
+            success &= Serializer.Transfer(archive, ref _avatarProperties);
+
+            // archive.IsTransient
+            success &= Serializer.Transfer(archive, ref _shardId);
+            success &= Serializer.Transfer(archive, ref _playerName);
+            success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+            success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
+            success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+            success &= Serializer.Transfer(archive, ref _matchQueueStatus);
+            success &= Serializer.Transfer(archive, ref _emailVerified);
+            success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
+
+            // archive.IsReplication
+            success &= Serializer.Transfer(archive, ref _partyId);
+            success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+
+            // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
+            string emptyString = string.Empty;
+            success &= Serializer.Transfer(archive, ref emptyString);
+            if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
+
+            //bool hasCommunityData = archive.IsPersistent || archive.IsMigration
+            //    || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner));
+            bool hasCommunityData = true;
+            success &= Serializer.Transfer(archive, ref hasCommunityData);
+            if (hasCommunityData)
+                success &= Serializer.Transfer(archive, ref _community);
+
+            // Unknown bool, always false
+            bool unkBool = false;
+            success &= Serializer.Transfer(archive, ref unkBool);
+            if (unkBool) Logger.Warn($"Serialize(): unkBool is true!");
+
+            success &= Serializer.Transfer(archive, ref _unlockedInventoryList);
+
+            //if (archive.IsMigration || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
+            success &= Serializer.Transfer(archive, ref _badges);
+
+            success &= Serializer.Transfer(archive, ref _gameplayOptions);
+
+            //if (archive.IsMigration || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
+            success &= Serializer.Transfer(archive, ref _achievementState);
+
+            success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
+
+            return success;
+        }
+
         protected override void Decode(CodedInputStream stream)
         {
             base.Decode(stream);
@@ -189,7 +242,9 @@ namespace MHServerEmu.Games.Entities
             for (ulong i = 0; i < numStashTabOptions; i++)
             {
                 PrototypeId stashTabRef = stream.ReadPrototypeRef<Prototype>();
-                _stashTabOptionsDict.Add(stashTabRef, new(stream));
+                StashTabOptions options = new();
+                options.Decode(stream);
+                _stashTabOptionsDict.Add(stashTabRef, options);
             }
         }
 
