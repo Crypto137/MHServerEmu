@@ -2,13 +2,15 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Achievements
 {
     /// <summary>
     /// Manages the state of all achievements for a given player.
     /// </summary>
-    public class AchievementState
+    public class AchievementState : ISerialize
     {
         public Dictionary<uint, AchievementProgress> AchievementProgressMap { get; } = new();
 
@@ -17,6 +19,53 @@ namespace MHServerEmu.Games.Achievements
         /// </summary>
         public AchievementState() { }
 
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+            //if (archive.IsTransient) return success;
+
+            uint achievementCount = (uint)AchievementProgressMap.Count;
+            success &= Serializer.Transfer(archive, ref achievementCount);
+
+            if (archive.IsPacking)
+            {
+                foreach (var kvp in AchievementProgressMap)
+                {
+                    uint achievementId = kvp.Key;
+                    uint count = kvp.Value.Count;
+                    TimeSpan completedDate = kvp.Value.CompletedDate;
+
+                    success &= Serializer.Transfer(archive, ref achievementId);
+                    success &= Serializer.Transfer(archive, ref count);
+                    success &= Serializer.Transfer(archive, ref completedDate);
+                    // IsMigration => progress.modifiedSinceCheckpoint
+                }
+
+                // IsMigration => m_migrationStamp, m_lastFullWriteTime
+            }
+            else
+            {
+                AchievementProgressMap.Clear();
+
+                for (uint i = 0; i < achievementCount; i++)
+                {
+                    uint achievementId = 0;
+                    uint count = 0;
+                    TimeSpan completedDate = TimeSpan.Zero;
+
+                    success &= Serializer.Transfer(archive, ref achievementId);
+                    success &= Serializer.Transfer(archive, ref count);
+                    success &= Serializer.Transfer(archive, ref completedDate);
+                    // IsMigration => progress.modifiedSinceCheckpoint
+
+                    AchievementProgressMap.Add(achievementId, new(count, completedDate, false));
+                }
+
+                // IsMigration => progress.modifiedSinceCheckpoint
+            }
+
+            return success;
+        }
 
         /// <summary>
         /// Decodes <see cref="AchievementState"/> data from the provided <see cref="CodedInputStream"/>.
