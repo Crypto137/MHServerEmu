@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Social.Communities
 {
@@ -105,7 +106,7 @@ namespace MHServerEmu.Games.Social.Communities
             return false;
         }
 
-        public bool ShouldArchiveTo(/* archive */)
+        public bool ShouldArchiveTo(Archive archive = null)
         {
             // TODO: Archive::IsReplication(), Archive::IsPersistent(), CommunityCircle::IsPersistent(), Archive::IsMigration(), CommunityCircle:IsMigrated()
             return true;
