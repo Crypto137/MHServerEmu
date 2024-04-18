@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Entities
 
         private void MissionEntityTracker()
         {
-            EntityTrackingContextMap2 involvementMap = new();
+            EntityTrackingContextMap involvementMap = new();
             if (GameDatabase.InteractionManager.GetEntityContextInvolvement(this, involvementMap) == false) return;
             foreach (var involment in involvementMap)
             {

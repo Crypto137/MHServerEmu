@@ -515,7 +515,7 @@ namespace MHServerEmu.Games.Dialog
             return false;
         }
 
-        public bool GetEntityContextInvolvement(WorldEntity entity, EntityTrackingContextMap2 map)
+        public bool GetEntityContextInvolvement(WorldEntity entity, EntityTrackingContextMap map)
         {
             if (entity == null) return false;
 
