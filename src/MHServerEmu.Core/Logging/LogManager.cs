@@ -8,6 +8,8 @@ namespace MHServerEmu.Core.Logging
     public static class LogManager
     {
         private static readonly Dictionary<string, Logger> _loggerDict = new();
+        private static readonly object _loggerDictLock = new();
+
         private static readonly HashSet<LogTarget> _targets = new();
 
         public static bool Enabled { get; set; }
@@ -29,13 +31,16 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         public static Logger CreateLogger(string name)
         {
-            if (_loggerDict.TryGetValue(name, out var logger) == false)
+            lock (_loggerDictLock)
             {
-                logger = new(name);
-                _loggerDict.Add(name, logger);
-            }
+                if (_loggerDict.TryGetValue(name, out var logger) == false)
+                {
+                    logger = new(name);
+                    _loggerDict.Add(name, logger);
+                }
 
-            return logger;
+                return logger;
+            }
         }
 
         /// <summary>
