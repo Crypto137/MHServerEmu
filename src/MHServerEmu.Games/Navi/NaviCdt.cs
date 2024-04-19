@@ -225,7 +225,7 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        private NaviTriangle FindTriangleContainingVertex(NaviPoint point)
+        public NaviTriangle FindTriangleContainingVertex(NaviPoint point)
         {
             var triangle = FindTriangleAtPoint(point.Pos);
             if (triangle != null)
@@ -962,5 +962,66 @@ namespace MHServerEmu.Games.Navi
 
             return sb.ToString();
         }
+
+        public NaviPoint FindCachedPointAtPoint(Vector3 position)
+        {
+            return _vertexLookupCache.FindVertex(position);
+        }
+
+        public bool AttemptCheapVertexPositionUpdate(NaviTriangle triangle, NaviPoint point, Vector3 position)
+        {
+            var oldPos = point.Pos;
+            point.Pos = position;
+            bool checkFail = false;
+            
+            var nextTriangle = triangle;
+            do
+            {
+                nextTriangle.OpposedTriangle(point, out NaviTriangle oppoTriangle, out NaviEdge oppoEdge);
+                if (oppoTriangle != null)
+                {
+                    var checkPoint = oppoTriangle.OpposedVertex(oppoEdge);
+                    var p0 = nextTriangle.PointCW(0);
+                    var p1 = nextTriangle.PointCW(1);
+                    var p2 = nextTriangle.PointCW(2);
+
+                    if (Pred.IsDegenerate(p0, p1, p2) || Pred.CircumcircleContainsPoint(p0, p1, p2, checkPoint))
+                    {
+                        checkFail = true;
+                        break;
+                    }
+                }
+                nextTriangle = nextTriangle.NextTriangleSharingPoint(point);
+            } while (nextTriangle != triangle);            
+
+            if (checkFail)
+            {
+                point.Pos = oldPos;
+                return false;
+            }
+            else
+            {
+                point.Pos = oldPos;                
+                nextTriangle = triangle;
+                do
+                {
+                    var sectorIndex = PointToSectorIndex(nextTriangle.Centroid());
+                    if (sectorIndex != -1 && nextTriangle == _sectors[sectorIndex])
+                        _sectors[sectorIndex] = null;
+                    nextTriangle = nextTriangle.NextTriangleSharingPoint(point);
+                } while (nextTriangle != triangle);
+
+                _vertexLookupCache.UpdateVertex(point, NaviUtil.ProjectToPlane(triangle, position));                
+                nextTriangle = triangle;
+                do
+                {
+                    AddTriangleFastLookupRef(nextTriangle);
+                    nextTriangle = nextTriangle.NextTriangleSharingPoint(point);
+                } while (nextTriangle != triangle);                
+
+                return true;
+            }
+        }
+
     }
 }
