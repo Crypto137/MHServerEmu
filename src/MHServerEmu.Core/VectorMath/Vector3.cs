@@ -211,6 +211,12 @@ namespace MHServerEmu.Core.VectorMath
 
         public float MaxElem() => Math.Max(Z, Math.Max(X, Y));
 
+        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero)
+        {
+            Vector3 vector2D = new(v.X, v.Y, 0.0f);
+            return IsNearZero(vector2D) ? zero : Normalize(vector2D);
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
