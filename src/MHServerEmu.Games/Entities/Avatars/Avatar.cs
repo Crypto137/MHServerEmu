@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // WorldEntity
             TrackingContextMap = new();
-            ConditionCollection = new();
+            ConditionCollection = new(this);
             PowerCollection = new();
             UnkEvent = 134463198;
 

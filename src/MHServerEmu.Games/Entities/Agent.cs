@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Entities
                 Id = 1,
                 CreatorPowerPrototypeId = startPowerRef
             };
-            ConditionCollection.Add(condition);
+            ConditionCollection.AddCondition(condition);
             PowerCollectionRecord powerCollection = new()
             {
                 Flags = PowerCollectionRecordFlags.PowerRefCountIsOne

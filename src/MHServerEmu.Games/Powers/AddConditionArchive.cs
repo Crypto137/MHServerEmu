@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 
@@ -18,7 +17,8 @@ namespace MHServerEmu.Games.Powers
 
             ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            Condition = new(stream);
+            Condition = new();
+            Condition.Decode(stream);
         }
 
         public AddConditionArchive() { }

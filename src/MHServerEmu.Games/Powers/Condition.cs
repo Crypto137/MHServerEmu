@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -45,14 +46,20 @@ namespace MHServerEmu.Games.Powers
         public ReplicatedPropertyCollection Properties { get; set; }
         public UInt32Flags CancelOnFlags { get; set; }
 
-        public Condition(CodedInputStream stream)
+        public Condition() 
+        {
+            StartTime = (long)Clock.GameTime.TotalMilliseconds;
+            Properties = new();
+        }
+
+        public void Decode(CodedInputStream stream)
         {
             SerializationFlags = (ConditionSerializationFlags)stream.ReadRawVarint32();
             Id = stream.ReadRawVarint64();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorId) == false)
                 CreatorId = stream.ReadRawVarint64();
-            
+
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoUltimateCreatorId) == false)
                 UltimateCreatorId = stream.ReadRawVarint64();
 
@@ -85,12 +92,6 @@ namespace MHServerEmu.Games.Powers
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
                 CancelOnFlags = (UInt32Flags)stream.ReadRawVarint32();
-        }
-
-        public Condition() 
-        {
-            StartTime = (long)Clock.GameTime.TotalMilliseconds;
-            Properties = new();
         }
 
         public void Encode(CodedOutputStream stream)

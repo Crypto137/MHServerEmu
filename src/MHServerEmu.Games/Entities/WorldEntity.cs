@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Entities
                 Bounds.InitializeFromPrototype(proto.Bounds);
 
             TrackingContextMap = new();
-            ConditionCollection = new();
+            ConditionCollection = new(this);
             PowerCollection = new();
             UnkEvent = 0;
         }
@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
             TrackingContextMap = new();
-            ConditionCollection = new();
+            ConditionCollection = new(this);
             PowerCollection = new();
             UnkEvent = 0;
             SpatialPartitionLocation = new(this);
@@ -97,12 +97,10 @@ namespace MHServerEmu.Games.Entities
             TrackingContextMap = new();
             TrackingContextMap.Decode(stream);
 
-            ConditionCollection = new();
-            int conditionCollectionCount = (int)stream.ReadRawVarint64();
-            for (int i = 0; i < conditionCollectionCount; i++)
-                ConditionCollection.Add(new(stream));
+            ConditionCollection = new(this);
+            ConditionCollection.Decode(stream);
 
-            // Gazillion::PowerCollection::SerializeRecordCount
+            // Gazillion::PowerCollection::SerializeRecordCount()
             if (ReplicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
             {
                 PowerCollection = new();
@@ -128,9 +126,7 @@ namespace MHServerEmu.Games.Entities
             base.Encode(stream);
 
             TrackingContextMap.Encode(stream);
-
-            stream.WriteRawVarint64((ulong)ConditionCollection.Count);
-            foreach (Condition condition in ConditionCollection) condition.Encode(stream);
+            ConditionCollection.Encode(stream);
 
             if (ReplicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
             {
@@ -148,8 +144,8 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in TrackingContextMap)
                 sb.AppendLine($"{nameof(TrackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            for (int i = 0; i < ConditionCollection.Count; i++)
-                sb.AppendLine($"ConditionCollection{i}: {ConditionCollection[i]}");
+            foreach (var kvp in ConditionCollection)
+                sb.AppendLine($"{nameof(ConditionCollection)}[{kvp.Key}]: {kvp.Value}");
 
             for (int i = 0; i < PowerCollection.Count; i++)
                 sb.AppendLine($"PowerCollection{i}: {PowerCollection[i]}");

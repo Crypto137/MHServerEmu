@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties = properties;
             TrackingContextMap = new();
-            ConditionCollection = new();
+            ConditionCollection = new(this);
             PowerCollection = new();
             UnkEvent = 0;
 
