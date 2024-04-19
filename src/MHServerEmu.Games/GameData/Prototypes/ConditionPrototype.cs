@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Core;
-using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -173,7 +173,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
         [DoNotCopy]
-        public UInt32Flags CancelOnFlags { get; private set; } = UInt32Flags.None;
+        public ConditionCancelOnFlags CancelOnFlags { get; private set; } = ConditionCancelOnFlags.None;
 
         public override void PostProcess()
         {
@@ -182,12 +182,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // TODO: stuff
 
             // Combine cancel flags into a single bit field (TODO: flag enum)
-            if (CancelOnHit)                    CancelOnFlags |= UInt32Flags.Flag0;
-            if (CancelOnKilled)                 CancelOnFlags |= UInt32Flags.Flag1;
-            if (CancelOnPowerUse)               CancelOnFlags |= UInt32Flags.Flag2;
-            if (CancelOnPowerUsePost)           CancelOnFlags |= UInt32Flags.Flag3;
-            if (CancelOnTransfer)               CancelOnFlags |= UInt32Flags.Flag4;
-            if (CancelOnIntraRegionTeleport)    CancelOnFlags |= UInt32Flags.Flag5;
+            if (CancelOnHit)                    CancelOnFlags |= ConditionCancelOnFlags.OnHit;
+            if (CancelOnKilled)                 CancelOnFlags |= ConditionCancelOnFlags.OnKilled;
+            if (CancelOnPowerUse)               CancelOnFlags |= ConditionCancelOnFlags.OnPowerUse;
+            if (CancelOnPowerUsePost)           CancelOnFlags |= ConditionCancelOnFlags.OnPowerUsePost;
+            if (CancelOnTransfer)               CancelOnFlags |= ConditionCancelOnFlags.OnTransfer;
+            if (CancelOnIntraRegionTeleport)    CancelOnFlags |= ConditionCancelOnFlags.OnIntraRegionTeleport;
 
             // TODO: more stuff
         }

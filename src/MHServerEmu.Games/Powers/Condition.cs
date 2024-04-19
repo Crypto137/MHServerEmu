@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -31,6 +30,18 @@ namespace MHServerEmu.Games.Powers
         HasCancelOnFlags            = 1 << 11,  // cancelOnFalgs from ConditionPrototype
     }
 
+    [Flags]
+    public enum ConditionCancelOnFlags : uint
+    {
+        None                        = 0,
+        OnHit                       = 1 << 0,
+        OnKilled                    = 1 << 1,
+        OnPowerUse                  = 1 << 2,
+        OnPowerUsePost              = 1 << 3,
+        OnTransfer                  = 1 << 4,
+        OnIntraRegionTeleport       = 1 << 5
+    }
+
     public class Condition
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -53,7 +64,7 @@ namespace MHServerEmu.Games.Powers
         private bool _isEnabled = true;
         private int _updateIntervalMS;                              // milliseconds
         private ReplicatedPropertyCollection _properties = new();
-        private UInt32Flags _cancelOnFlags;
+        private ConditionCancelOnFlags _cancelOnFlags;
 
         private ulong _creatorPlayerId;                             // Player guid
 
@@ -82,7 +93,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsEnabled { get => _isEnabled; set => _isEnabled = value; }
         public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(_updateIntervalMS); set => _updateIntervalMS = (int)value.TotalMilliseconds; }
         public ReplicatedPropertyCollection Properties { get => _properties; }
-        public UInt32Flags CancelOnFlags { get => _cancelOnFlags; set => _cancelOnFlags = value; }
+        public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; set => _cancelOnFlags = value; }
 
         public ulong CreatorPlayerId { get => _creatorPlayerId; set => _creatorPlayerId = value; }
 
@@ -248,7 +259,7 @@ namespace MHServerEmu.Games.Powers
                 {
                     uint cancelOnFlags = 0;
                     success &= Serializer.Transfer(archive, ref cancelOnFlags);
-                    _cancelOnFlags = (UInt32Flags)cancelOnFlags;
+                    _cancelOnFlags = (ConditionCancelOnFlags)cancelOnFlags;
                 }
             }
 
@@ -297,7 +308,7 @@ namespace MHServerEmu.Games.Powers
             _properties.Decode(stream);
 
             if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
-                _cancelOnFlags = (UInt32Flags)stream.ReadRawVarint32();
+                _cancelOnFlags = (ConditionCancelOnFlags)stream.ReadRawVarint32();
         }
 
         public void Encode(CodedOutputStream stream)
