@@ -3,12 +3,34 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
     public class Agent : WorldEntity
     {
         public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
+        public override bool IsTeamUpAgent => AgentPrototype is AgentTeamUpPrototype;
+
+        public override bool IsSummonedPet
+        {
+            get
+            {
+                if (this is Missile) return false;
+                if (IsTeamUpAgent) return true;
+                
+                PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];
+                if (powerRef != PrototypeId.Invalid)
+                {
+                    var powerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
+                    if (powerProto != null)
+                        return powerProto.IsPetSummoningPower();
+                }
+
+                return false;
+            }
+
+        }
 
         // New
         public Agent(Game game) : base(game) { }
