@@ -46,10 +46,13 @@ namespace MHServerEmu.Games.Entities
 
         public bool AddCondition(Condition condition)
         {
+            if (condition == null)
+                return Logger.WarnReturn(false, "AddCondition(): condition == null");
+
             if (InsertCondition(condition) == false)
                 return false;
 
-            OnInsertCondition();
+            OnInsertCondition(condition);
             return true;
         }
 
@@ -70,7 +73,7 @@ namespace MHServerEmu.Games.Entities
             return _currentConditionDict.TryAdd(condition.Id, condition);
         }
 
-        private void OnInsertCondition()
+        private void OnInsertCondition(Condition condition)
         {
             // NYI
         }

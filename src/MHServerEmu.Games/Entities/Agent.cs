@@ -1,5 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
@@ -43,10 +44,11 @@ namespace MHServerEmu.Games.Entities
                 SerializationFlags = ConditionSerializationFlags.NoCreatorId
                 | ConditionSerializationFlags.NoUltimateCreatorId
                 | ConditionSerializationFlags.NoConditionPrototypeId
-                | ConditionSerializationFlags.HasIndex
-                | ConditionSerializationFlags.HasAssetDataRef,
+                | ConditionSerializationFlags.HasCreatorPowerIndex
+                | ConditionSerializationFlags.HasOwnerAssetRef,
                 Id = 1,
-                CreatorPowerPrototypeId = startPowerRef
+                CreatorPowerPrototypeRef = startPowerRef,
+                StartTime = Clock.GameTime
             };
             ConditionCollection.AddCondition(condition);
             PowerCollectionRecord powerCollection = new()

@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Powers
 
         public AddConditionArchive() { }
 
-        public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, int startTime)
+        public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, TimeSpan startTime)
         {
             ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy;
             EntityId = entityId;
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Powers
             {
                 Id = id,
                 SerializationFlags = serializationFlags,
-                CreatorPowerPrototypeId = prototypeId,
+                CreatorPowerPrototypeRef = prototypeId,
                 StartTime = startTime
             };
         }
