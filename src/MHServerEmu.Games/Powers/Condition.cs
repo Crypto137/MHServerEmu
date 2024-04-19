@@ -156,10 +156,51 @@ namespace MHServerEmu.Games.Powers
             return sb.ToString();
         }
 
-        public bool IsANegativeStatusEffect()
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="Condition"/> includes any negative status effects.
+        /// Negative effect prototype refs are added to the provided <see cref="List{T}"/> if it's not <see langword="null"/>.
+        /// </summary>
+        public bool IsANegativeStatusEffect(List<PrototypeId> outputList = null)
         {
-            // TODO for Crypto
-            throw new NotImplementedException();
+            return IsANegativeStatusEffect(Properties, outputList);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the specified <see cref="PrototypeId"/> refers to a negative status effect <see cref="PropertyInfoPrototype"/>.
+        /// </summary>
+        public static bool IsANegativeStatusEffectProperty(PrototypeId propertyPrototypeRef)
+        {
+            // The client implementation contains additional null checks that we can safely skip (probably).
+
+            // Properties designated as "negative status effects" as of 1.52:
+            // Immobilized, Knockback, Knockdown, Mesmerized, MovementSpeedDecrPct,
+            // Stunned, Taunted, Feared, Knockup, AllianceOverride, StunnedByHitReact,
+            // Confused, CastSpeedDecrPct.
+
+            return GameDatabase.GlobalsPrototype.NegStatusEffectList.Contains(propertyPrototypeRef);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="PropertyCollection"/> contains any negative status effects.
+        /// Negative effect prototype refs are added to the provided <see cref="List{T}"/> if it's not <see langword="null"/>.
+        /// </summary>
+        public static bool IsANegativeStatusEffect(PropertyCollection propertyCollection, List<PrototypeId> outputList)
+        {
+            bool containsNegativeStatusEffects = false;
+
+            foreach (var kvp in propertyCollection)
+            {
+                PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                PrototypeId propertyPrototypeRef = propertyInfo.PropertyInfoPrototypeRef;
+
+                if (IsANegativeStatusEffectProperty(propertyPrototypeRef))
+                {
+                    containsNegativeStatusEffects = true;
+                    outputList?.Add(propertyPrototypeRef);      // This can be null
+                }
+            }
+
+            return containsNegativeStatusEffects;
         }
     }
 }
