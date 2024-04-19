@@ -1,12 +1,15 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {
     public class Locomotor
     {
+        public const float MovementSweepPadding = 0.5f;
         public LocomotionState LocomotionState { get; private set; }
         public bool MovementImpeded { get; set; }
+        public bool IsMoving { get; private set; }
         public bool IsLocomoting { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting); }
         public bool IsWalking { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsWalking); }
         public bool IsLooking { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking); }
@@ -17,7 +20,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool IsSyncMoving { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsSyncMoving); }
         public bool IgnoresWorldCollision { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IgnoresWorldCollision); }
         public int CurrentMoveHeight { get => LocomotionState.Height; }
-
+        public bool IsMissile { get => LocomotionState.Method == LocomotorMethod.Missile || LocomotionState.Method == LocomotorMethod.MissileSeeking; }
+        public bool IsSeekingMissile { get => LocomotionState.Method == LocomotorMethod.MissileSeeking; }
+        public PathFlags PathFlags { get => GetPathFlags(LocomotionState.Method); }
         public static PathFlags GetPathFlags(LocomotorMethod naviMethod)
         {
             return naviMethod switch
@@ -30,10 +35,14 @@ namespace MHServerEmu.Games.Entities.Locomotion
             };
         }
 
-        internal bool IsMissile()
+        internal SweepResult SweepFromTo(Vector3 fromPosition, Vector3 toPosition, ref Vector3 resultPosition, float movementSweepPadding = MovementSweepPadding)
         {
             throw new NotImplementedException();
         }
 
+        internal SweepResult SweepTo(Vector3 toPosition, ref Vector3 resultPosition, ref Vector3 resultNormal, float movementSweepPadding = MovementSweepPadding)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
