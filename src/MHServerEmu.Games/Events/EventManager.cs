@@ -278,7 +278,7 @@ namespace MHServerEmu.Games.Events
                     conditionArchive.Condition.CreatorPowerIndex = 0;
 
                     playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                        .SetArchiveData(conditionArchive.Serialize())
+                        .SetArchiveData(conditionArchive.SerializeToByteString())
                         .Build());
 
                     playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Events
                     conditionArchive = new(avatarEntityId, 667, conditionSerializationFlags, powerId, TimeSpan.Zero);
                     conditionArchive.Condition.CreatorPowerIndex = 0;
                     playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                        .SetArchiveData(conditionArchive.Serialize())
+                        .SetArchiveData(conditionArchive.SerializeToByteString())
                         .Build());
                     break;
             }
@@ -462,7 +462,7 @@ namespace MHServerEmu.Games.Events
             conditionArchive.Condition.CreatorPowerIndex = 0;
 
             playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                 .SetArchiveData(conditionArchive.Serialize())
+                 .SetArchiveData(conditionArchive.SerializeToByteString())
                  .Build());
         }
 
@@ -491,7 +491,7 @@ namespace MHServerEmu.Games.Events
             conditionArchive.Condition.CreatorPowerIndex = 0;
 
             playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                .SetArchiveData(conditionArchive.Serialize())
+                .SetArchiveData(conditionArchive.SerializeToByteString())
                 .Build());
 
             WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(

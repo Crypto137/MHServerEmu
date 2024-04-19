@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 
@@ -7,21 +9,24 @@ namespace MHServerEmu.Games.Powers
 {
     public class AddConditionArchive
     {
+        private ulong _entityId;
+
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
-        public ulong EntityId { get; set; }
+        public ulong EntityId { get => _entityId; set => _entityId = value; }
         public Condition Condition { get; set; }
+
+        public AddConditionArchive() { }
 
         public AddConditionArchive(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
-
-            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            EntityId = stream.ReadRawVarint64();
-            Condition = new();
-            Condition.Decode(stream);
+            using (Archive archive = new(ArchiveSerializeType.Replication, data.ToByteArray()))
+            {
+                ReplicationPolicy = (AOINetworkPolicyValues)archive.ReplicationPolicy;
+                Serializer.Transfer(archive, ref _entityId);
+                Condition = new();
+                Condition.Serialize(archive, null);
+            }
         }
-
-        public AddConditionArchive() { }
 
         public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, TimeSpan startTime)
         {
@@ -37,27 +42,24 @@ namespace MHServerEmu.Games.Powers
             };
         }
 
-        public ByteString Serialize()
+        public ByteString SerializeToByteString()
         {
-            using (MemoryStream ms = new())
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+                ulong entityId = EntityId;
+                archive.Transfer(ref entityId);
+                Condition.Serialize(archive, null);
 
-                cos.WriteRawVarint32((uint)ReplicationPolicy);
-                cos.WriteRawVarint64(EntityId);
-                Condition.Encode(cos);
-
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
+                return ByteString.CopyFrom(archive.AccessAutoBuffer().ToArray());
             }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"EntityId: {EntityId}");
-            sb.AppendLine($"Condition: {Condition}");
+            sb.AppendLine($"{nameof(ReplicationPolicy)}: {ReplicationPolicy}");
+            sb.AppendLine($"{nameof(EntityId)}: {EntityId}");
+            sb.AppendLine($"{nameof(Condition)}: {Condition}");
 
             return sb.ToString();
         }

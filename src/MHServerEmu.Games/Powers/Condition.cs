@@ -142,6 +142,8 @@ namespace MHServerEmu.Games.Powers
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
                     success &= Serializer.Transfer(archive, ref _updateIntervalMS);
 
+                success &= Serializer.Transfer(archive, ref _properties);
+
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
                 {
                     uint cancelOnFlags = (uint)_cancelOnFlags;
