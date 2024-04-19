@@ -69,6 +69,7 @@ namespace MHServerEmu.Games.Entities
         Destroyed = 1 << 1,
         ToTransform = 1 << 2,
         InGame = 1 << 3,
+        ExitWorld = 1 << 10,
         // TODO etc
     }
 
@@ -307,7 +308,7 @@ namespace MHServerEmu.Games.Entities
             {
                 if (owner is WorldEntity worldEntity)
                 {
-                    if (worldEntity.IsInWorld())
+                    if (worldEntity.IsInWorld)
                         return worldEntity.RegionLocation;
                 }
                 else
@@ -315,7 +316,7 @@ namespace MHServerEmu.Games.Entities
                     if (owner is Player player)
                     {
                         Avatar avatar = player.CurrentAvatar;
-                        if (avatar != null && avatar.IsInWorld())
+                        if (avatar != null && avatar.IsInWorld)
                             return avatar.RegionLocation;
                     }
                 }
@@ -348,6 +349,26 @@ namespace MHServerEmu.Games.Entities
             var ownerPlayer = GetOwnerOfType<Player>();
             if (ownerPlayer != null) return ownerPlayer.GetPartyId();
             return 0;
+        }
+
+        public bool CanBePlayerOwned()
+        {
+            var prototype = EntityPrototype;
+            if (prototype is AvatarPrototype) return true;
+            if (prototype is AgentTeamUpPrototype) return true;
+            if (prototype is MissilePrototype) return IsMissilePlayerOwned;
+
+            ulong ownerId = PowerUserOverrideId;
+            if (ownerId != 0)
+            {
+                Game game = Game;
+                if (game == null) return false;
+                Agent owner = game.EntityManager.GetEntity<Agent>(ownerId);
+                if (owner != null)
+                    if (owner.IsControlledEntity || owner is Avatar || owner.IsTeamUpAgent) return true;
+            }
+
+            return false;
         }
     }
 }
