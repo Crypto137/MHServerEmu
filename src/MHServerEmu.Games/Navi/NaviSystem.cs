@@ -116,4 +116,9 @@ namespace MHServerEmu.Games.Navi
 
     }
 
+    public class NavigationInfluence
+    {
+        public NaviPoint Point;
+        public NaviTriangle Triangle;
+    }
 }
