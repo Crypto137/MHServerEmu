@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Core;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -168,6 +169,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayName { get; protected set; }
         public int UrgentTimeMS { get; protected set; }
         public AssetId IconPathHiRes { get; protected set; }
+
+        [DoNotCopy]
+        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
+        [DoNotCopy]
+        public UInt32Flags CancelOnFlags { get; private set; } = UInt32Flags.None;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // TODO: stuff
+
+            // Combine cancel flags into a single bit field (TODO: flag enum)
+            if (CancelOnHit)                    CancelOnFlags |= UInt32Flags.Flag0;
+            if (CancelOnKilled)                 CancelOnFlags |= UInt32Flags.Flag1;
+            if (CancelOnPowerUse)               CancelOnFlags |= UInt32Flags.Flag2;
+            if (CancelOnPowerUsePost)           CancelOnFlags |= UInt32Flags.Flag3;
+            if (CancelOnTransfer)               CancelOnFlags |= UInt32Flags.Flag4;
+            if (CancelOnIntraRegionTeleport)    CancelOnFlags |= UInt32Flags.Flag5;
+
+            // TODO: more stuff
+        }
     }
 
     public class ConditionEffectPrototype : Prototype
