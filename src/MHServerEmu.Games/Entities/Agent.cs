@@ -48,6 +48,7 @@ namespace MHServerEmu.Games.Entities
                 | ConditionSerializationFlags.HasOwnerAssetRef,
                 Id = 1,
                 CreatorPowerPrototypeRef = startPowerRef,
+                CreatorPowerIndex = 0,
                 StartTime = Clock.GameTime
             };
             ConditionCollection.AddCondition(condition);
