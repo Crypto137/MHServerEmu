@@ -27,6 +27,7 @@ namespace MHServerEmu.Games.Entities
         public List<EntitySelectorActionPrototype> Actions;
         public PrototypeId ActionsTarget;
         public SpawnSpec SpawnSpec;
+        public bool HotspotSkipCollide;
     }
 
     public class EntityManager

@@ -13,19 +13,23 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities.Locomotion;
-using Gazillion;
+using MHServerEmu.Games.Entities.Physics;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Entities
 {
     public class WorldEntity : Entity
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public AlliancePrototype AllianceProto { get; private set; }
 
         public List<EntityTrackingContextMap> TrackingContextMap { get; set; }
         public ConditionCollection ConditionCollection { get; set; }
         public List<PowerCollectionRecord> PowerCollection { get; set; }
         public int UnkEvent { get; set; }
-        public RegionLocation RegionLocation { get; private set; } = new(); 
+        public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
         public Area Area { get => RegionLocation.Area; }
         public RegionLocationSafe ExitWorldRegionLocation { get; private set; } = new();
@@ -33,6 +37,7 @@ namespace MHServerEmu.Games.Entities
         public Aabb RegionBounds { get; set; }
         public Bounds Bounds { get; set; } = new();
         public Region Region { get => RegionLocation.Region; }
+        public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
@@ -41,11 +46,22 @@ namespace MHServerEmu.Games.Entities
         public SpawnSpec SpawnSpec { get; private set; }
         public SpawnGroup SpawnGroup { get => SpawnSpec?.Group; }
         public Locomotor Locomotor { get; private set; }
+        public virtual Bounds EntityCollideBounds { get => Bounds; set { } }
+        public virtual bool IsTeamUpAgent { get => false; }
+        public virtual bool IsSummonedPet { get => false; }
+        public bool IsInWorld { get => RegionLocation.IsValid(); }
+        public EntityPhysics Physics { get; private set; }
+        public bool HasNavigationInfluence { get; private set; }
+        public NavigationInfluence NaviInfluence { get; private set; }
+        public virtual bool IsMovementAuthoritative { get => true; }
 
         // New
         public WorldEntity(Game game): base(game) 
         {
             SpatialPartitionLocation = new(this);
+            Physics = new();
+            HasNavigationInfluence = false;
+            NaviInfluence = new();
         }
 
         public override void Initialize(EntitySettings settings)
@@ -70,6 +86,8 @@ namespace MHServerEmu.Games.Entities
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);
+
+            Physics.Initialize(this);
 
             TrackingContextMap = new();
             ConditionCollection = new();
@@ -211,6 +229,11 @@ namespace MHServerEmu.Games.Entities
             return allianceRef;
         }
 
+        public AlliancePrototype GetAlliancePrototype()
+        {
+            return GameDatabase.GetPrototype<AlliancePrototype>(GetAlliance());
+        }
+
         public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             var proto = WorldEntityPrototype;
@@ -225,7 +248,58 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnEnteredWorld(EntitySettings settings)
         {
-            // TODO CanInfluenceNavigationMesh
+            if (CanInfluenceNavigationMesh()) 
+                EnableNavigationInfluence();
+            // TODO PowerCollection
+        }
+
+        public void EnableNavigationInfluence()
+        {
+            if (IsInWorld == false || TestStatus(EntityStatus.ExitWorld)) return;
+
+            if (HasNavigationInfluence == false)
+            {
+                var region = Region;
+                if (region == null) return;
+                if (region.NaviMesh.AddInfluence(RegionLocation.Position, Bounds.Radius, NaviInfluence) == false)
+                    Logger.Warn($"Failed to add navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+                HasNavigationInfluence = true;
+            }
+        }
+
+        public bool CanInfluenceNavigationMesh()
+        {
+            if (IsInWorld == false || TestStatus(EntityStatus.ExitWorld) || NoCollide || IsIntangible || IsCloneParent())
+                return false;
+
+            var prototype = WorldEntityPrototype;
+            if (prototype != null && prototype.Bounds != null)
+                return prototype.Bounds.CollisionType == BoundsCollisionType.Blocking && prototype.AffectNavigation;
+
+            return false;
+        }
+        public void UpdateNavigationInfluence()
+        {
+            if (HasNavigationInfluence == false) return;
+           
+            Region region = Region;
+            if (region == null) return;
+            var regionPosition = RegionLocation.Position;
+            if (NaviInfluence.Point != null)
+            {
+                if (NaviInfluence.Point.Pos.X != regionPosition.X ||
+                    NaviInfluence.Point.Pos.Y != regionPosition.Y)
+                    if (region.NaviMesh.UpdateInfluence(NaviInfluence, regionPosition, Bounds.Radius) == false)
+                        Logger.Warn($"Failed to update navi influence for ENTITY={ToString()} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+            }
+            else
+                if (region.NaviMesh.AddInfluence(regionPosition, Bounds.Radius, NaviInfluence) == false)
+                    Logger.Warn($"Failed to add navi influence for ENTITY={ToString()} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");        
+        }
+
+        public bool IsCloneParent()
+        {
+            return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
         }
 
         public virtual void ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
@@ -252,8 +326,6 @@ namespace MHServerEmu.Games.Entities
             if (ShouldUseSpatialPartitioning())
                 Region.UpdateEntityInSpatialPartition(this);
         }
-
-        public bool IsInWorld() => RegionLocation.IsValid();
 
         public void ExitWorld()
         {
@@ -319,9 +391,168 @@ namespace MHServerEmu.Games.Entities
             return Status.HasFlag(status);
         }
 
-        internal void UpdateNavigationInfluence()
+        public EntityRegionSPContext GetEntityRegionSPContext()
         {
-            throw new NotImplementedException();
+            EntityRegionSPContext context = new(EntityRegionSPContextFlags.ActivePartition);
+            WorldEntityPrototype entityProto = WorldEntityPrototype;
+            if (entityProto == null) return context;
+
+            if (entityProto.CanCollideWithPowerUserItems)
+            {
+                Avatar avatar = GetMostResponsiblePowerUser<Avatar>();
+                if (avatar != null)
+                    context.PlayerRestrictedGuid = avatar.OwnerPlayerDbId;
+            }
+
+            if (!(IsNeverAffectedByPowers || (IsHotspot && !IsCollidableHotspot && !IsReflectingHotspot) ))
+                context.Flags |= EntityRegionSPContextFlags.StaticPartition;
+            return context;
+        }
+
+        public T GetMostResponsiblePowerUser<T>(bool skipPet = false) where T : WorldEntity
+        {
+            if (Game == null)
+            {
+                Logger.Warn("Entity has no associated game. \nEntity: " + ToString());
+                return null;
+            }
+
+            WorldEntity currentWorldEntity = this;
+            T result = null;
+            while (currentWorldEntity != null)
+            {
+                if (skipPet && currentWorldEntity.IsSummonedPet)
+                    return null;
+
+                if (currentWorldEntity is T possibleResult)
+                    result = possibleResult;
+
+                if (currentWorldEntity.HasPowerUserOverride == false)
+                    break;
+
+                ulong powerUserOverrideId = currentWorldEntity.Properties[PropertyEnum.PowerUserOverrideID];
+                currentWorldEntity = Game.EntityManager.GetEntity<WorldEntity>(powerUserOverrideId);
+
+                if (currentWorldEntity == this)
+                {
+                    Logger.Warn("Circular reference in PowerUserOverrideID chain!");
+                    return null;
+                }
+            }
+
+            return result;
+        }
+
+        public bool CanBeBlockedBy(WorldEntity other)
+        {
+            if (other == null || CanCollideWith(other) == false || Bounds.CanBeBlockedBy(other.Bounds) == false) return false;
+
+            if (NoCollide || other.NoCollide)
+            {
+                bool noEntityCollideException = (HasNoCollideException && Properties[PropertyEnum.NoEntityCollideException] == other.Id) ||
+                   (other.HasNoCollideException && other.Properties[PropertyEnum.NoEntityCollideException] == Id);
+                return noEntityCollideException;
+            }
+
+            var worldEntityProto = WorldEntityPrototype;
+            var boundsProto = worldEntityProto?.Bounds;
+            var otherWorldEntityProto = other.WorldEntityPrototype;
+            var otherBoundsProto = otherWorldEntityProto?.Bounds;
+
+            if ((boundsProto != null && boundsProto.BlockOnlyMyself) 
+                || (otherBoundsProto != null && otherBoundsProto.BlockOnlyMyself))
+                return PrototypeDataRef == other.PrototypeDataRef;
+
+            if ((otherBoundsProto != null && otherBoundsProto.IgnoreBlockingWithAvatars && this is Avatar) ||
+                (boundsProto != null && boundsProto.IgnoreBlockingWithAvatars && other is Avatar)) return false;
+
+            bool locomotionNoCollide = Locomotor != null && (Locomotor.HasLocomotionNoEntityCollide || IsInKnockback);
+            bool otherLocomotionNoCollide = other.Locomotor != null && (other.Locomotor.HasLocomotionNoEntityCollide || other.IsInKnockback);
+
+            if (locomotionNoCollide || otherLocomotionNoCollide || IsIntangible || other.IsIntangible)
+            {
+                bool locomotorMovementPower = false;
+                if (otherBoundsProto != null)
+                {
+                    switch (otherBoundsProto.BlocksMovementPowers)
+                    {
+                        case BoundsMovementPowerBlockType.All:
+                            locomotorMovementPower = (Locomotor != null 
+                                && (Locomotor.IsMovementPower || Locomotor.IsHighFlying)) 
+                                || IsInKnockback || IsIntangible;
+                            break;
+                        case BoundsMovementPowerBlockType.Ground:
+                            locomotorMovementPower = (Locomotor != null 
+                                && (Locomotor.IsMovementPower && Locomotor.CurrentMoveHeight == 0) 
+                                && !Locomotor.IgnoresWorldCollision && !IsIntangible) 
+                                || IsInKnockback;
+                            break;
+                        case BoundsMovementPowerBlockType.None:
+                        default:
+                            break;
+                    }
+                }
+                if (locomotorMovementPower == false) return false;
+            }
+
+            if (CanBePlayerOwned() && other.CanBePlayerOwned())
+            {
+                if (GetAlliance() == other.GetAlliance())
+                {
+                    if (HasPowerUserOverride == false || other.HasPowerUserOverride == false) return false;
+                    uint powerId = Properties[PropertyEnum.PowerUserOverrideID];
+                    uint otherPowerId = other.Properties[PropertyEnum.PowerUserOverrideID];
+                    if (powerId != otherPowerId) return false;
+                }
+                if (other.IsInKnockdown || other.IsInKnockup) return false;
+            }
+            return true;
+        }
+
+        public virtual bool CanCollideWith(WorldEntity other)
+        {
+            if (other == null) return false;
+
+            if (TestStatus(EntityStatus.Destroyed) || !IsInWorld 
+                || other.TestStatus(EntityStatus.Destroyed) || !other.IsInWorld) return false;
+
+            if (Bounds.CollisionType == BoundsCollisionType.None 
+                || other.Bounds.CollisionType == BoundsCollisionType.None) return false;
+
+            if ((other.Bounds.Geometry == GeometryType.Triangle || other.Bounds.Geometry == GeometryType.Wedge) 
+                && (Bounds.Geometry == GeometryType.Triangle || Bounds.Geometry == GeometryType.Wedge)) return false;
+
+            var entityProto = WorldEntityPrototype;
+            if (entityProto == null) return false;
+
+            if (IsCloneParent())  return false;
+
+            var boundsProto = entityProto.Bounds;
+            if (boundsProto != null && boundsProto.IgnoreCollisionWithAllies && IsFriendlyTo(other)) return false; 
+
+            if (IsDormant || other.IsDormant) return false;
+
+            return true;
+        }
+
+        public bool IsFriendlyTo(WorldEntity other, AlliancePrototype allianceProto = null)
+        {
+            if (other == null) return false;
+            return IsFriendlyTo(other.GetAlliancePrototype(), allianceProto);
+        }
+
+        private bool IsFriendlyTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceProto = null)
+        {
+            if (otherAllianceProto == null) return false;
+            AlliancePrototype thisAllianceProto = allianceProto ?? GetAlliancePrototype();
+            if (thisAllianceProto == null) return false;
+            return thisAllianceProto.IsFriendlyTo(otherAllianceProto) && !thisAllianceProto.IsHostileTo(otherAllianceProto);
+        }
+
+        public void RegisterForPendingPhysicsResolve()
+        {
+            PhysicsManager physMan = Game?.EntityManager?.PhysicsManager;
+            physMan?.RegisterEntityForPendingPhysicsResolve(this);
         }
     }
 

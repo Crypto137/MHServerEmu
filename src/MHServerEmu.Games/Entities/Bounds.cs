@@ -423,7 +423,7 @@ namespace MHServerEmu.Games.Entities
             }            
         }
 
-        public bool CanBeBlockedBy(Bounds entityBounds, bool selfBlocking, bool otherBlocking)
+        public bool CanBeBlockedBy(Bounds entityBounds, bool selfBlocking = false, bool otherBlocking = false)
         {
             return (CollisionType == BoundsCollisionType.Blocking || selfBlocking)
                 && (entityBounds.CollisionType == BoundsCollisionType.Blocking || otherBlocking);
@@ -612,6 +612,11 @@ namespace MHServerEmu.Games.Entities
                     break;
             }
             return sb.ToString();
+        }
+
+        internal bool Sweep(Bounds otherBounds, Vector3 zero, Vector3 distance, ref float time, ref Vector3 collisionNormal)
+        {
+            throw new NotImplementedException();
         }
     }
 }
