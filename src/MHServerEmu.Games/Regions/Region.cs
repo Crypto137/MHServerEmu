@@ -1,10 +1,11 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -93,6 +94,10 @@ namespace MHServerEmu.Games.Regions
         public ConnectionNodeList Targets { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
 
+        private BitList _collisionIds;
+        private BitList _collisionBits;
+        private List<BitList> _collisionBitList;
+
         public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, CreateRegionParams createParams) // Old
         {
             Id = IdGenerator.Generate();
@@ -104,6 +109,11 @@ namespace MHServerEmu.Games.Regions
 
             NaviSystem = new();
             NaviMesh = new(NaviSystem);
+
+            _collisionIds = new();
+            _collisionBits = new();
+            _collisionBitList = new();
+            _collisionIds.Resize(256);
         }
 
         public Region(Game game)
@@ -585,7 +595,7 @@ namespace MHServerEmu.Games.Regions
                         }
                         else*/
                         {
-                            if (worldEntity.IsInWorld())
+                            if (worldEntity.IsInWorld)
                             {
                                 worldEntity.ExitWorld();
                                 // found = true;
@@ -842,11 +852,60 @@ namespace MHServerEmu.Games.Regions
         {            
             return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
         }
-
-        internal void ClearCollidedEntities()
+        public int AcquireCollisionId()
         {
-            throw new NotImplementedException();
+            int index = _collisionIds.FirstUnset();
+            if (index == -1) index = _collisionIds.Size;
+            _collisionIds.Set(index, true);
+            return index;
         }
+
+        public bool CollideEntities(int collisionId, int otherCollisionId)
+        {
+            int maxCollisionId = _collisionBitList.Count;
+            if (collisionId >= maxCollisionId)
+            {
+                maxCollisionId = MaxCollisionId + 64;
+                while (_collisionBitList.Count < maxCollisionId)
+                    _collisionBitList.Add(new ());
+            }
+
+            var collisionBits = _collisionBitList[collisionId];
+
+            if (_collisionBits[collisionId] == false)
+            {
+                _collisionBits.Set(collisionId);
+                collisionBits.Clear();
+            }
+
+            if (otherCollisionId >= collisionBits.Size)
+                collisionBits.Resize(maxCollisionId);
+
+            bool collide = collisionBits[otherCollisionId];
+            collisionBits.Set(otherCollisionId);
+            return !collide;
+        }
+
+        public int MaxCollisionId => _collisionIds.Size;
+
+        public void ReleaseCollisionId(int collisionId)
+        {
+            if (collisionId >= 0) _collisionIds.Reset(collisionId);
+        }
+
+        public void ClearCollidedEntities()
+        {
+            if (MaxCollisionId < _collisionBitList.Count / 2)
+            {
+                _collisionBitList.Clear();
+                _collisionBits.Resize(0);
+            }
+            else
+            {
+                _collisionBits.Clear();
+            }
+        }
+
     }
 
     public class DividedStartLocation
