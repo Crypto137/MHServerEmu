@@ -358,13 +358,6 @@ namespace MHServerEmu.Games.Entities
             return null;
         }
 
-        public virtual ulong GetPartyId()
-        {
-            var ownerPlayer = GetOwnerOfType<Player>();
-            if (ownerPlayer != null) return ownerPlayer.GetPartyId();
-            return 0;
-        }
-
         public bool CanBePlayerOwned()
         {
             var prototype = EntityPrototype;
