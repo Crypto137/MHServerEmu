@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Common
         public static bool Transfer(Archive archive, ref long ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref ulong ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref float ioData) => archive.Transfer(ref ioData);
-        public static bool Transfer(Archive archive, ref ISerialize ioData) => archive.Transfer(ref ioData);
+        public static bool Transfer<T>(Archive archive, ref T ioData) where T: ISerialize => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref Vector3 ioData) => archive.Transfer(ref ioData);
         public static bool TransferFloatFixed(Archive archive, ref float ioData, int precision) => archive.TransferFloatFixed(ref ioData, precision);
         public static bool TransferVectorFixed(Archive archive, ref Vector3 ioData, int precision) => archive.TransferVectorFixed(ref ioData, precision);
@@ -324,10 +324,7 @@ namespace MHServerEmu.Games.Common
                 ulong numElements = (ulong)ioData.Length;
                 success &= Transfer(archive, ref numElements);
                 for (int i = 0; i < ioData.Length; i++)
-                {
-                    ISerialize value = ioData[i];
-                    success &= Transfer(archive, ref value);
-                }
+                    success &= Transfer(archive, ref ioData[i]);
             }
             else
             {
@@ -341,15 +338,14 @@ namespace MHServerEmu.Games.Common
 
                 for (int i = 0; i < ioData.Length; i++)
                 {
-                    ISerialize value = new T();
-                    success &= Transfer(archive, ref value);
-                    ioData[i] = (T)value;
+                    ioData[i] = new();
+                    success &= Transfer(archive, ref ioData[i]);
                 }
 
                 // Elements outside the range of the provided array are discarded
                 for (ulong i = (ulong)ioData.Length; i < numElements; i++)
                 {
-                    ISerialize value = new T();
+                    T value = new();
                     success &= Transfer(archive, ref value);
                 }
             }
@@ -467,7 +463,7 @@ namespace MHServerEmu.Games.Common
                 success &= Transfer(archive, ref numElements);
                 foreach (T data in ioData)
                 {
-                    ISerialize value = data;
+                    T value = data;
                     success &= Transfer(archive, ref value);
                 }
             }
@@ -480,9 +476,9 @@ namespace MHServerEmu.Games.Common
 
                 for (ulong i = 0; i < numElements; i++)
                 {
-                    ISerialize value = new T();
+                    T value = new();
                     success &= Transfer(archive, ref value);
-                    ioData.Add((T)value);
+                    ioData.Add(value);
                 }
             }
 
@@ -505,7 +501,7 @@ namespace MHServerEmu.Games.Common
                 {
                     ulong key = kvp.Key;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = kvp.Value;
+                    T value = kvp.Value;
                     success &= Transfer(archive, ref value);
                 }
             }
@@ -520,7 +516,7 @@ namespace MHServerEmu.Games.Common
                 {
                     ulong key = 0;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = new T();
+                    T value = new();
                     success &= Transfer(archive, ref value);
 
                     ioData.Add(key, (T)value);
@@ -542,7 +538,7 @@ namespace MHServerEmu.Games.Common
                 {
                     PrototypeId key = kvp.Key;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = kvp.Value;
+                    T value = kvp.Value;
                     success &= Transfer(archive, ref value);
                 }
             }
@@ -557,10 +553,10 @@ namespace MHServerEmu.Games.Common
                 {
                     PrototypeId key = 0;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = new T();
+                    T value = new();
                     success &= Transfer(archive, ref value);
 
-                    ioData.Add(key, (T)value);
+                    ioData.Add(key, value);
                 }
             }
 
@@ -580,7 +576,7 @@ namespace MHServerEmu.Games.Common
                 {
                     uint key = kvp.Key;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = kvp.Value;
+                    T value = kvp.Value;
                     success &= Transfer(archive, ref value);
                 }
             }
@@ -595,9 +591,9 @@ namespace MHServerEmu.Games.Common
                 {
                     uint key = 0;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = new T();
+                    T value = new();
                     success &= Transfer(archive, ref value);
-                    ioData.Add(key, (T)value);
+                    ioData.Add(key, value);
                 }
             }
 
@@ -617,7 +613,7 @@ namespace MHServerEmu.Games.Common
                 {
                     ulong key = (ulong)kvp.Key;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = kvp.Value;
+                    T value = kvp.Value;
                     success &= Transfer(archive, ref value);
                 }
             }
@@ -632,9 +628,9 @@ namespace MHServerEmu.Games.Common
                 {
                     ulong key = 0;
                     success &= Transfer(archive, ref key);
-                    ISerialize value = new T();
+                    T value = new();
                     success &= Transfer(archive, ref value);
-                    ioData.Add((PrototypeGuid)key, (T)value);
+                    ioData.Add((PrototypeGuid)key, value);
                 }
             }
 

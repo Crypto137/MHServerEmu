@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Entities.Options
     /// <summary>
     /// Manages various gameplay options for a specific owner <see cref="Player"/>.
     /// </summary>
-    public class GameplayOptions
+    public class GameplayOptions : ISerialize
     {
         private const int NumChatTabs = 4;
 
@@ -69,10 +69,10 @@ namespace MHServerEmu.Games.Entities.Options
 
         private Player _owner;
 
-        private readonly long[] _optionSettings = new long[(int)GameplayOptionSetting.NumSettings];
-        private readonly SortedDictionary<PrototypeId, bool> _chatChannelFilterDict = new();
-        private readonly PrototypeId[] _chatTabChannels = new PrototypeId[NumChatTabs];
-        private readonly SortedDictionary<EquipmentInvUISlot, PrototypeId> _armorRarityVaporizeThresholdDict = new();
+        private long[] _optionSettings = new long[(int)GameplayOptionSetting.NumSettings];                      // Various settings (see enum above)
+        private SortedDictionary<PrototypeId, bool> _chatChannelFilterDict = new();                             // Whether the channel is included in the main chat tab 
+        private PrototypeId[] _chatTabChannels = new PrototypeId[NumChatTabs];                                  // Chat channels bound to tabs other than the main one
+        private SortedDictionary<EquipmentInvUISlot, PrototypeId> _armorRarityVaporizeThresholdDict = new();    // PetTech item vacuum settings
 
         /// <summary>
         /// Constructs a new <see cref="GameplayOptions"/> instance for the provided owner <see cref="Player"/>.
@@ -126,6 +126,21 @@ namespace MHServerEmu.Games.Entities.Options
 
                 _armorRarityVaporizeThresholdDict[slot] = (PrototypeId)netStruct.ArmorRarityVaporizeThresholdProtoIdList[(int)slot - 1]; ;
             }
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            // NOTE: Archives use a different encoding order from protobufs: filters - tabs - options - thresholds.
+            // The client implementation includes a lot of legacy backward compatibility code that we don't really need.
+
+            success &= Serializer.Transfer(archive, ref _chatChannelFilterDict);
+            success &= Serializer.Transfer(archive, ref _chatTabChannels);
+            success &= Serializer.Transfer(archive, ref _optionSettings);
+            success &= Serializer.Transfer(archive, ref _armorRarityVaporizeThresholdDict);
+
+            return success;
         }
 
         public bool Decode(CodedInputStream stream, BoolDecoder boolDecoder)

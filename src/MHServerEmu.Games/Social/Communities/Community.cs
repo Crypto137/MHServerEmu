@@ -3,6 +3,8 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Social.Communities
@@ -10,7 +12,7 @@ namespace MHServerEmu.Games.Social.Communities
     /// <summary>
     /// Contains a collection of entries displayed in a <see cref="Player"/>'s social tab divided by circles (tabs).
     /// </summary>
-    public class Community
+    public class Community : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -49,6 +51,69 @@ namespace MHServerEmu.Games.Social.Communities
         {
             CircleManager.Shutdown();
             _communityMemberDict.Clear();
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            success &= CircleManager.Serialize(archive);
+
+            int numCommunityMembers = 0;
+            if (archive.IsPacking)
+            {
+                foreach (CommunityMember member in IterateMembers())
+                {
+                    if (member.ShouldArchiveTo(archive))
+                        numCommunityMembers++;
+                }
+            }
+
+            success &= Serializer.Transfer(archive, ref numCommunityMembers);
+
+            if (archive.IsPacking)
+            {
+                foreach (CommunityMember memberIt in IterateMembers())
+                {
+                    CommunityMember member = memberIt;
+
+                    if (member.ShouldArchiveTo(archive) == false) continue;
+
+                    string playerName = member.GetName();
+                    ulong playerDbId = member.DbId;
+
+                    success &= Serializer.Transfer(archive, ref playerName);
+                    success &= Serializer.Transfer(archive, ref playerDbId);
+                    success &= Serializer.Transfer(archive, ref member);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < numCommunityMembers; i++)
+                {
+                    string playerName = string.Empty;
+                    ulong playerDbId = 0;
+
+                    // Get an existing member to deserialize into
+                    CommunityMember member = GetMember(playerDbId);
+
+                    // If not found create a new member
+                    if (member == null)
+                    {
+                        member = CreateMember(playerDbId, playerName);
+                        if (member == null) return false;   // Bail out if member creation failed
+                    }
+
+                    // Deserialize data into our member
+                    success &= Serializer.Transfer(archive, ref member);
+
+                    // Get rid of members that don't have any circles for some reason
+                    if (member.NumCircles() == 0)
+                        DestroyMember(member);
+                }
+            }
+
+            return success;
         }
 
         public bool Decode(CodedInputStream stream)

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 
@@ -7,8 +8,8 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        public ReplicatedVariable<int> Team1 { get; set; }
-        public ReplicatedVariable<int> Team2 { get; set; }
+        private ReplicatedVariable<int> _team1 = new();
+        private ReplicatedVariable<int> _team2 = new();
 
         // new
         public PvP(Game game) : base(game) { }
@@ -18,28 +19,37 @@ namespace MHServerEmu.Games.MetaGames
 
         public PvP(EntityBaseData baseData) : base(baseData) { }
 
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+            // if (archive.IsTransient)
+            success &= Serializer.Transfer(archive, ref _team1);
+            success &= Serializer.Transfer(archive, ref _team2);
+            return success;
+        }
+
         protected override void Decode(CodedInputStream stream)
         {
             base.Decode(stream);
 
-            Team1 = new(stream);
-            Team2 = new(stream);
+            _team1.Decode(stream);
+            _team2.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)
         {
             base.Encode(stream);
 
-            Team1.Encode(stream);
-            Team2.Encode(stream);
+            _team1.Encode(stream);
+            _team2.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"Team1: {Team1}");
-            sb.AppendLine($"Team2: {Team2}");
+            sb.AppendLine($"{nameof(_team1)}: {_team1}");
+            sb.AppendLine($"{nameof(_team2)}: {_team2}");
         }
     }
 }

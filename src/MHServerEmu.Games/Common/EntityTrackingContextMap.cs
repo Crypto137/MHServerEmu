@@ -1,46 +1,74 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Common
 {
-    public class EntityTrackingContextMap
+    /// <summary>
+    /// A <see cref="Dictionary{TKey, TValue}"/> of <see cref="PrototypeId"/> and <see cref="EntityTrackingFlag"/> that implements <see cref="ISerialize"/>.
+    /// </summary>
+    public class EntityTrackingContextMap : Dictionary<PrototypeId, EntityTrackingFlag>, ISerialize
     {
-        public PrototypeId Context { get; set; }
-        public uint Flag { get; set; }
+        // NOTE: Consider making this a wrapper around Dictionary rather than inherit from it.
 
-        public EntityTrackingContextMap(CodedInputStream stream)
+        public bool Serialize(Archive archive)
         {
-            Context = stream.ReadPrototypeRef<Prototype>();
-            Flag = stream.ReadRawVarint32();
+            bool success = true;
+
+            ulong numEntries = (ulong)Count;
+            success &= Serializer.Transfer(archive, ref numEntries);
+
+            if (archive.IsPacking)
+            {
+                foreach (var kvp in this)
+                {
+                    PrototypeId contextRef = kvp.Key;
+                    uint flags = (uint)kvp.Value;
+                    success &= Serializer.Transfer(archive, ref contextRef);
+                    success &= Serializer.Transfer(archive, ref flags);
+                }
+            }
+            else
+            {
+                Clear();
+                for (ulong i = 0; i < numEntries; i++)
+                {
+                    PrototypeId contextRef = PrototypeId.Invalid;
+                    uint flags = 0;
+                    success &= Serializer.Transfer(archive, ref contextRef);
+                    success &= Serializer.Transfer(archive, ref flags);
+                    Add(contextRef, (EntityTrackingFlag)flags);
+                }
+            }
+
+            return success;
         }
 
-        public EntityTrackingContextMap(PrototypeId context, uint value)
+        public void Decode(CodedInputStream stream)
         {
-            Context = context;
-            Flag = value;
+            Clear();
+            ulong numEntries = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numEntries; i++)
+            {
+                PrototypeId context = stream.ReadPrototypeRef<Prototype>();
+                uint flags = stream.ReadRawVarint32();
+                Add(context, (EntityTrackingFlag)flags);
+            }
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeRef<Prototype>(Context);
-            stream.WriteRawVarint32(Flag);
+            stream.WriteRawVarint64((ulong)Count);
+            foreach (var kvp in this)
+            {
+                stream.WritePrototypeRef<Prototype>(kvp.Key);
+                stream.WriteRawVarint32((uint)kvp.Value);
+            }
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"Context: {GameDatabase.GetPrototypeName(Context)}");
-            sb.AppendLine($"Flag: 0x{Flag:X}");
-            return sb.ToString();
-        }
-    }
-
-    // TODO Merge
-    public class EntityTrackingContextMap2 : Dictionary<PrototypeId, EntityTrackingFlag>
-    {
+        // Gazillion::EntityTrackingContextMapInsert()
         public void Insert(PrototypeId contextRef, EntityTrackingFlag flag)
         {
             if (ContainsKey(contextRef))

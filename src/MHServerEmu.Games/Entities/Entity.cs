@@ -1,14 +1,13 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Games.Properties;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Regions;
-using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -73,7 +72,7 @@ namespace MHServerEmu.Games.Entities
         // TODO etc
     }
 
-    public class Entity
+    public class Entity : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -85,7 +84,16 @@ namespace MHServerEmu.Games.Entities
         public EntityStatus Status { get; set; }
         public ulong DatabaseUniqueId { get => BaseData.DbId; }
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
-        public ReplicatedPropertyCollection Properties { get; set; }
+        public ReplicatedPropertyCollection Properties { get; set; } = new();
+
+        public virtual ulong PartyId
+        {
+            get
+            {
+                var ownerPlayer = GetOwnerOfType<Player>();
+                return ownerPlayer != null ? ownerPlayer.PartyId : 0;
+            }
+        }
 
         public DateTime DeadTime { get; private set; }
         public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
@@ -208,10 +216,16 @@ namespace MHServerEmu.Games.Entities
             Properties = propertyCollection;
         }
 
+        public virtual bool Serialize(Archive archive)
+        {
+            PropertyCollection defaultCollection = null;    // TODO: Get the default collection from the prototype
+            return Properties.SerializeWithDefault(archive, defaultCollection);
+        }
+
         protected virtual void Decode(CodedInputStream stream)
         {
             ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            Properties = new(stream);
+            Properties.Decode(stream);
         }
 
         public virtual void Encode(CodedOutputStream stream)
@@ -220,7 +234,7 @@ namespace MHServerEmu.Games.Entities
             Properties.Encode(stream);
         }
 
-        public ByteString Serialize()
+        public ByteString OLD_Serialize()
         {
             using (MemoryStream ms = new())
             {
@@ -235,14 +249,14 @@ namespace MHServerEmu.Games.Entities
         {
             return NetMessageEntityCreate.CreateBuilder()
                 .SetBaseData(BaseData.Serialize())
-                .SetArchiveData(Serialize())
+                .SetArchiveData(OLD_Serialize())
                 .Build();
         }
 
         protected virtual void BuildString(StringBuilder sb)
         {
-            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"Properties: {Properties}");
+            sb.AppendLine($"{nameof(ReplicationPolicy)}: {ReplicationPolicy}");
+            sb.AppendLine($"{nameof(Properties)}: {Properties}");
         }
 
         public override string ToString()

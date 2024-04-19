@@ -239,7 +239,7 @@ namespace MHServerEmu.Games.Missions
                     ulong guid = (ulong)GameDatabase.GetPrototypeGuid(kvp.Key);
                     success &= Serializer.Transfer(archive, ref guid);
 
-                    ISerialize mission = kvp.Value;
+                    Mission mission = kvp.Value;
                     success &= Serializer.Transfer(archive, ref mission);
                 }
 
@@ -263,7 +263,7 @@ namespace MHServerEmu.Games.Missions
 
                     PrototypeId missionRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)guid);
                     Mission mission = CreateMission(missionRef);
-                    success &= mission.Serialize(archive);
+                    success &= Serializer.Transfer(archive, ref mission);
                     InsertMission(mission);
                 }
 

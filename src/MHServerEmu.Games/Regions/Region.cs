@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.Regions
             {
                 if (GenerateAreas(settings.GenerateLog) == false)
                 {
-                    Logger.Error($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
+                    Logger.Warn($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
                     return false;
                 }
             }

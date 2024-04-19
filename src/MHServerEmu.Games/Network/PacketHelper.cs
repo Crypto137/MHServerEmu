@@ -24,21 +24,21 @@ namespace MHServerEmu.Games.Network
 
         private static readonly string PacketDirectory = Path.Combine(FileHelper.DataDirectory, "Packets");
 
-        public static void ParseServerMessagesFromPacketFile(string fileName)
+        public static bool ParseServerMessagesFromPacketFile(string fileName)
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
             if (File.Exists(path) == false)
-            {
-                Logger.Warn($"{path} not found");
-                return;
-            }
+                return Logger.WarnReturn(false, $"ParseServerMessagesFromPacketFile(): {path} not found");
 
-            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-            PacketIn packet = new(stream);
+            MuxPacket packet;
+            using (MemoryStream ms = new(File.ReadAllBytes(path)))
+                packet = new(ms);
 
-            if (packet.Command == MuxCommand.Data)
+            if (packet.IsDataPacket)
                 ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_parsed.txt"));
+
+            return true;
         }
 
         public static void ParseServerMessagesFromAllPacketFiles()
@@ -48,85 +48,81 @@ namespace MHServerEmu.Games.Network
 
             foreach (string file in files)
             {
-                if (Path.GetExtension(file) == ".bin")     // ignore previous parses and other files
-                {
-                    //Logger.Info($"Parsing {file}...");
-                    ParseServerMessagesFromPacketFile(Path.GetFileName(file));
-                    packetCount++;
-                }
+                if (Path.GetExtension(file) != ".bin") continue;     // ignore previous parses and other files
+
+                //Logger.Info($"Parsing {file}...");
+                ParseServerMessagesFromPacketFile(Path.GetFileName(file));
+                packetCount++;
             }
 
             Logger.Info($"Finished parsing {packetCount} packet files");
         }
 
-        public static void ParseServerMessagesFromPacketDump(string fileName)
+        public static bool ParseServerMessagesFromPacketDump(string fileName)
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
             if (File.Exists(path) == false)
+                return Logger.WarnReturn(false, $"ParseServerMessagesFromPacketDump(): {path} not found");
+
+            using (MemoryStream ms = new(File.ReadAllBytes(path)))
             {
-                Logger.Warn($"{path} not found");
-                return;
-            }
+                int packetCount = 0;
 
-            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-            int packetCount = 0;
-
-            while (!stream.IsAtEnd)
-            {
-                PacketIn packet = new(stream);
-
-                if (packet.Command == MuxCommand.Data)
+                while (ms.Position < ms.Length)
                 {
+                    MuxPacket packet = new(ms);
+                    if (packet.IsDataPacket == false) continue;
+
                     ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_parsed.txt"));
                     packetCount++;
                 }
             }
+
+            return true;
         }
 
-        public static void ExtractMessagePacketsFromDump(string fileName)
+        public static bool ExtractMessagePacketsFromDump(string fileName)
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
             if (File.Exists(path) == false)
+                return Logger.WarnReturn(false, $"ExtractMessagePacketsFromDump(): {path} not found");
+
+            using (MemoryStream ms = new(File.ReadAllBytes(path)))
             {
-                Logger.Warn($"{path} not found");
-                return;
-            }
+                int packetCount = 0;
 
-            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-            int packetCount = 0;
-
-            while (!stream.IsAtEnd)
-            {
-                PacketIn packet = new(stream);
-
-                if (packet.Command == MuxCommand.Data)
+                while (ms.Position < ms.Length)
                 {
-                    byte[] rawPacket = packet.ToPacketOut().Data;
+                    MuxPacket packet = new(ms);
+                    if (packet.IsDataPacket == false) continue;
+
+                    byte[] rawPacket = packet.Serialize();
                     File.WriteAllBytes(Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_raw.bin"), rawPacket);
                     packetCount++;
                 }
             }
+
+            return true;
         }
 
-        public static MessagePackage[] LoadMessagesFromPacketFile(string fileName)
+        public static IEnumerable<MessagePackage> LoadMessagesFromPacketFile(string fileName)
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
             if (File.Exists(path) == false)
-            {
-                Logger.Warn($"{fileName} not found");
-                return Array.Empty<MessagePackage>();
-            }
+                return Logger.WarnReturn(Array.Empty<MessagePackage>(), $"LoadMessagesFromPacketFile(): {fileName} not found");
 
-            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-            PacketIn packet = new(stream);
-            Logger.Info($"Loaded {packet.Messages.Length} messages from {fileName}");
-            return packet.Messages;
+            using (MemoryStream ms = new(File.ReadAllBytes(path)))
+            {
+                MuxPacket packet = new(ms);
+                Logger.Info($"Loaded {packet.Messages.Count()} messages from {fileName}");
+                return packet.Messages;
+            }
         }
 
-        private static void ParseServerMessagesFromPacket(PacketIn packet, string outputPath)
+        private static void ParseServerMessagesFromPacket(MuxPacket packet, string outputPath)
         {
             using (StreamWriter writer = new(outputPath))
             {

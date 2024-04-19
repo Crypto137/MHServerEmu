@@ -46,6 +46,14 @@ namespace MHServerEmu
 
             Logger.Info("MHServerEmu starting...");
 
+            // Our encoding is not going to work unless we are running on a little-endian system
+            if (BitConverter.IsLittleEndian == false)
+            {
+                Logger.Fatal("This computer's architecture uses big-endian byte order, which is not compatible with MHServerEmu.");
+                Console.ReadLine();
+                return;
+            }
+
             // Initialize everything else and start the servers
             if (InitSystems() == false)
             {

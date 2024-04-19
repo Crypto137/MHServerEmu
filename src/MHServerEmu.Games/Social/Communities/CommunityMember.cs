@@ -4,6 +4,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -40,12 +41,17 @@ namespace MHServerEmu.Games.Social.Communities
         SecondaryPlayer = 1 << 12
     }
 
-    public class CommunityMember
+    public class CommunityMember : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ulong _dbId;
+        private PrototypeId _regionRef;
+        private PrototypeId _difficultyRef;
+
         private long _lastLogoutTimeAsFileTimeUtc = 0;
         private AvatarSlotInfo[] _slots = Array.Empty<AvatarSlotInfo>();
+        private CommunityMemberOnlineStatus _isOnline;
         private string _playerName = string.Empty;
         private string _secondaryPlayerName = string.Empty;
         private readonly BitArray _systemCircles = new((int)CircleId.NumCircles);
@@ -54,23 +60,104 @@ namespace MHServerEmu.Games.Social.Communities
 
         public Community Community { get; }
 
-        public ulong DbId { get; private set; }
-
-        public PrototypeId RegionRef { get; private set; }
-        public PrototypeId DifficultyRef { get; private set; }
-        public CommunityMemberOnlineStatus IsOnline { get; private set; }
+        public ulong DbId { get => _dbId; }
+        public PrototypeId RegionRef { get => _regionRef; }
+        public PrototypeId DifficultyRef { get => _difficultyRef; }
+        public CommunityMemberOnlineStatus IsOnline { get => _isOnline; }
 
         public CommunityMember(Community community, ulong playerDbId, string playerName)
         {
             Community = community;
-            DbId = playerDbId;
+            _dbId = playerDbId;
             _playerName = playerName;
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            // archive.IsPersistent == false
+            success &= Serializer.Transfer(archive, ref _regionRef);
+            success &= Serializer.Transfer(archive, ref _difficultyRef);
+
+            byte numSlots = 0;
+            if (archive.IsPacking)
+            {
+                if (_slots.Length >= byte.MaxValue)
+                    return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
+                numSlots = (byte)_slots.Length;
+            }
+
+            success &= Serializer.Transfer(archive, ref numSlots);
+
+            if (archive.IsUnpacking)
+                Array.Resize(ref _slots, numSlots);
+
+            for (int i = 0; i < numSlots; i++)
+            {
+                // Slight deviation from the client: we implemented ISerialize for AvatarSlotInfo to make this a bit cleaner
+                if (_slots[i] == null)
+                    _slots[i] = new();
+
+                success &= Serializer.Transfer(archive, ref _slots[i]);
+            }
+
+            int isOnline = (int)_isOnline;
+            success &= Serializer.Transfer(archive, ref isOnline);
+            _isOnline = (CommunityMemberOnlineStatus)isOnline;
+
+            success &= Serializer.Transfer(archive, ref _playerName);
+            success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+            success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+            success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
+
+            int numCircles = 0;
+            if (archive.IsPacking)
+            {
+                foreach (CommunityCircle circle in Community.IterateCircles(this))
+                {
+                    if (circle.ShouldArchiveTo(archive))
+                        numCircles++;
+                }
+            }
+
+            success &= Serializer.Transfer(archive, ref numCircles);
+
+            if (archive.IsPacking)
+            {
+                foreach (CommunityCircle circle in Community.IterateCircles(this))
+                {
+                    if (circle.ShouldArchiveTo(archive) == false) continue;
+
+                    int archiveCircleId = Community.CircleManager.GetArchiveCircleId(circle);
+                    if (archiveCircleId == 1)
+                        return Logger.ErrorReturn(false, $"Serialize(): Invalid archive circle id returned for circle in archive. circle={circle}");
+
+                    success &= Serializer.Transfer(archive, ref archiveCircleId);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < numCircles; i++)
+                {
+                    int archiveCircleId = 0;
+                    success &= Serializer.Transfer(archive, ref archiveCircleId);
+
+                    CommunityCircle circle = Community.CircleManager.GetCircleByArchiveCircleId(archiveCircleId);
+                    if (circle == null)
+                        return Logger.ErrorReturn(false, $"Serialize(): Circle not found when reading member. archiveCircleId=0x{archiveCircleId:X}, member={this}, community={Community}");
+
+                    SetBitForCircle(_systemCircles, circle, true);
+                }
+            }
+
+            return success;
         }
 
         public bool Decode(CodedInputStream stream)
         {
-            RegionRef = stream.ReadPrototypeRef<Prototype>();
-            DifficultyRef = stream.ReadPrototypeRef<Prototype>();
+            _regionRef = stream.ReadPrototypeRef<Prototype>();
+            _difficultyRef = stream.ReadPrototypeRef<Prototype>();
 
             byte numSlots = stream.ReadRawByte();
             Array.Resize(ref _slots, numSlots);
@@ -84,7 +171,7 @@ namespace MHServerEmu.Games.Social.Communities
                 _slots[i] = new(avatarRef, costumeRef, avatarLevel, prestigeLevel);
             }
 
-            IsOnline = (CommunityMemberOnlineStatus)stream.ReadRawInt32();
+            _isOnline = (CommunityMemberOnlineStatus)stream.ReadRawInt32();
 
             _playerName = stream.ReadRawString();
             _secondaryPlayerName = stream.ReadRawString();
@@ -191,10 +278,15 @@ namespace MHServerEmu.Games.Social.Communities
             return null;
         }
 
-        public bool ShouldArchiveTo(/* Archive archive */)
+        public bool ShouldArchiveTo(Archive archive)
         {
-            // iterate community circles to determine this
-            return true;
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+            {
+                if (circle.ShouldArchiveTo(archive))
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -248,7 +340,7 @@ namespace MHServerEmu.Games.Social.Communities
 
                 if (RegionRef != newRegionRef)
                 {
-                    RegionRef = newRegionRef;
+                    _regionRef = newRegionRef;
                     updateOptionBits |= CommunityMemberUpdateOptionBits.RegionRef;
                 }
                     
@@ -261,7 +353,7 @@ namespace MHServerEmu.Games.Social.Communities
 
                 if (DifficultyRef != newDifficultyRef)
                 {
-                    DifficultyRef = newDifficultyRef;
+                    _difficultyRef = newDifficultyRef;
                     updateOptionBits |= CommunityMemberUpdateOptionBits.DifficultyRef;
                 }  
             }
@@ -269,7 +361,7 @@ namespace MHServerEmu.Games.Social.Communities
             if (broadcast.HasIsOnline)
             {
                 CommunityMemberOnlineStatus oldIsOnline = IsOnline;
-                IsOnline = broadcast.IsOnline == 1 ? CommunityMemberOnlineStatus.Online : CommunityMemberOnlineStatus.Offline;
+                _isOnline = broadcast.IsOnline == 1 ? CommunityMemberOnlineStatus.Online : CommunityMemberOnlineStatus.Offline;
 
                 if (oldIsOnline != CommunityMemberOnlineStatus.Online && IsOnline == CommunityMemberOnlineStatus.Online)
                     updateOptionBits |= CommunityMemberUpdateOptionBits.IsOnline;
@@ -391,14 +483,14 @@ namespace MHServerEmu.Games.Social.Communities
             StringBuilder sb = new();
 
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
-            sb.AppendLine($"{nameof(DbId)}: 0x{DbId:X}");
-            sb.AppendLine($"{nameof(RegionRef)}: {GameDatabase.GetPrototypeName(RegionRef)}");
-            sb.AppendLine($"{nameof(DifficultyRef)}: {GameDatabase.GetPrototypeName(DifficultyRef)}");
+            sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
+            sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
+            sb.AppendLine($"{nameof(_difficultyRef)}: {GameDatabase.GetPrototypeName(_difficultyRef)}");
 
             for (int i = 0; i < _slots.Length; i++)
-                sb.AppendLine($"Slot{i}: {_slots[i]}");
+                sb.AppendLine($"{nameof(_slots)}[{i}]: {_slots[i]}");
 
-            sb.AppendLine($"{nameof(IsOnline)}: {IsOnline}");
+            sb.AppendLine($"{nameof(_isOnline)}: {_isOnline}");
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");

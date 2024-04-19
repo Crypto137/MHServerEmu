@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Network
             Player.InitializeFromDBAccount(_dbAccount);
 
             ulong avatarEntityId = Player.Id + 1;
-            ulong avatarRepId = Player.PartyId.ReplicationId + 1;
+            ulong avatarRepId = Player.Properties.ReplicationId + 4;
             foreach (PrototypeId avatarId in dataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
                 PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
             {

@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
         public AlliancePrototype AllianceProto { get; private set; }
 
-        public List<EntityTrackingContextMap> TrackingContextMap { get; set; }
+        public EntityTrackingContextMap TrackingContextMap { get; set; }
         public ConditionCollection ConditionCollection { get; set; }
         public List<PowerCollectionRecord> PowerCollection { get; set; }
         public int UnkEvent { get; set; }
@@ -116,9 +116,7 @@ namespace MHServerEmu.Games.Entities
             base.Decode(stream);
 
             TrackingContextMap = new();
-            int trackingContextMapCount = (int)stream.ReadRawVarint64();
-            for (int i = 0; i < trackingContextMapCount; i++)
-                TrackingContextMap.Add(new(stream));
+            TrackingContextMap.Decode(stream);
 
             ConditionCollection = new();
             int conditionCollectionCount = (int)stream.ReadRawVarint64();
@@ -150,8 +148,7 @@ namespace MHServerEmu.Games.Entities
         {
             base.Encode(stream);
 
-            stream.WriteRawVarint64((ulong)TrackingContextMap.Count);
-            foreach (EntityTrackingContextMap entry in TrackingContextMap) entry.Encode(stream);
+            TrackingContextMap.Encode(stream);
 
             stream.WriteRawVarint64((ulong)ConditionCollection.Count);
             foreach (Condition condition in ConditionCollection) condition.Encode(stream);
@@ -169,8 +166,8 @@ namespace MHServerEmu.Games.Entities
         {
             base.BuildString(sb);
 
-            for (int i = 0; i < TrackingContextMap.Count; i++)
-                sb.AppendLine($"TrackingContextMap{i}: {TrackingContextMap[i]}");
+            foreach (var kvp in TrackingContextMap)
+                sb.AppendLine($"{nameof(TrackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
 
             for (int i = 0; i < ConditionCollection.Count; i++)
                 sb.AppendLine($"ConditionCollection{i}: {ConditionCollection[i]}");

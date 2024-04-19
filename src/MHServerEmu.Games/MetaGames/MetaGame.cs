@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -15,15 +16,17 @@ namespace MHServerEmu.Games.MetaGames
     public class MetaGame : Entity
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public ReplicatedVariable<string> Name { get; set; }
+
+        protected ReplicatedVariable<string> _name = new();
 
         // new
         public MetaGame(Game game) : base(game) { }
+
         public override void Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
-            Name = new(0, "");
+            _name = new(0, "");
             Region region = Game.RegionManager.GetRegion(settings.RegionId);
             region.RegisterMetaGame(this);
         }
@@ -39,7 +42,15 @@ namespace MHServerEmu.Games.MetaGames
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
 
-            Name = name;
+            _name = name;
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+            // if (archive.IsTransient)
+            success &= Serializer.Transfer(archive, ref _name);
+            return success;
         }
 
         public override void Destroy()
@@ -52,21 +63,21 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.Decode(stream);
 
-            Name = new(stream);
+            _name.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)
         {
             base.Encode(stream);
 
-            Name.Encode(stream);
+            _name.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"Name: {Name}");
+            sb.AppendLine($"{nameof(_name)}: {_name}");
         }
 
         // TODO event registry States

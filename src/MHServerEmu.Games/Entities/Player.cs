@@ -51,37 +51,46 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ReplicatedVariable<string> _playerName;
+        private MissionManager _missionManager = new();
+        private ReplicatedPropertyCollection _avatarProperties = new();
+        private ulong _shardId;
+        private ReplicatedVariable<string> _playerName = new();
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private ReplicatedVariable<string> _secondaryPlayerName;
+        private ReplicatedVariable<string> _secondaryPlayerName = new();
+        private MatchQueueStatus _matchQueueStatus = new();
+
+        // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
+        // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
+        // sent along with it.
+        private bool _emailVerified;
+        private TimeSpan _accountCreationTimestamp;     // UnixTime
+
+        private ReplicatedVariable<ulong> _partyId = new();
 
         private ulong _guildId;
         private string _guildName;
         private GuildMembership _guildMembership;
 
-        private List<PrototypeId> _unlockedInventoryList;
+        private Community _community;
+        private List<PrototypeId> _unlockedInventoryList = new();
+        private SortedSet<AvailableBadges> _badges = new();
+        private GameplayOptions _gameplayOptions = new();
+        private AchievementState _achievementState = new();
+        private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
-        private SortedSet<AvailableBadges> _badges;
+        // Accessors
+        public MissionManager MissionManager { get => _missionManager; }
+        public ulong ShardId { get => _shardId; }
+        public MatchQueueStatus MatchQueueStatus { get => _matchQueueStatus; }
+        public bool EmailVerified { get => _emailVerified; set => _emailVerified = value; }
+        public TimeSpan AccountCreationTimestamp { get => _accountCreationTimestamp; set => _accountCreationTimestamp = value; }
+        public override ulong PartyId { get => _partyId.Value; }
+        public Community Community { get => _community; }
+        public GameplayOptions GameplayOptions { get => _gameplayOptions; }
+        public AchievementState AchievementState { get => _achievementState; }
 
-        private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict;
-
-        public MissionManager MissionManager { get; set; }
-        public ReplicatedPropertyCollection AvatarProperties { get; set; }
-        public ulong ShardId { get; set; }
-        public MatchQueueStatus MatchQueueStatus { get; set; }
-
-        // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
-        // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
-        // sent along with it.
-        public bool EmailVerified { get; set; }
-        public TimeSpan AccountCreationTimestamp { get; set; }  // UnixTime
-
-        public ReplicatedVariable<ulong> PartyId { get; set; }
-        public Community Community { get; set; }
-
-        public GameplayOptions GameplayOptions { get; set; }
-        public AchievementState AchievementState { get; set; }
-
+        
+        // Avatars
         public Avatar CurrentAvatar { get; private set; }
         public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
 
@@ -102,33 +111,79 @@ namespace MHServerEmu.Games.Entities
 
             // Archive Data
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            Properties.ReplicationId = 9078332;
 
-            Properties = new(9078332);
-
-            MissionManager = new();
-            MissionManager.Owner = this;
-            
-            AvatarProperties = new(9078333);
-            ShardId = 3;
+            _missionManager.Owner = this;
+            _avatarProperties.ReplicationId = 9078333;
+            _shardId = 3;
             _playerName = new(9078334, string.Empty);
             _secondaryPlayerName = new(0, string.Empty);
-            
-            MatchQueueStatus = new();
-            MatchQueueStatus.SetOwner(this);
-            
-            PartyId = new(9078335, 0);
-            
-            Community = new(this);
-            Community.Initialize();
-
-            _unlockedInventoryList = new();
-            _badges = new();
-            GameplayOptions = new(this);
-            AchievementState = new();
-            _stashTabOptionsDict = new();
+            _matchQueueStatus.SetOwner(this);
+            _partyId = new(9078335, 0);
+            _community = new(this);
+            _community.Initialize();
+            _gameplayOptions.SetOwner(this);
         }
 
-        public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
+        public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData)
+        {
+            _missionManager.Owner = this;
+            _matchQueueStatus.SetOwner(this);
+            _gameplayOptions.SetOwner(this);
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            success &= Serializer.Transfer(archive, ref _missionManager);
+            success &= Serializer.Transfer(archive, ref _avatarProperties);
+
+            // archive.IsTransient
+            success &= Serializer.Transfer(archive, ref _shardId);
+            success &= Serializer.Transfer(archive, ref _playerName);
+            success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+            success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
+            success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+            success &= Serializer.Transfer(archive, ref _matchQueueStatus);
+            success &= Serializer.Transfer(archive, ref _emailVerified);
+            success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
+
+            // archive.IsReplication
+            success &= Serializer.Transfer(archive, ref _partyId);
+            success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+
+            // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
+            string emptyString = string.Empty;
+            success &= Serializer.Transfer(archive, ref emptyString);
+            if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
+
+            //bool hasCommunityData = archive.IsPersistent || archive.IsMigration
+            //    || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner));
+            bool hasCommunityData = true;
+            success &= Serializer.Transfer(archive, ref hasCommunityData);
+            if (hasCommunityData)
+                success &= Serializer.Transfer(archive, ref _community);
+
+            // Unknown bool, always false
+            bool unkBool = false;
+            success &= Serializer.Transfer(archive, ref unkBool);
+            if (unkBool) Logger.Warn($"Serialize(): unkBool is true!");
+
+            success &= Serializer.Transfer(archive, ref _unlockedInventoryList);
+
+            //if (archive.IsMigration || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
+            success &= Serializer.Transfer(archive, ref _badges);
+
+            success &= Serializer.Transfer(archive, ref _gameplayOptions);
+
+            //if (archive.IsMigration || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
+            success &= Serializer.Transfer(archive, ref _achievementState);
+
+            success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
+
+            return success;
+        }
 
         protected override void Decode(CodedInputStream stream)
         {
@@ -136,24 +191,22 @@ namespace MHServerEmu.Games.Entities
 
             BoolDecoder boolDecoder = new();
 
-            MissionManager = new();
-            MissionManager.Decode(stream, boolDecoder);
-            AvatarProperties = new(stream);
+            _missionManager.Decode(stream, boolDecoder);
+            _avatarProperties.Decode(stream);
 
-            ShardId = stream.ReadRawVarint64();
+            _shardId = stream.ReadRawVarint64();
 
-            _playerName = new(stream);
+            _playerName.Decode(stream);
             _consoleAccountIds[0] = stream.ReadRawVarint64();
             _consoleAccountIds[1] = stream.ReadRawVarint64();
-            _secondaryPlayerName = new(stream);
+            _secondaryPlayerName.Decode(stream);
 
-            MatchQueueStatus = new(stream);
-            MatchQueueStatus.SetOwner(this);
+            _matchQueueStatus.Decode(stream);
 
-            EmailVerified = boolDecoder.ReadBool(stream);
-            AccountCreationTimestamp = new(stream.ReadRawInt64() * 10);
+            _emailVerified = boolDecoder.ReadBool(stream);
+            _accountCreationTimestamp = new(stream.ReadRawInt64() * 10);
 
-            PartyId = new(stream);
+            _partyId.Decode(stream);
 
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
 
@@ -161,8 +214,8 @@ namespace MHServerEmu.Games.Entities
             if (stream.ReadRawString() != string.Empty)
                 Logger.Warn($"Decode(): emptyString is not empty!");
 
-            Community = new(this);
-            Community.Initialize();
+            _community = new(this);
+            _community.Initialize();
             bool hasCommunityData = boolDecoder.ReadBool(stream);
             if (hasCommunityData) Community.Decode(stream);
 
@@ -170,27 +223,28 @@ namespace MHServerEmu.Games.Entities
             if (boolDecoder.ReadBool(stream))
                 Logger.Warn($"Decode(): unkBool is true!");
 
-            _unlockedInventoryList = new();
+            _unlockedInventoryList.Clear();
             ulong numUnlockedInventories = stream.ReadRawVarint64();
             for (ulong i = 0; i < numUnlockedInventories; i++)
                 _unlockedInventoryList.Add(stream.ReadPrototypeRef<Prototype>());
 
-            _badges = new();
+            _badges.Clear();
             ulong numBadges = stream.ReadRawVarint64();
             for (ulong i = 0; i < numBadges; i++)
                 _badges.Add((AvailableBadges)stream.ReadRawVarint32());
 
-            GameplayOptions = new(this);
-            GameplayOptions.Decode(stream, boolDecoder);
+            _gameplayOptions.Decode(stream, boolDecoder);
 
-            AchievementState = new(stream);
+            _achievementState.Decode(stream);
 
-            _stashTabOptionsDict = new();
+            _stashTabOptionsDict.Clear();
             ulong numStashTabOptions = stream.ReadRawVarint64();
             for (ulong i = 0; i < numStashTabOptions; i++)
             {
                 PrototypeId stashTabRef = stream.ReadPrototypeRef<Prototype>();
-                _stashTabOptionsDict.Add(stashTabRef, new(stream));
+                StashTabOptions options = new();
+                options.Decode(stream);
+                _stashTabOptionsDict.Add(stashTabRef, options);
             }
         }
 
@@ -201,9 +255,9 @@ namespace MHServerEmu.Games.Entities
             // Prepare bool encoder
             BoolEncoder boolEncoder = new();
 
-            MissionManager.EncodeBools(boolEncoder);
+            _missionManager.EncodeBools(boolEncoder);
 
-            boolEncoder.EncodeBool(EmailVerified);
+            boolEncoder.EncodeBool(_emailVerified);
             boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
             boolEncoder.EncodeBool(true);   // hasCommunity TODO: Check archive's replication policy and send community only to owners
             boolEncoder.EncodeBool(false);  // Unknown unused bool, always false
@@ -213,23 +267,23 @@ namespace MHServerEmu.Games.Entities
             boolEncoder.Cook();
 
             // Encode
-            MissionManager.Encode(stream, boolEncoder);
-            AvatarProperties.Encode(stream);
+            _missionManager.Encode(stream, boolEncoder);
+            _avatarProperties.Encode(stream);
 
-            stream.WriteRawVarint64(ShardId);
+            stream.WriteRawVarint64(_shardId);
             _playerName.Encode(stream);
             stream.WriteRawVarint64(_consoleAccountIds[0]);
             stream.WriteRawVarint64(_consoleAccountIds[1]);
             _secondaryPlayerName.Encode(stream);
-            MatchQueueStatus.Encode(stream);
+            _matchQueueStatus.Encode(stream);
             boolEncoder.WriteBuffer(stream);   // EmailVerified
             stream.WriteRawInt64(AccountCreationTimestamp.Ticks / 10);
-            PartyId.Encode(stream);
+            _partyId.Encode(stream);
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolEncoder, ref _guildId, ref _guildName, ref _guildMembership);
             stream.WriteRawString(string.Empty);    // Mysterious always empty throwaway string
 
             boolEncoder.WriteBuffer(stream);   // hasCommunity
-            Community.Encode(stream);
+            _community.Encode(stream);
 
             boolEncoder.WriteBuffer(stream);   // UnkBool
 
@@ -306,17 +360,17 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
-            MissionManager.SetAvatar((PrototypeId)account.CurrentAvatar.RawPrototype);
+            _missionManager.SetAvatar((PrototypeId)account.CurrentAvatar.RawPrototype);
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
                 PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
             {
                 var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                if (MissionManager.ShouldCreateMission(missionPrototype))
+                if (_missionManager.ShouldCreateMission(missionPrototype))
                 {
-                    Mission mission = MissionManager.CreateMission(missionRef);
+                    Mission mission = _missionManager.CreateMission(missionRef);
                     mission.SetState(MissionState.Completed);
                     mission.AddParticipant(this);
-                    MissionManager.InsertMission(mission);
+                    _missionManager.InsertMission(mission);
                 }
             }
 
@@ -325,62 +379,62 @@ namespace MHServerEmu.Games.Entities
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
-            EmailVerified = true;
-            AccountCreationTimestamp = Clock.DateTimeToUnixTime(new(2023, 07, 16, 1, 48, 0));   // First GitHub commit date
+            _emailVerified = true;
+            _accountCreationTimestamp = Clock.DateTimeToUnixTime(new(2023, 07, 16, 1, 48, 0));   // First GitHub commit date
 
             #region Hardcoded social tab easter eggs
-            Community.AddMember(1, "DavidBrevik", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(1).SetIsOnline(1)
+            _community.AddMember(1, "DavidBrevik", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(1).SetIsOnline(1)
                 .SetCurrentRegionRefId(12735255224807267622).SetCurrentDifficultyRefId((ulong)DifficultyTier.Normal)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(15769648016960461069).SetCostumeRefId(4881398219179434365).SetLevel(60).SetPrestigeLevel(6))
                 .Build());
 
-            Community.AddMember(2, "TonyStark", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(2).SetIsOnline(1)
+            _community.AddMember(2, "TonyStark", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(2).SetIsOnline(1)
                 .SetCurrentRegionRefId((ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion).SetCurrentDifficultyRefId((ulong)DifficultyTier.Normal)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(421791326977791218).SetCostumeRefId(7150542631074405762).SetLevel(60).SetPrestigeLevel(5))
                 .Build());
 
-            Community.AddMember(3, "Doomsaw", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(3).SetIsOnline(1)
+            _community.AddMember(3, "Doomsaw", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(3).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(17750839636937086083).SetCostumeRefId(14098108758769669917).SetLevel(60).SetPrestigeLevel(6))
                 .Build());
 
-            Community.AddMember(4, "PizzaTime", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(4).SetIsOnline(1)
+            _community.AddMember(4, "PizzaTime", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(4).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(9378552423541970369).SetCostumeRefId(6454902525769881598).SetLevel(60).SetPrestigeLevel(5))
                 .Build());
 
-            Community.AddMember(5, "RogueServerEnjoyer", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(5).SetIsOnline(1)
+            _community.AddMember(5, "RogueServerEnjoyer", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(5).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(1660250039076459846).SetCostumeRefId(9447440487974639491).SetLevel(60).SetPrestigeLevel(3))
                 .Build());
 
-            Community.AddMember(6, "WhiteQueenXOXO", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(6).SetIsOnline(1)
+            _community.AddMember(6, "WhiteQueenXOXO", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(6).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(412966192105395660).SetCostumeRefId(12724924652099869123).SetLevel(60).SetPrestigeLevel(4))
                 .Build());
 
-            Community.AddMember(7, "AlexBond", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(7).SetIsOnline(1)
+            _community.AddMember(7, "AlexBond", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(7).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(9255468350667101753).SetCostumeRefId(16813567318560086134).SetLevel(60).SetPrestigeLevel(2))
                 .Build());
 
-            Community.AddMember(8, "Crypto137", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(8).SetIsOnline(1)
+            _community.AddMember(8, "Crypto137", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(8).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(421791326977791218).SetCostumeRefId(1195778722002966150).SetLevel(60).SetPrestigeLevel(2))
                 .Build());
 
-            Community.AddMember(9, "yn01", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(9).SetIsOnline(1)
+            _community.AddMember(9, "yn01", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(9).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(12534955053251630387).SetCostumeRefId(14506515434462517197).SetLevel(60).SetPrestigeLevel(2))
                 .Build());
 
-            Community.AddMember(10, "Gazillion", CircleId.__Friends);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(10).SetIsOnline(0).Build());
+            _community.AddMember(10, "Gazillion", CircleId.__Friends);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(10).SetIsOnline(0).Build());
 
-            Community.AddMember(11, "FriendlyLawyer", CircleId.__Nearby);
-            Community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(11).SetIsOnline(1)
+            _community.AddMember(11, "FriendlyLawyer", CircleId.__Nearby);
+            _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(11).SetIsOnline(1)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(12394659164528645362).SetCostumeRefId(2844257346122946366).SetLevel(99).SetPrestigeLevel(1))
                 .Build());
             #endregion
@@ -397,8 +451,7 @@ namespace MHServerEmu.Games.Entities
                     AddBadge(badge);
             }
 
-            GameplayOptions.ResetToDefaults();
-            AchievementState = new();
+            _gameplayOptions.ResetToDefaults();
         }
 
         public void SaveToDBAccount(DBAccount account)
@@ -682,17 +735,17 @@ namespace MHServerEmu.Games.Entities
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"{nameof(MissionManager)}: {MissionManager}");
-            sb.AppendLine($"{nameof(AvatarProperties)}: {AvatarProperties}");
-            sb.AppendLine($"{nameof(ShardId)}: {ShardId}");
+            sb.AppendLine($"{nameof(_missionManager)}: {_missionManager}");
+            sb.AppendLine($"{nameof(_avatarProperties)}: {_avatarProperties}");
+            sb.AppendLine($"{nameof(_shardId)}: {_shardId}");
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
-            sb.AppendLine($"{nameof(MatchQueueStatus)}: {MatchQueueStatus}");
-            sb.AppendLine($"{nameof(EmailVerified)}: {EmailVerified}");
-            sb.AppendLine($"{nameof(AccountCreationTimestamp)}: {AccountCreationTimestamp}");
-            sb.AppendLine($"{nameof(PartyId)}: {PartyId}");
+            sb.AppendLine($"{nameof(_matchQueueStatus)}: {_matchQueueStatus}");
+            sb.AppendLine($"{nameof(_emailVerified)}: {_emailVerified}");
+            sb.AppendLine($"{nameof(_accountCreationTimestamp)}: {Clock.UnixTimeToDateTime(_accountCreationTimestamp)}");
+            sb.AppendLine($"{nameof(_partyId)}: {_partyId}");
 
             if (_guildId != GuildMember.InvalidGuildId)
             {
@@ -701,24 +754,24 @@ namespace MHServerEmu.Games.Entities
                 sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
             }
 
-            sb.AppendLine($"{nameof(Community)}: {Community}");
+            sb.AppendLine($"{nameof(_community)}: {_community}");
 
             for (int i = 0; i < _unlockedInventoryList.Count; i++)
-                sb.AppendLine($"_unlockedInventoryList[{i}]: {GameDatabase.GetPrototypeName(_unlockedInventoryList[i])}");
+                sb.AppendLine($"{nameof(_unlockedInventoryList)}[{i}]: {GameDatabase.GetPrototypeName(_unlockedInventoryList[i])}");
 
             if (_badges.Any())
             {
-                sb.Append("Badges: ");
+                sb.Append($"{nameof(_badges)}: ");
                 foreach (AvailableBadges badge in _badges)
                     sb.Append(badge.ToString()).Append(' ');
                 sb.AppendLine();
             }
 
-            sb.AppendLine($"{nameof(GameplayOptions)}: {GameplayOptions}");
-            sb.AppendLine($"{nameof(AchievementState)}: {AchievementState}");
+            sb.AppendLine($"{nameof(_gameplayOptions)}: {_gameplayOptions}");
+            sb.AppendLine($"{nameof(_achievementState)}: {_achievementState}");
 
             foreach (var kvp in _stashTabOptionsDict)
-                sb.AppendLine($"StashTabOptions[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+                sb.AppendLine($"{nameof(_stashTabOptionsDict)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
         }
 
         /// <summary>
@@ -757,11 +810,6 @@ namespace MHServerEmu.Games.Entities
             var manager = Game.RegionManager;
             if (manager == null) return null;
             return manager.GetRegion(RegionId);
-        }
-
-        public override ulong GetPartyId()
-        {
-            return PartyId.Value;
         }
 
         public void OnPlayKismetSeqDone(PlayerConnection playerConnection, PrototypeId kismetSeqPrototypeId)

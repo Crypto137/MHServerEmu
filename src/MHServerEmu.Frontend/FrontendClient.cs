@@ -32,14 +32,19 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void Parse(byte[] data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
-            PacketIn packet = new(stream);
+            MuxPacket packet;
+            using (MemoryStream ms = new(data))
+                packet = new(ms);
+
+            // We should be receiving packets only from mux channels 1 and 2
+            if (packet.MuxId == 0 || packet.MuxId > 2)
+                Logger.Warn($"Received a MuxPacket with unexpected mux channel {packet.MuxId} from {Connection}");
 
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
                     Logger.Trace($"Connected on mux channel {packet.MuxId}");
-                    Connection.Send(new PacketOut(packet.MuxId, MuxCommand.ConnectAck));
+                    Connection.Send(new MuxPacket(packet.MuxId, MuxCommand.ConnectAck));
                     break;
 
                 case MuxCommand.ConnectAck:
@@ -57,6 +62,10 @@ namespace MHServerEmu.Frontend
 
                 case MuxCommand.Data:
                     RouteMessages(packet.MuxId, packet.Messages);
+                    break;
+
+                default:
+                    Logger.Error($"Received a malformed MuxPacket with command {packet.Command} from {Connection}");
                     break;
             }
         }
@@ -77,7 +86,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMuxDisconnect(ushort muxId)
         {
-            Connection.Send(new PacketOut(muxId, MuxCommand.Disconnect));
+            Connection.Send(new MuxPacket(muxId, MuxCommand.Disconnect));
         }
 
         /// <summary>
@@ -85,7 +94,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMessage(ushort muxId, MessagePackage message)
         {
-            PacketOut packet = new(muxId, MuxCommand.Data);
+            MuxPacket packet = new(muxId, MuxCommand.Data);
             packet.AddMessage(message);
             Connection.Send(packet);
         }
@@ -103,7 +112,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void SendMessages(ushort muxId, IEnumerable<MessagePackage> messages)
         {
-            PacketOut packet = new(muxId, MuxCommand.Data);
+            MuxPacket packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
         }

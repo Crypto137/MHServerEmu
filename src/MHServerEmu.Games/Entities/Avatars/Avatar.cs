@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
 
-        public ReplicatedVariable<string> PlayerName { get; set; }
+        public ReplicatedVariable<string> PlayerName { get; set; } = new();
         public ulong OwnerPlayerDbId { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
         public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Avatar(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, ConditionCollection conditionCollection, List<PowerCollectionRecord> powerCollection, int unkEvent,
+        public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, List<PowerCollectionRecord> powerCollection, int unkEvent,
             ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             BoolDecoder boolDecoder = new();
 
-            PlayerName = new(stream);
+            PlayerName.Decode(stream);
             OwnerPlayerDbId = stream.ReadRawVarint64();
 
             // Similar throwaway string to Player entity

@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Dialog
             return Priority.CompareTo(other.Priority);
         }
 
-        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap2 map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
         {
             checkList.Add(this);
             return EntityTrackingFlag.None;

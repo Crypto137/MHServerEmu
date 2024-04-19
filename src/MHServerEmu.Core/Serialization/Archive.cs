@@ -300,7 +300,7 @@ namespace MHServerEmu.Core.Serialization
         /// <summary>
         /// Transfers an <see cref="ISerialize"/> instance to or from this <see cref="Archive"/> instance. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool Transfer(ref ISerialize ioData)
+        public bool Transfer<T>(ref T ioData) where T: ISerialize
         {
             return ioData.Serialize(this);
         }

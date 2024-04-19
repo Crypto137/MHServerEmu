@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Missions
                 foreach (var kvp in _objectiveDict)
                 {
                     byte index = kvp.Key;
-                    ISerialize objective = kvp.Value;
+                    MissionObjective objective = kvp.Value;
                     success &= Serializer.Transfer(archive, ref index);
                     success &= Serializer.Transfer(archive, ref objective);
                 }
@@ -223,10 +223,10 @@ namespace MHServerEmu.Games.Missions
                     byte index = 0;
                     success &= Serializer.Transfer(archive, ref index);
 
-                    ISerialize objective = CreateObjective(index);
+                    MissionObjective objective = CreateObjective(index);
                     success &= Serializer.Transfer(archive, ref objective);
 
-                    InsertObjective(index, (MissionObjective)objective);
+                    InsertObjective(index, objective);
                 }
             }
 
