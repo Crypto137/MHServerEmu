@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -576,6 +577,11 @@ namespace MHServerEmu.Games.Navi
             }
 
             return true;
+        }
+
+        internal SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3 resultPosition, ref Vector3 resultNormal, float padding, HeightSweepType heightSweep, int maxHeight, int minHeight, WorldEntity owner)
+        {
+            throw new NotImplementedException();
         }
 
         private class MarkupState

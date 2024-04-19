@@ -1,7 +1,9 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -17,7 +19,7 @@ namespace MHServerEmu.Games.Entities
         public ulong RegionId { get => Region != null ? Region.Id : 0; }
         public uint AreaId { get => Area != null ? Area.Id : 0; }
         public uint CellId { get => Cell != null ? Cell.Id : 0; }
-
+        public NaviMesh NaviMesh { get => Region?.NaviMesh; }
         public bool IsValid() => _region != null;
 
         private Vector3 _position;
@@ -54,32 +56,59 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public static float ProjectToFloor(Cell cell, Vector3 position)
+        public static Vector3 ProjectToFloor(Cell cell, Vector3 regionPos)
         {
-            Vector3 cellPos = position - cell.RegionBounds.Min;
+            if (cell == null || cell.RegionBounds.IntersectsXY(regionPos) == false) return regionPos;
             var cellProto = cell.CellProto;
-            cellPos.X /= cellProto.BoundingBox.Width;
-            cellPos.Y /= cellProto.BoundingBox.Length;
-            int mapX = (int)cellProto.HeightMap.HeightMapSize.X;
-            int mapY = (int)cellProto.HeightMap.HeightMapSize.Y;
-            int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
-            int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
-            return cellProto.HeightMap.HeightMapData[y * mapX + x];
+            if (cellProto == null) return regionPos;
+
+            short height;
+            if (cellProto.HeightMap.HeightMapData.HasValue())
+            {
+                Vector3 cellPos = regionPos - cell.RegionBounds.Min;
+                cellPos.X /= cellProto.BoundingBox.Width;
+                cellPos.Y /= cellProto.BoundingBox.Length;
+                int mapX = (int)cellProto.HeightMap.HeightMapSize.X;
+                int mapY = (int)cellProto.HeightMap.HeightMapSize.Y;
+                int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
+                int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
+                height = cellProto.HeightMap.HeightMapData[y * mapX + x];
+            }
+            else
+                height = short.MinValue;
+
+            if (height > short.MinValue)
+            {
+                Vector3 resultPos = new(regionPos)
+                {
+                    Z = cell.RegionBounds.Center.Z + height
+                };
+                return resultPos;
+            }
+            else
+            {
+                var naviMesh = cell.GetRegion().NaviMesh;
+                if (naviMesh.IsMeshValid)
+                    return naviMesh.ProjectToMesh(regionPos);
+                else
+                    return regionPos;
+            }
         }
 
         public static Vector3 ProjectToFloor(Region region, Vector3 regionPos)
         {
+            if (region == null) return regionPos;
             Cell cell = region.GetCellAtPosition(regionPos);
             if (cell == null) return regionPos;
-            Vector3 postion = new(regionPos);
+            return ProjectToFloor(cell, regionPos);
+        }
 
-            var height = ProjectToFloor(cell, postion);
-            if (height > Int16.MinValue) 
-                postion.Z = cell.RegionBounds.Center.Z + height;
-            else if (region.NaviMesh.IsMeshValid)
-                return region.NaviMesh.ProjectToMesh(regionPos);
-
-            return postion;
+        public static Vector3 ProjectToFloor(Region region, Cell cell, Vector3 regionPos)
+        {
+            if (cell != null && cell.IntersectsXY(regionPos))
+                return ProjectToFloor(cell, regionPos);
+            else
+                return ProjectToFloor(region, regionPos);
         }
 
         public override string ToString()
@@ -102,7 +131,6 @@ namespace MHServerEmu.Games.Entities
             if (area != null && area.HasKeyword(keywordProto)) return true;
             return false;
         }
-
     }
 
     public class RegionLocationSafe

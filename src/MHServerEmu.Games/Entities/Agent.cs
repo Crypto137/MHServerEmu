@@ -1,5 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
@@ -37,8 +38,29 @@ namespace MHServerEmu.Games.Entities
 
         public override void Initialize(EntitySettings settings)
         {
+            if (AgentPrototype == null) return;
+            if (AgentPrototype.Locomotion.Immobile == false) Locomotor = new();
+
+            // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
+            // InitPowersCollection
+            InitLocomotor(settings.LocomotorHeightOverride);
         }
+
+        private bool InitLocomotor(float height = 0.0f)
+        {
+            if (Locomotor != null)
+            {
+                AgentPrototype agentPrototype = AgentPrototype;
+                if (agentPrototype == null) return false;
+
+                Locomotor.Initialize(agentPrototype.Locomotion, this, height);
+                Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
+            }
+
+            return true;
+        }
+
 
         public override void OnEnteredWorld(EntitySettings settings)
         {

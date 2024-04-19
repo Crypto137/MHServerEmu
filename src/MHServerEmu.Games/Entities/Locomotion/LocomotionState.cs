@@ -46,15 +46,23 @@ namespace MHServerEmu.Games.Entities.Locomotion
     {
         public LocomotionFlags LocomotionFlags { get; set; }
         public LocomotorMethod Method { get; set; }
-        public float MoveSpeed { get; set; }
+        public float BaseMoveSpeed { get; set; }
         public int Height { get; set; }
         public ulong FollowEntityId { get; set; }
         public Vector2 FollowEntityRange { get; set; }
         public uint PathGoalNodeIndex { get; set; }     // This was signed in old protocols
-        public LocomotionPathNode[] LocomotionPathNodes { get; set; } = Array.Empty<LocomotionPathNode>();
+        public List<LocomotionPathNode> LocomotionPathNodes { get; set; }
+
+        public LocomotionState()
+        {
+            Method = LocomotorMethod.Default;
+            LocomotionPathNodes = new();
+        }
 
         public LocomotionState(CodedInputStream stream, LocomotionMessageFlags flags)
         {
+            LocomotionPathNodes = new();
+
             if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
                 LocomotionFlags = (LocomotionFlags)stream.ReadRawVarint64();
 
@@ -62,7 +70,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 Method = (LocomotorMethod)stream.ReadRawVarint32();
 
             if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
-                MoveSpeed = stream.ReadRawZigZagFloat(0);
+                BaseMoveSpeed = stream.ReadRawZigZagFloat(0);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
                 Height = (int)stream.ReadRawVarint32();
@@ -76,23 +84,24 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
             {
                 PathGoalNodeIndex = stream.ReadRawVarint32();
-                LocomotionPathNodes = new LocomotionPathNode[stream.ReadRawVarint64()];
-                for (int i = 0; i < LocomotionPathNodes.Length; i++)
-                    LocomotionPathNodes[i] = new(stream);
+                int count = (int)stream.ReadRawVarint64();
+                for (int i = 0; i < count; i++)
+                    LocomotionPathNodes.Add(new(stream));
             }
         }
 
-        public LocomotionState(float moveSpeed)
+        public LocomotionState(float baseMoveSpeed)
         {
-            MoveSpeed = moveSpeed;
+            BaseMoveSpeed = baseMoveSpeed;
+            LocomotionPathNodes = new();
         }
 
-        public LocomotionState(LocomotionFlags locomotionFlags, LocomotorMethod method, float moveSpeed, int height,
-            ulong followEntityId, Vector2 followEntityRange, uint pathGoalNodeIndex, LocomotionPathNode[] locomotionPathNodes)
+        public LocomotionState(LocomotionFlags locomotionFlags, LocomotorMethod method, float baseMoveSpeed, int height,
+            ulong followEntityId, Vector2 followEntityRange, uint pathGoalNodeIndex, List<LocomotionPathNode> locomotionPathNodes)
         {
             LocomotionFlags = locomotionFlags;
             Method = method;
-            MoveSpeed = moveSpeed;
+            BaseMoveSpeed = baseMoveSpeed;
             Height = height;
             FollowEntityId = followEntityId;
             FollowEntityRange = followEntityRange;
@@ -109,7 +118,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 stream.WriteRawVarint32((uint)Method);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
-                stream.WriteRawZigZagFloat(MoveSpeed, 0);
+                stream.WriteRawZigZagFloat(BaseMoveSpeed, 0);
 
             if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
                 stream.WriteRawVarint32((uint)Height);
@@ -123,7 +132,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
             {
                 stream.WriteRawVarint32(PathGoalNodeIndex);
-                stream.WriteRawVarint64((ulong)LocomotionPathNodes.Length);
+                stream.WriteRawVarint64((ulong)LocomotionPathNodes.Count);
                 foreach (LocomotionPathNode naviVector in LocomotionPathNodes) naviVector.Encode(stream);
             }
         }
@@ -133,12 +142,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
             StringBuilder sb = new();
             sb.AppendLine($"LocomotionFlags: {LocomotionFlags}");
             sb.AppendLine($"Method: 0x{Method:X}");
-            sb.AppendLine($"MoveSpeed: {MoveSpeed}");
+            sb.AppendLine($"BaseMoveSpeed: {BaseMoveSpeed}");
             sb.AppendLine($"Height: 0x{Height:X}");
             sb.AppendLine($"FollowEntityId: {FollowEntityId}");
             sb.AppendLine($"FollowEntityRange: {FollowEntityRange}");
             sb.AppendLine($"PathGoalNodeIndex: {PathGoalNodeIndex}");
-            for (int i = 0; i < LocomotionPathNodes.Length; i++) sb.AppendLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
+            for (int i = 0; i < LocomotionPathNodes.Count; i++) sb.AppendLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
             return sb.ToString();
         }
     }

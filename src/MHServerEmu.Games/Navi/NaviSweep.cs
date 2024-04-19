@@ -6,6 +6,12 @@ namespace MHServerEmu.Games.Navi
 
     }
 
+    public enum HeightSweepType
+    {
+        None,
+        Constraint
+    }
+
     public enum SweepResult
     {
         Success = 0,

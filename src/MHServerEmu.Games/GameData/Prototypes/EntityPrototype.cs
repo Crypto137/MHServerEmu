@@ -80,6 +80,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Missile = 4,
         MissileSeeking = 5,
         HighFlying = 6,
+        Default = 7
     }
 
     [AssetEnum((int)None)]

@@ -28,6 +28,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId ActionsTarget;
         public SpawnSpec SpawnSpec;
         public bool HotspotSkipCollide;
+        public float LocomotorHeightOverride;
     }
 
     public class EntityManager

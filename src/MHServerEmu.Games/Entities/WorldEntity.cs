@@ -37,6 +37,7 @@ namespace MHServerEmu.Games.Entities
         public Aabb RegionBounds { get; set; }
         public Bounds Bounds { get; set; } = new();
         public Region Region { get => RegionLocation.Region; }
+        public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public RegionLocation LastLocation { get; private set; }
@@ -45,7 +46,7 @@ namespace MHServerEmu.Games.Entities
         public EntityActionComponent EntityActionComponent { get; protected set; }
         public SpawnSpec SpawnSpec { get; private set; }
         public SpawnGroup SpawnGroup { get => SpawnSpec?.Group; }
-        public Locomotor Locomotor { get; private set; }
+        public Locomotor Locomotor { get; protected set; }
         public virtual Bounds EntityCollideBounds { get => Bounds; set { } }
         public virtual bool IsTeamUpAgent { get => false; }
         public virtual bool IsSummonedPet { get => false; }
@@ -54,6 +55,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasNavigationInfluence { get; private set; }
         public NavigationInfluence NaviInfluence { get; private set; }
         public virtual bool IsMovementAuthoritative { get => true; }
+
 
         // New
         public WorldEntity(Game game): base(game) 

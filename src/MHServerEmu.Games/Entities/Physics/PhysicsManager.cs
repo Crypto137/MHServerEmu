@@ -298,7 +298,8 @@ namespace MHServerEmu.Games.Entities.Physics
                     if (locomotor == null) return false;
 
                     Vector3 newDesiredDestination = new();
-                    locomotor.SweepFromTo(collidedDestination, collidedDestination + slidingVelocity2D, ref newDesiredDestination);
+                    Vector3 normal = null;
+                    locomotor.SweepFromTo(collidedDestination, collidedDestination + slidingVelocity2D, ref newDesiredDestination, ref normal);
 
                     Vector3 newVelocity = newDesiredDestination - collidedDestination;
                     if (Vector3.IsNearZero(newVelocity) == false)
@@ -395,8 +396,8 @@ namespace MHServerEmu.Games.Entities.Physics
 
                     Vector3 fromPosition = new(resultPosition);
                     destination = resultPosition + velocity2D;
-
-                    sweepResult = locomotor.SweepFromTo(fromPosition, destination, ref resultPosition);
+                    resultNormal = null;
+                    sweepResult = locomotor.SweepFromTo(fromPosition, destination, ref resultPosition, ref resultNormal);
                     if (sweepResult == SweepResult.Failed) return false;
                 }
             }
