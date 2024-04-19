@@ -287,7 +287,7 @@ namespace MHServerEmu.Games.Entities.Physics
             {
                 Vector3 normal2D = Vector3.SafeNormalize2D(collision.Normal, Vector3.Zero);
                 Vector3 slidingVelocity = desiredDestination - collidedDestination;
-                Vector3 slidingVelocity2D = new (slidingVelocity.X, slidingVelocity.Y, 0.0f);
+                Vector3 slidingVelocity2D = slidingVelocity.To2D();
 
                 float dot = Vector3.Dot(slidingVelocity2D, normal2D);
                 if (dot < 0.0f)
@@ -319,7 +319,7 @@ namespace MHServerEmu.Games.Entities.Physics
             Bounds bounds = entity.EntityCollideBounds;
             RegionLocation location = entity.RegionLocation;
             Vector3 velocity = destination - position;
-            Vector3 velocity2D = new (velocity.X, velocity.Y, 0.0f);
+            Vector3 velocity2D = velocity.To2D();
             outCollision = new();
             var context = entity.GetEntityRegionSPContext();
             foreach (var otherEntity in entity.Region.IterateEntitiesInVolume(volume, context))
@@ -387,7 +387,7 @@ namespace MHServerEmu.Games.Entities.Physics
             if (clipped && allowSweep)
             {
                 Vector3 velocity = destination - resultPosition;
-                Vector3 velocity2D = new (velocity.X, velocity.Y, 0.0f);
+                Vector3 velocity2D = velocity.To2D();
 
                 float dot = Vector3.Dot(velocity2D, resultNormal2D);
                 if (dot < 0.0f)

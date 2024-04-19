@@ -9,7 +9,6 @@ namespace MHServerEmu.Core.VectorMath
 {
     public class Vector3
     {
-
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
@@ -119,7 +118,7 @@ namespace MHServerEmu.Core.VectorMath
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
         public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon = Segment.Epsilon) => LengthSqr(v1 - v2) < epsilon;
         public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
-        public static float LengthSquared2D(Vector3 v) => LengthSqr(new(v.X, v.Y, 0.0f));
+        public static float LengthSquared2D(Vector3 v) => LengthSqr(v.To2D());
         public static bool IsNearZero(Vector3 v, float epsilon = Segment.Epsilon) => LengthSqr(v) < epsilon;
         public static bool IsNearZero2D(Vector3 v, float epsilon = Segment.Epsilon) => LengthSquared2D(v) < epsilon;
 
@@ -143,7 +142,7 @@ namespace MHServerEmu.Core.VectorMath
 
         public static Vector3 Normalize2D(Vector3 v)
         {
-            Vector3 vector2D = new(v.X, v.Y, 0f);
+            Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? XAxis : Normalize(vector2D);
         }
 
@@ -162,15 +161,17 @@ namespace MHServerEmu.Core.VectorMath
             return new(x, y, 0.0f);
         }
 
-        public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(Flatten(v1, 2), Flatten(v2, 2));
+        public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(v1.To2D(), v2.To2D());
         private static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
 
-        private static Vector3 Flatten(Vector3 v, int index)
+        public static Vector3 Flatten(Vector3 v, Axis axis)
         {
-            return new(index == 0 ? 0.0f : v.X,
-                       index == 1 ? 0.0f : v.Y,
-                       index == 2 ? 0.0f : v.Z);
+            return new(axis == Axis.X ? 0.0f : v.X,
+                       axis == Axis.Y ? 0.0f : v.Y,
+                       axis == Axis.Z ? 0.0f : v.Z);
         }
+
+        public Vector3 To2D() => new(X, Y, 0.0f);
 
         public static Vector3 AbsPerElem(Vector3 vec)
         {
@@ -216,9 +217,11 @@ namespace MHServerEmu.Core.VectorMath
 
         public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero)
         {
-            Vector3 vector2D = new(v.X, v.Y, 0.0f);
+            Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? zero : Normalize(vector2D);
         }
+
+        public static Vector3 Perp2D(Vector3 v) => new(v.Y, -v.X, 0.0f);
 
         // static vectors
 
@@ -233,5 +236,12 @@ namespace MHServerEmu.Core.VectorMath
         public static Vector3 Left { get => new(0.0f, -1.0f, 0.0f); }
         public static Vector3 Down { get => new(0.0f, 0.0f, -1.0f); }
 
+    }
+
+    public enum Axis
+    {
+        X = 0,
+        Y = 1,
+        Z = 2,
     }
 }

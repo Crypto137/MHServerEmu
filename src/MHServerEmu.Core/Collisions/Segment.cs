@@ -62,10 +62,7 @@ namespace MHServerEmu.Core.Collisions
 
         public static float SegmentPointDistanceSq2D(Vector3 a, Vector3 b, Vector3 c)
         {
-            Vector3 a2d = new(a.X, a.Y, 0.0f);
-            Vector3 b2d = new(b.X, b.Y, 0.0f);
-            Vector3 c2d = new(c.X, c.Y, 0.0f);
-            return SegmentPointDistanceSq(a2d, b2d, c2d);
+            return SegmentPointDistanceSq(a.To2D(), b.To2D(), c.To2D());
         }
 
         public static float SegmentPointDistance2D(Vector3 a, Vector3 b, Vector3 c)
@@ -76,6 +73,11 @@ namespace MHServerEmu.Core.Collisions
         public static float Cross2D(Vector3 v0, Vector3 v1)
         {
             return v0.X * v1.Y - v0.Y * v1.X;
+        }
+
+        public static float SegmentSegmentDistanceSq2D(Vector3 a1, Vector3 b1, Vector3 a2, Vector3 b2)
+        {
+            return SegmentSegmentClosestPoint(a1.To2D(), b1.To2D(), a2.To2D(), b2.To2D(), out _, out _, out _, out _);
         }
 
         public static float SegmentSegmentClosestPoint(Vector3 a1, Vector3 b1, Vector3 a2, Vector3 b2, out float s, out float t, out Vector3 c1, out Vector3 c2)
@@ -188,6 +190,13 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
+        public static float Lerp(float min, float max, float value)
+        {
+            if (value >= 0.0f && value <= 1.0f)
+                return min + (max - min) * value;
+            else
+                return min;
+        }
     }
 
 }

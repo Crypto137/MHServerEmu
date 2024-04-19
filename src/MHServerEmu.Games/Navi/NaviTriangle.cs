@@ -248,6 +248,13 @@ namespace MHServerEmu.Games.Navi
             edge = OpposedEdge(point);
             triangle = edge.OpposedTriangle(this);
         }
+
+        public bool Contains(Vector3 point)
+        {
+            return Pred.Contains2D(PointCW(0), PointCW(1), PointCW(2), point);
+        }
+
+        public bool TestPathFlags(PathFlags pathFlags) => (PathingFlags & pathFlags) != 0;
     }
 
     public class NaviTriangleState
