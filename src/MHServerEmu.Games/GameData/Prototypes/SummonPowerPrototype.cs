@@ -18,6 +18,14 @@
         public bool UseTargetAsSource { get; protected set; }
         public bool KillPreviousSummons { get; protected set; }
         public bool SummonAsPopulation { get; protected set; }
+
+        public bool IsPetSummoningPower()
+        {
+            var keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
+            if (keywordGlobalsProto != null)
+                return HasKeyword(keywordGlobalsProto.PetPowerKeyword.As<KeywordPrototype>());
+            return false;
+        }
     }
 
     public class SummonPowerOverridePrototype : PowerUnrealOverridePrototype

@@ -378,9 +378,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
         public override bool ApprovedForUse()
         {
             return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // TODO
+
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            // TODO 
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return (keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto));
         }
     }
 

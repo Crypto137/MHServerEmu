@@ -39,7 +39,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
 
-        private KeywordsMask _keywordsMask;
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
 
         public override void PostProcess()
         {
@@ -47,12 +48,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // TODO GetEnumValueFromBlueprint
 
-            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
-            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
         }
     }
 

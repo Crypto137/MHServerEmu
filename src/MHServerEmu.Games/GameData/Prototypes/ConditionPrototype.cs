@@ -168,6 +168,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayName { get; protected set; }
         public int UrgentTimeMS { get; protected set; }
         public AssetId IconPathHiRes { get; protected set; }
+
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            // TODO 
+        }
     }
 
     public class ConditionEffectPrototype : Prototype

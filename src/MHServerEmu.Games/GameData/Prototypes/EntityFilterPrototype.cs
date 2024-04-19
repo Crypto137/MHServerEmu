@@ -251,7 +251,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             var keywordProto = Keyword.As<KeywordPrototype>();
 
-            if (entity.IsInWorld())
+            if (entity.IsInWorld)
                 return entity.RegionLocation.HasKeyword(keywordProto);
             else
             {
