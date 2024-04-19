@@ -12,11 +12,14 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Entities
 {
     public class WorldEntity : Entity
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public AlliancePrototype AllianceProto { get; private set; }
 
         public EntityTrackingContextMap TrackingContextMap { get; set; }
@@ -32,6 +35,7 @@ namespace MHServerEmu.Games.Entities
         public Bounds Bounds { get; set; } = new();
         public Region Region { get => RegionLocation.Region; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
+        public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
@@ -304,6 +308,12 @@ namespace MHServerEmu.Games.Entities
             return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
         }
 
+        public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
 
+        public static AssetId GetOriginalWorldAsset(WorldEntityPrototype prototype)
+        {
+            if (prototype == null) return Logger.WarnReturn(AssetId.Invalid, $"GetOriginalWorldAsset(): prototype == null");
+            return prototype.UnrealClass;
+        }
     }
 }

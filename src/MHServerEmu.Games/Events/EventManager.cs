@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Events
         private void OnStartTravel(PlayerConnection playerConnection, PrototypeId powerId)
         {
             var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeId | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef;
+                | ConditionSerializationFlags.NoConditionPrototypeRef | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef;
 
             ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
 
@@ -274,7 +274,8 @@ namespace MHServerEmu.Games.Events
                 case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
                     Logger.Trace($"EventStart GhostRiderRide");
                     // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
-                    AddConditionArchive conditionArchive = new(avatarEntityId, 666, conditionSerializationFlags, powerId, TimeSpan.Zero);   // TODO: generate and save Condition.Id                        
+                    AddConditionArchive conditionArchive = new(avatarEntityId, 666, conditionSerializationFlags, powerId, TimeSpan.Zero);   // TODO: generate and save Condition.Id
+                    conditionArchive.Condition.CreatorPowerIndex = 0;
 
                     playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                         .SetArchiveData(conditionArchive.Serialize())
@@ -302,6 +303,7 @@ namespace MHServerEmu.Games.Events
                 case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                     Logger.Trace($"EventStart Ride");
                     conditionArchive = new(avatarEntityId, 667, conditionSerializationFlags, powerId, TimeSpan.Zero);
+                    conditionArchive.Condition.CreatorPowerIndex = 0;
                     playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                         .SetArchiveData(conditionArchive.Serialize())
                         .Build());
@@ -441,7 +443,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnDiamondFormActivate(PlayerConnection playerConnection)
         {
-            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeId
+            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeRef
                 | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef | ConditionSerializationFlags.OwnerAssetRefOverride;
 
             var diamondFormCondition = (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition;
@@ -457,6 +459,7 @@ namespace MHServerEmu.Games.Events
 
             var asset = GameDatabase.GetPrototype<CostumePrototype>(emmaCostume).CostumeUnrealClass;
             conditionArchive.Condition.OwnerAssetRef = asset;  // MarvelPlayer_EmmaFrost_Modern
+            conditionArchive.Condition.CreatorPowerIndex = 0;
 
             playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                  .SetArchiveData(conditionArchive.Serialize())
@@ -478,13 +481,14 @@ namespace MHServerEmu.Games.Events
         {
             ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
 
-            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeId
+            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeRef
                 | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef | ConditionSerializationFlags.HasDuration;
 
             Logger.Trace($"EventStart Magik Ultimate");
 
             AddConditionArchive conditionArchive = new(avatarEntityId, 777, conditionSerializationFlags, (PrototypeId)PowerPrototypes.Magik.Ultimate, TimeSpan.Zero);
             conditionArchive.Condition.Duration = TimeSpan.FromMilliseconds(20000);
+            conditionArchive.Condition.CreatorPowerIndex = 0;
 
             playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                 .SetArchiveData(conditionArchive.Serialize())

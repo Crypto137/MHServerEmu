@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Entities
             {
                 SerializationFlags = ConditionSerializationFlags.NoCreatorId
                 | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeId
+                | ConditionSerializationFlags.NoConditionPrototypeRef
                 | ConditionSerializationFlags.HasCreatorPowerIndex
                 | ConditionSerializationFlags.HasOwnerAssetRef,
                 Id = 1,
