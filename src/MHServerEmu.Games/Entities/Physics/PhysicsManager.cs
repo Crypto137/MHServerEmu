@@ -593,6 +593,11 @@ namespace MHServerEmu.Games.Entities.Physics
     public class PhysicsContext
     {
         public List<WorldEntity> AttachedEntities;
+
+        public PhysicsContext()
+        {
+            AttachedEntities = new();
+        }
     }
 
     public enum OverlapEventType
