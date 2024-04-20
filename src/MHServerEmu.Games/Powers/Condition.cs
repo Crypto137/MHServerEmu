@@ -67,6 +67,7 @@ namespace MHServerEmu.Games.Powers
         private ConditionCancelOnFlags _cancelOnFlags;
 
         private ulong _creatorPlayerId;                             // Player guid
+        private ConditionCollection _collection;                    // Condition collection this condition belongs to
 
         // Accessors
         // TODO: Replace setters with Initialize()
@@ -96,6 +97,8 @@ namespace MHServerEmu.Games.Powers
         public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; set => _cancelOnFlags = value; }
 
         public ulong CreatorPlayerId { get => _creatorPlayerId; set => _creatorPlayerId = value; }
+        public ConditionCollection Collection { get => _collection; set => _collection = value; }
+        public bool IsInCollection { get => _collection != null; }
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Clock.GameTime - _startTime; }
@@ -375,6 +378,30 @@ namespace MHServerEmu.Games.Powers
             sb.AppendLine($"{nameof(_cancelOnFlags)}: {_cancelOnFlags}");
 
             return sb.ToString();
+        }
+
+        public bool IsPersistToDB()
+        {
+            if (_conditionPrototype == null)
+                return Logger.WarnReturn(false, $"IsPersistToDB(): _conditionPrototype == null");
+
+            return _conditionPrototype.PersistToDB;
+        }
+
+        public bool IsBoost()
+        {
+            if (_conditionPrototype == null)
+                return Logger.WarnReturn(false, $"IsBoost(): _conditionPrototype == null");
+
+            return _conditionPrototype.IsBoost;
+        }
+
+        public bool IsHitReactCondition()
+        {
+            if (_conditionPrototype == null)
+                return Logger.WarnReturn(false, $"IsHitReactCondition(): _conditionPrototype == null");
+
+            return _conditionPrototype.IsHitReactCondition;
         }
 
         /// <summary>
