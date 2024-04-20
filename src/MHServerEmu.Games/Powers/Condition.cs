@@ -15,19 +15,29 @@ namespace MHServerEmu.Games.Powers
     [Flags]
     public enum ConditionSerializationFlags : uint
     {
+        // These serialization flags were introduced in version 1.25, and they are used to reduce the size of condition
+        // net messages by omitting data that can be derived from the owner world entity or the ConditionPrototype.
         None                        = 0,
         NoCreatorId                 = 1 << 0,   // _creatorId == owner.Id
         NoUltimateCreatorId         = 1 << 1,   // _ultimateCreatorId == _creatorId
-        NoConditionPrototypeRef     = 1 << 2,   // _conditionPrototypeRef == PrototypeId.Invalid
-        NoCreatorPowerPrototypeRef  = 1 << 3,   // _creatorPowerPrototypeRef == PrototypeId.Invalid
-        HasCreatorPowerIndex        = 1 << 4,   // _creatorPowerIndex == -1
-        HasOwnerAssetRef            = 1 << 5,   // _ownerAssetRef != AssetId.Invalid
-        HasPauseTime                = 1 << 6,   // _pauseTime == TimeSpan.Zero
-        HasDuration                 = 1 << 7,   // _duration == 0
+
+        // The condition prototype is identified either by a condition prototype ref if it's a standalone condition,
+        // or a creator power prototype ref + index in the AppliesConditions mixin list if this condition's prototype
+        // is mixed into a PowerPrototype.
+        NoConditionPrototypeRef     = 1 << 2,   // _conditionPrototypeRef != PrototypeId.Invalid
+        NoCreatorPowerPrototypeRef  = 1 << 3,   // _creatorPowerPrototypeRef != PrototypeId.Invalid
+        HasCreatorPowerIndex        = 1 << 4,   // _creatorPowerIndex != -1
+
+        HasOwnerAssetRef            = 1 << 5,   // _ownerAssetRef != AssetId.Invalid (defaults to owner.EntityWorldAsset if OwnerAssetRefOverride is not set)
+        HasPauseTime                = 1 << 6,   // _pauseTime != TimeSpan.Zero
+        HasDuration                 = 1 << 7,   // _duration != 0
         IsDisabled                  = 1 << 8,   // _isEnabled == false
         OwnerAssetRefOverride       = 1 << 9,   // owner == null || owner.Id != _ultimateCreatorId || _ownerAssetRef != owner.EntityWorldAsset
-        HasUpdateInterval           = 1 << 10,  // updateInterval from ConditionPrototype
-        HasCancelOnFlags            = 1 << 11,  // cancelOnFalgs from ConditionPrototype
+
+        // Normally, _updateInterval and _cancelOnFlags are taken from the ConditionPrototype, but if any of these two flags
+        // are set, it means that the default values are overriden.
+        UpdateIntervalOverride      = 1 << 10,
+        CancelOnFlagsOverride       = 1 << 11
     }
 
     [Flags]
@@ -49,7 +59,7 @@ namespace MHServerEmu.Games.Powers
         private ConditionSerializationFlags _serializationFlags;
         private ulong _id;                                          // Condition id
         private ulong _creatorId;                                   // Entity id
-        private ulong _ultimateCreatorId;                           // Entity id
+        private ulong _ultimateCreatorId;                           // Entity id, the highest entity in the creation hierarchy (i.e. creator of creator, or the creator itself)
 
         private PrototypeId _conditionPrototypeRef;
         private ConditionPrototype _conditionPrototype;
@@ -60,13 +70,13 @@ namespace MHServerEmu.Games.Powers
         private AssetId _ownerAssetRef;
         private TimeSpan _startTime;
         private TimeSpan _pauseTime;
-        private long _duration;                                     // milliseconds, 7200000 == 2 hours
+        private long _duration;                                     // milliseconds (e.g. 7200000 == 2 hours)
         private bool _isEnabled = true;
         private int _updateIntervalMS;                              // milliseconds
         private ReplicatedPropertyCollection _properties = new();
         private ConditionCancelOnFlags _cancelOnFlags;
 
-        private ulong _creatorPlayerId;                             // Player guid
+        private ulong _creatorPlayerId;                             // Player entity guid
         private ConditionCollection _collection;                    // Condition collection this condition belongs to
 
         // Accessors
@@ -122,6 +132,7 @@ namespace MHServerEmu.Games.Powers
                 uint serializationFlags = (uint)_serializationFlags;
                 success &= Serializer.Transfer(archive, ref serializationFlags);
 
+                // Pack all the necessary data according to our flags
                 success &= Serializer.Transfer(archive, ref _id);
 
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorId) == false)
@@ -153,12 +164,12 @@ namespace MHServerEmu.Games.Powers
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasDuration))
                     success &= Serializer.Transfer(archive, ref _duration);
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
                     success &= Serializer.Transfer(archive, ref _updateIntervalMS);
 
                 success &= Serializer.Transfer(archive, ref _properties);
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
                 {
                     uint cancelOnFlags = (uint)_cancelOnFlags;
                     success &= Serializer.Transfer(archive, ref cancelOnFlags);
@@ -186,6 +197,9 @@ namespace MHServerEmu.Games.Powers
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoUltimateCreatorId) == false)
                     success &= Serializer.Transfer(archive, ref _ultimateCreatorId);
 
+                // There MUST be a ConditionPrototype, either a directly referenced one,
+                // or a creator power ref + index in the AppliesConditions mixin list.
+
                 // Default condition prototype ref is invalid
                 _conditionPrototypeRef = PrototypeId.Invalid;
                 _conditionPrototype = null;
@@ -198,14 +212,13 @@ namespace MHServerEmu.Games.Powers
                 // Default creator power prototype ref is invalid
                 _creatorPowerPrototypeRef = PrototypeId.Invalid;
                 _creatorPowerPrototype = null;
-
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeRef) == false)
                 {
                     success &= Serializer.Transfer(archive, ref _creatorPowerPrototypeRef);
                     _creatorPowerPrototype = _creatorPowerPrototypeRef.As<PowerPrototype>();
                 }
 
-                // If a condition has a creator index, it means its prototype is a list mixin of the creator power
+                // If a condition has a creator power index, it means its prototype is a list mixin of the creator power
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCreatorPowerIndex))
                 {
                     uint index = 0;
@@ -223,17 +236,16 @@ namespace MHServerEmu.Games.Powers
                     }
                 }
 
-                // Make sure we have a prototype, or we won't be able to figure out the rest of data
+                // Make sure we were able to find our prototype, or things are going to go very wrong
                 if (_conditionPrototype == null)
-                    return Logger.ErrorReturn(false, $"Serialize(): _conditionPrototype == null");
+                    return Logger.ErrorReturn(false, $"Serialize(): Failed to find the ConditionPrototype reference during unpacking");
 
                 // Default owner asset is AssetId.Invalid
                 _ownerAssetRef = AssetId.Invalid;
-
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.OwnerAssetRefOverride))
-                    success &= Serializer.Transfer(archive, ref _ownerAssetRef);
+                    success &= Serializer.Transfer(archive, ref _ownerAssetRef);                // Get asset override if we have one
                 else if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRef))
-                    _ownerAssetRef = owner != null ? owner.EntityWorldAsset : AssetId.Invalid;
+                    _ownerAssetRef = owner != null ? owner.EntityWorldAsset : AssetId.Invalid;  // Fall back to the owner asset
 
                 // _startTime should always be present
                 success &= Serializer.TransferTimeAsDelta(archive, null, ref _startTime);
@@ -251,14 +263,14 @@ namespace MHServerEmu.Games.Powers
                 // For some reason _isEnabled is not updated during deserialization in the client.
                 // ConditionCollection does call Condition::serializationFlagIsDisabled() during OnUnpackComplete() though.
 
-                // Default update interval is taken from the condition prototype
+                // Default update interval is taken from the ConditionPrototype
                 _updateIntervalMS = _conditionPrototype.UpdateIntervalMS;
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
                     success &= Serializer.Transfer(archive, ref _updateIntervalMS);
 
-                // Default cancel on flags are taken from the prototype
+                // Default cancel on flags are taken from the ConditionPrototype
                 _cancelOnFlags = _conditionPrototype.CancelOnFlags;
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
                 {
                     uint cancelOnFlags = 0;
                     success &= Serializer.Transfer(archive, ref cancelOnFlags);
@@ -305,12 +317,12 @@ namespace MHServerEmu.Games.Powers
             // ConditionCollection does call Condition::serializationFlagIsDisabled() during OnUnpackComplete() though.
             //_isEnabled = _serializationFlags.HasFlag(ConditionSerializationFlags.IsDisabled) == false;
 
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
+            if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
                 _updateIntervalMS = stream.ReadRawInt32();
 
             _properties.Decode(stream);
 
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
+            if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
                 _cancelOnFlags = (ConditionCancelOnFlags)stream.ReadRawVarint32();
         }
 
@@ -348,12 +360,12 @@ namespace MHServerEmu.Games.Powers
             if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasDuration))
                 stream.WriteRawInt64(_duration);
 
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
+            if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
                 stream.WriteRawInt32(_updateIntervalMS);
 
             _properties.Encode(stream);
 
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
+            if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
                 stream.WriteRawVarint32((uint)CancelOnFlags);
         }
 
