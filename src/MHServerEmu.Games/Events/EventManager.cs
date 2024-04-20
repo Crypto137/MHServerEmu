@@ -262,27 +262,38 @@ namespace MHServerEmu.Games.Events
             Logger.Trace($"Teleporting to {targetPos}");
         }
 
-        private void OnStartTravel(PlayerConnection playerConnection, PrototypeId powerId)
+        private bool OnStartTravel(PlayerConnection playerConnection, PrototypeId powerId)
         {
-            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeRef | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef;
-
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             switch (powerId)
             {
                 case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
+                    Condition ghostRiderRideCondition = avatar.ConditionCollection.GetCondition(666);
+                    if (ghostRiderRideCondition != null) return Logger.WarnReturn(false, "OnStartTravel(): ghostRiderRideCondition != null");
+
                     Logger.Trace($"EventStart GhostRiderRide");
+
                     // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
-                    AddConditionArchive conditionArchive = new(avatarEntityId, 666, conditionSerializationFlags, powerId, TimeSpan.Zero);   // TODO: generate and save Condition.Id
-                    conditionArchive.Condition.CreatorPowerIndex = 0;
+                    // Create and add a ride condition
+                    ghostRiderRideCondition = avatar.ConditionCollection.AllocateCondition();
+                    ghostRiderRideCondition.InitializeFromPowerMixinPrototype(666, powerId, 0, TimeSpan.Zero);
+                    avatar.ConditionCollection.AddCondition(ghostRiderRideCondition);
+
+                    // Notify the client
+                    AddConditionArchive conditionArchive = new()
+                    {
+                        ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
+                        EntityId = avatar.Id,
+                        Condition = ghostRiderRideCondition
+                    };
 
                     playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                         .SetArchiveData(conditionArchive.SerializeToByteString())
                         .Build());
 
                     playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                        .SetEntityId(avatarEntityId)
+                        .SetEntityId(avatar.Id)
                         .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
@@ -301,32 +312,57 @@ namespace MHServerEmu.Games.Events
                 case (PrototypeId)PowerPrototypes.Travel.BladeRide:
                 case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
                 case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
+                    Condition rideCondition = avatar.ConditionCollection.GetCondition(667);
+                    if (rideCondition != null) return Logger.WarnReturn(false, "OnStartTravel(): rideCondition != null");
+
                     Logger.Trace($"EventStart Ride");
-                    conditionArchive = new(avatarEntityId, 667, conditionSerializationFlags, powerId, TimeSpan.Zero);
-                    conditionArchive.Condition.CreatorPowerIndex = 0;
+
+                    // Create and add a ride condition
+                    rideCondition = avatar.ConditionCollection.AllocateCondition();
+                    rideCondition.InitializeFromPowerMixinPrototype(667, powerId, 0, TimeSpan.Zero);
+                    avatar.ConditionCollection.AddCondition(rideCondition);
+
+                    // Notify the client
+                    conditionArchive = new()
+                    {
+                        ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
+                        EntityId = avatar.Id,
+                        Condition = rideCondition
+                    };
+
                     playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                         .SetArchiveData(conditionArchive.SerializeToByteString())
                         .Build());
+
                     break;
             }
+
+            return true;
         }
 
         private void OnEndTravel(PlayerConnection playerConnection, PrototypeId powerId)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             switch (powerId)
             {
                 case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
+                    if (avatar.ConditionCollection.GetCondition(666) == null) return;
+
                     Logger.Trace($"EventEnd GhostRiderRide");
 
+                    // Remove the ride condition
+                    avatar.ConditionCollection.RemoveCondition(666);
+                    // TODO: Remove the power from the collection
+
+                    // Notify the client
                     playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-                        .SetIdEntity(avatarEntityId)
+                        .SetIdEntity(avatar.Id)
                         .SetKey(666)
                         .Build());
 
                     playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                        .SetEntityId(avatarEntityId)
+                        .SetEntityId(avatar.Id)
                         .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
                         .Build());
 
@@ -340,9 +376,16 @@ namespace MHServerEmu.Games.Events
                 case (PrototypeId)PowerPrototypes.Travel.BladeRide:
                 case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
                 case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
+                    if (avatar.ConditionCollection.GetCondition(667) == null) return;
+
                     Logger.Trace($"EventEnd Ride");
+
+                    // Remove the ride condition
+                    avatar.ConditionCollection.RemoveCondition(667);
+
+                    // Notify the client
                     playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-                        .SetIdEntity(avatarEntityId)
+                        .SetIdEntity(avatar.Id)
                         .SetKey(667)
                         .Build());
 
@@ -443,23 +486,33 @@ namespace MHServerEmu.Games.Events
 
         private void OnDiamondFormActivate(PlayerConnection playerConnection)
         {
-            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeRef
-                | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef | ConditionSerializationFlags.OwnerAssetRefOverride;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            var diamondFormCondition = (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition;
-            AddConditionArchive conditionArchive = new(playerConnection.Player.CurrentAvatar.Id, 111, conditionSerializationFlags, diamondFormCondition, TimeSpan.Zero);
+            Condition diamondFormCondition = avatar.ConditionCollection.GetCondition(111);
+            if (diamondFormCondition != null) return;
 
             Logger.Trace($"Event Start EmmaDiamondForm");
 
-            PrototypeId emmaCostume = playerConnection.Player.CurrentAvatar.Properties[PropertyEnum.CostumeCurrent];
-
+            // Get the asset id for the current costume to set the correct owner asset id override
+            PrototypeId emmaCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
             // Invalid prototype id is the same as the default costume
             if (emmaCostume == PrototypeId.Invalid)
-                emmaCostume = GameDatabase.GetPrototypeRefByName("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
+                emmaCostume = GameDatabase.GetPrototypeRefByName("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");    // MarvelPlayer_EmmaFrost_Modern
 
-            var asset = GameDatabase.GetPrototype<CostumePrototype>(emmaCostume).CostumeUnrealClass;
-            conditionArchive.Condition.OwnerAssetRef = asset;  // MarvelPlayer_EmmaFrost_Modern
-            conditionArchive.Condition.CreatorPowerIndex = 0;
+            AssetId costumeAsset = emmaCostume.As<CostumePrototype>().CostumeUnrealClass;
+
+            // Create and add a condition for the diamond form
+            diamondFormCondition = avatar.ConditionCollection.AllocateCondition();
+            diamondFormCondition.InitializeFromPowerMixinPrototype(111, (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition, 0, TimeSpan.Zero, true, costumeAsset);
+            avatar.ConditionCollection.AddCondition(diamondFormCondition);
+
+            // Notify the client
+            AddConditionArchive conditionArchive = new()
+            {
+                ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
+                EntityId = avatar.Id,
+                Condition = diamondFormCondition
+            };
 
             playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
                  .SetArchiveData(conditionArchive.SerializeToByteString())
@@ -468,40 +521,62 @@ namespace MHServerEmu.Games.Events
 
         private void OnDiamondFormDeactivate(PlayerConnection playerConnection)
         {
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
             // TODO: get DiamondFormCondition Condition Key
-            playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-              .SetKey(111)
-              .SetIdEntity(playerConnection.Player.CurrentAvatar.Id)
-              .Build());
+            if (avatar.ConditionCollection.GetCondition(111) == null) return;
 
             Logger.Trace($"EventEnd EmmaDiamondForm");
+
+            // Remove the condition server-side
+            avatar.ConditionCollection.RemoveCondition(111);
+
+            // Notify the client
+            playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
+              .SetKey(111)
+              .SetIdEntity(avatar.Id)
+              .Build());
         }
 
-        private void OnStartMagikUltimate(PlayerConnection playerConnection, NetStructPoint3 position)
+        private bool OnStartMagikUltimate(PlayerConnection playerConnection, NetStructPoint3 position)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeRef
-                | ConditionSerializationFlags.HasCreatorPowerIndex | ConditionSerializationFlags.HasOwnerAssetRef | ConditionSerializationFlags.HasDuration;
+            Condition magikUltimateCondition = avatar.ConditionCollection.GetCondition(777);
+            if (magikUltimateCondition != null) return Logger.WarnReturn(false, "OnStartMagikUltimate(): magikUltimateCondition != null");
 
             Logger.Trace($"EventStart Magik Ultimate");
 
-            AddConditionArchive conditionArchive = new(avatarEntityId, 777, conditionSerializationFlags, (PrototypeId)PowerPrototypes.Magik.Ultimate, TimeSpan.Zero);
-            conditionArchive.Condition.Duration = TimeSpan.FromMilliseconds(20000);
-            conditionArchive.Condition.CreatorPowerIndex = 0;
+            // Create and add a condition for the ultimate
+            magikUltimateCondition = avatar.ConditionCollection.AllocateCondition();
+            magikUltimateCondition.InitializeFromPowerMixinPrototype(777, (PrototypeId)PowerPrototypes.Magik.Ultimate, 0, TimeSpan.FromMilliseconds(20000));
+            avatar.ConditionCollection.AddCondition(magikUltimateCondition);
 
-            playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                .SetArchiveData(conditionArchive.SerializeToByteString())
-                .Build());
-
+            /*
+            // Create the arena entity
             WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(
                 playerConnection.AOI.Region.Id,
                 (PrototypeId)PowerPrototypes.Magik.UltimateArea,
                 new(position.X, position.Y, position.Z), new());
 
-            // we need to store this state in the avatar entity instead
-            playerConnection.MagikUltimateEntityId = arenaEntity.Id;
 
+            // Save the entity id for the arena entity (we need to store this state in the avatar entity instead)
+            playerConnection.MagikUltimateEntityId = arenaEntity.Id;
+            */
+
+            // Notify the client
+            AddConditionArchive conditionArchive = new()
+            {
+                ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
+                EntityId = avatar.Id,
+                Condition = magikUltimateCondition
+            };
+
+            playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
+                .SetArchiveData(conditionArchive.SerializeToByteString())
+                .Build());
+
+            /*
             playerConnection.SendMessage(arenaEntity.ToNetMessageEntityCreate());
 
             playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -514,31 +589,53 @@ namespace MHServerEmu.Games.Events
                 .SetItemVariation(1)
                 .Build());
 
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty(arenaEntity.Properties.ReplicationId, new(PropertyEnum.AttachedToEntityId), avatarEntityId));
+            playerConnection.SendMessage(Property.ToNetMessageSetProperty(arenaEntity.Properties.ReplicationId, new(PropertyEnum.AttachedToEntityId), avatar.Id));
+            */
+
+            return true;
         }
 
-        private void OnEndMagikUltimate(PlayerConnection playerConnection)
+        private bool OnEndMagikUltimate(PlayerConnection playerConnection)
         {
-            Logger.Trace($"EventEnd Magik Ultimate");
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-            ulong arenaEntityId = playerConnection.MagikUltimateEntityId;
+            // Make sure we still get Magik in case the player switched to another avatar
+            Avatar avatar = playerConnection.Player.AvatarList.FirstOrDefault(avatar => avatar.PrototypeDataRef == (PrototypeId)AvatarPrototypeId.Magik);
+            if (avatar == null) return Logger.WarnReturn(false, "OnEndMagikUltimate(): avatar == null");
 
+            Condition magikUltimateCondition = avatar.ConditionCollection.GetCondition(777);
+            if (magikUltimateCondition == null) return Logger.WarnReturn(false, "OnEndMagikUltimate(): magikUltimateCondition == null");
+
+            Logger.Trace($"EventEnd Magik Ultimate");
+
+            // Remove the ultimate condition
+            avatar.ConditionCollection.RemoveCondition(777);
+
+            /*
+            // TODO: Removed the hotspot effect power from the arena's power collection
+
+            // Destroy the arena entity
+            ulong arenaEntityId = playerConnection.MagikUltimateEntityId;
+            var entity = _game.EntityManager.GetEntityById(arenaEntityId);
+            entity?.Destroy();
+            */
+
+            // Notify the client
             playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-                .SetIdEntity(avatarEntityId)
+                .SetIdEntity(avatar.Id)
                 .SetKey(777)
                 .Build());
 
+            /*
             playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                 .SetEntityId(arenaEntityId)
                 .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
                 .Build());
 
-                    var entity = _game.EntityManager.GetEntityById(arenaEntityId);
-                    entity?.Destroy();
-
             playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
                 .SetIdEntity(arenaEntityId)
                 .Build());
+            */
+
+            return true;
         }
 
         private void OnGetRegion(PlayerConnection playerConnection, Region region)
