@@ -369,6 +369,38 @@ namespace MHServerEmu.Games.Powers
                 stream.WriteRawVarint32((uint)CancelOnFlags);
         }
 
+        public bool InitializeFromPowerMixinPrototype(ulong conditionId, PrototypeId creatorPowerPrototypeRef, int creatorPowerIndex, TimeSpan duration,
+            bool hasOwnerAssetRef = true, AssetId ownerAssetRefOverride = AssetId.Invalid)
+        {
+            _id = conditionId;
+            _creatorPowerPrototypeRef = creatorPowerPrototypeRef;
+            _creatorPowerPrototype = creatorPowerPrototypeRef.As<PowerPrototype>();
+            _creatorPowerIndex = creatorPowerIndex;
+
+            _serializationFlags = ConditionSerializationFlags.NoCreatorId;
+            _serializationFlags |= ConditionSerializationFlags.NoUltimateCreatorId;
+            _serializationFlags |= ConditionSerializationFlags.NoConditionPrototypeRef;
+            _serializationFlags |= ConditionSerializationFlags.HasCreatorPowerIndex;
+
+            if (duration != TimeSpan.Zero)
+            {
+                _duration = (long)duration.TotalMilliseconds;
+                _serializationFlags |= ConditionSerializationFlags.HasDuration;
+            }
+
+            if (hasOwnerAssetRef)
+            {
+                _serializationFlags |= ConditionSerializationFlags.HasOwnerAssetRef;
+                if (ownerAssetRefOverride != AssetId.Invalid)
+                {
+                    _ownerAssetRef = ownerAssetRefOverride;
+                    _serializationFlags |= ConditionSerializationFlags.OwnerAssetRefOverride;
+                }    
+            }
+
+            return true;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();
