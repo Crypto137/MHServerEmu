@@ -27,6 +27,12 @@ namespace MHServerEmu.Core.Collisions
             D = Vector3.Dot(Normal, p0);
         }
 
+        public Plane(Vector3 normal, Vector3 point)
+        {
+            Normal = normal;
+            D = Vector3.Dot(Normal, point);
+        }
+
         public IntersectionType Intersects(Aabb bound)
         {
             IntersectionType[] intersection = new IntersectionType[8];

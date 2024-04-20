@@ -7,6 +7,8 @@ namespace MHServerEmu.Core.Collisions
     {
         public Vector3 Center { get; }
         public float Radius { get; }
+        public float RadiusSquared => Radius * Radius;
+        public static Sphere Zero => new(Vector3.Zero, 0.0f);
 
         public Sphere(Vector3 center, float radius)
         {
@@ -247,9 +249,63 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
+        public static bool SweepSegment2d(Vector3 segmentStart, Vector3 segmentEnd, Vector3 sphereStart, float sphereRadius, Vector3 direction, float magnitude, ref float distanceToIntersect, SweepSegmentFlags segmentFlag)
+        {
+            Vector3 segment = segmentEnd - segmentStart;
 
-        public float RadiusSquared => Radius * Radius;
-        public static Sphere Zero => new(Vector3.Zero, 0.0f);
+            bool flip = Segment.Cross2D(segment, sphereStart - segmentStart) > 0.0f;
+            Vector3 segmentPerp = flip ? Vector3.Perp2D(-segment) : Vector3.Perp2D(segment);
+
+            Plane plane = new (Vector3.Normalize(segmentPerp), segmentStart);
+            Vector3 planeNormal = plane.Normal;
+            float planeDistance = Vector3.Dot(sphereStart, planeNormal) - plane.D;
+
+            float sphereScalar = Vector3.Dot(segment, sphereStart - segmentStart) / Vector3.Dot(segment, segment);
+            if ((Math.Abs(planeDistance) <= sphereRadius) && (sphereScalar >= 0.0f && sphereScalar <= 1.0f))
+            {
+                distanceToIntersect = 0.0f;
+                return true;
+            }
+
+            float dotNormal = Vector3.Dot(direction, planeNormal);
+            if (dotNormal * planeDistance >= 0.0f)
+            {
+                distanceToIntersect = 0.0f;
+                return false;
+            }
+
+            float radiusAdjustment = (planeDistance > 0.0f) ? sphereRadius : -sphereRadius;
+            float distance = (radiusAdjustment - planeDistance) / dotNormal;
+            Vector3 spherePoint = sphereStart + direction * distance;
+            Vector3 planePoint = spherePoint - planeNormal * radiusAdjustment;
+
+            float planeScalar = Vector3.Dot(segment, planePoint - segmentStart) / Vector3.Dot(segment, segment);
+            if (planeScalar >= 0.0f && planeScalar <= 1.0f)
+            {
+                distanceToIntersect = distance;
+                return true;
+            }
+            else
+            {
+                if (segmentFlag != SweepSegmentFlags.Ignore)
+                {
+                    distanceToIntersect = float.MaxValue;
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        Vector3 point = (i == 0) ? segmentStart : segmentEnd;
+                        if (IntersectsRay(sphereStart, direction, point, sphereRadius, out float rayDistance))
+                            if (rayDistance < distanceToIntersect)
+                                distanceToIntersect = rayDistance;
+                    }
+                    return distanceToIntersect <= magnitude;
+                }
+                else
+                {
+                    distanceToIntersect = 0.0f;
+                    return false;
+                }
+            }
+        }
 
         public override string ToString()
         {
@@ -258,5 +314,11 @@ namespace MHServerEmu.Core.Collisions
             //sb.AppendLine($"A: {Center.ToStringFloat()}");
             return sb.ToString();
         }
+    }
+
+    public enum SweepSegmentFlags
+    {
+        None = 0,
+        Ignore = 1,
     }
 }
