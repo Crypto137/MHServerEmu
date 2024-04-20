@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class ConditionCollection : IEnumerable<KeyValuePair<ulong, Condition>>
+    public class ConditionCollection : IEnumerable<KeyValuePair<ulong, Condition>>, ISerialize
     {
         public const int MaxConditions = 256;
         public const ulong InvalidConditionId = 0;
@@ -21,6 +23,44 @@ namespace MHServerEmu.Games.Entities
         public ConditionCollection(WorldEntity owner = null)
         {
             _owner = owner;
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            // if (archive.IsTransient) -> This wasn't originally used for persistent serialization, same as individual conditions
+            if (archive.IsPacking)
+            {
+                if (_currentConditionDict.Count >= MaxConditions)
+                    return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions");
+
+                uint numConditions = (uint)_currentConditionDict.Count;
+                success &= Serializer.Transfer(archive, ref numConditions);
+
+                foreach (Condition condition in _currentConditionDict.Values)
+                    success &= condition.Serialize(archive, _owner);
+            }
+            else
+            {
+                if (_currentConditionDict.Count != 0)
+                    return Logger.ErrorReturn(false, $"Serialize(): _currrentConditionDict is not empty");
+
+                uint numConditions = 0;
+                success &= Serializer.Transfer(archive, ref numConditions);
+
+                if (numConditions >= MaxConditions)
+                    return Logger.ErrorReturn(false, $"Serialize(): numConditions >= MaxConditions");
+
+                for (uint i = 0; i < numConditions; i++)
+                {
+                    Condition condition = AllocateCondition();
+                    success &= condition.Serialize(archive, _owner);
+                    InsertCondition(condition);
+                }
+            }
+
+            return success;
         }
 
         public void Decode(CodedInputStream stream)
@@ -66,6 +106,17 @@ namespace MHServerEmu.Games.Entities
         // TODO: ConditionCollection::Iterator implementation
         public IEnumerator<KeyValuePair<ulong, Condition>> GetEnumerator() => _currentConditionDict.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public Condition AllocateCondition()
+        {
+            // ConditionCollection::AllocateCondition() in the client also checks to make sure this collection has a valid owner / game.
+            // However, this is going to break parsing of individual messages where owners do not exist in a game.
+            // Possible solution: create a dummy game for parsing purposes.
+            // if (_owner == null || _owner.Game == null)
+            //     return null;
+
+            return new();
+        }
 
         private bool InsertCondition(Condition condition)
         {
