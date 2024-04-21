@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Entities
                 PowerPrototypeId = startPowerRef,
                 PowerRefCount = 1
             };
-            PowerCollection.Add(powerCollection);
+            PowerCollection.TEMP_AddRecord(powerCollection);
             return true;
         }
 

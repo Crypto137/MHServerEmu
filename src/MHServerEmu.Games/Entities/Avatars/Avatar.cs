@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, List<PowerCollectionRecord> powerCollection, int unkEvent,
+        public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, PowerCollection powerCollection, int unkEvent,
             ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
