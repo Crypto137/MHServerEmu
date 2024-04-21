@@ -4,7 +4,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Entities
+namespace MHServerEmu.Games.Entities.Inventories
 {
     public class InventoryLocation
     {
