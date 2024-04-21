@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             IndexProps = new();
 
-            IndexProps.PowerRank = Flags.HasFlag(PowerCollectionRecordFlags.PowerRankIsZero) ? 0 : stream.ReadRawVarint32();
+            IndexProps.PowerRank = Flags.HasFlag(PowerCollectionRecordFlags.PowerRankIsZero) ? 0 : (int)stream.ReadRawVarint32();
 
             // CharacterLevel
             if (Flags.HasFlag(PowerCollectionRecordFlags.CharacterLevelIsOne))
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             else if (Flags.HasFlag(PowerCollectionRecordFlags.CharacterLevelIsFromPreviousRecord))
                 IndexProps.CharacterLevel = previousRecord.IndexProps.CharacterLevel;
             else
-                IndexProps.CharacterLevel = stream.ReadRawVarint32();
+                IndexProps.CharacterLevel = (int)stream.ReadRawVarint32();
 
             // CombatLevel
             if (Flags.HasFlag(PowerCollectionRecordFlags.CombatLevelIsOne))
@@ -54,9 +54,9 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             else if (Flags.HasFlag(PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel))
                 IndexProps.CombatLevel = IndexProps.CharacterLevel;
             else
-                IndexProps.CombatLevel = stream.ReadRawVarint32();
+                IndexProps.CombatLevel = (int)stream.ReadRawVarint32();
 
-            IndexProps.ItemLevel = Flags.HasFlag(PowerCollectionRecordFlags.ItemLevelIsOne) ? 1 : stream.ReadRawVarint32();
+            IndexProps.ItemLevel = Flags.HasFlag(PowerCollectionRecordFlags.ItemLevelIsOne) ? 1 : (int)stream.ReadRawVarint32();
             IndexProps.ItemVariation = Flags.HasFlag(PowerCollectionRecordFlags.ItemVariationIsOne) ? 1.0f : stream.ReadRawFloat();
             PowerRefCount = Flags.HasFlag(PowerCollectionRecordFlags.PowerRefCountIsOne) ? 1 : stream.ReadRawVarint32();
         }
@@ -69,17 +69,17 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             stream.WriteRawVarint32((uint)Flags);
 
             if (Flags.HasFlag(PowerCollectionRecordFlags.PowerRankIsZero) == false)
-                stream.WriteRawVarint32(IndexProps.PowerRank);
+                stream.WriteRawVarint32((uint)IndexProps.PowerRank);
 
             if (Flags.HasFlag(PowerCollectionRecordFlags.CharacterLevelIsOne) == false && Flags.HasFlag(PowerCollectionRecordFlags.CharacterLevelIsFromPreviousRecord) == false)
-                stream.WriteRawVarint32(IndexProps.CharacterLevel);
+                stream.WriteRawVarint32((uint)IndexProps.CharacterLevel);
 
             if (Flags.HasFlag(PowerCollectionRecordFlags.CombatLevelIsOne) == false && Flags.HasFlag(PowerCollectionRecordFlags.CombatLevelIsFromPreviousRecord) == false
                 && Flags.HasFlag(PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel) == false)
-                stream.WriteRawVarint32(IndexProps.CombatLevel);
+                stream.WriteRawVarint32((uint)IndexProps.CombatLevel);
 
             if (Flags.HasFlag(PowerCollectionRecordFlags.ItemLevelIsOne) == false)
-                stream.WriteRawVarint32(IndexProps.ItemLevel);
+                stream.WriteRawVarint32((uint)IndexProps.ItemLevel);
 
             if (Flags.HasFlag(PowerCollectionRecordFlags.ItemVariationIsOne) == false)
                 stream.WriteRawFloat(IndexProps.ItemVariation);
