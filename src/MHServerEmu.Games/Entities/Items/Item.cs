@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Items
             
             TrackingContextMap = new();
             ConditionCollection = new(this);    
-            PowerCollection = new();
+            PowerCollection = new(this);
             UnkEvent = 0;
             ItemSpec = itemSpec;
         }

@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Entities
             Properties = properties;
             TrackingContextMap = new();
             ConditionCollection = new(this);
-            PowerCollection = new();
+            PowerCollection = new(this);
             UnkEvent = 0;
 
             TransitionName = "";

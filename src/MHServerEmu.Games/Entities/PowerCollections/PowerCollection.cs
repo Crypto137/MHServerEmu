@@ -17,14 +17,17 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private WorldEntity _owner;
+        private readonly WorldEntity _owner;
 
         private SortedDictionary<PrototypeId, PowerCollectionRecord> _powerDict = new();
  
         public Power ThrowablePower { get; private set; }
         public Power ThrowableCancelPower { get; private set; }
 
-        public PowerCollection() { }
+        public PowerCollection(WorldEntity owner)
+        {
+            _owner = owner;
+        }
 
         public static bool SerializeRecordCount(Archive archive, PowerCollection powerCollection, ref uint recordCount)
         {

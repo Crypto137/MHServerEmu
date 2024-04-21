@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Entities
 
             TrackingContextMap = new();
             ConditionCollection = new(this);
-            PowerCollection = new();
+            PowerCollection = new(this);
             UnkEvent = 0;
         }
 
@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Entities
             Properties = properties;
             TrackingContextMap = new();
             ConditionCollection = new(this);
-            PowerCollection = new();
+            PowerCollection = new(this);
             UnkEvent = 0;
             SpatialPartitionLocation = new(this);
         }
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection = new(this);
             ConditionCollection.Decode(stream);
 
-            PowerCollection = new();
+            PowerCollection = new(this);
             PowerCollection.Decode(stream, ReplicationPolicy);
 
             UnkEvent = stream.ReadRawInt32();

@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Entities
 
         public int Count { get => _currentConditionDict.Count; }    // Temp property for compatibility with our existing hacks
 
-        public ConditionCollection(WorldEntity owner = null)
+        public ConditionCollection(WorldEntity owner)
         {
             _owner = owner;
         }
@@ -208,9 +208,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool RemoveCondition(Condition condition)
         {
-            // TODO: 
-            //if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
-
+            if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
             if (condition == null) return false;
 
             // TODO: more checks
