@@ -5,6 +5,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities.PowerCollections
 {
@@ -28,15 +29,34 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             ItemVariationIsOne                  = 1 << 8
         }
 
-        private PrototypeId _powerRef;
+        private PrototypeId _powerPrototypeRef;
         private PowerIndexProperties _indexProps = new();
         private uint _powerRefCount;
 
-        public PrototypeId PowerRef { get => _powerRef; set => _powerRef = value; }
+        public PrototypeId PowerPrototypeRef { get => _powerPrototypeRef; }
         public PowerIndexProperties IndexProps { get => _indexProps; }
         public uint PowerRefCount { get => _powerRefCount; set => _powerRefCount = value; }
 
+        // The rest of data is not serialized
+        public Power Power { get; private set; }
+        public PowerPrototype PowerPrototype { get; private set; }
+        public bool IsAvatarPowerProgressionPower { get; private set; }
+        public bool IsTeamUpPassivePowerWhileAway { get; private set; }
+
         public PowerCollectionRecord() { }
+
+        public void Initialize(Power power, PrototypeId powerPrototypeRef, PowerIndexProperties indexProps, uint powerRefCount,
+            bool isAvatarPowerProgressionPower, bool isTeamUpPassivePowerWhileAway)
+        {
+            _powerPrototypeRef = powerPrototypeRef;
+            _indexProps = indexProps;
+            _powerRefCount = powerRefCount;
+
+            Power = power;
+            PowerPrototype = powerPrototypeRef.As<PowerPrototype>();
+            IsAvatarPowerProgressionPower = isAvatarPowerProgressionPower;
+            IsTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
+        }
 
         public bool ShouldSerializeRecordForPacking(Archive archive = null)
         {
@@ -55,7 +75,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public void Decode(CodedInputStream stream, PowerCollectionRecord previousRecord)
         {
-            _powerRef = stream.ReadPrototypeRef<PowerPrototype>();
+            _powerPrototypeRef = stream.ReadPrototypeRef<PowerPrototype>();
+            PowerPrototype = _powerPrototypeRef.As<PowerPrototype>();
 
             var flags = (SerializationFlags)stream.ReadRawVarint32();
 
@@ -115,7 +136,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 flags |= SerializationFlags.ItemVariationIsOne;
 
             // Write data
-            stream.WritePrototypeRef<PowerPrototype>(PowerRef);
+            stream.WritePrototypeRef<PowerPrototype>(PowerPrototypeRef);
             stream.WriteRawVarint32((uint)flags);
 
             if (flags.HasFlag(SerializationFlags.PowerRankIsZero) == false)
@@ -141,7 +162,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"{nameof(_powerRef)}: {GameDatabase.GetPrototypeName(_powerRef)}");
+            sb.AppendLine($"{nameof(_powerPrototypeRef)}: {GameDatabase.GetPrototypeName(_powerPrototypeRef)}");
             sb.AppendLine($"{nameof(_indexProps)}: {_indexProps}");
             sb.AppendLine($"{nameof(_powerRefCount)}: {_powerRefCount}");
             return sb.ToString();

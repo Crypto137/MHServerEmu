@@ -11,12 +11,14 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private bool _unkInitializeBool;
+        private bool _isTeamUpPassivePowerWhileAway;
 
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
         public PowerPrototype Prototype { get; }
         public WorldEntity Owner { get; private set; }
+
+        public PowerCategoryType PowerCategory { get => Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None; }
 
         public PropertyCollection Properties { get; } = new();
 
@@ -27,29 +29,34 @@ namespace MHServerEmu.Games.Powers
             Prototype = prototypeDataRef.As<PowerPrototype>();
         }
 
-        public bool Initialize(WorldEntity owner, bool unkInitializeBool, PropertyCollection secondaryCollection)
+        public bool Initialize(WorldEntity owner, bool isTeamUpPassivePowerWhileAway, PropertyCollection initializeProperties)
         {
             Owner = owner;
-            _unkInitializeBool = unkInitializeBool;
+            _isTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
 
             if (Prototype == null)
                 return Logger.WarnReturn(false, $"Initialize(): Prototype == null");
 
-            GeneratePowerProperties(Properties, Prototype, secondaryCollection, Owner);
+            GeneratePowerProperties(Properties, Prototype, initializeProperties, Owner);
             // TODO: Power::createSituationalComponent()
 
             return true;
         }
 
-        public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype prototype, PropertyCollection secondaryCollection, WorldEntity owner)
+        public void OnAssign()
+        {
+            // TODO
+        }
+
+        public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype prototype, PropertyCollection initializeProperties, WorldEntity owner)
         {
             // Start with a clean copy from the prototype
             if (prototype.Properties != null)
                 primaryCollection.FlattenCopyFrom(prototype.Properties, true);
 
-            // Add properties from the secondary collection if we have one
-            if (secondaryCollection != null)
-                primaryCollection.FlattenCopyFrom(secondaryCollection, false);
+            // Add properties from the collection passed in the Initialize() method if we have one
+            if (initializeProperties != null)
+                primaryCollection.FlattenCopyFrom(initializeProperties, false);
 
             // Set properties for all keywords assigned in the prototype
             if (prototype.Keywords != null)

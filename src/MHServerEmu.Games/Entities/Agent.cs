@@ -46,12 +46,7 @@ namespace MHServerEmu.Games.Entities
             condition.StartTime = Clock.GameTime;
             ConditionCollection.AddCondition(condition);
 
-            PowerCollectionRecord powerCollection = new()
-            {
-                PowerRef = startPowerRef,
-                PowerRefCount = 1
-            };
-            PowerCollection.TEMP_AddRecord(powerCollection);
+            PowerCollection.AssignPower(startPowerRef, new());
             
             return true;
         }
