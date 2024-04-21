@@ -40,15 +40,13 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             uint recordCount = stream.ReadRawVarint32();
             if (recordCount == 0) return;
 
-            // The first record is standalone
-            PowerCollectionRecord previousRecord = new(stream, null);
-            _powerDict.Add(previousRecord.PowerPrototypeId, previousRecord);
-
-            // Records after the first one may require the previous record to get values from
-            for (uint i = 1; i < recordCount; i++)
+            // The first record is standalone. Records that follow it will omit data that matches the previous one.
+            PowerCollectionRecord previousRecord = null;
+            for (uint i = 0; i < recordCount; i++)
             {
-                PowerCollectionRecord record = new(stream, previousRecord);
-                _powerDict.Add(record.PowerPrototypeId, record);
+                PowerCollectionRecord record = new();
+                record.Decode(stream, previousRecord);
+                _powerDict.Add(record.PowerRef, record);
                 previousRecord = record;
             }
         }
@@ -58,14 +56,19 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (replicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) == false) return;
 
             stream.WriteRawVarint32((uint)_powerDict.Count);
+
+            PowerCollectionRecord previousRecord = null;
             foreach (PowerCollectionRecord record in _powerDict.Values)
-                record.Encode(stream);
+            {
+                record.Encode(stream, previousRecord);
+                previousRecord = record;
+            }
         }
 
         public void TEMP_AddRecord(PowerCollectionRecord record)
         {
             // Temp method for compatibility with existing hacks
-            _powerDict.Add(record.PowerPrototypeId, record);
+            _powerDict.Add(record.PowerRef, record);
         }
 
         // IEnumerable implementation

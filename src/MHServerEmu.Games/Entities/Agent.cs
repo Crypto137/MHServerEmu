@@ -40,30 +40,19 @@ namespace MHServerEmu.Games.Entities
         {
             if (startPowerRef == PrototypeId.Invalid) return false;
             //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-            Condition condition = new()
-            {
-                SerializationFlags = ConditionSerializationFlags.NoCreatorId
-                | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeRef
-                | ConditionSerializationFlags.HasCreatorPowerIndex
-                | ConditionSerializationFlags.HasOwnerAssetRef,
-                Id = 1,
-                CreatorPowerPrototypeRef = startPowerRef,
-                CreatorPowerIndex = 0,
-                StartTime = Clock.GameTime
-            };
+
+            Condition condition = new();
+            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
+            condition.StartTime = Clock.GameTime;
             ConditionCollection.AddCondition(condition);
+
             PowerCollectionRecord powerCollection = new()
             {
-                Flags = PowerCollectionRecordFlags.PowerRefCountIsOne
-                | PowerCollectionRecordFlags.PowerRankIsZero
-                | PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel
-                | PowerCollectionRecordFlags.ItemLevelIsOne
-                | PowerCollectionRecordFlags.ItemVariationIsOne,
-                PowerPrototypeId = startPowerRef,
+                PowerRef = startPowerRef,
                 PowerRefCount = 1
             };
             PowerCollection.TEMP_AddRecord(powerCollection);
+            
             return true;
         }
 

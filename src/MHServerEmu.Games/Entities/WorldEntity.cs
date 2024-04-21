@@ -254,7 +254,7 @@ namespace MHServerEmu.Games.Entities
         {
             StringBuilder sb = new();
             sb.AppendLine($"Powers:");
-            foreach (var kvp in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerPrototypeId)}");
+            foreach (var kvp in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerRef)}");
             return sb.ToString();
         }
 
