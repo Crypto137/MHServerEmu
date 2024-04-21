@@ -5,21 +5,21 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Powers
+namespace MHServerEmu.Games.Entities.PowerCollections
 {
     [Flags]
     public enum PowerCollectionRecordFlags
     {
-        None                                = 0,
-        PowerRefCountIsOne                  = 1 << 0,
-        PowerRankIsZero                     = 1 << 1,
-        CharacterLevelIsOne                 = 1 << 2,
-        CharacterLevelIsFromPreviousRecord  = 1 << 3,
-        CombatLevelIsOne                    = 1 << 4,
-        CombatLevelIsFromPreviousRecord     = 1 << 5,
-        CombatLevelIsSameAsCharacterLevel   = 1 << 6,
-        ItemLevelIsOne                      = 1 << 7,
-        ItemVariationIsOne                  = 1 << 8
+        None = 0,
+        PowerRefCountIsOne = 1 << 0,
+        PowerRankIsZero = 1 << 1,
+        CharacterLevelIsOne = 1 << 2,
+        CharacterLevelIsFromPreviousRecord = 1 << 3,
+        CombatLevelIsOne = 1 << 4,
+        CombatLevelIsFromPreviousRecord = 1 << 5,
+        CombatLevelIsSameAsCharacterLevel = 1 << 6,
+        ItemLevelIsOne = 1 << 7,
+        ItemVariationIsOne = 1 << 8
     }
 
     public class PowerCollectionRecord
@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Powers
             Flags = (PowerCollectionRecordFlags)stream.ReadRawVarint32();
 
             IndexProps = new();
-            
+
             IndexProps.PowerRank = Flags.HasFlag(PowerCollectionRecordFlags.PowerRankIsZero) ? 0 : stream.ReadRawVarint32();
 
             // CharacterLevel
@@ -96,35 +96,6 @@ namespace MHServerEmu.Games.Powers
             sb.AppendLine($"IndexProps: {IndexProps}");
             sb.AppendLine($"PowerRefCount: {PowerRefCount}");
 
-            return sb.ToString();
-        }
-    }
-
-    public class PowerIndexProperties
-    {
-        public uint PowerRank { get; set; }
-        public uint CharacterLevel { get; set; }
-        public uint CombatLevel { get; set; }
-        public uint ItemLevel { get; set; }
-        public float ItemVariation { get; set; }
-
-        public PowerIndexProperties()
-        {
-            PowerRank = 0;
-            CharacterLevel = 1;
-            CombatLevel = 1;
-            ItemLevel = 1;
-            ItemVariation = 1.0f;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"PowerRank: {PowerRank}");
-            sb.AppendLine($"CharacterLevel: {CharacterLevel}");
-            sb.AppendLine($"CombatLevel: {CombatLevel}");
-            sb.AppendLine($"ItemLevel: {ItemLevel}");
-            sb.AppendLine($"ItemVariation: {ItemVariation}");
             return sb.ToString();
         }
     }
