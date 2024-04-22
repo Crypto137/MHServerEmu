@@ -133,6 +133,16 @@ namespace MHServerEmu.Games.Navi
             uint tri1 = Triangles[1] != null ? Triangles[1].GetHash() : 0;
             return $"{GetHash():X} T[{tri0:X} {tri1:X}]";
         }
+
+        public static bool IsBlockingDoorEdge(NaviEdge edge, PathFlags pathFlags)
+        {
+            if (edge.TestFlag(NaviEdgeFlags.Door))
+            {
+                var edgePathFlags = ContentFlags.ToPathFlags(edge.PathingFlags.GetContentFlagsForSide(0));
+                return (edgePathFlags & pathFlags) == 0;
+            }
+            return false;
+        }
     }
 
 }
