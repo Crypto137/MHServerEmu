@@ -43,6 +43,9 @@ namespace MHServerEmu.Games
         private int _tickCount;
         private ulong _currentRepId;
 
+        public static TimeSpan StartTime { get; } = TimeSpan.FromMilliseconds(1);
+
+        // Dumped ids: 0xF9E00000FA2B3EA (Lobby), 0xFF800000FA23AE9 (Tower), 0xF4A00000FA2B47D (Danger Room), 0xFCC00000FA29FE7 (Midtown)
         public ulong Id { get; }
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
@@ -225,8 +228,8 @@ namespace MHServerEmu.Games
             // Add server info messages
             messageList.Add(NetMessageMarkFirstGameFrame.CreateBuilder()
                 .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
-                .SetCurrentservergameid(1150669705055451881)
-                .SetGamestarttime(1)
+                .SetCurrentservergameid(Id)
+                .SetGamestarttime((ulong)StartTime.TotalMilliseconds)
                 .Build());
 
             messageList.Add(NetMessageServerVersion.CreateBuilder().SetVersion(Version).Build());
@@ -356,5 +359,10 @@ namespace MHServerEmu.Games
             foreach (Region region in RegionManager.AllRegions) 
                 yield return region;
         }
+
+        // StartTime is always a TimeSpan of 1 ms, so we can make both Game::GetTimeFromStart() and Game::GetTimeFromDelta() static
+
+        public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
+        public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
     }
 }

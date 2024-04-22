@@ -1,5 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -82,28 +84,14 @@ namespace MHServerEmu.Games.Entities
         {
             if (startPowerRef == PrototypeId.Invalid) return false;
             //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-            Condition condition = new()
-            {
-                SerializationFlags = ConditionSerializationFlags.NoCreatorId
-                | ConditionSerializationFlags.NoUltimateCreatorId
-                | ConditionSerializationFlags.NoConditionPrototypeId
-                | ConditionSerializationFlags.HasIndex
-                | ConditionSerializationFlags.HasAssetDataRef,
-                Id = 1,
-                CreatorPowerPrototypeId = startPowerRef
-            };
-            ConditionCollection.Add(condition);
-            PowerCollectionRecord powerCollection = new()
-            {
-                Flags = PowerCollectionRecordFlags.PowerRefCountIsOne
-                | PowerCollectionRecordFlags.PowerRankIsZero
-                | PowerCollectionRecordFlags.CombatLevelIsSameAsCharacterLevel
-                | PowerCollectionRecordFlags.ItemLevelIsOne
-                | PowerCollectionRecordFlags.ItemVariationIsOne,
-                PowerPrototypeId = startPowerRef,
-                PowerRefCount = 1
-            };
-            PowerCollection.Add(powerCollection);
+
+            Condition condition = new();
+            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
+            condition.StartTime = Clock.GameTime;
+            ConditionCollection.AddCondition(condition);
+
+            PowerCollection.AssignPower(startPowerRef, new());
+            
             return true;
         }
 

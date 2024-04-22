@@ -184,6 +184,24 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
+        public static bool TransferTimeAsDelta(Archive archive, Game game, ref TimeSpan gameTime)
+        {
+            // GameStartTime is always a timespan of 1 ms, so we don't actually need a game reference here
+
+            if (archive.IsPacking)
+            {
+                long delta = Game.GetTimeFromStart(gameTime);
+                return Transfer(archive, ref delta);
+            }
+            else
+            {
+                long delta = 0;
+                bool success = Transfer(archive, ref delta);
+                gameTime = Game.GetTimeFromDelta(delta);
+                return success;
+            }
+        }
+
         // Collections
         // TODO: Find a good way to make this more DRY without sacrificing performance
 

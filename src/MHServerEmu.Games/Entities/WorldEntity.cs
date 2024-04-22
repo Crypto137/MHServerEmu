@@ -1,11 +1,16 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -23,11 +28,12 @@ namespace MHServerEmu.Games.Entities
     public class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
         public AlliancePrototype AllianceProto { get; private set; }
 
         public EntityTrackingContextMap TrackingContextMap { get; set; }
         public ConditionCollection ConditionCollection { get; set; }
-        public List<PowerCollectionRecord> PowerCollection { get; set; }
+        public PowerCollection PowerCollection { get; set; }
         public int UnkEvent { get; set; }
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
@@ -40,6 +46,7 @@ namespace MHServerEmu.Games.Entities
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
+        public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
@@ -92,8 +99,8 @@ namespace MHServerEmu.Games.Entities
             Physics.Initialize(this);
 
             TrackingContextMap = new();
-            ConditionCollection = new();
-            PowerCollection = new();
+            ConditionCollection = new(this);
+            PowerCollection = new(this);
             UnkEvent = 0;
         }
 
@@ -107,8 +114,8 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
             TrackingContextMap = new();
-            ConditionCollection = new();
-            PowerCollection = new();
+            ConditionCollection = new(this);
+            PowerCollection = new(this);
             UnkEvent = 0;
             SpatialPartitionLocation = new(this);
         }
@@ -120,28 +127,11 @@ namespace MHServerEmu.Games.Entities
             TrackingContextMap = new();
             TrackingContextMap.Decode(stream);
 
-            ConditionCollection = new();
-            int conditionCollectionCount = (int)stream.ReadRawVarint64();
-            for (int i = 0; i < conditionCollectionCount; i++)
-                ConditionCollection.Add(new(stream));
+            ConditionCollection = new(this);
+            ConditionCollection.Decode(stream);
 
-            // Gazillion::PowerCollection::SerializeRecordCount
-            if (ReplicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
-            {
-                PowerCollection = new();
-                int powerCollectionCount = (int)stream.ReadRawVarint32();
-                if (powerCollectionCount > 0)
-                {
-                    // Records after the first one may require the previous record to get values from
-                    PowerCollection.Add(new(stream, null));
-                    for (int i = 1; i < powerCollectionCount; i++)
-                        PowerCollection.Add(new(stream, PowerCollection[i - 1]));
-                }
-            }
-            else
-            {
-                PowerCollection = new();
-            }
+            PowerCollection = new(this);
+            PowerCollection.Decode(stream, ReplicationPolicy);
 
             UnkEvent = stream.ReadRawInt32();
         }
@@ -151,15 +141,8 @@ namespace MHServerEmu.Games.Entities
             base.Encode(stream);
 
             TrackingContextMap.Encode(stream);
-
-            stream.WriteRawVarint64((ulong)ConditionCollection.Count);
-            foreach (Condition condition in ConditionCollection) condition.Encode(stream);
-
-            if (ReplicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
-            {
-                stream.WriteRawVarint32((uint)PowerCollection.Count);
-                for (int i = 0; i < PowerCollection.Count; i++) PowerCollection[i].Encode(stream);
-            }
+            ConditionCollection.Encode(stream);
+            PowerCollection.Encode(stream, ReplicationPolicy);
 
             stream.WriteRawInt32(UnkEvent);
         }
@@ -171,11 +154,11 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in TrackingContextMap)
                 sb.AppendLine($"{nameof(TrackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            for (int i = 0; i < ConditionCollection.Count; i++)
-                sb.AppendLine($"ConditionCollection{i}: {ConditionCollection[i]}");
+            foreach (var kvp in ConditionCollection)
+                sb.AppendLine($"{nameof(ConditionCollection)}[{kvp.Key}]: {kvp.Value}");
 
-            for (int i = 0; i < PowerCollection.Count; i++)
-                sb.AppendLine($"PowerCollection{i}: {PowerCollection[i]}");
+            foreach (var kvp in PowerCollection)
+                sb.AppendLine($"{nameof(PowerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
 
             sb.AppendLine($"UnkEvent: {UnkEvent}");
         }
@@ -350,7 +333,7 @@ namespace MHServerEmu.Games.Entities
         {
             StringBuilder sb = new();
             sb.AppendLine($"Powers:");
-            foreach(var power in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(power.PowerPrototypeId)}");
+            foreach (var kvp in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerPrototypeRef)}");
             return sb.ToString();
         }
 
@@ -383,6 +366,14 @@ namespace MHServerEmu.Games.Entities
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
+        }
+
+        public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
+
+        public static AssetId GetOriginalWorldAsset(WorldEntityPrototype prototype)
+        {
+            if (prototype == null) return Logger.WarnReturn(AssetId.Invalid, $"GetOriginalWorldAsset(): prototype == null");
+            return prototype.UnrealClass;
         }
 
         public bool TestStatus(EntityStatus status)

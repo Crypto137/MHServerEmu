@@ -25,8 +25,8 @@ namespace MHServerEmu.Games.Entities.Items
             Properties[PropertyEnum.ItemVariation] = itemVariation;
             
             TrackingContextMap = new();
-            ConditionCollection = new();    
-            PowerCollection = new();
+            ConditionCollection = new(this);    
+            PowerCollection = new(this);
             UnkEvent = 0;
             ItemSpec = itemSpec;
         }

@@ -1,5 +1,7 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -171,6 +173,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
+        [DoNotCopy]
+        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
+        [DoNotCopy]
+        public ConditionCancelOnFlags CancelOnFlags { get; private set; } = ConditionCancelOnFlags.None;
+        [DoNotCopy]
+        public bool IsHitReactCondition { get => Properties != null && Properties.HasProperty(PropertyEnum.HitReact); }
 
         public override void PostProcess()
         {
@@ -178,7 +186,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
-            // TODO 
+            // TODO: stuff
+
+            // Combine cancel flags into a single bit field (TODO: flag enum)
+            if (CancelOnHit)                    CancelOnFlags |= ConditionCancelOnFlags.OnHit;
+            if (CancelOnKilled)                 CancelOnFlags |= ConditionCancelOnFlags.OnKilled;
+            if (CancelOnPowerUse)               CancelOnFlags |= ConditionCancelOnFlags.OnPowerUse;
+            if (CancelOnPowerUsePost)           CancelOnFlags |= ConditionCancelOnFlags.OnPowerUsePost;
+            if (CancelOnTransfer)               CancelOnFlags |= ConditionCancelOnFlags.OnTransfer;
+            if (CancelOnIntraRegionTeleport)    CancelOnFlags |= ConditionCancelOnFlags.OnIntraRegionTeleport;
+
+            // TODO: more stuff
         }
     }
 

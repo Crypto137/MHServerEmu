@@ -6,11 +6,11 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social.Guilds;
 
@@ -48,8 +48,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // WorldEntity
             TrackingContextMap = new();
-            ConditionCollection = new();
-            PowerCollection = new();
+            ConditionCollection = new(this);
+            PowerCollection = new(this);
             UnkEvent = 134463198;
 
             // Avatar
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, List<PowerCollectionRecord> powerCollection, int unkEvent,
+        public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, PowerCollection powerCollection, int unkEvent,
             ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {

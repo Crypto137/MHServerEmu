@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Tables;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -164,6 +165,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId WhileConfused { get; protected set; }
         public PrototypeId WhileControlled { get; protected set; }
 
+        [DoNotCopy]
+        public int EnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            BlueprintId blueprintRef = GameDatabase.DataDirectory.GetPrototypeBlueprintDataRef(DataRef);
+            EnumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue(DataRef, blueprintRef);
+        }
+
         public static bool IsHostileToPlayerAlliance(AlliancePrototype allianceProto)
         {
             if (allianceProto == null
@@ -175,11 +187,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return playerAlliance.IsHostileTo(allianceProto);
         }
 
+        public bool IsFriendlyTo(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null) return false;
+            return GameDataTables.Instance.AllianceTable.IsFriendlyTo(this, allianceProto);
+        }
+
         public bool IsHostileTo(AlliancePrototype allianceProto)
         {
             if (allianceProto == null) return false;
-            // TODO GameDataTables.GetAllianceTable().IsHostileTo(this, allianceProto);
-            return true;
+            return GameDataTables.Instance.AllianceTable.IsHostileTo(this, allianceProto);
         }
 
         public bool IsFriendlyTo(AlliancePrototype otherAllianceProto)
