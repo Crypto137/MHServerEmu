@@ -198,13 +198,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (allianceProto == null) return false;
             return GameDataTables.Instance.AllianceTable.IsHostileTo(this, allianceProto);
         }
-
-        public bool IsFriendlyTo(AlliancePrototype otherAllianceProto)
-        {
-            if (otherAllianceProto == null) return false;
-            // TODO GameDataTables.GetAllianceTable().IsFriendlyTo(this, otherAllianceProto);
-            return true;
-        }
     }
 
     public class BotDefinitionEntryPrototype : Prototype

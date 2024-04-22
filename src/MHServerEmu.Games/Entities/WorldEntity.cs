@@ -13,14 +13,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Entities
