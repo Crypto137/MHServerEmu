@@ -113,8 +113,7 @@ namespace MHServerEmu.Games.Network
 
             ulong avatarEntityId = Player.Id + 1;
             ulong avatarRepId = Player.Properties.ReplicationId + 4;
-            foreach (PrototypeId avatarId in dataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (PrototypeId avatarId in dataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarId == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 

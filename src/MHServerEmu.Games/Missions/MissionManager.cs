@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Missions
         {
             Region region = GetRegion();
             // search all Missions with encounter
-            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (missionProto == null) continue;

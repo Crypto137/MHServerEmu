@@ -23,8 +23,7 @@ namespace MHServerEmu.Games.Dialog
 
         public void Initialize()
         {
-            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), 
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (missionProto == null) continue;
@@ -54,15 +53,13 @@ namespace MHServerEmu.Games.Dialog
                 }
             }
 
-            foreach (var uiWidgetRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MetaGameDataPrototype), 
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var uiWidgetRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MetaGameDataPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (uiWidgetRef == PrototypeId.Invalid) continue;
                 GetInteractionDataFromUIWidgetPrototype(uiWidgetRef);
             }
 
-            foreach (var metaStateRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MetaStatePrototype), 
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var metaStateRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MetaStatePrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (metaStateRef == PrototypeId.Invalid) continue;
                 GetInteractionDataFromMetaStatePrototype(metaStateRef);

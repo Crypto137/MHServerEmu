@@ -99,8 +99,7 @@ namespace MHServerEmu.Games.Dialog
 
             if (missionComplete.MissionKeyword != PrototypeId.Invalid)
             {
-                foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
-                    PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+                foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
                     MissionPrototype mission = missionRef.As<MissionPrototype>();
                     if (mission != null && mission.Keywords.HasValue() && mission.Keywords.Contains(missionComplete.MissionKeyword))

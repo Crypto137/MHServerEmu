@@ -208,8 +208,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // We need 10 synergies active to remove the in-game popup
             int synergyCount = 0;
-            foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 Properties[PropertyEnum.AvatarSynergySelected, avatarId] = true;
                 if (++synergyCount >= 10) break;

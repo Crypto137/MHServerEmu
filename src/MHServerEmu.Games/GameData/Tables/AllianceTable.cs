@@ -32,8 +32,7 @@ namespace MHServerEmu.Games.GameData.Tables
 
 
             // Fill our table with data from alliance prototypes
-            foreach (PrototypeId alliancePrototypeRef in dataDirectory.IteratePrototypesInHierarchy(typeof(AlliancePrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (PrototypeId alliancePrototypeRef in dataDirectory.IteratePrototypesInHierarchy(typeof(AlliancePrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var alliancePrototype = alliancePrototypeRef.As<AlliancePrototype>();
                 if (alliancePrototype == null)

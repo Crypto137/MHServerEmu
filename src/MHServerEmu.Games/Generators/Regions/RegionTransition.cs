@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(region);
 
-            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
+            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstractApprovedOnly);
             foreach (var itrProtoId in iterateProtos)
             {
                 RegionConnectionNodePrototype proto = GameDatabase.GetPrototype<RegionConnectionNodePrototype>(itrProtoId);
@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public static bool GetRequiredTransitionData(PrototypeId regionRef, PrototypeId areaRef, ref List<RegionTransitionSpec> specList)
         {
-            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
+            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstractApprovedOnly);
 
             // ulong InvalidPrototype = 0;  This variable has no logic!!!
             bool found = false;
