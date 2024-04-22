@@ -75,6 +75,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
 
+        [DoNotCopy]
+        public PrototypeId UltimatePowerRef { get; private set; } = PrototypeId.Invalid;
+
         public override bool ApprovedForUse()
         {
             if (base.ApprovedForUse() == false) return false;
@@ -86,6 +89,46 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Add settings for PS4 and Xbox One here if we end up supporting console clients
             PrototypeId startingCostumeId = GetStartingCostumeForPlatform(Platforms.PC);
             return CostumeApprovedForUse(startingCostumeId);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            UIGlobalsPrototype uiGlobals = GameDatabase.UIGlobalsPrototype;
+
+            if (PowerProgressionTables != null)
+            {
+                for (int i = 0; i < PowerProgressionTables.Length; i++)
+                {
+                    PowerProgressionTablePrototype powerProgTableProto = PowerProgressionTables[i];
+
+                    // Assign tab references to power progression tables
+                    if (i >= 3) Logger.Warn("PostProcess(): PowerProgressionTables.Length >= 3");
+                    switch (i)
+                    {
+                        case 0: powerProgTableProto.PowerProgTableTabRef = uiGlobals.PowerProgTableTabRefTab1; break;
+                        case 1: powerProgTableProto.PowerProgTableTabRef = uiGlobals.PowerProgTableTabRefTab2; break;
+                        case 2: powerProgTableProto.PowerProgTableTabRef = uiGlobals.PowerProgTableTabRefTab3; break;
+                    }
+
+                    // Find the ultimate power
+                    foreach (PowerProgressionEntryPrototype entryProto in powerProgTableProto.PowerProgressionEntries)
+                    {
+                        PowerPrototype powerProto = entryProto.PowerAssignment.Ability.As<PowerPrototype>();
+
+                        if (powerProto.IsUltimate)
+                        {
+                            if (UltimatePowerRef != PrototypeId.Invalid) Logger.Warn($"PostProcess(): Avatar has more than one ultimate power defined ({this})");
+                            UltimatePowerRef = entryProto.PowerAssignment.Ability;
+                        }
+                    }
+                }
+            }
+
+            // TODO: SynergyTable
+            // TODO: StealablePowersAllowed
+            // TODO: Gazillion::LiveTuningData::GetAvatarBlueprintDataRef(), Gazillion::Prototype::GetEnumValueFromBlueprint()
         }
 
         /// <summary>
@@ -260,6 +303,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId DisplayName { get; protected set; }
         public PowerProgressionEntryPrototype[] PowerProgressionEntries { get; protected set; }
+
+        [DoNotCopy]
+        public PrototypeId PowerProgTableTabRef { get; set; } = PrototypeId.Invalid;
     }
 
     public class PowerProgTableTabRefPrototype : Prototype
