@@ -15,6 +15,7 @@
 
         public static float ToRadians(float v) => v * PiOverHalfCircleDegrees;
         public static float SquareRoot(float f) => f > 0.0f ? MathF.Sqrt(f) : 0.0f;
+        public static int RoundDownToInt(float v) => (int)MathF.Floor(v);
 
         /// <summary>
         /// Determines the index of the highest bit set in a <see cref="ulong"/> value.
@@ -26,5 +27,15 @@
                 bit++;
             return bit;
         }
+
+        public static int RoundToInt(float value) // TODO check where it used
+        {
+            if (value < 0.0f)
+                return (int)(value - 0.5f);
+            else
+                return (int)(value + 0.5f);
+        }
+
+        public static float Square(float v) => v * v;
     }
 }

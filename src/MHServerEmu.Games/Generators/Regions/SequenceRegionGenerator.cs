@@ -749,8 +749,8 @@ namespace MHServerEmu.Games.Generators.Regions
 
         }
 
-        public bool IsValid() => Edge.Length() > 0 && ConnectionList.Any();
-        public float GetLength() => Edge.Length();
+        public bool IsValid() => Edge.Length > 0 && ConnectionList.Any();
+        public float GetLength() => Edge.Length;
 
     }
 

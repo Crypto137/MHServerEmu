@@ -314,7 +314,7 @@ namespace MHServerEmu.Games.Entities
                     max = Math.Max(
                         Vector3.DistanceSquared2D(wedgeVertices[1], Center),
                         Vector3.DistanceSquared2D(wedgeVertices[2], Center));
-                    return MathF.Sqrt(max); // SquareRoot
+                    return MathHelper.SquareRoot(max);
                 default:
                     return 0.0f;
             }
