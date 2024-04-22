@@ -5,6 +5,7 @@ using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Locales;
 using MHServerEmu.Games.Properties;
 
@@ -140,6 +141,12 @@ namespace MHServerEmu.Games.GameData
             // processAvatarSynergyMap
 
             AchievementDatabase.Instance.Initialize();
+
+            // Initialize game data tables
+            var tablesWatch = Stopwatch.StartNew();
+            var tables = GameDataTables.Instance;
+            tablesWatch.Stop();
+            Logger.Info($"Initialized GameDataTables in {tablesWatch.ElapsedMilliseconds} ms");
 
             // Verify
             if (VerifyData() == false)
