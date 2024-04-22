@@ -25,6 +25,7 @@ namespace MHServerEmu.Games.Navi
             public NaviPatchPrototype Patch;
         }
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly NaviSystem _navi;
 
         public Aabb Bounds { get; private set; }
@@ -579,9 +580,24 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        internal SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3 resultPosition, ref Vector3 resultNormal, float padding, HeightSweepType heightSweep, int maxHeight, int minHeight, WorldEntity owner)
+        public SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3 resultPosition, ref Vector3 resultNormal,
+            float padding = 0, HeightSweepType heightSweep = HeightSweepType.None, int maxHeight = short.MaxValue, int minHeight = short.MinValue, Entity owner = null)
         {
-            throw new NotImplementedException();
+            NaviTriangle currentTriangle = NaviCdt.FindTriangleAtPoint(fromPosition);
+            if (currentTriangle == null)
+            {
+                Logger.Error($"Navi sweep failed to find starting triangle at point: {fromPosition} for mesh: {ToString()}");
+                resultPosition = Vector3.Zero;
+                return SweepResult.Failed;
+            }
+            if (_region == null)
+            {
+                resultPosition = Vector3.Zero;
+                return SweepResult.Failed;
+            }
+            NaviSweep naviSweep = new (this, _region, pathFlags, radius, fromPosition, currentTriangle, toPosition, owner, heightSweep, maxHeight, minHeight);
+            SweepResult resultSweep = naviSweep.DoSweep(ref resultPosition, ref resultNormal, padding);
+            return resultSweep;
         }
 
         private class MarkupState
