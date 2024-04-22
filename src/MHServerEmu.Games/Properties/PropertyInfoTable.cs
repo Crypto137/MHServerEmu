@@ -99,8 +99,8 @@ namespace MHServerEmu.Games.Properties
                 LoadPropertyInfo(propertyInfo);                
 
             // Preload property default prototypes
-            foreach (var propertyPrototypeId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(PropertyPrototype)))
-                GameDatabase.GetPrototype<Prototype>(propertyPrototypeId);
+            foreach (var propertyPrototypeRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy< PropertyPrototype>())
+                GameDatabase.GetPrototype<Prototype>(propertyPrototypeRef);
 
             // todo: eval dependencies
 

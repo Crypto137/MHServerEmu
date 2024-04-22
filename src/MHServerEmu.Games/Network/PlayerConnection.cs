@@ -113,16 +113,16 @@ namespace MHServerEmu.Games.Network
 
             ulong avatarEntityId = Player.Id + 1;
             ulong avatarRepId = Player.Properties.ReplicationId + 4;
-            foreach (PrototypeId avatarId in dataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
+            foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                if (avatarId == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 Avatar avatar = new(avatarEntityId, avatarRepId);
                 avatar.BaseData.InvLoc = new(Player.Id, PrototypeId.Invalid, 0);
                 avatarEntityId++;
                 avatarRepId += 2;
 
-                avatar.InitializeFromDBAccount(avatarId, _dbAccount);
+                avatar.InitializeFromDBAccount(avatarRef, _dbAccount);
                 Player.AvatarList.Add(avatar);
             }
 

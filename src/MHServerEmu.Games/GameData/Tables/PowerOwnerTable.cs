@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.GameData.Tables
         public PowerOwnerTable()
         {
             // Get data from avatar prototypes
-            foreach (PrototypeId avatarRef in DataDirectory.Instance.IteratePrototypesInHierarchy(typeof(AvatarPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
+            foreach (PrototypeId avatarRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 AvatarPrototype avatarProto = avatarRef.As<AvatarPrototype>();
 
@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.GameData.Tables
             }
 
             // Get data from team-up prototypes
-            foreach (PrototypeId teamUpRef in DataDirectory.Instance.IteratePrototypesInHierarchy(typeof(AgentTeamUpPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
+            foreach (PrototypeId teamUpRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 AgentTeamUpPrototype teamUpProto = teamUpRef.As<AgentTeamUpPrototype>();
 

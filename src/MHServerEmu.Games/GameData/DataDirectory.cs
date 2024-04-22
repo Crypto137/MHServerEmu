@@ -512,23 +512,31 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Returns an iterator for prototypes belonging to the specified class.
+        /// Returns a <see cref="PrototypeIterator"/> for specified class <see cref="Type"/>.
         /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
-                return Logger.WarnReturn(new PrototypeIterator(), $"Failed to get iterated prototype list for class {prototypeClassType.Name}");
+                return Logger.WarnReturn(new PrototypeIterator(), $"IteratePrototypesInHierarchy(): Failed to get iterated prototype list for class {prototypeClassType.Name}");
 
             return new(node.PrototypeRecordList, flags);
         }
 
         /// <summary>
-        /// Returns an iterator for prototypes belonging to the specified blueprint.
+        /// Returns a <see cref="PrototypeIterator"/> for <typeparamref name="T"/>.
+        /// </summary>
+        public PrototypeIterator IteratePrototypesInHierarchy<T>(PrototypeIterateFlags flags = PrototypeIterateFlags.None) where T: Prototype
+        {
+            return IteratePrototypesInHierarchy(typeof(T), flags);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="PrototypeIterator"/> for prototypes belonging to the specified blueprint.
         /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
-                return Logger.WarnReturn(new PrototypeIterator(), $"Failed to get iterated prototype list for blueprint id {blueprintId}");
+                return Logger.WarnReturn(new PrototypeIterator(), $"IteratePrototypesInHierarchy(): Failed to get iterated prototype list for blueprint id {blueprintId}");
 
             return new(record.Blueprint.PrototypeRecordList, flags);
         }

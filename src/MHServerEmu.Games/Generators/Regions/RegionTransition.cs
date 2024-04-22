@@ -90,24 +90,23 @@ namespace MHServerEmu.Games.Generators.Regions
 
             RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(region);
 
-            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstractApprovedOnly);
-            foreach (var itrProtoId in iterateProtos)
+            foreach (var protoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionConnectionNodePrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                RegionConnectionNodePrototype proto = GameDatabase.GetPrototype<RegionConnectionNodePrototype>(itrProtoId);
+                var proto = protoRef.As<RegionConnectionNodePrototype>();
                 if (proto != null)
                 {
-                    var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Target);
-                    var origin = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Origin);
+                    var target = proto.Target.As<RegionConnectionTargetPrototype>();
+                    var origin = proto.Origin.As<RegionConnectionTargetPrototype>();
 
                     if (origin != null && target != null)
                     {
-                        var originRegion = GameDatabase.GetPrototype<RegionPrototype>(origin.Region);
+                        var originRegion = origin.Region.As<RegionPrototype>();
                         if (RegionPrototype.Equivalent(originRegion, regionProto))
                             { 
                                 AddTargetNode(target, origin);
                             }
 
-                        var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(target.Region);
+                        var targetRegion = target.Region.As<RegionPrototype>();
                         if (proto.Type == RegionTransitionDirectionality.BiDirectional 
                             && RegionPrototype.Equivalent(targetRegion, regionProto))       
                             {
@@ -122,18 +121,17 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public static bool GetRequiredTransitionData(PrototypeId regionRef, PrototypeId areaRef, ref List<RegionTransitionSpec> specList)
         {
-            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstractApprovedOnly);
-
             // ulong InvalidPrototype = 0;  This variable has no logic!!!
             bool found = false;
 
-            foreach (var itrProtoId in iterateProtos) // they check ALL prototypes... TODO: Rewrite!!!
+            // they check ALL prototypes... TODO: Rewrite!!!
+            foreach (var protoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionConnectionNodePrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                RegionConnectionNodePrototype proto = GameDatabase.GetPrototype<RegionConnectionNodePrototype>(itrProtoId);
+                RegionConnectionNodePrototype proto = protoRef.As<RegionConnectionNodePrototype>();
                 if (proto != null)
                 {
-                    var origin = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Origin);
-                    var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Target);
+                    var origin = proto.Origin.As<RegionConnectionTargetPrototype>();
+                    var target = proto.Target.As<RegionConnectionTargetPrototype>();
 
                     if (origin != null && target != null)
                     {
@@ -173,7 +171,7 @@ namespace MHServerEmu.Games.Generators.Regions
         {            
             target = null;
             if (waypointProto == null || waypointProto.Destination == 0) return false;
-            target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(waypointProto.Destination);
+            target = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
             return (target != null);
         }
     }

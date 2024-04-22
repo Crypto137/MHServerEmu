@@ -359,7 +359,7 @@ namespace MHServerEmu.Games.Entities.Options
 
             // Chat channel filters
             _chatChannelFilterDict.Clear();
-            foreach(PrototypeId channelProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(ChatChannelPrototype), PrototypeIterateFlags.NoAbstractApprovedOnly))
+            foreach(PrototypeId channelProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<ChatChannelPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var chatChannelPrototype = channelProtoRef.As<ChatChannelPrototype>();
                 if (chatChannelPrototype.AllowPlayerFilter)
