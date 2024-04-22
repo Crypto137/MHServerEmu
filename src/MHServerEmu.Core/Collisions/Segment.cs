@@ -22,15 +22,14 @@ namespace MHServerEmu.Core.Collisions
             End = end;
         }
 
-        public Vector3 GetDirection()
+        public Segment(Segment segment)
         {
-            return End - Start;
+            Start = segment.Start;
+            End = segment.End;
         }
 
-        public float Length()
-        {
-            return Vector3.Length(GetDirection());
-        }
+        public Vector3 Direction => End - Start;
+        public float Length =>  Vector3.Length(Direction);
 
         public void Set(Segment segment)
         {
@@ -80,100 +79,110 @@ namespace MHServerEmu.Core.Collisions
             return SegmentSegmentClosestPoint(a1.To2D(), b1.To2D(), a2.To2D(), b2.To2D(), out _, out _, out _, out _);
         }
 
-        public static float SegmentSegmentClosestPoint(Vector3 a1, Vector3 b1, Vector3 a2, Vector3 b2, out float s, out float t, out Vector3 c1, out Vector3 c2)
+        public static float SegmentSegmentClosestPoint(Vector3 s1Start, Vector3 s1End, Vector3 s2Start, Vector3 s2End, out float s1Dist, out float s2Dist, out Vector3 point1, out Vector3 point2)
         {
-            Vector3 ba1 = b1 - a1;
-            Vector3 ba2 = b2 - a2;
-            Vector3 a12 = a1 - a2;
-            float dotba1 = Vector3.Dot(ba1, ba1);
-            float dotba2 = Vector3.Dot(ba2, ba2);
-            float dotba212 = Vector3.Dot(ba2, a12);
+            // Based on Real-Time Collision Detection by Christer Ericson, pages 149-151 (ClosestPtSegmentSegment)
 
-            if (dotba1 <= Epsilon && dotba2 <= Epsilon)
-            {
-                s = t = 0.0f;
-                c1 = a1;
-                c2 = a2;
-                Vector3 c12 = c1 - c2;
-                return Vector3.Dot(c12, c12);
+            Vector3 s1Dir = s1End - s1Start; // Direction vector of segment S1
+            Vector3 s2Dir = s2End - s2Start; // Direction vector of segment S2
+            Vector3 vector = s1Start - s2Start;
+            float a = Vector3.Dot(s1Dir, s1Dir); // Squared length of segment S1, always nonnegative
+            float e = Vector3.Dot(s2Dir, s2Dir); // Squared length of segment S2, always nonnegative
+            float f = Vector3.Dot(s2Dir, vector);
+
+            // Check if either or both segments degenerate into points
+            if (a <= Epsilon && e <= Epsilon)
+            {   // Both segments degenerate into points                
+                s1Dist = s2Dist = 0.0f;
+                point1 = s1Start;
+                point2 = s2Start;
+                return Vector3.Dot(vector, vector);
             }
 
-            if (dotba1 <= Epsilon)
-            {
-                s = 0.0f;
-                t = dotba212 / dotba2;
-                t = Math.Clamp(t, 0.0f, 1.0f);
+            if (a <= Epsilon)
+            {   // First segment degenerates into a point                
+                s1Dist = 0.0f;
+                s2Dist = f / e;
+                s2Dist = Math.Clamp(s2Dist, 0.0f, 1.0f);
             }
             else
             {
-                float dotba112 = Vector3.Dot(ba1, a12);
-                if (dotba2 <= Epsilon)
-                {
-                    t = 0.0f;
-                    s = Math.Clamp(-dotba112 / dotba1, 0.0f, 1.0f);
+                float c = Vector3.Dot(s1Dir, vector);
+                if (e <= Epsilon)
+                {   // Second segment degenerates into a point                    
+                    s2Dist = 0.0f;
+                    s1Dist = Math.Clamp(-c / a, 0.0f, 1.0f);
                 }
                 else
-                {
-                    float dotba12 = Vector3.Dot(ba1, ba2);
-                    float denom = dotba1 * dotba2 - dotba12 * dotba12;
+                {   // The general nondegenerate case starts here                    
+                    float b = Vector3.Dot(s1Dir, s2Dir);
+                    float denom = a * e - b * b; ; // Always nonnegative
 
+                    // If segments not parallel, compute closest point on L1 to L2 and
+                    // clamp to segment S1. Else pick arbitrary s (here 0)
                     if (denom != 0.0f)
-                        s = Math.Clamp((dotba12 * dotba212 - dotba112 * dotba2) / denom, 0.0f, 1.0f);
+                        s1Dist = Math.Clamp((b * f - c * e) / denom, 0.0f, 1.0f);
                     else
-                        s = 0.0f;
+                        s1Dist = 0.0f;
 
-                    float tnom = dotba12 * s + dotba212;
+                    // Compute point on L2 closest to S1(s)
+                    float tnom = b * s1Dist + f;
                     if (tnom < 0.0f)
                     {
-                        t = 0.0f;
-                        s = Math.Clamp(-dotba112 / dotba1, 0.0f, 1.0f);
+                        s2Dist = 0.0f;
+                        s1Dist = Math.Clamp(-c / a, 0.0f, 1.0f);
                     }
-                    else if (tnom > dotba2)
+                    else if (tnom > e)
                     {
-                        t = 1.0f;
-                        s = Math.Clamp((dotba12 - dotba112) / dotba1, 0.0f, 1.0f);
+                        s2Dist = 1.0f;
+                        s1Dist = Math.Clamp((b - c) / a, 0.0f, 1.0f);
                     }
                     else
                     {
-                        t = tnom / dotba2;
+                        s2Dist = tnom / e;
                     }
                 }
             }
 
-            c1 = a1 + ba1 * s;
-            c2 = a2 + ba2 * t;
-            Vector3 c1c2 = c1 - c2;
-            return Vector3.Dot(c1c2, c1c2);
+            point1 = s1Start + s1Dir * s1Dist;
+            point2 = s2Start + s2Dir * s2Dist;
+            vector = point1 - point2;
+            return Vector3.Dot(vector, vector);
         }
 
-        public static bool SegmentsIntersect2D(Vector3 a0, Vector3 a1, Vector3 b0, Vector3 b1)
+        public static bool SegmentsIntersect2D(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
         {
-            float s1 = SignedDoubleTriangleArea2D(a0, a1, b1);
-            float s2 = SignedDoubleTriangleArea2D(a0, a1, b0);
-            if (s1 * s2 < 0.0f)
-            {
-                float s3 = SignedDoubleTriangleArea2D(b0, b1, a0);
-                float s4 = s3 + s2 - s1;
-                if (s3 * s4 < 0.0f) return true;
+            // Real-Time Collision Detection p.152 (Test2DSegmentSegment)
+            // Sign of areas correspond to which side of ab points c and d are
+            float a1 = SignedDoubleTriangleArea2D(a, b, d); // Compute winding of abd (+ or -)
+            float a2 = SignedDoubleTriangleArea2D(a, b, c); // To intersect, must have sign opposite of a1
+            // If c and d are on different sides of ab, areas have different signs
+            if (a1 * a2 < 0.0f)
+            {   // Compute signs for a and b with respect to segment cd
+                float a3 = SignedDoubleTriangleArea2D(c, d, a); // Compute winding of cda (+ or -)
+                // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1
+                float a4 = a3 + a2 - a1;
+                // Points a and b on different sides of cd if areas have different signs
+                if (a3 * a4 < 0.0f) return true; // Segments intersect.
             }
-            return false;
+            return false; // Segments not intersecting (or collinear)
         }
 
-        public static float SignedDoubleTriangleArea2D(Vector3 t0, Vector3 t1, Vector3 t2)
-        {
-            Vector3 v0 = t1 - t0;
-            Vector3 v1 = t2 - t0;
-            return Cross2D(v0, v1);
+        public static float SignedDoubleTriangleArea2D(Vector3 a, Vector3 b, Vector3 c)
+        {   
+            // Returns 2 times the signed triangle area. The result is positive if
+            // abc is ccw, negative if abc is cw, zero if abc is degenerate.
+            return Cross2D(b - a, c - a);
         }
 
-        public static bool LineLineIntersect2D(Vector3 a0, Vector3 a1, Vector3 b0, Vector3 b1, out Vector3 outPoint)
+        public static bool LineLineIntersect2D(Vector3 line1Start, Vector3 line1End, Vector3 line2Start, Vector3 line2End, out Vector3 outPoint)
         {
-            Vector3 av = a1 - a0;
-            float ax = av.X;
-            float ay = av.Y;
+            Vector3 line1Dir = line1End - line1Start;
+            float ax = line1Dir.X;
+            float ay = line1Dir.Y;
 
-            float bx = b1.X - b0.X;
-            float by = b1.Y - b0.Y;
+            float bx = line2End.X - line2Start.X;
+            float by = line2End.Y - line2Start.Y;
             float cross = ax * by - ay * bx;
 
             if (cross == 0)
@@ -182,11 +191,11 @@ namespace MHServerEmu.Core.Collisions
                 return false;
             }
 
-            float cx = b0.X - a0.X;
-            float cy = b0.Y - a0.Y;
-            float t = (cx * by - cy * bx) / cross;
+            float vx = line2Start.X - line1Start.X;
+            float vy = line2Start.Y - line1Start.Y;
+            float line1Dist = (vx * by - vy * bx) / cross;
 
-            outPoint = a0 + av * t;
+            outPoint = line1Start + line1Dir * line1Dist;
             return true;
         }
 
@@ -197,6 +206,37 @@ namespace MHServerEmu.Core.Collisions
             else
                 return min;
         }
+
+        public static bool RayLineIntersect2D(Vector3 rayStart, Vector3 rayDirection, Vector3 lineStart, Vector3 lineDirection, out float rayDistance, out float lineDistance)
+        {
+            Vector3 perpLineDir = Vector3.Perp2D(lineDirection);
+            Vector3 perpRayDir = Vector3.Perp2D(rayDirection);
+            float d = Vector3.Dot2D(perpLineDir, rayDirection);
+            if (d != 0.0f)
+            {
+                Vector3 vector = lineStart - rayStart;
+                rayDistance = Vector3.Dot2D(perpLineDir, vector) / d;
+                lineDistance = Vector3.Dot2D(perpRayDir, vector) / d;
+
+                return true;
+            }
+            rayDistance = 0.0f;
+            lineDistance = 0.0f;
+            return false;
+        }
+
+        public static bool RaySegmentIntersect2D(Vector3 rayStart, Vector3 rayDirection, Vector3 segmentStart, Vector3 segmentDirection, out Vector3 intersectPoint)
+        {
+            if (RayLineIntersect2D(rayStart, rayDirection, segmentStart, segmentDirection, out float rayDistance, out float lineDistance))
+                if (rayDistance >= 0.0f && lineDistance >= 0.0f && lineDistance <= 1.0f)
+                {
+                    intersectPoint = rayStart.To2D() + rayDirection.To2D() * rayDistance;
+                    return true;
+                }
+            intersectPoint = null;
+            return false;
+        }
+
     }
 
 }

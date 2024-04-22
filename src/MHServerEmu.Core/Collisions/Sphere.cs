@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
@@ -124,12 +125,19 @@ namespace MHServerEmu.Core.Collisions
 
         public bool Sweep(Aabb aabb, Vector3 velocity, ref float time)
         {
+            // Real-Time Collision Detection p.229 (IntersectMovingSphereAABB)
+            // Compute the AABB resulting from expanding b by sphere radius r
             float diameter = Radius * 2.0f;
             Aabb expandedAabb = new(aabb.Center, aabb.Width + diameter, aabb.Length + diameter, aabb.Height + diameter);
+
+            // Intersect ray against expanded AABB e. Exit with no intersection if ray
+            // misses e, else get intersection point p and time t as result
             if (expandedAabb.IntersectRay(Center, velocity, ref time, out Vector3 point) == false) return false;
 
+            // Compute which min and max faces of b the intersection point p lies
+            // outside of. Note, u and v cannot have the same bits set and
+            // they must have at least one bit set among them
             int u = 0, v = 0;
-
             if (point.X < aabb.Min.X) u |= 1;
             if (point.X > aabb.Max.X) v |= 1;
             if (point.Y < aabb.Min.Y) u |= 2;
@@ -137,12 +145,14 @@ namespace MHServerEmu.Core.Collisions
             if (point.Z < aabb.Min.Z) u |= 4;
             if (point.Z > aabb.Max.Z) v |= 4;
 
+            // 'Or' all set bits together into a bit mask (note: here u + v == u | v)
             int m = u + v;
-
+            // Define line segment [c, c+d] specified by the sphere movement
             Segment seg = new(Center, Center + velocity);
-
+            // If all 3 bits set (m == 7) then p is in a vertex region
             if (m == 7)
-            {
+            {   // Must now intersect segment [c, c+d] against the capsules of the three
+                // edges meeting at the vertex and return the best time, if one or more hit
                 float tmin = float.MaxValue;
                 if (Capsule.IntersectsSegment(seg, SweepGetCorner(aabb, v), SweepGetCorner(aabb, v ^ 1), Radius, ref time))
                     tmin = Math.Min(time, tmin);
@@ -151,17 +161,19 @@ namespace MHServerEmu.Core.Collisions
                 if (Capsule.IntersectsSegment(seg, SweepGetCorner(aabb, v), SweepGetCorner(aabb, v ^ 4), Radius, ref time))
                     tmin = Math.Min(time, tmin);
                 if (tmin == float.MaxValue)
-                    return false;
+                    return false; // No intersection
                 time = tmin;
                 return true;
             }
-
-            if ((m & m - 1) == 0) return true;
+            // If only one bit set in m, then p is in a face region
+            if ((m & m - 1) == 0) return true; // Do nothing. Time t from intersection with expanded box is correct intersection time
+            // p is in an edge region. Intersect against the capsule at the edge
             return Capsule.IntersectsSegment(seg, SweepGetCorner(aabb, u ^ 7), SweepGetCorner(aabb, v), Radius, ref time);
         }
 
         private static Vector3 SweepGetCorner(Aabb b, int n)
         {
+            // Support function that returns the AABB vertex with index n
             return new Vector3((n & 1) != 0 ? b.Max.X : b.Min.X,
                                (n & 2) != 0 ? b.Max.Y : b.Min.Y,
                                (n & 4) != 0 ? b.Max.Z : b.Min.Z);
@@ -183,7 +195,7 @@ namespace MHServerEmu.Core.Collisions
 
         public bool Intersects(Segment segment, ref float time, out Vector3 intersectionPoint)
         {
-            Vector3 direction = segment.GetDirection();
+            Vector3 direction = segment.Direction;
             float length = Vector3.Length(direction);
             Vector3 directionNorm = Vector3.Normalize(direction);
 
@@ -225,22 +237,23 @@ namespace MHServerEmu.Core.Collisions
 
         public static bool IntersectsRay(Vector3 start, Vector3 directionNorm, Vector3 center, float radius, out float rayDistance)
         {
-            Vector3 sc = start - center;
-            float dotscdn = Vector3.Dot(sc, directionNorm);
-            float scr = Vector3.Dot(sc, sc) - radius * radius;
-
-            if (scr > 0.0f && dotscdn > 0.0f)
+            // Real-Time Collision Detection p.178 (IntersectRaySphere)
+            Vector3 dir = start - center;
+            float b = Vector3.Dot(dir, directionNorm);
+            float c = Vector3.Dot(dir, dir) - radius * radius;
+            // Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0)
+            if (c > 0.0f && b > 0.0f)
             {
                 rayDistance = 0.0f;
                 return false;
             }
 
-            float discreminant = dotscdn * dotscdn - scr;
+            float discreminant = b * b - c;
+            // A negative discriminant corresponds to ray missing sphere
             if (discreminant > 0.0f)
-            {
-                float discreminantSqrt = MathF.Sqrt(discreminant);
-                rayDistance = -dotscdn - discreminantSqrt;
-
+            {   // Ray now found to intersect sphere, compute smallest t value of intersection                
+                rayDistance = -b - MathHelper.SquareRoot(discreminant);
+                // If t is negative, ray started inside sphere so clamp t to zero
                 if (rayDistance < 0.0f) rayDistance = 0.0f;
                 return true;
             }

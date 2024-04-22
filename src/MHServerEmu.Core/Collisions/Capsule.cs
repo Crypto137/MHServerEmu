@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
@@ -18,60 +19,61 @@ namespace MHServerEmu.Core.Collisions
 
         public static Capsule Zero => new(Vector3.Zero, Vector3.Zero, 0.0f);
 
-        public static bool IntersectsSegment(Segment seg, Vector3 a, Vector3 b, float radius, ref float time)
+        public static bool IntersectsSegment(Segment seg, Vector3 sideA, Vector3 sideB, float radius, ref float time)
         {
             bool SphereIntersects(Vector3 center, ref float time)
             {
                 var sphere = new Sphere(center, radius);
                 return sphere.Intersects(seg, ref time);
             }
+            // Real-Time Collision Detection p.197 (IntersectSegmentCylinder)
 
-            Vector3 ba = b - a;
-            Vector3 sa = seg.Start - a;
-            Vector3 es = seg.End - seg.Start;
-            float dotsaba = Vector3.Dot(sa, ba);
-            float dotesba = Vector3.Dot(es, ba);
-            float dotba = Vector3.Dot(ba, ba);
+            Vector3 d = sideB - sideA;
+            Vector3 m = seg.Start - sideA;
+            Vector3 n = seg.End - seg.Start;
+            float md = Vector3.Dot(m, d);
+            float nd = Vector3.Dot(n, d);
+            float dd = Vector3.Dot(d, d);
+            // Test if segment fully outside either endcap of capsula
+            if (md < 0.0f && md + nd < 0.0f) // Segment outside A side
+                return SphereIntersects(sideA, ref time);
 
-            if (dotsaba < 0.0f && dotsaba + dotesba < 0.0f)
-                return SphereIntersects(a, ref time);
+            if (md > dd && md + nd > dd) // Segment outside B side
+                return SphereIntersects(sideB, ref time);
 
-            if (dotsaba > dotba && dotsaba + dotesba > dotba)
-                return SphereIntersects(b, ref time);
+            float nn = Vector3.Dot(n, n);
+            float mn = Vector3.Dot(m, n);
+            float a = dd * nn - nd * nd;
+            float k = Vector3.Dot(m, m) - radius * radius;
+            float c = dd * k - md * md;
 
-            float dotes = Vector3.Dot(es, es);
-            float dotsaes = Vector3.Dot(sa, es);
-            float m = dotba * dotes - dotesba * dotesba;
-            float sar = Vector3.Dot(sa, sa) - radius * radius;
-            float mr = dotba * sar - dotsaba * dotsaba;
-
-            if (Math.Abs(m) < float.Epsilon)
-            {
-                if (mr > 0.0f) return false;
-
-                if (dotsaba < 0.0f) return SphereIntersects(a, ref time);
-                else if (dotsaba > dotba) return SphereIntersects(b, ref time);
+            if (Math.Abs(a) < Segment.Epsilon)
+            {   // Segment runs parallel to capsula axis                
+                if (c > 0.0f) return false; // 'a' and thus the segment lie outside cylinder
+                // Now known that segment intersects capsula; figure out how it intersects
+                if (md < 0.0f) return SphereIntersects(sideA, ref time); // Intersect segment against A endcap
+                else if (md > dd) return SphereIntersects(sideB, ref time); // Intersect segment against B endcap
                 else
-                {
-                    time = 0.0f;
+                {   // 'a' lies inside capsula                 
+                    time = 0.0f; 
                     return true;
                 }
             }
 
-            float dmn = dotba * dotsaes - dotesba * dotsaba;
-            float mnr = dmn * dmn - m * mr;
+            float b = dd * mn - nd * md;
+            float discr = b * b - a * c;
 
-            if (mnr < 0.0f)
-            {
-                time = 0.0f;
+            if (discr < 0.0f)
+            {   // No real roots; no intersection             
+                time = 0.0f; 
                 return false;
             }
 
-            time = (-dmn - MathF.Sqrt(mnr)) / m;
+            time = (-b - MathHelper.SquareRoot(discr)) / a;
 
-            if (dotsaba + time * dotesba < 0.0f) return SphereIntersects(a, ref time);
-            else if (dotsaba + time * dotesba > dotba) return SphereIntersects(b, ref time);
-
+            if (md + time * nd < 0.0f) return SphereIntersects(sideA, ref time); // Intersection outside capsula on A side
+            else if (md + time * nd > dd) return SphereIntersects(sideB, ref time); // Intersection outside capsula on B side
+            // Segment intersects cylinder between the endcaps
             return time >= 0.0f && time <= 1.0f;
         }
 
@@ -107,6 +109,7 @@ namespace MHServerEmu.Core.Collisions
         {
             return triangle.TriangleIntersectsCircle2D(A, Radius);
         }
+
         public override string ToString()
         {
             StringBuilder sb = new();
