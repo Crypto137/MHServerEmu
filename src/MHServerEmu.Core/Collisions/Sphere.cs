@@ -327,6 +327,38 @@ namespace MHServerEmu.Core.Collisions
             //sb.AppendLine($"A: {Center.ToStringFloat()}");
             return sb.ToString();
         }
+
+        public bool Sweep(Sphere otherSphere, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, Axis axis = Axis.Invalid)
+        {
+            // Real-Time Collision Detection p.224 (TestMovingSphereSphere)
+
+            Vector3 s = otherSphere.Center - Center; // Vector between sphere centers
+            Vector3 v = otherVelocity - velocity; // Relative motion of s1 with respect to stationary s0
+
+            if (axis != Axis.Invalid)
+            {
+                s[(int)axis] = 0.0f;
+                v[(int)axis] = 0.0f;
+            }
+
+            float r = otherSphere.Radius + Radius; // Sum of sphere radii
+            float c = Vector3.Dot(s, s) - r * r;
+            if (c < 0.0f)
+            {   // Spheres initially overlapping so exit directly
+                resultTime = 0.0f;
+                return true;
+            }
+            float a = Vector3.Dot(v, v);
+            if (a < Segment.Epsilon) return false; // Spheres not moving relative each other
+            float b = Vector3.Dot(v, s);
+            if (b >= 0.0f) return false; // Spheres not moving towards each other
+            float d = b * b - a * c;
+            if (d < 0.0f) return false; // No real-valued root, spheres do not intersect
+
+            resultTime = (-b - MathHelper.SquareRoot(d)) / a;
+            return resultTime >= 0.0f && resultTime <= 1.0f;
+        }
+
     }
 
     public enum SweepSegmentFlags
