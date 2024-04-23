@@ -529,19 +529,24 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
-        private void NotifyEntityOverlapEnd(WorldEntity who, WorldEntity whom)
+        private static void NotifyEntityOverlapBegin(WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
-            throw new NotImplementedException();
+            if (who == null) return;
+            who.OnOverlapBegin(whom, whoPos, whomPos);
         }
 
-        private void NotifyEntityOverlapBegin(WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        private static void NotifyEntityOverlapEnd(WorldEntity who, WorldEntity whom)
         {
-            throw new NotImplementedException();
+            if (who == null) return;
+            who.OnOverlapEnd(whom);
         }
 
         private void UpdateOverlapEntryHelper(EntityPhysics entityPhysics, WorldEntity otherEntity)
         {
-            throw new NotImplementedException();
+            OverlapEntityEntry overlappedEntity = new();
+            if (entityPhysics.OverlappedEntities.TryAdd(otherEntity.Id, overlappedEntity))
+                RegisterEntityForPendingPhysicsResolve(entityPhysics.Entity);
+            overlappedEntity.Frame = _physicsFrames;
         }
 
         private void ApplyRepulsionForces(WorldEntity entity, WorldEntity otherEntity)

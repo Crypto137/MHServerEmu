@@ -4,6 +4,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -56,6 +57,16 @@ namespace MHServerEmu.Games.Entities
                 ConditionEntityCounter = new();
                 MissionEntityTracker();
             }
+        }
+
+        public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        {
+            // TODO trigger
+        }
+
+        public override void OnOverlapEnd(WorldEntity whom)
+        {
+            // TODO trigger
         }
 
         private void MissionEntityTracker()

@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
     }
 
-    public struct OverlapEntityEntry
+    public class OverlapEntityEntry
     {
         public bool Overlapped;
         public int Frame;

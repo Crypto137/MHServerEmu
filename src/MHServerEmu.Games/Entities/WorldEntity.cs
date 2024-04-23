@@ -549,6 +549,8 @@ namespace MHServerEmu.Games.Entities
             return RegionLocation.GetVectorFrom(other.RegionLocation);
         }
 
+        public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
+        public virtual void OnOverlapEnd(WorldEntity whom) { }
     }
 
     [Flags]
