@@ -81,6 +81,18 @@ namespace MHServerEmu.Games.Entities.Physics
             attachedEntities = AttachedEntities.ToList();
             return attachedEntities.Count > 0;
         }
+
+        public void AddRepulsionForce(Vector3 force)
+        {
+            if (Entity == null) return;
+            if (Entity.Locomotor != null)
+            {
+                if (Vector3.IsFinite(force) == false) return;
+                _repulsionForces[GetCurrentForceWriteIndex()] += force;
+                Entity.RegisterForPendingPhysicsResolve();
+            }
+        }
+
     }
 
     public struct OverlapEntityEntry

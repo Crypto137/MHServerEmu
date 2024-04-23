@@ -131,6 +131,17 @@ namespace MHServerEmu.Games.Entities
             if (area != null && area.HasKeyword(keywordProto)) return true;
             return false;
         }
+
+        public Vector3 GetVectorFrom(RegionLocation other)
+        {
+            if (ValidateSameRegion(other) == false) return Vector3.Zero;
+            return Position - other.Position;
+        }
+
+        private bool ValidateSameRegion(RegionLocation other)
+        {
+            return RegionId == other.RegionId && RegionId != 0;
+        }
     }
 
     public class RegionLocationSafe

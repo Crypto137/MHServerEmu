@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -545,7 +546,41 @@ namespace MHServerEmu.Games.Entities.Physics
 
         private void ApplyRepulsionForces(WorldEntity entity, WorldEntity otherEntity)
         {
-            throw new NotImplementedException();
+            if (entity == null || otherEntity == null) return;
+            bool hasSphereCollide = entity.EntityCollideBounds.Geometry == GeometryType.Sphere || entity.EntityCollideBounds.Geometry == GeometryType.Capsule;
+            bool hasOtherSphereCollide = otherEntity.EntityCollideBounds.Geometry == GeometryType.Sphere || otherEntity.EntityCollideBounds.Geometry == GeometryType.Capsule;
+            if (!hasSphereCollide || !hasOtherSphereCollide) return;
+
+            Vector3 vector = entity.GetVectorFrom(otherEntity).To2D();
+
+            float distance;
+            if (Vector3.IsNearZero(vector))
+            {
+                Game game = entity.Game;
+                if (game == null) return;
+                vector = Vector3.RandomUnitVector2D(game.Random);
+                distance = 0.0f;
+            }
+            else
+            {
+                distance = Vector3.LengthTest(vector);
+                if (distance > Segment.Epsilon)
+                    vector /= distance;
+                else
+                    vector = Vector3.XAxis;
+            }
+
+            if (!Vector3.IsFinite(vector) || !float.IsFinite(distance))  return;
+
+            float collisionImpact = entity.EntityCollideBounds.Radius + otherEntity.EntityCollideBounds.Radius - distance;
+            if (collisionImpact < 0.001f) return;
+
+            Vector3 repulseForce = vector * collisionImpact;
+
+            if (entity.CanBeRepulsed && otherEntity.CanRepulseOthers)
+                entity.Physics.AddRepulsionForce(repulseForce);
+            if (otherEntity.CanBeRepulsed && entity.CanRepulseOthers)
+                otherEntity.Physics.AddRepulsionForce(-repulseForce);
         }
 
         private bool CacheCollisionPair(WorldEntity entity, WorldEntity otherEntity)

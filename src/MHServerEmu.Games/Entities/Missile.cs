@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Entities
     public class Missile : Agent
     {
         public override Bounds EntityCollideBounds { get; set; }
+        public override bool CanRepulseOthers => false;
         // new
         public Missile(Game game) : base(game) { }
 

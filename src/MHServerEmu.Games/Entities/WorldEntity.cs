@@ -57,7 +57,10 @@ namespace MHServerEmu.Games.Entities
         public bool HasNavigationInfluence { get; private set; }
         public NavigationInfluence NaviInfluence { get; private set; }
         public virtual bool IsMovementAuthoritative { get => true; }
-
+        public virtual bool CanBeRepulsed { get => Locomotor != null && Locomotor.IsMoving && !IsExecutingPower; }
+        public virtual bool CanRepulseOthers { get => true; }
+        public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
+        public PrototypeId ActivePowerRef { get; private set; }
 
         // New
         public WorldEntity(Game game): base(game) 
@@ -539,6 +542,13 @@ namespace MHServerEmu.Games.Entities
             PhysicsManager physMan = Game?.EntityManager?.PhysicsManager;
             physMan?.RegisterEntityForPendingPhysicsResolve(this);
         }
+
+        public Vector3 GetVectorFrom(WorldEntity other)
+        {
+            if (other == null) return Vector3.Zero;
+            return RegionLocation.GetVectorFrom(other.RegionLocation);
+        }
+
     }
 
     [Flags]
