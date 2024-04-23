@@ -501,7 +501,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                             if (entryProto.RestrictToRegionsIncludeChildren) 
                             {
-                                foreach (var regionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionPrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+                                foreach (var regionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                                 {                                        
                                     if (GameDatabase.DataDirectory.PrototypeIsAPrototype(regionRef, restrictRef))  
                                         regions.Add(regionRef);

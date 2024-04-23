@@ -53,9 +53,9 @@ namespace MHServerEmu.Games.Powers
             // Stolen powers for Rogue
             if (avatarPrototype.DataRef == (PrototypeId)AvatarPrototypeId.Rogue)
             {
-                foreach (PrototypeId stealablePowerInfoId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(StealablePowerInfoPrototype), PrototypeIterateFlags.NoAbstract))
+                foreach (PrototypeId stealablePowerInfoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<StealablePowerInfoPrototype>(PrototypeIterateFlags.NoAbstract))
                 {
-                    var stealablePowerInfo = stealablePowerInfoId.As<StealablePowerInfoPrototype>();
+                    var stealablePowerInfo = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
                     powersToUnlockList.Add(stealablePowerInfo.Power);
                 }
             }

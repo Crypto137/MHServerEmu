@@ -9,7 +9,9 @@ namespace MHServerEmu.Games.GameData
         //Flag0         = 1 << 0,   // Does nothing
         NoAbstract      = 1 << 1,
         ApprovedOnly    = 1 << 2,
-        WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
+        WithEditorOnly  = 1 << 3,   // Records that have EditorOnly set are skipped if this is not set
+
+        NoAbstractApprovedOnly = NoAbstract | ApprovedOnly
     }
 
     /// <summary>

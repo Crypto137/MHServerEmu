@@ -141,16 +141,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootCooldownPrototype : Prototype
     {
         public PrototypeId Channel { get; protected set; }
+
+        [DoNotCopy]
+        public virtual PrototypeId CooldownRef { get => PrototypeId.Invalid; }
     }
 
     public class LootCooldownEntityPrototype : LootCooldownPrototype
     {
         public PrototypeId Entity { get; protected set; }
+
+        [DoNotCopy]
+        public override PrototypeId CooldownRef { get => Entity; }
     }
 
     public class LootCooldownVendorTypePrototype : LootCooldownPrototype
     {
         public PrototypeId VendorType { get; protected set; }
+
+        [DoNotCopy]
+        public override PrototypeId CooldownRef { get => VendorType; }
     }
 
     public class LootCooldownHierarchyPrototype : Prototype

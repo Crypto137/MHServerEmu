@@ -127,6 +127,19 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
+        {
+            // NOTE: In the client this is functionality of the PropertyCollection::ConstIterator
+            foreach (var kvp in this)
+            {
+                if (kvp.Key.Enum == propertyEnum)
+                    yield return kvp;
+            }
+        }
+
+        /// <summary>
         /// Sets the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// </summary>
         /// <remarks>

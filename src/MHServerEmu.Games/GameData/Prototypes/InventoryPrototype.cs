@@ -67,9 +67,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SoftCapacityDefaultSlotsConsole { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
 
+        /// <summary>
+        /// Returns <see langword="true"/> is this <see cref="InventoryPrototype"/> is for a player stash inventory.
+        /// </summary>
         public bool IsPlayerStashInventory()
         {
             return Category == InventoryCategory.PlayerStashAvatarSpecific || Category == InventoryCategory.PlayerStashGeneral;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> is entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this prototype.
+        /// </summary>
+        public bool AllowEntity(EntityPrototype entityPrototype)
+        {
+            if (EntityTypeFilter == null || EntityTypeFilter.Length == 0) return false;
+
+            foreach (PrototypeId entityTypeRef in EntityTypeFilter)
+            {
+                BlueprintId entityTypeBlueprintRef = GameDatabase.DataDirectory.GetPrototypeBlueprintDataRef(entityTypeRef);
+                if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(entityPrototype.DataRef, entityTypeBlueprintRef))
+                    return true;
+            }
+
+            return false;
         }
     }
 

@@ -199,19 +199,18 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Unlock all stealable powers for Rogue
             if (prototypeId == (PrototypeId)6514650100102861856)
             {
-                foreach (PrototypeId stealablePowerInfoId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(StealablePowerInfoPrototype), PrototypeIterateFlags.NoAbstract))
+                foreach (PrototypeId stealablePowerInfoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<StealablePowerInfoPrototype>(PrototypeIterateFlags.NoAbstract))
                 {
-                    var stealablePowerInfo = stealablePowerInfoId.As<StealablePowerInfoPrototype>();
+                    var stealablePowerInfo = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
                     Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
                 }
             }
 
             // We need 10 synergies active to remove the in-game popup
             int synergyCount = 0;
-            foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                Properties[PropertyEnum.AvatarSynergySelected, avatarId] = true;
+                Properties[PropertyEnum.AvatarSynergySelected, avatarRef] = true;
                 if (++synergyCount >= 10) break;
             }
 

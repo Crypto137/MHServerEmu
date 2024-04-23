@@ -325,44 +325,30 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototypeRef] = 60;
             }
 
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
                 Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
             }
 
-            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(WaypointPrototype),
-                PrototypeIterateFlags.NoAbstract))
-            {
+            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.Waypoint, waypointRef] = true;
-            }
 
-            foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(VendorTypePrototype),
-                PrototypeIterateFlags.NoAbstract))
-            {
+            foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
-            }
 
-            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(UISystemLockPrototype),
-                PrototypeIterateFlags.NoAbstract))
-            {
+            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<UISystemLockPrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
-            }
 
-            foreach (PrototypeId tutorialRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(HUDTutorialPrototype),
-                PrototypeIterateFlags.NoAbstract))
-            {
+            foreach (PrototypeId tutorialRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<HUDTutorialPrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.TutorialHasSeenTip, tutorialRef] = true;
-            }
 
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
             _missionManager.SetAvatar((PrototypeId)account.CurrentAvatar.RawPrototype);
-            foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (_missionManager.ShouldCreateMission(missionPrototype))

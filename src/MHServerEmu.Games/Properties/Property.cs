@@ -114,6 +114,21 @@ namespace MHServerEmu.Games.Properties
             FromParam(propertyId.Enum, paramIndex, paramValue, out prototypeId);
         }
 
+        public static void FromParam(PropertyId propertyId, int paramIndex, out int value)
+        {
+            value = (int)propertyId.GetParam(paramIndex);
+        }
+
+        public static void FromParam(PropertyId propertyId, int paramIndex, out AssetId assetId)
+        {
+            FromParam(propertyId.Enum, paramIndex, propertyId.GetParam(paramIndex), out assetId);
+        }
+
+        public static void FromParam(PropertyId propertyId, int paramIndex, out PrototypeId prototypeId)
+        {
+            FromParam(propertyId.Enum, paramIndex, propertyId.GetParam(paramIndex), out prototypeId);
+        }
+
         public static PropertyParam ToParam(AssetId paramValue)
         {
             return (PropertyParam)GameDatabase.DataDirectory.AssetDirectory.GetEnumValue(paramValue);
