@@ -116,6 +116,7 @@ namespace MHServerEmu.Core.VectorMath
         public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // TODO check IsNearZero
+        public static float LengthTest(Vector3 v) => IsNearZero(v) ? 0.0f : Length(v);
         public static float Length2D(Vector3 v)
         {
             var v2d = v.To2D();
@@ -266,6 +267,7 @@ namespace MHServerEmu.Core.VectorMath
 
     public enum Axis
     {
+        Invalid = -1,
         X = 0,
         Y = 1,
         Z = 2,
