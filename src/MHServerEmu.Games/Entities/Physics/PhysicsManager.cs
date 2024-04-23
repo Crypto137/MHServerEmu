@@ -1,10 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
 
@@ -351,10 +347,8 @@ namespace MHServerEmu.Games.Entities.Physics
                                 outCollision = entityCollision;
                         }
                     }
-                }
-           
+                }           
         }
-
 
         private bool GetDesiredDestination(WorldEntity entity, Vector3 vector, bool allowSweep, ref Vector3 resultPosition, out bool clipped)
         {
@@ -408,15 +402,10 @@ namespace MHServerEmu.Games.Entities.Physics
             return true;
         }
 
-
-        private void NotifyEntityCollision(WorldEntity who, WorldEntity other, Vector3 collidedDestination)
-        {
-            throw new NotImplementedException();
-        }
-
         private void HandleEntityCollisions(List<EntityCollision> entityCollisionList, WorldEntity entity, bool applyRepulsionForces)
         {
-            throw new NotImplementedException();
+            foreach (var collisionRecord in entityCollisionList)
+                HandlePossibleEntityCollision(entity, collisionRecord, applyRepulsionForces, false);
         }
 
         private void CheckForExistingCollisions(WorldEntity entity, bool applyRepulsionForces)
@@ -529,16 +518,19 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
+        private static void NotifyEntityCollision(WorldEntity who, WorldEntity whom, Vector3 whoPos)
+        {
+            who?.OnCollide(whom, whoPos);
+        }
+
         private static void NotifyEntityOverlapBegin(WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
-            if (who == null) return;
-            who.OnOverlapBegin(whom, whoPos, whomPos);
+            who?.OnOverlapBegin(whom, whoPos, whomPos);
         }
 
         private static void NotifyEntityOverlapEnd(WorldEntity who, WorldEntity whom)
         {
-            if (who == null) return;
-            who.OnOverlapEnd(whom);
+            who?.OnOverlapEnd(whom);
         }
 
         private void UpdateOverlapEntryHelper(EntityPhysics entityPhysics, WorldEntity otherEntity)
