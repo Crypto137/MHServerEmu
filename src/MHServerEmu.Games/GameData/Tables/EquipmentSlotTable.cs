@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 
@@ -8,10 +9,15 @@ namespace MHServerEmu.Games.GameData.Tables
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<(PrototypeId, PrototypeId), EquipmentInvUISlot> _equipmentSlotDict = new();
+        private readonly Dictionary<(PrototypeId, PrototypeId), EquipmentInvUISlot> _equipmentSlotDict;
 
         public EquipmentSlotTable()
         {
+            // Caching equipment slot table requires preloading all item prototypes, which is too slow
+            var config = ConfigManager.Instance.GetConfig<GameDataConfig>();
+            if (config.UseEquipmentSlotTableCache == false) return;
+
+            _equipmentSlotDict = new();
             foreach (var avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var avatarProto = avatarRef.As<AvatarPrototype>();
@@ -28,6 +34,8 @@ namespace MHServerEmu.Games.GameData.Tables
 
         public EquipmentInvUISlot EquipmentUISlotForAvatar(ItemPrototype itemProto, AvatarPrototype avatarProto)
         {
+            if (_equipmentSlotDict == null) return FindEquipmentUISlotForAvatar(itemProto, avatarProto);
+
             if (itemProto == null) return Logger.WarnReturn(EquipmentInvUISlot.Invalid, "EquipmentUISlotForAvatar(): itemProto == null");
             if (avatarProto == null) return Logger.WarnReturn(EquipmentInvUISlot.Invalid, "EquipmentUISlotForAvatar(): avatarProto == null");
 
