@@ -3,6 +3,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Common;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -296,9 +297,9 @@ namespace MHServerEmu.Games.Entities
             switch (Geometry)
             {
                 case GeometryType.OBB:
-                    return Vector3.Length(new Vector3(_params.OBBHalfWidth, _params.OBBHalfLength, 0.0f));
+                    return Vector3.LengthTest(new (_params.OBBHalfWidth, _params.OBBHalfLength, 0.0f));
                 case GeometryType.AABB:
-                    return Vector3.Length(new Vector3(_params.AABBOrientedWidth, _params.AABBOrientedLength, 0.0f));
+                    return Vector3.LengthTest(new (_params.AABBOrientedWidth, _params.AABBOrientedLength, 0.0f));
                 case GeometryType.Capsule:
                     return _params.CapsuleRadius;
                 case GeometryType.Sphere:
@@ -314,6 +315,38 @@ namespace MHServerEmu.Games.Entities
                     max = Math.Max(
                         Vector3.DistanceSquared2D(wedgeVertices[1], Center),
                         Vector3.DistanceSquared2D(wedgeVertices[2], Center));
+                    return MathHelper.SquareRoot(max);
+                default:
+                    return 0.0f;
+            }
+        }
+
+        private float GetSphereRadius()
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB:
+                    return Vector3.LengthTest(new(_params.OBBHalfWidth, _params.OBBHalfLength, _params.OBBHalfHeight));
+                case GeometryType.AABB:
+                    return Vector3.LengthTest(new(_params.AABBOrientedWidth, _params.AABBOrientedLength, _params.AABBOrientedHeight));
+                case GeometryType.Capsule:
+                    return _params.CapsuleHalfHeight + _params.CapsuleRadius;
+                case GeometryType.Sphere:
+                    return _params.SphereRadius;
+                case GeometryType.Triangle:
+                    float posZ = Center.Z + _params.TriangleHalfHeight;
+                    Triangle triangle = ToTriangle2D();
+                    triangle.Points[0].Z = triangle.Points[1].Z = triangle.Points[2].Z = posZ;
+                    return MathF.Max( MathF.Max(
+                        Vector3.Length(triangle[0] - Center), 
+                        Vector3.Length(triangle[1] - Center)),
+                        Vector3.Length(triangle[2] - Center)); 
+                case GeometryType.Wedge:
+                    Vector3[] wedgeVertices = GetWedgeVertices();
+                    Vector3 heightPoint = new(0.0f, 0.0f, _params.WedgeHalfHeight);
+                    float max = Math.Max(
+                        Vector3.DistanceSquared2D(wedgeVertices[1] + heightPoint, Center),
+                        Vector3.DistanceSquared2D(wedgeVertices[2] + heightPoint, Center));
                     return MathHelper.SquareRoot(max);
                 default:
                     return 0.0f;
@@ -614,9 +647,146 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        internal bool Sweep(Bounds otherBounds, Vector3 zero, Vector3 distance, ref float time, ref Vector3 collisionNormal)
+        public bool Sweep(Bounds other, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, ref Vector3 resultNormal)
         {
-            throw new NotImplementedException();
+            if (Geometry == GeometryType.Sphere && other.Geometry == GeometryType.Sphere)
+            {
+                Sphere sphere = ToSphere();
+                Sphere otherSphere = other.ToSphere();
+                bool result = sphere.Sweep(otherSphere, otherVelocity, velocity, ref resultTime);
+                if (result && resultNormal != null)
+                {
+                    Vector3 position = Center + velocity * resultTime;
+                    Vector3 otherPosition = other.Center + otherVelocity * resultTime;
+                    resultNormal = Vector3.SafeNormalize2D(position - otherPosition, Vector3.ZAxis);
+                }
+                return result;
+            }
+            else if (Geometry == GeometryType.OBB && Vector3.IsNearZero(velocity))
+                return SweepVsStationaryOBB(other, otherVelocity, ToObb(), ref resultTime, resultNormal);
+            else if (other.Geometry == GeometryType.OBB && Vector3.IsNearZero(otherVelocity))
+                return SweepVsStationaryOBB(this, velocity, other.ToObb(), ref resultTime, resultNormal);
+            else if (Geometry == GeometryType.AABB && Vector3.IsNearZero(velocity))
+                return SweepVsStationaryAABB(other, otherVelocity, ToAabb(), ref resultTime, resultNormal);
+            else if (other.Geometry == GeometryType.AABB && Vector3.IsNearZero(otherVelocity))
+                return SweepVsStationaryAABB(this, velocity, other.ToAabb(), ref resultTime, resultNormal);
+            else if (Geometry == GeometryType.Triangle || other.Geometry == GeometryType.Triangle ||
+                     Geometry == GeometryType.Wedge || other.Geometry == GeometryType.Wedge)
+            {
+                Bounds bounds = new(this);
+                bounds.Center += velocity;
+                Bounds otherBounds = new(other);
+                otherBounds.Center += otherVelocity;
+
+                if (bounds.Intersects(otherBounds))
+                {
+                    resultTime = 1.0f;
+                    if (resultNormal != null) resultNormal = Vector3.ZAxis;
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else
+            {
+                bool result = SweepAsCylinders(this, other, velocity, otherVelocity, ref resultTime);
+                if (result && resultNormal != null)
+                {
+                    Vector3 position = Center + velocity * resultTime;
+                    Vector3 otherPosition = other.Center + otherVelocity * resultTime;
+                    resultNormal = Vector3.SafeNormalize2D(position - otherPosition, Vector3.ZAxis);
+                }
+                return result;
+            }
+        }
+
+        private static bool SweepAsCylinders(Bounds bounds, Bounds other, Vector3 velocity, Vector3 otherVelocity, ref float resultTime)
+        {
+            Sphere sphere = new (bounds.Center, bounds.Radius);
+            Sphere otherSphere = new (other.Center, other.Radius);
+            float time = 0.0f;
+            if (sphere.Sweep(otherSphere, otherVelocity, velocity, ref time, Axis.Z))
+            {
+                if (bounds.Geometry == GeometryType.Triangle || other.Geometry == GeometryType.Triangle) return true;
+                Vector3 center = bounds.Center + velocity * time;
+                Vector3 otherCenter = other.Center + otherVelocity * time;
+                Range<float> rangeHeight = new (center.Z - bounds.HalfHeight, center.Z + bounds.HalfHeight);
+                Range<float> otherRangeHeight = new (otherCenter.Z - other.HalfHeight, otherCenter.Z + other.HalfHeight);
+                if (rangeHeight.Intersects(otherRangeHeight))
+                {
+                    resultTime = time;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool SweepVsStationaryAABB(Bounds bounds, Vector3 velocity, Aabb aabb, ref float resultTime, Vector3 resultNormal)
+        {
+            switch (bounds.Geometry)
+            {
+                case GeometryType.Capsule:
+                    {
+                        Cylinder2 cylinder2 = new (bounds.Center, bounds._params.CapsuleHalfHeight, bounds._params.CapsuleRadius);
+                        return cylinder2.Sweep(velocity, aabb, ref resultTime, ref resultNormal);
+                    }
+                case GeometryType.Sphere:
+                    {
+                        Cylinder2 cylinder2 = new (bounds.Center, bounds._params.SphereRadius, bounds._params.SphereRadius);
+                        return cylinder2.Sweep(velocity, aabb, ref resultTime, ref resultNormal);
+                    }
+                case GeometryType.Triangle:
+                    {
+                        if (resultNormal != null) resultNormal = Vector3.ZAxis;
+                        Sphere sphere = new (bounds.Center, bounds.GetSphereRadius());
+                        return sphere.Sweep(aabb, velocity, ref resultTime);
+                    }
+                default:
+                    {
+                        Logger.Warn($"SweepVsStationaryAABB: Unsupported bounds geometry type: {bounds.Geometry}");
+                        return false;
+                    }
+            }
+        }
+
+        private static bool SweepVsStationaryOBB(Bounds bounds, Vector3 velocity, Obb obb, ref float resultTime, Vector3 resultNormal)
+        {
+            Aabb aabb = new (obb.Center - obb.Extents, obb.Center + obb.Extents);
+
+            switch (bounds.Geometry)
+            {
+                case GeometryType.Capsule:
+                    {
+                        Vector3 oobCenter = obb.TransformPoint(bounds.Center);
+                        Vector3 oobVelocity = obb.TransformVector(velocity);
+                        Cylinder2 cylinder2 = new (oobCenter, bounds._params.CapsuleHalfHeight, bounds._params.CapsuleRadius);
+                        bool result = cylinder2.Sweep(oobVelocity, aabb, ref resultTime, ref resultNormal);
+                        if (result && resultNormal != null)
+                            resultNormal = obb.RotationMatrix * resultNormal;
+                        return result;
+                    }
+                case GeometryType.Sphere:
+                    {
+                        Vector3 oobCenter = obb.TransformPoint(bounds.Center);
+                        Vector3 oobVelocity = obb.TransformVector(velocity);
+                        Cylinder2 cylinder2 = new (oobCenter, bounds._params.SphereRadius, bounds._params.SphereRadius);
+                        bool result = cylinder2.Sweep(oobVelocity, aabb, ref resultTime, ref resultNormal);
+                        if (result && resultNormal != null)
+                            resultNormal = obb.RotationMatrix * resultNormal;
+                        return result;
+                    }
+                case GeometryType.Triangle:
+                    {
+                        if (resultNormal != null) resultNormal = Vector3.ZAxis;
+                        Vector3 oobCenter = obb.TransformPoint(bounds.Center);
+                        Vector3 oobVelocity = obb.TransformVector(velocity);
+                        Sphere sphere = new (oobCenter, bounds.GetSphereRadius());
+                        return sphere.Sweep(aabb, oobVelocity, ref resultTime);
+                    }
+                default:
+                    Logger.Warn($"SweepVsStationaryOBB: Unsupported bounds geometry type: {bounds.Geometry}");
+                    return false;
+            }
         }
     }
 }
