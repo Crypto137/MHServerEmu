@@ -16,7 +16,11 @@ namespace MHServerEmu.Core.Config
         internal void Initialize(IniFile configFile)
         {
             Type type = GetType();                                          // Use reflection to populate our config
-            string section = type.Name.Replace("Config", string.Empty);     // Remove the Config suffix from the config class
+
+            // Remove the Config suffix from the config class
+            string section = type.Name;
+            if (section.EndsWith("Config", StringComparison.OrdinalIgnoreCase))
+                section = section.Substring(0, section.Length - 6);  
 
             // Read and set values for each property from the ini file
             foreach (var property in type.GetProperties())
