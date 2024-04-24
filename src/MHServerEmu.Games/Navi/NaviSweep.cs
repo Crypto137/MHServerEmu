@@ -688,7 +688,7 @@ namespace MHServerEmu.Games.Navi
                 cellMin.Y + (y0 + 0.5f) / mapY * cellLength,
                 0.0f);
 
-            Cell pointCell = cell.GetRegion().GetCellAtPosition(point);
+            Cell pointCell = cell.Region.GetCellAtPosition(point);
             if (pointCell != null)
             {
                 Vector3 position = RegionLocation.ProjectToFloor(pointCell, point);

@@ -87,7 +87,7 @@ namespace MHServerEmu.Games.Entities
             }
             else
             {
-                var naviMesh = cell.GetRegion().NaviMesh;
+                var naviMesh = cell.Region.NaviMesh;
                 if (naviMesh.IsMeshValid)
                     return naviMesh.ProjectToMesh(regionPos);
                 else

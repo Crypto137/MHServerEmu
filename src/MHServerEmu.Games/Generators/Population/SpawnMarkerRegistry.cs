@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Generators.Population
                 {
                     var filterRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.FilterGuid);
 
-                    if (cell.GetRegion().CheckMarkerFilter(filterRef))
+                    if (cell.Region.CheckMarkerFilter(filterRef))
                     {
                         if (entityMarker.EntityGuid == 0) continue;
                         var markerRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);

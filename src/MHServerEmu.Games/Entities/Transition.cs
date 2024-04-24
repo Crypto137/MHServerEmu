@@ -248,7 +248,7 @@ namespace MHServerEmu.Games.Entities
         public static Destination FindDestination(Cell cell, TransitionPrototype transitionProto)
         {
             PrototypeId area = cell.Area.PrototypeDataRef;
-            Region region = cell.GetRegion();
+            Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
             ConnectionNodeList targets = region.Targets;
             TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, entityGuid);

@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Generators.Population
         public bool SpawnByMarker(Cell cell)
         {
             if (Count == 0) return false;
-            SpawnTarget spawnTarget = new(cell.GetRegion())
+            SpawnTarget spawnTarget = new(cell.Region)
             {
                 Type = SpawnTargetType.Marker,
                 Cell = cell
@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public bool SpawnInCell(Cell cell)
         {
-            SpawnTarget spawnTarget = new(cell.GetRegion())
+            SpawnTarget spawnTarget = new(cell.Region)
             {
                 Type = SpawnTargetType.RegionBounds,
                 RegionBounds = cell.RegionBounds

@@ -41,6 +41,7 @@ namespace MHServerEmu.Games.Regions
         public int Seed { get; private set; }
         public PrototypeId PopulationThemeOverrideRef { get; private set; }
         public Aabb RegionBounds { get; private set; }
+        public Region Region { get => Area?.Region; }
         public Area Area { get; private set; }
         public Game Game { get => Area?.Game; }
         public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); } // TODO: Optimize
@@ -53,7 +54,7 @@ namespace MHServerEmu.Games.Regions
         public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
         public PopulationArea PopulationArea { get => Area.PopulationArea ; }
-        public PopulationManager PopulationManager { get => GetRegion().PopulationManager; }
+        public PopulationManager PopulationManager { get => Region.PopulationManager; }
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Vector3 AreaOffset { get; private set; }
         public Vector3 AreaPosition { get; private set; }
@@ -107,7 +108,7 @@ namespace MHServerEmu.Games.Regions
             if (CellProto == null) return;
 
             if (SpatialPartitionLocation.IsValid())
-                GetRegion().PartitionCell(this, Region.PartitionContext.Remove);
+                Region.PartitionCell(this, Region.PartitionContext.Remove);
 
             AreaPosition = positionInArea;
             AreaOrientation = orientationInArea;
@@ -121,12 +122,12 @@ namespace MHServerEmu.Games.Regions
             RegionBounds.RoundToNearestInteger();
 
             if (!SpatialPartitionLocation.IsValid())
-                GetRegion().PartitionCell(this, Region.PartitionContext.Insert);
+                Region.PartitionCell(this, Region.PartitionContext.Insert);
         }
 
         public void AddNavigationDataToRegion()
         {
-             Region region = GetRegion();
+             Region region = Region;
              if (region == null) return;
              NaviMesh naviMesh = region.NaviMesh;
              if (CellProto == null) return;
@@ -227,7 +228,7 @@ namespace MHServerEmu.Games.Regions
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
             if (RegionBounds.Intersects(entityPosition) == false) entityPosition.RoundToNearestInteger();
 
-            var region = GetRegion();
+            var region = Region;
             var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword.As<KeywordPrototype>();            
             if (region.RegionPrototype.RespawnDestructibles && entityProto.HasKeyword(destructibleKeyword))
             {
@@ -317,15 +318,9 @@ namespace MHServerEmu.Games.Regions
 
         public void Shutdown()
         {
-            Region region = GetRegion();
+            Region region = Region;
             if (region != null && SpatialPartitionLocation.IsValid())
                 region.PartitionCell(this, Region.PartitionContext.Remove);
-        }
-
-        public Region GetRegion()
-        {
-            if (Area == null) return null;
-            return Area.Region;
         }
 
         public bool IntersectsXY(Vector3 position)
@@ -452,7 +447,7 @@ namespace MHServerEmu.Games.Regions
         public void BlackOutZonesRebuild()
         {
             if (PlayableArea == 0.0f) return;
-            var region = GetRegion();
+            var region = Region;
             var naviMesh = region.NaviMesh;
             var zones = region.PopulationManager.IterateBlackOutZoneInVolume(RegionBounds);
             foreach (var zone in zones)
