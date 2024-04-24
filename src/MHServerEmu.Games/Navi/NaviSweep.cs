@@ -490,7 +490,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.Success;
         }
 
-        private bool GridRenderLine2D(Segment line, float mapX, float mapY, GridRenderPredicate predicate)
+        private static bool GridRenderLine2D(Segment line, float mapX, float mapY, GridRenderPredicate predicate)
         {
             float x0 = Math.Clamp(line.Start.X * mapX, 0.0f, mapX - 1);
             float y0 = Math.Clamp(line.Start.Y * mapY, 0.0f, mapY - 1);

@@ -11,14 +11,14 @@ namespace MHServerEmu.Games.Entities.Physics
         public int CurrentForceReadIndex => _currentForceReadWriteState ? 1 : 0;
         public int CurrentForceWriteIndex => _currentForceReadWriteState ? 0 : 1;
 
-        private Game _game { get; }
-        private List<ForceSystem> _pendingForceSystems { get; }
-        private List<ForceSystem> _activeForceSystems { get; }
-        private Queue<OverlapEvent> _overlapEvents { get; }
-        private List<ulong> _entitiesPendingResolve { get; }
-        private List<ulong> _entitiesResolving { get; }
-        private int _physicsFrames;
+        private readonly Game _game;
+        private readonly List<ForceSystem> _pendingForceSystems;
+        private readonly List<ForceSystem> _activeForceSystems;
+        private readonly Queue<OverlapEvent> _overlapEvents;
+        private readonly List<ulong> _entitiesPendingResolve;
+        private readonly List<ulong> _entitiesResolving;
         private bool _currentForceReadWriteState;
+        private int _physicsFrames;
 
         public PhysicsManager(Game game)
         {
@@ -256,7 +256,7 @@ namespace MHServerEmu.Games.Entities.Physics
             return moved;
         }
 
-        private bool SweepEntityCollideToDestination(WorldEntity entity, Vector3 desiredDestination, bool sliding, ref Vector3 collidedDestination, List<EntityCollision> entityCollisionList)
+        private static bool SweepEntityCollideToDestination(WorldEntity entity, Vector3 desiredDestination, bool sliding, ref Vector3 collidedDestination, List<EntityCollision> entityCollisionList)
         {
             if (entity == null || entity.Region == null) return false;
 
@@ -311,7 +311,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 return true;
         }
 
-        private void SweepEntityCollideToDestinationHelper(WorldEntity entity, Aabb volume, Vector3 position, Vector3 destination, WorldEntity blockedEntity, out EntityCollision outCollision, List<EntityCollision> entityCollisionList)
+        private static void SweepEntityCollideToDestinationHelper(WorldEntity entity, Aabb volume, Vector3 position, Vector3 destination, WorldEntity blockedEntity, out EntityCollision outCollision, List<EntityCollision> entityCollisionList)
         {
             Bounds bounds = entity.EntityCollideBounds;
             RegionLocation location = entity.RegionLocation;
@@ -350,7 +350,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 }           
         }
 
-        private bool GetDesiredDestination(WorldEntity entity, Vector3 vector, bool allowSweep, ref Vector3 resultPosition, out bool clipped)
+        private static bool GetDesiredDestination(WorldEntity entity, Vector3 vector, bool allowSweep, ref Vector3 resultPosition, out bool clipped)
         {
             RegionLocation location = entity.RegionLocation;
             Vector3 destination = location.Position + vector;
@@ -486,7 +486,7 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
-        private void ResolveOverlapEvent(OverlapEventType type, WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        private static void ResolveOverlapEvent(OverlapEventType type, WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
             if (who == null || whom == null) return;
             if (who.IsInWorld == false || whom.IsInWorld == false) return;
@@ -541,7 +541,7 @@ namespace MHServerEmu.Games.Entities.Physics
             overlappedEntity.Frame = _physicsFrames;
         }
 
-        private void ApplyRepulsionForces(WorldEntity entity, WorldEntity otherEntity)
+        private static void ApplyRepulsionForces(WorldEntity entity, WorldEntity otherEntity)
         {
             if (entity == null || otherEntity == null) return;
             bool hasSphereCollide = entity.EntityCollideBounds.Geometry == GeometryType.Sphere || entity.EntityCollideBounds.Geometry == GeometryType.Capsule;
@@ -580,7 +580,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 otherEntity.Physics.AddRepulsionForce(-repulseForce);
         }
 
-        private bool CacheCollisionPair(WorldEntity entity, WorldEntity otherEntity)
+        private static bool CacheCollisionPair(WorldEntity entity, WorldEntity otherEntity)
         {
             int collisionId = entity.Physics.CollisionId;
             int otherCollisionId = otherEntity.Physics.CollisionId;
@@ -625,7 +625,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
     public class PhysicsContext
     {
-        public List<WorldEntity> AttachedEntities;
+        public List<WorldEntity> AttachedEntities { get; private set; }
 
         public PhysicsContext()
         {
