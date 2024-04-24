@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Entities
     {
         Simulated = 0,
         Locomotion = 1,
-        All,
+        All = 3,
     }
 
     public class EntityInvasiveCollection : InvasiveList<Entity>
@@ -642,6 +642,8 @@ namespace MHServerEmu.Games.Entities
             BossEntryTarget = 6193630514385067431,
         };
 
+        #endregion
+
         private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
         {
             WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
@@ -652,10 +654,8 @@ namespace MHServerEmu.Games.Entities
         public void LocomoteEntities()
         {
             foreach (var entity in LocomotionEntities.Iterate())
-                if (entity is WorldEntity worldEntity) 
+                if (entity is WorldEntity worldEntity)
                     worldEntity?.Locomotor.Locomote();
         }
-
-        #endregion
     }
 }

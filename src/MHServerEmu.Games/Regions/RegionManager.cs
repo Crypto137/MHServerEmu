@@ -107,12 +107,10 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public Region EmptyRegion(RegionPrototypeId prototype)
+        public Region EmptyRegion(RegionPrototypeId prototype) // For test
         {
-            Region region = new(prototype, 1210027349,
-             Array.Empty<byte>(),
-             new(10, DifficultyTier.Normal));
-            region.Bound = Aabb.Zero;
+            Region region = new(Game);
+            region.InitEmpty(prototype, 1210027349);
             return region;
         }
 

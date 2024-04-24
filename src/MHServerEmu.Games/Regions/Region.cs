@@ -98,14 +98,12 @@ namespace MHServerEmu.Games.Regions
         private BitList _collisionBits;
         private List<BitList> _collisionBitList;
 
-        public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, CreateRegionParams createParams) // Old
+        public Region(Game game)
         {
-            Id = IdGenerator.Generate();
-
-            PrototypeId = prototype;
-            RandomSeed = randomSeed;
-            ArchiveData = archiveData;
-            CreateParams = createParams;
+            Game = game;
+            SpawnMarkerRegistry = new(this);
+            Settings = new();
+            PathCache = new();
 
             NaviSystem = new();
             NaviMesh = new(NaviSystem);
@@ -116,15 +114,14 @@ namespace MHServerEmu.Games.Regions
             _collisionIds.Resize(256);
         }
 
-        public Region(Game game)
+        public void InitEmpty(RegionPrototypeId prototype, int seed) // For test
         {
-            Game = game;
-            SpawnMarkerRegistry = new(this);
-            Settings = new();
-            PathCache = new();
-
-            NaviSystem = new();
-            NaviMesh = new(NaviSystem);
+            Id = IdGenerator.Generate();
+            PrototypeId = prototype;
+            RandomSeed = seed;
+            ArchiveData = Array.Empty<byte>();
+            CreateParams = new(10, DifficultyTier.Normal);
+            Bound = Aabb.Zero; 
         }
 
         public bool Initialize(RegionSettings settings)
