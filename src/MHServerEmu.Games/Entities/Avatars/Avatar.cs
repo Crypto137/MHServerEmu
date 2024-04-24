@@ -234,6 +234,28 @@ namespace MHServerEmu.Games.Entities.Avatars
             AbilityKeyMappings = new AbilityKeyMapping[] { abilityKeyMapping };
         }
 
+        public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)
+        {
+            if (getTempPoints)
+            {
+                long pointsSpent = Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
+                if (pointsSpent >= 0) return pointsSpent;
+            }
+
+            return Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
+        }
+
+        public int GetOmegaPointsSpentOnBonus(PrototypeId omegaBonusRef, bool getTempPoints)
+        {
+            if (getTempPoints)
+            {
+                int pointsSpent = Properties[PropertyEnum.OmegaSpecTemp, omegaBonusRef];
+                if (pointsSpent >= 0) return pointsSpent;
+            }
+
+            return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
