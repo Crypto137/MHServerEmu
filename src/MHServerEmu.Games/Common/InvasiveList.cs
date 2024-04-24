@@ -183,4 +183,25 @@ namespace MHServerEmu.Games.Common
         public void Clear() => Next = Prev = default;
     }
 
+    public class InvasiveListNodeCollection<T>
+    {
+        private readonly InvasiveListNode<T>[] _nodes;
+        private int _numLists;
+
+        public InvasiveListNodeCollection(int numLists)
+        {
+            _numLists = numLists;
+            _nodes = new InvasiveListNode<T>[_numLists];
+            for (int i = 0; i < _numLists; i++)
+                _nodes[i] = new();
+        }
+
+        public InvasiveListNode<T> GetInvasiveListNode(int listIndex)
+        {
+            if (listIndex >= 0 && listIndex < _numLists)
+                return _nodes[listIndex];
+            else
+                return null;
+        }
+    }
 }

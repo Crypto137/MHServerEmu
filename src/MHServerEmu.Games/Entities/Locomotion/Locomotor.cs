@@ -204,5 +204,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             GiveupDistanceThreshold = distanceThreshold;
             GiveUpTime = time;
         }
+
+        internal void Locomote()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

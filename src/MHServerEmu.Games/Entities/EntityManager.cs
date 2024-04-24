@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -32,6 +33,19 @@ namespace MHServerEmu.Games.Entities
         public float LocomotorHeightOverride;
     }
 
+    public enum EntityCollection
+    {
+        Simulated = 0,
+        Locomotion = 1,
+        All,
+    }
+
+    public class EntityInvasiveCollection : InvasiveList<Entity>
+    {
+        public EntityInvasiveCollection(EntityCollection collectionType, int maxIterators = 8) : base(maxIterators, (int)collectionType) { }
+        public override InvasiveListNode<Entity> GetInvasiveListNode(Entity element, int listId) => element.GetInvasiveListNode(listId);
+    }
+
     public class EntityManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -44,11 +58,17 @@ namespace MHServerEmu.Games.Entities
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
         public PhysicsManager PhysicsManager { get; set; }
+        public EntityInvasiveCollection AllEntities { get; private set; }
+        public EntityInvasiveCollection SimulatedEntities { get; private set; }
+        public EntityInvasiveCollection LocomotionEntities { get; private set; }
 
         public EntityManager(Game game)
         {            
             _game = game;
             PhysicsManager = new(game);
+            AllEntities = new(EntityCollection.All);
+            SimulatedEntities = new(EntityCollection.Simulated);
+            LocomotionEntities = new(EntityCollection.Locomotion);
         }
 
         public void PhysicsResolveEntities()
@@ -627,6 +647,13 @@ namespace MHServerEmu.Games.Entities
             WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
             if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
             return invisibleId;
+        }
+
+        public void LocomoteEntities()
+        {
+            foreach (var entity in LocomotionEntities.Iterate())
+                if (entity is WorldEntity worldEntity) 
+                    worldEntity?.Locomotor.Locomote();
         }
 
         #endregion

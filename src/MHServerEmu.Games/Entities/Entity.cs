@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -377,6 +378,12 @@ namespace MHServerEmu.Games.Entities
             }
 
             return false;
+        }
+
+        private InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
+        public InvasiveListNode<Entity> GetInvasiveListNode(int listId)
+        {
+            return _entityListNodes.GetInvasiveListNode(listId);
         }
     }
 }

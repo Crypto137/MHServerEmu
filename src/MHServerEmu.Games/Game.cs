@@ -110,7 +110,8 @@ namespace MHServerEmu.Games
                     FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(TickTime); // TODO UpdateFixedTime();
                     // Update event manager
                     EventManager.Update();
-
+                    // Update locomote
+                    EntityManager.LocomoteEntities();
                     // Update physics manager
                     EntityManager.PhysicsResolveEntities();
 
