@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
@@ -109,6 +110,15 @@ namespace MHServerEmu.Core.Collisions
             return ContainmentType.Intersects;
         }
 
+        public ContainmentType ContainsXY(Vector3 point)
+        {
+            if (point.X > Max.X || point.X < Min.X ||
+                point.Y > Max.Y || point.Y < Min.Y)
+                return ContainmentType.Disjoint;
+            else
+                return ContainmentType.Contains;
+        }
+
         public ContainmentType Contains(Aabb2 bounds)
         {
             if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
@@ -150,7 +160,7 @@ namespace MHServerEmu.Core.Collisions
         public float DistanceToPoint2D(Vector3 point)
         {
             float distance = DistanceToPointSq2D(point);
-            return distance > 0.000001f ? MathF.Sqrt(distance) : 0.0f;
+            return distance > Segment.Epsilon ? MathHelper.SquareRoot(distance) : 0.0f;
         }
 
         public void RoundToNearestInteger()
@@ -243,40 +253,41 @@ namespace MHServerEmu.Core.Collisions
 
         public bool IntersectRay(Vector3 point, Vector3 velocity, ref float time, out Vector3 intersectPoint)
         {
-            float tMin = 0.0f;
-            float tMax = float.MaxValue;
-
+            // Real-Time Collision Detection p.180 (IntersectRayAABB)
+            float tMin = 0.0f;              // set to -FLT_MAX to get first hit on line
+            float tMax = float.MaxValue;    // set to max distance ray can travel (for segment)
+            // For all three slabs
             for (int i = 0; i < 3; ++i)
             {
                 if (Math.Abs(velocity[i]) < Segment.Epsilon)
-                {
+                {   // Ray is parallel to slab. No hit if origin not within slab
                     if (point[i] < Min[i] || point[i] > Max[i])
                     {
                         time = 0.0f;
-                        intersectPoint = Vector3.Zero;
+                        intersectPoint = null;
                         return false;
                     }
                 }
                 else
-                {
-                    float dv = 1.0f / velocity[i];
-                    float t1 = (Min[i] - point[i]) * dv;
-                    float t2 = (Max[i] - point[i]) * dv;
-
+                {   // Compute intersection t value of ray with near and far plane of slab
+                    float ood = 1.0f / velocity[i];
+                    float t1 = (Min[i] - point[i]) * ood;
+                    float t2 = (Max[i] - point[i]) * ood;
+                    // Make t1 be intersection with near plane, t2 with far plane
                     if (t1 > t2) (t2, t1) = (t1, t2);
-
+                    // Compute the intersection of slab intersection intervals
                     tMin = Math.Max(tMin, t1);
                     tMax = Math.Min(tMax, t2);
-
+                    // Exit with no collision as soon as slab intersection becomes empty
                     if (tMin > tMax)
                     {
                         time = 0.0f;
-                        intersectPoint = Vector3.Zero;
+                        intersectPoint = null;
                         return false;
                     }
                 }
             }
-
+            // Ray intersects all 3 slabs. Return point (q) and intersection t value (tmin)
             intersectPoint = point + velocity * tMin;
             time = tMin;
 

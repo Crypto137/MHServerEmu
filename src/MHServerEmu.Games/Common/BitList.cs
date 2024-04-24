@@ -21,6 +21,12 @@ namespace MHServerEmu.Games.Common
             _bits[index] = value;
         }
 
+        public void Reset(int index)
+        {
+            Expand(index);
+            _bits[index] = false;
+        }
+
         public void Set(int bitIndex)
         {
             Set(bitIndex, true);
@@ -67,6 +73,12 @@ namespace MHServerEmu.Games.Common
         {
             while (_bits.Count < newSize)
                 _bits.Add(false);
+        }
+
+        public int FirstUnset()
+        {
+            int index = _bits.FindIndex(bit => !bit);
+            return index < Size ? index : -1;
         }
 
         public int Size => _bits.Count;

@@ -29,7 +29,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
         public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
-
+        public override bool IsMovementAuthoritative => false;
+        public override bool CanBeRepulsed => false;
+        public override bool CanRepulseOthers => false;
         // new
         public Avatar(Game game) : base(game) { }
 

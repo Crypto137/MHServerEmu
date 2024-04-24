@@ -395,8 +395,8 @@ namespace MHServerEmu.Games.Network
 
                     var teleportEntity = target.TransitionPrototype;
                     if (teleportEntity == null) return true;
-                    Vector3 targetPos = new(target.RegionLocation.GetPosition());
-                    Orientation targetRot = target.RegionLocation.GetOrientation();
+                    Vector3 targetPos = new(target.RegionLocation.Position);
+                    Orientation targetRot = target.RegionLocation.Orientation;
 
                     teleportEntity.CalcSpawnOffset(targetRot, targetPos);
 
@@ -408,7 +408,7 @@ namespace MHServerEmu.Games.Network
 
                     SendMessage(NetMessageEntityPosition.CreateBuilder()
                         .SetIdEntity(Player.CurrentAvatar.Id)
-                        .SetFlags(64)
+                        .SetFlags((uint)ChangePositionFlags.Teleport)
                         .SetPosition(targetPos.ToNetStructPoint3())
                         .SetOrientation(targetRot.ToNetStructPoint3())
                         .SetCellId(cellid)

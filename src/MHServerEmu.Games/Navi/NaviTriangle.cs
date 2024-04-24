@@ -242,6 +242,19 @@ namespace MHServerEmu.Games.Navi
                 return Segment.SignedDoubleTriangleArea2D(PointCW(0).Pos, PointCW(1).Pos, PointCW(2).Pos) / 2.0f;
             return 0.0f;
         }
+
+        public void OpposedTriangle(NaviPoint point, out NaviTriangle triangle, out NaviEdge edge)
+        {
+            edge = OpposedEdge(point);
+            triangle = edge.OpposedTriangle(this);
+        }
+
+        public bool Contains(Vector3 point)
+        {
+            return Pred.Contains2D(PointCW(0), PointCW(1), PointCW(2), point);
+        }
+
+        public bool TestPathFlags(PathFlags pathFlags) => (PathingFlags & pathFlags) != 0;
     }
 
     public class NaviTriangleState

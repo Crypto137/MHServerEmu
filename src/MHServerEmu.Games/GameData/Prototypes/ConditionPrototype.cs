@@ -172,6 +172,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId IconPathHiRes { get; protected set; }
 
         [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+        [DoNotCopy]
         public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
         [DoNotCopy]
         public ConditionCancelOnFlags CancelOnFlags { get; private set; } = ConditionCancelOnFlags.None;
@@ -181,6 +183,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
+
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             // TODO: stuff
 

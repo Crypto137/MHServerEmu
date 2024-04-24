@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Regions
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
         public static void ClearRegionDict() => _regionDict?.Clear();
-
+        public IEnumerable<Region> AllRegions => _allRegions.Values;
         //----------
         private uint _cellId;
         private uint _areaId;
@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Regions
             if (cell != null && _allCells.ContainsKey(cell.Id) == false)
             {
                 _allCells[cell.Id] = cell;
-                if (cell.Area.Log) Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()} area id={cell.Area.Id}");
+                if (cell.Area.Log) Logger.Trace($"Adding cell {cell} in region {cell.Region} area id={cell.Area.Id}");
                 return true;
             }
             return false;
@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Regions
         public bool RemoveCell(Cell cell)
         {
             if (cell == null) return false;
-            if (cell.Area.Log) Logger.Trace($"Removing cell {cell} from region {cell.GetRegion()}");
+            if (cell.Area.Log) Logger.Trace($"Removing cell {cell} from region {cell.Region}");
 
             if (_allCells.ContainsKey(cell.Id))
             {
@@ -107,12 +107,10 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public Region EmptyRegion(RegionPrototypeId prototype)
+        public Region EmptyRegion(RegionPrototypeId prototype) // For test
         {
-            Region region = new(prototype, 1210027349,
-             Array.Empty<byte>(),
-             new(10, DifficultyTier.Normal));
-            region.Bound = Aabb.Zero;
+            Region region = new(Game);
+            region.InitEmpty(prototype, 1210027349);
             return region;
         }
 
@@ -236,7 +234,7 @@ namespace MHServerEmu.Games.Regions
             List<Region> toShutdown = new();
             lock (_managerLock)
             {
-                foreach (Region region in _allRegions.Values)
+                foreach (Region region in AllRegions)
                 {
                     DateTime visitedTime;
                     lock (region.Lock)

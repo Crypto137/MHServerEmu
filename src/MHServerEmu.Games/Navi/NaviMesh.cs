@@ -1,7 +1,9 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -23,6 +25,7 @@ namespace MHServerEmu.Games.Navi
             public NaviPatchPrototype Patch;
         }
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly NaviSystem _navi;
 
         public Aabb Bounds { get; private set; }
@@ -244,7 +247,7 @@ namespace MHServerEmu.Games.Navi
             triangle.ContentFlagCounts.Set(state.FlagCounts);
             triangle.PathingFlags = pathFlags;
             triangle.SetFlag(NaviTriangleFlags.Markup);
-            //int t = 0; int e = 0;
+
             while (stateStack.Count > 0)
             {
                 state = stateStack.Pop();
@@ -463,6 +466,138 @@ namespace MHServerEmu.Games.Navi
                 }
             }
             return spawnableArea;
+        }
+
+        public bool AddInfluence(Vector3 position, float radius, NavigationInfluence outInfluence)
+        {
+            NaviPoint point = NaviCdt.AddPointProjZ(position, false);
+            if (point != null)
+            {
+                if (point.InfluenceRef == sbyte.MaxValue) return false;
+                return AddInfluenceHelper(point, radius, outInfluence);
+            }
+            return true;
+        }
+
+        private bool AddInfluenceHelper(NaviPoint point, float radius, NavigationInfluence outInfluence)
+        {
+            if (outInfluence.Point != null)
+            {
+                NaviTriangle foundT = NaviCdt.FindTriangleContainingVertex(point);
+                if (foundT != null && NaviUtil.IsPointConstraint(point, foundT) == false)
+                    {
+                        if (++point.InfluenceRef == 1) point.InfluenceRadius = radius;
+                        outInfluence.Point = point;
+                        outInfluence.Triangle = foundT;
+                    }
+            }
+            return true;
+        }
+
+        public bool UpdateInfluence(NavigationInfluence inoutInfluence, Vector3 position, float radius)
+        {
+            if (inoutInfluence.Point == null || inoutInfluence.Point.TestFlag(NaviPointFlags.Attached) == false) return false;
+            if (inoutInfluence.Point.InfluenceRef <= 0)
+            {
+                NaviSystem.Logger.Warn($"UpdateInfluence failed POINT={inoutInfluence.Point}");
+                return false;
+            }
+
+            NaviPoint point = NaviCdt.FindCachedPointAtPoint(position);
+            if (point != null)
+            {
+                if (point.TestFlag(NaviPointFlags.Attached))
+                {
+                    if (point != inoutInfluence.Point)
+                    {
+                        if (RemoveInfluence(inoutInfluence) == false || AddInfluenceHelper(point, radius, inoutInfluence) == false)
+                            return false;
+                    }
+                    else
+                        point.InfluenceRadius = radius;
+                }
+                else
+                {
+                    if (RemoveInfluence(inoutInfluence) == false || AddInfluence(position, radius, inoutInfluence) == false)
+                        return false;
+                }
+            }
+            else
+            {
+                NaviTriangle triangle = inoutInfluence.Triangle;
+                if (triangle.TestFlag(NaviTriangleFlags.Attached) == false)
+                    triangle = NaviCdt.FindTriangleContainingVertex(inoutInfluence.Point);
+
+                if (triangle == null || !triangle.Contains(inoutInfluence.Point)) return false;
+                inoutInfluence.Triangle = triangle;
+
+                if (inoutInfluence.Point.InfluenceRef == 1 &&
+                    NaviCdt.AttemptCheapVertexPositionUpdate(inoutInfluence.Triangle, inoutInfluence.Point, position))
+                {
+                    return true;
+                }
+                else
+                {
+                    if (RemoveInfluence(inoutInfluence) == false || AddInfluence(position, radius, inoutInfluence) == false)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool RemoveInfluence(NavigationInfluence inoutInfluence)
+        {
+            if (inoutInfluence.Point != null)
+            {
+                NaviPoint influencePoint = inoutInfluence.Point;
+                NaviTriangle influenceTriangle = inoutInfluence.Triangle;
+
+                inoutInfluence.Point = null;
+                inoutInfluence.Triangle = null;
+
+                if (influencePoint.TestFlag(NaviPointFlags.Attached) == false) return false;
+                if (influencePoint.InfluenceRef <= 0) 
+                {
+                    NaviSystem.Logger.Warn($"RemoveInfluence failed POINT={influencePoint}");
+                    return false;
+                }
+
+                if (--influencePoint.InfluenceRef == 0)
+                {
+                    NaviTriangle triangle = influenceTriangle;
+                    if (triangle.TestFlag(NaviTriangleFlags.Attached) == false)
+                        triangle = NaviCdt.FindTriangleContainingVertex(influencePoint);
+                    if (triangle == null) return false;
+
+                    influencePoint.InfluenceRadius = 0f;
+
+                    NaviCdt.RemovePoint(influencePoint, triangle);
+                    NaviVertexLookupCache.RemoveVertex(influencePoint);
+                }
+            }
+
+            return true;
+        }
+
+        public SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3 resultPosition, ref Vector3 resultNormal,
+            float padding = 0, HeightSweepType heightSweep = HeightSweepType.None, int maxHeight = short.MaxValue, int minHeight = short.MinValue, Entity owner = null)
+        {
+            NaviTriangle currentTriangle = NaviCdt.FindTriangleAtPoint(fromPosition);
+            if (currentTriangle == null)
+            {
+                Logger.Error($"Navi sweep failed to find starting triangle at point: {fromPosition} for mesh: {ToString()}");
+                resultPosition = Vector3.Zero;
+                return SweepResult.Failed;
+            }
+            if (_region == null)
+            {
+                resultPosition = Vector3.Zero;
+                return SweepResult.Failed;
+            }
+            NaviSweep naviSweep = new (this, _region, pathFlags, radius, fromPosition, currentTriangle, toPosition, owner, heightSweep, maxHeight, minHeight);
+            SweepResult resultSweep = naviSweep.DoSweep(ref resultPosition, ref resultNormal, padding);
+            return resultSweep;
         }
 
         private class MarkupState

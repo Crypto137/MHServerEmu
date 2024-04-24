@@ -9,7 +9,6 @@ namespace MHServerEmu.Core.VectorMath
 {
     public class Vector3
     {
-
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
@@ -116,10 +115,19 @@ namespace MHServerEmu.Core.VectorMath
         public static bool operator !=(Vector3 a, Vector3 b) => !(a == b);
         public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
-        public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
-        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => LengthSqr(v1 - v2) < epsilon;
+        public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // TODO check IsNearZero
+        public static float LengthTest(Vector3 v) => IsNearZero(v) ? 0.0f : Length(v);
+        public static float Length2D(Vector3 v)
+        {
+            var v2d = v.To2D();
+            return IsNearZero(v2d) ? 0.0f : Length(v2d);
+        }
+        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon = Segment.Epsilon) => LengthSqr(v1 - v2) < epsilon;
         public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
-        public static bool IsNearZero(Vector3 v, float epsilon = 0.000001f) => LengthSqr(v) < epsilon;
+        public static float LengthSquared2D(Vector3 v) => LengthSqr(v.To2D());
+        public static bool IsNearZero(Vector3 v, float epsilon = Segment.Epsilon) => LengthSqr(v) < epsilon;
+        public static bool IsNearZero2D(Vector3 v, float epsilon = Segment.Epsilon) => LengthSquared2D(v) < epsilon;
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
@@ -134,13 +142,13 @@ namespace MHServerEmu.Core.VectorMath
         public string ToStringNames() => $"x:{X} y:{Y} z:{Z}";
         public override string ToString() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
         public static float Dot(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
-
+        public static float Dot2D(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y;
         public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new(b.X - a.X, b.Y - a.Y, 0.0f));
         public static float DistanceSquared(Vector3 a, Vector3 b) => LengthSqr(b - a);
 
         public static Vector3 Normalize2D(Vector3 v)
         {
-            Vector3 vector2D = new(v.X, v.Y, 0f);
+            Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? XAxis : Normalize(vector2D);
         }
 
@@ -159,15 +167,17 @@ namespace MHServerEmu.Core.VectorMath
             return new(x, y, 0.0f);
         }
 
-        public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(Flatten(v1, 2), Flatten(v2, 2));
+        public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(v1.To2D(), v2.To2D());
         private static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
 
-        private static Vector3 Flatten(Vector3 v, int index)
+        public static Vector3 Flatten(Vector3 v, Axis axis)
         {
-            return new(index == 0 ? 0.0f : v.X,
-                       index == 1 ? 0.0f : v.Y,
-                       index == 2 ? 0.0f : v.Z);
+            return new(axis == Axis.X ? 0.0f : v.X,
+                       axis == Axis.Y ? 0.0f : v.Y,
+                       axis == Axis.Z ? 0.0f : v.Z);
         }
+
+        public Vector3 To2D() => new(X, Y, 0.0f);
 
         public static Vector3 AbsPerElem(Vector3 vec)
         {
@@ -211,18 +221,55 @@ namespace MHServerEmu.Core.VectorMath
 
         public float MaxElem() => Math.Max(Z, Math.Max(X, Y));
 
+        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero)
+        {
+            Vector3 vector2D = v.To2D();
+            return IsNearZero(vector2D) ? zero : Normalize(vector2D);
+        }
+
+        public static Vector3 Perp2D(Vector3 v) => new(v.Y, -v.X, 0.0f);
+
+        public static Vector3 MaxPerElem(Vector3 v0, Vector3 v2)
+        {
+            return new Vector3(
+                v0.X > v2.X ? v0.X : v2.X,
+                v0.Y > v2.Y ? v0.Y : v2.Y,
+                v0.Z > v2.Z ? v0.Z : v2.Z
+            );
+        }
+
+        public static Vector3 MinPerElem(Vector3 v0, Vector3 v1)
+        {
+            return new Vector3(
+                v0.X < v1.X ? v0.X : v1.X,
+                v0.Y < v1.Y ? v0.Y : v1.Y,
+                v0.Z < v1.Z ? v0.Z : v1.Z
+            );
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
         public static Vector3 XAxis { get => new(1.0f, 0.0f, 0.0f); }
+        public static Vector3 XAxisNeg { get => new(-1.0f, 0.0f, 0.0f); }
         public static Vector3 YAxis { get => new(0.0f, 1.0f, 0.0f); }
+        public static Vector3 YAxisNeg { get => new(0.0f, -1.0f, 0.0f); }
         public static Vector3 ZAxis { get => new(0.0f, 0.0f, 1.0f); }
+        public static Vector3 ZAxisNeg { get => new(0.0f, 0.0f, -1.0f); }
         public static Vector3 Forward { get => XAxis; }
         public static Vector3 Right { get => YAxis; }
         public static Vector3 Up { get => ZAxis; }
-        public static Vector3 Back { get => new(-1.0f, 0.0f, 0.0f); }
-        public static Vector3 Left { get => new(0.0f, -1.0f, 0.0f); }
-        public static Vector3 Down { get => new(0.0f, 0.0f, -1.0f); }
+        public static Vector3 Back { get => XAxisNeg; }
+        public static Vector3 Left { get => YAxisNeg; }
+        public static Vector3 Down { get => ZAxisNeg; }
 
+    }
+
+    public enum Axis
+    {
+        Invalid = -1,
+        X = 0,
+        Y = 1,
+        Z = 2,
     }
 }

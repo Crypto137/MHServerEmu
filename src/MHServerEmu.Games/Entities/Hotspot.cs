@@ -4,6 +4,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -13,6 +14,7 @@ namespace MHServerEmu.Games.Entities
         public HotspotPrototype HotspotPrototype { get => EntityPrototype as HotspotPrototype; }
 
         private Dictionary<MissionConditionContext, int> ConditionEntityCounter;
+        private bool _skipCollide;
 
         // new
         public Hotspot(Game game) : base(game) { }
@@ -22,6 +24,13 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
             _flags |= EntityFlags.IsHotspot;
             if (EntityPrototype.Properties[PropertyEnum.MissionHotspot]) IsMissionHotspot = true;
+            _skipCollide = settings.HotspotSkipCollide;
+        }
+
+        public override bool CanCollideWith(WorldEntity other)
+        {
+            if (_skipCollide) return false;
+            return base.CanCollideWith(other);
         }
 
         public override void OnEnteredWorld(EntitySettings settings)
@@ -48,6 +57,16 @@ namespace MHServerEmu.Games.Entities
                 ConditionEntityCounter = new();
                 MissionEntityTracker();
             }
+        }
+
+        public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        {
+            // TODO trigger
+        }
+
+        public override void OnOverlapEnd(WorldEntity whom)
+        {
+            // TODO trigger
         }
 
         private void MissionEntityTracker()

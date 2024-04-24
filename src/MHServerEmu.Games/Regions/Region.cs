@@ -1,10 +1,11 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -93,18 +94,9 @@ namespace MHServerEmu.Games.Regions
         public ConnectionNodeList Targets { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
 
-        public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, CreateRegionParams createParams) // Old
-        {
-            Id = IdGenerator.Generate();
-
-            PrototypeId = prototype;
-            RandomSeed = randomSeed;
-            ArchiveData = archiveData;
-            CreateParams = createParams;
-
-            NaviSystem = new();
-            NaviMesh = new(NaviSystem);
-        }
+        private BitList _collisionIds;
+        private BitList _collisionBits;
+        private List<BitList> _collisionBitList;
 
         public Region(Game game)
         {
@@ -115,6 +107,21 @@ namespace MHServerEmu.Games.Regions
 
             NaviSystem = new();
             NaviMesh = new(NaviSystem);
+
+            _collisionIds = new();
+            _collisionBits = new();
+            _collisionBitList = new();
+            _collisionIds.Resize(256);
+        }
+
+        public void InitEmpty(RegionPrototypeId prototype, int seed) // For test
+        {
+            Id = IdGenerator.Generate();
+            PrototypeId = prototype;
+            RandomSeed = seed;
+            ArchiveData = Array.Empty<byte>();
+            CreateParams = new(10, DifficultyTier.Normal);
+            Bound = Aabb.Zero; 
         }
 
         public bool Initialize(RegionSettings settings)
@@ -410,7 +417,7 @@ namespace MHServerEmu.Games.Regions
         {
             foreach(var metaGameId in MetaGames)
             {
-                MetaGame metaGame = Game.EntityManager.GetEntityById(metaGameId) as MetaGame;                
+                var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);                
                 metaGame?.RegistyStates();
             }
             return MissionManager.GenerateMissionPopulation();            
@@ -585,7 +592,7 @@ namespace MHServerEmu.Games.Regions
                         }
                         else*/
                         {
-                            if (worldEntity.IsInWorld())
+                            if (worldEntity.IsInWorld)
                             {
                                 worldEntity.ExitWorld();
                                 // found = true;
@@ -603,7 +610,7 @@ namespace MHServerEmu.Games.Regions
             {
                 var metaGameId = MetaGames.First();
                 var metaGame = Game.EntityManager.GetEntityById(metaGameId);
-                if (metaGame != null) metaGame.Destroy();
+                metaGame?.Destroy();
                 MetaGames.Remove(metaGameId);
             }
 
@@ -746,8 +753,8 @@ namespace MHServerEmu.Games.Regions
             {
                 if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
-                    Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.GetPosition());
-                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.GetOrientation());
+                    Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.Position);
+                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.Orientation);
                     if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
                     playerConnection.StartPositon = position;
@@ -841,6 +848,59 @@ namespace MHServerEmu.Games.Regions
         public bool HasKeyword(KeywordPrototype keywordProto)
         {            
             return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
+        }
+        public int AcquireCollisionId()
+        {
+            int index = _collisionIds.FirstUnset();
+            if (index == -1) index = _collisionIds.Size;
+            _collisionIds.Set(index, true);
+            return index;
+        }
+
+        public bool CollideEntities(int collisionId, int otherCollisionId)
+        {
+            int maxCollisionId = _collisionBitList.Count;
+            if (collisionId >= maxCollisionId)
+            {
+                maxCollisionId = MaxCollisionId + 64;
+                while (_collisionBitList.Count < maxCollisionId)
+                    _collisionBitList.Add(new ());
+            }
+
+            var collisionBits = _collisionBitList[collisionId];
+
+            if (_collisionBits[collisionId] == false)
+            {
+                _collisionBits.Set(collisionId);
+                collisionBits.Clear();
+            }
+
+            if (otherCollisionId >= collisionBits.Size)
+                collisionBits.Resize(maxCollisionId);
+
+            bool collide = collisionBits[otherCollisionId];
+            collisionBits.Set(otherCollisionId);
+            return !collide;
+        }
+
+        public int MaxCollisionId => _collisionIds.Size;
+
+        public void ReleaseCollisionId(int collisionId)
+        {
+            if (collisionId >= 0) _collisionIds.Reset(collisionId);
+        }
+
+        public void ClearCollidedEntities()
+        {
+            if (MaxCollisionId < _collisionBitList.Count / 2)
+            {
+                _collisionBitList.Clear();
+                _collisionBits.Resize(0);
+            }
+            else
+            {
+                _collisionBits.Clear();
+            }
         }
 
     }

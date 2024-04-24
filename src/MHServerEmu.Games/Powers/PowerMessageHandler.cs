@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (damage > 0)
             {
-                WorldEntity entity = (WorldEntity)playerConnection.Game.EntityManager.GetEntityById(entityId);
+                var entity = playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
                 if (entity != null)
                 {
                     var proto = entity.WorldEntityPrototype;
@@ -165,7 +165,7 @@ namespace MHServerEmu.Games.Powers
                             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                             EntityId = entityId,
                             FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                            Position = new(entity.RegionLocation.GetPosition()),
+                            Position = new(entity.RegionLocation.Position),
                             Orientation = new(),
                             LocomotionState = new(0)
                         };

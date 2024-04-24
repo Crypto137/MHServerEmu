@@ -163,10 +163,10 @@ namespace MHServerEmu.Core.Collisions
         {
             if (TriangleContainsPoint2D(center)) return true;
 
-            Vector3 p0 = new(Points[0].X, Points[0].Y, 0.0f);
-            Vector3 p2 = new(Points[1].X, Points[1].Y, 0.0f);
-            Vector3 p3 = new(Points[2].X, Points[2].Y, 0.0f);
-            Vector3 center2D = new(center.X, center.Y, 0.0f);
+            Vector3 p0 = Points[0].To2D();
+            Vector3 p2 = Points[1].To2D();
+            Vector3 p3 = Points[2].To2D();
+            Vector3 center2D = center.To2D();
 
             float radiusSq = radius * radius;
             if (Segment.SegmentPointDistanceSq(p0, p2, center2D) < radiusSq) return true;

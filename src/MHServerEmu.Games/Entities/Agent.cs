@@ -2,23 +2,68 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
     public class Agent : WorldEntity
     {
         public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
+        public override bool IsTeamUpAgent => AgentPrototype is AgentTeamUpPrototype;
+
+        public override bool IsSummonedPet
+        {
+            get
+            {
+                if (this is Missile) return false;
+                if (IsTeamUpAgent) return true;
+                
+                PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];
+                if (powerRef != PrototypeId.Invalid)
+                {
+                    var powerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
+                    if (powerProto != null)
+                        return powerProto.IsPetSummoningPower();
+                }
+
+                return false;
+            }
+
+        }
 
         // New
         public Agent(Game game) : base(game) { }
 
         public override void Initialize(EntitySettings settings)
         {
+            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
+            if (agentProto == null) return;
+            if (agentProto.Locomotion.Immobile == false) Locomotor = new();
+
+            // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
+            // InitPowersCollection
+            InitLocomotor(settings.LocomotorHeightOverride);
         }
+
+        private bool InitLocomotor(float height = 0.0f)
+        {
+            if (Locomotor != null)
+            {
+                AgentPrototype agentPrototype = AgentPrototype;
+                if (agentPrototype == null) return false;
+
+                Locomotor.Initialize(agentPrototype.Locomotion, this, height);
+                Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
+            }
+
+            return true;
+        }
+
 
         public override void OnEnteredWorld(EntitySettings settings)
         {

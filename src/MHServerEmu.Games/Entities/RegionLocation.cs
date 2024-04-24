@@ -1,7 +1,9 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -17,65 +19,96 @@ namespace MHServerEmu.Games.Entities
         public ulong RegionId { get => Region != null ? Region.Id : 0; }
         public uint AreaId { get => Area != null ? Area.Id : 0; }
         public uint CellId { get => Cell != null ? Cell.Id : 0; }
-
+        public NaviMesh NaviMesh { get => Region?.NaviMesh; }
         public bool IsValid() => _region != null;
 
         private Vector3 _position;
-        public Vector3 GetPosition() => IsValid() ? _position : Vector3.Zero;
-        public bool SetPosition(Vector3 position)
+        public Vector3 Position
         {
-            if (!Vector3.IsFinite(position))
+            get => IsValid() ? _position : Vector3.Zero;
+            set 
             {
-                Logger.Warn($"Non-finite position ({position}) given to region location: {ToString()}");
-                return false;
-            }
-            if (_region == null) return false;
+                if (!Vector3.IsFinite(value))
+                {
+                    Logger.Warn($"Non-finite position ({value}) given to region location: {ToString()}");
+                    return;
+                }
+                if (_region == null) return;
 
-            Cell oldCell = Cell;
-            if (oldCell == null || !oldCell.IntersectsXY(position))
-            {
-                Cell newCell = _region.GetCellAtPosition(position);
-                if (newCell == null) return false;
-                else Cell = newCell;
+                Cell oldCell = Cell;
+                if (oldCell == null || !oldCell.IntersectsXY(value))
+                {
+                    Cell newCell = _region.GetCellAtPosition(value);
+                    if (newCell == null) return;
+                    else Cell = newCell;
+                }
+                _position = value;
             }
-            _position = position;
-            return true;
         }
 
         private Orientation _orientation;
-        public Orientation GetOrientation() => IsValid() ? _orientation : Orientation.Zero;
-
-        public void SetOrientation(Orientation orientation)
+        public Orientation Orientation
         {
-            if (Orientation.IsFinite(orientation)) _orientation = orientation;
+            get => IsValid() ? _orientation : Orientation.Zero;
+            set
+            {
+                if (Orientation.IsFinite(value)) _orientation = value;
+            }
         }
 
-        public static float ProjectToFloor(Cell cell, Vector3 position)
+        public static Vector3 ProjectToFloor(Cell cell, Vector3 regionPos)
         {
-            Vector3 cellPos = position - cell.RegionBounds.Min;
+            if (cell == null || cell.RegionBounds.IntersectsXY(regionPos) == false) return regionPos;
             var cellProto = cell.CellProto;
-            cellPos.X /= cellProto.BoundingBox.Width;
-            cellPos.Y /= cellProto.BoundingBox.Length;
-            int mapX = (int)cellProto.HeightMap.HeightMapSize.X;
-            int mapY = (int)cellProto.HeightMap.HeightMapSize.Y;
-            int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
-            int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
-            return cellProto.HeightMap.HeightMapData[y * mapX + x];
+            if (cellProto == null) return regionPos;
+
+            short height;
+            if (cellProto.HeightMap.HeightMapData.HasValue())
+            {
+                Vector3 cellPos = regionPos - cell.RegionBounds.Min;
+                cellPos.X /= cellProto.BoundingBox.Width;
+                cellPos.Y /= cellProto.BoundingBox.Length;
+                int mapX = (int)cellProto.HeightMap.HeightMapSize.X;
+                int mapY = (int)cellProto.HeightMap.HeightMapSize.Y;
+                int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
+                int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
+                height = cellProto.HeightMap.HeightMapData[y * mapX + x];
+            }
+            else
+                height = short.MinValue;
+
+            if (height > short.MinValue)
+            {
+                Vector3 resultPos = new(regionPos)
+                {
+                    Z = cell.RegionBounds.Center.Z + height
+                };
+                return resultPos;
+            }
+            else
+            {
+                var naviMesh = cell.Region.NaviMesh;
+                if (naviMesh.IsMeshValid)
+                    return naviMesh.ProjectToMesh(regionPos);
+                else
+                    return regionPos;
+            }
         }
 
         public static Vector3 ProjectToFloor(Region region, Vector3 regionPos)
         {
+            if (region == null) return regionPos;
             Cell cell = region.GetCellAtPosition(regionPos);
             if (cell == null) return regionPos;
-            Vector3 postion = new(regionPos);
+            return ProjectToFloor(cell, regionPos);
+        }
 
-            var height = ProjectToFloor(cell, postion);
-            if (height > Int16.MinValue) 
-                postion.Z = cell.RegionBounds.Center.Z + height;
-            else if (region.NaviMesh.IsMeshValid)
-                return region.NaviMesh.ProjectToMesh(regionPos);
-
-            return postion;
+        public static Vector3 ProjectToFloor(Region region, Cell cell, Vector3 regionPos)
+        {
+            if (cell != null && cell.IntersectsXY(regionPos))
+                return ProjectToFloor(cell, regionPos);
+            else
+                return ProjectToFloor(region, regionPos);
         }
 
         public override string ToString()
@@ -99,6 +132,16 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public Vector3 GetVectorFrom(RegionLocation other)
+        {
+            if (ValidateSameRegion(other) == false) return Vector3.Zero;
+            return Position - other.Position;
+        }
+
+        private bool ValidateSameRegion(RegionLocation other)
+        {
+            return RegionId == other.RegionId && RegionId != 0;
+        }
     }
 
     public class RegionLocationSafe
@@ -166,8 +209,8 @@ namespace MHServerEmu.Games.Entities
                 CellRef = PrototypeId.Invalid;
             }
 
-            Position = new(regionLocation.GetPosition());
-            Orientation = new(regionLocation.GetOrientation());
+            Position = new(regionLocation.Position);
+            Orientation = new(regionLocation.Orientation);
 
             return this;
         }

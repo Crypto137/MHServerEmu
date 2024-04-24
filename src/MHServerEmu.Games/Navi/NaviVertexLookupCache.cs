@@ -126,5 +126,53 @@ namespace MHServerEmu.Games.Navi
             return key?.Point;
         }
 
+        public void RemoveVertex(NaviPoint point)
+        {
+            VertexCacheKey entry = new()
+            {
+                Point = point,
+                X = (int)(point.Pos.X / CellSize),
+                Y = (int)(point.Pos.Y / CellSize)
+            };
+
+            if (_vertexCache.TryGetValue(entry, out var key) == false)
+            {
+                Logger.Warn($"[NaviVertexLookupCache] RemoveVertex failed to find point {point}");
+                return;
+            }
+
+            if (key.Point != point)
+            {
+                Logger.Warn($"[NaviVertexLookupCache] RemoveVertex found point {key.Point} which does not match {point}");
+                return;
+            }
+
+            _vertexCache.Remove(key);
+        }
+
+        public void UpdateVertex(NaviPoint point, Vector3 pos)
+        {
+            RemoveVertex(point);
+
+            point.Pos = pos;
+            VertexCacheKey entry = new()
+            {
+                Point = point,
+                X = (int)(point.Pos.X / CellSize),
+                Y = (int)(point.Pos.Y / CellSize)
+            };
+            bool vertexAdded = _vertexCache.Add(entry);
+            if (vertexAdded == false && _vertexCache.TryGetValue(entry, out var key)) // Second try?
+            {
+                if (key.Point.TestFlag(NaviPointFlags.Attached) == false)
+                {
+                    Logger.Warn($"[NaviVertexLookupCache] UpdateVertex found old unattached point {key.Point} while updating {point}");
+                    return;
+                }
+                _vertexCache.Remove(key);
+                _vertexCache.Add(entry);
+            }
+        }
+
     }
 }

@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Navi
         public static double LineRelationship2D(NaviPoint p0, NaviPoint p1, Vector3 pos)
         {
             bool flip = SortInputs(ref p0, ref p1);
-            double d = InternalOrient2D(p1.Pos, p0.Pos, pos); // Debug Crashed here!!!
+            double d = InternalOrient2D(p1.Pos, p0.Pos, pos);
             return flip ? -d : d;
         }
 
@@ -107,9 +107,9 @@ namespace MHServerEmu.Games.Navi
 
         public static float RobustLinePointDistanceSq2D(Vector3 va, Vector3 vb, Vector3 vp)
         {
-            Vector3 a = new (va.X, va.Y, 0.0f);
-            Vector3 b = new (vb.X, vb.Y, 0.0f);
-            Vector3 p = new (vp.X, vp.Y, 0.0f);
+            Vector3 a = va.To2D();
+            Vector3 b = vb.To2D();
+            Vector3 p = vp.To2D();
             Vector3 ba = b - a;
             Vector3 ap = a - p;
             return Vector3.LengthSquared(Vector3.Cross(ba, ap)) / Vector3.LengthSquared(ba);
@@ -142,5 +142,11 @@ namespace MHServerEmu.Games.Navi
             return power;
         }
 
+        public static bool Contains2D(NaviPoint p0, NaviPoint p1, NaviPoint p2, Vector3 point)
+        {
+            return (LineRelationship2D(p0, p1, point) <= 0.0) &&
+                   (LineRelationship2D(p1, p2, point) <= 0.0) &&
+                   (LineRelationship2D(p2, p0, point) <= 0.0);
+        }
     }
 }

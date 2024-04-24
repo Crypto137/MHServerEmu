@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Generators.Population
         public bool SpawnByMarker(Cell cell)
         {
             if (Count == 0) return false;
-            SpawnTarget spawnTarget = new(cell.GetRegion())
+            SpawnTarget spawnTarget = new(cell.Region)
             {
                 Type = SpawnTargetType.Marker,
                 Cell = cell
@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public bool SpawnInCell(Cell cell)
         {
-            SpawnTarget spawnTarget = new(cell.GetRegion())
+            SpawnTarget spawnTarget = new(cell.Region)
             {
                 Type = SpawnTargetType.RegionBounds,
                 RegionBounds = cell.RegionBounds
@@ -123,8 +123,8 @@ namespace MHServerEmu.Games.Generators.Population
                     break;
 
                 case SpawnTargetType.Spawner:
-                    Vector3 pos = new(Location.GetPosition());
-                    Orientation rot = new(Location.GetOrientation());
+                    Vector3 pos = new(Location.Position);
+                    Orientation rot = new(Location.Orientation);
 
                     success = clusterGroup.PickPositionInSector(pos, rot, SpawnerProto.SpawnDistanceMin, SpawnerProto.SpawnDistanceMax);
                     if (success == false && SpawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))

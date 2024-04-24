@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
@@ -27,6 +29,21 @@ namespace MHServerEmu.Games.Entities
         public List<EntitySelectorActionPrototype> Actions;
         public PrototypeId ActionsTarget;
         public SpawnSpec SpawnSpec;
+        public bool HotspotSkipCollide;
+        public float LocomotorHeightOverride;
+    }
+
+    public enum EntityCollection
+    {
+        Simulated = 0,
+        Locomotion = 1,
+        All = 3,
+    }
+
+    public class EntityInvasiveCollection : InvasiveList<Entity>
+    {
+        public EntityInvasiveCollection(EntityCollection collectionType, int maxIterators = 8) : base(maxIterators, (int)collectionType) { }
+        public override InvasiveListNode<Entity> GetInvasiveListNode(Entity element, int listId) => element.GetInvasiveListNode(listId);
     }
 
     public class EntityManager
@@ -40,9 +57,23 @@ namespace MHServerEmu.Games.Entities
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
+        public PhysicsManager PhysicsManager { get; set; }
+        public EntityInvasiveCollection AllEntities { get; private set; }
+        public EntityInvasiveCollection SimulatedEntities { get; private set; }
+        public EntityInvasiveCollection LocomotionEntities { get; private set; }
+
         public EntityManager(Game game)
-        {
+        {            
             _game = game;
+            PhysicsManager = new(game);
+            AllEntities = new(EntityCollection.All);
+            SimulatedEntities = new(EntityCollection.Simulated);
+            LocomotionEntities = new(EntityCollection.Locomotion);
+        }
+
+        public void PhysicsResolveEntities()
+        {
+            PhysicsManager.ResolveEntities();
         }
 
         public Entity CreateEntity(EntitySettings settings)
@@ -138,6 +169,11 @@ namespace MHServerEmu.Games.Entities
         {
             if (_entityDict.TryGetValue(entityId, out Entity entity)) return entity;
             return null;
+        }
+
+        public T GetEntity<T>(ulong entityId) where T : Entity
+        {
+            return GetEntityById(entityId) as T;
         }
 
         public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
@@ -606,6 +642,8 @@ namespace MHServerEmu.Games.Entities
             BossEntryTarget = 6193630514385067431,
         };
 
+        #endregion
+
         private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
         {
             WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
@@ -613,6 +651,11 @@ namespace MHServerEmu.Games.Entities
             return invisibleId;
         }
 
-        #endregion
+        public void LocomoteEntities()
+        {
+            foreach (var entity in LocomotionEntities.Iterate())
+                if (entity is WorldEntity worldEntity)
+                    worldEntity?.Locomotor.Locomote();
+        }
     }
 }

@@ -56,7 +56,8 @@ namespace MHServerEmu.Games
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
-        
+        public TimeSpan FixedTimeBetweenUpdates { get; private set; }
+
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
         public Game(ulong id)
@@ -106,8 +107,13 @@ namespace MHServerEmu.Games
                         connection.ReceiveMessage(message.Item2);
                     }
 
+                    FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(TickTime); // TODO UpdateFixedTime();
                     // Update event manager
                     EventManager.Update();
+                    // Update locomote
+                    EntityManager.LocomoteEntities();
+                    // Update physics manager
+                    EntityManager.PhysicsResolveEntities();
 
                     // Send responses to all clients
                     NetworkManager.SendAllPendingMessages();
@@ -178,8 +184,8 @@ namespace MHServerEmu.Games
             lock (_gameLock)
             {
                 var entityManager = playerConnection.Game.EntityManager;
-                var targetEntity = entityManager.GetEntityById(entityId);
-                if (targetEntity is not WorldEntity worldEntity) return;
+                var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
+                if (worldEntity == null) return;
 
                 foreach (IMessage message in GetExitGameMessages())
                     SendMessage(playerConnection, message);
@@ -347,6 +353,12 @@ namespace MHServerEmu.Games
                 entity = new Entity(this);
 
             return entity;
+        }
+
+        public IEnumerable<Region> RegionIterator()
+        {            
+            foreach (Region region in RegionManager.AllRegions) 
+                yield return region;
         }
 
         // StartTime is always a TimeSpan of 1 ms, so we can make both Game::GetTimeFromStart() and Game::GetTimeFromDelta() static
