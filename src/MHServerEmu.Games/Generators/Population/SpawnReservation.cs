@@ -1,9 +1,10 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
-using System.Text;
+﻿using System.Text;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common.SpatialPartitions;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Population
 {

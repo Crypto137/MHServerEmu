@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Generators.Population

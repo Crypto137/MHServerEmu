@@ -4,14 +4,13 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
-using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 
