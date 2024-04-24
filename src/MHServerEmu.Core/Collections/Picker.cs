@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Core.System.Random;
 
-namespace MHServerEmu.Games.Generators
+namespace MHServerEmu.Core.Collections
 {
     public class Picker<T>
     {

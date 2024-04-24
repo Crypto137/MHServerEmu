@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.GameData.Tables
 {
