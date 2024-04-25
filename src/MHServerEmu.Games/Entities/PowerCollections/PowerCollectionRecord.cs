@@ -40,13 +40,13 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         // The rest of data is not serialized
         public Power Power { get; private set; }
         public PowerPrototype PowerPrototype { get; private set; }
-        public bool IsAvatarPowerProgressionPower { get; private set; }
-        public bool IsTeamUpPassivePowerWhileAway { get; private set; }
+        public bool IsPowerProgressionPower { get; private set; }
+        public bool IsTeamUpPassiveWhileAway { get; private set; }
 
         public PowerCollectionRecord() { }
 
         public void Initialize(Power power, PrototypeId powerPrototypeRef, PowerIndexProperties indexProps, uint powerRefCount,
-            bool isAvatarPowerProgressionPower, bool isTeamUpPassivePowerWhileAway)
+            bool isPowerProgressionPower, bool isTeamUpPassiveWhileAway)
         {
             _powerPrototypeRef = powerPrototypeRef;
             _indexProps = indexProps;
@@ -54,8 +54,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             Power = power;
             PowerPrototype = powerPrototypeRef.As<PowerPrototype>();
-            IsAvatarPowerProgressionPower = isAvatarPowerProgressionPower;
-            IsTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
+            IsPowerProgressionPower = isPowerProgressionPower;
+            IsTeamUpPassiveWhileAway = isTeamUpPassiveWhileAway;
         }
 
         public bool ShouldSerializeRecordForPacking(Archive archive = null)

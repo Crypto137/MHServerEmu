@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -105,23 +106,57 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
             if (powerRecord == null)
             {
-                // Determine the source of this power
-                bool isAvatarPowerProgressionPower = false;
-                bool isTeamUpPassivePowerWhileAway = false;
+                // Determine source flags for this power
+                // (TODO: it would probably be cleaner to do this as a separate method with early returns)
+                bool isPowerProgressionPower = false;
+                bool isTeamUpPassiveWhileAway = false;
 
-                // Inherit the source from the triggering power if we have one
+                // Inherit the flags from the triggering power if we have one
                 PowerCollectionRecord triggeringPowerRecord = GetPowerRecordByRef(triggeringPowerRef);
                 if (triggeringPowerRecord != null)
                 {
-                    isAvatarPowerProgressionPower = triggeringPowerRecord.IsAvatarPowerProgressionPower;
-                    isTeamUpPassivePowerWhileAway = triggeringPowerRecord.IsTeamUpPassivePowerWhileAway;
+                    isPowerProgressionPower = triggeringPowerRecord.IsPowerProgressionPower;
+                    isTeamUpPassiveWhileAway = triggeringPowerRecord.IsTeamUpPassiveWhileAway;
                 }
-                else //if (_owner != null)
+                else
                 {
-                    // Figure out the source from the power collection's owner, skip this for now
+                    if (_owner != null)
+                    {
+                        if (_owner is Agent agentOwner)
+                        {
+                            isPowerProgressionPower = agentOwner.HasPowerInPowerProgression(powerProtoRef);
+
+                            if (isPowerProgressionPower == false)
+                            {
+                                var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
+                                if (avatarOwner != null)
+                                {
+                                    Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
+                                    if (teamUpAgent != null)
+                                    {
+                                        teamUpAgent.GetPowerProgressionInfo(powerProtoRef, out var info);
+                                        if (info.IsForTeamUp)
+                                        {
+                                            isPowerProgressionPower = true;
+                                            isTeamUpPassiveWhileAway = info.IsPassivePowerOnAvatarWhileAway;
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            isTeamUpPassiveWhileAway = _owner.Properties[PropertyEnum.IsTeamUpAwaySource];
+                        }
+                    }
+                    else
+                    {
+                        Logger.Warn("AssignPowerInternal(): _owner == null");
+                    }
                 }
 
-                powerRecord = CreatePowerRecord(powerProtoRef, indexProps, triggeringPowerRef, isAvatarPowerProgressionPower, isTeamUpPassivePowerWhileAway);
+                powerRecord = CreatePowerRecord(powerProtoRef, indexProps, triggeringPowerRef, isPowerProgressionPower, isTeamUpPassiveWhileAway);
                 if (powerRecord == null) return Logger.WarnReturn<Power>(null, "AssignPowerInternal(): powerRecord == null");
             }
             else
