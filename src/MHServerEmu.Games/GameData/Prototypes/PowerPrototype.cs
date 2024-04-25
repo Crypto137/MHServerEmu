@@ -498,6 +498,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AbilityAssignmentPrototype : Prototype
     {
         public PrototypeId Ability { get; protected set; }
+
+        [DoNotCopy]
+        public int StartingRank { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            StartingRank = 1;
+        }
     }
 
     public class AbilityAutoAssignmentSlotPrototype : Prototype

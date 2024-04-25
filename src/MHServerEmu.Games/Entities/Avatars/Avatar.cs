@@ -10,7 +10,9 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social.Guilds;
 
@@ -27,11 +29,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ReplicatedVariable<string> PlayerName { get; set; } = new();
         public ulong OwnerPlayerDbId { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
+
+        public Agent CurrentTeamUpAgent { get; set; } = null;
+
         public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
+
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
+
         // new
         public Avatar(Game game) : base(game) { }
 
@@ -232,6 +239,33 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             AbilityKeyMappings = new AbilityKeyMapping[] { abilityKeyMapping };
+        }
+
+        public override bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            return false;
+        }
+
+        public override bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
+        {
+            info = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
+
+            // TODO: the rest of avatar power progression init
+
+            return info.IsValid;    // this is going to be always false for now
         }
 
         public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)

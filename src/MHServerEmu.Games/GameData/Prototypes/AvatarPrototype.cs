@@ -297,6 +297,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UIFanTier { get; protected set; }
         public PrototypeId[] Antirequisites { get; protected set; }
         public bool IsTrait { get; protected set; }
+
+        public override int GetRequiredLevel() => Level;
+        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.StartingRank : 0;
+
+        public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
+        public override PrototypeId[] GetPrerequisites() => Prerequisites;
+        public override PrototypeId[] GetAntirequisites() => Antirequisites;
     }
 
     public class PowerProgressionTablePrototype : Prototype
