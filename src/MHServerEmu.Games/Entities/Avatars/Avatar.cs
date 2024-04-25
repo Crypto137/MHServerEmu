@@ -241,6 +241,37 @@ namespace MHServerEmu.Games.Entities.Avatars
             AbilityKeyMappings = new AbilityKeyMapping[] { abilityKeyMapping };
         }
 
+        public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                if ((PrototypeId)kvp.Value != mappedPowerRef) continue;
+                Property.FromParam(kvp.Key, 0, out PrototypeId originalPower);
+                return originalPower;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                // TODO: Filter by param (originalPowerRef) for iteration
+                Property.FromParam(kvp.Key, 0, out PrototypeId itOriginalPowerRef);
+                if (itOriginalPowerRef != originalPowerRef) continue;
+
+                PrototypeId mappedPowerRef = kvp.Value;
+
+                if (mappedPowerRef == PrototypeId.Invalid)
+                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
+
+                return mappedPowerRef;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
         public override bool HasPowerInPowerProgression(PrototypeId powerRef)
         {
             if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
@@ -263,9 +294,47 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (avatarProto == null)
                 return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
 
-            // TODO: the rest of avatar power progression init
+            PrototypeId progressionInfoPower = powerProtoRef;
+            PrototypeId mappedPowerRef;
 
-            return info.IsValid;    // this is going to be always false for now
+            // Check if this is a mapped power
+            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(powerProtoRef);
+            if (originalPowerRef != PrototypeId.Invalid)
+            {
+                mappedPowerRef = powerProtoRef;
+                progressionInfoPower = originalPowerRef;
+            }
+            else
+            {
+                mappedPowerRef = GetMappedPowerFromOriginalPower(powerProtoRef);
+            }
+
+            PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
+
+            // Initialize info
+            // Case 1 - Progression Power
+            PowerProgressionEntryPrototype powerProgressionEntry = powerOwnerTable.GetPowerProgressionEntry(avatarProto.DataRef, progressionInfoPower);
+            if (powerProgressionEntry != null)
+            {
+                PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
+                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
+
+                info.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
+                return info.IsValid;
+            }
+
+            // Case 2 - Talent
+            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
+            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
+            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
+            {
+                info.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
+                return info.IsValid;
+            }
+
+            // Case 3 - Non-Progression Power
+            info.InitNonProgressionPower(powerProtoRef);
+            return info.IsValid;
         }
 
         public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)
