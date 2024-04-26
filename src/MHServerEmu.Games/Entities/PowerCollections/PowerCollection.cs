@@ -158,7 +158,9 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                             if (isPowerProgressionPower == false)
                             {
-                                var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
+                                // TODO: Uncomment this once all avatars have a game
+                                //var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
+                                Avatar avatarOwner = _owner.Game != null ? _owner.GetMostResponsiblePowerUser<Avatar>() : null;
                                 if (avatarOwner != null)
                                 {
                                     Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;

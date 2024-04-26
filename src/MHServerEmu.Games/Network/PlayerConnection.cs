@@ -45,10 +45,7 @@ namespace MHServerEmu.Games.Network
         public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
         public Vector3 LastPosition { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
-        public bool IsThrowing { get; set; } = false;
-        public PrototypeId ThrowingPower { get; set; }
-        public PrototypeId ThrowingCancelPower { get; set; }
-        public Entity ThrowingObject { get; set; }
+        public Entity ThrowableEntity { get; set; }
 
         public AreaOfInterest AOI { get; private set; }
         public Vector3 StartPositon { get; internal set; }
