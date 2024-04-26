@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Config;
@@ -67,16 +68,16 @@ namespace MHServerEmu.Commands.Implementations
             switch (@params[1].ToLower())
             {
                 case "chatnormalmessage":
-                    string message = @params[2];
+                    var messageBuilder = new StringBuilder(@params[2]);
                     for (int i = 3; i < @params.Length; i++)
-                        message += " " + @params[i];
+                        messageBuilder.Append(" ").Append(@params[i]);
 
                     var config = ConfigManager.Instance.GetConfig<GroupingManagerConfig>();
 
                     var chatMessage = ChatNormalMessage.CreateBuilder()
                         .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
                         .SetFromPlayerName(config.MotdPlayerName)
-                        .SetTheMessage(ChatMessage.CreateBuilder().SetBody(message))
+                        .SetTheMessage(ChatMessage.CreateBuilder().SetBody(messageBuilder.ToString()))
                         .SetPrestigeLevel(6)
                         .Build();
 

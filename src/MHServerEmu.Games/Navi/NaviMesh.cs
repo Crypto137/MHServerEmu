@@ -600,7 +600,7 @@ namespace MHServerEmu.Games.Navi
             return resultSweep;
         }
 
-        private class MarkupState
+        private sealed class MarkupState
         {
             public NaviTriangle Triangle { get; set; }
             public ContentFlagCounts FlagCounts { get; set; }

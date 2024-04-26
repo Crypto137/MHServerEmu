@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Represents a file contained in a pak.
         /// </summary>
-        private class PakEntry
+        private sealed class PakEntry
         {
             public ulong FileHash { get; }
             public string FilePath { get; }

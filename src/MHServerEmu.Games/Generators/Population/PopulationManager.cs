@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.Generators.Population
             if (metastate is MetaStateMissionProgressionPrototype missionProgression) 
             {
                 if (missionProgression.StatesProgression.HasValue())
-                    MetaStateRegisty(missionProgression.StatesProgression.First());
+                    MetaStateRegisty(missionProgression.StatesProgression[0]);
             } 
             else if (metastate is MetaStateMissionActivatePrototype missionActivate)
             {

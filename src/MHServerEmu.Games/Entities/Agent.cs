@@ -23,7 +23,6 @@ namespace MHServerEmu.Games.Entities
         {
             get
             {
-                if (this is Missile) return false;
                 if (IsTeamUpAgent) return true;
                 
                 PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];

@@ -598,7 +598,7 @@ namespace MHServerEmu.Games.Events
         private bool OnEndMagikUltimate(PlayerConnection playerConnection)
         {
             // Make sure we still get Magik in case the player switched to another avatar
-            Avatar avatar = playerConnection.Player.AvatarList.FirstOrDefault(avatar => avatar.PrototypeDataRef == (PrototypeId)AvatarPrototypeId.Magik);
+            Avatar avatar = playerConnection.Player.AvatarList.Find(avatar => avatar.PrototypeDataRef == (PrototypeId)AvatarPrototypeId.Magik);
             if (avatar == null) return Logger.WarnReturn(false, "OnEndMagikUltimate(): avatar == null");
 
             Condition magikUltimateCondition = avatar.ConditionCollection.GetCondition(777);

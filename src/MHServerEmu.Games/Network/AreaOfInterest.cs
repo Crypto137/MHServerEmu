@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Network
 
                 if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
                 _lastCameraSetting = cameraSettingPrototype;
-                CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
+                CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings[0];
 
                 var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
                 float angle = Orientation.WrapAngleRadians(Orientation.FromDeltaVector2D(normalizedDirection).Yaw + MathHelper.Pi - MathHelper.PiOver4);

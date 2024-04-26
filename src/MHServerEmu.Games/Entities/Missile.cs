@@ -21,5 +21,13 @@ namespace MHServerEmu.Games.Entities
         public Missile(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Missile(EntityBaseData baseData) : base(baseData) { }
+
+        public override bool IsSummonedPet
+        {
+            get
+            {
+                return false;
+            }
+        }
     }
 }

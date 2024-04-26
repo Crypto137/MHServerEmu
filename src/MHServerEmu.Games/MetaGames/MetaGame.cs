@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.MetaGames
             if (EntityPrototype is not MetaGamePrototype metaGameProto) return;
             if (metaGameProto.GameModes.HasValue())
             {
-                var gameMode = metaGameProto.GameModes.First().As<MetaGameModePrototype>();
+                var gameMode = metaGameProto.GameModes[0].As<MetaGameModePrototype>();
                 if (gameMode == null) return;
 
                 if (gameMode.ApplyStates.HasValue())

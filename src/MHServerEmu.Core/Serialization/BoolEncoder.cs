@@ -32,7 +32,7 @@ namespace MHServerEmu.Core.Serialization
                 return;
             }
 
-            byte bitBuffer = _bitBufferList.Last();
+            byte bitBuffer = _bitBufferList[_bitBufferList.Count - 1];
             byte encodedBits = (byte)(bitBuffer & 0x7);
 
             // Each byte can hold up to 5 encoded bools, so we need to add a new byte for every 5 bools

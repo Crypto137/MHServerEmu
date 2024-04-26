@@ -608,7 +608,7 @@ namespace MHServerEmu.Games.Regions
             */
             while (MetaGames.Any())
             {
-                var metaGameId = MetaGames.First();
+                var metaGameId = MetaGames[0];
                 var metaGame = Game.EntityManager.GetEntityById(metaGameId);
                 metaGame?.Destroy();
                 MetaGames.Remove(metaGameId);
