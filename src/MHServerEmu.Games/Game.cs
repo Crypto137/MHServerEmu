@@ -264,6 +264,9 @@ namespace MHServerEmu.Games
             Task.Run(() => GetRegionAsync(playerConnection));
             playerConnection.AOI.LoadedCellCount = 0;
             playerConnection.IsLoading = true;
+
+            playerConnection.Player.IsOnLoadingScreen = true;
+
             return messageList;
         }
 

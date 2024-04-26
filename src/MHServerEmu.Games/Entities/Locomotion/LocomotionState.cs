@@ -150,5 +150,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             for (int i = 0; i < LocomotionPathNodes.Count; i++) sb.AppendLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
             return sb.ToString();
         }
+
+        internal void StateFrom(LocomotionState locomotionState)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

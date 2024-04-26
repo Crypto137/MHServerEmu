@@ -54,6 +54,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int InteractRangeThrow { get; protected set; }
         public bool DamageMeterEnabled { get; protected set; }
         public CurveId MobHealthBaseCurveDCL { get; protected set; }
+
+        [DoNotCopy]
+        public override LocomotorPrototype Locomotor => Locomotion;
     }
 
     public class OrbPrototype : AgentPrototype

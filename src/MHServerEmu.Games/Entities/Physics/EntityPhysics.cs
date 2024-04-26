@@ -93,6 +93,15 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
+        public bool HasAttachedEntities()
+        {
+            return AttachedEntities != null && AttachedEntities.Count > 0;
+        }
+
+        internal void ApplyInternalForce(Vector3 dir)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class OverlapEntityEntry

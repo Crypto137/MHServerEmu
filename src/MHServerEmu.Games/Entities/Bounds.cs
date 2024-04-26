@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private float GetRadius()
+        public float GetRadius()
         {
             switch (Geometry)
             {
