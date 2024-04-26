@@ -8,6 +8,8 @@ The latest builds are available here: [Stable](https://github.com/Crypto137/MHSe
 
 We post development progress reports on our [blog](https://crypto137.github.io/MHServerEmu/). You can find additional information on various topics in the [documentation](./docs/Index.md). If you would like to discuss this project and/or help with its development, feel free to join our [Discord](https://discord.gg/hjR8Bj52t3).
 
+**Please make sure to read our [contribution guidelines](./CONTRIBUTING.md) if you would like to participate in the development of this project.**
+
 ## Features
 
 MHServerEmu is in early stages of development. Currently it features:
