@@ -209,5 +209,15 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             throw new NotImplementedException();
         }
+        
+        
+        /// <summary>
+        /// ToDo: Implement me in the future, added to support potential AI changes
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Stop()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
