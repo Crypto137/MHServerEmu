@@ -56,6 +56,18 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public RegionLocation(RegionLocation other)
+        {
+            _position = new(other._position);
+            _orientation = new(other._orientation);
+            _region = other._region;
+            Cell = other.Cell;
+        }
+
+        public RegionLocation()
+        {
+        }
+
         public static Vector3 ProjectToFloor(Cell cell, Vector3 regionPos)
         {
             if (cell == null || cell.RegionBounds.IntersectsXY(regionPos) == false) return regionPos;
