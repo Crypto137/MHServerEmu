@@ -86,11 +86,20 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             var powerProto = powerProtoRef.As<PowerPrototype>();
             if (powerProto == null) return Logger.WarnReturn<Power>(null, "AssignPower(): powerProto == null");
 
-            // Uncomment IsInWorld check when we have world entities properly entering and exiting world
-            if (Power.IsComboEffect(powerProto) == false && _owner == null /* && _owner.IsInWorld == false */)
+            // TODO: Uncomment IsInWorld check when we have world entities properly entering and exiting world
+            if (Power.IsComboEffect(powerProto) == false && (_owner == null /* || _owner.IsInWorld == false */))
                 return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection only supports Assign() of powers while the owner is in world!");
 
             return AssignPowerInternal(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
+        }
+
+        public bool UnassignPower(PrototypeId powerProtoRef, bool sendPowerUnassignToClients = true)
+        {
+            // TODO: Uncomment IsInWorld check when we have world entities properly entering and exiting world
+            if (_owner == null /* || _owner.IsInWorld == false */)
+                return Logger.WarnReturn(false, "UnassignPower(): PowerCollection only supports Unassign() of powers while the owner is in world!");
+
+            return UnassignPowerInternal(powerProtoRef, sendPowerUnassignToClients);
         }
 
         private PowerCollectionRecord GetPowerRecordByRef(PrototypeId powerProtoRef)
@@ -233,6 +242,77 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             // TODO: PowerCollection::assignTriggeredPowers()
             // TODO: _owner.OnPowerAssigned()
             power.OnAssign();
+        }
+
+        private bool UnassignPowerInternal(PrototypeId powerProtoRef, bool sendPowerUnassignToClients)
+        {
+            if (_owner == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner == null");
+            // TODO: Uncomment this later
+            //if (_owner.Game == null) return Logger.WarnReturn(false, "UnAssignPowerInternal(): _owner.Game == null");
+
+            // Find and validate the record for our powerProtoRef
+            PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
+            if (powerRecord == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord == null");
+            if (powerRecord.Power == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.Power == null");
+
+            // Start by subtracting from the PowerRefCount
+            if (powerRecord.PowerRefCount < 1) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.PowerRefCount < 1");
+            powerRecord.PowerRefCount--;
+
+            // Remove the record when our PowerRefCount reaches 0
+            if (powerRecord.PowerRefCount == 0)
+            {
+                FinishUnassignPower(powerRecord.Power);
+
+                // TODO: EntityManager::RegisterEntityForCondemnedPowerDeletion()
+
+                DestroyPowerRecord(powerRecord.PowerPrototypeRef);
+            }
+
+            return true;
+        }
+
+        private bool DestroyPowerRecord(PrototypeId powerProtoRef)
+        {
+            // Is this extra validation worth the performance cost of looking the record up again?
+            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord powerRecord) == false)
+                return false;
+
+            if (powerRecord.PowerRefCount != 0)
+                Logger.Warn("DestroyPowerRecord(): Power record is not empty");
+
+            return _powerDict.Remove(powerProtoRef);
+        }
+
+        private void FinishUnassignPower(Power power)
+        {
+            if (power.PowerCategory == PowerCategoryType.ThrowablePower)
+            {
+                if (ThrowablePower == null)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power when this entity does not have a throwable power in its power collection");
+
+                if (ThrowablePower != power)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power that isn't the same as this power collection's throwable power");
+
+                ThrowablePower = null;
+            }
+            else if (power.PowerCategory == PowerCategoryType.ThrowableCancelPower)
+            {
+                if (ThrowableCancelPower == null)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power when this entity does not have a throwable cancel power in its power collection");
+
+                if (ThrowableCancelPower != power)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power that isn't the same as this power collection's throwable cancel power");
+
+                ThrowableCancelPower = null;
+            }
+
+            if (_owner.IsDestroyed() == false)
+            {
+                // TODO: _owner.OnPowerUnAssigned()
+            }
+
+            // TODO: PowerCollection::unassignTriggeredPowers()
         }
     }
 }
