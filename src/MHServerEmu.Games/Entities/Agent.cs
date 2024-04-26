@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Entities
             condition.StartTime = Clock.GameTime;
             ConditionCollection.AddCondition(condition);
 
-            PowerCollection.AssignPower(startPowerRef, new());
+            AssignPower(startPowerRef, new());
             
             return true;
         }

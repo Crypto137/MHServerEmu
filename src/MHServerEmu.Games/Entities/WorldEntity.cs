@@ -5,18 +5,19 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities.PowerCollections;
-using MHServerEmu.Games.Generators;
-using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -30,6 +31,7 @@ namespace MHServerEmu.Games.Entities
         public ConditionCollection ConditionCollection { get; set; }
         public PowerCollection PowerCollection { get; set; }
         public int UnkEvent { get; set; }
+
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
         public Area Area { get => RegionLocation.Area; }
@@ -178,6 +180,34 @@ namespace MHServerEmu.Games.Entities
                 // CancelDestroyEvent();
                 base.Destroy();
             }
+        }
+
+        public Power GetPower(PrototypeId powerProtoRef) => PowerCollection?.GetPower(powerProtoRef);
+        public Power GetThrowablePower() => PowerCollection?.ThrowablePower;
+        public Power GetThrowableCancelPower() => PowerCollection?.ThrowableCancelPower;
+
+        public bool HasPowerInPowerCollection(PrototypeId powerProtoRef)
+        {
+            if (PowerCollection == null) return Logger.WarnReturn(false, "HasPowerInPowerCollection(): PowerCollection == null");
+            return PowerCollection.ContainsPower(powerProtoRef);
+        }
+
+        public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, bool sendPowerAssignmentToClients = true, PrototypeId triggeringPowerRef = PrototypeId.Invalid)
+        {
+            if (PowerCollection == null) return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection == null");
+            Power assignedPower = PowerCollection.AssignPower(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
+            if (assignedPower == null) return Logger.WarnReturn(assignedPower, "AssignPower(): assignedPower == null");
+            return assignedPower;
+        }
+
+        public bool UnassignPower(PrototypeId powerProtoRef, bool sendPowerUnassignToClients = true)
+        {
+            if (HasPowerInPowerCollection(powerProtoRef) == false) return false;    // This includes the null check for PowerCollection
+
+            if (PowerCollection.UnassignPower(powerProtoRef, sendPowerUnassignToClients) == false)
+                return Logger.WarnReturn(false, "UnassignPower(): Failed to unassign power");
+
+            return true;
         }
 
         private void OnAllianceChanged(PrototypeId allianceRef)

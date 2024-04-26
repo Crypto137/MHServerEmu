@@ -81,6 +81,22 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         public IEnumerator<KeyValuePair<PrototypeId, PowerCollectionRecord>> GetEnumerator() => _powerDict.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        public Power GetPower(PrototypeId powerProtoRef)
+        {
+            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord record) == false)
+                return null;
+
+            return record.Power;
+        }
+
+        public bool ContainsPower(PrototypeId powerProtoRef) => GetPowerRecordByRef(powerProtoRef) != null;
+
+        public bool ContainsPowerProgressionPower(PrototypeId powerProtoRef)
+        {
+            PowerCollectionRecord record = GetPowerRecordByRef(powerProtoRef);
+            return record != null && record.IsPowerProgressionPower;
+        }
+
         public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, PrototypeId triggeringPowerRef = PrototypeId.Invalid, bool sendPowerAssignmentToClients = true)
         {
             var powerProto = powerProtoRef.As<PowerPrototype>();
