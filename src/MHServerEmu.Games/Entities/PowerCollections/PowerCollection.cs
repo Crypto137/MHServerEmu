@@ -83,7 +83,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, PrototypeId triggeringPowerRef = PrototypeId.Invalid, bool sendPowerAssignmentToClients = true)
         {
-            // TODO: More validation checks
+            var powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn<Power>(null, "AssignPower(): powerProto == null");
+
+            // Uncomment IsInWorld check when we have world entities properly entering and exiting world
+            if (Power.IsComboEffect(powerProto) == false && _owner == null /* && _owner.IsInWorld == false */)
+                return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection only supports Assign() of powers while the owner is in world!");
 
             return AssignPowerInternal(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
         }

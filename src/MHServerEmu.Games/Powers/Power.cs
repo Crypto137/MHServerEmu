@@ -84,5 +84,10 @@ namespace MHServerEmu.Games.Powers
             sb.AppendLine($"{nameof(Properties)}: {Properties}");
             return sb.ToString();
         }
+
+        // Static accessors
+        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto) => powerProto.PowerCategory;
+        public static bool IsComboEffect(PowerPrototype powerProto) => GetPowerCategory(powerProto) == PowerCategoryType.ComboEffect;
+        public static bool IsUltimatePower(PowerPrototype powerProto) => powerProto.IsUltimate;
     }
 }
