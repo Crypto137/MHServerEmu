@@ -255,12 +255,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
         {
-            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
             {
-                // TODO: Filter by param (originalPowerRef) for iteration
-                Property.FromParam(kvp.Key, 0, out PrototypeId itOriginalPowerRef);
-                if (itOriginalPowerRef != originalPowerRef) continue;
-
                 PrototypeId mappedPowerRef = kvp.Value;
 
                 if (mappedPowerRef == PrototypeId.Invalid)

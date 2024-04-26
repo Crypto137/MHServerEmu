@@ -127,19 +127,6 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
-        /// </summary>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
-        {
-            // NOTE: In the client this is functionality of the PropertyCollection::ConstIterator
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    yield return kvp;
-            }
-        }
-
-        /// <summary>
         /// Sets the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// </summary>
         /// <remarks>
@@ -406,11 +393,128 @@ namespace MHServerEmu.Games.Properties
 
         public override string ToString() => _aggregateList.ToString();
 
-        #region IEnumerable Implementation
+        #region Iteration
 
-        // This should iterate over aggregated value list rather than base
+        // NOTE: In the client this is the functionality of PropertyCollection::ConstIterator and NewPropertyList::ConstIterator
+        // TODO: If iteration is too slow, switch PropertyList to Dictionary<PropertyEnum, List<KeyValuePair<PropertyId, PropertyValue>>
+        // or group KVPs by property enum in some other way.
+
+        public delegate bool PropertyEnumFilter(PropertyEnum propertyEnum);
+
+        // IEnumerable implementation, iterates over _aggregateList
         public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _aggregateList.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
+        {
+            foreach (var kvp in this)
+            {
+                if (kvp.Key.Enum == propertyEnum)
+                    yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use any of the specified <see cref="PropertyEnum"/> values.
+        /// Count specifies how many <see cref="PropertyEnum"/> elements to get from the provided <see cref="IEnumerable"/>.
+        /// </summary>
+        /// /// <remarks>
+        /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this is checked
+        /// against every key/value pair rather than once per enum.
+        /// </remarks>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum[] enums)
+        {
+            // TODO: Confirm if this is working as intended
+            foreach (var kvp in this)
+            {
+                if (enums.Contains(kvp.Key.Enum) == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="int"/> value as param0.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, int param0)
+        {
+            foreach (var kvp in this)
+            {
+                Property.FromParam(kvp.Key, 0, out int itParam0);
+
+                bool match = true;
+                match &= kvp.Key.Enum == propertyEnum;
+                match &= itParam0 == param0;
+
+                if (match == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
+        {
+            foreach (var kvp in this)
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
+
+                bool match = true;
+                match &= kvp.Key.Enum == propertyEnum;
+                match &= itParam0 == param0;
+
+                if (match == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0 and param1.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+        {
+            foreach (var kvp in this)
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
+                Property.FromParam(kvp.Key, 1, out PrototypeId itParam1);
+
+                bool match = true;
+                match &= kvp.Key.Enum == propertyEnum;
+                match &= itParam0 == param0;
+                match &= itParam1 == param1;
+
+                if (match == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that match the provided <see cref="PropertyEnumFilter"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
+        /// on every key/value pair rather than once per enum.
+        /// </remarks>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter filter)
+        {
+            if (filter == null)
+            {
+                Logger.Warn("IteratePropertyRange(): filter == null");
+                yield break;
+            }
+
+            foreach (var kvp in this)
+            {
+                if (filter(kvp.Key.Enum) == false) continue;
+                yield return kvp;
+            }
+        }
 
         #endregion
 
