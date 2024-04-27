@@ -1,16 +1,21 @@
 ﻿namespace MHServerEmu.Games.Entities.PowerCollections
 {
-    public class PowerIndexProperties
+    public readonly struct PowerIndexProperties
     {
-        // TODO: Maybe this can be a readonly struct?
+        public int PowerRank { get; } = 0;
+        public int CharacterLevel { get; } = 1;
+        public int CombatLevel { get; } = 1;
+        public int ItemLevel { get; } = 1;
+        public float ItemVariation { get; } = 1.0f;
 
-        public int PowerRank { get; set; } = 0;
-        public int CharacterLevel { get; set; } = 1;
-        public int CombatLevel { get; set; } = 1;
-        public int ItemLevel { get; set; } = 1;
-        public float ItemVariation { get; set; } = 1.0f;
-
-        public PowerIndexProperties() { }
+        public PowerIndexProperties(int powerRank = 0, int characterLevel = 1, int combatLevel = 1, int itemLevel = 1, float itemVariation = 1.0f)
+        {
+            PowerRank = powerRank;
+            CharacterLevel = characterLevel;
+            CombatLevel = combatLevel;
+            ItemLevel = itemLevel;
+            ItemVariation = itemVariation;
+        }
 
         public override string ToString()
         {

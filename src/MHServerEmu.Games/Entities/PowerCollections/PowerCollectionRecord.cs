@@ -80,29 +80,33 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             var flags = (SerializationFlags)stream.ReadRawVarint32();
 
-            _indexProps.PowerRank = flags.HasFlag(SerializationFlags.PowerRankIsZero) ? 0 : (int)stream.ReadRawVarint32();
+            int powerRank = flags.HasFlag(SerializationFlags.PowerRankIsZero) ? 0 : (int)stream.ReadRawVarint32();
 
             // CharacterLevel
+            int characterLevel;
             if (flags.HasFlag(SerializationFlags.CharacterLevelIsOne))
-                _indexProps.CharacterLevel = 1;
+                characterLevel = 1;
             else if (flags.HasFlag(SerializationFlags.CharacterLevelIsFromPreviousRecord))
-                _indexProps.CharacterLevel = previousRecord._indexProps.CharacterLevel;
+                characterLevel = previousRecord._indexProps.CharacterLevel;
             else
-                _indexProps.CharacterLevel = (int)stream.ReadRawVarint32();
+                characterLevel = (int)stream.ReadRawVarint32();
 
             // CombatLevel
+            int combatLevel;
             if (flags.HasFlag(SerializationFlags.CombatLevelIsSameAsCharacterLevel))
-                _indexProps.CombatLevel = _indexProps.CharacterLevel;
+                combatLevel = _indexProps.CharacterLevel;
             else if (flags.HasFlag(SerializationFlags.CombatLevelIsOne))
-                _indexProps.CombatLevel = 1;
+                combatLevel = 1;
             else if (flags.HasFlag(SerializationFlags.CombatLevelIsFromPreviousRecord))
-                _indexProps.CombatLevel = previousRecord._indexProps.CombatLevel;
+                combatLevel = previousRecord._indexProps.CombatLevel;
             else
-                _indexProps.CombatLevel = (int)stream.ReadRawVarint32();
+                combatLevel = (int)stream.ReadRawVarint32();
 
-            _indexProps.ItemLevel = flags.HasFlag(SerializationFlags.ItemLevelIsOne) ? 1 : (int)stream.ReadRawVarint32();
-            _indexProps.ItemVariation = flags.HasFlag(SerializationFlags.ItemVariationIsOne) ? 1.0f : stream.ReadRawFloat();
-            
+            int itemLevel = flags.HasFlag(SerializationFlags.ItemLevelIsOne) ? 1 : (int)stream.ReadRawVarint32();
+            float itemVariation = flags.HasFlag(SerializationFlags.ItemVariationIsOne) ? 1.0f : stream.ReadRawFloat();
+
+            _indexProps = new(powerRank, characterLevel, combatLevel, itemLevel, itemVariation);
+
             _powerRefCount = flags.HasFlag(SerializationFlags.PowerRefCountIsOne) ? 1 : stream.ReadRawVarint32();
         }
 

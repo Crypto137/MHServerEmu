@@ -415,7 +415,7 @@ namespace MHServerEmu.Games.Events
             PrototypeId throwablePowerRef = throwableProto.Properties[PropertyEnum.ThrowablePower];
             PrototypeId throwableCancelPowerRef = throwableProto.Properties[PropertyEnum.ThrowableRestorePower];
 
-            PowerIndexProperties indexProps = new() { CharacterLevel = avatar.CharacterLevel, CombatLevel = avatar.CombatLevel };
+            PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
             avatar.AssignPower(throwablePowerRef, indexProps);
             avatar.AssignPower(throwableCancelPowerRef, indexProps);
 
