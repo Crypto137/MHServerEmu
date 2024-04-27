@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -15,6 +16,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
     {
         // Relevant protobufs: NetMessagePowerCollectionAssignPower, NetMessageAssignPowerCollection,
         // NetMessagePowerCollectionUnassignPower, NetMessageUpdatePowerIndexProps
+
+        private const int MaxNumRecordsToSerialize = 256;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -30,19 +33,90 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             _owner = owner;
         }
 
-        public static bool SerializeRecordCount(Archive archive, PowerCollection powerCollection, ref uint recordCount)
+        public static bool SerializeRecordCount(Archive archive, PowerCollection powerCollection, ref uint numberOfRecords)
         {
-            throw new NotImplementedException();
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                // TODO: archive.IsPersistent
+                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                {
+                    numberOfRecords = 0;
+                    if (powerCollection != null)
+                    {
+                        foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
+                        {
+                            if (record.ShouldSerializeRecordForPacking(archive))
+                            {
+                                if (numberOfRecords >= MaxNumRecordsToSerialize)
+                                {
+                                    Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
+                                    break;
+                                }
+
+                                numberOfRecords++;
+                            }
+                        }
+                    }
+                    success &= Serializer.Transfer(archive, ref numberOfRecords);
+                }
+            }
+            else
+            {
+                // TODO: archive.IsPersistent
+                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                    success &= Serializer.Transfer(archive, ref numberOfRecords);
+            }
+
+            return success;
         }
 
-        public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint recordCount)
+        public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            throw new NotImplementedException();
+            // TODO: Also check for replication mode
+            if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+
+            bool success = true;
+
+            PowerCollectionRecord previousRecord = null;
+            foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
+            {
+                if (record.ShouldSerializeRecordForPacking(archive))
+                {
+                    success &= record.SerializeTo(archive, previousRecord);
+                    previousRecord = record;
+                    numberOfRecords--;
+                }
+            }
+
+            if (numberOfRecords != 0) return Logger.ErrorReturn(false, "SerializeTo(): numberOfRecords != 0");
+            return success;
         }
 
-        public static bool SerializeFrom(Archive archive, PowerCollection powerCollection, uint recordCount)
+        public static bool SerializeFrom(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            throw new NotImplementedException();
+            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
+
+            bool success = true;
+
+            if (powerCollection != null && powerCollection._powerDict.Count > 0)
+            {
+                Logger.Error("SerializeFrom(): When preparing to unpack a serialized PowerCollection, there was already data in the receiving _powerDict");
+                powerCollection._powerDict.Clear();
+            }
+
+            PowerCollectionRecord previousRecord = null;
+            for (uint i = 0; i < numberOfRecords; i++)
+            {
+                PowerCollectionRecord record = new();
+                success &= record.SerializeFrom(archive, previousRecord);
+                if (powerCollection != null)
+                    powerCollection._powerDict.Add(record.PowerPrototypeRef, record);
+                previousRecord = record;
+            }
+
+            return success;
         }
 
         public void Decode(CodedInputStream stream, AOINetworkPolicyValues replicationPolicy)
