@@ -280,6 +280,10 @@ namespace MHServerEmu.Games.Events
                     ghostRiderRideCondition.InitializeFromPowerMixinPrototype(666, powerId, 0, TimeSpan.Zero);
                     avatar.ConditionCollection.AddCondition(ghostRiderRideCondition);
 
+                    // Assign the hotspot power to the avatar
+                    PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
+                    avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
+
                     // Notify the client
                     AddConditionArchive conditionArchive = new()
                     {
@@ -295,11 +299,11 @@ namespace MHServerEmu.Games.Events
                     playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatar.Id)
                         .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
-                        .SetPowerRank(0)
-                        .SetCharacterLevel(60)
-                        .SetCombatLevel(60)
-                        .SetItemLevel(1)
-                        .SetItemVariation(1)
+                        .SetPowerRank(indexProps.PowerRank)
+                        .SetCharacterLevel(indexProps.CharacterLevel)
+                        .SetCombatLevel(indexProps.CombatLevel)
+                        .SetItemLevel(indexProps.ItemLevel)
+                        .SetItemVariation(indexProps.ItemVariation)
                         .Build());
 
                     break;
@@ -353,7 +357,7 @@ namespace MHServerEmu.Games.Events
 
                     // Remove the ride condition
                     avatar.ConditionCollection.RemoveCondition(666);
-                    // TODO: Remove the power from the collection
+                    avatar.UnassignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd);
 
                     // Notify the client
                     playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
