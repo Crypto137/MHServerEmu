@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -25,13 +26,16 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        protected EntityTrackingContextMap _trackingContextMap;
+        protected ConditionCollection _conditionCollection;
+        protected PowerCollection _powerCollection;
+        protected int _unkEvent;
+
+        public EntityTrackingContextMap TrackingContextMap { get => _trackingContextMap; }
+        public ConditionCollection ConditionCollection { get => _conditionCollection; }
+        public PowerCollection PowerCollection { get => _powerCollection; }
+
         public AlliancePrototype AllianceProto { get; private set; }
-
-        public EntityTrackingContextMap TrackingContextMap { get; set; }
-        public ConditionCollection ConditionCollection { get; set; }
-        public PowerCollection PowerCollection { get; set; }
-        public int UnkEvent { get; set; }
-
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
         public Area Area { get => RegionLocation.Area; }
@@ -98,10 +102,10 @@ namespace MHServerEmu.Games.Entities
 
             Physics.Initialize(this);
 
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 0;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 0;
         }
 
         // Old
@@ -113,27 +117,57 @@ namespace MHServerEmu.Games.Entities
         {
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 0;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 0;
             SpatialPartitionLocation = new(this);
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            if (archive.IsTransient)
+                success &= Serializer.Transfer(archive, ref _trackingContextMap);
+
+            success &= Serializer.Transfer(archive, ref _conditionCollection);
+
+            uint numRecords = 0;
+            success &= PowerCollection.SerializeRecordCount(archive, _powerCollection, ref numRecords);
+            if (numRecords > 0)
+            {
+                if (archive.IsPacking)
+                {
+                    success &= PowerCollection.SerializeTo(archive, _powerCollection, numRecords);
+                }
+                else
+                {
+                    if (_powerCollection == null) _powerCollection = new(this);
+                    success &= PowerCollection.SerializeFrom(archive, _powerCollection, numRecords);
+                }
+            }
+
+            if (archive.IsReplication)
+                success &= Serializer.Transfer(archive, ref _unkEvent);
+
+            return success;
         }
 
         protected override void Decode(CodedInputStream stream)
         {
             base.Decode(stream);
 
-            TrackingContextMap = new();
+            _trackingContextMap = new();
             TrackingContextMap.Decode(stream);
 
-            ConditionCollection = new(this);
+            _conditionCollection = new(this);
             ConditionCollection.Decode(stream);
 
-            PowerCollection = new(this);
+            _powerCollection = new(this);
             PowerCollection.Decode(stream, ReplicationPolicy);
 
-            UnkEvent = stream.ReadRawInt32();
+            _unkEvent = stream.ReadRawInt32();
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -144,7 +178,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection.Encode(stream);
             PowerCollection.Encode(stream, ReplicationPolicy);
 
-            stream.WriteRawInt32(UnkEvent);
+            stream.WriteRawInt32(_unkEvent);
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -160,7 +194,7 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in PowerCollection)
                 sb.AppendLine($"{nameof(PowerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            sb.AppendLine($"UnkEvent: {UnkEvent}");
+            sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
 
         internal Entity GetRootOwner()
