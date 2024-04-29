@@ -216,6 +216,8 @@ namespace MHServerEmu.Games
 
             lock (_gameLock)    // Lock to prevent state from being modified mid-update
             {
+                int timesUpdated = 0;
+
                 while (_accumulatedFixedTimeUpdateTime >= FixedTimeBetweenUpdates)
                 {
                     _accumulatedFixedTimeUpdateTime -= FixedTimeBetweenUpdates;
@@ -224,12 +226,16 @@ namespace MHServerEmu.Games
 
                     DoFixedTimeUpdate();
                     _frameCount++;
+                    timesUpdated++;
 
                     _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - fixedUpdateStartTime;
 
                     if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
-                        Logger.Warn($"UpdateFixedTime(): Took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+                        Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
                 }
+
+                if (timesUpdated > 1)
+                    Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single update to catch up");
             }
         }
 
