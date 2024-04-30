@@ -1,10 +1,12 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
-using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -12,8 +14,10 @@ namespace MHServerEmu.Games.Entities
 {
     public class Agent : WorldEntity
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
-        public override bool IsTeamUpAgent => AgentPrototype is AgentTeamUpPrototype;
+        public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
 
         public override bool IsSummonedPet
         {
@@ -106,7 +110,7 @@ namespace MHServerEmu.Games.Entities
             condition.StartTime = Clock.GameTime;
             ConditionCollection.AddCondition(condition);
 
-            PowerCollection.AssignPower(startPowerRef, new());
+            AssignPower(startPowerRef, new());
             
             return true;
         }
@@ -130,6 +134,36 @@ namespace MHServerEmu.Games.Entities
                 if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
             }
             return false;
+        }
+
+        public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (IsTeamUpAgent)
+                return GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(PrototypeDataRef, powerRef) != null;
+
+            return false;
+        }
+
+        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
+        {
+            // Note: this implementation is meant only for team-up agents
+
+            info = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            var teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
+            if (teamUpProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
+
+            var powerProgressionEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
+            if (powerProgressionEntry != null)
+                info.InitForTeamUp(powerProgressionEntry);
+            else
+                info.InitNonProgressionPower(powerProtoRef);
+
+            return info.IsValid;
         }
 
         // Old

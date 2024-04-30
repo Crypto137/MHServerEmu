@@ -1,98 +1,13 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using System.Collections;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using System.Collections;
 
-namespace MHServerEmu.Games.Generators
+namespace MHServerEmu.Games.Common.SpatialPartitions
 {
-    public class Node<T>
-    {
-        public Quadtree<T> Tree;
-        public Node<T> Parent;
-        public Node<T>[] Children = new Node<T>[4];
-        public Aabb2 LooseBounds;
-        public LinkedList<QuadtreeLocation<T>> Elements = new(); // intr_circ_list
-        public int AtTargetLevelCount;
+    // NOTE: Even though this is a quadtree structure, the original source file referenced by client verify messages is called "Octree.h".
+    // D:\mirrorBuilds_source05\MarvelGame_v52\Source\Game\Game\SpacialPartition\Octree.h
 
-        public Node(Quadtree<T> tree, Node<T> parent, Aabb2 bounds)
-        {
-            Tree = tree;
-            Parent = parent;
-            LooseBounds = bounds;
-            AtTargetLevelCount = 0;
-        }
-
-        public void AddElement(QuadtreeLocation<T> element, bool atTargetLevel)
-        {    
-            if (element.IsUnlinked())
-            {
-                element.Node = this;
-                element.AtTargetLevel = atTargetLevel;
-                Elements.AddFirst(element);
-                element.Linked = true;
-                if (atTargetLevel) AtTargetLevelCount++;
-            }
-        }
-
-        public float GetRadius() => LooseBounds.Width;
-
-        public void PushDown(Quadtree<T> tree, Node<T> child)
-        {
-            var next = Elements.First;
-            for (var current = next; next != null; current = next)
-            {
-                next = current.Next;
-                var element = current.Value;
-
-                Aabb elementBounds = element.GetBounds();
-                if (child.LooseBounds.FullyContainsXY(elementBounds))
-                {
-                    Elements.Remove(element);
-                    element.Linked = false;
-                    if (element.AtTargetLevel) AtTargetLevelCount--;
-                    child.AddElement(element, tree.AtTargetLevel(child, elementBounds.Radius2D()));
-                }
-            }
-        }
-
-        public bool RemoveElement(QuadtreeLocation<T> element)
-        {
-            if (element.IsUnlinked()) return false;
-            if (AtTargetLevelCount < (element.AtTargetLevel ? 1 : 0))  return false;
-
-            if (element.AtTargetLevel) AtTargetLevelCount--;
-            Elements.Remove(element);
-            element.Linked = false;
-            element.Node = null;
-            element.AtTargetLevel = false;
-
-            return true;
-        }
-
-        public bool IsEmpty()
-        {
-            if (Elements.Any() || AtTargetLevelCount != 0) return false;
-            foreach (var child in Children)
-                if (child != null) return false;
-            return true;
-        }
-    }
-
-    public class QuadtreeLocation<T>
-    {
-        public T Element { get; }
-        public Node<T> Node { get; set; }
-        public bool AtTargetLevel { get; set; }
-        public bool Linked { get; set; }
-
-        public QuadtreeLocation(T element) { 
-            Element = element;
-            Node = default;
-        }
-
-        public bool IsValid() => Node != null;
-        public bool IsUnlinked() => Linked == false; 
-        public virtual Aabb GetBounds() => default;
-    }
+    // Logically it probably makes more sense to have this in the Core.Collections namespace, but for now we are sticking to how it is in the client.
 
     public class Quadtree<T>
     {
@@ -142,7 +57,8 @@ namespace MHServerEmu.Games.Generators
 
         public bool Insert(T element)
         {
-            if (element == null || _outstandingIteratorCount > 0) {
+            if (element == null || _outstandingIteratorCount > 0)
+            {
                 Console.WriteLine($"Trying to insert element into quadtree with IteratorCount = [{_outstandingIteratorCount}]");
                 return false;
             }
@@ -157,7 +73,7 @@ namespace MHServerEmu.Games.Generators
                 Console.WriteLine($"Trying to insert element into quadtree with invalid size. ElementRadius={elementRadius}, ElementBounds={elementBounds}, Element={element}");
                 return default;
             }
-            
+
             return Insert(Root, element, elementBounds, elementBounds.Center, elementRadius);
         }
 
@@ -176,9 +92,9 @@ namespace MHServerEmu.Games.Generators
                 }
 
                 Vector2 center = node.LooseBounds.Center;
-                int x = (elementCenter.X > center.X) ? 1 : 0;
-                int y = (elementCenter.Y > center.Y) ? 1 : 0;
-                int index = (x << 1) | y;
+                int x = elementCenter.X > center.X ? 1 : 0;
+                int y = elementCenter.Y > center.Y ? 1 : 0;
+                int index = x << 1 | y;
                 Node<T> child = node.Children[index];
 
                 if (child != null)
@@ -201,7 +117,7 @@ namespace MHServerEmu.Games.Generators
 
                 _elementsCount++;
                 return true;
-            }            
+            }
         }
 
         public virtual QuadtreeLocation<T> GetLocation(T element) => default;
@@ -212,7 +128,7 @@ namespace MHServerEmu.Games.Generators
             if (notAtTargetCount >= 0 && notAtTargetCount >= _targetThreshold)
             {
                 var childBounds = ConstructChildBounds(node, center, x, y);
-                var child = AllocateNode(childBounds, node, (x << 1) | y);
+                var child = AllocateNode(childBounds, node, x << 1 | y);
                 if (child != null)
                 {
                     node.PushDown(this, child);
@@ -228,13 +144,13 @@ namespace MHServerEmu.Games.Generators
             float looseRadius = childDiameter / (_loose * 2.0f);
             Vector2 offset = new(x == 0 ? -looseRadius : looseRadius, y == 0 ? -looseRadius : looseRadius);
             Vector2 childCenter = center + offset;
-            return new (childCenter, childDiameter);
+            return new(childCenter, childDiameter);
         }
 
         public bool AtTargetLevel(Node<T> node, float elementRadius)
         {
             float nodeRadius = node.GetRadius();
-            return (nodeRadius <= _minLoose || elementRadius >= nodeRadius * 0.5);
+            return nodeRadius <= _minLoose || elementRadius >= nodeRadius * 0.5;
         }
 
         public virtual Aabb GetElementBounds(T element) => null;
@@ -383,7 +299,7 @@ namespace MHServerEmu.Games.Generators
                 if (contains == ContainmentType.Disjoint) return;
 
                 _currentNode.Node = Tree.Root;
-                _currentNode.Contains = (contains == ContainmentType.Contains);
+                _currentNode.Contains = contains == ContainmentType.Contains;
 
                 _currentElement = GetFirstElement(_currentNode);
                 if (_currentElement == null) NextNode();
@@ -450,8 +366,8 @@ namespace MHServerEmu.Games.Generators
                     if (node.Contains)
                     {
                         for (index++; index < 4; index++)
-                            if (node.Node.Children[index] != null)  
-                                _stack.Push(new (node.Node.Children[index], true));
+                            if (node.Node.Children[index] != null)
+                                _stack.Push(new(node.Node.Children[index], true));
                     }
                     else
                     {
@@ -465,9 +381,9 @@ namespace MHServerEmu.Games.Generators
 
                             var otherContains = Volume.Contains(otherChild.LooseBounds);
                             if (otherContains != ContainmentType.Disjoint)
-                                _stack.Push(new (otherChild, otherContains == ContainmentType.Contains));
+                                _stack.Push(new(otherChild, otherContains == ContainmentType.Contains));
                         }
-                        node.Contains = (childContains == ContainmentType.Contains);
+                        node.Contains = childContains == ContainmentType.Contains;
                     }
 
                     node.Node = child;

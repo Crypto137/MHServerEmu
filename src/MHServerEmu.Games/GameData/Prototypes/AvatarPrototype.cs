@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -117,7 +118,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     {
                         PowerPrototype powerProto = entryProto.PowerAssignment.Ability.As<PowerPrototype>();
 
-                        if (powerProto.IsUltimate)
+                        if (Power.IsUltimatePower(powerProto))
                         {
                             if (UltimatePowerRef != PrototypeId.Invalid) Logger.Warn($"PostProcess(): Avatar has more than one ultimate power defined ({this})");
                             UltimatePowerRef = entryProto.PowerAssignment.Ability;
@@ -297,6 +298,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UIFanTier { get; protected set; }
         public PrototypeId[] Antirequisites { get; protected set; }
         public bool IsTrait { get; protected set; }
+
+        public override int GetRequiredLevel() => Level;
+        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.StartingRank : 0;
+
+        public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
+        public override PrototypeId[] GetPrerequisites() => Prerequisites;
+        public override PrototypeId[] GetAntirequisites() => Antirequisites;
     }
 
     public class PowerProgressionTablePrototype : Prototype

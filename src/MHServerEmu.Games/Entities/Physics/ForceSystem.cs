@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Entities.Physics
 {

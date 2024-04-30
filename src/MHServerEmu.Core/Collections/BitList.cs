@@ -1,5 +1,4 @@
-﻿
-namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Core.Collections
 {
     public class BitList
     {

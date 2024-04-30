@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.Collections
 {
     public class InvasiveList<T>
     {

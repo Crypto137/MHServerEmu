@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Core.Collections
 {
     public class FixedPriorityQueue<T> where T : IComparable<T>
     {

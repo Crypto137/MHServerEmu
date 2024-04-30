@@ -43,10 +43,10 @@ namespace MHServerEmu.Games.Entities
         {
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties = properties;
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 0;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 0;
 
             TransitionName = "";
             Destinations = new();
@@ -60,10 +60,10 @@ namespace MHServerEmu.Games.Entities
             PowerCollection powerCollection, int unkEvent, 
             string transitionName, List<Destination> destinations) : base(baseData)
         {
-            TrackingContextMap = trackingContextMap;
-            ConditionCollection = conditionCollection;
-            PowerCollection = powerCollection;
-            UnkEvent = unkEvent;
+            _trackingContextMap = trackingContextMap;
+            _conditionCollection = conditionCollection;
+            _powerCollection = powerCollection;
+            _unkEvent = unkEvent;
             TransitionName = transitionName;
             Destinations = destinations;
         }

@@ -24,10 +24,10 @@ namespace MHServerEmu.Games.Entities.Items
             Properties[PropertyEnum.ItemRarity] = itemRarity;
             Properties[PropertyEnum.ItemVariation] = itemVariation;
             
-            TrackingContextMap = new();
-            ConditionCollection = new(this);    
-            PowerCollection = new(this);
-            UnkEvent = 0;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);    
+            _powerCollection = new(this);
+            _unkEvent = 0;
             ItemSpec = itemSpec;
         }
 

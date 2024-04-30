@@ -3,21 +3,22 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities.PowerCollections;
-using MHServerEmu.Games.Generators;
-using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -25,12 +26,16 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public AlliancePrototype AllianceProto { get; private set; }
+        protected EntityTrackingContextMap _trackingContextMap;
+        protected ConditionCollection _conditionCollection;
+        protected PowerCollection _powerCollection;
+        protected int _unkEvent;
 
-        public EntityTrackingContextMap TrackingContextMap { get; set; }
-        public ConditionCollection ConditionCollection { get; set; }
-        public PowerCollection PowerCollection { get; set; }
-        public int UnkEvent { get; set; }
+        public EntityTrackingContextMap TrackingContextMap { get => _trackingContextMap; }
+        public ConditionCollection ConditionCollection { get => _conditionCollection; }
+        public PowerCollection PowerCollection { get => _powerCollection; }
+
+        public AlliancePrototype AllianceProto { get; private set; }
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
         public Area Area { get => RegionLocation.Area; }
@@ -97,10 +102,10 @@ namespace MHServerEmu.Games.Entities
 
             Physics.Initialize(this);
 
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 0;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 0;
         }
 
         // Old
@@ -112,27 +117,57 @@ namespace MHServerEmu.Games.Entities
         {
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 0;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 0;
             SpatialPartitionLocation = new(this);
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            if (archive.IsTransient)
+                success &= Serializer.Transfer(archive, ref _trackingContextMap);
+
+            success &= Serializer.Transfer(archive, ref _conditionCollection);
+
+            uint numRecords = 0;
+            success &= PowerCollection.SerializeRecordCount(archive, _powerCollection, ref numRecords);
+            if (numRecords > 0)
+            {
+                if (archive.IsPacking)
+                {
+                    success &= PowerCollection.SerializeTo(archive, _powerCollection, numRecords);
+                }
+                else
+                {
+                    if (_powerCollection == null) _powerCollection = new(this);
+                    success &= PowerCollection.SerializeFrom(archive, _powerCollection, numRecords);
+                }
+            }
+
+            if (archive.IsReplication)
+                success &= Serializer.Transfer(archive, ref _unkEvent);
+
+            return success;
         }
 
         protected override void Decode(CodedInputStream stream)
         {
             base.Decode(stream);
 
-            TrackingContextMap = new();
+            _trackingContextMap = new();
             TrackingContextMap.Decode(stream);
 
-            ConditionCollection = new(this);
+            _conditionCollection = new(this);
             ConditionCollection.Decode(stream);
 
-            PowerCollection = new(this);
+            _powerCollection = new(this);
             PowerCollection.Decode(stream, ReplicationPolicy);
 
-            UnkEvent = stream.ReadRawInt32();
+            _unkEvent = stream.ReadRawInt32();
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -143,7 +178,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection.Encode(stream);
             PowerCollection.Encode(stream, ReplicationPolicy);
 
-            stream.WriteRawInt32(UnkEvent);
+            stream.WriteRawInt32(_unkEvent);
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -159,7 +194,7 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in PowerCollection)
                 sb.AppendLine($"{nameof(PowerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            sb.AppendLine($"UnkEvent: {UnkEvent}");
+            sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
 
         public override void Destroy()
@@ -174,6 +209,34 @@ namespace MHServerEmu.Games.Entities
                 // CancelDestroyEvent();
                 base.Destroy();
             }
+        }
+
+        public Power GetPower(PrototypeId powerProtoRef) => PowerCollection?.GetPower(powerProtoRef);
+        public Power GetThrowablePower() => PowerCollection?.ThrowablePower;
+        public Power GetThrowableCancelPower() => PowerCollection?.ThrowableCancelPower;
+
+        public bool HasPowerInPowerCollection(PrototypeId powerProtoRef)
+        {
+            if (PowerCollection == null) return Logger.WarnReturn(false, "HasPowerInPowerCollection(): PowerCollection == null");
+            return PowerCollection.ContainsPower(powerProtoRef);
+        }
+
+        public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, bool sendPowerAssignmentToClients = true, PrototypeId triggeringPowerRef = PrototypeId.Invalid)
+        {
+            if (PowerCollection == null) return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection == null");
+            Power assignedPower = PowerCollection.AssignPower(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
+            if (assignedPower == null) return Logger.WarnReturn(assignedPower, "AssignPower(): assignedPower == null");
+            return assignedPower;
+        }
+
+        public bool UnassignPower(PrototypeId powerProtoRef, bool sendPowerUnassignToClients = true)
+        {
+            if (HasPowerInPowerCollection(powerProtoRef) == false) return false;    // This includes the null check for PowerCollection
+
+            if (PowerCollection.UnassignPower(powerProtoRef, sendPowerUnassignToClients) == false)
+                return Logger.WarnReturn(false, "UnassignPower(): Failed to unassign power");
+
+            return true;
         }
 
         private void OnAllianceChanged(PrototypeId allianceRef)

@@ -10,7 +10,9 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social.Guilds;
 
@@ -27,11 +29,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ReplicatedVariable<string> PlayerName { get; set; } = new();
         public ulong OwnerPlayerDbId { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
+
+        public Agent CurrentTeamUpAgent { get; set; } = null;
+
         public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
+
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
+
         // new
         public Avatar(Game game) : base(game) { }
 
@@ -49,10 +56,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties = new(replicationId);
 
             // WorldEntity
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 134463198;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 134463198;
 
             // Avatar
             PlayerName = new(++replicationId, string.Empty);
@@ -65,10 +72,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
-            TrackingContextMap = trackingContextMap;
-            ConditionCollection = conditionCollection;
-            PowerCollection = powerCollection;
-            UnkEvent = unkEvent;
+            _trackingContextMap = trackingContextMap;
+            _conditionCollection = conditionCollection;
+            _powerCollection = powerCollection;
+            _unkEvent = unkEvent;
             PlayerName = playerName;
             OwnerPlayerDbId = ownerPlayerDbId;
             _guildId = guildId;
@@ -232,6 +239,98 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             AbilityKeyMappings = new AbilityKeyMapping[] { abilityKeyMapping };
+        }
+
+        public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                if ((PrototypeId)kvp.Value != mappedPowerRef) continue;
+                Property.FromParam(kvp.Key, 0, out PrototypeId originalPower);
+                return originalPower;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
+            {
+                PrototypeId mappedPowerRef = kvp.Value;
+
+                if (mappedPowerRef == PrototypeId.Invalid)
+                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
+
+                return mappedPowerRef;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        public override bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            return false;
+        }
+
+        public override bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
+        {
+            info = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
+
+            PrototypeId progressionInfoPower = powerProtoRef;
+            PrototypeId mappedPowerRef;
+
+            // Check if this is a mapped power
+            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(powerProtoRef);
+            if (originalPowerRef != PrototypeId.Invalid)
+            {
+                mappedPowerRef = powerProtoRef;
+                progressionInfoPower = originalPowerRef;
+            }
+            else
+            {
+                mappedPowerRef = GetMappedPowerFromOriginalPower(powerProtoRef);
+            }
+
+            PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
+
+            // Initialize info
+            // Case 1 - Progression Power
+            PowerProgressionEntryPrototype powerProgressionEntry = powerOwnerTable.GetPowerProgressionEntry(avatarProto.DataRef, progressionInfoPower);
+            if (powerProgressionEntry != null)
+            {
+                PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
+                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
+
+                info.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
+                return info.IsValid;
+            }
+
+            // Case 2 - Talent
+            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
+            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
+            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
+            {
+                info.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
+                return info.IsValid;
+            }
+
+            // Case 3 - Non-Progression Power
+            info.InitNonProgressionPower(powerProtoRef);
+            return info.IsValid;
         }
 
         public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)

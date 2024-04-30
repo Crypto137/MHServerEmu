@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -8,9 +9,9 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Navi;
 
 namespace MHServerEmu.Games.Generators.Population
 {

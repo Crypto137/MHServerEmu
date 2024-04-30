@@ -1,5 +1,4 @@
-﻿
-namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Core.Collections
 {
     public class Range<T> where T : IComparable<T>
     {

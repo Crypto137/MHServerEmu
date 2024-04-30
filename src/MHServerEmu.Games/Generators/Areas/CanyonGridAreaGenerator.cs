@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;

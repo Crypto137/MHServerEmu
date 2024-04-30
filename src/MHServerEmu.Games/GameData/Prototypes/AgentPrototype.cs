@@ -81,6 +81,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProgressionEntryPrototype : Prototype
     {
+        // These are accessors present in the client
+        public virtual int GetRequiredLevel() => 0;
+        public virtual int GetStartingRank() => 0;
+
+        // These are additional accessors we are using for PowerProgressionInfo
+        public virtual CurveId GetMaxRankForPowerAtCharacterLevel() => CurveId.Invalid;
+        public virtual PrototypeId[] GetPrerequisites() => Array.Empty<PrototypeId>();
+        public virtual PrototypeId[] GetAntirequisites() => Array.Empty<PrototypeId>();
+
     }
 
     public class TeamUpPowerProgressionEntryPrototype : ProgressionEntryPrototype
@@ -95,6 +104,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int StartingRank { get; protected set; }
         public float UIPositionPctX { get; protected set; }
         public float UIPositionPctY { get; protected set; }
+
+        public override int GetRequiredLevel() => RequiredLevel;
+        public override int GetStartingRank() => StartingRank;
+
+        public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
+        public override PrototypeId[] GetPrerequisites() => Prerequisites;
+        public override PrototypeId[] GetAntirequisites() => Antirequisites;
     }
 
     public class AgentTeamUpPrototype : AgentPrototype
