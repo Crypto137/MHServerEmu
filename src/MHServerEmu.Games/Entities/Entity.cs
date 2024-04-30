@@ -161,6 +161,7 @@ namespace MHServerEmu.Games.Entities
 
         public int CurrentStackSize { get => Properties[PropertyEnum.InventoryStackCount]; }
         public int MaxStackSize { get => Properties[PropertyEnum.InventoryStackSizeMax]; }
+        public bool IsRootOwner { get => OwnerId == 0; }
 
         #endregion
 
@@ -358,6 +359,17 @@ namespace MHServerEmu.Games.Entities
                 owner = owner.GetOwner();
             }
             return null;
+        }
+
+        public Entity GetRootOwner()
+        {
+            Entity owner = this;
+            while (owner != null)
+            {
+                if (owner.IsRootOwner) return owner;
+                owner = owner.GetOwner();
+            }
+            return this;
         }
 
         public bool CanBePlayerOwned()
