@@ -297,7 +297,7 @@ namespace MHServerEmu.Games.Network
 
             if (avatarState.FieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && currentAvatar.Locomotor != null)
             {
-                var locomotionState = currentAvatar.Locomotor.LastSyncState;
+                LocomotionState locomotionState = new(currentAvatar.Locomotor.LastSyncState);
                 locomotionState.StateFrom(avatarState.LocomotionState); // LocomotionState.SerializeFrom
                 currentAvatar.Locomotor.SetSyncState(locomotionState, position, orientation);
             }

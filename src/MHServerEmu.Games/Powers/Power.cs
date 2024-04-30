@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Powers
         public PowerCategoryType PowerCategory { get => Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None; }
 
         public PropertyCollection Properties { get; } = new();
+        public bool IsTravelPower { get => Prototype != null && Prototype.IsTravelPower; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {

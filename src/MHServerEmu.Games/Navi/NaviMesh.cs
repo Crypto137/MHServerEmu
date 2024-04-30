@@ -546,7 +546,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        private bool RemoveInfluence(NavigationInfluence inoutInfluence)
+        public bool RemoveInfluence(NavigationInfluence inoutInfluence)
         {
             if (inoutInfluence.Point != null)
             {

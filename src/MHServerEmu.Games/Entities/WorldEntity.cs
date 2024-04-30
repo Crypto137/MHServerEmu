@@ -17,6 +17,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -161,11 +162,6 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"UnkEvent: {UnkEvent}");
         }
 
-        internal Entity GetRootOwner()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void Destroy()
         {
             if (Game == null) return;
@@ -244,6 +240,18 @@ namespace MHServerEmu.Games.Entities
                 if (region.NaviMesh.AddInfluence(RegionLocation.Position, Bounds.Radius, NaviInfluence) == false)
                     Logger.Warn($"Failed to add navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
                 HasNavigationInfluence = true;
+            }
+        }
+
+        public void DisableNavigationInfluence()
+        {
+            if (HasNavigationInfluence)
+            {
+                Region region = Region;
+                if (region == null) return;
+                if (region.NaviMesh.RemoveInfluence(NaviInfluence) == false)
+                    Logger.Warn($"Failed to remove navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+                HasNavigationInfluence = false;
             }
         }
 
@@ -646,6 +654,15 @@ namespace MHServerEmu.Games.Entities
 
         public Vector3 Forward { get => GetTransform().Col0; }
         public Vector3 GetUp { get => GetTransform().Col2; }
+        public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
+        public float MovementSpeedOverride { get => Properties[PropertyEnum.MovementSpeedOverride]; } // PropertyTemp[PropertyEnum.MovementSpeedOverride]
+        public Power ActivePower { get => GetActivePower(); }
+        public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
+
+        private Power GetActivePower()
+        {
+            throw new NotImplementedException();
+        }
 
         private Transform3 _transform = Transform3.Identity();
 
@@ -674,6 +691,13 @@ namespace MHServerEmu.Games.Entities
         }
 
         internal bool ActivePowerOrientsToTarget()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
+
+        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities)
         {
             throw new NotImplementedException();
         }
