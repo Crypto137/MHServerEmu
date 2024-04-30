@@ -764,6 +764,11 @@ namespace MHServerEmu.Games.Entities
         {
             throw new NotImplementedException();
         }
+
+        internal void OrientToward(Vector3 goalPosition)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum PowerMovementPreventionFlags

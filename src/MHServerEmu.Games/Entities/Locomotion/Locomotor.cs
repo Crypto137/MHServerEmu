@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
@@ -637,7 +636,167 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 SetEnabled(false);
         }
 
-        private bool GetNextLocomotePosition(float time, out Vector3 movePosition)
+        private bool GetNextLocomotePosition(float timeSeconds, out Vector3 resultMovePosition)
+        {
+            resultMovePosition = null;
+            if (_owner == null || _owner.Region == null || !IsEnabled) return false;
+            if (RefreshCurrentPath() == false) return false;
+            Vector3 currentPosition = _owner.RegionLocation.Position;
+
+            switch (Method)
+            {
+                case LocomotorMethod.TallGround:
+                case LocomotorMethod.Airborne:
+                case LocomotorMethod.Ground:
+                case LocomotorMethod.HighFlying:
+                    {
+                        if (IsFollowingEntity)
+                        {
+                            if (GeneratedPath.Path.IsValid == false) return false;
+                            if (LocomotionState.FollowEntityRangeStart > 0.0f)
+                            {
+                                Vector3 finalPosition = GeneratedPath.Path.GetFinalPosition();
+                                float distanceSq = Vector3.DistanceSquared(finalPosition, currentPosition);
+                                if (distanceSq <= (LocomotionState.FollowEntityRangeEnd * LocomotionState.FollowEntityRangeEnd))
+                                    return false;
+                            }
+                        }
+
+                        float moveDistance = GetCurrentSpeed() * timeSeconds;
+                        if (LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.ForwardMove))
+                            resultMovePosition = currentPosition + _owner.Forward * moveDistance;
+                        else
+                        {
+                            if (GeneratedPath.Path.IsValid == false || GeneratedPath.Path.IsComplete) return false;
+                            GeneratedPath.Path.GetNextMovePosition(currentPosition, moveDistance, out resultMovePosition, out _);
+                            LocomotionState.PathGoalNodeIndex = GeneratedPath.Path.GetCurrentGoalNode();
+                        }
+
+                        if (IgnoresWorldCollision == false)
+                        {
+                            resultMovePosition = _owner.FloorToCenter(RegionLocation.ProjectToFloor(_owner.Region, _owner.Cell, resultMovePosition));
+                            if (!Vector3.IsFinite(resultMovePosition)) return false;
+                        }
+                        return true;
+                    }
+
+                case LocomotorMethod.Missile:
+                case LocomotorMethod.MissileSeeking:
+                    {
+                        if (_owner.Game == null) return false;
+                        if (_owner is not Missile ownerAsMissile) return false;
+                        var missileContext = ownerAsMissile.MissileCreationContextPrototype;
+                        if (missileContext == null) return false;
+                        WorldEntity followEntity = _owner.Game.EntityManager.GetEntity<WorldEntity>(LocomotionState.FollowEntityId);
+
+                        var gravitatedContext = missileContext.GravitatedContext;
+                        if (gravitatedContext != null)
+                        {
+                            Vector3 currentDirection = _owner.Forward;
+                            Vector3 currentVelocity = currentDirection * GetCurrentSpeed();
+                            Vector3 nextVelocity = currentVelocity + (Vector3.Up * gravitatedContext.Gravity);
+                            Vector3 nextDirection = Vector3.Normalize(nextVelocity);
+                            Vector3 nextPosition = currentPosition + nextVelocity * timeSeconds;
+                            Vector3 floorPosition = RegionLocation.ProjectToFloor(_owner.Region, _owner.Cell, nextPosition);
+
+                            Orientation newOrientation;
+                            if (nextPosition.Z <= floorPosition.Z)
+                            {
+                                if (!ownerAsMissile.OnBounce(floorPosition)) return false;
+                                float bounceSpeed = Vector3.Length(nextVelocity) * gravitatedContext.OnBounceCoefficientOfRestitution;
+                                int randomDegree = gravitatedContext.OnBounceRandomDegreeFromForward;
+                                if (randomDegree != 0)
+                                {
+                                    Random random = ownerAsMissile.Random;
+                                    nextDirection = Vector3.AxisAngleRotate(nextDirection, Vector3.ZAxis, MathHelper.ToRadians(random.Next(-randomDegree, randomDegree)));
+                                }
+                                Vector3 axisVector = Vector3.Normalize(Vector3.Cross(Vector3.Up, nextDirection));
+                                Vector3 normalDirection = Vector3.AxisAngleRotate(Vector3.Up, axisVector, MathHelper.ToRadians(90.0f));
+                                float angle = MathF.Acos(Vector3.Dot(normalDirection, nextDirection));
+                                newOrientation = Orientation.FromDeltaVector(Vector3.AxisAngleRotate(nextDirection, -axisVector, 2 * angle));
+                                _owner.Properties[PropertyEnum.MovementSpeedOverride] = bounceSpeed;
+                                resultMovePosition = floorPosition + new Vector3(0.0f, 0.0f, _owner.Bounds.HalfHeight);
+                            }
+                            else
+                            {
+                                newOrientation = Orientation.FromDeltaVector(nextDirection);
+                                float newSpeed = Vector3.Length(currentVelocity);
+                                _owner.Properties[PropertyEnum.MovementSpeedOverride] = newSpeed;
+                                resultMovePosition = nextPosition;
+                            }
+                            _owner.ChangeRegionPosition(null, newOrientation);
+                        }
+                        else
+                        {
+                            if (GetPathGoal(out Vector3 goalPosition) && (followEntity == null || !followEntity.IsDead))
+                            {
+                                if (GetCurrentRotationSpeed() > 0f)
+                                {
+                                    Vector3 currentDirection = _owner.Forward;
+                                    Vector3 nextDirection = goalPosition - currentPosition;
+                                    float currentRotationSpeed = GetCurrentRotationSpeed();
+
+                                    if (missileContext.InterpolateRotationSpeed)
+                                    {
+                                        float interpolateRotMultByDist = missileContext.InterpolateRotMultByDist;
+                                        if (Segment.EpsilonTest(interpolateRotMultByDist, 1.0f) == false)
+                                        {
+                                            float originalRotationSpeed = GetOriginalRotationSpeed();
+                                            float spawnDistanceToTargetSqr = _owner.Properties[PropertyEnum.SpawnDistanceToTargetSqr];
+                                            float nextDistanceToTargetSqr = MathF.Min(Vector3.LengthSquared(nextDirection), spawnDistanceToTargetSqr);
+                                            float minSpeed = MathF.Min(currentRotationSpeed, originalRotationSpeed);
+                                            currentRotationSpeed = Segment.Lerp(minSpeed, originalRotationSpeed * interpolateRotMultByDist, 
+                                                (spawnDistanceToTargetSqr - nextDistanceToTargetSqr) / spawnDistanceToTargetSqr);
+                                        }
+                                        else
+                                        {
+                                            float interpolateOvershotAccel = missileContext.InterpolateOvershotAccel;
+                                            if (Segment.IsNearZero(interpolateOvershotAccel) == false)
+                                            {
+                                                WorldEntity powerUser = _owner.Game.EntityManager.GetEntity<WorldEntity>(_owner.Properties[PropertyEnum.PowerUserOverrideID]);
+                                                if (powerUser != null && powerUser.IsInWorld)
+                                                    if (Vector3.Dot(powerUser.RegionLocation.Position - goalPosition, currentPosition - goalPosition) < 0)
+                                                        currentRotationSpeed += currentRotationSpeed * interpolateOvershotAccel * timeSeconds;
+                                            }
+                                        }
+                                        _rotationSpeed = currentRotationSpeed;
+                                    }
+
+                                    if (missileContext.IgnoresPitch)
+                                    {
+                                        currentDirection.Z = 0.0f;
+                                        nextDirection.Z = 0.0f;
+                                    }
+
+                                    currentDirection = Vector3.Normalize(currentDirection);
+                                    nextDirection = Vector3.Normalize(nextDirection);
+                                    SetRotateMaxTurnThisFrame3D(currentDirection, nextDirection, currentRotationSpeed, timeSeconds);
+                                }
+                                else
+                                    _owner.OrientToward(goalPosition);
+                            }
+
+                            Vector3 moveDelta = _owner.Forward * (GetCurrentSpeed() * timeSeconds);
+                            resultMovePosition = currentPosition + moveDelta;
+                            if (Vector3.IsFinite(resultMovePosition) == false) return false;
+                        }
+
+                        return true;
+                    }
+
+                default:
+                    resultMovePosition = currentPosition;
+                    return false;
+            }
+        }
+
+        public float GetOriginalRotationSpeed()
+        {
+            var locomotorProto = _owner?.WorldEntityPrototype?.Locomotor;
+            return locomotorProto != null ? locomotorProto.RotationSpeed : 0.0f;
+        }
+
+        private bool RefreshCurrentPath()
         {
             throw new NotImplementedException();
         }

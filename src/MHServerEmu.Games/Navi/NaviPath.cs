@@ -117,6 +117,11 @@ namespace MHServerEmu.Games.Navi
         {
             throw new NotImplementedException();
         }
+
+        internal void GetNextMovePosition(Vector3 currentPosition, float moveDistance, out Vector3 movePosition, out Vector3 moveDirection)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum PathGenerationFlags
