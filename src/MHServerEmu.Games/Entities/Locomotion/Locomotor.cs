@@ -33,11 +33,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool MovementImpeded { get; set; }
         public bool IsMoving { get; private set; }
         public bool IsEnabled { get; private set; }
-        public float DefaultRunSpeed { get; private set; }        
+        public float DefaultRunSpeed { get => _runSpeed; }        
         public float Height { get; private set; }
-        public LocomotorMethod Method { get; private set; }
         public GeneratedPath GeneratedPath { get; private set; }
 
+        public LocomotorMethod Method { get => LocomotionState.Method; }
         public bool IsLocomoting { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting); }
         public bool IsWalking { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsWalking); }
         public bool IsLooking { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking); }
@@ -53,44 +53,46 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public PathFlags PathFlags { get => GetPathFlags(LocomotionState.Method); }
         public bool IsFollowingEntity { get => LocomotionState.FollowEntityId != 0; }
         public ulong FollowEntityId { get => LocomotionState.FollowEntityId; }
-
+        public bool SupportsWalking { get; private set; }
         public LocomotionState LastSyncState { get; private set; }
         public bool HasSyncState { get => _syncStateTime != TimeSpan.Zero; }
         public bool HasPath { get => GeneratedPath.Path.IsValid; }
-        public bool IsFollowingSyncPath { get; private set; }
+        public bool IsFollowingSyncPath { get => _syncPathGoalNodeIndex > 0 && LocomotionState.PathGoalNodeIndex <= _syncPathGoalNodeIndex; }
 
         private bool _hasOrientationSyncState;
         private TimeSpan _syncStateTime;
         private Orientation _syncOrientation;
         private Vector3 _syncPosition;
         private TimeSpan _syncNextRepathTime;
-
         private int _syncAttempts;
-        private float _giveUpDistanceThreshold;
-        private TimeSpan _giveUpTime;
-        private TimeSpan _giveUpNextTime;
-
-        public bool _supportsWalking;
-        private float _walkSpeed;
-        private float _rotationSpeed;
-        private float _movementSpeedOverride;
-
         private float _syncSpeed;
         private int _syncPathGoalNodeIndex;
         private int _syncAttemptsFailed;
+
+
+        private int _giveUpRepathCount;
+        private float _giveUpDistanceThreshold;
+        private TimeSpan _giveUpTime;
+        private TimeSpan _giveUpNextTime;
         private Vector3 _giveUpPosition;
         private float _giveUpDistance;
+
+        private float _runSpeed;
+        private float _walkSpeed;
+        private float _rotationSpeed;
+        private float _moveSpeedOverride;
+
+        private int _repathCount;
         private TimeSpan _repathDelay;
         private TimeSpan _repathTime;
-        private int _giveUpRepathCount;
-        private int _repathCount;
+
         private bool _initRotation;
         private LocomotorMethod _defaultMethod;
         private LocomotionState _lastLocomotionState;
         private PathGenerationFlags _pathGenerationFlags;
         private float _incompleteDistance;
         private TimeSpan _updateNavigationInfluenceTime;
-        private float _RotationDir;
+        private float _rotationDirection;
 
         public Locomotor()
         {
@@ -98,7 +100,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             ReturnTargetMissingEvent = new();
             LocomotionState = new();
             _lastLocomotionState = new();
-            Method = LocomotorMethod.None;
+            _defaultMethod = LocomotorMethod.None;
             GeneratedPath = new();
             _repathTime = TimeSpan.Zero;
             _repathDelay = TimeSpan.Zero;
@@ -115,11 +117,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             _owner = entity;
             if (entity != null && entity.Properties.HasProperty(PropertyEnum.MissileBaseMoveSpeed))
-                DefaultRunSpeed = entity.Properties[PropertyEnum.MissileBaseMoveSpeed];
+                _runSpeed = entity.Properties[PropertyEnum.MissileBaseMoveSpeed];
             else
-                DefaultRunSpeed = locomotorProto.Speed;
+                _runSpeed = locomotorProto.Speed;
 
-            _supportsWalking = locomotorProto.WalkEnabled;
+            SupportsWalking = locomotorProto.WalkEnabled;
             _walkSpeed = locomotorProto.WalkSpeed;
             _rotationSpeed = locomotorProto.RotationSpeed;
             Height = heightOverride != 0.0f ? heightOverride : locomotorProto.Height;
@@ -128,10 +130,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             {
                 var worldEntityProto = _owner.WorldEntityPrototype;
                 if (worldEntityProto != null)
-                    Method = worldEntityProto.NaviMethod;
+                    _defaultMethod = worldEntityProto.NaviMethod;
             }
 
-            LocomotionState.Method = Method;
+            LocomotionState.Method = _defaultMethod;
             LocomotionState.BaseMoveSpeed = DefaultRunSpeed;
         }
 
@@ -448,7 +450,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             PushLocomotionStateChanges();
         }
 
-        private bool GetPathGoal(out Vector3 goalPosition)
+        public bool GetPathGoal(out Vector3 goalPosition)
         {
             if (HasPath)
             {
@@ -459,7 +461,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return false;
         }
 
-        private bool GetPathStart(out Vector3 startPosition)
+        public bool GetPathStart(out Vector3 startPosition)
         {
             if (HasPath)
             {
@@ -470,7 +472,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return false;
         }
 
-        private bool IsPathComplete()
+        public bool IsPathComplete()
         {
             if (_owner == null) return false;
             if (GeneratedPath.Path.IsComplete == false)
@@ -491,7 +493,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return true;
         }
 
-        private WorldEntity GetFollowEntity()
+        public WorldEntity GetFollowEntity()
         {
             if (_owner == null) return null;
             var followEntity = _owner.Game.EntityManager.GetEntity<WorldEntity>(LocomotionState.FollowEntityId);
@@ -585,7 +587,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                             if (rotDeg < deg)
                             {
                                 if (Segment.Cross2D(dir2d, goalDir2d) < 0.0f) rotDeg = -rotDeg;
-                                _RotationDir = rotDeg;
+                                _rotationDirection = rotDeg;
                                 Matrix3 dirRot = Matrix3.RotationZ(MathHelper.ToRadians(rotDeg));
                                 goalDir2d = dirRot * dir2d;
                                 setRotation = false;
@@ -605,14 +607,14 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     setRotation = true;
                 }
 
-                if (setRotation && _RotationDir != 0.0f) _RotationDir = 0.0f;
+                if (setRotation && _rotationDirection != 0.0f) _rotationDirection = 0.0f;
             }
 
             if (setRotation) _initRotation = true;
             return setRotation;
         }
 
-        private float GetCurrentRotationSpeed()
+        public float GetCurrentRotationSpeed()
         {
             if (_owner == null) return 0.0f;
             float result = _rotationSpeed;
@@ -630,7 +632,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 return _owner.Forward;
         }
 
-        private void Stop()
+        public void Stop()
         {
             if (_owner != null && _owner.IsInWorld)
                 SetEnabled(false);
@@ -896,7 +898,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return true;
         }
 
-        private bool PathTo(Vector3 position, LocomotionOptions options)
+        public bool PathTo(Vector3 position, LocomotionOptions options)
         {
             if (!Vector3.IsFinite(position)) return false;
             ResetState(); 
@@ -924,11 +926,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 return options.BaseMoveSpeed;
             else
             {
-                if (_movementSpeedOverride > 0.0f)
-                    return _movementSpeedOverride;
+                if (_moveSpeedOverride > 0.0f)
+                    return _moveSpeedOverride;
                 else
                 {
-                    float baseMoveSpeed = options.Flags.HasFlag(LocomotionFlags.IsWalking) ? _walkSpeed : DefaultRunSpeed;
+                    float baseMoveSpeed = options.Flags.HasFlag(LocomotionFlags.IsWalking) ? _walkSpeed : _runSpeed;
                     baseMoveSpeed += GetBaseMovementSpeedBonus();
                     return baseMoveSpeed;
                 }
@@ -988,7 +990,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             ReturnTargetMissingEvent.UnregisterCallbacks();
         }
 
-        private bool MoveTo(Vector3 position, LocomotionOptions options)
+        public bool MoveTo(Vector3 position, LocomotionOptions options)
         {
             if (!Vector3.IsFinite(position)) return false;
             ResetState();
@@ -1013,7 +1015,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return game.GetCurrentTime();
         }
 
-        private void LookAt(Vector3 position)
+        public void LookAt(Vector3 position)
         {
             if (_owner == null || !Vector3.IsFinite(position)) return;
             if (IsLooking)
@@ -1097,6 +1099,26 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public void ClearSyncState()
         {
             _syncStateTime = TimeSpan.Zero;
+        }
+
+        public void SetMethod(LocomotorMethod method, float moveSpeedOverride)
+        {
+            LocomotionState.Method = (method == LocomotorMethod.Default) ? _defaultMethod : method;
+            if (_moveSpeedOverride != moveSpeedOverride)
+            {
+                _moveSpeedOverride = moveSpeedOverride;
+                LocomotionState.BaseMoveSpeed = _moveSpeedOverride > 0.0f ? _moveSpeedOverride : _runSpeed;
+            }
+            PushLocomotionStateChanges();
+        }
+
+        public float GetBonusMovementSpeed(bool skipOverride = true)
+        {
+            float defaultRunSpeed = DefaultRunSpeed;
+            float moveSpeedOverride = _owner.MovementSpeedOverride;
+            if (moveSpeedOverride > 0.0f && skipOverride == false)
+                return moveSpeedOverride - defaultRunSpeed;
+            return (defaultRunSpeed * GetCurrentSpeedRate()) - defaultRunSpeed;
         }
 
         public void SetSyncState(LocomotionState locomotionState, Vector3 syncPosition, Orientation syncOrientation)
@@ -1235,7 +1257,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             PushLocomotionStateChanges();
         }
 
-        private NaviPathResult GeneratePath(GeneratedPath generatedPath, Vector3 goalPosition, PathGenerationFlags pathGenerationFlags,
+        public NaviPathResult GeneratePath(GeneratedPath generatedPath, Vector3 goalPosition, PathGenerationFlags pathGenerationFlags,
             float incompleteDistance = 0.0f, WorldEntity other = null)
         {
             generatedPath.Clear();
@@ -1294,7 +1316,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return currentSpeed;
         }
 
-        private float GetCurrentSpeedRate()
+        public float GetCurrentSpeedRate()
         {
             return _owner != null ? _owner.MovementSpeedRate : 0.0f;
         }

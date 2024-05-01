@@ -723,6 +723,7 @@ namespace MHServerEmu.Games.Entities
         public Vector3 GetUp { get => GetTransform().Col2; }
         public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
         public float MovementSpeedOverride { get => Properties[PropertyEnum.MovementSpeedOverride]; } // PropertyTemp[PropertyEnum.MovementSpeedOverride]
+        public float BonusMovementSpeed => Locomotor?.GetBonusMovementSpeed(false) ?? 0.0f;
         public Power ActivePower { get => GetActivePower(); }
         public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
 
