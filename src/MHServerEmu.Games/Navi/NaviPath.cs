@@ -24,6 +24,7 @@ namespace MHServerEmu.Games.Navi
 
         public List<NaviPathNode> PathNodeList { get => _pathNodes; }
         public bool IsComplete { get; internal set; }
+        public bool IsCurrentGoalNodeLastNode { get; internal set; }
 
         public NaviPath()
         {
@@ -119,6 +120,11 @@ namespace MHServerEmu.Games.Navi
         }
 
         internal void GetNextMovePosition(Vector3 currentPosition, float moveDistance, out Vector3 movePosition, out Vector3 moveDirection)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float ApproxCurrentDistance(Vector3 position)
         {
             throw new NotImplementedException();
         }

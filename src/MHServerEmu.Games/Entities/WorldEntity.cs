@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -354,14 +355,14 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
         }
 
-        public virtual void ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        public virtual bool ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
             bool positionChanged = false;
             bool orientationChanged = false;
 
             RegionLocation preChangeLocation = new(RegionLocation);
             Region region = Game.RegionManager.GetRegion(preChangeLocation.RegionId);
-            if (region == null) return;
+            if (region == null) return false;
 
             if (position != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
             {
@@ -404,9 +405,12 @@ namespace MHServerEmu.Games.Entities
                 SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
                 if (RegionLocation.IsValid())
                     ExitWorldRegionLocation.Set(RegionLocation);
+                return true;
             }
 
             // TODO send NetMessageEntityPosition position change to clients
+
+            return false;
         }
 
         private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
@@ -759,15 +763,21 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
+        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
 
-        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities)
+        public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {
-            throw new NotImplementedException();
+            return OrientToward(point, RegionLocation.Position, ignorePitch, changeFlags);
         }
 
-        internal void OrientToward(Vector3 goalPosition)
+        private bool OrientToward(Vector3 point, Vector3 origin, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {
-            throw new NotImplementedException();
+            if (IsInWorld == false) Logger.Debug($"Trying to orient entity that is not in the world {this}.  point={point}, ignorePitch={ignorePitch}, cpFlags={changeFlags}");
+            Vector3 delta = point - origin;
+            if (ignorePitch) delta.Z = 0.0f;
+            if (Vector3.LengthSqr(delta) >= MathHelper.PositionSqTolerance)
+                return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == true;
+            return false;
         }
     }
 
