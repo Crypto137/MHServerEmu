@@ -26,7 +26,11 @@ namespace MHServerEmu.Games.Entities.Items
 
             AffixSpec = new AffixSpec[stream.ReadRawVarint64()];
             for (int i = 0; i < AffixSpec.Length; i++)
-                AffixSpec[i] = new(stream);
+            {
+                AffixSpec[i] = new();
+                AffixSpec[i].Decode(stream);
+            }
+
 
             Seed = stream.ReadRawInt32();
             EquippableBy = stream.ReadPrototypeRef<Prototype>();
