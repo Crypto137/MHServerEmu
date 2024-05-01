@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.Locomotion;
 
 namespace MHServerEmu.Games.Navi
 {
@@ -128,11 +129,17 @@ namespace MHServerEmu.Games.Navi
         {
             throw new NotImplementedException();
         }
+
+        internal NaviPathResult GenerateWaypointPath(NaviMesh naviMesh, Vector3 position, List<Waypoint> waypoints, float radius, PathFlags pathFlags)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum PathGenerationFlags
     {
         Default = 0,
+        IncompletedPath = 1 << 1,
     }
 
     public enum NaviPathResult
@@ -142,5 +149,12 @@ namespace MHServerEmu.Games.Navi
         FailedRegion = 3,
         IncompletedPath = 10,
 
+    }
+
+    public enum NaviSide
+    {
+        Left = 0,
+        Right = 1,
+        Point = 2
     }
 }

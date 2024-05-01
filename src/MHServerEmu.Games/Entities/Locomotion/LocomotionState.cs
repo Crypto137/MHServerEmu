@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         IsMovementPower = 1ul << 5,
         DisableOrientation = 1ul << 6,
         IsDrivingMovementMode = 1ul << 7,
-        ForwardMove = 1ul << 8,
+        MoveForward = 1ul << 8,
         MoveTo = 1ul << 9,
         IsSyncMoving = 1ul << 10,
         IgnoresWorldCollision = 1ul << 11,
