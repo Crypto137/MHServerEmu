@@ -1,4 +1,6 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
@@ -7,14 +9,27 @@ namespace MHServerEmu.Games.Entities
     {
         public override Bounds EntityCollideBounds { get; set; }
         public override bool CanRepulseOthers => false;
+
+        private MissileCreationContextPrototype _contextPrototype;
+        public MissileCreationContextPrototype MissileCreationContextPrototype { get => _contextPrototype; }
+        public Random Random { get; private set; }
+
         // new
-        public Missile(Game game) : base(game) { }
+        public Missile(Game game) : base(game) 
+        { 
+            Random = new();
+        }
 
         public override bool CanCollideWith(WorldEntity other)
         {
             if (base.CanCollideWith(other) == false) return false;
             if (other.Properties[PropertyEnum.NoMissileCollide] == true) return false;
             return true;
+        }
+
+        internal bool OnBounce(Vector3 position)
+        {
+            throw new NotImplementedException();
         }
 
         // old

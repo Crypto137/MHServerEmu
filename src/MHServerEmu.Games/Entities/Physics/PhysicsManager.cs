@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
@@ -107,6 +108,8 @@ namespace MHServerEmu.Games.Entities.Physics
                     moveFlags |= MoveEntityFlags.SendToOwner | MoveEntityFlags.SendToClients;
                 if (worldEntity.IsMovementAuthoritative)
                     moveFlags |= MoveEntityFlags.SendToOwner;
+                if (_game.AdminCommandManager.TestAdminFlag(AdminFlags.LocomotionSync) == false)
+                    moveFlags |= MoveEntityFlags.SendToClients;
 
                 if (Vector3.IsNearZero(repulsionForces, 0.5f) == false)
                 {
@@ -176,16 +179,16 @@ namespace MHServerEmu.Games.Entities.Physics
                 if (entity != null && entity.IsInWorld)
                     if (entity.TestStatus(EntityStatus.Destroyed))
                     {
-                        float time = Math.Min((float)_game.FixedTimeBetweenUpdates.TotalSeconds, member.Time);
-                        float distance = member.Speed * time + member.Acceleration * time * time / 2;
+                        float deltaTime = Math.Min((float)_game.FixedTimeBetweenUpdates.TotalSeconds, member.Time);
+                        float distance = member.Speed * deltaTime + member.Acceleration * deltaTime * deltaTime / 2;
                         Vector3 vector = member.Direction * distance;
                         bool moved = MoveEntity(entity, vector, MoveEntityFlags.SendToOwner | MoveEntityFlags.SendToClients | MoveEntityFlags.SweepCollide);
 
                         bool collision = Vector3.LengthSquared(member.Position + vector - entity.RegionLocation.Position) > 0.01f;
 
                         member.Position = entity.RegionLocation.Position;
-                        member.Time -= time;
-                        member.Speed += member.Acceleration * time;
+                        member.Time -= deltaTime;
+                        member.Speed += member.Acceleration * deltaTime;
 
                         active = collision == false && Segment.IsNearZero(member.Time) == false;
                         complete &= !active;

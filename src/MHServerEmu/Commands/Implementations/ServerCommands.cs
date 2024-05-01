@@ -15,7 +15,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             StringBuilder sb = new();
             sb.AppendLine("Server Status");
-            sb.AppendLine(Program.VersionInfo);
+            sb.AppendLine(ServerApp.VersionInfo);
             sb.Append(ServerManager.Instance.GetServerStatus());
             string status = sb.ToString();
 
@@ -31,7 +31,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]
         public string Shutdown(string[] @params, FrontendClient client)
         {
-            Program.Shutdown();
+            ServerApp.Instance.Shutdown();
             return string.Empty;
         }
     }

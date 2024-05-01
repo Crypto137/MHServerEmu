@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -15,6 +16,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
     {
         // Relevant protobufs: NetMessagePowerCollectionAssignPower, NetMessageAssignPowerCollection,
         // NetMessagePowerCollectionUnassignPower, NetMessageUpdatePowerIndexProps
+
+        private const int MaxNumRecordsToSerialize = 256;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -30,19 +33,90 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             _owner = owner;
         }
 
-        public static bool SerializeRecordCount(Archive archive, PowerCollection powerCollection, ref uint recordCount)
+        public static bool SerializeRecordCount(Archive archive, PowerCollection powerCollection, ref uint numberOfRecords)
         {
-            throw new NotImplementedException();
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                // TODO: archive.IsPersistent
+                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                {
+                    numberOfRecords = 0;
+                    if (powerCollection != null)
+                    {
+                        foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
+                        {
+                            if (record.ShouldSerializeRecordForPacking(archive))
+                            {
+                                if (numberOfRecords >= MaxNumRecordsToSerialize)
+                                {
+                                    Logger.Warn("SerializeRecordCount(): numberOfRecords >= MaxNumRecordsToSerialize");
+                                    break;
+                                }
+
+                                numberOfRecords++;
+                            }
+                        }
+                    }
+                    success &= Serializer.Transfer(archive, ref numberOfRecords);
+                }
+            }
+            else
+            {
+                // TODO: archive.IsPersistent
+                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                    success &= Serializer.Transfer(archive, ref numberOfRecords);
+            }
+
+            return success;
         }
 
-        public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint recordCount)
+        public static bool SerializeTo(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            throw new NotImplementedException();
+            // TODO: Also check for replication mode
+            if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+
+            bool success = true;
+
+            PowerCollectionRecord previousRecord = null;
+            foreach (PowerCollectionRecord record in powerCollection._powerDict.Values)
+            {
+                if (record.ShouldSerializeRecordForPacking(archive))
+                {
+                    success &= record.SerializeTo(archive, previousRecord);
+                    previousRecord = record;
+                    numberOfRecords--;
+                }
+            }
+
+            if (numberOfRecords != 0) return Logger.ErrorReturn(false, "SerializeTo(): numberOfRecords != 0");
+            return success;
         }
 
-        public static bool SerializeFrom(Archive archive, PowerCollection powerCollection, uint recordCount)
+        public static bool SerializeFrom(Archive archive, PowerCollection powerCollection, uint numberOfRecords)
         {
-            throw new NotImplementedException();
+            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
+
+            bool success = true;
+
+            if (powerCollection != null && powerCollection._powerDict.Count > 0)
+            {
+                Logger.Error("SerializeFrom(): When preparing to unpack a serialized PowerCollection, there was already data in the receiving _powerDict");
+                powerCollection._powerDict.Clear();
+            }
+
+            PowerCollectionRecord previousRecord = null;
+            for (uint i = 0; i < numberOfRecords; i++)
+            {
+                PowerCollectionRecord record = new();
+                success &= record.SerializeFrom(archive, previousRecord);
+                if (powerCollection != null)
+                    powerCollection._powerDict.Add(record.PowerPrototypeRef, record);
+                previousRecord = record;
+            }
+
+            return success;
         }
 
         public void Decode(CodedInputStream stream, AOINetworkPolicyValues replicationPolicy)
@@ -81,11 +155,41 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         public IEnumerator<KeyValuePair<PrototypeId, PowerCollectionRecord>> GetEnumerator() => _powerDict.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+        public Power GetPower(PrototypeId powerProtoRef)
+        {
+            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord record) == false)
+                return null;
+
+            return record.Power;
+        }
+
+        public bool ContainsPower(PrototypeId powerProtoRef) => GetPowerRecordByRef(powerProtoRef) != null;
+
+        public bool ContainsPowerProgressionPower(PrototypeId powerProtoRef)
+        {
+            PowerCollectionRecord record = GetPowerRecordByRef(powerProtoRef);
+            return record != null && record.IsPowerProgressionPower;
+        }
+
         public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, PrototypeId triggeringPowerRef = PrototypeId.Invalid, bool sendPowerAssignmentToClients = true)
         {
-            // TODO: More validation checks
+            var powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn<Power>(null, "AssignPower(): powerProto == null");
+
+            // TODO: Uncomment IsInWorld check when we have world entities properly entering and exiting world
+            if (Power.IsComboEffect(powerProto) == false && (_owner == null /* || _owner.IsInWorld == false */))
+                return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection only supports Assign() of powers while the owner is in world!");
 
             return AssignPowerInternal(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
+        }
+
+        public bool UnassignPower(PrototypeId powerProtoRef, bool sendPowerUnassignToClients = true)
+        {
+            // TODO: Uncomment IsInWorld check when we have world entities properly entering and exiting world
+            if (_owner == null /* || _owner.IsInWorld == false */)
+                return Logger.WarnReturn(false, "UnassignPower(): PowerCollection only supports Unassign() of powers while the owner is in world!");
+
+            return UnassignPowerInternal(powerProtoRef, sendPowerUnassignToClients);
         }
 
         private PowerCollectionRecord GetPowerRecordByRef(PrototypeId powerProtoRef)
@@ -128,7 +232,9 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                             if (isPowerProgressionPower == false)
                             {
-                                var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
+                                // TODO: Uncomment this once all avatars have a game
+                                //var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
+                                Avatar avatarOwner = _owner.Game != null ? _owner.GetMostResponsiblePowerUser<Avatar>() : null;
                                 if (avatarOwner != null)
                                 {
                                     Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
@@ -228,6 +334,77 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             // TODO: PowerCollection::assignTriggeredPowers()
             // TODO: _owner.OnPowerAssigned()
             power.OnAssign();
+        }
+
+        private bool UnassignPowerInternal(PrototypeId powerProtoRef, bool sendPowerUnassignToClients)
+        {
+            if (_owner == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner == null");
+            // TODO: Uncomment this later
+            //if (_owner.Game == null) return Logger.WarnReturn(false, "UnAssignPowerInternal(): _owner.Game == null");
+
+            // Find and validate the record for our powerProtoRef
+            PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
+            if (powerRecord == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord == null");
+            if (powerRecord.Power == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.Power == null");
+
+            // Start by subtracting from the PowerRefCount
+            if (powerRecord.PowerRefCount < 1) return Logger.WarnReturn(false, "UnassignPowerInternal(): powerRecord.PowerRefCount < 1");
+            powerRecord.PowerRefCount--;
+
+            // Remove the record when our PowerRefCount reaches 0
+            if (powerRecord.PowerRefCount == 0)
+            {
+                FinishUnassignPower(powerRecord.Power);
+
+                // TODO: EntityManager::RegisterEntityForCondemnedPowerDeletion()
+
+                DestroyPowerRecord(powerRecord.PowerPrototypeRef);
+            }
+
+            return true;
+        }
+
+        private bool DestroyPowerRecord(PrototypeId powerProtoRef)
+        {
+            // Is this extra validation worth the performance cost of looking the record up again?
+            if (_powerDict.TryGetValue(powerProtoRef, out PowerCollectionRecord powerRecord) == false)
+                return false;
+
+            if (powerRecord.PowerRefCount != 0)
+                Logger.Warn("DestroyPowerRecord(): Power record is not empty");
+
+            return _powerDict.Remove(powerProtoRef);
+        }
+
+        private void FinishUnassignPower(Power power)
+        {
+            if (power.PowerCategory == PowerCategoryType.ThrowablePower)
+            {
+                if (ThrowablePower == null)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power when this entity does not have a throwable power in its power collection");
+
+                if (ThrowablePower != power)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power that isn't the same as this power collection's throwable power");
+
+                ThrowablePower = null;
+            }
+            else if (power.PowerCategory == PowerCategoryType.ThrowableCancelPower)
+            {
+                if (ThrowableCancelPower == null)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power when this entity does not have a throwable cancel power in its power collection");
+
+                if (ThrowableCancelPower != power)
+                    Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power that isn't the same as this power collection's throwable cancel power");
+
+                ThrowableCancelPower = null;
+            }
+
+            if (_owner.IsDestroyed() == false)
+            {
+                // TODO: _owner.OnPowerUnAssigned()
+            }
+
+            // TODO: PowerCollection::unassignTriggeredPowers()
         }
     }
 }

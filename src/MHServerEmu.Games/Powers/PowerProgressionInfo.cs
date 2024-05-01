@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Powers
 
         public IEnumerable<PrototypeId> PrerequisitePowerRefs { get => _progressionEntryPrototype?.GetPrerequisites(); }
         public IEnumerable<PrototypeId> AntirequisitePowerRefs { get => _progressionEntryPrototype?.GetAntirequisites(); }
-        public bool IsUltimatePower { get => PowerPrototype != null && PowerPrototype.IsUltimate; }
+        public bool IsUltimatePower { get => PowerPrototype != null && Power.IsUltimatePower(PowerPrototype); }
         public bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.IsTrait; }
         public bool IsTalent { get => _talentEntryPrototype != null && _talentGroupPrototype != null; }
         public bool IsPassivePowerOnAvatarWhileAway { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileAway; }

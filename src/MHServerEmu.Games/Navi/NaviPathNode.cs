@@ -3,20 +3,20 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Games.Entities.Locomotion
+namespace MHServerEmu.Games.Navi
 {
-    public class LocomotionPathNode
+    public class NaviPathNode
     {
         public Vector3 Vertex { get; set; }
         public int VertexSideRadius { get; set; }
 
-        public LocomotionPathNode(CodedInputStream stream)
+        public NaviPathNode(CodedInputStream stream)
         {
             Vertex = new(stream, 3);
             VertexSideRadius = stream.ReadRawInt32();
         }
 
-        public LocomotionPathNode(Vector3 vertex, int vertexSideRadius)
+        public NaviPathNode(Vector3 vertex, int vertexSideRadius)
         {
             Vertex = vertex;
             VertexSideRadius = vertexSideRadius;

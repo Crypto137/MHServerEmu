@@ -1,21 +1,23 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class Item : WorldEntity
     {
-        public ItemSpec ItemSpec { get; set; }
+        private ItemSpec _itemSpec;
+
+        public ItemSpec ItemSpec { get => _itemSpec; }
 
         // new
-        public Item(Game game) : base(game) { }
+        public Item(Game game) : base(game) { _itemSpec = new(); }
 
         // old
-        public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
+        public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { _itemSpec = new(); }
 
         public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {
@@ -24,32 +26,36 @@ namespace MHServerEmu.Games.Entities.Items
             Properties[PropertyEnum.ItemRarity] = itemRarity;
             Properties[PropertyEnum.ItemVariation] = itemVariation;
             
-            TrackingContextMap = new();
-            ConditionCollection = new(this);    
-            PowerCollection = new(this);
-            UnkEvent = 0;
-            ItemSpec = itemSpec;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);    
+            _powerCollection = new(this);
+            _unkEvent = 0;
+            _itemSpec = itemSpec;
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+            success &= Serializer.Transfer(archive, ref _itemSpec);
+            return success;
         }
 
         protected override void Decode(CodedInputStream stream)
         {
             base.Decode(stream);
-
-            ItemSpec = new(stream);
+            _itemSpec.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)
         {
             base.Encode(stream);
-
-            ItemSpec.Encode(stream);
+            _itemSpec.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
-
-            sb.AppendLine($"ItemSpec: {ItemSpec}");
+            sb.AppendLine($"{nameof(_itemSpec)}: {_itemSpec}");
         }
     }
 }

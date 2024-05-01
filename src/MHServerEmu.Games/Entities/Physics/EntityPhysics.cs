@@ -93,6 +93,25 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
+        public bool HasAttachedEntities()
+        {
+            return AttachedEntities != null && AttachedEntities.Count > 0;
+        }
+
+        public void ApplyInternalForce(Vector3 force)
+        {
+            ApplyForce(force, false);
+        }
+
+        private void ApplyForce(Vector3 force, bool external)
+        {
+            if (!Vector3.IsFinite(force) || Vector3.IsNearZero(force) || !Entity.IsInWorld || Entity.Locomotor == null)
+                return;
+            var index = GetCurrentForceWriteIndex();
+            _hasExternalForces[index] |= external;
+            _externalForces[index] += force;
+            Entity.RegisterForPendingPhysicsResolve();
+        }
     }
 
     public class OverlapEntityEntry

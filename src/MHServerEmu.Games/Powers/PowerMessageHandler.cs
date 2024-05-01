@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Powers
 
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
-                Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
+                Logger.Trace($"AddEvent EndThrowing for {GameDatabase.GetPrototypeName(powerPrototypeId)}");
                 var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
                 _game.EventManager.AddEvent(playerConnection, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
                 return true;

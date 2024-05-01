@@ -9,6 +9,7 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -25,22 +26,26 @@ namespace MHServerEmu.Games
 {
     public partial class Game
     {
+        public const string Version = "1.52.0.1700";
+
         [ThreadStatic]
         internal static Game Current;
 
-        public const string Version = "1.52.0.1700";
-
+        private const int TargetFrameRate = 20;
+        public readonly TimeSpan FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
+        
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        public const int TickRate = 20;                 // Ticks per second based on client behavior
-        public const long TickTime = 1000 / TickRate;   // ms per tick
 
         private readonly NetStructGameOptions _gameOptions;
         private readonly object _gameLock = new();
         private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
-        private readonly Stopwatch _tickWatch = new();
 
-        private int _tickCount;
+        private readonly Stopwatch _gameTimer = new();
+        private TimeSpan _accumulatedFixedTimeUpdateTime;   // How much has passed since the last fixed time update
+        private TimeSpan _lastFixedTimeUpdateStartTime;     // When was the last time we tried to do a fixed time update
+        private TimeSpan _lastFixedTimeUpdateProcessTime;   // How long the last fixed time took
+        private int _frameCount;
+
         private ulong _currentRepId;
 
         public static TimeSpan StartTime { get; } = TimeSpan.FromMilliseconds(1);
@@ -52,11 +57,11 @@ namespace MHServerEmu.Games
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
+        public AdminCommandManager AdminCommandManager { get; }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
-        public TimeSpan FixedTimeBetweenUpdates { get; private set; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
@@ -71,6 +76,7 @@ namespace MHServerEmu.Games
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
 
+            AdminCommandManager = new(this);
             NetworkManager = new(this);
             EventManager = new(this);
             EntityManager = new(this);
@@ -86,46 +92,6 @@ namespace MHServerEmu.Games
             gameThread.Start();
             
             Logger.Info($"Game 0x{Id:X} created, initial replication id: {_currentRepId}");
-        }
-
-        public void Update()
-        {
-            Current = this;
-
-            while (true)
-            {
-                _tickWatch.Restart();
-                Interlocked.Increment(ref _tickCount);
-
-                lock (_gameLock)     // lock to prevent state from being modified mid-update
-                {
-                    // Handle all queued messages
-                    while (_mailbox.HasMessages)
-                    {
-                        var message = _mailbox.PopNextMessage();
-                        PlayerConnection connection = NetworkManager.GetPlayerConnection(message.Item1);
-                        connection.ReceiveMessage(message.Item2);
-                    }
-
-                    FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(TickTime); // TODO UpdateFixedTime();
-                    // Update event manager
-                    EventManager.Update();
-                    // Update locomote
-                    EntityManager.LocomoteEntities();
-                    // Update physics manager
-                    EntityManager.PhysicsResolveEntities();
-
-                    // Send responses to all clients
-                    NetworkManager.SendAllPendingMessages();
-                }
-
-                _tickWatch.Stop();
-
-                if (_tickWatch.ElapsedMilliseconds > TickTime)
-                    Logger.Warn($"Game update took longer ({_tickWatch.ElapsedMilliseconds} ms) than target tick time ({TickTime} ms)");
-                else
-                    Thread.Sleep((int)(TickTime - _tickWatch.ElapsedMilliseconds));
-            }
         }
 
         public void Handle(FrontendClient client, MessagePackage message)
@@ -222,6 +188,81 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
+        private void Update()
+        {
+            Current = this;
+            _gameTimer.Start();
+
+            while (true)
+            {
+                UpdateFixedTime();
+            }
+        }
+
+        private void UpdateFixedTime()
+        {
+            // First we make sure enough time has passed to do another fixed time update
+            TimeSpan currentTime = _gameTimer.Elapsed;
+            _accumulatedFixedTimeUpdateTime += currentTime - _lastFixedTimeUpdateStartTime;
+            _lastFixedTimeUpdateStartTime = currentTime;
+
+            if (_accumulatedFixedTimeUpdateTime < FixedTimeBetweenUpdates)
+            {
+                // Thread.Sleep() can sleep for longer than specified, so rather than sleeping
+                // for the entire time window between fixed updates, we do it in 1 ms intervals.
+                // For reference see MonoGame implementation here:
+                // https://github.com/MonoGame/MonoGame/blob/develop/MonoGame.Framework/Game.cs#L518
+                if ((FixedTimeBetweenUpdates - _accumulatedFixedTimeUpdateTime).TotalMilliseconds >= 2.0)
+                    Thread.Sleep(1);
+                return;
+            }
+
+            lock (_gameLock)    // Lock to prevent state from being modified mid-update
+            {
+                int timesUpdated = 0;
+
+                while (_accumulatedFixedTimeUpdateTime >= FixedTimeBetweenUpdates)
+                {
+                    _accumulatedFixedTimeUpdateTime -= FixedTimeBetweenUpdates;
+
+                    TimeSpan fixedUpdateStartTime = _gameTimer.Elapsed;
+
+                    DoFixedTimeUpdate();
+                    _frameCount++;
+                    timesUpdated++;
+
+                    _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - fixedUpdateStartTime;
+
+                    if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
+                        Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+                }
+
+                if (timesUpdated > 1)
+                    Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single update to catch up");
+            }
+        }
+
+        private void DoFixedTimeUpdate()
+        {
+            // Handle all queued messages
+            while (_mailbox.HasMessages)
+            {
+                var message = _mailbox.PopNextMessage();
+                PlayerConnection connection = NetworkManager.GetPlayerConnection(message.Item1);
+                connection.ReceiveMessage(message.Item2);
+            }
+
+            // Update event manager
+            EventManager.Update();
+            // Update locomote
+            EntityManager.LocomoteEntities();
+            // Update physics manager
+            EntityManager.PhysicsResolveEntities();
+
+            // Send responses to all clients
+            NetworkManager.SendAllPendingMessages();
+        }
+
         private List<IMessage> GetBeginLoadingMessages(PlayerConnection playerConnection)
         {
             List<IMessage> messageList = new();
@@ -264,6 +305,9 @@ namespace MHServerEmu.Games
             Task.Run(() => GetRegionAsync(playerConnection));
             playerConnection.AOI.LoadedCellCount = 0;
             playerConnection.IsLoading = true;
+
+            playerConnection.Player.IsOnLoadingScreen = true;
+
             return messageList;
         }
 
@@ -365,5 +409,11 @@ namespace MHServerEmu.Games
 
         public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
         public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
+
+        public TimeSpan GetCurrentTime()
+        {
+            // TODO check EventScheduler
+            return Clock.GameTime;
+        }
     }
 }

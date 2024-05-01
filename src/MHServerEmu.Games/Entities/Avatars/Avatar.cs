@@ -56,10 +56,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties = new(replicationId);
 
             // WorldEntity
-            TrackingContextMap = new();
-            ConditionCollection = new(this);
-            PowerCollection = new(this);
-            UnkEvent = 134463198;
+            _trackingContextMap = new();
+            _conditionCollection = new(this);
+            _powerCollection = new(this);
+            _unkEvent = 134463198;
 
             // Avatar
             PlayerName = new(++replicationId, string.Empty);
@@ -72,10 +72,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
-            TrackingContextMap = trackingContextMap;
-            ConditionCollection = conditionCollection;
-            PowerCollection = powerCollection;
-            UnkEvent = unkEvent;
+            _trackingContextMap = trackingContextMap;
+            _conditionCollection = conditionCollection;
+            _powerCollection = powerCollection;
+            _unkEvent = unkEvent;
             PlayerName = playerName;
             OwnerPlayerDbId = ownerPlayerDbId;
             _guildId = guildId;
