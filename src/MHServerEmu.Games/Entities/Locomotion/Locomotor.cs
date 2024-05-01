@@ -34,9 +34,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool IsEnabled { get; private set; }
         public float DefaultRunSpeed { get => _runSpeed; }        
         public float Height { get; private set; }
-        public GeneratedPath GeneratedPath { get; private set; }
-
         public LocomotorMethod Method { get => LocomotionState.Method; }
+
+        private GeneratedPath _generatedPath;
+
         public bool IsLocomoting { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting); }
         public bool IsWalking { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsWalking); }
         public bool IsLooking { get => LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking); }
@@ -55,11 +56,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool SupportsWalking { get; private set; }
         public LocomotionState LastSyncState { get; private set; }
         public bool HasSyncState { get => _syncStateTime != TimeSpan.Zero; }
-        public bool HasPath { get => GeneratedPath.Path.IsValid; }
+        public bool HasPath { get => _generatedPath.Path.IsValid; }
         public bool IsFollowingSyncPath { get => _syncPathGoalNodeIndex > 0 && LocomotionState.PathGoalNodeIndex <= _syncPathGoalNodeIndex; }
         public bool IsSyncMovingNoCollision { get => IsSyncMoving || IsFollowingSyncPath; }
         public bool IsStuck { get => HasPath && !IsPathComplete() && !IsEnabled; }
-        public NaviPathResult LastGeneratedPathResult { get => GeneratedPath.PathResult; }
+        public NaviPathResult LastGeneratedPathResult { get => _generatedPath.PathResult; }
         public static LocomotionOptions DefaultFollowEntityLocomotionOptions => new(TimeSpan.FromSeconds(1.0), 0, 0.0f, 0.0f, 0, 0);
 
         private bool _hasOrientationSyncState;
@@ -104,7 +105,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             LocomotionState = new();
             _lastLocomotionState = new();
             _defaultMethod = LocomotorMethod.None;
-            GeneratedPath = new();
+            _generatedPath = new();
             _repathTime = TimeSpan.Zero;
             _repathDelay = TimeSpan.Zero;
             _giveUpTime = TimeSpan.Zero;
@@ -457,7 +458,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             if (HasPath)
             {
-                goalPosition = GeneratedPath.Path.GetFinalPosition();
+                goalPosition = _generatedPath.Path.GetFinalPosition();
                 return true;
             }
             goalPosition = null;
@@ -468,7 +469,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             if (HasPath)
             {
-                startPosition = GeneratedPath.Path.GetStartPosition();
+                startPosition = _generatedPath.Path.GetStartPosition();
                 return true;
             }
             startPosition = null;
@@ -478,7 +479,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool IsPathComplete()
         {
             if (_owner == null) return false;
-            if (GeneratedPath.Path.IsComplete == false)
+            if (_generatedPath.Path.IsComplete == false)
             {
                 if (IsFollowingEntity)
                 {
@@ -629,7 +630,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public TimeSpan GetCurrentETA()
         {
             if (_owner == null) return TimeSpan.Zero;
-            float currentDistance = GeneratedPath.Path.ApproxCurrentDistance(_owner.RegionLocation.Position);
+            float currentDistance = _generatedPath.Path.ApproxCurrentDistance(_owner.RegionLocation.Position);
             float currentSpeed = GetCurrentSpeed();
             return TimeSpan.FromSeconds(currentDistance / currentSpeed);
         }
@@ -665,10 +666,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     {
                         if (IsFollowingEntity)
                         {
-                            if (GeneratedPath.Path.IsValid == false) return false;
+                            if (_generatedPath.Path.IsValid == false) return false;
                             if (LocomotionState.FollowEntityRangeStart > 0.0f)
                             {
-                                Vector3 finalPosition = GeneratedPath.Path.GetFinalPosition();
+                                Vector3 finalPosition = _generatedPath.Path.GetFinalPosition();
                                 float distanceSq = Vector3.DistanceSquared(finalPosition, currentPosition);
                                 if (distanceSq <= (LocomotionState.FollowEntityRangeEnd * LocomotionState.FollowEntityRangeEnd))
                                     return false;
@@ -680,9 +681,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
                             resultMovePosition = currentPosition + _owner.Forward * moveDistance;
                         else
                         {
-                            if (GeneratedPath.Path.IsValid == false || GeneratedPath.Path.IsComplete) return false;
-                            GeneratedPath.Path.GetNextMovePosition(currentPosition, moveDistance, out resultMovePosition, out _);
-                            LocomotionState.PathGoalNodeIndex = GeneratedPath.Path.GetCurrentGoalNode();
+                            if (_generatedPath.Path.IsValid == false || _generatedPath.Path.IsComplete) return false;
+                            _generatedPath.Path.GetNextMovePosition(currentPosition, moveDistance, out resultMovePosition, out _);
+                            LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNode();
                         }
 
                         if (IgnoresWorldCollision == false)
@@ -825,7 +826,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 {
                     if (followEntity != null && followEntity.IsInWorld)
                     {
-                        if (!GeneratedPath.Path.IsValid || (_repathDelay != TimeSpan.Zero && _repathTime < GameTimeNow()))
+                        if (!_generatedPath.Path.IsValid || (_repathDelay != TimeSpan.Zero && _repathTime < GameTimeNow()))
                         {
                             repath = true;
                             NaviPoint naviInfluencePoint = followEntity.NavigationInfluencePoint;
@@ -839,7 +840,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                 finalPosition = followEntity.RegionLocation.Position;
                         }
                         else
-                            GeneratedPath.Path.UpdateEndPosition(followEntity.RegionLocation.Position);
+                            _generatedPath.Path.UpdateEndPosition(followEntity.RegionLocation.Position);
                     }
                     else
                     {
@@ -856,22 +857,22 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 }
                 else
                 {
-                    if (followEntity != null && followEntity.IsInWorld && GeneratedPath.Path.IsValid)
-                        GeneratedPath.Path.UpdateEndPosition(followEntity.RegionLocation.Position);
+                    if (followEntity != null && followEntity.IsInWorld && _generatedPath.Path.IsValid)
+                        _generatedPath.Path.UpdateEndPosition(followEntity.RegionLocation.Position);
                 }
             }
             else
             {
-                if (GeneratedPath.Path.IsValid && !GeneratedPath.Path.IsComplete 
+                if (_generatedPath.Path.IsValid && !_generatedPath.Path.IsComplete 
                     && (_repathDelay != TimeSpan.Zero && _repathTime < GameTimeNow()))
                 {
                     repath = true;
-                    finalPosition = GeneratedPath.Path.GetFinalPosition();
+                    finalPosition = _generatedPath.Path.GetFinalPosition();
                 }
             }
 
             float finalDistance = Vector3.Distance2D(finalPosition, _owner.RegionLocation.Position) - _owner.Bounds.Radius;
-            if (repath && (finalDistance < 16.0f) && GeneratedPath.Path.IsValid && !GeneratedPath.Path.IsComplete)
+            if (repath && (finalDistance < 16.0f) && _generatedPath.Path.IsValid && !_generatedPath.Path.IsComplete)
                 repath = false;
 
             if (repath)
@@ -880,15 +881,15 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 GeneratedPath newPath = new ();
                 GeneratePath(newPath, finalPosition, _pathGenerationFlags, _incompleteDistance);
                 bool pathSuccess = newPath.PathResult == NaviPathResult.Success || newPath.PathResult == NaviPathResult.IncompletedPath;
-                float approxCurrentDistance = GeneratedPath.Path.ApproxCurrentDistance(_owner.RegionLocation.Position);
-                bool validDistance = pathSuccess && (!GeneratedPath.Path.IsValid || newPath.Path.ApproxTotalDistance < approxCurrentDistance);
+                float approxCurrentDistance = _generatedPath.Path.ApproxCurrentDistance(_owner.RegionLocation.Position);
+                bool validDistance = pathSuccess && (!_generatedPath.Path.IsValid || newPath.Path.ApproxTotalDistance < approxCurrentDistance);
 
                 bool movementImpeded = MovementImpeded;
-                if (pathSuccess && IsFollowingEntity && GeneratedPath.Path.IsCurrentGoalNodeLastNode)
+                if (pathSuccess && IsFollowingEntity && _generatedPath.Path.IsCurrentGoalNodeLastNode)
                 {
                     Vector3 resultPosition = new(); 
                     Vector3 normalResult = null;
-                    SweepResult sweepResult = _owner.NaviMesh.Sweep(_owner.RegionLocation.Position, GeneratedPath.Path.GetFinalPosition(), _owner.Bounds.Radius, PathFlags, 
+                    SweepResult sweepResult = _owner.NaviMesh.Sweep(_owner.RegionLocation.Position, _generatedPath.Path.GetFinalPosition(), _owner.Bounds.Radius, PathFlags, 
                         ref resultPosition, ref normalResult, MovementSweepPadding);
                     if (sweepResult != SweepResult.Success)
                         movementImpeded = true;
@@ -896,11 +897,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                 if (validDistance || (pathSuccess && movementImpeded))
                 {
-                    GeneratedPath = newPath;
-                    if (updateEnd && GeneratedPath.Path.IsValid)
-                        GeneratedPath.Path.UpdateEndPosition(updateEndPosition);
-                    LocomotionState.PathNodes = GeneratedPath.Path.PathNodeList;
-                    LocomotionState.PathGoalNodeIndex = GeneratedPath.Path.GetCurrentGoalNode();
+                    _generatedPath = newPath;
+                    if (updateEnd && _generatedPath.Path.IsValid)
+                        _generatedPath.Path.UpdateEndPosition(updateEndPosition);
+                    LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                    LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNode();
                     _syncPathGoalNodeIndex = 0;
                     _initRotation = false;
                 }
@@ -913,8 +914,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             if (!Vector3.IsFinite(position)) return false;
             ResetState(); 
-            GeneratePath(GeneratedPath, position, options.PathGenerationFlags, options.IncompleteDistance);
-            bool success = GeneratedPath.PathResult == NaviPathResult.Success || GeneratedPath.PathResult == NaviPathResult.IncompletedPath;
+            GeneratePath(_generatedPath, position, options.PathGenerationFlags, options.IncompleteDistance);
+            bool success = _generatedPath.PathResult == NaviPathResult.Success || _generatedPath.PathResult == NaviPathResult.IncompletedPath;
             if (success)
             {
                 _pathGenerationFlags = options.PathGenerationFlags;
@@ -925,7 +926,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = GeneratedPath.Path.PathNodeList; // new or link?
+                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList; // new or link?
             }
             SetEnabled(success);
             return success;
@@ -939,8 +940,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
             bool hasNaviInfluence = _owner.HasNavigationInfluence;
             if (hasNaviInfluence) _owner.DisableNavigationInfluence();
 
-            GeneratedPath.PathResult = GeneratedPath.Path.GenerateWaypointPath(region.NaviMesh, _owner.RegionLocation.Position, waypoints, _owner.Bounds.Radius, PathFlags);
-            bool success = (GeneratedPath.PathResult == NaviPathResult.Success);
+            _generatedPath.PathResult = _generatedPath.Path.GenerateWaypointPath(region.NaviMesh, _owner.RegionLocation.Position, waypoints, _owner.Bounds.Radius, PathFlags);
+            bool success = (_generatedPath.PathResult == NaviPathResult.Success);
             if (success)
             {
                 LocomotionOptions options = new();
@@ -952,7 +953,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = GeneratedPath.Path.PathNodeList;
+                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
             }
 
             if (hasNaviInfluence) _owner.EnableNavigationInfluence();
@@ -985,7 +986,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             if (clearPath && IsFollowingEntity) RefreshCurrentPath();
             SetEnabled(IsFollowingEntity);
-            return GeneratedPath.PathResult == NaviPathResult.Success || GeneratedPath.PathResult == NaviPathResult.IncompletedPath;
+            return _generatedPath.PathResult == NaviPathResult.Success || _generatedPath.PathResult == NaviPathResult.IncompletedPath;
         }
 
         public bool FollowPath(GeneratedPath followPath, LocomotionOptions options)
@@ -995,7 +996,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (success)
             {
                 ResetState();
-                GeneratedPath = followPath;
+                _generatedPath = followPath;
                 _pathGenerationFlags = options.PathGenerationFlags;
                 _incompleteDistance = options.IncompleteDistance;
                 _repathDelay = options.RepathDelay;
@@ -1004,7 +1005,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = GeneratedPath.Path.PathNodeList;
+                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
                 SetEnabled(true);
                 return true;
             }
@@ -1055,7 +1056,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             if (clearPath)
             {
-                GeneratedPath.Path.Clear();
+                _generatedPath.Path.Clear();
                 LocomotionState.PathNodes.Clear();
                 LocomotionState.PathGoalNodeIndex = 0;
                 LocomotionState.LocomotionFlags = 0;
@@ -1122,8 +1123,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (_owner == null || !Vector3.IsFinite(position)) return;
             if (IsLooking)
             {
-                GeneratedPath.Path.UpdateEndPosition(position);
-                LocomotionState.PathNodes = GeneratedPath.Path.PathNodeList;
+                _generatedPath.Path.UpdateEndPosition(position);
+                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
             }
             else
             {
@@ -1244,8 +1245,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
             {
                 if (_owner.IsInWorld && _owner.CanRotate && LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking))
                 {
-                    GeneratedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
-                    GeneratedPath.PathResult = NaviPathResult.Success;
+                    _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
+                    _generatedPath.PathResult = NaviPathResult.Success;
                     Vector3 lookingDir = GetLookingGoalDir();
                     SetEnabled(false);
                     _syncStateTime = GameTimeNow();
@@ -1258,8 +1259,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     {
                         ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToServer | ChangePositionFlags.NoSendToClients;
                         _owner.ChangeRegionPosition(syncPosition, syncOrientation, changeFlags);
-                        GeneratedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
-                        GeneratedPath.PathResult = NaviPathResult.Success;
+                        _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
+                        _generatedPath.PathResult = NaviPathResult.Success;
                         SetEnabled(true);
                     }
                     else if (LocomotionState.PathNodes.Count == 0 || LocomotionState.PathGoalNodeIndex == LocomotionState.PathNodes.Count)
@@ -1277,40 +1278,40 @@ namespace MHServerEmu.Games.Entities.Locomotion
                             int numPathNodes = LocomotionState.PathNodes.Count;
                             if (numPathNodes >= 2 && LocomotionState.PathGoalNodeIndex < numPathNodes)
                             {
-                                GeneratedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
-                                GeneratedPath.PathResult = NaviPathResult.Success;
+                                _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
+                                _generatedPath.PathResult = NaviPathResult.Success;
 
                                 int goalNodeIndex = LocomotionState.PathGoalNodeIndex;
-                                var currentGoalPosition = GeneratedPath.Path.GetCurrentGoalPosition(_owner.RegionLocation.Position);
+                                var currentGoalPosition = _generatedPath.Path.GetCurrentGoalPosition(_owner.RegionLocation.Position);
 
                                 if (Vector3.Dot2D(currentGoalPosition - syncPosition, _owner.RegionLocation.Position - syncPosition) > 0.0f)
                                 {
-                                    GeneratePath(GeneratedPath, currentGoalPosition, PathGenerationFlags.Default);
-                                    GeneratedPath.Path.PopGoal();
+                                    GeneratePath(_generatedPath, currentGoalPosition, PathGenerationFlags.Default);
+                                    _generatedPath.Path.PopGoal();
                                 }
                                 else
                                 {
-                                    GeneratePath(GeneratedPath, syncPosition, PathGenerationFlags.Default);
+                                    GeneratePath(_generatedPath, syncPosition, PathGenerationFlags.Default);
 
-                                    if (GeneratedPath.PathResult != NaviPathResult.Success)
+                                    if (_generatedPath.PathResult != NaviPathResult.Success)
                                     {
                                         Vector3 resultPosition = null;
                                         Vector3 resultNormal = null;
                                         if (SweepTo(syncPosition, ref resultPosition, ref resultNormal) == SweepResult.Success)
-                                            GeneratedPath.PathResult = GeneratedPath.Path.GenerateSimpleMove(_owner.RegionLocation.Position, syncPosition, _owner.Bounds.Radius, PathFlags);
+                                            _generatedPath.PathResult = _generatedPath.Path.GenerateSimpleMove(_owner.RegionLocation.Position, syncPosition, _owner.Bounds.Radius, PathFlags);
                                     }
                                 }
 
-                                if (GeneratedPath.PathResult == NaviPathResult.Success)
+                                if (_generatedPath.PathResult == NaviPathResult.Success)
                                 {
-                                    int numPathNodeList = GeneratedPath.Path.PathNodeList.Count;
-                                    GeneratedPath.Path.Append(LocomotionState.PathNodes, goalNodeIndex);
+                                    int numPathNodeList = _generatedPath.Path.PathNodeList.Count;
+                                    _generatedPath.Path.Append(LocomotionState.PathNodes, goalNodeIndex);
 
                                     float originalPathLength = NaviPath.CalcAccurateDistance(LocomotionState.PathNodes);
 
                                     if (LocomotionState.BaseMoveSpeed > Segment.Epsilon && originalPathLength > Segment.Epsilon)
                                     {
-                                        float fullPathLength = GeneratedPath.Path.AccurateTotalDistance();
+                                        float fullPathLength = _generatedPath.Path.AccurateTotalDistance();
                                         _syncSpeed = fullPathLength / (originalPathLength / LocomotionState.BaseMoveSpeed);
                                         _syncSpeed = Math.Max(_syncSpeed, LocomotionState.BaseMoveSpeed);
                                         if (_syncSpeed > LocomotionState.BaseMoveSpeed * 3.0f)
@@ -1323,8 +1324,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                                     if (syncTeleport == false)
                                     {
-                                        LocomotionState.PathNodes = GeneratedPath.Path.PathNodeList;
-                                        LocomotionState.PathGoalNodeIndex = GeneratedPath.Path.GetCurrentGoalNode();
+                                        LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                                        LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNode();
                                         _syncPathGoalNodeIndex = Math.Max(0, numPathNodeList - 1);
                                     }
                                 }
@@ -1339,8 +1340,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
                         {
                             ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToServer | ChangePositionFlags.NoSendToClients;
                             _owner.ChangeRegionPosition(syncPosition, syncOrientation, changeFlags);
-                            GeneratedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
-                            GeneratedPath.PathResult = NaviPathResult.Success;
+                            _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
+                            _generatedPath.PathResult = NaviPathResult.Success;
                         }
 
                         if (IsDrivingMovementMode && _owner.IsExecutingPower && _owner.Orientation != syncOrientation)
