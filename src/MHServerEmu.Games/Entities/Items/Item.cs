@@ -35,7 +35,8 @@ namespace MHServerEmu.Games.Entities.Items
         {
             base.Decode(stream);
 
-            ItemSpec = new(stream);
+            ItemSpec = new();
+            ItemSpec.Decode(stream);
         }
 
         public override void Encode(CodedOutputStream stream)

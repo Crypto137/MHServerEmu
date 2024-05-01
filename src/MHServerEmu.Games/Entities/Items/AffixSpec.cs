@@ -27,6 +27,13 @@ namespace MHServerEmu.Games.Entities.Items
             _seed = seed;
         }
 
+        public AffixSpec(NetStructAffixSpec protobuf)
+        {
+            _affixProtoRef = (PrototypeId)protobuf.AffixProtoRef;
+            _scopeProtoRef = (PrototypeId)protobuf.ScopeProtoRef;
+            _seed = protobuf.Seed;
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;
