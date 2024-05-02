@@ -367,7 +367,7 @@ namespace MHServerEmu.Games.Network
                         return true;
                     }
                     if (teleport.Destinations.Count == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return true;
-                    Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
+                    Logger.Trace($"Destination entity {teleport.Destinations[0].EntityRef}");
 
                     if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||
                         teleport.Destinations[0].Type == RegionTransitionType.TowerDown)
@@ -376,7 +376,7 @@ namespace MHServerEmu.Games.Network
                         return true;
                     }
 
-                    if (RegionDataRef != teleport.Destinations[0].Region)
+                    if (RegionDataRef != teleport.Destinations[0].RegionRef)
                     {
                         teleport.TeleportClient(this);
                         return true;

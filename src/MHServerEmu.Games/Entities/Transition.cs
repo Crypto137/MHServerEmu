@@ -2,12 +2,10 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -91,7 +89,12 @@ namespace MHServerEmu.Games.Entities
             Destinations = new();
             int destinationsCount = (int)stream.ReadRawVarint64();
             for (int i = 0; i < destinationsCount; i++)
-                Destinations.Add(new(stream));
+            {
+                Destination destination = new();
+                destination.Decode(stream);
+                Destinations.Add(destination);
+            }
+
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -124,19 +127,19 @@ namespace MHServerEmu.Games.Entities
                 destination = Destinations[0];
             }
             destination.EntityId = transition.Id;
-            destination.Entity = transition.BaseData.PrototypeId;
+            destination.EntityRef = transition.BaseData.PrototypeId;
             destination.Type = TransitionPrototype.Type;
         }
 
         public void TeleportClient(PlayerConnection connection)
         {
-            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            connection.Game.MovePlayerToRegion(connection, Destinations[0].Region, Destinations[0].Target);
+            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].RegionRef)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].EntityRef)}]");
+            connection.Game.MovePlayerToRegion(connection, Destinations[0].RegionRef, Destinations[0].TargetRef);
         }
 
         public void TeleportToEntity(PlayerConnection connection, ulong entityId)
         {
-            Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
+            Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].EntityRef)}]");
             connection.Game.MovePlayerToEntity(connection, Destinations[0].EntityId);
         }
 
