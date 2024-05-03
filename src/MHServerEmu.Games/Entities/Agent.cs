@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Entities
             Condition condition = new();
             condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
             condition.StartTime = Clock.GameTime;
-            ConditionCollection.AddCondition(condition);
+            _conditionCollection.AddCondition(condition);
 
             AssignPower(startPowerRef, new());
             
