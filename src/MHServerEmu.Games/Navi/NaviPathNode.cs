@@ -8,8 +8,11 @@ namespace MHServerEmu.Games.Navi
     public class NaviPathNode
     {
         public Vector3 Vertex { get; set; }
-        public int VertexSideRadius { get; set; }
+        public NaviSide VertexSide { get; set; }
+        public float Radius { get; set; }
 
+        // old
+        public int VertexSideRadius { get; set; }
         public NaviPathNode(CodedInputStream stream)
         {
             Vertex = new(stream, 3);

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Locomotion;
 
 namespace MHServerEmu.Games.Navi
@@ -18,9 +19,44 @@ namespace MHServerEmu.Games.Navi
 
         public float ApproxTotalDistance { get => _approxTotalDistance == 0.0f ? CalcApproximateDistance(_pathNodes) : _approxTotalDistance; }
 
-        private float CalcApproximateDistance(List<NaviPathNode> pathNodes)
+        private static float CalcApproximateDistance(List<NaviPathNode> pathNodes)
         {
-            throw new NotImplementedException();
+            float distance = 0.0f;
+            Vector3 prevVert = new();
+            Segment segment = new();
+            for (int i = 0; i < pathNodes.Count - 1; i++)
+            {
+                var node0 = pathNodes[i];
+                var node1 = pathNodes[i + 1];
+                if (node0.VertexSide != NaviSide.Point || node1.VertexSide != NaviSide.Point)
+                {
+                    Vector3 perpDir = Vector3.Perp2D(Vector3.Normalize2D(node1.Vertex - node0.Vertex));
+                    if (node0.VertexSide == NaviSide.Point)
+                        segment.Start = node0.Vertex;
+                    else if (node0.VertexSide == NaviSide.Left)
+                        segment.Start = node0.Vertex + perpDir * node0.Radius;
+                    else
+                        segment.Start = node0.Vertex - perpDir * node0.Radius;
+
+                    if (node1.VertexSide == NaviSide.Point)
+                        segment.End = node1.Vertex;
+                    else if (node1.VertexSide == NaviSide.Left)
+                        segment.End = node1.Vertex + perpDir * node1.Radius;
+                    else
+                        segment.End = node1.Vertex - perpDir * node1.Radius;
+
+                    distance += Vector3.Distance2D(segment.Start, segment.End);
+                    if (node0.VertexSide != NaviSide.Point)
+                        distance += Vector3.Distance2D(prevVert, segment.Start);
+                    prevVert = segment.End;
+                }
+                else
+                {
+                    distance += Vector3.Distance2D(node0.Vertex, node1.Vertex);
+                    prevVert = node1.Vertex;
+                }
+            }
+            return distance;
         }
 
         public List<NaviPathNode> PathNodeList { get => _pathNodes; }
@@ -32,9 +68,73 @@ namespace MHServerEmu.Games.Navi
             _pathNodes = new();
         }
 
-        internal static float CalcAccurateDistance(List<NaviPathNode> pathNodes)
+        public static float CalcAccurateDistance(List<NaviPathNode> pathNodes)
         {
-            throw new NotImplementedException();
+            float distance = 0f;
+            Vector3 prevVert = new();
+
+            for (int i = 0; i < pathNodes.Count - 1; i++)
+            {
+                var node0 = pathNodes[i];
+                var node1 = pathNodes[i + 1];
+                Segment segment = GetPathSegment(node0, node1);
+
+                if (node0.Radius > 0f)
+                {
+                    Vector3 dir0 = prevVert - node0.Vertex;
+                    Vector3 dir1 = segment.Start - node0.Vertex;
+                    distance += node0.Radius * Vector3.Angle2D(dir0, dir1); 
+                }
+                distance += Vector3.Distance2D(segment.Start, segment.End);
+                prevVert = segment.End;
+            }
+
+            return distance;
+        }
+
+        private static Segment GetPathSegment(NaviPathNode node0, NaviPathNode node1)
+        {
+            Segment segment = new();
+            Segment tangent = new ();
+            if (node0.VertexSide == NaviSide.Point)
+            {
+                segment.Start = node0.Vertex;
+                if (node1.VertexSide == NaviSide.Point)
+                    segment.End = node1.Vertex;
+                else
+                {
+                    if (Segment.CircleTangentPoints2D(node1.Vertex, node1.Radius, node0.Vertex, ref tangent))
+                    {
+                        segment.End = node1.VertexSide == NaviSide.Left ? tangent.End : tangent.Start;
+                        segment.End.Z = node1.Vertex.Z;
+                    }
+                    else
+                        segment.End = node1.Vertex;
+                }
+            }
+            else
+            {
+                if (node1.VertexSide == NaviSide.Point)
+                {
+                    if (Segment.CircleTangentPoints2D(node0.Vertex, node0.Radius, node1.Vertex, ref tangent))
+                    {
+                        segment.Start = node0.VertexSide == NaviSide.Left ? tangent.Start : tangent.End;
+                        segment.Start.Z = node0.Vertex.Z;
+                    }
+                    else
+                        segment.Start = node0.Vertex;
+                    segment.End = node1.Vertex;
+                }
+                else
+                {
+                    if (!Segment.CircleTangentPoints2D(node0.Vertex, node0.Radius, node0.VertexSide == NaviSide.Left, node1.Vertex, node1.Radius, node1.VertexSide == NaviSide.Left, ref segment))
+                    {
+                        segment.Start = node0.Vertex;
+                        segment.End = node1.Vertex;
+                    }
+                }
+            }
+            return segment;
         }
 
         internal float AccurateTotalDistance()
