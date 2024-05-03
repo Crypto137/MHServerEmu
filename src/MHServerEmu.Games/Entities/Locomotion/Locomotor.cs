@@ -580,7 +580,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 if (currentRotationSpeed > 0.0f)
                 {
                     Vector3 goalDir2d = goalDir.To2D();
-                    if (Vector3.LengthSquared(goalDir2d) > 0.0f)
+                    if (Vector3.LengthSqr(goalDir2d) > 0.0f)
                     {
                         goalDir2d = Vector3.Normalize(goalDir2d);
                         Vector3 dir2d = Vector3.Normalize(_owner.Forward.To2D());
