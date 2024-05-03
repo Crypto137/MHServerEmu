@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Dialog
         {
             if (entity is Transition transition && InterestRegions.Any())
             {
-                List<Destination> destinations = transition.Destinations;
+                List<Destination> destinations = transition.DestinationList;
                 foreach (var destination in destinations)
                     if (destination.RegionRef != PrototypeId.Invalid && InterestRegions.Contains(destination.RegionRef))
                     {
@@ -227,7 +227,7 @@ namespace MHServerEmu.Games.Dialog
                 if (entity is Transition transition)
                 {
                     var targetRef = Proto.ConnectionTarget;
-                    List<Destination> destinations = transition.Destinations;
+                    List<Destination> destinations = transition.DestinationList;
                     foreach (var destination in destinations)
                         if (destination.TargetRef == targetRef)
                         {

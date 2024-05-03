@@ -521,7 +521,7 @@ namespace MHServerEmu.Games.Dialog
             var worldEntityProto = entity.WorldEntityPrototype;
 
             if (entity is Transition transition)
-                foreach (var destination in transition.Destinations)
+                foreach (var destination in transition.DestinationList)
                 {
                     var regionRef = destination.RegionRef;
                     if (regionRef != PrototypeId.Invalid)
