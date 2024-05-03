@@ -159,13 +159,13 @@ namespace MHServerEmu.Games.Entities
             base.Decode(stream);
 
             _trackingContextMap = new();
-            TrackingContextMap.Decode(stream);
+            _trackingContextMap.Decode(stream);
 
             _conditionCollection = new(this);
-            ConditionCollection.Decode(stream);
+            _conditionCollection.Decode(stream);
 
             _powerCollection = new(this);
-            PowerCollection.Decode(stream, ReplicationPolicy);
+            _powerCollection.Decode(stream, ReplicationPolicy);
 
             _unkEvent = stream.ReadRawInt32();
         }
@@ -174,9 +174,9 @@ namespace MHServerEmu.Games.Entities
         {
             base.Encode(stream);
 
-            TrackingContextMap.Encode(stream);
-            ConditionCollection.Encode(stream);
-            PowerCollection.Encode(stream, ReplicationPolicy);
+            _trackingContextMap.Encode(stream);
+            _conditionCollection.Encode(stream);
+            _powerCollection.Encode(stream, ReplicationPolicy);
 
             stream.WriteRawInt32(_unkEvent);
         }
@@ -185,14 +185,14 @@ namespace MHServerEmu.Games.Entities
         {
             base.BuildString(sb);
 
-            foreach (var kvp in TrackingContextMap)
-                sb.AppendLine($"{nameof(TrackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
+            foreach (var kvp in _trackingContextMap)
+                sb.AppendLine($"{nameof(_trackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            foreach (var kvp in ConditionCollection)
-                sb.AppendLine($"{nameof(ConditionCollection)}[{kvp.Key}]: {kvp.Value}");
+            foreach (var kvp in _conditionCollection)
+                sb.AppendLine($"{nameof(_conditionCollection)}[{kvp.Key}]: {kvp.Value}");
 
-            foreach (var kvp in PowerCollection)
-                sb.AppendLine($"{nameof(PowerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+            foreach (var kvp in _powerCollection)
+                sb.AppendLine($"{nameof(_powerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
 
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
@@ -211,20 +211,20 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public Power GetPower(PrototypeId powerProtoRef) => PowerCollection?.GetPower(powerProtoRef);
-        public Power GetThrowablePower() => PowerCollection?.ThrowablePower;
-        public Power GetThrowableCancelPower() => PowerCollection?.ThrowableCancelPower;
+        public Power GetPower(PrototypeId powerProtoRef) => _powerCollection?.GetPower(powerProtoRef);
+        public Power GetThrowablePower() => _powerCollection?.ThrowablePower;
+        public Power GetThrowableCancelPower() => _powerCollection?.ThrowableCancelPower;
 
         public bool HasPowerInPowerCollection(PrototypeId powerProtoRef)
         {
-            if (PowerCollection == null) return Logger.WarnReturn(false, "HasPowerInPowerCollection(): PowerCollection == null");
-            return PowerCollection.ContainsPower(powerProtoRef);
+            if (_powerCollection == null) return Logger.WarnReturn(false, "HasPowerInPowerCollection(): PowerCollection == null");
+            return _powerCollection.ContainsPower(powerProtoRef);
         }
 
         public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, bool sendPowerAssignmentToClients = true, PrototypeId triggeringPowerRef = PrototypeId.Invalid)
         {
-            if (PowerCollection == null) return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection == null");
-            Power assignedPower = PowerCollection.AssignPower(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
+            if (_powerCollection == null) return Logger.WarnReturn<Power>(null, "AssignPower(): _powerCollection == null");
+            Power assignedPower = _powerCollection.AssignPower(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
             if (assignedPower == null) return Logger.WarnReturn(assignedPower, "AssignPower(): assignedPower == null");
             return assignedPower;
         }
@@ -233,7 +233,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (HasPowerInPowerCollection(powerProtoRef) == false) return false;    // This includes the null check for PowerCollection
 
-            if (PowerCollection.UnassignPower(powerProtoRef, sendPowerUnassignToClients) == false)
+            if (_powerCollection.UnassignPower(powerProtoRef, sendPowerUnassignToClients) == false)
                 return Logger.WarnReturn(false, "UnassignPower(): Failed to unassign power");
 
             return true;
@@ -513,7 +513,8 @@ namespace MHServerEmu.Games.Entities
         {
             StringBuilder sb = new();
             sb.AppendLine($"Powers:");
-            foreach (var kvp in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerPrototypeRef)}");
+            foreach (var kvp in _powerCollection)
+                sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(kvp.Value.PowerPrototypeRef)}");
             return sb.ToString();
         }
 

@@ -9,15 +9,16 @@ namespace MHServerEmu.Games.Entities.Items
 {
     public class Item : WorldEntity
     {
-        private ItemSpec _itemSpec;
+        private ItemSpec _itemSpec = new();     // ItemSpec needs to be initialized before the base constructor is called for packet parsing
+                                                // TODO: Fix this
 
         public ItemSpec ItemSpec { get => _itemSpec; }
 
         // new
-        public Item(Game game) : base(game) { _itemSpec = new(); }
+        public Item(Game game) : base(game) { }
 
         // old
-        public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { _itemSpec = new(); }
+        public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {

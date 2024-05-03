@@ -320,14 +320,14 @@ namespace MHServerEmu.Games.Entities
             {
                 if (entity is Transition teleport)
                 {
-                    if (teleport.Destinations.Count > 0 && teleport.Destinations[0].Type == RegionTransitionType.Transition)
+                    if (teleport.DestinationList.Count > 0 && teleport.DestinationList[0].Type == RegionTransitionType.Transition)
                     {
                         var teleportProto = teleport.TransitionPrototype;
                         if (teleportProto.VisibleByDefault == false) // To fix
                         {
                             // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
-                            if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].TargetRef) == false) continue;
-                            if ((InvTarget)teleport.Destinations[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
+                            if (LockedTargets.Contains((InvTarget)teleport.DestinationList[0].TargetRef) == false) continue;
+                            if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
                             entity.BaseData.PrototypeId = visibleParent;
                             continue;
