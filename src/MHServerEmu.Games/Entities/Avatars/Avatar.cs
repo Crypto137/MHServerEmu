@@ -101,7 +101,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];
             for (int i = 0; i < AbilityKeyMappings.Length; i++)
-                AbilityKeyMappings[i] = new(stream, boolDecoder);
+            {
+                AbilityKeyMapping abilityKeyMapping = new();
+                abilityKeyMapping.Decode(stream, boolDecoder);
+                AbilityKeyMappings[i] = abilityKeyMapping;
+            }   
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -224,17 +228,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Initialize AbilityKeyMapping
-            AbilityKeyMapping abilityKeyMapping;
+            AbilityKeyMapping abilityKeyMapping = new();
             if (dbAvatar.RawAbilityKeyMapping != null)
             {
                 // Deserialize existing saved mapping if there is one
                 CodedInputStream cis = CodedInputStream.CreateInstance(dbAvatar.RawAbilityKeyMapping);
-                abilityKeyMapping = new(cis, new());
+                abilityKeyMapping.Decode(cis, new BoolDecoder());
             }
             else
             {
                 // Initialize a new mapping
-                abilityKeyMapping = new(0);
                 abilityKeyMapping.SlotDefaultAbilities(this);
             }
 

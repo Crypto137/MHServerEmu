@@ -452,7 +452,7 @@ namespace MHServerEmu.Games.Entities
                 var abilityKeyMapping = avatar.AbilityKeyMappings[0];
 
                 BoolEncoder boolEncoder = new();
-                boolEncoder.EncodeBool(abilityKeyMapping.ShouldPersist);
+                abilityKeyMapping.EncodeBools(boolEncoder);
                 boolEncoder.Cook();
 
                 using (MemoryStream ms = new())
