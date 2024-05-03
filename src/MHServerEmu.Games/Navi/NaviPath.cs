@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Navi
         public bool IsValid { get =>  _pathNodes.Count > 0 ; }
 
         private List<NaviPathNode> _pathNodes;
-        private int _currentNodeIndex;
+        private NaviPathNode _currentNode;
         private float _approxTotalDistance;
         private bool _hasAccurateDistance;
         private PathFlags _pathFlags;
@@ -18,6 +18,14 @@ namespace MHServerEmu.Games.Navi
         private float _width;
 
         public float ApproxTotalDistance { get => _approxTotalDistance == 0.0f ? CalcApproximateDistance(_pathNodes) : _approxTotalDistance; }
+        public List<NaviPathNode> PathNodeList { get => _pathNodes; }
+        public bool IsComplete { get; internal set; }
+        public bool IsCurrentGoalNodeLastNode { get; internal set; }
+
+        public NaviPath()
+        {
+            _pathNodes = new();
+        }
 
         private static float CalcApproximateDistance(List<NaviPathNode> pathNodes)
         {
@@ -59,15 +67,6 @@ namespace MHServerEmu.Games.Navi
             return distance;
         }
 
-        public List<NaviPathNode> PathNodeList { get => _pathNodes; }
-        public bool IsComplete { get; internal set; }
-        public bool IsCurrentGoalNodeLastNode { get; internal set; }
-
-        public NaviPath()
-        {
-            _pathNodes = new();
-        }
-
         public static float CalcAccurateDistance(List<NaviPathNode> pathNodes)
         {
             float distance = 0f;
@@ -95,7 +94,7 @@ namespace MHServerEmu.Games.Navi
         private static Segment GetPathSegment(NaviPathNode node0, NaviPathNode node1)
         {
             Segment segment = new();
-            Segment tangent = new ();
+            Segment tangent = new();
             if (node0.VertexSide == NaviSide.Point)
             {
                 segment.Start = node0.Vertex;
@@ -127,7 +126,8 @@ namespace MHServerEmu.Games.Navi
                 }
                 else
                 {
-                    if (!Segment.CircleTangentPoints2D(node0.Vertex, node0.Radius, node0.VertexSide == NaviSide.Left, node1.Vertex, node1.Radius, node1.VertexSide == NaviSide.Left, ref segment))
+                    if (Segment.CircleTangentPoints2D(node0.Vertex, node0.Radius, node0.VertexSide == NaviSide.Left, 
+                        node1.Vertex, node1.Radius, node1.VertexSide == NaviSide.Left, ref segment) == false)
                     {
                         segment.Start = node0.Vertex;
                         segment.End = node1.Vertex;
@@ -137,9 +137,16 @@ namespace MHServerEmu.Games.Navi
             return segment;
         }
 
-        internal float AccurateTotalDistance()
+        public float AccurateTotalDistance()
         {
-            throw new NotImplementedException();
+            if (_hasAccurateDistance == false)
+            {
+                _approxTotalDistance = CalcAccurateDistance(_pathNodes);
+                if (float.IsFinite(_approxTotalDistance) == false)
+                    _approxTotalDistance = 0f;
+                _hasAccurateDistance = true;
+            }
+            return _approxTotalDistance;
         }
 
         public void Append(List<NaviPathNode> pathNodes, int startIndex)
@@ -149,7 +156,7 @@ namespace MHServerEmu.Games.Navi
             for (int i = startIndex; i < count; ++i)
                 _pathNodes.Add(pathNodes[i]);
 
-            _currentNodeIndex = 0;
+            _currentNode = _pathNodes[0];
         }
 
         internal NaviPathResult GenerateSimpleMove(Vector3 position, Vector3 syncPosition, float radius, PathFlags pathFlags)
@@ -157,15 +164,37 @@ namespace MHServerEmu.Games.Navi
             throw new NotImplementedException();
         }
 
-        public int GetCurrentGoalNode()
+        public NaviPathNode GetCurrentGoalNode()
         {
-            if (_currentNodeIndex == 0) return 0;
-            return ++_currentNodeIndex;
+            int currentIndex = _pathNodes.IndexOf(_currentNode);
+            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return null;
+            return _pathNodes[currentIndex + 1];
         }
 
-        internal Vector3 GetCurrentGoalPosition(Vector3 position)
+        public Vector3 GetCurrentGoalPosition(Vector3 position)
         {
-            throw new NotImplementedException();
+            int currentIndex = _pathNodes.IndexOf(_currentNode);
+            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1)
+                return position;
+            NaviPathNode goalNode = _pathNodes[currentIndex + 1];
+            return GetNodeGoalPosition(goalNode, position);
+        }
+
+        private static Vector3 GetNodeGoalPosition(NaviPathNode goalNode, Vector3 position)
+        {
+            if (goalNode.VertexSide == NaviSide.Point) 
+                return goalNode.Vertex;
+
+            Segment tangent = new();
+            if (Segment.CircleTangentPoints2D(goalNode.Vertex, goalNode.Radius, position, ref tangent))
+            {
+                if (goalNode.VertexSide == NaviSide.Left)
+                    return tangent.End;
+                else
+                    return tangent.Start;
+            }
+            else
+                return goalNode.Vertex;
         }
 
         public void Init(float radius, PathFlags pathFlags, List<NaviPathNode> pathNodes)
@@ -177,7 +206,7 @@ namespace MHServerEmu.Games.Navi
             _approxTotalDistance = 0.0f;
             _hasAccurateDistance = false;
             _pathNodes.Clear();
-            _currentNodeIndex = 0;
+            _currentNode = default; //_pathNodes.FirstOrDefault();
 
             if (pathNodes != null) Append(pathNodes, 0);
         }
@@ -195,7 +224,7 @@ namespace MHServerEmu.Games.Navi
             _approxTotalDistance = 0.0f;
             _hasAccurateDistance = false;
             _pathNodes.Clear();
-            _currentNodeIndex = 0;
+            _currentNode = default; //_pathNodes.LastOrDefault();
         }
 
         public Vector3 GetStartPosition()
