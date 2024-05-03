@@ -152,7 +152,7 @@ namespace MHServerEmu.Games.Dialog
             {
                 List<Destination> destinations = transition.Destinations;
                 foreach (var destination in destinations)
-                    if (destination.Region != PrototypeId.Invalid && InterestRegions.Contains(destination.Region))
+                    if (destination.RegionRef != PrototypeId.Invalid && InterestRegions.Contains(destination.RegionRef))
                     {
                         map.Insert(MissionProto.DataRef, EntityTrackingFlags);
                         return EntityTrackingFlags;
@@ -229,7 +229,7 @@ namespace MHServerEmu.Games.Dialog
                     var targetRef = Proto.ConnectionTarget;
                     List<Destination> destinations = transition.Destinations;
                     foreach (var destination in destinations)
-                        if (destination.Target == targetRef)
+                        if (destination.TargetRef == targetRef)
                         {
                             map.Insert(targetRef, EntityTrackingFlag.Appearance);
                             return EntityTrackingFlag.Appearance;

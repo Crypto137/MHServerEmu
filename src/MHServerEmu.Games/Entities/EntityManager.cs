@@ -188,9 +188,9 @@ namespace MHServerEmu.Games.Entities
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
-            PrototypeId areaRef = destination.Area;
-            PrototypeId cellRef = destination.Cell;
-            PrototypeId entityRef = destination.Entity;
+            PrototypeId areaRef = destination.AreaRef;
+            PrototypeId cellRef = destination.CellRef;
+            PrototypeId entityRef = destination.EntityRef;
             foreach (var entity in _entityDict.Values)
                 if (entity.RegionId == regionId)
                 {
@@ -326,8 +326,8 @@ namespace MHServerEmu.Games.Entities
                         if (teleportProto.VisibleByDefault == false) // To fix
                         {
                             // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
-                            if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].Target) == false) continue;
-                            if ((InvTarget)teleport.Destinations[0].Target == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
+                            if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].TargetRef) == false) continue;
+                            if ((InvTarget)teleport.Destinations[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
                             entity.BaseData.PrototypeId = visibleParent;
                             continue;

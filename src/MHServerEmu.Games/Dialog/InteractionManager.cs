@@ -523,7 +523,7 @@ namespace MHServerEmu.Games.Dialog
             if (entity is Transition transition)
                 foreach (var destination in transition.Destinations)
                 {
-                    var regionRef = destination.Region;
+                    var regionRef = destination.RegionRef;
                     if (regionRef != PrototypeId.Invalid)
                     {
                         map.Insert(regionRef, EntityTrackingFlag.TransitionRegion);
