@@ -5,7 +5,7 @@ namespace MHServerEmu.Core.Logging
     /// <summary>
     /// A timestamped log message.
     /// </summary>
-    public class LogMessage
+    public readonly struct LogMessage
     {
         private const string TimeFormat = "yyyy.MM.dd HH:mm:ss.fff";
 
