@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -48,7 +49,6 @@ namespace MHServerEmu.Games.Entities
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
-        public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId ActivePowerRef { get; private set; }
 
         // New
-        public WorldEntity(Game game): base(game) 
+        public WorldEntity(Game game) : base(game)
         {
             SpatialPartitionLocation = new(this);
             Physics = new();
@@ -197,11 +197,6 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
 
-        internal Entity GetRootOwner()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void Destroy()
         {
             if (Game == null) return;
@@ -292,7 +287,7 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnEnteredWorld(EntitySettings settings)
         {
-            if (CanInfluenceNavigationMesh()) 
+            if (CanInfluenceNavigationMesh())
                 EnableNavigationInfluence();
             // TODO PowerCollection
         }
@@ -311,6 +306,18 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void DisableNavigationInfluence()
+        {
+            if (HasNavigationInfluence)
+            {
+                Region region = Region;
+                if (region == null) return;
+                if (region.NaviMesh.RemoveInfluence(NaviInfluence) == false)
+                    Logger.Warn($"Failed to remove navi influence for ENTITY={this} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
+                HasNavigationInfluence = false;
+            }
+        }
+
         public bool CanInfluenceNavigationMesh()
         {
             if (IsInWorld == false || TestStatus(EntityStatus.ExitWorld) || NoCollide || IsIntangible || IsCloneParent())
@@ -322,10 +329,11 @@ namespace MHServerEmu.Games.Entities
 
             return false;
         }
+
         public void UpdateNavigationInfluence()
         {
             if (HasNavigationInfluence == false) return;
-           
+
             Region region = Region;
             if (region == null) return;
             var regionPosition = RegionLocation.Position;
@@ -338,7 +346,7 @@ namespace MHServerEmu.Games.Entities
             }
             else
                 if (region.NaviMesh.AddInfluence(regionPosition, Bounds.Radius, NaviInfluence) == false)
-                    Logger.Warn($"Failed to add navi influence for ENTITY={ToString()} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");        
+                Logger.Warn($"Failed to add navi influence for ENTITY={ToString()} MISSION={GameDatabase.GetFormattedPrototypeName(MissionPrototype)}");
         }
 
         public bool IsCloneParent()
@@ -346,20 +354,108 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
         }
 
-        public virtual void ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        public virtual bool ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
-            RegionLocation.Position = position;
-            RegionLocation.Orientation = orientation;
-            // Old
-            Properties[PropertyEnum.MapPosition] = position;
-            Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
-            Properties[PropertyEnum.MapAreaId] = RegionLocation.AreaId;
-            Properties[PropertyEnum.MapRegionId] = RegionLocation.RegionId;
-            Properties[PropertyEnum.MapCellId] = RegionLocation.CellId;
-            Properties[PropertyEnum.ContextAreaRef] = RegionLocation.Area.PrototypeDataRef;
+            bool positionChanged = false;
+            bool orientationChanged = false;
 
-            Bounds.Center = position;
-            UpdateRegionBounds(); // Add to Quadtree
+            RegionLocation preChangeLocation = new(RegionLocation);
+            Region region = Game.RegionManager.GetRegion(preChangeLocation.RegionId);
+            if (region == null) return false;
+
+            if (position != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
+            {
+                RegionLocation.Position = position;
+                if (Bounds.Geometry != GeometryType.None)
+                    Bounds.Center = position;
+
+                if (flags.HasFlag(ChangePositionFlags.PhysicsResolve) == false)
+                    RegisterForPendingPhysicsResolve();
+
+                positionChanged = true;
+                // Old
+                Properties[PropertyEnum.MapPosition] = position;
+            }
+
+            if (orientation != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Orientation != orientation))
+            {
+                RegionLocation.Orientation = orientation;
+
+                if (Bounds.Geometry != GeometryType.None)
+                    Bounds.Orientation = orientation;
+                if (Physics.HasAttachedEntities())
+                    RegisterForPendingPhysicsResolve();
+                orientationChanged = true;
+                // Old
+                Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
+            }
+
+            if (Locomotor != null && flags.HasFlag(ChangePositionFlags.PhysicsResolve) == false)
+            {
+                if (positionChanged)
+                    Locomotor.ClearSyncState();
+                else if (orientationChanged)
+                    Locomotor.ClearOrientationSyncState();
+            }
+
+            if (positionChanged || orientationChanged)
+            {
+                UpdateRegionBounds(); // Add to Quadtree
+                SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
+                if (RegionLocation.IsValid())
+                    ExitWorldRegionLocation.Set(RegionLocation);
+                return true;
+            }
+
+            // TODO send NetMessageEntityPosition position change to clients
+
+            return false;
+        }
+
+        private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
+        {
+            if (flags.HasFlag(ChangePositionFlags.EnterWorld))
+                OnRegionChanged(null, newLocation.Region);
+            else
+                OnRegionChanged(oldLocation.Region, newLocation.Region);
+
+            if (oldLocation.Area != newLocation.Area)
+                OnAreaChanged(oldLocation, newLocation);
+
+            if (oldLocation.Cell != newLocation.Cell)
+                OnCellChanged(oldLocation, newLocation, flags);
+        }
+
+        public virtual void OnCellChanged(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
+        {
+            Cell oldCell = oldLocation.Cell;
+            Cell newCell = newLocation.Cell;
+
+            if (newCell != null)
+                Properties[PropertyEnum.MapCellId] = newCell.Id;
+
+            // TODO other events
+        }
+
+        public virtual void OnAreaChanged(RegionLocation oldLocation, RegionLocation newLocation)
+        {
+            Area oldArea = oldLocation.Area;
+            Area newArea = newLocation.Area;
+            if (newArea != null)
+            {
+                Properties[PropertyEnum.MapAreaId] = newArea.Id;
+                Properties[PropertyEnum.ContextAreaRef] = newArea.PrototypeDataRef;
+            }
+
+            // TODO other events
+        }
+
+        public virtual void OnRegionChanged(Region oldRegion, Region newRegion)
+        {
+            if (newRegion != null)
+                Properties[PropertyEnum.MapRegionId] = newRegion.Id;
+
+            // TODO other events
         }
 
         public bool ShouldUseSpatialPartitioning() => Bounds.Geometry != GeometryType.None;
@@ -374,16 +470,38 @@ namespace MHServerEmu.Games.Entities
         public void ExitWorld()
         {
             // TODO send packets for delete entities from world
-            var entityManager = Game.EntityManager;
-            ClearWorldLocation();
-            entityManager.DestroyEntity(this);
+            if (IsInWorld)
+            {
+                bool exitStatus = !TestStatus(EntityStatus.ExitWorld);
+                SetStatus(EntityStatus.ExitWorld, true);
+                Physics.ReleaseCollisionId();
+                // TODO IsAttachedToEntity()
+                Physics.DetachAllChildren();
+                DisableNavigationInfluence();
+
+                var entityManager = Game.EntityManager;
+                if (entityManager == null) return;
+                entityManager.PhysicsManager?.OnExitedWorld(Physics);
+                OnExitedWorld();
+                var oldLocation = ClearWorldLocation();
+                SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
+                ModifyCollectionMembership(EntityCollection.Simulated, false);
+                ModifyCollectionMembership(EntityCollection.Locomotion, false);
+
+                if (exitStatus)
+                    SetStatus(EntityStatus.ExitWorld, false);
+            }
         }
 
-        public void ClearWorldLocation()
+        public virtual void OnExitedWorld() { }
+
+        public RegionLocation ClearWorldLocation()
         {
-            if(RegionLocation.IsValid()) LastLocation = RegionLocation;
+            if (RegionLocation.IsValid()) ExitWorldRegionLocation.Set(RegionLocation);
             if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
-            RegionLocation = null;
+            var oldLocation = RegionLocation;
+            RegionLocation = RegionLocation.Invalid;
+            return oldLocation;
         }
 
         internal void EmergencyRegionCleanup(Region region)
@@ -416,7 +534,7 @@ namespace MHServerEmu.Games.Entities
             EntityActionComponent.Register(actions);
         }
 
-        public virtual void AppendStartAction(PrototypeId actionsTarget) {}
+        public virtual void AppendStartAction(PrototypeId actionsTarget) { }
 
         public ScriptRoleKeyEnum GetScriptRoleKey()
         {
@@ -439,11 +557,6 @@ namespace MHServerEmu.Games.Entities
             return prototype.UnrealClass;
         }
 
-        public bool TestStatus(EntityStatus status)
-        {
-            return Status.HasFlag(status);
-        }
-
         public EntityRegionSPContext GetEntityRegionSPContext()
         {
             EntityRegionSPContext context = new(EntityRegionSPContextFlags.ActivePartition);
@@ -457,7 +570,7 @@ namespace MHServerEmu.Games.Entities
                     context.PlayerRestrictedGuid = avatar.OwnerPlayerDbId;
             }
 
-            if (!(IsNeverAffectedByPowers || (IsHotspot && !IsCollidableHotspot && !IsReflectingHotspot) ))
+            if (!(IsNeverAffectedByPowers || (IsHotspot && !IsCollidableHotspot && !IsReflectingHotspot)))
                 context.Flags |= EntityRegionSPContextFlags.StaticPartition;
             return context;
         }
@@ -512,7 +625,7 @@ namespace MHServerEmu.Games.Entities
             var otherWorldEntityProto = other.WorldEntityPrototype;
             var otherBoundsProto = otherWorldEntityProto?.Bounds;
 
-            if ((boundsProto != null && boundsProto.BlockOnlyMyself) 
+            if ((boundsProto != null && boundsProto.BlockOnlyMyself)
                 || (otherBoundsProto != null && otherBoundsProto.BlockOnlyMyself))
                 return PrototypeDataRef == other.PrototypeDataRef;
 
@@ -530,14 +643,14 @@ namespace MHServerEmu.Games.Entities
                     switch (otherBoundsProto.BlocksMovementPowers)
                     {
                         case BoundsMovementPowerBlockType.All:
-                            locomotorMovementPower = (Locomotor != null 
-                                && (Locomotor.IsMovementPower || Locomotor.IsHighFlying)) 
+                            locomotorMovementPower = (Locomotor != null
+                                && (Locomotor.IsMovementPower || Locomotor.IsHighFlying))
                                 || IsInKnockback || IsIntangible;
                             break;
                         case BoundsMovementPowerBlockType.Ground:
-                            locomotorMovementPower = (Locomotor != null 
-                                && (Locomotor.IsMovementPower && Locomotor.CurrentMoveHeight == 0) 
-                                && !Locomotor.IgnoresWorldCollision && !IsIntangible) 
+                            locomotorMovementPower = (Locomotor != null
+                                && (Locomotor.IsMovementPower && Locomotor.CurrentMoveHeight == 0)
+                                && !Locomotor.IgnoresWorldCollision && !IsIntangible)
                                 || IsInKnockback;
                             break;
                         case BoundsMovementPowerBlockType.None:
@@ -566,22 +679,22 @@ namespace MHServerEmu.Games.Entities
         {
             if (other == null) return false;
 
-            if (TestStatus(EntityStatus.Destroyed) || !IsInWorld 
+            if (TestStatus(EntityStatus.Destroyed) || !IsInWorld
                 || other.TestStatus(EntityStatus.Destroyed) || !other.IsInWorld) return false;
 
-            if (Bounds.CollisionType == BoundsCollisionType.None 
+            if (Bounds.CollisionType == BoundsCollisionType.None
                 || other.Bounds.CollisionType == BoundsCollisionType.None) return false;
 
-            if ((other.Bounds.Geometry == GeometryType.Triangle || other.Bounds.Geometry == GeometryType.Wedge) 
+            if ((other.Bounds.Geometry == GeometryType.Triangle || other.Bounds.Geometry == GeometryType.Wedge)
                 && (Bounds.Geometry == GeometryType.Triangle || Bounds.Geometry == GeometryType.Wedge)) return false;
 
             var entityProto = WorldEntityPrototype;
             if (entityProto == null) return false;
 
-            if (IsCloneParent())  return false;
+            if (IsCloneParent()) return false;
 
             var boundsProto = entityProto.Bounds;
-            if (boundsProto != null && boundsProto.IgnoreCollisionWithAllies && IsFriendlyTo(other)) return false; 
+            if (boundsProto != null && boundsProto.IgnoreCollisionWithAllies && IsFriendlyTo(other)) return false;
 
             if (IsDormant || other.IsDormant) return false;
 
@@ -614,9 +727,77 @@ namespace MHServerEmu.Games.Entities
             return RegionLocation.GetVectorFrom(other.RegionLocation);
         }
 
+        public virtual bool CanMove => Locomotor != null && Locomotor.GetCurrentSpeed() > 0.0f;
+        public virtual bool CanRotate => true;
+
+        public Vector3 Forward { get => GetTransform().Col0; }
+        public Vector3 GetUp { get => GetTransform().Col2; }
+        public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
+        public float MovementSpeedOverride { get => Properties[PropertyEnum.MovementSpeedOverride]; } // PropertyTemp[PropertyEnum.MovementSpeedOverride]
+        public float BonusMovementSpeed => Locomotor?.GetBonusMovementSpeed(false) ?? 0.0f;
+        public Power ActivePower { get => GetActivePower(); }
+        public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
+
+        private Power GetActivePower()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Transform3 _transform = Transform3.Identity();
+
+        private Transform3 GetTransform()
+        {
+            if (TestStatus(EntityStatus.ToTransform)) 
+            {
+                _transform = Transform3.BuildTransform(RegionLocation.Position, RegionLocation.Orientation);
+                SetStatus(EntityStatus.ToTransform, false);
+            }
+            return _transform;
+        }
+
         public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
+
+        internal bool ActivePowerPreventsMovement(PowerMovementPreventionFlags sync)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool ActivePowerDisablesOrientation()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool ActivePowerOrientsToTarget()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
+        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
+
+        public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
+        {
+            return OrientToward(point, RegionLocation.Position, ignorePitch, changeFlags);
+        }
+
+        private bool OrientToward(Vector3 point, Vector3 origin, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
+        {
+            if (IsInWorld == false) Logger.Debug($"Trying to orient entity that is not in the world {this}.  point={point}, ignorePitch={ignorePitch}, cpFlags={changeFlags}");
+            Vector3 delta = point - origin;
+            if (ignorePitch) delta.Z = 0.0f;
+            if (Vector3.LengthSqr(delta) >= MathHelper.PositionSqTolerance)
+                return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == true;
+            return false;
+        }
+    }
+
+    public enum PowerMovementPreventionFlags
+    {
+        Forced = 0,
+        NonForced = 1,
+        Sync = 2,
     }
 
     [Flags]

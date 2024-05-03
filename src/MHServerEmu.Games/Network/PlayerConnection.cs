@@ -7,6 +7,7 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -202,7 +203,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break;
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
-                case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnNetMessagePlayKismetSeqDone(message); break;
+                case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;
+                case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;
 
                 // Power Messages
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -242,7 +244,12 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        private bool OnNetMessagePlayKismetSeqDone(MailboxMessage message)
+        private void OnNotifyLoadingScreenFinished(MailboxMessage message)
+        {
+            Player.IsOnLoadingScreen = false;
+        }
+
+        private bool OnPlayKismetSeqDone(MailboxMessage message)
         {
             var playKismetSeqDone = message.As<NetMessagePlayKismetSeqDone>();
             if (playKismetSeqDone == null) return Logger.WarnReturn(false, $"OnNetMessagePlayKismetSeqDone(): Failed to retrieve message");
@@ -268,6 +275,28 @@ namespace MHServerEmu.Games.Network
                     foreach (IMessage aoiMessage in AOI.Messages)
                         SendMessage(aoiMessage);
                 }
+            }
+            
+            Avatar currentAvatar = Player.CurrentAvatar;
+            if (currentAvatar.IsInWorld == false) return true;
+
+            bool canMove = currentAvatar.CanMove;
+            bool canRotate = currentAvatar.CanRotate;
+            Vector3 position = currentAvatar.RegionLocation.Position;
+            Orientation orientation = currentAvatar.RegionLocation.Orientation;
+
+            if (canMove || canRotate) {
+                position = avatarState.Position;
+                orientation = avatarState.Orientation;
+                currentAvatar.ChangeRegionPosition(canMove ? position : null, canRotate ? orientation : null);
+                currentAvatar.UpdateNavigationInfluence();
+            }
+
+            if (avatarState.FieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && currentAvatar.Locomotor != null)
+            {
+                LocomotionState locomotionState = new(currentAvatar.Locomotor.LastSyncState);
+                locomotionState.StateFrom(avatarState.LocomotionState); // LocomotionState.SerializeFrom
+                currentAvatar.Locomotor.SetSyncState(locomotionState, position, orientation);
             }
 
             /* Logger spam

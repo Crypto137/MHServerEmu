@@ -9,6 +9,7 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -56,6 +57,7 @@ namespace MHServerEmu.Games
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
+        public AdminCommandManager AdminCommandManager { get; }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
@@ -74,6 +76,7 @@ namespace MHServerEmu.Games
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
 
+            AdminCommandManager = new(this);
             NetworkManager = new(this);
             EventManager = new(this);
             EntityManager = new(this);
@@ -302,6 +305,9 @@ namespace MHServerEmu.Games
             Task.Run(() => GetRegionAsync(playerConnection));
             playerConnection.AOI.LoadedCellCount = 0;
             playerConnection.IsLoading = true;
+
+            playerConnection.Player.IsOnLoadingScreen = true;
+
             return messageList;
         }
 
@@ -403,5 +409,11 @@ namespace MHServerEmu.Games
 
         public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
         public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
+
+        public TimeSpan GetCurrentTime()
+        {
+            // TODO check EventScheduler
+            return Clock.GameTime;
+        }
     }
 }

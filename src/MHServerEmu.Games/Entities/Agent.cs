@@ -39,6 +39,21 @@ namespace MHServerEmu.Games.Entities
 
         }
 
+        public override bool CanRotate
+        {
+            get
+            {
+                Player ownerPlayer = GetOwnerOfType<Player>();
+                if ( IsInKnockback || IsInKnockdown || IsInKnockup 
+                    || IsImmobilized || IsImmobilizedByHitReact || IsSystemImmobilized 
+                    || IsStunned || IsMesmerized ||
+                    (ownerPlayer != null && ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)
+                    || NPCAmbientLock)
+                    return false;
+                return true;
+            }
+        }
+
         // New
         public Agent(Game game) : base(game) { }
 

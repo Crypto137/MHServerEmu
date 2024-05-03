@@ -89,7 +89,9 @@ namespace MHServerEmu.Games.Entities
         public GameplayOptions GameplayOptions { get => _gameplayOptions; }
         public AchievementState AchievementState { get => _achievementState; }
 
-        
+        public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
+        public bool IsOnLoadingScreen { get; set; }
+
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
         public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories

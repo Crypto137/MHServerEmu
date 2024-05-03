@@ -37,6 +37,17 @@
             );
         }
 
+        public static Matrix3 RotationZ(float radians)
+        {
+            float s = MathF.Sin(radians);
+            float c = MathF.Cos(radians);
+            return new(
+                new (c, s, 0.0f),
+                new (-s, c, 0.0f),
+                Vector3.ZAxis
+            );
+        }
+
         public static Matrix3 AbsPerElem(Matrix3 mat)
         {
             return new Matrix3(

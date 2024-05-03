@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
@@ -107,6 +108,8 @@ namespace MHServerEmu.Games.Entities.Physics
                     moveFlags |= MoveEntityFlags.SendToOwner | MoveEntityFlags.SendToClients;
                 if (worldEntity.IsMovementAuthoritative)
                     moveFlags |= MoveEntityFlags.SendToOwner;
+                if (_game.AdminCommandManager.TestAdminFlag(AdminFlags.LocomotionSync) == false)
+                    moveFlags |= MoveEntityFlags.SendToClients;
 
                 if (Vector3.IsNearZero(repulsionForces, 0.5f) == false)
                 {
@@ -176,16 +179,16 @@ namespace MHServerEmu.Games.Entities.Physics
                 if (entity != null && entity.IsInWorld)
                     if (entity.TestStatus(EntityStatus.Destroyed))
                     {
-                        float time = Math.Min((float)_game.FixedTimeBetweenUpdates.TotalSeconds, member.Time);
-                        float distance = member.Speed * time + member.Acceleration * time * time / 2;
+                        float deltaTime = Math.Min((float)_game.FixedTimeBetweenUpdates.TotalSeconds, member.Time);
+                        float distance = member.Speed * deltaTime + member.Acceleration * deltaTime * deltaTime / 2;
                         Vector3 vector = member.Direction * distance;
                         bool moved = MoveEntity(entity, vector, MoveEntityFlags.SendToOwner | MoveEntityFlags.SendToClients | MoveEntityFlags.SweepCollide);
 
                         bool collision = Vector3.LengthSquared(member.Position + vector - entity.RegionLocation.Position) > 0.01f;
 
                         member.Position = entity.RegionLocation.Position;
-                        member.Time -= time;
-                        member.Speed += member.Acceleration * time;
+                        member.Time -= deltaTime;
+                        member.Speed += member.Acceleration * deltaTime;
 
                         active = collision == false && Segment.IsNearZero(member.Time) == false;
                         complete &= !active;
@@ -412,7 +415,7 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             if (entity == null) return;
             Region region = entity.Region;
-            if (region == null) return;
+            if (region == null || region.IsGenerated == false) return;
 
             Aabb bound = entity.EntityCollideBounds.ToAabb();            
             Vector3 position = entity.RegionLocation.Position;
@@ -512,8 +515,32 @@ namespace MHServerEmu.Games.Entities.Physics
                 {
                     bool overlapped = overlappedEntity.Overlapped;
                     who.Physics.OverlappedEntities.Remove(whom.Id);
-                    if (overlapped)
-                        NotifyEntityOverlapEnd(who, whom);
+                    if (overlapped) NotifyEntityOverlapEnd(who, whom);
+                }
+            }
+        }
+
+        public void OnExitedWorld(EntityPhysics entityPhysics)
+        {
+            if (entityPhysics != null && entityPhysics.Entity != null)
+            {
+                var who = entityPhysics.Entity;
+                while (entityPhysics.OverlappedEntities.Count > 0)
+                {
+                    var entry = entityPhysics.OverlappedEntities.First();
+                    var whomId = entry.Key;
+                    bool overlapped = entry.Value.Overlapped;
+                    entityPhysics.OverlappedEntities.Remove(whomId);
+                    var whom = _game.EntityManager.GetEntity<WorldEntity>(whomId);
+                    if (whom == null) continue;
+                    if (overlapped) NotifyEntityOverlapEnd(who, whom);
+
+                    if (whom.Physics.OverlappedEntities.TryGetValue(who.Id, out var overlappedEntity))
+                    {
+                        overlapped = overlappedEntity.Overlapped;
+                        whom.Physics.OverlappedEntities.Remove(who.Id);
+                        if (overlapped) NotifyEntityOverlapEnd(whom, who);
+                    }
                 }
             }
         }
