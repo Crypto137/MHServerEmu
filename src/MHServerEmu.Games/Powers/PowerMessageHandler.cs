@@ -169,7 +169,7 @@ namespace MHServerEmu.Games.Powers
                             Orientation = new(),
                             LocomotionState = new(0)
                         };
-                        locomotion.Orientation.Yaw = Vector3.Angle(locomotion.Position, playerConnection.LastPosition);
+                        locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
                         playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
                             .SetArchiveData(locomotion.Serialize())
                             .Build());
