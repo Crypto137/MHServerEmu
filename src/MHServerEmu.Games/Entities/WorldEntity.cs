@@ -49,7 +49,6 @@ namespace MHServerEmu.Games.Entities
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
-        public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
@@ -471,16 +470,38 @@ namespace MHServerEmu.Games.Entities
         public void ExitWorld()
         {
             // TODO send packets for delete entities from world
-            var entityManager = Game.EntityManager;
-            ClearWorldLocation();
-            entityManager.DestroyEntity(this);
+            if (IsInWorld)
+            {
+                bool exitStatus = !TestStatus(EntityStatus.ExitWorld);
+                SetStatus(EntityStatus.ExitWorld, true);
+                Physics.ReleaseCollisionId();
+                // TODO IsAttachedToEntity()
+                Physics.DetachAllChildren();
+                DisableNavigationInfluence();
+
+                var entityManager = Game.EntityManager;
+                if (entityManager == null) return;
+                entityManager.PhysicsManager?.OnExitedWorld(Physics);
+                OnExitedWorld();
+                var oldLocation = ClearWorldLocation();
+                SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
+                ModifyCollectionMembership(EntityCollection.Simulated, false);
+                ModifyCollectionMembership(EntityCollection.Locomotion, false);
+
+                if (exitStatus)
+                    SetStatus(EntityStatus.ExitWorld, false);
+            }
         }
 
-        public void ClearWorldLocation()
+        public virtual void OnExitedWorld() { }
+
+        public RegionLocation ClearWorldLocation()
         {
-            if (RegionLocation.IsValid()) LastLocation = RegionLocation;
+            if (RegionLocation.IsValid()) ExitWorldRegionLocation.Set(RegionLocation);
             if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
-            RegionLocation = null;
+            var oldLocation = RegionLocation;
+            RegionLocation = RegionLocation.Invalid;
+            return oldLocation;
         }
 
         internal void EmergencyRegionCleanup(Region region)
@@ -533,17 +554,6 @@ namespace MHServerEmu.Games.Entities
         {
             if (prototype == null) return Logger.WarnReturn(AssetId.Invalid, $"GetOriginalWorldAsset(): prototype == null");
             return prototype.UnrealClass;
-        }
-
-        public bool TestStatus(EntityStatus status)
-        {
-            return Status.HasFlag(status);
-        }
-
-        public void SetStatus(EntityStatus status, bool set)
-        {
-            if (set) Status |= status;
-            else Status &= ~status;
         }
 
         public EntityRegionSPContext GetEntityRegionSPContext()

@@ -23,13 +23,13 @@ namespace MHServerEmu.Games.Entities
         public Orientation Orientation;
         public bool OverrideSnapToFloor;
         public bool OverrideSnapToFloorValue;
+        public bool EnterGameWorld;
+        public bool HotspotSkipCollide;
         public PropertyCollection Properties;
         public Cell Cell;
-        public bool EnterGameWorld;
         public List<EntitySelectorActionPrototype> Actions;
         public PrototypeId ActionsTarget;
         public SpawnSpec SpawnSpec;
-        public bool HotspotSkipCollide;
         public float LocomotorHeightOverride;
     }
 
@@ -79,6 +79,7 @@ namespace MHServerEmu.Games.Entities
         public Entity CreateEntity(EntitySettings settings)
         {
             Entity entity = _game.AllocateEntity(settings.EntityRef);
+            entity.ModifyCollectionMembership(EntityCollection.All, true);
 
             if (settings.Id == 0)
                 settings.Id = GetNextEntityId();
@@ -96,7 +97,13 @@ namespace MHServerEmu.Games.Entities
         private void FinalizeEntity(Entity entity, EntitySettings settings)
         {
             entity.OnPostInit(settings);
-
+            // TODO InventoryLocation
+            if (settings.EnterGameWorld)
+            {
+                var owner = entity.GetOwner();
+                if (owner == null || owner.IsInGame)
+                    entity.EnterGame(settings);
+            }
             if (entity is WorldEntity worldEntity)
             {
                 worldEntity.RegisterActions(settings.Actions);
@@ -156,6 +163,7 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO 
             entity.Status = EntityStatus.Destroyed;
+            entity.ExitGame();
             // TODO  clear all contained
 
             ulong entityId = entity.Id;
