@@ -487,7 +487,7 @@ namespace MHServerEmu.Games.Network
             var slotToAbilityBar = message.As<NetMessageAbilitySlotToAbilityBar>();
             if (slotToAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySlotToAbilityBar(): Failed to retrieve message");
 
-            var abilityKeyMapping = Player.CurrentAvatar.AbilityKeyMappings[0];
+            var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
             AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
             Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
@@ -502,7 +502,7 @@ namespace MHServerEmu.Games.Network
             var unslotFromAbilityBar = message.As<NetMessageAbilityUnslotFromAbilityBar>();
             if (unslotFromAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilityUnslotFromAbilityBar(): Failed to retrieve message");
 
-            var abilityKeyMapping = Player.CurrentAvatar.AbilityKeyMappings[0];
+            var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
             Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
 
@@ -516,7 +516,7 @@ namespace MHServerEmu.Games.Network
             var swapInAbilityBar = message.As<NetMessageAbilitySwapInAbilityBar>();
             if (swapInAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySwapInAbilityBar(): Failed to retrieve message");
 
-            var abilityKeyMapping = Player.CurrentAvatar.AbilityKeyMappings[0];
+            var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
             AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
             Logger.Trace($"NetMessageAbilitySwapInAbilityBar: {slotA} and {slotB}");

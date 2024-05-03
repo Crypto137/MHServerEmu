@@ -449,7 +449,7 @@ namespace MHServerEmu.Games.Entities
                 dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
 
                 // Encode key mapping
-                var abilityKeyMapping = avatar.AbilityKeyMappings[0];
+                var abilityKeyMapping = avatar.CurrentAbilityKeyMapping;
 
                 BoolEncoder boolEncoder = new();
                 abilityKeyMapping.EncodeBools(boolEncoder);

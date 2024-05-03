@@ -22,13 +22,17 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ReplicatedVariable<string> _playerName = new();
+        private ulong _ownerPlayerDbId;
+        private List<AbilityKeyMapping> _abilityKeyMappingList = new();
+
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
 
-        public ReplicatedVariable<string> PlayerName { get; set; } = new();
-        public ulong OwnerPlayerDbId { get; set; }
-        public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
+        public string PlayerName { get => _playerName.Value; }
+        public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
+        public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }
 
         public Agent CurrentTeamUpAgent { get; set; } = null;
 
@@ -62,26 +66,48 @@ namespace MHServerEmu.Games.Entities.Avatars
             _unkEvent = 134463198;
 
             // Avatar
-            PlayerName = new(++replicationId, string.Empty);
-            OwnerPlayerDbId = 0x20000000000D3D03;   // D3D03 == 867587 from Player's EntityBaseData
+            _playerName = new(++replicationId, string.Empty);
+            _ownerPlayerDbId = 0x20000000000D3D03;   // D3D03 == 867587 from Player's EntityBaseData
         }
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, PowerCollection powerCollection, int unkEvent,
-            ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, AbilityKeyMapping[] abilityKeyMappings)
+            ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, IEnumerable<AbilityKeyMapping> abilityKeyMappings)
             : base(baseData)
         {
             _trackingContextMap = trackingContextMap;
             _conditionCollection = conditionCollection;
             _powerCollection = powerCollection;
             _unkEvent = unkEvent;
-            PlayerName = playerName;
-            OwnerPlayerDbId = ownerPlayerDbId;
+
+            _playerName = playerName;
+            _ownerPlayerDbId = ownerPlayerDbId;
             _guildId = guildId;
             _guildName = guildName;
             _guildMembership = guildMembership;
-            AbilityKeyMappings = abilityKeyMappings;
+            _abilityKeyMappingList.AddRange(abilityKeyMappings);
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            success &= Serializer.Transfer(archive, ref _playerName);
+            success &= Serializer.Transfer(archive, ref _ownerPlayerDbId);
+
+            // There is an unused string here that is always empty
+            string emptyString = string.Empty;
+            success &= Serializer.Transfer(archive, ref emptyString);
+            if (emptyString != string.Empty)
+                Logger.Warn($"Serialize(): emptyString is not empty!");
+
+            //if (archive.IsReplication)
+            success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+
+            success &= Serializer.Transfer(archive, ref _abilityKeyMappingList);
+
+            return success;
         }
 
         protected override void Decode(CodedInputStream stream)
@@ -90,8 +116,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             BoolDecoder boolDecoder = new();
 
-            PlayerName.Decode(stream);
-            OwnerPlayerDbId = stream.ReadRawVarint64();
+            _playerName.Decode(stream);
+            _ownerPlayerDbId = stream.ReadRawVarint64();
 
             // Similar throwaway string to Player entity
             if (stream.ReadRawString() != string.Empty)
@@ -99,13 +125,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
 
-            AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];
-            for (int i = 0; i < AbilityKeyMappings.Length; i++)
+            _abilityKeyMappingList.Clear();
+            uint numAbilityKeyMappings = stream.ReadRawVarint32();
+            for (uint i = 0; i < numAbilityKeyMappings; i++)
             {
                 AbilityKeyMapping abilityKeyMapping = new();
                 abilityKeyMapping.Decode(stream, boolDecoder);
-                AbilityKeyMappings[i] = abilityKeyMapping;
-            }   
+                _abilityKeyMappingList.Add(abilityKeyMapping);
+            }
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -116,21 +143,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             BoolEncoder boolEncoder = new();
 
             boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
-            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings)
+            foreach (AbilityKeyMapping keyMap in _abilityKeyMappingList)
                 keyMap.EncodeBools(boolEncoder);
 
             boolEncoder.Cook();
 
             // Encode
-            PlayerName.Encode(stream);
-            stream.WriteRawVarint64(OwnerPlayerDbId);
+            _playerName.Encode(stream);
+            stream.WriteRawVarint64(_ownerPlayerDbId);
 
             stream.WriteRawString(string.Empty);    // throwaway string
 
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolEncoder, ref _guildId, ref _guildName, ref _guildMembership);
             
-            stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
-            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings)
+            stream.WriteRawVarint64((uint)_abilityKeyMappingList.Count);
+            foreach (AbilityKeyMapping keyMap in _abilityKeyMappingList)
                 keyMap.Encode(stream, boolEncoder);
         }
 
@@ -146,7 +173,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             BaseData.PrototypeId = prototypeId;
 
             // Archive Data
-            PlayerName.Value = account.PlayerName;
+            _playerName.Value = account.PlayerName;
 
             // Properties
             Properties.FlattenCopyFrom(prototype.Properties, true);
@@ -228,6 +255,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Initialize AbilityKeyMapping
+            _abilityKeyMappingList.Clear();
             AbilityKeyMapping abilityKeyMapping = new();
             if (dbAvatar.RawAbilityKeyMapping != null)
             {
@@ -241,7 +269,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 abilityKeyMapping.SlotDefaultAbilities(this);
             }
 
-            AbilityKeyMappings = new AbilityKeyMapping[] { abilityKeyMapping };
+            _abilityKeyMappingList.Add(abilityKeyMapping);
         }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
@@ -362,8 +390,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"{nameof(PlayerName)}: {PlayerName}");
-            sb.AppendLine($"{nameof(OwnerPlayerDbId)}: 0x{OwnerPlayerDbId:X}");
+            sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
+            sb.AppendLine($"{nameof(_ownerPlayerDbId)}: 0x{OwnerPlayerDbId:X}");
 
             if (_guildId != GuildMember.InvalidGuildId)
             {
@@ -372,8 +400,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
             }
 
-            for (int i = 0; i < AbilityKeyMappings.Length; i++)
-                sb.AppendLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
+            for (int i = 0; i < _abilityKeyMappingList.Count; i++)
+                sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
         }
     }
 }
