@@ -237,6 +237,45 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
+        public static bool CircleTangentPoints2D(Vector3 vertex0, float radius, Vector3 vertex1, ref Segment tangent)
+        {
+            Vector3 v0 = new (vertex0.X, vertex0.Y, 0.0f);
+            Vector3 v1 = new (vertex1.X, vertex1.Y, 0.0f);
+            Vector3 dir = v1 - v0;
+
+            float distSq = Vector3.DistanceSquared2D(v1, v0);
+            if (distSq <= Epsilon)
+            {
+                tangent.Start = Vector3.Zero;
+                tangent.End = Vector3.Zero;
+                return false;
+            }
+
+            float dist = MathHelper.SquareRoot(distSq);
+            float radiusSq = radius * radius;
+
+            if (distSq < (radiusSq + Epsilon))
+            {
+                tangent.Start = v0 + (dir * (radius / dist));
+                tangent.End = tangent.Start;
+                return true;
+            }
+            else
+            {
+                float tangentDist = radiusSq / dist; // (radiusSq - (distSq - radiusSq) + distSq) / (2.0f * dist);
+                float tangentLength = MathHelper.SquareRoot(radiusSq - tangentDist * tangentDist);
+                Vector3 tangentPoint = v0 + dir * (tangentDist / dist);
+                Vector3 tangentPerp = Vector3.Perp2D(dir * (tangentLength / dist));
+                tangent.Start = tangentPoint + tangentPerp;
+                tangent.End = tangentPoint - tangentPerp;
+                return true;
+            }
+        }
+
+        public static bool CircleTangentPoints2D(Vector3 vertex1, float radius1, bool v1, Vector3 vertex2, float radius2, bool v2, ref Segment result)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }
