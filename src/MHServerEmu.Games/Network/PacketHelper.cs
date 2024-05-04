@@ -4,6 +4,8 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -14,7 +16,6 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Network
 {
@@ -268,7 +269,13 @@ namespace MHServerEmu.Games.Network
                                 break;
 
                             case NetMessageActivatePower activatePower:
-                                writer.WriteLine($"ArchiveData: {new ActivatePowerArchive(activatePower.ArchiveData)}");
+                                using (Archive archive = new(ArchiveSerializeType.Replication, activatePower.ArchiveData.ToByteArray()))
+                                {
+                                    ActivatePowerArchive activatePowerArchive = new();
+                                    activatePowerArchive.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                                    activatePowerArchive.Serialize(archive);
+                                    writer.WriteLine($"ArchiveData: {activatePowerArchive}");
+                                }
                                 break;
 
                             case NetMessagePowerResult powerResult:
