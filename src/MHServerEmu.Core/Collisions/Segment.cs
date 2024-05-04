@@ -239,8 +239,8 @@ namespace MHServerEmu.Core.Collisions
 
         public static bool CircleTangentPoints2D(Vector3 point0, float radius, Vector3 point1, ref Segment tangent)
         {
-            Vector3 p0 = new (point0.X, point0.Y, 0.0f);
-            Vector3 p1 = new (point1.X, point1.Y, 0.0f);
+            Vector3 p0 = point0.To2D();
+            Vector3 p1 = point1.To2D();
             Vector3 dir = p1 - p0;
 
             float distSq = Vector3.DistanceSquared2D(p1, p0);
@@ -414,6 +414,20 @@ namespace MHServerEmu.Core.Collisions
             direction.End.Z = 0.0f;
 
             return direction;
+        }
+
+        public static bool CircleTangents2D(Vector3 point0, float radius, Vector3 point1, out Segment tangent)
+        {
+            Vector3 p0 = point0.To2D();
+            Vector3 p1 = point1.To2D();
+
+            Segment tangentPoint = new();
+            tangent = new ();
+            if (CircleTangentPoints2D(p0, radius, p1, ref tangentPoint) == false) return false;
+
+            tangent.Start = Vector3.Perp2D(Vector3.Normalize(tangentPoint.Start - p0));
+            tangent.End = -Vector3.Perp2D(Vector3.Normalize(tangentPoint.End - p0));
+            return true;
         }
 
     }
