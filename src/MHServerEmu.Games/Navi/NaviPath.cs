@@ -17,7 +17,6 @@ namespace MHServerEmu.Games.Navi
         private float _radiusSq;
         private float _width;
 
-        public float ApproxTotalDistance { get => _approxTotalDistance == 0.0f ? CalcApproximateDistance(_pathNodes) : _approxTotalDistance; }
         public List<NaviPathNode> PathNodeList { get => _pathNodes; }
         public bool IsComplete { get; internal set; }
         public bool IsCurrentGoalNodeLastNode { get; internal set; }
@@ -25,6 +24,36 @@ namespace MHServerEmu.Games.Navi
         public NaviPath()
         {
             _pathNodes = new();
+            Clear();
+        }
+
+        public void Init(float radius, PathFlags pathFlags, List<NaviPathNode> pathNodes)
+        {
+            _radius = radius;
+            _radiusSq = radius * radius;
+            _width = 2.0f * radius;
+            _pathFlags = pathFlags;
+            _approxTotalDistance = 0.0f;
+            _hasAccurateDistance = false;
+            _pathNodes.Clear();
+            _currentNode = default; //_pathNodes.FirstOrDefault();
+
+            if (pathNodes != null) Append(pathNodes, 0);
+        }
+
+        public void Clear()
+        {
+            _radius = _radiusSq = _width = 0.0f;
+            _pathFlags = 0;
+            _approxTotalDistance = 0.0f;
+            _hasAccurateDistance = false;
+            _pathNodes.Clear();
+            _currentNode = default; //_pathNodes.LastOrDefault();
+        }
+
+        public float ApproxTotalDistance()
+        {
+            return _approxTotalDistance == 0.0f ? CalcApproximateDistance(_pathNodes) : _approxTotalDistance;
         }
 
         private static float CalcApproximateDistance(List<NaviPathNode> pathNodes)
@@ -88,6 +117,25 @@ namespace MHServerEmu.Games.Navi
                 prevVert = segment.End;
             }
 
+            return distance;
+        }
+
+        public float ApproxCurrentDistance(Vector3 currentPos)
+        {
+            float distance = 0.0f;
+            var node = GetCurrentGoalNode();
+            if (node == null) return distance;
+
+            distance += Vector3.Distance2D(currentPos, node.Vertex);
+            var nextIndex = _pathNodes.IndexOf(node) + 1;
+            while (nextIndex < _pathNodes.Count)
+            {
+                var node0 = node;
+                var node1 = _pathNodes[nextIndex];
+                distance += Vector3.Distance2D(node0.Vertex, node1.Vertex);
+                node = node1;
+                nextIndex++;
+            }
             return distance;
         }
 
@@ -159,11 +207,6 @@ namespace MHServerEmu.Games.Navi
             _currentNode = _pathNodes[0];
         }
 
-        internal NaviPathResult GenerateSimpleMove(Vector3 position, Vector3 syncPosition, float radius, PathFlags pathFlags)
-        {
-            throw new NotImplementedException();
-        }
-
         public NaviPathNode GetCurrentGoalNode()
         {
             int currentIndex = _pathNodes.IndexOf(_currentNode);
@@ -197,34 +240,10 @@ namespace MHServerEmu.Games.Navi
                 return goalNode.Vertex;
         }
 
-        public void Init(float radius, PathFlags pathFlags, List<NaviPathNode> pathNodes)
-        {
-            _radius = radius;
-            _radiusSq = radius * radius;
-            _width = 2.0f * radius;
-            _pathFlags = pathFlags;
-            _approxTotalDistance = 0.0f;
-            _hasAccurateDistance = false;
-            _pathNodes.Clear();
-            _currentNode = default; //_pathNodes.FirstOrDefault();
-
-            if (pathNodes != null) Append(pathNodes, 0);
-        }
-
         public void PopGoal()
         {
             if (_pathNodes.Count > 0) 
                 _pathNodes.RemoveAt(_pathNodes.Count - 1);
-        }
-
-        public void Clear()
-        {
-            _radius = _radiusSq = _width = 0.0f; 
-            _pathFlags = 0;
-            _approxTotalDistance = 0.0f;
-            _hasAccurateDistance = false;
-            _pathNodes.Clear();
-            _currentNode = default; //_pathNodes.LastOrDefault();
         }
 
         public Vector3 GetStartPosition()
@@ -239,50 +258,159 @@ namespace MHServerEmu.Games.Navi
             return _pathNodes.Last().Vertex;
         }
 
-        internal NaviPathResult GeneratePath(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags, PathGenerationFlags pathGenerationFlags, float incompleteDistance)
+        public void UpdateEndPosition(Vector3 position)
         {
-            throw new NotImplementedException();
+            if (_pathNodes.Count > 0)
+                _pathNodes.Last().Vertex = position;
         }
 
-        internal void UpdateEndPosition(Vector3 position)
+        public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
-            throw new NotImplementedException();
+            List<NaviPathNode> pathNodes = new();
+            var pathGen = new NaviPathGenerator(naviMesh);
+            return pathGen.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, true, 0, 0f);
         }
 
-        internal void GetNextMovePosition(Vector3 currentPosition, float moveDistance, out Vector3 movePosition, out Vector3 moveDirection)
+        public NaviPathResult GeneratePath(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags, PathGenerationFlags pathGenerationFlags, float incompleteDistance)
         {
-            throw new NotImplementedException();
+            List<NaviPathNode> pathNodes = new();
+            var generator = new NaviPathGenerator(naviMesh);
+            NaviPathResult result = generator.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, false, pathGenerationFlags, incompleteDistance);
+            Init(radius, pathFlags, pathNodes);
+            return result;
         }
 
-        public float ApproxCurrentDistance(Vector3 currentPos)
+        public NaviPathResult GenerateWaypointPath(NaviMesh naviMesh, Vector3 position, List<Waypoint> waypoints, float radius, PathFlags pathFlags)
         {
-            float distance = 0.0f;
-            var node = GetCurrentGoalNode();
-            if (node == null) return distance;
+            if (waypoints.Count == 0 || waypoints[^1].Side != NaviSide.Point)
+                return NaviPathResult.Failed;
 
-            distance += Vector3.Distance2D(currentPos, node.Vertex);
-            var nextIndex = _pathNodes.IndexOf(node) + 1;
-            while (nextIndex < _pathNodes.Count)
+            var startNode = new NaviPathNode(position, NaviSide.Point, 0f, false);
+            List<NaviPathNode> pathNodes = new ();
+            var generator = new NaviPathGenerator(naviMesh);
+            NaviPathResult result = NaviPathResult.Success;
+
+            foreach (var wp in waypoints)
             {
-                var node0 = node;
-                var node1 = _pathNodes[nextIndex];
-                distance += Vector3.Distance2D(node0.Vertex, node1.Vertex);
-                node = node1;
-                nextIndex++;
+                if (!Vector3.IsFinite(wp.Point) 
+                    || (wp.Side == NaviSide.Point && wp.Radius != 0f) 
+                    || (wp.Side != NaviSide.Point && wp.Radius <= 0f))
+                    return NaviPathResult.Failed;
+
+                var pathNode = new NaviPathNode(wp.Point,wp.Side, wp.Radius, false);
+                Segment pathSegment = GetPathSegment(pathNodes.Count > 0 ? pathNodes[^1] : startNode, pathNode);
+                List<NaviPathNode> wpPath = new ();
+                result = generator.GeneratePath(pathSegment.Start, pathSegment.End, radius, pathFlags, wpPath, false, 0, 0f);
+                if (result == NaviPathResult.Success)
+                {
+                    if (pathNodes.Count + wpPath.Count > 256)
+                        return NaviPathResult.FailedOutMaxSize;
+
+                    if (wp.Side != NaviSide.Point)
+                        wpPath[^1] = pathNode;
+
+                    pathNodes.AddRange(wpPath);
+                }
+                else
+                    break;
             }
-            return distance;
+
+            Init(radius, pathFlags, null);
+
+            if (result == NaviPathResult.Success)
+                Append(pathNodes, 0);
+
+            return result;
         }
 
-        internal NaviPathResult GenerateWaypointPath(NaviMesh naviMesh, Vector3 position, List<Waypoint> waypoints, float radius, PathFlags pathFlags)
+        public NaviPathResult GenerateSimpleMove(Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
-            throw new NotImplementedException();
+            List<NaviPathNode> pathNodes = new ();
+            NaviPathGenerator.GenerateDirectMove(position, goalPosition, pathNodes);
+            Init(radius, pathFlags, pathNodes);
+            return NaviPathResult.Success;
         }
-    }
 
-    public enum PathGenerationFlags
-    {
-        Default = 0,
-        IncompletedPath = 1 << 1,
+        public void GetNextMovePosition(Vector3 fromPoint, float moveDistance, out Vector3 movePosition, out Vector3 moveDirection)
+        {
+            movePosition = Vector3.Zero;
+            moveDirection = Vector3.Zero;
+            if (!Vector3.IsFinite(fromPoint) || !float.IsFinite(moveDistance)) return;
+
+            TryAdvanceGoalNode(fromPoint);
+            var goalNode = GetCurrentGoalNode();
+            if (goalNode != null)
+            {
+                if (goalNode.VertexSide == NaviSide.Point)
+                {
+                    float distanceSq = Vector3.DistanceSquared2D(goalNode.Vertex, fromPoint);
+                    float moveDistanceSq = moveDistance * moveDistance;
+                    moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                    if (distanceSq < moveDistanceSq)
+                    {
+                        movePosition = goalNode.Vertex;
+                        if (_pathNodes.IndexOf(_currentNode) + 1 == _pathNodes.Count)
+                            _currentNode = null;
+                    }
+                    else
+                        movePosition = fromPoint + moveDirection * moveDistance;
+                }
+                else
+                {
+                    if (Segment.CircleTangents2D(goalNode.Vertex, goalNode.Radius, fromPoint, out Segment tangent))
+                    {
+                        moveDirection = goalNode.VertexSide == NaviSide.Left ? tangent.End : tangent.Start;
+                        if (!Vector3.IsFinite(moveDirection))
+                            moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                    }
+                    else
+                        moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                    movePosition = fromPoint + moveDirection * moveDistance;
+                }
+            }
+            else
+            {
+                movePosition = GetFinalPosition();
+                moveDirection = Vector3.SafeNormalize2D(GetFinalPosition() - fromPoint, Vector3.XAxis);
+            }
+
+            if (!Vector3.IsFinite(movePosition))
+                movePosition = Vector3.Zero;
+        }
+
+        private void TryAdvanceGoalNode(Vector3 fromPoint)
+        {
+            int goalIndex = _pathNodes.IndexOf(GetCurrentGoalNode());
+            bool next;
+            while (goalIndex != -1 && goalIndex < _pathNodes.Count)
+            {
+                NaviPathNode goalNode = _pathNodes[goalIndex];
+                next = false;
+                if (goalNode.VertexSide != NaviSide.Point)
+                {
+                    int nextGoalIndex = goalIndex + 1;
+                    if (nextGoalIndex < _pathNodes.Count)
+                    {
+                        NaviPathNode nextGoalNode = _pathNodes[nextGoalIndex];
+                        Vector3 nextGoalDir = nextGoalNode.Vertex - goalNode.Vertex;
+                        Vector3 fromPointDir = fromPoint - goalNode.Vertex;
+                        bool flip = Segment.Cross2D(fromPointDir, nextGoalDir) > 0.0f;
+                        NaviSide vertexSide = flip ? NaviSide.Left : NaviSide.Right;
+                        if (vertexSide == goalNode.VertexSide && Vector3.Dot2D(fromPointDir, nextGoalDir) > 0.0f)
+                            next = true;
+                    }
+                }
+                else
+                {
+                    if (Vector3.DistanceSquared2D(goalNode.Vertex, fromPoint) < 1.0f)
+                        next = true;
+                }
+                if (next == false) break;
+                _currentNode = _pathNodes[goalIndex];
+                goalIndex++;
+            }
+        }
+
     }
 
     public enum NaviPathResult
@@ -290,14 +418,8 @@ namespace MHServerEmu.Games.Navi
         Success = 0,
         Failed = 1,
         FailedRegion = 3,
+        FailedOutMaxSize = 9,
         IncompletedPath = 10,
-
     }
 
-    public enum NaviSide
-    {
-        Left = 0,
-        Right = 1,
-        Point = 2
-    }
 }

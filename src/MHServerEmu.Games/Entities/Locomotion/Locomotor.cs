@@ -882,7 +882,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 GeneratePath(newPath, finalPosition, _pathGenerationFlags, _incompleteDistance);
                 bool pathSuccess = newPath.PathResult == NaviPathResult.Success || newPath.PathResult == NaviPathResult.IncompletedPath;
                 float approxCurrentDistance = _generatedPath.Path.ApproxCurrentDistance(_owner.RegionLocation.Position);
-                bool validDistance = pathSuccess && (!_generatedPath.Path.IsValid || newPath.Path.ApproxTotalDistance < approxCurrentDistance);
+                bool validDistance = pathSuccess && (!_generatedPath.Path.IsValid || newPath.Path.ApproxTotalDistance() < approxCurrentDistance);
 
                 bool movementImpeded = MovementImpeded;
                 if (pathSuccess && IsFollowingEntity && _generatedPath.Path.IsCurrentGoalNodeLastNode)
