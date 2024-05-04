@@ -254,9 +254,23 @@ namespace MHServerEmu.Games.Navi
             throw new NotImplementedException();
         }
 
-        internal float ApproxCurrentDistance(Vector3 position)
+        public float ApproxCurrentDistance(Vector3 currentPos)
         {
-            throw new NotImplementedException();
+            float distance = 0.0f;
+            var node = GetCurrentGoalNode();
+            if (node == null) return distance;
+
+            distance += Vector3.Distance2D(currentPos, node.Vertex);
+            var nextIndex = _pathNodes.IndexOf(node) + 1;
+            while (nextIndex < _pathNodes.Count)
+            {
+                var node0 = node;
+                var node1 = _pathNodes[nextIndex];
+                distance += Vector3.Distance2D(node0.Vertex, node1.Vertex);
+                node = node1;
+                nextIndex++;
+            }
+            return distance;
         }
 
         internal NaviPathResult GenerateWaypointPath(NaviMesh naviMesh, Vector3 position, List<Waypoint> waypoints, float radius, PathFlags pathFlags)
