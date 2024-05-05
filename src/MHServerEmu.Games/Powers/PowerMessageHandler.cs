@@ -126,14 +126,15 @@ namespace MHServerEmu.Games.Powers
 
             //Logger.Trace(tryActivatePower.ToString());
 
-            PowerResultArchive archive = new(tryActivatePower);
-            if (archive.TargetEntityId > 0)
+            PowerResults results = new();
+            results.Init(tryActivatePower);
+            if (results.TargetEntityId > 0)
             {                
                 playerConnection.SendMessage(NetMessagePowerResult.CreateBuilder()
-                    .SetArchiveData(archive.Serialize())
+                    .SetArchiveData(results.ToByteString())
                     .Build());
 
-                TestHit(playerConnection, archive.TargetEntityId, (int)archive.DamagePhysical);
+                TestHit(playerConnection, results.TargetEntityId, (int)results.DamagePhysical);
             }
 
             return true;

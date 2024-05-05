@@ -279,7 +279,14 @@ namespace MHServerEmu.Games.Network
                                 break;
 
                             case NetMessagePowerResult powerResult:
-                                writer.WriteLine($"ArchiveData: {new PowerResultArchive(powerResult.ArchiveData)}");
+                                using (Archive archive = new(ArchiveSerializeType.Replication, powerResult.ArchiveData.ToByteArray()))
+                                {
+                                    PowerResults powerResults = new();
+                                    powerResults.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                                    powerResults.Serialize(archive);
+                                    writer.WriteLine($"ArchiveData: {powerResults}");
+                                }
+
                                 break;
 
                             case NetMessageAddCondition addCondition:
