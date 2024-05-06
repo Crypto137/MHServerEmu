@@ -32,11 +32,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             AvatarWorldInstanceId = stream.ReadRawVarint32();
             FieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
             Position = new(stream);
+            
             if (FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
                 Orientation = new(stream);
             else
                 Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-            LocomotionState = new(stream, FieldFlags);
+            
+            LocomotionState = new();
+            LocomotionState.Decode(stream, FieldFlags);
         }
 
         public UpdateAvatarStateArchive() { }

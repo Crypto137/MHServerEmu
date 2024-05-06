@@ -36,7 +36,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 ? new(stream)
                 : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
 
-            LocomotionState = new(stream, FieldFlags);
+            LocomotionState = new();
+            LocomotionState.Decode(stream, FieldFlags);
         }
 
         public LocomotionStateUpdateArchive() { }

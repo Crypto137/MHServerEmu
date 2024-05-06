@@ -263,6 +263,10 @@ namespace MHServerEmu.Games.Network
             if (updateAvatarState == null) return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to retrieve message");
 
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
+            // Logger spam
+            //Logger.Trace(avatarState.ToString());
+            //Logger.Trace(avatarState.Position.ToString());
+
             //Vector3 oldPosition = client.LastPosition;
             LastPosition = avatarState.Position;
             AOI.Region.Visited();
@@ -299,10 +303,6 @@ namespace MHServerEmu.Games.Network
                 currentAvatar.Locomotor.SetSyncState(locomotionState, position, orientation);
             }
 
-            /* Logger spam
-            Logger.Trace(avatarState.ToString())
-            Logger.Trace(avatarState.Position.ToString());
-            */
             return true;
         }
 

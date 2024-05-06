@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
@@ -13,11 +14,11 @@ namespace MHServerEmu.Games.Entities.Locomotion
         None                    = 0,
         HasFullOrientation      = 1 << 0,
         NoLocomotionState       = 1 << 1,
-        Flag2                   = 1 << 2,
+        RelativeToPreviousState = 1 << 2,   // See LocomotionState::GetFieldFlags()
         HasLocomotionFlags      = 1 << 3,
         HasMethod               = 1 << 4,
         UpdatePathNodes         = 1 << 5,
-        Flag6                   = 1 << 6,
+        LocomotionFinished      = 1 << 6,
         HasMoveSpeed            = 1 << 7,
         HasHeight               = 1 << 8,
         HasFollowEntityId       = 1 << 9,
@@ -28,23 +29,25 @@ namespace MHServerEmu.Games.Entities.Locomotion
     [Flags]
     public enum LocomotionFlags : ulong
     {
-        None = 0,
-        IsLocomoting = 1ul << 0,
-        IsWalking = 1ul << 1,
-        IsLooking = 1ul << 2,
-        SkipCurrentSpeedRate = 1ul << 3,
-        LocomotionNoEntityCollide = 1ul << 4,
-        IsMovementPower = 1ul << 5,
-        DisableOrientation = 1ul << 6,
-        IsDrivingMovementMode = 1ul << 7,
-        MoveForward = 1ul << 8,
-        MoveTo = 1ul << 9,
-        IsSyncMoving = 1ul << 10,
-        IgnoresWorldCollision = 1ul << 11,
+        None                        = 0,
+        IsLocomoting                = 1 << 0,
+        IsWalking                   = 1 << 1,
+        IsLooking                   = 1 << 2,
+        SkipCurrentSpeedRate        = 1 << 3,
+        LocomotionNoEntityCollide   = 1 << 4,
+        IsMovementPower             = 1 << 5,
+        DisableOrientation          = 1 << 6,
+        IsDrivingMovementMode       = 1 << 7,
+        MoveForward                 = 1 << 8,
+        MoveTo                      = 1 << 9,
+        IsSyncMoving                = 1 << 10,
+        IgnoresWorldCollision       = 1 << 11,
     }
 
-    public class LocomotionState // TODO replace to struct
+    public class LocomotionState // TODO: Change to struct? Consider how this is used before doing it
     {
+        // NOTE: Due to how LocomotionState serialization is implemented, we should be able to
+        // get away with using C# auto properties instead of private fields.
         public LocomotionFlags LocomotionFlags { get; set; }
         public LocomotorMethod Method { get; set; }
         public float BaseMoveSpeed { get; set; }
@@ -52,8 +55,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public ulong FollowEntityId { get; set; }
         public float FollowEntityRangeStart { get; set; }
         public float FollowEntityRangeEnd { get; set; }
-        public int PathGoalNodeIndex { get; set; }     // This was signed in old protocols
-        public List<NaviPathNode> PathNodes { get; set; }
+        public int PathGoalNodeIndex { get; set; }
+        public List<NaviPathNode> PathNodes { get; set; } = new();
 
         public LocomotionState()
         {
@@ -61,9 +64,44 @@ namespace MHServerEmu.Games.Entities.Locomotion
             PathNodes = new();
         }
 
-        public LocomotionState(CodedInputStream stream, LocomotionMessageFlags flags)
+        public LocomotionState(float baseMoveSpeed)
         {
+            BaseMoveSpeed = baseMoveSpeed;
             PathNodes = new();
+        }
+
+        public LocomotionState(LocomotionState other)
+        {
+            Set(other);
+        }
+
+        // NOTE: LocomotionState serialization implementation is similar to what PowerCollection is doing
+        // (i.e. separate static serialization methods for serialization and deserialization rather than
+        // combined ISerialize implementention we have seen everywhere else).
+
+        public static bool SerializeTo(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool SerializeFrom(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool SerializeTo(Archive archive, LocomotionState state, LocomotionMessageFlags flags)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool SerializeFrom(Archive archive, LocomotionState state, LocomotionMessageFlags flags)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Decode(CodedInputStream stream, LocomotionMessageFlags flags)
+        {
+            PathNodes.Clear();
 
             if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
                 LocomotionFlags = (LocomotionFlags)stream.ReadRawVarint64();
@@ -90,20 +128,16 @@ namespace MHServerEmu.Games.Entities.Locomotion
             {
                 PathGoalNodeIndex = (int)stream.ReadRawVarint32();
                 int count = (int)stream.ReadRawVarint64();
+
+                Vector3 previousVertex = Vector3.Zero;
                 for (int i = 0; i < count; i++)
-                    PathNodes.Add(new(stream));
+                {
+                    NaviPathNode pathNode = new();
+                    pathNode.Decode(stream, previousVertex);
+                    previousVertex = pathNode.Vertex;
+                    PathNodes.Add(pathNode);
+                }
             }
-        }
-
-        public LocomotionState(float baseMoveSpeed)
-        {
-            BaseMoveSpeed = baseMoveSpeed;
-            PathNodes = new();
-        }
-
-        public LocomotionState(LocomotionState other)
-        {
-            Set(other);
         }
 
         public void Encode(CodedOutputStream stream, LocomotionMessageFlags flags)
@@ -133,28 +167,35 @@ namespace MHServerEmu.Games.Entities.Locomotion
             {
                 stream.WriteRawVarint32((uint)PathGoalNodeIndex);
                 stream.WriteRawVarint64((ulong)PathNodes.Count);
-                foreach (NaviPathNode naviVector in PathNodes) naviVector.Encode(stream);
+
+                Vector3 previousVertex = Vector3.Zero;
+                foreach (NaviPathNode naviVector in PathNodes)
+                {
+                    naviVector.Encode(stream, previousVertex);
+                    previousVertex = naviVector.Vertex;
+                }
             }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"LocomotionFlags: {LocomotionFlags}");
-            sb.AppendLine($"Method: 0x{Method:X}");
-            sb.AppendLine($"BaseMoveSpeed: {BaseMoveSpeed}");
-            sb.AppendLine($"Height: 0x{Height:X}");
-            sb.AppendLine($"FollowEntityId: {FollowEntityId}");
-            sb.AppendLine($"FollowEntityRangeStart: {FollowEntityRangeStart}");
-            sb.AppendLine($"FollowEntityRangeEnd: {FollowEntityRangeEnd}");
-            sb.AppendLine($"PathGoalNodeIndex: {PathGoalNodeIndex}");
-            for (int i = 0; i < PathNodes.Count; i++) sb.AppendLine($"PathNode{i}: {PathNodes[i]}");
+            sb.AppendLine($"{nameof(LocomotionFlags)}: {LocomotionFlags}");
+            sb.AppendLine($"{nameof(Method)}: {Method}");
+            sb.AppendLine($"{nameof(BaseMoveSpeed)}: {BaseMoveSpeed}");
+            sb.AppendLine($"{nameof(Height)}: {Height}");
+            sb.AppendLine($"{nameof(FollowEntityId)}: {FollowEntityId}");
+            sb.AppendLine($"{nameof(FollowEntityRangeStart)}: {FollowEntityRangeStart}");
+            sb.AppendLine($"{nameof(FollowEntityRangeEnd)}: {FollowEntityRangeEnd}");
+            sb.AppendLine($"{nameof(PathGoalNodeIndex)}: {PathGoalNodeIndex}");
+            for (int i = 0; i < PathNodes.Count; i++)
+                sb.AppendLine($"{nameof(PathNodes)}[{i}]: {PathNodes[i]}");
             return sb.ToString();
         }
 
         public void StateFrom(LocomotionState locomotionState)
         {
-            // TODO Replace to SerializeFrom
+            // TODO Replace with SerializeFrom()
             Set(locomotionState);
         }
 
@@ -168,7 +209,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
             FollowEntityRangeStart = other.FollowEntityRangeStart;
             FollowEntityRangeEnd = other.FollowEntityRangeEnd;
             PathGoalNodeIndex = other.PathGoalNodeIndex;
-            PathNodes = new(other.PathNodes);
+
+            // NOTE: Is it okay to add path nodes here by reference? Do we need a copy?
+            // Review this if/when we change NaviPathNode to struct.
+            //PathNodes = new(other.PathNodes);
+            PathNodes.Clear();
+            PathNodes.AddRange(other.PathNodes);
         }
     }
 }

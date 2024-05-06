@@ -63,7 +63,10 @@ namespace MHServerEmu.Games.Entities
                 : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
 
             if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-                LocomotionState = new(stream, LocoFieldFlags);
+            {
+                LocomotionState = new();
+                LocomotionState.Decode(stream, LocoFieldFlags);
+            }
 
             if (ExtraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAvatarWorldInstanceId))
                 AvatarWorldInstanceId = stream.ReadRawVarint32();
