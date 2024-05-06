@@ -1,8 +1,10 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
 
@@ -46,6 +48,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
     public class LocomotionState // TODO: Change to struct? Consider how this is used before doing it
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         // NOTE: Due to how LocomotionState serialization is implemented, we should be able to
         // get away with using C# auto properties instead of private fields.
         public LocomotionFlags LocomotionFlags { get; set; }
@@ -81,22 +85,214 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
         public static bool SerializeTo(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
         {
-            throw new NotImplementedException();
+            bool success = true;
+            
+            // Encode offset from the previous vertex
+            Vector3 offset = pathNode.Vertex - previousVertex;
+            success &= Serializer.TransferVectorFixed(archive, ref offset, 3);
+
+            // Pack vertex side + radius into a single value
+            int vertexSideRadius = (int)MathF.Round(pathNode.Radius);
+            if (pathNode.VertexSide == NaviSide.Left) vertexSideRadius = -vertexSideRadius;
+            success &= Serializer.Transfer(archive, ref vertexSideRadius);
+
+            return success;
         }
 
         public static bool SerializeFrom(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
         {
-            throw new NotImplementedException();
+            bool success = true;
+
+            // Decode offset and combine it with the previous vertex
+            Vector3 offset = Vector3.Zero;
+            success &= Serializer.TransferVectorFixed(archive, ref offset, 3);
+            pathNode.Vertex = offset + previousVertex;
+
+            // Vertex side and radius are encoded together in the same value
+            int vertexSideRadius = 0;
+            success &= Serializer.Transfer(archive, ref vertexSideRadius);
+            if (vertexSideRadius < 0)
+            {
+                pathNode.VertexSide = NaviSide.Left;
+                pathNode.Radius = -vertexSideRadius;
+            }
+            else if (vertexSideRadius > 0)
+            {
+                pathNode.VertexSide = NaviSide.Right;
+                pathNode.Radius = vertexSideRadius;
+            }
+            else /* if (vertexSideRadius == 0) */
+            {
+                pathNode.VertexSide = NaviSide.Point;
+                pathNode.Radius = 0f;
+            }
+
+            return success;
         }
 
         public static bool SerializeTo(Archive archive, LocomotionState state, LocomotionMessageFlags flags)
         {
-            throw new NotImplementedException();
+            bool success = true;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
+            {
+                ulong locomotionFlags = (ulong)state.LocomotionFlags;
+                success &= Serializer.Transfer(archive, ref locomotionFlags);
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
+            {
+                uint method = (uint)state.Method;
+                success &= Serializer.Transfer(archive, ref method);
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
+            {
+                float moveSpeed = state.BaseMoveSpeed;
+                success &= Serializer.TransferFloatFixed(archive, ref moveSpeed, 0);
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
+            {
+                uint height = (uint)state.Height;
+                success &= Serializer.Transfer(archive, ref height);
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
+            {
+                ulong followEntityId = state.FollowEntityId;
+                success &= Serializer.Transfer(archive, ref followEntityId);
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
+            {
+                float rangeStart = state.FollowEntityRangeStart;
+                float rangeEnd = state.FollowEntityRangeEnd;
+                success &= Serializer.TransferFloatFixed(archive, ref rangeStart, 0);
+                success &= Serializer.TransferFloatFixed(archive, ref rangeEnd, 0);
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
+            {
+                if (state.PathGoalNodeIndex < 0) Logger.Warn("SerializeTo(): state.PathGoalNodeIndex < 0");
+
+                uint pathGoalNodeIndex = (uint)state.PathGoalNodeIndex;
+                success &= Serializer.Transfer(archive, ref pathGoalNodeIndex);
+
+                uint pathNodeCount = (uint)state.PathNodes.Count;
+                success &= Serializer.Transfer(archive, ref pathNodeCount);
+
+                if (pathNodeCount > 0)
+                {
+                    Vector3 previousVertex = Vector3.Zero;
+                    foreach (NaviPathNode pathNode in state.PathNodes)
+                    {
+                        success &= SerializeTo(archive, pathNode, previousVertex);
+                        previousVertex = pathNode.Vertex;
+                    }
+                }
+            }
+
+            return success;
         }
 
         public static bool SerializeFrom(Archive archive, LocomotionState state, LocomotionMessageFlags flags)
         {
-            throw new NotImplementedException();
+            bool success = true;
+
+            // NOTE: when the RelativeToPreviousState flag is not set and the value is not serialized,
+            // it means the value is zero. When the flag IS set and the value is not serialized,
+            // it means that the value has not changed relative to some previous locomotion state.
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
+            {
+                ulong locomotionFlags = 0;
+                success &= Serializer.Transfer(archive, ref locomotionFlags);
+                state.LocomotionFlags = (LocomotionFlags)locomotionFlags;       // NOTE: Is this correct? BitSet<12ul>::operator=
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                state.LocomotionFlags = LocomotionFlags.None;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
+            {
+                uint method = 0;
+                success &= Serializer.Transfer(archive, ref method);
+                state.Method = (LocomotorMethod)method;
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                state.Method = LocomotorMethod.Ground;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
+            {
+                float moveSpeed = 0f;
+                success &= Serializer.TransferFloatFixed(archive, ref moveSpeed, 0);
+                state.BaseMoveSpeed = moveSpeed;
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                state.BaseMoveSpeed = 0f;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
+            {
+                uint height = 0;
+                success &= Serializer.Transfer(archive, ref height);
+                state.Height = (int)height;
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                state.Height = 0;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
+            {
+                ulong followEntityId = 0;
+                success &= Serializer.Transfer(archive, ref followEntityId);
+                state.FollowEntityId = followEntityId;
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                state.FollowEntityId = 0;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
+            {
+                float rangeStart = 0f;
+                float rangeEnd = 0f;
+                success &= Serializer.TransferFloatFixed(archive, ref rangeStart, 0);
+                success &= Serializer.TransferFloatFixed(archive, ref rangeEnd, 0);
+                state.FollowEntityRangeStart = rangeStart;
+                state.FollowEntityRangeEnd = rangeEnd;
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+            {
+                state.FollowEntityRangeStart = 0f;
+                state.FollowEntityRangeEnd = 0f;
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
+            {
+                uint pathGoalNodeIndex = 0;
+                success &= Serializer.Transfer(archive, ref pathGoalNodeIndex);
+                state.PathGoalNodeIndex = (int)pathGoalNodeIndex;
+
+                state.PathNodes.Clear();
+                uint pathNodeCount = 0;
+                success &= Serializer.Transfer(archive, ref pathNodeCount);
+
+                if (pathNodeCount > 0)
+                {
+                    Vector3 previousVertex = Vector3.Zero;
+                    for (uint i = 0; i < pathNodeCount; i++)
+                    {
+                        NaviPathNode pathNode = new();
+                        success &= SerializeFrom(archive, pathNode, previousVertex);
+                        previousVertex = pathNode.Vertex;
+                        state.PathNodes.Add(pathNode);
+                    }
+                }
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+            {
+                state.PathGoalNodeIndex = 0;
+                state.PathNodes.Clear();
+            }
+
+            return success;
         }
 
         public void Decode(CodedInputStream stream, LocomotionMessageFlags flags)
