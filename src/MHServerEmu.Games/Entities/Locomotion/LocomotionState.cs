@@ -295,6 +295,78 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
+        public static LocomotionMessageFlags GetFieldFlags(LocomotionState currentState, LocomotionState previousState, bool withPathNodes)
+        {
+            if (currentState == null) return LocomotionMessageFlags.NoLocomotionState;
+
+            LocomotionMessageFlags flags = LocomotionMessageFlags.None;
+
+            if (previousState != null)
+            {
+                // If we have a previous state, it means we are sending a relative update that contains only what has changed
+                flags |= LocomotionMessageFlags.RelativeToPreviousState;
+
+                if (currentState.LocomotionFlags != previousState.LocomotionFlags)
+                    flags |= LocomotionMessageFlags.HasLocomotionFlags;
+
+                if (currentState.Method != previousState.Method)
+                    flags |= LocomotionMessageFlags.HasMethod;
+
+                if (currentState.BaseMoveSpeed != previousState.BaseMoveSpeed)
+                    flags |= LocomotionMessageFlags.HasMoveSpeed;
+
+                if (currentState.Height != previousState.Height)
+                    flags |= LocomotionMessageFlags.HasHeight;
+
+                if (currentState.FollowEntityId != previousState.FollowEntityId)
+                    flags |= LocomotionMessageFlags.HasFollowEntityId;
+
+                if (currentState.FollowEntityRangeStart != previousState.FollowEntityRangeStart)
+                    flags |= LocomotionMessageFlags.HasFollowEntityRange;
+
+                if (withPathNodes)
+                {
+                    bool isLocomoting = currentState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting);
+                    bool isLooking = currentState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking);
+
+                    if (isLocomoting || isLooking)
+                        flags |= LocomotionMessageFlags.UpdatePathNodes;
+                    else if ((previousState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting) && isLocomoting == false)
+                        || (previousState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking) && isLooking == false))
+                    {
+                        // If we were locomoting or looking, and no longer are, flag the current locomotion state as finished
+                        flags |= LocomotionMessageFlags.LocomotionFinished;
+                    }
+                }
+            }
+            else
+            {
+                // If no previous state is provided, it means we are sending a full locomotion state (we still omit default values)
+                if (currentState.LocomotionFlags != LocomotionFlags.None)
+                    flags |= LocomotionMessageFlags.HasLocomotionFlags;
+
+                if (currentState.Method != LocomotorMethod.Ground)
+                    flags |= LocomotionMessageFlags.HasMethod;
+
+                if (currentState.BaseMoveSpeed != 0f)
+                    flags |= LocomotionMessageFlags.HasMoveSpeed;
+
+                if (currentState.Height != 0)
+                    flags |= LocomotionMessageFlags.HasHeight;
+
+                if (currentState.FollowEntityId != 0)
+                    flags |= LocomotionMessageFlags.HasFollowEntityId;
+
+                if (currentState.FollowEntityRangeStart != 0f)
+                    flags |= LocomotionMessageFlags.HasFollowEntityRange;
+
+                if (withPathNodes)
+                    flags |= LocomotionMessageFlags.UpdatePathNodes;
+            }
+
+            return flags;
+        }
+
         public void Decode(CodedInputStream stream, LocomotionMessageFlags flags)
         {
             PathNodes.Clear();
