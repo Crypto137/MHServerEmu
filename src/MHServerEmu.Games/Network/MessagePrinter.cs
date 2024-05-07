@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.Network
             sb.AppendLine($"Blueprint: {GameDatabase.GetBlueprintName(blueprint.Id)} (bound to {blueprint.RuntimeBindingClassType.Name})");
 
             // Deserialize archive data
-            using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData.ToByteArray()))
+            using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData))
             {
                 Entity entity = DummyGame.AllocateEntity(baseData.PrototypeId);
                 entity.BaseData = baseData;
@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.Network
             sb.Append(regionChange.ToString());
             if (regionChange.ArchiveData.Length > 0)
             {
-                using (Archive archive = new(ArchiveSerializeType.Replication, regionChange.ArchiveData.ToByteArray()))
+                using (Archive archive = new(ArchiveSerializeType.Replication, regionChange.ArchiveData))
                 {
                     RegionArchive regionArchive = new();
                     regionArchive.Serialize(archive);
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Network
         {
             var locomotionStateUpdate = (NetMessageLocomotionStateUpdate)message;
 
-            using (Archive archive = new(ArchiveSerializeType.Replication, locomotionStateUpdate.ArchiveData.ToByteArray()))
+            using (Archive archive = new(ArchiveSerializeType.Replication, locomotionStateUpdate.ArchiveData))
             {
                 LocomotionStateUpdateArchive update = new();
                 update.ReplicationPolicy = archive.GetReplicationPolicyEnum();
@@ -126,7 +126,7 @@ namespace MHServerEmu.Games.Network
         {
             var activatePower = (NetMessageActivatePower)message;
 
-            using (Archive archive = new(ArchiveSerializeType.Replication, activatePower.ArchiveData.ToByteArray()))
+            using (Archive archive = new(ArchiveSerializeType.Replication, activatePower.ArchiveData))
             {
                 ActivatePowerArchive activatePowerArchive = new();
                 activatePowerArchive.ReplicationPolicy = archive.GetReplicationPolicyEnum();
@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Network
         {
             var powerResult = (NetMessagePowerResult)message;
 
-            using (Archive archive = new(ArchiveSerializeType.Replication, powerResult.ArchiveData.ToByteArray()))
+            using (Archive archive = new(ArchiveSerializeType.Replication, powerResult.ArchiveData))
             {
                 PowerResults powerResults = new();
                 powerResults.ReplicationPolicy = archive.GetReplicationPolicyEnum();

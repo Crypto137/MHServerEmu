@@ -255,7 +255,7 @@ namespace MHServerEmu.Games.Entities
             using (Archive archive = new Archive(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
             {
                 Serialize(archive);
-                archiveData = ByteString.CopyFrom(archive.AccessAutoBuffer().ToArray());
+                archiveData = archive.ToByteString();
             }
 
             return NetMessageEntityCreate.CreateBuilder()
