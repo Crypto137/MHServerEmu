@@ -1023,5 +1023,11 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
+        public NaviPoint FindAttachedPointAtPoint(Vector3 position)
+        {
+            NaviPoint point = _vertexLookupCache.FindVertex(position);
+            return point != null && point.TestFlag(NaviPointFlags.Attached) ? point : null;
+        }
+
     }
 }
