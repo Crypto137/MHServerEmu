@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ReplicatedVariable<string> _playerName = new();
+        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
         private ulong _ownerPlayerDbId;
         private List<AbilityKeyMapping> _abilityKeyMappingList = new();
 
