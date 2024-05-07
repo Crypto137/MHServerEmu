@@ -259,6 +259,13 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
+        public static Vector3 Project(Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            Vector3 u = p1 - p0;
+            Vector3 v = p2 - p0;
+            return u * (Dot(u, v) / Dot(u, u)) + p0;
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }

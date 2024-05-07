@@ -280,14 +280,78 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        private bool CanCrossTriangle(NaviTriangle triangle, Vector3 position, Vector3 goalPosition, float width)
+        private static bool CanCrossTriangle(NaviTriangle triangle, Vector3 startPosition, Vector3 goalPosition, float width)
         {
-            throw new NotImplementedException();
+            var vert = new Vector3[3];
+            for (int index = 0; index < 3; index++)
+                vert[index] = triangle.PointCW(index).Pos;
+
+            var isObtuse = new bool[3];
+            isObtuse[0] = NaviUtil.IsAngleObtuse2D(vert[2], vert[0], vert[1]);
+            isObtuse[1] = NaviUtil.IsAngleObtuse2D(vert[0], vert[1], vert[2]);
+            isObtuse[2] = NaviUtil.IsAngleObtuse2D(vert[1], vert[2], vert[0]);
+
+            for (int index = 0; index < 3; index++)
+            {
+                int i0 = index;
+                int i1 = (index + 2) % 3;
+                int i2 = (index + 1) % 3;
+                var pos0 = vert[i0];
+                var pos1 = vert[i1];
+                var pos2 = vert[i2];
+
+                if (!isObtuse[i1] && !isObtuse[i2])
+                {
+                    Vector3 projectPoint = Vector3.Project(pos1, pos2, pos0);
+                    bool startSide = Segment.LinePointSide2D(pos0, projectPoint, startPosition) < 0.0f;
+                    bool goalSide = Segment.LinePointSide2D(pos0, projectPoint, goalPosition) < 0.0f;
+                    if (startSide != goalSide)
+                    {
+                        float ignoreWidth = triangle.CalculateWidthIgnoreInitialEdges(triangle.EdgeMod(index + 2), triangle.Edges[index]);
+                        if (width >= ignoreWidth)
+                            return false;
+                    }
+                }
+            }
+            return true;
         }
 
-        private bool CanCrossTriangle(NaviTriangle triangle, int edgeIndex, NaviEdge edge, Vector3 position, float width)
+        private static bool CanCrossTriangle(NaviTriangle triangle, int edgeIndex, NaviEdge edge, Vector3 startPosition, float width)
         {
-            throw new NotImplementedException();
+            var pos2 = triangle.OpposedVertex(edge).Pos;
+            var pos0 = triangle.EdgePointCW(edgeIndex, 0).Pos;
+            var pos1 = triangle.EdgePointCW(edgeIndex, 1).Pos;
+
+            bool isObtuse0 = NaviUtil.IsAngleObtuse2D(pos2, pos0, pos1);
+            bool isObtuse1 = NaviUtil.IsAngleObtuse2D(pos0, pos1, pos2);
+            bool isObtuse2 = NaviUtil.IsAngleObtuse2D(pos1, pos2, pos0);
+
+            if (!isObtuse2 && !isObtuse1)
+            {
+                Vector3 projectPoint = Vector3.Project(pos1, pos2, pos0);
+                bool startSide = Segment.LinePointSide2D(pos0, projectPoint, startPosition) < 0.0f;
+                bool pointSide1 = Segment.LinePointSide2D(pos0, projectPoint, pos1) < 0.0f;
+                if (startSide != pointSide1)
+                {
+                    float ignoreWidth = triangle.CalculateWidthIgnoreInitialEdges(triangle.EdgeMod(edgeIndex + 2), edge);
+                    if (width >= ignoreWidth)
+                        return false;
+                }
+            }
+            else if (!isObtuse2 && !isObtuse0)
+            {
+                Vector3 projectPoint = Vector3.Project(pos0, pos2, pos1);
+                bool startSide = Segment.LinePointSide2D(pos1, projectPoint, startPosition) < 0.0f;
+                bool pointSide0 = Segment.LinePointSide2D(pos1, projectPoint, pos0) < 0.0f;
+                if (startSide != pointSide0)
+                {
+                    float ignoreWidth = triangle.CalculateWidthIgnoreInitialEdges(triangle.EdgeMod(edgeIndex + 1), edge);
+                    if (width >= ignoreWidth)
+                        return false;
+                }
+            }
+
+            return true;
         }
 
         private bool FunnelStep(NaviPathChannel pathChannel, List<NaviPathNode> outPathNodes)

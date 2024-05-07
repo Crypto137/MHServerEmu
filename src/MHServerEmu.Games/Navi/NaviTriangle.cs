@@ -311,6 +311,13 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
+        public float CalculateWidthIgnoreInitialEdges(NaviEdge edge1, NaviEdge edge2)
+        {
+            NaviPoint point = NaviEdge.SharedVertex(edge1, edge2);
+            NaviEdge edge = OpposedEdge(point);
+            return SearchWidth(point, this, edge, float.MaxValue);
+        }
+
     }
 
     public class NaviTriangleState

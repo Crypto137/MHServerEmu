@@ -472,6 +472,10 @@ namespace MHServerEmu.Core.Collisions
             }
         }
 
+        public static float LinePointSide2D(Vector3 start, Vector3 end, Vector3 point)
+        {
+            return Cross2D(start - end, point - end);
+        }
     }
 
 }
