@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -14,105 +15,89 @@ namespace MHServerEmu.Games.Powers
     {
         None                            = 0,
         TargetIsUser                    = 1 << 0,
-        HasTriggeringPowerPrototypeId   = 1 << 1,
+        HasTriggeringPowerPrototypeRef  = 1 << 1,
         HasTargetPosition               = 1 << 2,
         TargetPositionIsUserPosition    = 1 << 3,
-        HasMovementTimeMS               = 1 << 4,
+        HasMovementTime                 = 1 << 4,
         HasVariableActivationTime       = 1 << 5,
         HasPowerRandomSeed              = 1 << 6,
         HasFXRandomSeed                 = 1 << 7
     }
 
-    public class ActivatePowerArchive
+    // TODO: This probably belongs in Power
+
+    public class ActivatePowerArchive : ISerialize
     {
-        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
-        public ActivatePowerMessageFlags Flags { get; set; }
-        public ulong IdUserEntity { get; set; }
-        public ulong IdTargetEntity { get; set; }
-        public PrototypeId PowerPrototypeId { get; set; }
-        public PrototypeId TriggeringPowerPrototypeId { get; set; }     // AKA parentPowerPrototypeId
-        public Vector3 UserPosition { get; set; }
-        public Vector3 TargetPosition { get; set; }
-        public ulong MovementTimeMS { get; set; }   // AKA moveTimeSeconds, should this be uint or ulong?
-        public uint VariableActivationTime { get; set; }
-        public uint PowerRandomSeed { get; set; }
-        public uint FXRandomSeed { get; set; }
+        private AOINetworkPolicyValues _replicationPolicy;
+        private ActivatePowerMessageFlags _flags;
+        private ulong _userEntityId;
+        private ulong _targetEntityId;
+        private PrototypeId _powerPrototypeRef;
+        private PrototypeId _triggeringPowerPrototypeRef;   // previously parentPowerPrototypeId
+        private Vector3 _userPosition = Vector3.Zero;
+        private Vector3 _targetPosition = Vector3.Zero;
+        private TimeSpan _movementTime;                       // previously float moveTimeSeconds
+        private TimeSpan _variableActivationTime;
+        private uint _powerRandomSeed;
+        private uint _fxRandomSeed;
 
-        public ActivatePowerArchive(ByteString data)
+        // TODO: Remove accessors and implement PowerActivationSettings
+        public AOINetworkPolicyValues ReplicationPolicy { get => _replicationPolicy; set => _replicationPolicy = value; }
+        public ActivatePowerMessageFlags Flags { get => _flags; set => _flags = value; }
+        public ulong UserEntityId { get => _userEntityId; set => _userEntityId = value; }
+        public ulong TargetEntityId { get => _targetEntityId; set => _targetEntityId = value; }
+        public PrototypeId PowerPrototypeRef { get => _powerPrototypeRef; set => _powerPrototypeRef = value; }
+        public PrototypeId TriggeringPowerPrototypeRef { get => _triggeringPowerPrototypeRef; set => _triggeringPowerPrototypeRef = value; }     
+        public Vector3 UserPosition { get => _userPosition; set => _userPosition = value; }
+        public Vector3 TargetPosition { get => _targetPosition; set => _targetPosition = value; }
+        public TimeSpan MovementTime { get => _movementTime; set => _movementTime = value; }
+        public TimeSpan VariableActivationTime { get => _variableActivationTime; set => _variableActivationTime = value; }
+        public uint PowerRandomSeed { get => _powerRandomSeed; set => _powerRandomSeed = value; }
+        public uint FXRandomSeed { get => _fxRandomSeed; set => _fxRandomSeed = value; }
+
+        public ActivatePowerArchive() { }
+
+        public void Initialize(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
+            _replicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
+            _flags = ActivatePowerMessageFlags.None;
 
-            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            Flags = (ActivatePowerMessageFlags)stream.ReadRawVarint32();
-            IdUserEntity = stream.ReadRawVarint64();
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
-                IdTargetEntity = stream.ReadRawVarint64();
-
-            PowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId))
-                TriggeringPowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
-
-            UserPosition = new(stream, 2);
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
-                TargetPosition = new Vector3(stream, 2) + UserPosition;      // TargetPosition is relative to UserPosition when encoded
-            else if (Flags.HasFlag(ActivatePowerMessageFlags.TargetPositionIsUserPosition))
-                TargetPosition = UserPosition;
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTimeMS))
-                MovementTimeMS = stream.ReadRawVarint64();
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
-                VariableActivationTime = stream.ReadRawVarint32();
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
-                PowerRandomSeed = stream.ReadRawVarint32();
-
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
-                FXRandomSeed = stream.ReadRawVarint32();
-        }
-
-        public ActivatePowerArchive(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
-        {
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
-            Flags = ActivatePowerMessageFlags.None;
-
-            IdUserEntity = tryActivatePower.IdUserEntity;
-            PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
-            UserPosition = userPosition;        // derive this from tryActivatePower.MovementSpeed?
+            _userEntityId = tryActivatePower.IdUserEntity;
+            _powerPrototypeRef = (PrototypeId)tryActivatePower.PowerPrototypeId;
+            _userPosition = userPosition;        // derive this from tryActivatePower.MovementSpeed?
 
             // IdTargetEntity
-            if (tryActivatePower.HasIdTargetEntity)                 
-                if (tryActivatePower.IdTargetEntity == IdUserEntity)
-                    Flags |= ActivatePowerMessageFlags.TargetIsUser;    // flag0 means the user is the target
+            if (tryActivatePower.HasIdTargetEntity)
+            {
+                if (tryActivatePower.IdTargetEntity == _userEntityId)
+                    _flags |= ActivatePowerMessageFlags.TargetIsUser;    // flag0 means the user is the target
                 else
-                    IdTargetEntity = tryActivatePower.IdTargetEntity;
+                    _targetEntityId = tryActivatePower.IdTargetEntity;
+            }
 
             // TriggeringPowerPrototypeId
             if (tryActivatePower.HasTriggeringPowerPrototypeId)
             {
-                TriggeringPowerPrototypeId = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
-                Flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId;
+                _triggeringPowerPrototypeRef = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
+                _flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef;
             }
 
             // TargetPosition
             if (tryActivatePower.HasTargetPosition)
             {
-                TargetPosition = new(tryActivatePower.TargetPosition);
-                Flags |= ActivatePowerMessageFlags.HasTargetPosition;
+                _targetPosition = new(tryActivatePower.TargetPosition);
+                _flags |= ActivatePowerMessageFlags.HasTargetPosition;
             }
             else
             {
-                Flags |= ActivatePowerMessageFlags.TargetPositionIsUserPosition;    // TargetPosition == UserPosition
+                _flags |= ActivatePowerMessageFlags.TargetPositionIsUserPosition;    // TargetPosition == UserPosition
             }
 
             // MovementTimeMS
             if (tryActivatePower.HasMovementTimeMS)
             {
-                MovementTimeMS = tryActivatePower.MovementTimeMS;
-                Flags |= ActivatePowerMessageFlags.HasMovementTimeMS;
+                _movementTime = TimeSpan.FromMilliseconds(tryActivatePower.MovementTimeMS);
+                _flags |= ActivatePowerMessageFlags.HasMovementTime;
             }
 
             // VariableActivationTime - where does this come from?
@@ -120,75 +105,211 @@ namespace MHServerEmu.Games.Powers
             // PowerRandomSeed
             if (tryActivatePower.HasPowerRandomSeed)
             {
-                PowerRandomSeed = tryActivatePower.PowerRandomSeed;
-                Flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
+                _powerRandomSeed = tryActivatePower.PowerRandomSeed;
+                _flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
             }
 
             // FXRandomSeed - NOTE: FXRandomSeed is marked as required in protobuf, so it should always be present
             if (tryActivatePower.HasFxRandomSeed)
             {
-                FXRandomSeed = tryActivatePower.FxRandomSeed;
-                Flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
+                _fxRandomSeed = tryActivatePower.FxRandomSeed;
+                _flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
             }
         }
 
-        public ActivatePowerArchive() { }
-
-        public ByteString Serialize()
+        public bool Serialize(Archive archive)
         {
-            using (MemoryStream ms = new())
+            bool success = true;
+
+            if (archive.IsPacking)
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+                // TODO: build serialization flags here
+                uint flags = (uint)_flags;
+                success &= Serializer.Transfer(archive, ref flags);
 
-                cos.WriteRawVarint32((uint)ReplicationPolicy);
-                cos.WriteRawVarint32((uint)Flags);
-                cos.WriteRawVarint64(IdUserEntity);
+                // User and target entity ids
+                success &= Serializer.Transfer(archive, ref _userEntityId);
+                if (_flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
+                    success &= Serializer.Transfer(archive, ref _targetEntityId);
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
-                    cos.WriteRawVarint64(IdTargetEntity);
+                // Power prototype refs
+                success &= Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref _powerPrototypeRef);
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
+                    success &= Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref _triggeringPowerPrototypeRef);
 
-                cos.WritePrototypeRef<PowerPrototype>(PowerPrototypeId);
+                // Positions
+                success &= Serializer.TransferVectorFixed(archive, ref _userPosition, 2);
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                {
+                    Vector3 offset = _targetPosition - _userPosition;   // Target position is relative to user when encoded
+                    success &= Serializer.TransferVectorFixed(archive, ref offset, 2);
+                }
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId))
-                    cos.WritePrototypeRef<PowerPrototype>(TriggeringPowerPrototypeId);
+                // Movement time for travel powers
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
+                {
+                    uint movementTimeMS = (uint)_movementTime.TotalMilliseconds;
+                    success &= Serializer.Transfer(archive, ref movementTimeMS);
+                }
 
-                UserPosition.Encode(cos, 2);
+                // Variable activation time - what is this? For chargeable / holdable powers?
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                {
+                    uint variableActivationTimeMS = (uint)_variableActivationTime.TotalMilliseconds;
+                    success &= Serializer.Transfer(archive, ref variableActivationTimeMS);
+                }
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
-                    (TargetPosition - UserPosition).Encode(cos, 2);
+                // Random seeds for keeping server / client in sync
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                    success &= Serializer.Transfer(archive, ref _powerRandomSeed);
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTimeMS))
-                    cos.WriteRawVarint64(MovementTimeMS);
+                // NOTE: FXRandomSeed is marked as required in the NetMessageTryActivatePower protobuf, so it should probably always be present
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                    success &= Serializer.Transfer(archive, ref _fxRandomSeed);
+            }
+            else
+            {
+                uint flags = 0;
+                success &= Serializer.Transfer(archive, ref flags);
+                _flags = (ActivatePowerMessageFlags)flags;
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
-                    cos.WriteRawVarint32(VariableActivationTime);
+                success &= Serializer.Transfer(archive, ref _userEntityId);
+                if (_flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser))
+                    _targetEntityId = _userEntityId;
+                else
+                    success &= Serializer.Transfer(archive, ref _targetEntityId);
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
-                    cos.WriteRawVarint32(PowerRandomSeed);
+                success &= Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref _powerPrototypeRef);
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
+                    success &= Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref _triggeringPowerPrototypeRef);
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
-                    cos.WriteRawVarint32(FXRandomSeed);
+                success &= Serializer.TransferVectorFixed(archive, ref _userPosition, 2);
+                if (_flags.HasFlag(ActivatePowerMessageFlags.TargetPositionIsUserPosition))
+                    _targetPosition = _userPosition;
+                else if (_flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                {
+                    // Target position is encoded as an offset from user position
+                    Vector3 offset = Vector3.Zero;
+                    success &= Serializer.TransferVectorFixed(archive, ref offset, 2);
+                    _targetPosition = offset + _userPosition;
+                }
 
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
+                {
+                    uint movementTimeMS = 0;
+                    success &= Serializer.Transfer(archive, ref movementTimeMS);
+                    _movementTime = TimeSpan.FromMilliseconds(movementTimeMS);
+                }
+
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                {
+                    uint variableActivationTimeMS = 0;
+                    success &= Serializer.Transfer(archive, ref variableActivationTimeMS);
+                    _variableActivationTime = TimeSpan.FromMilliseconds(variableActivationTimeMS);
+                }
+
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                    success &= Serializer.Transfer(archive, ref _powerRandomSeed);
+
+                if (_flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                    success &= Serializer.Transfer(archive, ref _fxRandomSeed);
+            }
+
+            return success;
+        }
+
+        public void Decode(CodedInputStream stream)
+        {
+            _replicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
+            _flags = (ActivatePowerMessageFlags)stream.ReadRawVarint32();
+            _userEntityId = stream.ReadRawVarint64();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
+                _targetEntityId = stream.ReadRawVarint64();
+            else
+                _targetEntityId = _userEntityId;
+
+            _powerPrototypeRef = stream.ReadPrototypeRef<PowerPrototype>();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
+                _triggeringPowerPrototypeRef = stream.ReadPrototypeRef<PowerPrototype>();
+
+            _userPosition = new(stream, 2);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                _targetPosition =  new Vector3(stream, 2) + _userPosition;      // TargetPosition is relative to UserPosition when encoded
+            else if (Flags.HasFlag(ActivatePowerMessageFlags.TargetPositionIsUserPosition))
+                _targetPosition = _userPosition;
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
+                _movementTime = TimeSpan.FromMilliseconds(stream.ReadRawVarint32());
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                _variableActivationTime = TimeSpan.FromMilliseconds(stream.ReadRawVarint32());
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                _powerRandomSeed = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                _fxRandomSeed = stream.ReadRawVarint32();
+        }
+
+        public void Encode(CodedOutputStream cos)
+        {
+            cos.WriteRawVarint32((uint)_replicationPolicy);
+            cos.WriteRawVarint32((uint)_flags);
+            cos.WriteRawVarint64(_userEntityId);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
+                cos.WriteRawVarint64(_targetEntityId);
+
+            cos.WritePrototypeRef<PowerPrototype>(_powerPrototypeRef);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
+                cos.WritePrototypeRef<PowerPrototype>(_triggeringPowerPrototypeRef);
+
+            _userPosition.Encode(cos, 2);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                (_targetPosition - _userPosition).Encode(cos, 2);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
+                cos.WriteRawVarint32((uint)_movementTime.TotalMilliseconds);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                cos.WriteRawVarint32((uint)_variableActivationTime.TotalMilliseconds);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                cos.WriteRawVarint32(_powerRandomSeed);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                cos.WriteRawVarint32(_fxRandomSeed);
+        }
+
+        public ByteString ToByteString()
+        {
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)_replicationPolicy))
+            {
+                Serialize(archive);
+                return ByteString.CopyFrom(archive.AccessAutoBuffer().ToArray());
             }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"Flags: {Flags}");
-            sb.AppendLine($"IdUserEntity: {IdUserEntity}");
-            sb.AppendLine($"IdTargetEntity: {IdTargetEntity}");
-            sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
-            sb.AppendLine($"TriggeringPowerPrototypeId: {GameDatabase.GetPrototypeName(TriggeringPowerPrototypeId)}");
-            sb.AppendLine($"UserPosition: {UserPosition}");
-            sb.AppendLine($"TargetPosition: {TargetPosition}");
-            sb.AppendLine($"MovementTimeMS: {MovementTimeMS}");
-            sb.AppendLine($"VariableActivationTime: {VariableActivationTime}");
-            sb.AppendLine($"PowerRandomSeed: {PowerRandomSeed}");
-            sb.AppendLine($"FXRandomSeed: {FXRandomSeed}");
+            sb.AppendLine($"{nameof(_replicationPolicy)}: {_replicationPolicy}");
+            sb.AppendLine($"{nameof(_flags)}: {_flags}");
+            sb.AppendLine($"{nameof(_userEntityId)}: {_userEntityId}");
+            sb.AppendLine($"{nameof(_targetEntityId)}: {_targetEntityId}");
+            sb.AppendLine($"{nameof(_powerPrototypeRef)}: {GameDatabase.GetPrototypeName(_powerPrototypeRef)}");
+            sb.AppendLine($"{nameof(_triggeringPowerPrototypeRef)}: {GameDatabase.GetPrototypeName(_triggeringPowerPrototypeRef)}");
+            sb.AppendLine($"{nameof(_userPosition)}: {_userPosition}");
+            sb.AppendLine($"{nameof(_targetPosition)}: {_targetPosition}");
+            sb.AppendLine($"{nameof(_movementTime)}: {_movementTime}");
+            sb.AppendLine($"{nameof(_variableActivationTime)}: {_variableActivationTime}");
+            sb.AppendLine($"{nameof(_powerRandomSeed)}: {_powerRandomSeed}");
+            sb.AppendLine($"{nameof(_fxRandomSeed)}: {_fxRandomSeed}");
             return sb.ToString();
         }
     }

@@ -12,7 +12,7 @@ namespace MHServerEmu.Frontend
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public TcpClientConnection Connection { get; set; }
+        public TcpClientConnection Connection { get; }
 
         public IFrontendSession Session { get; private set; } = null;
         public bool FinishedPlayerManagerHandshake { get; set; } = false;

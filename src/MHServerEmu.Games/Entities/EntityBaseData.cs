@@ -88,7 +88,10 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-                LocomotionState = new(stream, LocoFieldFlags);
+            {
+                LocomotionState = new();
+                LocomotionState.Decode(stream, LocoFieldFlags);
+            }
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
                 BoundsScaleOverride = stream.ReadRawZigZagFloat(8);
