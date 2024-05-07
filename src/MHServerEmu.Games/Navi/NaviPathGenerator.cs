@@ -356,7 +356,163 @@ namespace MHServerEmu.Games.Navi
 
         private bool FunnelStep(NaviPathChannel pathChannel, List<NaviPathNode> outPathNodes)
         {
-            throw new NotImplementedException();
+            NaviPoint startPoint = new(_startPosition);
+            NaviPoint goalPoint = new(_goalPosition);
+            NaviSide vertexSide;
+            float radiusSq = _radius * _radius;
+            NaviFunnel funnel = new (startPoint);
+
+            if (pathChannel.Count > 0)
+            {
+                int index = pathChannel.Count - 1;
+                NaviChannelEdge firstChannelEdge = pathChannel[index];
+
+                NaviPoint leftEnd = firstChannelEdge.LeftEndPoint();
+                vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, firstChannelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Left : NaviSide.Point;
+                FunnelAddSide(funnel, leftEnd, NaviSide.Left, vertexSide, outPathNodes);
+
+                NaviPoint rightEnd = firstChannelEdge.RightEndPoint();
+                vertexSide = SimpleTestFunnelVertexClearOfObstacles(rightEnd, firstChannelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Point : NaviSide.Right;
+                FunnelAddSide(funnel, rightEnd, NaviSide.Right, vertexSide, outPathNodes);
+
+                while (--index >= 0)
+                {
+                    NaviChannelEdge channelEdge = pathChannel[index];
+                    NaviPoint leftNext = channelEdge.LeftEndPoint();
+                    NaviPoint rightNext = channelEdge.RightEndPoint();
+
+                    if (leftNext == leftEnd)
+                    {
+                        rightEnd = rightNext;
+                        vertexSide = SimpleTestFunnelVertexClearOfObstacles(rightEnd, channelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Point : NaviSide.Right;
+                        FunnelAddSide(funnel, rightEnd, NaviSide.Right, vertexSide, outPathNodes);
+                    }
+                    else
+                    {
+                        leftEnd = leftNext;
+                        vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, channelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Left : NaviSide.Point;
+                        FunnelAddSide(funnel, leftEnd, NaviSide.Left, vertexSide, outPathNodes);
+                    }
+                }
+            }
+
+            FunnelAddSide(funnel, goalPoint, NaviSide.Right, NaviSide.Point, outPathNodes);
+
+            if (funnel.IsEmpty) return false;
+            while (funnel.Left != funnel.Apex) funnel.PopLeft();
+            while (funnel.Size > 0)
+            {
+                FunnelAddApexToPath(funnel, outPathNodes);
+                funnel.PopApexLeft();
+            }
+
+            return true;
+        }
+
+        private void FunnelAddApexToPath(NaviFunnel funnel, List<NaviPathNode> outPathNodes)
+        {
+            if (funnel.IsApexPathStart == false)
+                AddPathNodeBack(outPathNodes, funnel.Apex.Pos, funnel.ApexSide, _radius, funnel.Apex.InfluenceRadius);
+        }
+
+        private static bool SimpleTestFunnelVertexClearOfObstacles(NaviPoint point, NaviTriangle triangle, float radiusSq, PathFlags pathFlags)
+        {
+            if (point.InfluenceRef > 0) return false;
+            NaviTriangle nextTriangle = triangle;
+            do
+            {
+                if (nextTriangle == null || nextTriangle.TestPathFlags(pathFlags) == false) return false;
+                var edge = nextTriangle.OpposedEdge(point);
+                float distanceSq = Segment.SegmentPointDistanceSq(edge.Points[0].Pos, edge.Points[1].Pos, point.Pos);
+                if (distanceSq < radiusSq) return false;
+                nextTriangle = nextTriangle.NextTriangleSharingPoint(point);
+            } while (nextTriangle != triangle);
+
+            return true;
+        }
+
+        private void FunnelAddSide(NaviFunnel funnel, NaviPoint point, NaviSide funnelSide, NaviSide vertexSide, List<NaviPathNode> outPathNodes)
+        {
+            Vector3 prevPoint, cutPoint;
+
+            while (funnel.IsEmpty == false)
+            {
+                if (funnel.Left == funnel.Right)
+                {
+                    funnel.AddVertex(funnelSide, point, vertexSide);
+                    break;
+                }
+
+                if (funnel.Vertex(funnelSide) == funnel.Apex)
+                {
+                    cutPoint = GetOffsetSegment(funnel.Vertex(funnelSide), funnel.ApexSide, point, vertexSide, _radius);
+                    NaviSide invertedSide = (funnelSide == NaviSide.Left) ? NaviSide.Right : NaviSide.Left;
+                    prevPoint = GetOffsetSegment(funnel.Vertex(funnelSide), funnel.ApexSide, funnel.VertexPrev(funnelSide), invertedSide, _radius);
+                }
+                else if (funnel.VertexPrev(funnelSide) == funnel.Apex)
+                {
+                    cutPoint = GetOffsetSegment(funnel.Vertex(funnelSide), funnelSide, point, vertexSide, _radius);
+                    prevPoint = GetOffsetSegment(funnel.VertexPrev(funnelSide), funnel.ApexSide, funnel.Vertex(funnelSide), funnelSide, _radius);
+                }
+                else
+                {
+                    cutPoint = GetOffsetSegment(funnel.Vertex(funnelSide), funnelSide, point, vertexSide, _radius);
+                    prevPoint = GetOffsetSegment(funnel.VertexPrev(funnelSide), funnelSide, funnel.Vertex(funnelSide), funnelSide, _radius);
+                }
+
+                bool cross = Segment.Cross2D(prevPoint, cutPoint) < 0.0f;
+                if (cross ^ (funnelSide == NaviSide.Left))
+                {
+                    funnel.AddVertex(funnelSide, point, vertexSide);
+                    break;
+                }
+
+                if (funnel.Vertex(funnelSide) == funnel.Apex)
+                {
+                    FunnelAddApexToPath(funnel, outPathNodes);
+                    var distSide = Vector3.DistanceSquared2D(funnel.Vertex(funnelSide).Pos, funnel.VertexPrev(funnelSide).Pos);
+                    if (Vector3.DistanceSquared2D(funnel.Apex.Pos, point.Pos) < distSide)
+                    {
+                        funnel.AddApex(funnelSide, point, vertexSide);
+                        break;
+                    }
+                    else
+                        funnel.PopApex(funnelSide);
+                }
+                else
+                    funnel.PopVertex(funnelSide);
+            }
+        }
+
+        private static Vector3 GetOffsetSegment(NaviPoint point0, NaviSide vertexSide0, NaviPoint point1, NaviSide vertexSide1, float radius)
+        {
+            Segment offset = GetOffsetSegmentPts(point0, vertexSide0, point1, vertexSide1, radius);
+            return offset.Direction;
+        }
+
+        private static Segment GetOffsetSegmentPts(NaviPoint point0, NaviSide vertexSide0, NaviPoint point1, NaviSide vertexSide1, float radius)
+        {
+            Vector3 perpVect = Vector3.Normalize(Vector3.Perp2D(point1.Pos - point0.Pos));
+            Vector3 perpVect0 = perpVect * (radius + point0.InfluenceRadius);
+            Vector3 perpVect1 = perpVect * (radius + point1.InfluenceRadius);
+            
+            Vector3 offset0 = null;
+            switch (vertexSide0)
+            {
+                case NaviSide.Point: offset0 = point0.Pos; break;
+                case NaviSide.Left: offset0 = point0.Pos + perpVect0; break;
+                case NaviSide.Right: offset0 = point0.Pos - perpVect0; break;
+            };
+
+            Vector3 offset1 = null;
+            switch (vertexSide1)
+            {
+                case NaviSide.Point: offset1 = point1.Pos; break;
+                case NaviSide.Left: offset1 = point1.Pos + perpVect1; break;
+                case NaviSide.Right: offset1 = point1.Pos - perpVect1; break;
+            };
+
+            return new(offset0, offset1);
         }
 
         private static void CopySearchStateToPathChannel(NaviPathSearchState searchState, NaviPathChannel pathChannel)
@@ -456,7 +612,6 @@ namespace MHServerEmu.Games.Navi
             }
             return NaviPathResult.Success;
         }
-
     }
 
     public class NaviPathChannel : List<NaviChannelEdge> { }
