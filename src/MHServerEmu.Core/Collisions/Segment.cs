@@ -79,6 +79,32 @@ namespace MHServerEmu.Core.Collisions
             return SegmentSegmentClosestPoint(a1.To2D(), b1.To2D(), a2.To2D(), b2.To2D(), out _, out _, out _, out _);
         }
 
+        public static Vector3 SegmentPointClosestPoint(Vector3 a, Vector3 b, Vector3 c)
+        {
+            // Real-Time Collision Detection p.129 (ClosestPtPointSegment)
+            Vector3 ab = b - a;
+            // Project c onto ab, but deferring divide by Dot(ab, ab)
+            float t = Vector3.Dot(c - a, ab);
+            if (t <= 0.0f)
+            {   // c projects outside the [a,b] interval, on the a side; clamp to a
+                return a;
+            }
+            else
+            {
+                float denom = Vector3.Dot(ab, ab); // Always nonnegative since denom = ||ab||^2
+                if (t >= denom)
+                {   // c projects outside the [a,b] interval, on the b side; clamp to b
+                    return b;
+                }
+                else
+                {
+                    // c projects inside the [a,b] interval; must do deferred divide now
+                    t /= denom;
+                    return a + ab * t;
+                }
+            }
+        }
+
         public static float SegmentSegmentClosestPoint(Vector3 s1Start, Vector3 s1End, Vector3 s2Start, Vector3 s2End, out float s1Dist, out float s2Dist, out Vector3 point1, out Vector3 point2)
         {
             // Based on Real-Time Collision Detection by Christer Ericson, pages 149-151 (ClosestPtSegmentSegment)
@@ -428,6 +454,22 @@ namespace MHServerEmu.Core.Collisions
             tangent.Start = Vector3.Perp2D(Vector3.Normalize(tangentPoint.Start - p0));
             tangent.End = -Vector3.Perp2D(Vector3.Normalize(tangentPoint.End - p0));
             return true;
+        }
+
+        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 outNormal, out float outLength, Vector3 safeNormal)
+        {
+            Vector3 v2d = v.To2D();
+            if (!Vector3.IsNearZero(v2d))
+            {
+                float length = Vector3.Length(v2d);
+                outNormal = v2d / length;
+                outLength = length;
+            }
+            else
+            {
+                outNormal = safeNormal;
+                outLength = 0.0f;
+            }
         }
 
     }
