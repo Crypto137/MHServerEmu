@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Navi
             return distance;
         }
 
-        private static Segment GetPathSegment(NaviPathNode node0, NaviPathNode node1)
+        public static Segment GetPathSegment(NaviPathNode node0, NaviPathNode node1)
         {
             Segment segment = new();
             Segment tangent = new();
@@ -418,8 +418,12 @@ namespace MHServerEmu.Games.Navi
         Success = 0,
         Failed = 1,
         FailedRegion = 3,
+        FailedNaviMesh = 4,
+        FailedTriangle = 5,
+        FailedNoPathFound = 7,
         FailedOutMaxSize = 9,
         IncompletedPath = 10,
+
     }
 
 }
