@@ -225,13 +225,14 @@ namespace MHServerEmu.Games.Common
             {
                 Array.Clear(ioData);
 
-                ulong numElements = 0;
-                success &= Transfer(archive, ref numElements);
+                ulong rawNumElements = 0;
+                success &= Transfer(archive, ref rawNumElements);
+                int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
-                if (ioData.Length < (int)numElements)
+                if (ioData.Length < numElements)
                     Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
                 
-                for (int i = 0; i < ioData.Length; i++)
+                for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
                     ulong value = 0;
                     success &= Transfer(archive, ref value);
@@ -239,7 +240,7 @@ namespace MHServerEmu.Games.Common
                 }
 
                 // Elements outside the range of the provided array are discarded
-                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                for (int i = ioData.Length; i < numElements; i++)
                 {
                     ulong value = 0;
                     success &= Transfer(archive, ref value);
@@ -267,13 +268,14 @@ namespace MHServerEmu.Games.Common
             {
                 Array.Clear(ioData);
 
-                ulong numElements = 0;
-                success &= Transfer(archive, ref numElements);
+                ulong rawNumElements = 0;
+                success &= Transfer(archive, ref rawNumElements);
+                int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
-                if (ioData.Length < (int)numElements)
+                if (ioData.Length < numElements)
                     Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
 
-                for (int i = 0; i < ioData.Length; i++)
+                for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
                     long value = 0;
                     success &= Transfer(archive, ref value);
@@ -281,7 +283,7 @@ namespace MHServerEmu.Games.Common
                 }
 
                 // Elements outside the range of the provided array are discarded
-                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                for (int i = ioData.Length; i < numElements; i++)
                 {
                     long value = 0;
                     success &= Transfer(archive, ref value);
@@ -309,13 +311,14 @@ namespace MHServerEmu.Games.Common
             {
                 Array.Clear(ioData);
 
-                ulong numElements = 0;
-                success &= Transfer(archive, ref numElements);
+                ulong rawNumElements = 0;
+                success &= Transfer(archive, ref rawNumElements);
+                int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
-                if (ioData.Length < (int)numElements)
+                if (ioData.Length < numElements)
                     Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
 
-                for (int i = 0; i < ioData.Length; i++)
+                for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
                     PrototypeId value = PrototypeId.Invalid;
                     success &= Transfer(archive, ref value);
@@ -323,7 +326,7 @@ namespace MHServerEmu.Games.Common
                 }
 
                 // Elements outside the range of the provided array are discarded
-                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                for (int i = ioData.Length; i < numElements; i++)
                 {
                     ulong value = 0;
                     success &= Transfer(archive, ref value);
@@ -348,20 +351,21 @@ namespace MHServerEmu.Games.Common
             {
                 Array.Clear(ioData);
 
-                ulong numElements = 0;
-                success &= Transfer(archive, ref numElements);
+                ulong rawNumElements = 0;
+                success &= Transfer(archive, ref rawNumElements);
+                int numElements = (int)rawNumElements;  // Cast to int for easier comparisons
 
-                if (ioData.Length < (int)numElements)
+                if (ioData.Length < numElements)
                     Logger.Warn($"Transfer(): Array length {ioData} is not enough to hold {numElements} elements");
 
-                for (int i = 0; i < ioData.Length; i++)
+                for (int i = 0; i < numElements && i < ioData.Length; i++)
                 {
                     ioData[i] = new();
                     success &= Transfer(archive, ref ioData[i]);
                 }
 
                 // Elements outside the range of the provided array are discarded
-                for (ulong i = (ulong)ioData.Length; i < numElements; i++)
+                for (int i = ioData.Length; i < numElements; i++)
                 {
                     T value = new();
                     success &= Transfer(archive, ref value);
