@@ -265,7 +265,14 @@ namespace MHServerEmu.Games.Network
                                 break;
 
                             case NetMessageLocomotionStateUpdate locomotionStateUpdate:
-                                writer.WriteLine($"ArchiveData: {new LocomotionStateUpdateArchive(locomotionStateUpdate.ArchiveData)}");
+                                using (Archive archive = new(ArchiveSerializeType.Replication, locomotionStateUpdate.ArchiveData.ToByteArray()))
+                                {
+                                    LocomotionStateUpdateArchive update = new();
+                                    update.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                                    update.Serialize(archive);
+                                    writer.WriteLine($"ArchiveData: {update}");
+                                }
+
                                 break;
 
                             case NetMessageActivatePower activatePower:

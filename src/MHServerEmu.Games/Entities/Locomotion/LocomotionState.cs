@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         HasHeight               = 1 << 8,
         HasFollowEntityId       = 1 << 9,
         HasFollowEntityRange    = 1 << 10,
-        HasEntityPrototypeId    = 1 << 11
+        HasEntityPrototypeRef   = 1 << 11
     }
 
     [Flags]
