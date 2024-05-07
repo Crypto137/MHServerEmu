@@ -6,12 +6,9 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -24,6 +21,7 @@ namespace MHServerEmu.Games.Network
     public static class MessagePrinter
     {
         private static readonly Dictionary<Type, Func<IMessage, string>> PrintMethodDict = new();
+        private static readonly Game DummyGame = new(0);
 
         static MessagePrinter()
         {
@@ -68,86 +66,14 @@ namespace MHServerEmu.Games.Network
             Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.PrototypeId);
             sb.AppendLine($"Blueprint: {GameDatabase.GetBlueprintName(blueprint.Id)} (bound to {blueprint.RuntimeBindingClassType.Name})");
 
-            // Parse entity depending on its blueprint class
-            switch (blueprint.RuntimeBindingClassType.Name)
+            // Deserialize archive data
+            using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData.ToByteArray()))
             {
-                case "EntityPrototype":
-                    sb.Append($"ArchiveData: {new Entity(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "WorldEntityPrototype":
-                case "PropPrototype":
-                case "DestructiblePropPrototype":
-                case "SpawnerPrototype":
-                    sb.Append($"ArchiveData: {new WorldEntity(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "HotspotPrototype":
-                    sb.Append($"ArchiveData: {new Hotspot(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "AgentPrototype":
-                case "AgentTeamUpPrototype":
-                case "OrbPrototype":
-                case "SmartPropPrototype":
-                    sb.Append($"ArchiveData: {new Agent(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "MissilePrototype":
-                    sb.Append($"ArchiveData: {new Missile(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "AvatarPrototype":
-                    sb.Append($"ArchiveData: {new Avatar(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "KismetSequenceEntityPrototype":
-                    sb.Append($"ArchiveData: {new KismetSequenceEntity(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "ItemPrototype":
-                case "ArmorPrototype":
-                case "ArtifactPrototype":
-                case "BagItemPrototype":
-                case "CharacterTokenPrototype":
-                case "CostumeCorePrototype":
-                case "CostumePrototype":
-                case "CraftingIngredientPrototype":
-                case "CraftingRecipePrototype":
-                case "EmoteTokenPrototype":
-                case "InventoryStashTokenPrototype":
-                case "LegendaryPrototype":
-                case "MedalPrototype":
-                case "RelicPrototype":
-                case "TeamUpGearPrototype":
-                case "VanityTitleItemPrototype":
-                    sb.Append($"ArchiveData: {new Item(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "PlayerPrototype":
-                    sb.Append($"ArchiveData: {new Player(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "TransitionPrototype":
-                    sb.Append($"ArchiveData: {new Transition(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "MetaGamePrototype":
-                case "MatchMetaGamePrototype":
-                    sb.Append($"ArchiveData: {new MetaGame(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "PvPPrototype":
-                    sb.Append($"ArchiveData: {new PvP(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                case "MissionMetaGamePrototype":
-                    sb.Append($"ArchiveData: {new MissionMetaGame(baseData, entityCreate.ArchiveData)}");
-                    break;
-
-                default:
-                    sb.Append($"ArchiveData: unsupported entity ({blueprint.RuntimeBindingClassType.Name})");
-                    break;
+                Entity entity = DummyGame.AllocateEntity(baseData.PrototypeId);
+                entity.BaseData = baseData;
+                entity.Serialize(archive);
+                entity.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                sb.Append($"ArchiveData: {entity}");
             }
 
             return sb.ToString();
