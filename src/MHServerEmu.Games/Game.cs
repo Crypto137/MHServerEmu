@@ -32,8 +32,9 @@ namespace MHServerEmu.Games
         internal static Game Current;
 
         private const int TargetFrameRate = 20;
+        public static readonly TimeSpan StartTime = TimeSpan.FromMilliseconds(1);
         public readonly TimeSpan FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
-        
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly NetStructGameOptions _gameOptions;
@@ -46,9 +47,11 @@ namespace MHServerEmu.Games
         private TimeSpan _lastFixedTimeUpdateProcessTime;   // How long the last fixed time took
         private int _frameCount;
 
-        private ulong _currentRepId;
+        private bool _isRunning;
+        private Thread _gameThread;
+        private Task _regionCleanupTask;
 
-        public static TimeSpan StartTime { get; } = TimeSpan.FromMilliseconds(1);
+        private ulong _currentRepId;
 
         // Dumped ids: 0xF9E00000FA2B3EA (Lobby), 0xFF800000FA23AE9 (Tower), 0xF4A00000FA2B47D (Danger Room), 0xFCC00000FA29FE7 (Midtown)
         public ulong Id { get; }
@@ -84,14 +87,23 @@ namespace MHServerEmu.Games
             RegionManager.Initialize(this);
 
             Random = new();
-            // Run a task that cleans up unused regions periodically
-            Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
+        }
 
-            // Start main game loop
-            Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            gameThread.Start();
-            
-            Logger.Info($"Game 0x{Id:X} created, initial replication id: {_currentRepId}");
+        public void Run()
+        {
+            // NOTE: This is now separate from the constructor so that we can have
+            // a dummy game with no simulation running that we use to parse messages.
+            if (_isRunning) throw new InvalidOperationException();
+            _isRunning = true;
+
+            // Run a task that cleans up unused regions periodically
+            _regionCleanupTask = Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
+
+            // Initialize and start game thread
+            _gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            _gameThread.Start();
+
+            Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
         }
 
         public void Handle(FrontendClient client, MessagePackage message)

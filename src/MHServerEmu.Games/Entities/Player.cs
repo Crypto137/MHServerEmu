@@ -54,9 +54,9 @@ namespace MHServerEmu.Games.Entities
         private MissionManager _missionManager = new();
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
-        private ReplicatedVariable<string> _playerName = new();
+        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private ReplicatedVariable<string> _secondaryPlayerName = new();
+        private ReplicatedVariable<string> _secondaryPlayerName = new(0, string.Empty);
         private MatchQueueStatus _matchQueueStatus = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Entities
         public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
 
         // new
-        public Player(Game game): base(game) { }
+        public Player(Game game) : base(game) { }
 
         // old
         public Player(EntityBaseData baseData) : base(baseData)
@@ -165,7 +165,16 @@ namespace MHServerEmu.Games.Entities
             bool hasCommunityData = true;
             success &= Serializer.Transfer(archive, ref hasCommunityData);
             if (hasCommunityData)
+            {
+                // TODO: Remove this when we get rid of old entity constructors
+                if (_community == null)
+                {
+                    _community = new(this);
+                    _community.Initialize();
+                }
+
                 success &= Serializer.Transfer(archive, ref _community);
+            }
 
             // Unknown bool, always false
             bool unkBool = false;

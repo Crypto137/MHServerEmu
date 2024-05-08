@@ -35,6 +35,7 @@ namespace MHServerEmu.PlayerManagement
             ulong id = _idGenerator.Generate();
             Game game = new(id);
             _gameDict.Add(id, game);
+            game.Run();
             return game;
         }
 

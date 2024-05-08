@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.Powers
             using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)_replicationPolicy))
             {
                 Serialize(archive);
-                return ByteString.CopyFrom(archive.AccessAutoBuffer().ToArray());
+                return archive.ToByteString();
             }
         }
 

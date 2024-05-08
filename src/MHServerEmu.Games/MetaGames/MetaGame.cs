@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.MetaGames
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
 
-        protected ReplicatedVariable<string> _name = new();
+        protected ReplicatedVariable<string> _name = new(0, string.Empty);
 
         // new
         public MetaGame(Game game) : base(game) { }

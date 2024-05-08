@@ -166,13 +166,11 @@ namespace MHServerEmu.Games.Powers
                             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                             EntityId = entityId,
                             FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                            Position = new(entity.RegionLocation.Position),
-                            Orientation = new(),
-                            LocomotionState = new(0)
+                            Position = new(entity.RegionLocation.Position)
                         };
                         locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
                         playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                            .SetArchiveData(locomotion.Serialize())
+                            .SetArchiveData(locomotion.ToByteString())
                             .Build());
                     }
                     if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])

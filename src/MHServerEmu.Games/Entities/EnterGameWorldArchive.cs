@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Entities
             LocoFieldFlags = (LocomotionMessageFlags)(allFieldFlags & 0xFFF);
             ExtraFieldFlags = (EnterGameWorldMessageFlags)(allFieldFlags >> LocoFlagsCount);
 
-            if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+            if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
                 EntityPrototypeId = stream.ReadPrototypeRef<EntityPrototype>();
 
             Position = new(stream, 3);
@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Entities
                 cos.WriteRawVarint64(EntityId);
                 cos.WriteRawVarint32((uint)LocoFieldFlags | ((uint)ExtraFieldFlags << LocoFlagsCount));     // Combine flags
 
-                if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
                     cos.WritePrototypeRef<EntityPrototype>(EntityPrototypeId);
 
                 Position.Encode(cos);
