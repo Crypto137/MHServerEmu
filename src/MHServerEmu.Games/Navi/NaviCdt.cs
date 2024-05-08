@@ -503,18 +503,18 @@ namespace MHServerEmu.Games.Navi
         }
 
         public void AddEdge(NaviEdge edge)
-        {
-            Queue<NaviEdge> edges = new ();
-            edges.Enqueue(edge);
+        {          
+            FixedDeque<NaviEdge> edges = new (256);
+            edges.PushBack(edge);
 
-            while (edges.Count > 0)
+            while (!edges.Empty)
             {
-                edge = edges.Dequeue();
+                edge = edges.PopFront();
                 AddEdge(edge, edges);
             }
         }
 
-        private void AddEdge(NaviEdge edge, Queue<NaviEdge> edges)
+        private void AddEdge(NaviEdge edge, FixedDeque<NaviEdge> edges)
         {
             NaviPoint p0 = edge.Points[0];
             NaviPoint p1 = edge.Points[1];
@@ -575,8 +575,8 @@ namespace MHServerEmu.Games.Navi
             if (splitEdge != null)
             {
                 splitPoint = splitEdge.OpposedPoint(p0);
-                edges.Enqueue(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
-                edges.Enqueue(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
+                edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
                 return;
             }
 
@@ -641,8 +641,8 @@ namespace MHServerEmu.Games.Navi
 
                 if (Segment.SegmentPointDistanceSq2D(p0.Pos, p1.Pos, splitPoint.Pos) < SplitEpsilonSq)
                 {
-                    edges.Enqueue(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
-                    edges.Enqueue(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+                    edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
+                    edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
                     return;
                 }
 
@@ -738,7 +738,7 @@ namespace MHServerEmu.Games.Navi
             return edge;
         }
 
-        private void SplitEdge(NaviEdge splitEdge, NaviEdge edge, Queue<NaviEdge> edges)
+        private void SplitEdge(NaviEdge splitEdge, NaviEdge edge, FixedDeque<NaviEdge> edges)
         {
             if (splitEdge.TestFlag(NaviEdgeFlags.Door))
                 _navi.LogError("SplitEdge: Cannot split door edges!", edge);
@@ -756,13 +756,13 @@ namespace MHServerEmu.Games.Navi
             }
             else if (splitEdge.Contains(splitPoint) == false)
             {
-                edges.Enqueue(new(splitEdge.Points[0], splitPoint, splitEdge.EdgeFlags, splitEdge.PathingFlags));
-                edges.Enqueue(new(splitPoint, splitEdge.Points[1], splitEdge.EdgeFlags, splitEdge.PathingFlags));
+                edges.PushBack(new(splitEdge.Points[0], splitPoint, splitEdge.EdgeFlags, splitEdge.PathingFlags));
+                edges.PushBack(new(splitPoint, splitEdge.Points[1], splitEdge.EdgeFlags, splitEdge.PathingFlags));
                 RemoveEdge(splitEdge, false);
             }
 
-            if (p0 != splitPoint) edges.Enqueue(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
-            if (splitPoint != p1) edges.Enqueue(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
+            if (p0 != splitPoint) edges.PushBack(new(p0, splitPoint, edge.EdgeFlags, edge.PathingFlags));
+            if (splitPoint != p1) edges.PushBack(new(splitPoint, p1, edge.EdgeFlags, edge.PathingFlags));
         }
 
         public void RemoveEdge(NaviEdge edge, bool check = true)
