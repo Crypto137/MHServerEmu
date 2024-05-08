@@ -202,17 +202,17 @@ namespace MHServerEmu.Games.Events
             ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
-                IdUserEntity = avatarEntityId,
-                IdTargetEntity = 0,
-                PowerPrototypeId = preIteractPower,
+                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
+                UserEntityId = avatarEntityId,
+                TargetEntityId = 0,
+                PowerPrototypeRef = preIteractPower,
                 UserPosition = playerConnection.LastPosition,
                 PowerRandomSeed = 2222,
                 FXRandomSeed = 2222
             };
 
             playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
-                 .SetArchiveData(activatePower.Serialize())
+                 .SetArchiveData(activatePower.ToByteString())
                  .Build());
         }
 
@@ -250,17 +250,17 @@ namespace MHServerEmu.Games.Events
             ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
-                IdUserEntity = avatarEntityId,
-                IdTargetEntity = avatarEntityId,
-                PowerPrototypeId = (PrototypeId)PowerPrototypes.Emotes.EmoteDance,
+                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
+                UserEntityId = avatarEntityId,
+                TargetEntityId = avatarEntityId,
+                PowerPrototypeRef = (PrototypeId)PowerPrototypes.Emotes.EmoteDance,
                 UserPosition = playerConnection.LastPosition,
                 PowerRandomSeed = 1111,
                 FXRandomSeed = 1111
             };
 
             playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
-                .SetArchiveData(activatePower.Serialize())
+                .SetArchiveData(activatePower.ToByteString())
                 .Build());
         }
 

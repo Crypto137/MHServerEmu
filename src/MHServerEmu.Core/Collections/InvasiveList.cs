@@ -57,7 +57,7 @@ namespace MHServerEmu.Core.Collections
             for (int i = 0; i < _numIterators; i++)
             {
                 Iterator iterator = _iterators[i];
-                if (iterator.Current.Equals(element))
+                if (element.Equals(iterator.Current))
                 {
                     iterator.SkipNext = false;
                     iterator.MoveNext();

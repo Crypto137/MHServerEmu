@@ -2,12 +2,11 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -30,9 +29,12 @@ namespace MHServerEmu.Games.Entities
 
     public class Transition : WorldEntity
     {
-        public static readonly Logger Logger = LogManager.CreateLogger();
-        public string TransitionName { get; set; }
-        public List<Destination> Destinations { get; set; }
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private string _transitionName = string.Empty;          // Seemingly unused
+        private List<Destination> _destinationList = new();
+
+        public List<Destination> DestinationList { get => _destinationList; }
 
         public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
 
@@ -46,10 +48,8 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
-            TransitionName = "";
-            Destinations = new();
             if (destination != null)
-                Destinations.Add(destination);
+                _destinationList.Add(destination);
         }
 
         // Old
@@ -62,88 +62,105 @@ namespace MHServerEmu.Games.Entities
             _powerCollection = new(this);
             _unkEvent = 0;
 
-            TransitionName = "";
-            Destinations = new();
             if (destination != null)
-                Destinations.Add(destination);
+                _destinationList.Add(destination);
         }
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Transition(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection,
             PowerCollection powerCollection, int unkEvent, 
-            string transitionName, List<Destination> destinations) : base(baseData)
+            string transitionName, IEnumerable<Destination> destinations) : base(baseData)
         {
             _trackingContextMap = trackingContextMap;
             _conditionCollection = conditionCollection;
             _powerCollection = powerCollection;
             _unkEvent = unkEvent;
-            TransitionName = transitionName;
-            Destinations = destinations;
+            _transitionName = transitionName;
+            _destinationList.AddRange(destinations);
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            //if (archive.IsTransient)
+            success &= Serializer.Transfer(archive, ref _transitionName);
+            success &= Serializer.Transfer(archive, ref _destinationList);
+
+            return success;
         }
 
         protected override void Decode(CodedInputStream stream)
         {
             base.Decode(stream);
 
-            TransitionName = stream.ReadRawString();
+            _transitionName = stream.ReadRawString();
 
-            Destinations = new();
-            int destinationsCount = (int)stream.ReadRawVarint64();
-            for (int i = 0; i < destinationsCount; i++)
-                Destinations.Add(new(stream));
+            _destinationList.Clear();
+            uint numDestinations = stream.ReadRawVarint32();
+            for (uint i = 0; i < numDestinations; i++)
+            {
+                Destination destination = new();
+                destination.Decode(stream);
+                _destinationList.Add(destination);
+            }
         }
 
         public override void Encode(CodedOutputStream stream)
         {
             base.Encode(stream);
 
-            stream.WriteRawString(TransitionName);
-            stream.WriteRawVarint64((ulong)Destinations.Count);
-            foreach (Destination destination in Destinations) destination.Encode(stream);
+            stream.WriteRawString(_transitionName);
+            stream.WriteRawVarint32((uint)_destinationList.Count);
+            foreach (Destination destination in _destinationList)
+                destination.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"TransitionName: {TransitionName}");
-            for (int i = 0; i < Destinations.Count; i++) sb.AppendLine($"Destination{i}: {Destinations[i]}");
+            sb.AppendLine($"{nameof(_transitionName)}: {_transitionName}");
+            for (int i = 0; i < _destinationList.Count; i++)
+                sb.AppendLine($"{nameof(_destinationList)}[{i}]: {_destinationList[i]}");
         }
 
         public void ConfigureTowerGen(Transition transition)
         {
             Destination destination;
-            if (Destinations.Count == 0)
+            if (_destinationList.Count == 0)
             {
                 destination = new();
-                Destinations.Add(destination);
+                _destinationList.Add(destination);
             }
             else
             {
-                destination = Destinations[0];
+                destination = _destinationList[0];
             }
             destination.EntityId = transition.Id;
-            destination.Entity = transition.BaseData.PrototypeId;
+            destination.EntityRef = transition.BaseData.PrototypeId;
             destination.Type = TransitionPrototype.Type;
         }
 
         public void TeleportClient(PlayerConnection connection)
         {
-            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            connection.Game.MovePlayerToRegion(connection, Destinations[0].Region, Destinations[0].Target);
+            Logger.Trace(string.Format("TeleportClient(): Destination region {0} [{1}]",
+                GameDatabase.GetFormattedPrototypeName(_destinationList[0].RegionRef),
+                GameDatabase.GetFormattedPrototypeName(_destinationList[0].EntityRef)));
+            connection.Game.MovePlayerToRegion(connection, _destinationList[0].RegionRef, _destinationList[0].TargetRef);
         }
 
         public void TeleportToEntity(PlayerConnection connection, ulong entityId)
         {
-            Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            connection.Game.MovePlayerToEntity(connection, Destinations[0].EntityId);
+            Logger.Trace($"TeleportToEntity(): Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(_destinationList[0].EntityRef)}]");
+            connection.Game.MovePlayerToEntity(connection, _destinationList[0].EntityId);
         }
 
         public void TeleportToLastTown(PlayerConnection connection)
         {
             // TODO back to last saved hub
-            Logger.Trace($"Destination LastTown");
+            Logger.Trace($"TeleportToLastTown(): Destination LastTown");
             connection.Game.MovePlayerToRegion(connection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
         }
     }

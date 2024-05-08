@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -10,114 +11,153 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class Destination
+    public class Destination : ISerialize
     {
-        public RegionTransitionType Type { get; set; }
-        public PrototypeId Region { get; set; }
-        public PrototypeId Area { get; set; }
-        public PrototypeId Cell { get; set; }
-        public PrototypeId Entity { get; set; }
-        public PrototypeId Target { get; set; }
-        public int Unk2 { get; set; }
-        public string Name { get; set; }
-        public LocaleStringId NameId { get; set; }
-        public ulong RegionId { get; set; }
-        public Vector3 Position { get; set; }
-        public ulong EntityId { get; set; }
-        public ulong UnkId2 { get; set; }
+        private RegionTransitionType _type;
+        private PrototypeId _regionRef;
+        private PrototypeId _areaRef;
+        private PrototypeId _cellRef;
+        private PrototypeId _entityRef;
+        private PrototypeId _targetRef;
+        private int _unk2;
+        private string _name;
+        private LocaleStringId _nameId;
+        private ulong _regionId;
+        private Vector3 _position;
+        private ulong _entityId;
+        private ulong _unkId2;
+
+        // TODO: Remove unnecessary accessors
+        public RegionTransitionType Type { get => _type; set => _type = value; }
+        public PrototypeId RegionRef { get => _regionRef; set => _regionRef = value; }
+        public PrototypeId AreaRef { get => _areaRef; set => _areaRef = value; }
+        public PrototypeId CellRef { get => _cellRef; set => _cellRef = value; }
+        public PrototypeId EntityRef { get => _entityRef; set => _entityRef = value; }
+        public PrototypeId TargetRef { get => _targetRef; set => _targetRef = value; }
+        public int Unk2 { get => _unk2; set => _unk2 = value; }
+        public string Name { get => _name; set => _name = value; }
+        public LocaleStringId NameId { get => _nameId; set => _nameId = value; }
+        public ulong RegionId { get => _regionId; set => _regionId = value; }
+        public Vector3 Position { get => _position; set => _position = value; }
+        public ulong EntityId { get => _entityId; set => _entityId = value; }
+        public ulong UnkId2 { get => _unkId2; set => _unkId2 = value; }
 
         public Destination()
         {
-            Position = Vector3.Zero;
-            Name = "";
+            _position = Vector3.Zero;
+            _name = string.Empty;
         }
 
-        public Destination(CodedInputStream stream)
+        public Destination(RegionTransitionType type, PrototypeId regionRef, PrototypeId areaRef, PrototypeId cellRef, PrototypeId entityRef, PrototypeId targetRef,
+            int unk2, string name, LocaleStringId nameId, ulong regionId,
+            Vector3 position, ulong entityId, ulong unkId2)
         {
-            Type = (RegionTransitionType)stream.ReadRawInt32();
+            _type = type;
+            _regionRef = regionRef;
+            _areaRef = areaRef;
+            _cellRef = cellRef;
+            _entityRef = entityRef;
+            _targetRef = targetRef;
+            _unk2 = unk2;
+            _name = name;
+            _nameId = nameId;
+            _regionId = regionId;
+            _position = position;
+            _entityId = entityId;
+            _unkId2 = unkId2;
+        }
 
-            Region = stream.ReadPrototypeRef<Prototype>();
-            Area = stream.ReadPrototypeRef<Prototype>();
-            Cell = stream.ReadPrototypeRef<Prototype>();
-            Entity = stream.ReadPrototypeRef<Prototype>();
-            Target = stream.ReadPrototypeRef<Prototype>();
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
 
-            Unk2 = stream.ReadRawInt32();
+            int type = (int)_type;
+            success &= Serializer.Transfer(archive, ref type);
+            _type = (RegionTransitionType)type;
 
-            Name = stream.ReadRawString();
-            NameId = (LocaleStringId)stream.ReadRawVarint64();
+            success &= Serializer.Transfer(archive, ref _regionRef);
+            success &= Serializer.Transfer(archive, ref _areaRef);
+            success &= Serializer.Transfer(archive, ref _cellRef);
+            success &= Serializer.Transfer(archive, ref _entityRef);
+            success &= Serializer.Transfer(archive, ref _targetRef);
+            success &= Serializer.Transfer(archive, ref _unk2);
+            success &= Serializer.Transfer(archive, ref _name);
+            success &= Serializer.Transfer(archive, ref _nameId);
+            success &= Serializer.Transfer(archive, ref _regionId);
+            success &= Serializer.Transfer(archive, ref _position);
+            success &= Serializer.Transfer(archive, ref _entityId);
+            success &= Serializer.Transfer(archive, ref _unkId2);
 
-            RegionId = stream.ReadRawVarint64();
+            return success;
+        }
+
+        public void Decode(CodedInputStream stream)
+        {
+            _type = (RegionTransitionType)stream.ReadRawInt32();
+
+            _regionRef = stream.ReadPrototypeRef<Prototype>();
+            _areaRef = stream.ReadPrototypeRef<Prototype>();
+            _cellRef = stream.ReadPrototypeRef<Prototype>();
+            _entityRef = stream.ReadPrototypeRef<Prototype>();
+            _targetRef = stream.ReadPrototypeRef<Prototype>();
+
+            _unk2 = stream.ReadRawInt32();
+
+            _name = stream.ReadRawString();
+            _nameId = (LocaleStringId)stream.ReadRawVarint64();
+
+            _regionId = stream.ReadRawVarint64();
 
             float x = stream.ReadRawFloat();
             float y = stream.ReadRawFloat();
             float z = stream.ReadRawFloat();
-            Position = new Vector3(x, y, z);
+            _position = new Vector3(x, y, z);
 
-            EntityId = stream.ReadRawVarint64();
-            UnkId2 = stream.ReadRawVarint64();
-        }
-
-        public Destination(RegionTransitionType type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target,
-            int unk2, string name, LocaleStringId nameId, ulong regionId,
-            Vector3 position, ulong entityId, ulong unkId2)
-        {
-            Type = type;
-            Region = region;
-            Area = area;
-            Cell = cell;
-            Entity = entity;
-            Target = target;
-            Unk2 = unk2;
-            Name = name;
-            NameId = nameId;
-            RegionId = regionId;
-            Position = position;
-            EntityId = entityId;
-            UnkId2 = unkId2;
+            _entityId = stream.ReadRawVarint64();
+            _unkId2 = stream.ReadRawVarint64();
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawInt32((int)Type);
+            stream.WriteRawInt32((int)_type);
 
-            stream.WritePrototypeRef<Prototype>(Region);
-            stream.WritePrototypeRef<Prototype>(Area);
-            stream.WritePrototypeRef<Prototype>(Cell);
-            stream.WritePrototypeRef<Prototype>(Entity);
-            stream.WritePrototypeRef<Prototype>(Target);
+            stream.WritePrototypeRef<Prototype>(_regionRef);
+            stream.WritePrototypeRef<Prototype>(_areaRef);
+            stream.WritePrototypeRef<Prototype>(_cellRef);
+            stream.WritePrototypeRef<Prototype>(_entityRef);
+            stream.WritePrototypeRef<Prototype>(_targetRef);
 
-            stream.WriteRawInt32(Unk2);
+            stream.WriteRawInt32(_unk2);
 
-            stream.WriteRawString(Name);
-            stream.WriteRawVarint64((ulong)NameId);
+            stream.WriteRawString(_name);
+            stream.WriteRawVarint64((ulong)_nameId);
 
-            stream.WriteRawVarint64(RegionId);
+            stream.WriteRawVarint64(_regionId);
 
-            stream.WriteRawFloat(Position.X);
-            stream.WriteRawFloat(Position.Y);
-            stream.WriteRawFloat(Position.Z);
+            stream.WriteRawFloat(_position.X);
+            stream.WriteRawFloat(_position.Y);
+            stream.WriteRawFloat(_position.Z);
 
-            stream.WriteRawVarint64(EntityId);
-            stream.WriteRawVarint64(UnkId2);
+            stream.WriteRawVarint64(_entityId);
+            stream.WriteRawVarint64(_unkId2);
         }
         public override string ToString()
         {
             StringBuilder sb = new();
 
-            sb.AppendLine($"Type: {Type}");
-            sb.AppendLine($"Region: {GameDatabase.GetPrototypeName(Region)}");
-            sb.AppendLine($"Area: {GameDatabase.GetPrototypeName(Area)}");
-            sb.AppendLine($"Cell: {GameDatabase.GetPrototypeName(Cell)}");
-            sb.AppendLine($"Entity: {GameDatabase.GetPrototypeName(Entity)}");
-            sb.AppendLine($"Target: {GameDatabase.GetPrototypeName(Target)}");
-            sb.AppendLine($"Unk2: {Unk2}");
-            sb.AppendLine($"Name: {Name}");
-            sb.AppendLine($"NameId: {NameId}");
-            sb.AppendLine($"RegionId: {RegionId}");
-            sb.AppendLine($"Position: {Position}");
-            sb.AppendLine($"UnkId1: {EntityId}");
-            sb.AppendLine($"UnkId2: {UnkId2}");
+            sb.AppendLine($"{nameof(_type)}: {_type}");
+            sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
+            sb.AppendLine($"{nameof(_areaRef)}: {GameDatabase.GetPrototypeName(_areaRef)}");
+            sb.AppendLine($"{nameof(_cellRef)}: {GameDatabase.GetPrototypeName(_cellRef)}");
+            sb.AppendLine($"{nameof(_entityRef)}: {GameDatabase.GetPrototypeName(_entityRef)}");
+            sb.AppendLine($"{nameof(_targetRef)}: {GameDatabase.GetPrototypeName(_targetRef)}");
+            sb.AppendLine($"{nameof(_unk2)}: {_unk2}");
+            sb.AppendLine($"{nameof(_name)}: {_name}");
+            sb.AppendLine($"{nameof(_nameId)}: {_nameId}");
+            sb.AppendLine($"{nameof(_regionId)}: {_regionId}");
+            sb.AppendLine($"{nameof(_position)}: {_position}");
+            sb.AppendLine($"{nameof(_entityId)}: {_entityId}");
+            sb.AppendLine($"{nameof(_unkId2)}: {_unkId2}");
 
             return sb.ToString();
         }
@@ -142,21 +182,22 @@ namespace MHServerEmu.Games.Entities
             var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
 
             var targetRegionRef = regionConnectionTarget.Region;
-
-
             var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
-            if (RegionPrototype.Equivalent(targetRegion, region.RegionPrototype)) targetRegionRef = (PrototypeId)region.PrototypeId;
+            
+            if (RegionPrototype.Equivalent(targetRegion, region.RegionPrototype))
+                targetRegionRef = (PrototypeId)region.PrototypeId;
 
             Destination destination = new()
             {
-                Type = transitionProto.Type,
-                Region = targetRegionRef,
-                Area = regionConnectionTarget.Area,
-                Cell = cellPrototypeId,
-                Entity = regionConnectionTarget.Entity,
-                NameId = regionConnectionTarget.Name,
-                Target = targetRef
+                _type = transitionProto.Type,
+                _regionRef = targetRegionRef,
+                _areaRef = regionConnectionTarget.Area,
+                _cellRef = cellPrototypeId,
+                _entityRef = regionConnectionTarget.Entity,
+                _nameId = regionConnectionTarget.Name,
+                _targetRef = targetRef
             };
+
             return destination;
         }
     }

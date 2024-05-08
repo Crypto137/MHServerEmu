@@ -103,12 +103,29 @@ namespace MHServerEmu.Core.Serialization
         }
 
         /// <summary>
+        /// Constructs a new <see cref="Archive"/> instance for unpacking.
+        /// </summary>
+        public Archive(ArchiveSerializeType serializeType, ByteString buffer) : this(serializeType, ByteString.Unsafe.GetBuffer(buffer))
+        {
+            // We use ByteString.Unsafe here to avoid copying message data one extra time (Stream -> Buffer -> ByteString).
+        }
+
+        /// <summary>
         /// Returns the <see cref="MemoryStream"/> instance that acts as the AutoBuffer for this <see cref="Archive"/>.
         /// </summary>
         /// <remarks>
         /// AutoBuffer is the name of the data structure that backs archives in the client.
         /// </remarks>
         public MemoryStream AccessAutoBuffer() => _bufferStream;
+
+        /// <summary>
+        /// Converts the underlying <see cref="MemoryStream"/> to <see cref="ByteString"/>.
+        /// </summary>
+        public ByteString ToByteString()
+        {
+            // We use ByteString.Unsafe here to avoid copying message data one extra time (Stream -> Buffer -> ByteString).
+            return ByteString.Unsafe.FromBytes(_bufferStream.ToArray());
+        }
 
         /// <summary>
         /// Writes the header for this <see cref="Archive"/>. Returns <see langword="true"/> if successful.

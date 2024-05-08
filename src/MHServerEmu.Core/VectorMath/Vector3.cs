@@ -115,7 +115,7 @@ namespace MHServerEmu.Core.VectorMath
         public static bool operator !=(Vector3 a, Vector3 b) => !(a == b);
         public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
-        public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // TODO check IsNearZero
+        public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // MathF.Sqrt(LengthSqr(v))
         public static float LengthTest(Vector3 v) => IsNearZero(v) ? 0.0f : Length(v);
         public static float Length2D(Vector3 v)
         {
@@ -195,10 +195,22 @@ namespace MHServerEmu.Core.VectorMath
             return pos * cosA + Cross(axis, pos) * MathF.Sin(angle) + axis * Dot(axis, pos) * (1.0f - cosA);
         }
 
-        public static float Angle(Vector3 a, Vector3 b)
+        public static float AngleYaw(Vector3 a, Vector3 b)
         {
             Vector3 delta = Normalize2D(b - a);
             return MathF.Atan2(delta.Y, delta.X);
+        }
+
+        public static float Angle(Vector3 a, Vector3 b)
+        {
+            float magnitudes = Length(a) * Length(b);
+            return magnitudes > 0.0f ? MathF.Acos(Math.Clamp(Dot(a, b) / magnitudes, -1.0f, 1.0f)) : 0.0f;
+        }
+
+        public static float Angle2D(Vector3 a, Vector3 b)
+        {
+            float magnitudes = Length2D(a) * Length2D(b);
+            return magnitudes > 0.0f ? MathF.Acos(Math.Clamp(Dot2D(a, b) / magnitudes, -1.0f, 1.0f)) : 0.0f;
         }
 
         public static Vector3 Cross(Vector3 v1, Vector3 v2)
@@ -245,6 +257,13 @@ namespace MHServerEmu.Core.VectorMath
                 v0.Y < v1.Y ? v0.Y : v1.Y,
                 v0.Z < v1.Z ? v0.Z : v1.Z
             );
+        }
+
+        public static Vector3 Project(Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            Vector3 u = p1 - p0;
+            Vector3 v = p2 - p0;
+            return u * (Dot(u, v) / Dot(u, u)) + p0;
         }
 
         // static vectors

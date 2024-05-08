@@ -93,6 +93,8 @@ namespace MHServerEmu.Games.Social.Communities
                 {
                     string playerName = string.Empty;
                     ulong playerDbId = 0;
+                    success &= Serializer.Transfer(archive, ref playerName);
+                    success &= Serializer.Transfer(archive, ref playerDbId);
 
                     // Get an existing member to deserialize into
                     CommunityMember member = GetMember(playerDbId);

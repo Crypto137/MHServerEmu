@@ -24,6 +24,11 @@ namespace MHServerEmu.Games.Entities.Physics
             AttachedEntities = null;
             _externalForces = new Vector3[2];
             _repulsionForces = new Vector3[2];
+            for (int i = 0;  i < 2; i++)
+            {
+                _externalForces[i] = Vector3.Zero;
+                _repulsionForces[i] = Vector3.Zero;
+            }
             _hasExternalForces = new bool[2];
         }
 
@@ -111,6 +116,36 @@ namespace MHServerEmu.Games.Entities.Physics
             _hasExternalForces[index] |= external;
             _externalForces[index] += force;
             Entity.RegisterForPendingPhysicsResolve();
+        }
+
+        public void DetachAllChildren()
+        {
+            if (Entity == null) return;
+            var manager = Entity.Game.EntityManager;
+            if (GetAttachedEntities(out var attachedEntities))
+                foreach (var entityId in attachedEntities)
+                {
+                    var childEntity = manager.GetEntity<WorldEntity>(entityId);
+                    if (childEntity != null)
+                        DetachChild(childEntity.Physics);
+                }
+            AttachedEntities?.Clear();
+        }
+
+        private void DetachChild(EntityPhysics physics)
+        {
+            if (AttachedEntities != null && Entity != null && physics.Entity != null)
+                AttachedEntities.Remove(physics.Entity.Id);
+        }
+
+        public void ReleaseCollisionId()
+        {
+            var region = Entity?.Region;
+            if (region != null && CollisionId != -1)
+            {
+                region.ReleaseCollisionId(CollisionId);
+                CollisionId = -1;
+            }
         }
     }
 

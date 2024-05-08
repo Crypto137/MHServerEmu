@@ -46,6 +46,7 @@ namespace MHServerEmu.Games.Regions
 
         public RegionPrototypeId PrototypeId { get; private set; }   
         public byte[] ArchiveData { get; set; }
+        public bool IsGenerated { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
 
         // New
@@ -289,7 +290,7 @@ namespace MHServerEmu.Games.Regions
             Bound ??= new Aabb(Vector3.Zero, Vector3.Zero);
 
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
-
+            IsGenerated = true;
             return true;
         }
 
@@ -582,15 +583,15 @@ namespace MHServerEmu.Games.Regions
                 {
                     if (entity is WorldEntity worldEntity)
                     {
-                        /*if (worldEntity.GetRootOwner() is not Player owner)
+                        if (worldEntity.GetRootOwner() is not Player)
                         {
                             if (worldEntity.IsDestroyed() == false)
                             {
                                 worldEntity.Destroy();
-                                found = true;
+                                //found = true;
                             }
                         }
-                        else*/
+                        else
                         {
                             if (worldEntity.IsInWorld)
                             {
@@ -635,7 +636,7 @@ namespace MHServerEmu.Games.Regions
              }
             */
 
-            //NaviMesh.Release();
+            NaviMesh.Release();
         }
 
         public ulong GetMatchNumber() => Settings.MatchNumber;

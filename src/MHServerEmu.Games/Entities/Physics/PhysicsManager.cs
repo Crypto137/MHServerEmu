@@ -415,7 +415,7 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             if (entity == null) return;
             Region region = entity.Region;
-            if (region == null) return;
+            if (region == null || region.IsGenerated == false) return;
 
             Aabb bound = entity.EntityCollideBounds.ToAabb();            
             Vector3 position = entity.RegionLocation.Position;
@@ -515,8 +515,32 @@ namespace MHServerEmu.Games.Entities.Physics
                 {
                     bool overlapped = overlappedEntity.Overlapped;
                     who.Physics.OverlappedEntities.Remove(whom.Id);
-                    if (overlapped)
-                        NotifyEntityOverlapEnd(who, whom);
+                    if (overlapped) NotifyEntityOverlapEnd(who, whom);
+                }
+            }
+        }
+
+        public void OnExitedWorld(EntityPhysics entityPhysics)
+        {
+            if (entityPhysics != null && entityPhysics.Entity != null)
+            {
+                var who = entityPhysics.Entity;
+                while (entityPhysics.OverlappedEntities.Count > 0)
+                {
+                    var entry = entityPhysics.OverlappedEntities.First();
+                    var whomId = entry.Key;
+                    bool overlapped = entry.Value.Overlapped;
+                    entityPhysics.OverlappedEntities.Remove(whomId);
+                    var whom = _game.EntityManager.GetEntity<WorldEntity>(whomId);
+                    if (whom == null) continue;
+                    if (overlapped) NotifyEntityOverlapEnd(who, whom);
+
+                    if (whom.Physics.OverlappedEntities.TryGetValue(who.Id, out var overlappedEntity))
+                    {
+                        overlapped = overlappedEntity.Overlapped;
+                        whom.Physics.OverlappedEntities.Remove(who.Id);
+                        if (overlapped) NotifyEntityOverlapEnd(whom, who);
+                    }
                 }
             }
         }

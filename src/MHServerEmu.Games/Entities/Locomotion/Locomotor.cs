@@ -580,7 +580,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 if (currentRotationSpeed > 0.0f)
                 {
                     Vector3 goalDir2d = goalDir.To2D();
-                    if (Vector3.LengthSquared(goalDir2d) > 0.0f)
+                    if (Vector3.LengthSqr(goalDir2d) > 0.0f)
                     {
                         goalDir2d = Vector3.Normalize(goalDir2d);
                         Vector3 dir2d = Vector3.Normalize(_owner.Forward.To2D());
@@ -683,7 +683,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                         {
                             if (_generatedPath.Path.IsValid == false || _generatedPath.Path.IsComplete) return false;
                             _generatedPath.Path.GetNextMovePosition(currentPosition, moveDistance, out resultMovePosition, out _);
-                            LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNode();
+                            LocomotionState.PathGoalNodeIndex = _generatedPath.Path.PathNodeList.IndexOf(_generatedPath.Path.GetCurrentGoalNode());
                         }
 
                         if (IgnoresWorldCollision == false)
@@ -882,7 +882,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 GeneratePath(newPath, finalPosition, _pathGenerationFlags, _incompleteDistance);
                 bool pathSuccess = newPath.PathResult == NaviPathResult.Success || newPath.PathResult == NaviPathResult.IncompletedPath;
                 float approxCurrentDistance = _generatedPath.Path.ApproxCurrentDistance(_owner.RegionLocation.Position);
-                bool validDistance = pathSuccess && (!_generatedPath.Path.IsValid || newPath.Path.ApproxTotalDistance < approxCurrentDistance);
+                bool validDistance = pathSuccess && (!_generatedPath.Path.IsValid || newPath.Path.ApproxTotalDistance() < approxCurrentDistance);
 
                 bool movementImpeded = MovementImpeded;
                 if (pathSuccess && IsFollowingEntity && _generatedPath.Path.IsCurrentGoalNodeLastNode)
@@ -901,7 +901,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     if (updateEnd && _generatedPath.Path.IsValid)
                         _generatedPath.Path.UpdateEndPosition(updateEndPosition);
                     LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
-                    LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNode();
+                    LocomotionState.PathGoalNodeIndex = _generatedPath.Path.PathNodeList.IndexOf(_generatedPath.Path.GetCurrentGoalNode());
                     _syncPathGoalNodeIndex = 0;
                     _initRotation = false;
                 }
@@ -1325,7 +1325,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                     if (syncTeleport == false)
                                     {
                                         LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
-                                        LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNode();
+                                        LocomotionState.PathGoalNodeIndex = _generatedPath.Path.PathNodeList.IndexOf(_generatedPath.Path.GetCurrentGoalNode());
                                         _syncPathGoalNodeIndex = Math.Max(0, numPathNodeList - 1);
                                     }
                                 }
