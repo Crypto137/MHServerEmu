@@ -60,8 +60,11 @@ namespace MHServerEmu.Games.Network
 
             // Parse base data
             EntityBaseData baseData = new();
-            CodedInputStream baseStream = CodedInputStream.CreateInstance(ByteString.Unsafe.GetBuffer(entityCreate.BaseData));
-            baseData.Decode(baseStream);
+            using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.BaseData))
+            {
+                baseData.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                baseData.Serialize(archive);
+            }
 
             sb.AppendLine($"BaseData: {baseData}");
 

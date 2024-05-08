@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
@@ -34,7 +35,7 @@ namespace MHServerEmu.Games.Entities
         IgnoreNavi                  = 1 << 15
     }
 
-    public class EntityBaseData
+    public class EntityBaseData : ISerialize
     {
         // This used to be a regular protobuf message, but it was converted to archive in 1.25.
         // This data is deserialized into EntitySettings in GameConnection::handleEntityCreateMessage().
@@ -56,7 +57,7 @@ namespace MHServerEmu.Games.Entities
         private PrototypeId _activePowerPrototypeRef;
         private InventoryLocation _invLoc;
         private InventoryLocation _invLocPrev;
-        private ulong[] _attachedEntities = Array.Empty<ulong>();   // TODO: Change to list?
+        private List<ulong> _attachedEntityList = new();
 
         public AOINetworkPolicyValues ReplicationPolicy { get => _replicationPolicy; set => _replicationPolicy = value; }
         public ulong EntityId { get => _entityId; set => _entityId = value; }
@@ -75,7 +76,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId ActivePowerPrototypeRef { get => _activePowerPrototypeRef; }
         public InventoryLocation InvLoc { get => _invLoc; set => _invLoc = value; }
         public InventoryLocation InvLocPrev { get => _invLocPrev; set => _invLocPrev = value; }
-        public ulong[] AttachedEntities { get => _attachedEntities; }
+        public List<ulong> AttachedEntityList { get => _attachedEntityList; }
 
         public EntityBaseData() { }
 
@@ -99,6 +100,97 @@ namespace MHServerEmu.Games.Entities
             if (snap) FieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
         }
 
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            // TODO: build flags
+
+            success &= Serializer.Transfer(archive, ref _entityId);
+            success &= Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref _entityPrototypeRef);
+
+            uint fieldFlags = (uint)_fieldFlags;
+            success &= Serializer.Transfer(archive, ref fieldFlags);
+            _fieldFlags = (EntityCreateMessageFlags)fieldFlags;
+
+            uint locoFieldFlags = (uint)_locoFieldFlags;
+            success &= Serializer.Transfer(archive, ref locoFieldFlags);
+            _locoFieldFlags = (LocomotionMessageFlags)locoFieldFlags;
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest))
+            {
+                uint interestPolicies = (uint)_interestPolicies;
+                success &= Serializer.Transfer(archive, ref interestPolicies);
+                _interestPolicies = (AOINetworkPolicyValues)interestPolicies;
+            }
+            else if (archive.IsUnpacking)
+                _interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
+                success &= Serializer.Transfer(archive, ref _avatarWorldInstanceId);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
+                success &= Serializer.Transfer(archive, ref _dbId);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
+            {
+                success &= Serializer.TransferVectorFixed(archive, ref _position, 3);
+
+                bool yawOnly = _locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+                success &= Serializer.TransferOrientationFixed(archive, ref _orientation, yawOnly, 6);
+            }
+
+            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+            {
+                if (archive.IsPacking)
+                    success &= LocomotionState.SerializeTo(archive, _locomotionState, _locoFieldFlags);
+                else
+                {
+                    if (_locomotionState == null) _locomotionState = new();
+                    success &= LocomotionState.SerializeFrom(archive, _locomotionState, _locoFieldFlags);
+                }
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
+                success &= Serializer.TransferFloatFixed(archive, ref _boundsScaleOverride, 8);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
+                success &= Serializer.Transfer(archive, ref _sourceEntityId);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
+                success &= Serializer.TransferVectorFixed(archive, ref _sourcePosition, 3);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
+                success &= Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref _activePowerPrototypeRef);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
+            {
+                if (archive.IsPacking)
+                    success &= InventoryLocation.SerializeTo(archive, _invLoc);
+                else
+                {
+                    if (_invLoc == null) _invLoc = new();
+                    success &= InventoryLocation.SerializeFrom(archive, _invLoc);
+                }
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
+            {
+                if (archive.IsPacking)
+                    success &= InventoryLocation.SerializeTo(archive, _invLocPrev);
+                else
+                {
+                    if (_invLocPrev == null) _invLocPrev = new();
+                    success &= InventoryLocation.SerializeFrom(archive, _invLocPrev);
+                }
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
+                success &= Serializer.Transfer(archive, ref _attachedEntityList);
+
+            return success;
+        }
+
         public void Decode(CodedInputStream stream)
         {
             _replicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint64();
@@ -115,13 +207,13 @@ namespace MHServerEmu.Games.Entities
                 _avatarWorldInstanceId = stream.ReadRawVarint32();
 
             if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
-                _dbId = stream.ReadRawVarint32();
+                _dbId = stream.ReadRawVarint64();
 
             if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
             {
                 _position = new(stream);
 
-                _orientation = LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
+                _orientation = _locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
                     ? new(stream)
                     : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
             }
@@ -158,9 +250,10 @@ namespace MHServerEmu.Games.Entities
 
             if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
             {
-                _attachedEntities = new ulong[stream.ReadRawVarint64()];
-                for (int i = 0; i < _attachedEntities.Length; i++)
-                    _attachedEntities[i] = stream.ReadRawVarint64();
+                _attachedEntityList.Clear();
+                ulong numAttachedEntities = stream.ReadRawVarint64();
+                for (ulong i = 0; i < numAttachedEntities; i++)
+                    _attachedEntityList.Add(stream.ReadRawVarint64());
             }
         }
 
@@ -215,20 +308,18 @@ namespace MHServerEmu.Games.Entities
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
             {
-                stream.WriteRawVarint64((ulong)_attachedEntities.Length);
-                for (int i = 0; i < _attachedEntities.Length; i++)
-                    stream.WriteRawVarint64(_attachedEntities[i]);
+                stream.WriteRawVarint64((ulong)_attachedEntityList.Count);
+                foreach (ulong entityId in _attachedEntityList)
+                    stream.WriteRawVarint64(entityId);
             }
         }
 
         public ByteString ToByteString()
         {
-            using (MemoryStream ms = new())
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                Encode(cos);
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
+                Serialize(archive);
+                return archive.ToByteString();
             }
         }
 
@@ -242,7 +333,7 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_locoFieldFlags)}: {_locoFieldFlags}");
             sb.AppendLine($"{nameof(_interestPolicies)}: {_interestPolicies}");
             sb.AppendLine($"{nameof(_avatarWorldInstanceId)}: {_avatarWorldInstanceId}");
-            sb.AppendLine($"{nameof(_dbId)}: {_dbId}");
+            sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
             sb.AppendLine($"{nameof(_position)}: {_position}");
             sb.AppendLine($"{nameof(_orientation)}: {_orientation}");
             sb.AppendLine($"{nameof(_locomotionState)}: {_locomotionState}");
@@ -252,8 +343,8 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_activePowerPrototypeRef)}: {GameDatabase.GetPrototypeName(_activePowerPrototypeRef)}");
             sb.AppendLine($"{nameof(_invLoc)}: {_invLoc}");
             sb.AppendLine($"{nameof(_invLocPrev)}: {_invLocPrev}");
-            for (int i = 0; i < _attachedEntities.Length; i++)
-                sb.AppendLine($"{nameof(_attachedEntities)}[{i}]: {_attachedEntities[i]}");
+            for (int i = 0; i < _attachedEntityList.Count; i++)
+                sb.AppendLine($"{nameof(_attachedEntityList)}[{i}]: {_attachedEntityList[i]}");
             return sb.ToString();
         }
     }

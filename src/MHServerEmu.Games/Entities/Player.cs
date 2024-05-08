@@ -108,8 +108,8 @@ namespace MHServerEmu.Games.Entities
             BaseData.EntityPrototypeRef = (PrototypeId)18307315963852687724;
             BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.DbId = 867587;
-            BaseData.LocomotionState = new(0f);
+            BaseData.DbId = 0x20000000000D3D03;
+            BaseData.LocomotionState = new();
 
             // Archive Data
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
