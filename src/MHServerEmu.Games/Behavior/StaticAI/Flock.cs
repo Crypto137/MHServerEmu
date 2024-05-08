@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class FlockContext : IStateContext
+    {
+        public FlockContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class DelayContext : IStateContext
+    {
+        public DelayContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

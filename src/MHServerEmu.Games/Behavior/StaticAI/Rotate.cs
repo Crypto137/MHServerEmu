@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class RotateContext : IStateContext
+    {
+        public RotateContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

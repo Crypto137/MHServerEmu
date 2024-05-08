@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class WanderContext : IStateContext
+    {
+        public WanderContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

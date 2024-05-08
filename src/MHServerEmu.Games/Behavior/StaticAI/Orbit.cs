@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class OrbitContext : IStateContext
+    {
+        public OrbitContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

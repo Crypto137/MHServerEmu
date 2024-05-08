@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class TriggerSpawnersContext : IStateContext
+    {
+        public TriggerSpawnersContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class FleeContext : IStateContext
+    {
+        public FleeContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

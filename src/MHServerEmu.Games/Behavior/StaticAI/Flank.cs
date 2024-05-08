@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class FlankContext : IStateContext
+    {
+        public FlankContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

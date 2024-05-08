@@ -23,4 +23,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class TeleportContext : IStateContext
+    {
+        public TeleportContext(AIController ownerController) : base(ownerController)
+        {
+        }
+    }
 }

@@ -23,4 +23,12 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
     }
+
+    public class DespawnContext : IStateContext
+    {
+        public DespawnContext(AIController ownerController) : base(ownerController)
+        {
+         
+        }
+    }
 }
