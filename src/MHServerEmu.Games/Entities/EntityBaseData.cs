@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Entities
         private ulong _dbId;
         private Vector3 _position = Vector3.Zero;
         private Orientation _orientation = Orientation.Zero;
-        private LocomotionState _locomotionState = new();
+        private LocomotionState _locomotionState;
         private float _boundsScaleOverride;
         private ulong _sourceEntityId;
         private Vector3 _sourcePosition = Vector3.Zero;
@@ -145,10 +145,16 @@ namespace MHServerEmu.Games.Entities
                 _activePowerPrototypeRef = stream.ReadPrototypeRef<PowerPrototype>();
 
             if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
-                _invLoc = new(stream);
+            {
+                _invLoc = new();
+                _invLoc.Decode(stream);
+            }
 
             if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                _invLocPrev = new(stream);
+            {
+                _invLocPrev = new();
+                _invLocPrev.Decode(stream);
+            }
 
             if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
             {

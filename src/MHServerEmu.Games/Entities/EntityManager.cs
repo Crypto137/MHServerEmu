@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Entities
             if (isNewItem)
             {
                 baseData.FieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
-                baseData.InvLocPrev = new(0, PrototypeId.Invalid, 0xFFFFFFFF); // -1
+                baseData.InvLocPrev = new();
             }
 
             var defRank = (PrototypeId)15168672998566398820; // Popcorn           

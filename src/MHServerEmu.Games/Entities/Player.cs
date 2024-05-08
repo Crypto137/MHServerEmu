@@ -707,14 +707,12 @@ namespace MHServerEmu.Games.Entities
             {
                 if (avatar.BaseData.EntityPrototypeRef == prototypeId)
                 {
+                    avatar.BaseData.InvLoc.Set(Id, (PrototypeId)9555311166682372646, 0);
                     CurrentAvatar = avatar;
-                    avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)9555311166682372646;
-                    avatar.BaseData.InvLoc.Slot = 0;
                     continue;
                 }
 
-                avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)5235960671767829134;
-                avatar.BaseData.InvLoc.Slot = librarySlot++;
+                avatar.BaseData.InvLoc.Set(Id, (PrototypeId)5235960671767829134, librarySlot++);
             }
         }
 
