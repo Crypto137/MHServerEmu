@@ -79,6 +79,32 @@ namespace MHServerEmu.Core.Collisions
             return SegmentSegmentClosestPoint(a1.To2D(), b1.To2D(), a2.To2D(), b2.To2D(), out _, out _, out _, out _);
         }
 
+        public static Vector3 SegmentPointClosestPoint(Vector3 a, Vector3 b, Vector3 c)
+        {
+            // Real-Time Collision Detection p.129 (ClosestPtPointSegment)
+            Vector3 ab = b - a;
+            // Project c onto ab, but deferring divide by Dot(ab, ab)
+            float t = Vector3.Dot(c - a, ab);
+            if (t <= 0.0f)
+            {   // c projects outside the [a,b] interval, on the a side; clamp to a
+                return a;
+            }
+            else
+            {
+                float denom = Vector3.Dot(ab, ab); // Always nonnegative since denom = ||ab||^2
+                if (t >= denom)
+                {   // c projects outside the [a,b] interval, on the b side; clamp to b
+                    return b;
+                }
+                else
+                {
+                    // c projects inside the [a,b] interval; must do deferred divide now
+                    t /= denom;
+                    return a + ab * t;
+                }
+            }
+        }
+
         public static float SegmentSegmentClosestPoint(Vector3 s1Start, Vector3 s1End, Vector3 s2Start, Vector3 s2End, out float s1Dist, out float s2Dist, out Vector3 point1, out Vector3 point2)
         {
             // Based on Real-Time Collision Detection by Christer Ericson, pages 149-151 (ClosestPtSegmentSegment)
@@ -237,13 +263,13 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
-        public static bool CircleTangentPoints2D(Vector3 vertex0, float radius, Vector3 vertex1, ref Segment tangent)
+        public static bool CircleTangentPoints2D(Vector3 point0, float radius, Vector3 point1, ref Segment tangent)
         {
-            Vector3 v0 = new (vertex0.X, vertex0.Y, 0.0f);
-            Vector3 v1 = new (vertex1.X, vertex1.Y, 0.0f);
-            Vector3 dir = v1 - v0;
+            Vector3 p0 = point0.To2D();
+            Vector3 p1 = point1.To2D();
+            Vector3 dir = p1 - p0;
 
-            float distSq = Vector3.DistanceSquared2D(v1, v0);
+            float distSq = Vector3.DistanceSquared2D(p1, p0);
             if (distSq <= Epsilon)
             {
                 tangent.Start = Vector3.Zero;
@@ -256,7 +282,7 @@ namespace MHServerEmu.Core.Collisions
 
             if (distSq < (radiusSq + Epsilon))
             {
-                tangent.Start = v0 + (dir * (radius / dist));
+                tangent.Start = p0 + (dir * (radius / dist));
                 tangent.End = tangent.Start;
                 return true;
             }
@@ -264,7 +290,7 @@ namespace MHServerEmu.Core.Collisions
             {
                 float tangentDist = radiusSq / dist; // (radiusSq - (distSq - radiusSq) + distSq) / (2.0f * dist);
                 float tangentLength = MathHelper.SquareRoot(radiusSq - tangentDist * tangentDist);
-                Vector3 tangentPoint = v0 + dir * (tangentDist / dist);
+                Vector3 tangentPoint = p0 + dir * (tangentDist / dist);
                 Vector3 tangentPerp = Vector3.Perp2D(dir * (tangentLength / dist));
                 tangent.Start = tangentPoint + tangentPerp;
                 tangent.End = tangentPoint - tangentPerp;
@@ -272,9 +298,183 @@ namespace MHServerEmu.Core.Collisions
             }
         }
 
-        public static bool CircleTangentPoints2D(Vector3 vertex1, float radius1, bool v1, Vector3 vertex2, float radius2, bool v2, ref Segment result)
+        public static bool CircleTangentPoints2D(Vector3 p0, float r0, bool left0, Vector3 p1, float r1, bool left1, ref Segment tangent)
         {
-            throw new NotImplementedException();
+            Vector3 d = p1 - p0;
+            float lengthSq = Vector3.LengthSqr(d);
+            float r01 = r0 + r1;
+            float r10 = r1 - r0;
+            float r0Sq = r0 * r0;
+
+            float l2, l;
+            Segment tangentDir;
+
+            if (left0 == left1)
+            {
+                if (EpsilonTest(r10, 0.0f) == false)
+                {
+                    if (lengthSq <= r01 * r01) return false;
+
+                    float r1Sq = r1 * r1;
+                    float a = -r0Sq;
+                    float b = 2.0f * r0Sq;
+                    float c = r1 * r1 - r0Sq;
+                    float discr = Math.Abs(b * b - 4.0f * a * c);
+                    float root = MathHelper.SquareRoot(discr);
+
+                    float q = (b + root) * (-0.5f / c);
+                    if (q >= 0.5f)
+                        l2 = Math.Abs(lengthSq - r0Sq / (q * q));
+                    else
+                    {
+                        float nq = 1.0f - q;
+                        l2 = Math.Abs(lengthSq - r1Sq / (nq * nq));
+                    }
+                    l = MathHelper.SquareRoot(l2);
+                    tangentDir = GetTangentDirections(d, l);
+                }
+                else
+                {
+                    d /= MathHelper.SquareRoot(lengthSq);
+                    tangentDir = new(d, d);
+                }
+
+                if (left0)
+                {
+                    tangent.Start = p0 + Vector3.Perp2D(tangentDir.Start) * r0;
+                    tangent.End = p1 + Vector3.Perp2D(tangentDir.Start) * r1;
+                }
+                else
+                {
+                    tangent.Start = p0 - Vector3.Perp2D(tangentDir.End) * r0;
+                    tangent.End = p1 - Vector3.Perp2D(tangentDir.End) * r1;
+                }
+            }
+            else
+            {
+                if (lengthSq <= r01 * r01) return false;
+
+                if (EpsilonTest(r10, 0.0f) == false)
+                {
+                    float r1Sq = r1 * r1;
+                    float a = -r0Sq;
+                    float b = 2.0f * r0Sq;
+                    float c = r1 * r1 - r0Sq;
+                    float discr = Math.Abs(b * b - 4 * a * c);
+                    float root = MathHelper.SquareRoot(discr);
+
+                    float q = (b - root) * (-0.5f / c);
+                    if (q >= 0.5f)
+                        l2 = Math.Abs(lengthSq - r0Sq / (q * q));
+                    else
+                    {
+                        float nq = 1.0f - q;
+                        l2 = Math.Abs(lengthSq - r1Sq / (nq * nq));                        
+                    }
+                }
+                else
+                    l2 = Math.Abs(lengthSq - 4 * r0Sq);
+
+                l = MathHelper.SquareRoot(l2);
+                tangentDir = GetTangentDirections(d, l);
+
+                bool flip = Cross2D(tangentDir.Start, d) > 0f;
+
+                if (left0) 
+                    r1 = -r1;
+                else
+                    r0 = -r0;
+
+                if (left0 ^ flip)
+                {
+                    tangent.Start = p0 + Vector3.Perp2D(tangentDir.Start) * r0;
+                    tangent.End = p1 + Vector3.Perp2D(tangentDir.Start) * r1;
+                }
+                else
+                {
+                    tangent.Start = p0 + Vector3.Perp2D(tangentDir.End) * r0;
+                    tangent.End = p1 + Vector3.Perp2D(tangentDir.End) * r1;
+                }
+            }
+
+            return true;
+        }
+
+        private static Segment GetTangentDirections(Vector3 d, float l)
+        {
+            float a, b, root, discr, inv;
+
+            Segment direction = new();
+            float l2 = l * l;
+            float dx2 = d.X * d.X;
+            float dy2 = d.Y * d.Y;
+            float c = dx2 + dy2;
+            float invC = -0.5f / c;
+
+            if (Math.Abs(d.X) >= Math.Abs(d.Y))
+            {
+                a = l2 - dx2;
+                b = -2.0f * l * d.Y;
+                discr = Math.Abs(b * b - 4.0f * a * c);
+                root = MathHelper.SquareRoot(discr);
+                inv = 1.0f / d.X;
+                direction.Start.Y = (b + root) * invC;
+                direction.Start.X = (l - d.Y * direction.Start.Y) * inv;
+                direction.End.Y = (b - root) * invC;
+                direction.End.X = (l - d.Y * direction.End.Y) * inv;
+            }
+            else
+            {
+                a = l2 - dy2;
+                b = -2.0f * l * d.X;
+                discr = Math.Abs(b * b - 4.0f * a * c);
+                root = MathHelper.SquareRoot(discr);
+                inv = 1.0f / d.Y;
+                direction.Start.X = (b + root) * invC;
+                direction.Start.Y = (l - d.X * direction.Start.X) * inv;
+                direction.End.X = (b - root) * invC;
+                direction.End.Y = (l - d.X * direction.End.X) * inv;
+            }
+
+            direction.Start.Z = 0.0f;
+            direction.End.Z = 0.0f;
+
+            return direction;
+        }
+
+        public static bool CircleTangents2D(Vector3 point0, float radius, Vector3 point1, out Segment tangent)
+        {
+            Vector3 p0 = point0.To2D();
+            Vector3 p1 = point1.To2D();
+
+            Segment tangentPoint = new();
+            tangent = new ();
+            if (CircleTangentPoints2D(p0, radius, p1, ref tangentPoint) == false) return false;
+
+            tangent.Start = Vector3.Perp2D(Vector3.Normalize(tangentPoint.Start - p0));
+            tangent.End = -Vector3.Perp2D(Vector3.Normalize(tangentPoint.End - p0));
+            return true;
+        }
+
+        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 outNormal, out float outLength, Vector3 safeNormal)
+        {
+            Vector3 v2d = v.To2D();
+            if (!Vector3.IsNearZero(v2d))
+            {
+                float length = Vector3.Length(v2d);
+                outNormal = v2d / length;
+                outLength = length;
+            }
+            else
+            {
+                outNormal = safeNormal;
+                outLength = 0.0f;
+            }
+        }
+
+        public static float LinePointSide2D(Vector3 start, Vector3 end, Vector3 point)
+        {
+            return Cross2D(start - end, point - end);
         }
     }
 

@@ -5,11 +5,19 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Navi
 {
+    public enum NaviSide
+    {
+        Left = 0,
+        Right = 1,
+        Point = 2
+    }
+
     public class NaviPathNode   // TODO: Change to struct?
     {
         public Vector3 Vertex { get; set; }
         public NaviSide VertexSide { get; set; }
         public float Radius { get; set; }
+        public bool HasInfluence { get; set; }
 
         public NaviPathNode() { }
 
@@ -34,6 +42,14 @@ namespace MHServerEmu.Games.Navi
                 VertexSide = NaviSide.Point;
                 Radius = 0f;
             }
+        }
+
+        public NaviPathNode(Vector3 vertex, NaviSide vertexSide, float radius, bool hasInfluence)
+        {
+            Vertex = vertex;
+            VertexSide = vertexSide;
+            Radius = radius;
+            HasInfluence = hasInfluence;
         }
 
         public void Encode(CodedOutputStream stream, Vector3 previousVertex)

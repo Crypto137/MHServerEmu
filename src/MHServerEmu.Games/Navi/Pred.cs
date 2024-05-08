@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Navi
             Vector3 p = vp.To2D();
             Vector3 ba = b - a;
             Vector3 ap = a - p;
-            return Vector3.LengthSquared(Vector3.Cross(ba, ap)) / Vector3.LengthSquared(ba);
+            return Vector3.LengthSqr(Vector3.Cross(ba, ap)) / Vector3.LengthSqr(ba);
         }
 
         public static bool CircumcircleContainsPoint(NaviPoint p0, NaviPoint p1, NaviPoint p2, NaviPoint checkPoint)
