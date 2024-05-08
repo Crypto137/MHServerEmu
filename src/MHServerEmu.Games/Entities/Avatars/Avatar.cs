@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             BaseData.LocomotionState = new(0f);
             BaseData.EntityId = entityId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasInvLoc | EntityCreateMessageFlags.HasAvatarWorldInstanceId;
+            BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc | EntityCreateMessageFlags.HasAvatarWorldInstanceId;
             
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
             Properties = new(replicationId);
@@ -170,7 +170,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             AvatarPrototype prototype = GameDatabase.GetPrototype<AvatarPrototype>(prototypeId);
 
             // Base Data
-            BaseData.PrototypeId = prototypeId;
+            BaseData.EntityPrototypeRef = prototypeId;
 
             // Archive Data
             _playerName.Value = account.PlayerName;

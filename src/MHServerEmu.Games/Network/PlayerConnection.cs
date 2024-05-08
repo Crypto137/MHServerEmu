@@ -443,7 +443,7 @@ namespace MHServerEmu.Games.Network
                         .SetOrientation(targetRot.ToNetStructPoint3())
                         .SetCellId(cellid)
                         .SetAreaId(areaid)
-                        .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.PrototypeId)
+                        .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.EntityPrototypeRef)
                         .Build());
 
                     LastPosition = targetPos;

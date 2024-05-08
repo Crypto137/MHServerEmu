@@ -138,8 +138,8 @@ namespace MHServerEmu.Games.Entities
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner,
                 EntityId = GetNextEntityId(),
-                PrototypeId = itemProto,
-                FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasInvLoc,
+                EntityPrototypeRef = itemProto,
+                FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc,
                 InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner,
                 LocoFieldFlags = LocomotionMessageFlags.None,
                 LocomotionState = new(0f),
@@ -184,7 +184,7 @@ namespace MHServerEmu.Games.Entities
             return GetEntityById(entityId) as T;
         }
 
-        public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
+        public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.EntityPrototypeRef == prototype);
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
@@ -197,7 +197,7 @@ namespace MHServerEmu.Games.Entities
                     if (entity is not Transition transition) continue;
                     if (areaRef != 0 && areaRef != (PrototypeId)transition.RegionLocation.Area.PrototypeId) continue;
                     if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeId) continue;
-                    if (transition.BaseData.PrototypeId == entityRef)
+                    if (transition.BaseData.EntityPrototypeRef == entityRef)
                         return transition;
                 }
 
@@ -329,13 +329,13 @@ namespace MHServerEmu.Games.Entities
                             if (LockedTargets.Contains((InvTarget)teleport.DestinationList[0].TargetRef) == false) continue;
                             if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
-                            entity.BaseData.PrototypeId = visibleParent;
+                            entity.BaseData.EntityPrototypeRef = visibleParent;
                             continue;
                         }
                         // Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                     }
                 }
-                else if (Blockers.Contains((BlockerEntity)entity.BaseData.PrototypeId))
+                else if (Blockers.Contains((BlockerEntity)entity.BaseData.EntityPrototypeRef))
                 {
                     blockers.Add(entity);              
                 }

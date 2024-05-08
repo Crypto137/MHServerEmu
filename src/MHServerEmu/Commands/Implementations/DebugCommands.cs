@@ -182,7 +182,7 @@ namespace MHServerEmu.Commands.Implementations
             var entity = game.EntityManager.GetEntityById(entityId);
             if (entity == null) return "No entity found.";
 
-            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
+            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.EntityPrototypeRef)}");
             ChatHelper.SendMetagameMessageSplit(client, entity.Properties.ToString(), false);
             if (entity is WorldEntity worldEntity)
             {
