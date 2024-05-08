@@ -460,18 +460,10 @@ namespace MHServerEmu.Games.Entities
                 dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
 
                 // Encode key mapping
-                var abilityKeyMapping = avatar.CurrentAbilityKeyMapping;
-
-                BoolEncoder boolEncoder = new();
-                abilityKeyMapping.EncodeBools(boolEncoder);
-                boolEncoder.Cook();
-
-                using (MemoryStream ms = new())
+                using (Archive archive = new(ArchiveSerializeType.Database))
                 {
-                    CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                    abilityKeyMapping.Encode(cos, boolEncoder);
-                    cos.Flush();
-                    dbAvatar.RawAbilityKeyMapping = ms.ToArray();
+                    avatar.CurrentAbilityKeyMapping.Serialize(archive);
+                    dbAvatar.RawAbilityKeyMapping = archive.AccessAutoBuffer().ToArray();
                 }
             }
         }

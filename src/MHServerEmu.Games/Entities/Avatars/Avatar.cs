@@ -260,8 +260,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (dbAvatar.RawAbilityKeyMapping != null)
             {
                 // Deserialize existing saved mapping if there is one
-                CodedInputStream cis = CodedInputStream.CreateInstance(dbAvatar.RawAbilityKeyMapping);
-                abilityKeyMapping.Decode(cis, new BoolDecoder());
+                using (Archive archive = new(ArchiveSerializeType.Database, dbAvatar.RawAbilityKeyMapping))
+                    abilityKeyMapping.Serialize(archive);
             }
             else
             {
