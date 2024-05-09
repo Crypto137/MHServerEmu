@@ -4,11 +4,14 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.Maps;
 
 namespace MHServerEmu.Games.Network
 {
@@ -314,12 +317,15 @@ namespace MHServerEmu.Games.Network
                 Messages.Add(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
 
                 // Mini map
-                MiniMapArchive miniMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
-                if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
+                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+                {
+                    LowResMap lowResMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
+                    Serializer.Transfer(archive, ref lowResMap);
 
-                Messages.Add(NetMessageUpdateMiniMap.CreateBuilder()
-                    .SetArchiveData(miniMap.Serialize())
-                    .Build());
+                    Messages.Add(NetMessageUpdateMiniMap.CreateBuilder()
+                        .SetArchiveData(archive.ToByteString())
+                        .Build());
+                }
             }
 
             bool update = Messages.Count > 0;
