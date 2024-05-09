@@ -399,5 +399,6 @@ FodyWeavers.xsd
 .idea/*
 
 # Emacs
-#.*
+.*#
+.#*
 

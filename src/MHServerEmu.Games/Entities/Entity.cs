@@ -66,10 +66,10 @@ namespace MHServerEmu.Games.Entities
     [Flags]
     public enum EntityStatus
     {
-        PendingDestroy = 1 << 0,
-        Destroyed = 1 << 1,
-        ToTransform = 1 << 2,
-        InGame = 1 << 3,
+        PendingDestroy = 1 << 0,  
+        Destroyed = 1 << 1, 
+        ToTransform = 1 << 2, 
+        InGame = 1 << 3, 
         ExitWorld = 1 << 10,
         // TODO etc
     }
