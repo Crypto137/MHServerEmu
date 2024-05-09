@@ -111,7 +111,10 @@ namespace MHServerEmu.Games.Network
         private static string PrintNetMessageEntityEnterGameWorld(IMessage message)
         {
             var entityEnterGameWorld = (NetMessageEntityEnterGameWorld)message;
-            return $"ArchiveData: {new EnterGameWorldArchive(entityEnterGameWorld.ArchiveData)}";
+            CodedInputStream stream = CodedInputStream.CreateInstance(entityEnterGameWorld.ArchiveData.ToByteArray());
+            EnterGameWorldArchive archive = new();
+            archive.Decode(stream);
+            return $"ArchiveData: {archive}";
         }
 
         [PrintMethod(typeof(NetMessageLocomotionStateUpdate))]

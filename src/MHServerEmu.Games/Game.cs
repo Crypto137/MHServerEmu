@@ -342,7 +342,7 @@ namespace MHServerEmu.Games
 
             EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, entranceOrientation.Yaw, 350f);
             messageList.Add(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
+                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
                 .Build());
 
             playerConnection.AOI.Update(entrancePosition);
