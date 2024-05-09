@@ -1,4 +1,6 @@
 ﻿
+using MHServerEmu.Games.Entities;
+
 namespace MHServerEmu.Games.Behavior
 {
     public class BehaviorSensorySystem
@@ -30,6 +32,11 @@ namespace MHServerEmu.Games.Behavior
         }
 
         private void IsLeashingDistanceMet()
+        {
+            throw new NotImplementedException();
+        }
+
+        public WorldEntity GetCurrentTarget()
         {
             throw new NotImplementedException();
         }
