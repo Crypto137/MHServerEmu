@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
@@ -153,87 +151,6 @@ namespace MHServerEmu.Games.UI.Widgets
             }
 
             return success;
-        }
-
-        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            base.Decode(stream, boolDecoder);
-
-            _filterList.Clear();
-
-            int numFilterEntries = stream.ReadRawInt32();
-            for (int i = 0; i < numFilterEntries; i++)
-            {
-                FilterEntry filterEntry = new();
-                filterEntry.Index = stream.ReadRawInt32();
-
-                int numEntityEntries = stream.ReadRawInt32();
-                if (numEntityEntries == 0) continue;
-
-                filterEntry.KnownEntityDict = new();
-                for (int j = 0; j < numEntityEntries; j++)
-                {
-                    KnownEntityEntry entityEntry = new();
-
-                    entityEntry.EntityId = stream.ReadRawVarint64();
-                    entityEntry.State = (UIWidgetEntityState)stream.ReadRawInt32();
-                    entityEntry.HealthPercent = stream.ReadRawInt32();
-                    entityEntry.IconIndexForHealthPercentEval = stream.ReadRawInt32();
-                    entityEntry.ForceRefreshEntityHealthPercent = boolDecoder.ReadBool(stream);
-                    entityEntry.EnrageStartTime = TimeSpan.FromMilliseconds(stream.ReadRawInt64());
-                    entityEntry.HasPropertyEntryEval = boolDecoder.ReadBool(stream);
-                    entityEntry.PropertyEntryIndex = stream.ReadRawInt32();
-
-                    filterEntry.KnownEntityDict.Add(entityEntry.EntityId, entityEntry);
-                }
-
-                _filterList.Add(filterEntry);
-            }
-
-            UpdateUI();
-        }
-
-        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            base.Encode(stream, boolEncoder);
-
-            stream.WriteRawInt32(_filterList.Count);
-            foreach (FilterEntry filterEntry in _filterList)
-            {
-                stream.WriteRawInt32(filterEntry.Index);
-
-                if (filterEntry.KnownEntityDict == null)
-                {
-                    stream.WriteRawInt32(0);
-                    continue;
-                }
-
-                stream.WriteRawInt32(filterEntry.KnownEntityDict.Count);
-                foreach (KnownEntityEntry entityEntry in filterEntry.KnownEntityDict.Values)
-                {
-                    stream.WriteRawVarint64(entityEntry.EntityId);
-                    stream.WriteRawInt32((int)entityEntry.State);
-                    stream.WriteRawInt32(entityEntry.HealthPercent);
-                    stream.WriteRawInt32(entityEntry.IconIndexForHealthPercentEval);
-                    boolEncoder.WriteBuffer(stream);    // ForceRefreshEntityHealthPercent
-                    stream.WriteRawInt64((long)entityEntry.EnrageStartTime.TotalMilliseconds);
-                    boolEncoder.WriteBuffer(stream);    // HasPropertyEntryEval
-                    stream.WriteRawInt32(entityEntry.PropertyEntryIndex);
-                }
-            }
-        }
-
-        public override void EncodeBools(BoolEncoder boolEncoder)
-        {
-            foreach (FilterEntry filterEntry in _filterList)
-            {
-                if (filterEntry.KnownEntityDict == null) continue;
-                foreach (KnownEntityEntry entityEntry in filterEntry.KnownEntityDict.Values)
-                {
-                    boolEncoder.EncodeBool(entityEntry.ForceRefreshEntityHealthPercent);
-                    boolEncoder.EncodeBool(entityEntry.HasPropertyEntryEval);
-                }
-            }
         }
 
         protected override void BuildString(StringBuilder sb)

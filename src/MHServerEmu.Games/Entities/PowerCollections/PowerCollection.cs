@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -117,38 +116,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream, AOINetworkPolicyValues replicationPolicy)
-        {
-            if (replicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) == false) return;
-
-            uint recordCount = stream.ReadRawVarint32();
-            if (recordCount == 0) return;
-
-            // The first record is standalone. Records that follow it will omit data that matches the previous one.
-            PowerCollectionRecord previousRecord = null;
-            for (uint i = 0; i < recordCount; i++)
-            {
-                PowerCollectionRecord record = new();
-                record.Decode(stream, previousRecord);
-                _powerDict.Add(record.PowerPrototypeRef, record);
-                previousRecord = record;
-            }
-        }
-
-        public void Encode(CodedOutputStream stream, AOINetworkPolicyValues replicationPolicy)
-        {
-            if (replicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) == false) return;
-
-            stream.WriteRawVarint32((uint)_powerDict.Count);
-
-            PowerCollectionRecord previousRecord = null;
-            foreach (PowerCollectionRecord record in _powerDict.Values)
-            {
-                record.Encode(stream, previousRecord);
-                previousRecord = record;
-            }
         }
 
         // IEnumerable implementation

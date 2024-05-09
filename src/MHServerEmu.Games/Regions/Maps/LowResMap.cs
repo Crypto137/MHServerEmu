@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -49,39 +48,6 @@ namespace MHServerEmu.Games.Regions.Maps
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            BoolDecoder boolDecoder = new();
-
-            _isRevealAll = boolDecoder.ReadBool(stream);
-
-            // Map buffer is only included when the map is not revealed by default
-            if (IsRevealAll == false)
-            {
-                _map = new byte[stream.ReadRawVarint32() / 8];
-                for (int i = 0; i < _map.Length; i++)
-                    _map[i] = stream.ReadRawByte();
-            }
-        }
-
-        public void Encode(CodedOutputStream cos)
-        {
-            // Prepare bool encoder
-            BoolEncoder boolEncoder = new();
-            boolEncoder.EncodeBool(_isRevealAll);
-            boolEncoder.Cook();
-
-            // Encode
-            boolEncoder.WriteBuffer(cos);   // IsRevealAll
-
-            if (IsRevealAll == false)
-            {
-                cos.WriteRawVarint32((uint)_map.Length * 8);
-                for (int i = 0; i < _map.Length; i++)
-                    cos.WriteRawByte(_map[i]);
-            }
         }
 
         public override string ToString()

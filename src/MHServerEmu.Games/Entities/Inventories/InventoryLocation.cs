@@ -1,5 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -67,20 +66,6 @@ namespace MHServerEmu.Games.Entities.Inventories
             invLoc.Set(containerId, inventoryRef, slot);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            ContainerId = stream.ReadRawVarint64();
-            InventoryPrototype = stream.ReadPrototypeRef<InventoryPrototype>().As<InventoryPrototype>();
-            Slot = stream.ReadRawVarint32();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64(ContainerId);
-            stream.WritePrototypeRef<InventoryPrototype>(InventoryRef);
-            stream.WriteRawVarint64(Slot);
         }
 
         public Inventory GetInventory()

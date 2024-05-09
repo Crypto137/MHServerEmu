@@ -1,11 +1,8 @@
 ﻿using System.Text;
 using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -59,40 +56,6 @@ namespace MHServerEmu.Games.Entities.Items
             success &= Serializer.Transfer(archive, ref _seed);
             success &= Serializer.Transfer(archive, ref _equippableBy);
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _itemProtoRef = stream.ReadPrototypeRef<Prototype>();
-            _rarityProtoRef = stream.ReadPrototypeRef<Prototype>();
-            _itemLevel = stream.ReadRawInt32();
-            _creditsAmount = stream.ReadRawInt32();
-
-            uint numAffixSpecs = stream.ReadRawVarint32();
-            for (uint i = 0; i < numAffixSpecs; i++)
-            {
-                AffixSpec affixSpec = new();
-                affixSpec.Decode(stream);
-                _affixSpecList.Add(affixSpec);
-            }
-
-            _seed = stream.ReadRawInt32();
-            _equippableBy = stream.ReadPrototypeRef<Prototype>();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WritePrototypeRef<Prototype>(_itemProtoRef);
-            stream.WritePrototypeRef<Prototype>(_rarityProtoRef);
-            stream.WriteRawInt32(_itemLevel);
-            stream.WriteRawInt32(_creditsAmount);
-
-            stream.WriteRawVarint32((uint)_affixSpecList.Count);
-            foreach (AffixSpec affixSpec in _affixSpecList)
-                affixSpec.Encode(stream);
-
-            stream.WriteRawInt32(_seed);
-            stream.WritePrototypeRef<Prototype>(_equippableBy);
         }
 
         public NetStructItemSpec ToProtobuf()

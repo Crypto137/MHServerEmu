@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -60,51 +59,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 success &= LocomotionState.SerializeFrom(archive, _locomotionState, _fieldFlags);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            BoolDecoder boolDecoder = new();
-
-            _replicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint64();
-            _avatarIndex = stream.ReadRawInt32();
-            _entityId = stream.ReadRawVarint64();
-            _isUsingGamepadInput = boolDecoder.ReadBool(stream);
-            _avatarWorldInstanceId = stream.ReadRawVarint32();
-            _fieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
-            _position = new(stream);
-
-            if (_fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                _orientation = new(stream);
-            else
-                _orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-
-            _locomotionState = new();
-            _locomotionState.Decode(stream, FieldFlags);
-        }
-
-        public void Encode(CodedOutputStream cos)
-        {
-            // Prepare bool encoder
-            BoolEncoder boolEncoder = new();
-            boolEncoder.EncodeBool(_isUsingGamepadInput);
-            boolEncoder.Cook();
-
-            // Encode
-            cos.WriteRawVarint64((ulong)_replicationPolicy);
-            cos.WriteRawInt32(_avatarIndex);
-            cos.WriteRawVarint64(_entityId);
-            boolEncoder.WriteBuffer(cos);   // IsUsingGamepadInput  
-            cos.WriteRawVarint32(_avatarWorldInstanceId);
-            cos.WriteRawVarint32((uint)_fieldFlags);
-            _position.Encode(cos);
-            
-            if (_fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                _orientation.Encode(cos);
-            else
-                cos.WriteRawZigZagFloat(_orientation.Yaw, 6);
-            
-            _locomotionState.Encode(cos, _fieldFlags);
         }
 
         public ByteString ToByteString()

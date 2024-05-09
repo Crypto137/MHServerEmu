@@ -1,8 +1,6 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Common
 {
@@ -44,28 +42,6 @@ namespace MHServerEmu.Games.Common
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            Clear();
-            ulong numEntries = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numEntries; i++)
-            {
-                PrototypeId context = stream.ReadPrototypeRef<Prototype>();
-                uint flags = stream.ReadRawVarint32();
-                Add(context, (EntityTrackingFlag)flags);
-            }
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64((ulong)Count);
-            foreach (var kvp in this)
-            {
-                stream.WritePrototypeRef<Prototype>(kvp.Key);
-                stream.WriteRawVarint32((uint)kvp.Value);
-            }
         }
 
         // Gazillion::EntityTrackingContextMapInsert()

@@ -1,10 +1,7 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -41,20 +38,6 @@ namespace MHServerEmu.Games.Entities.Items
             success &= Serializer.Transfer(archive, ref _scopeProtoRef);
             success &= Serializer.Transfer(archive, ref _seed);
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _affixProtoRef = stream.ReadPrototypeRef<Prototype>();
-            _scopeProtoRef = stream.ReadPrototypeRef<Prototype>();
-            _seed = stream.ReadRawInt32();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WritePrototypeRef<Prototype>(_affixProtoRef);
-            stream.WritePrototypeRef<Prototype>(_scopeProtoRef);
-            stream.WriteRawInt32(_seed);
         }
 
         public NetStructAffixSpec ToProtobuf()

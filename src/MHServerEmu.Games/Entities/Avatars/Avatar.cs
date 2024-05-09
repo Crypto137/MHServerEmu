@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
@@ -108,57 +107,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             success &= Serializer.Transfer(archive, ref _abilityKeyMappingList);
 
             return success;
-        }
-
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-
-            BoolDecoder boolDecoder = new();
-
-            _playerName.Decode(stream);
-            _ownerPlayerDbId = stream.ReadRawVarint64();
-
-            // Similar throwaway string to Player entity
-            if (stream.ReadRawString() != string.Empty)
-                Logger.Warn($"Decode(): emptyString is not empty!");
-
-            GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
-
-            _abilityKeyMappingList.Clear();
-            uint numAbilityKeyMappings = stream.ReadRawVarint32();
-            for (uint i = 0; i < numAbilityKeyMappings; i++)
-            {
-                AbilityKeyMapping abilityKeyMapping = new();
-                abilityKeyMapping.Decode(stream, boolDecoder);
-                _abilityKeyMappingList.Add(abilityKeyMapping);
-            }
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-
-            // Prepare bool encoder
-            BoolEncoder boolEncoder = new();
-
-            boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
-            foreach (AbilityKeyMapping keyMap in _abilityKeyMappingList)
-                keyMap.EncodeBools(boolEncoder);
-
-            boolEncoder.Cook();
-
-            // Encode
-            _playerName.Encode(stream);
-            stream.WriteRawVarint64(_ownerPlayerDbId);
-
-            stream.WriteRawString(string.Empty);    // throwaway string
-
-            GuildMember.SerializeReplicationRuntimeInfo(stream, boolEncoder, ref _guildId, ref _guildName, ref _guildMembership);
-            
-            stream.WriteRawVarint64((uint)_abilityKeyMappingList.Count);
-            foreach (AbilityKeyMapping keyMap in _abilityKeyMappingList)
-                keyMap.Encode(stream, boolEncoder);
         }
 
         /// <summary>

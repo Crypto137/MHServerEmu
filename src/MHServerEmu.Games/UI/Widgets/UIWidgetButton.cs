@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -49,24 +48,6 @@ namespace MHServerEmu.Games.UI.Widgets
             }
 
             return success;
-        }
-
-        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            base.Decode(stream, boolDecoder);
-
-            uint numCallbacks = stream.ReadRawVarint32();
-            for (uint i = 0; i < numCallbacks; i++)
-                _callbackList.Add(new(stream.ReadRawVarint64()));
-        }
-
-        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            base.Encode(stream, boolEncoder);
-
-            stream.WriteRawVarint32((uint)_callbackList.Count);
-            foreach (CallbackBase callback in _callbackList)
-                stream.WriteRawVarint64(callback.PlayerGuid);
         }
 
         protected override void BuildString(StringBuilder sb)

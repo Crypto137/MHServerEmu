@@ -23,18 +23,6 @@ namespace MHServerEmu.Games.Regions.Maps
             return Serializer.Transfer(archive, ref _lowResMap);
         }
 
-        public void Decode(CodedInputStream stream)
-        {
-            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint64();
-            LowResMap.Decode(stream);
-        }
-
-        public void Encode(CodedOutputStream cos)
-        {
-            cos.WriteRawVarint64((ulong)ReplicationPolicy);
-            LowResMap.Encode(cos);
-        }
-
         public ByteString ToByteString()
         {
             using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)_replicationPolicy))

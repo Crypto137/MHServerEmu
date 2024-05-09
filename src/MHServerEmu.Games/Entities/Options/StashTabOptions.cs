@@ -1,6 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
@@ -45,22 +43,6 @@ namespace MHServerEmu.Games.Entities.Options
             _color = (StashTabColor)color;
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            DisplayName = stream.ReadRawString();
-            IconPathAssetId = (AssetId)stream.ReadRawVarint64();
-            SortOrder = stream.ReadRawInt32();
-            Color = (StashTabColor)stream.ReadRawInt32();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawString(DisplayName);
-            stream.WriteRawVarint64((ulong)IconPathAssetId);
-            stream.WriteRawInt32(SortOrder);
-            stream.WriteRawInt32((int)Color);
         }
 
         public override string ToString()

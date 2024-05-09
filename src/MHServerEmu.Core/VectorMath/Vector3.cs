@@ -1,7 +1,5 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
 
@@ -60,13 +58,6 @@ namespace MHServerEmu.Core.VectorMath
             Z = z;
         }
 
-        public Vector3(CodedInputStream stream, int precision = 3)
-        {
-            X = stream.ReadRawZigZagFloat(precision);
-            Y = stream.ReadRawZigZagFloat(precision);
-            Z = stream.ReadRawZigZagFloat(precision);
-        }
-
         public Vector3(NetStructPoint3 point3)
         {
             X = point3.X;
@@ -79,13 +70,6 @@ namespace MHServerEmu.Core.VectorMath
             X = v;
             Y = v;
             Z = v;
-        }
-
-        public void Encode(CodedOutputStream stream, int precision = 3)
-        {
-            stream.WriteRawZigZagFloat(X, precision);
-            stream.WriteRawZigZagFloat(Y, precision);
-            stream.WriteRawZigZagFloat(Z, precision);
         }
 
         public NetStructPoint3 ToNetStructPoint3() => NetStructPoint3.CreateBuilder().SetX(X).SetY(Y).SetZ(Z).Build();

@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
@@ -8,7 +6,6 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -99,52 +96,6 @@ namespace MHServerEmu.Games.Missions
             success &= Serializer.Transfer(archive, ref _isSuspended);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            _state = (MissionState)stream.ReadRawInt32();
-            _timeExpireCurrentState = new(stream.ReadRawInt64() * 10);
-            _prototypeDataRef = stream.ReadPrototypeRef<Prototype>();
-            _unkRandom = stream.ReadRawInt32();
-
-            // Mission::SerializeObjectives()
-            ulong numObjectives = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numObjectives; i++)
-            {
-                byte index = stream.ReadRawByte();
-                MissionObjective objective = new(this, index);
-                objective.Decode(stream);
-                _objectiveDict.Add(index, objective);
-            }
-
-            ulong numParticipants = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numParticipants; i++)
-                _participants.Add(stream.ReadRawVarint64());
-
-            _isSuspended = boolDecoder.ReadBool(stream);
-        }
-
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {            
-            stream.WriteRawInt32((int)_state);
-            stream.WriteRawInt64(_timeExpireCurrentState.Ticks / 10);
-            stream.WritePrototypeRef<Prototype>(_prototypeDataRef);
-            stream.WriteRawInt32(_unkRandom);
-
-            // Mission::SerializeObjectives()
-            stream.WriteRawVarint64((ulong)_objectiveDict.Count);
-            foreach (var kvp in _objectiveDict)
-            {
-                stream.WriteRawByte((byte)kvp.Key);
-                kvp.Value.Encode(stream);
-            }
-
-            stream.WriteRawVarint64((ulong)_participants.Count);
-            foreach (ulong participantId in _participants)
-                stream.WriteRawVarint64(participantId);
-
-            boolEncoder.WriteBuffer(stream);   // Suspended
         }
 
         public override string ToString()

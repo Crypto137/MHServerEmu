@@ -28,22 +28,6 @@ namespace MHServerEmu.Games.MetaGames
             return success;
         }
 
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-
-            _team1.Decode(stream);
-            _team2.Decode(stream);
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-
-            _team1.Encode(stream);
-            _team2.Encode(stream);
-        }
-
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);

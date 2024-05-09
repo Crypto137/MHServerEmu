@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -34,68 +32,6 @@ namespace MHServerEmu.Games.Missions
             success &= Serializer.Transfer(archive, ref _avatarPrototypeRef);
             success &= SerializeMissions(archive);
             return success;
-        }
-
-        public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            _avatarPrototypeRef = stream.ReadPrototypeRef<Prototype>();
-
-            // MissionManager::SerializeMissions()
-            _missionDict.Clear();
-            ulong numMissions = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numMissions; i++)
-            {
-                PrototypeGuid missionGuid = (PrototypeGuid)stream.ReadRawVarint64();
-                PrototypeId missionRef = GameDatabase.GetDataRefByPrototypeGuid(missionGuid);
-                Mission mission = CreateMission(missionRef);
-                mission.Decode(stream, boolDecoder);
-                InsertMission(mission);
-            }
-
-            _legendaryMissionBlacklist.Clear();
-            int numCategories = stream.ReadRawInt32();
-            for (int i = 0; i < numCategories; i++)
-            {
-                PrototypeGuid category = (PrototypeGuid)stream.ReadRawVarint64();
-
-                List<PrototypeGuid> categoryMissionList = new();
-                ulong numBlacklistCategoryMissions = stream.ReadRawVarint64();
-                for (ulong j = 0; j < numBlacklistCategoryMissions; j++)
-                    categoryMissionList.Add((PrototypeGuid)stream.ReadRawVarint64());
-
-                _legendaryMissionBlacklist.Add(category, categoryMissionList);
-            }
-        }
-
-        public void EncodeBools(BoolEncoder boolEncoder)
-        {
-            foreach (var mission in _missionDict)
-                boolEncoder.EncodeBool(mission.Value.IsSuspended);
-        }
-
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            stream.WritePrototypeRef<Prototype>(_avatarPrototypeRef);
-
-            // MissionManager::SerializeMissions()
-            stream.WriteRawVarint64((ulong)_missionDict.Count);
-            foreach (var kvp in _missionDict)
-            {
-                PrototypeGuid missionGuid = GameDatabase.GetPrototypeGuid(kvp.Key);
-                stream.WriteRawVarint64((ulong)missionGuid);    // missionGuid
-                kvp.Value.Encode(stream, boolEncoder);
-            }
-
-            stream.WriteRawInt32(_legendaryMissionBlacklist.Count);
-            foreach (var kvp in _legendaryMissionBlacklist)
-            {
-                stream.WriteRawVarint64((ulong)kvp.Key);        // category
-
-                List<PrototypeGuid> categoryMissionList = kvp.Value;
-                stream.WriteRawVarint64((ulong)categoryMissionList.Count);
-                foreach (PrototypeGuid guid in categoryMissionList)
-                    stream.WriteRawVarint64((ulong)guid);
-            }
         }
 
         public override string ToString()

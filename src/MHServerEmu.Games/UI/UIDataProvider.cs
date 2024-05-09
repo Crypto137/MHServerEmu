@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -53,35 +52,6 @@ namespace MHServerEmu.Games.UI
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            ulong numWidgets = stream.ReadRawVarint64();
-
-            for (ulong i = 0; i < numWidgets; i++)
-            {
-                PrototypeId widgetRef = stream.ReadPrototypeRef<Prototype>();
-                PrototypeId contextRef = stream.ReadPrototypeRef<Prototype>();
-                OLD_UpdateOrCreateUIWidget(widgetRef, contextRef, stream, boolDecoder);
-            }
-        }
-
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            stream.WriteRawVarint64((ulong)_dataDict.Count);
-            foreach (var kvp in _dataDict)
-            {
-                stream.WritePrototypeRef<Prototype>(kvp.Key.Item1);
-                stream.WritePrototypeRef<Prototype>(kvp.Key.Item2);
-                kvp.Value.Encode(stream, boolEncoder);
-            }
-        }
-
-        public void EncodeBools(BoolEncoder boolEncoder)
-        {
-            foreach (UISyncData uiData in _dataDict.Values)
-                uiData.EncodeBools(boolEncoder);
         }
 
         public override string ToString()
@@ -158,18 +128,6 @@ namespace MHServerEmu.Games.UI
                 uiData = AllocateUIWidget(widgetRef, contextRef);
 
             uiData.Serialize(archive);
-            uiData.UpdateUI();
-
-            return uiData;
-        }
-
-
-        private UISyncData OLD_UpdateOrCreateUIWidget(PrototypeId widgetRef, PrototypeId contextRef, CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData uiData) == false)
-                uiData = AllocateUIWidget(widgetRef, contextRef);
-
-            uiData.Decode(stream, boolDecoder);
             uiData.UpdateUI();
 
             return uiData;

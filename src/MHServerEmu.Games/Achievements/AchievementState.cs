@@ -1,7 +1,5 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 
@@ -65,38 +63,6 @@ namespace MHServerEmu.Games.Achievements
             }
 
             return success;
-        }
-
-        /// <summary>
-        /// Decodes <see cref="AchievementState"/> data from the provided <see cref="CodedInputStream"/>.
-        /// </summary>
-        public void Decode(CodedInputStream stream)
-        {
-            AchievementProgressMap.Clear();
-
-            ulong numProgress = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numProgress; i++)
-            {
-                uint id = stream.ReadRawVarint32();
-                uint count = stream.ReadRawVarint32();
-                long completedDate = stream.ReadRawInt64();
-
-                AchievementProgressMap[id] = new(count, new(completedDate * 10), false);
-            }
-        }
-
-        /// <summary>
-        /// Encodes this <see cref="AchievementState"/> instance to the provided <see cref="CodedOutputStream"/>.
-        /// </summary>
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64((ulong)AchievementProgressMap.Count);
-            foreach (var kvp in AchievementProgressMap)
-            {
-                stream.WriteRawVarint32(kvp.Key);
-                stream.WriteRawVarint32(kvp.Value.Count);
-                stream.WriteRawInt64(kvp.Value.CompletedDate.Ticks / 10);
-            }
         }
 
         /// <summary>

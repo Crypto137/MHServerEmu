@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -65,37 +63,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             success &= Serializer.Transfer(archive, ref _actionKeys);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            _powerSpecIndex = stream.ReadRawInt32();
-            _shouldPersist = boolDecoder.ReadBool(stream);
-            _associatedTransformMode = stream.ReadPrototypeRef<Prototype>();
-            _primaryAction = stream.ReadPrototypeRef<Prototype>();
-            _secondaryAction = stream.ReadPrototypeRef<Prototype>();
-
-            uint numPowerSlots = stream.ReadRawVarint32();
-            for (uint i = 0; i < numPowerSlots; i++)
-                _actionKeys[i] = stream.ReadPrototypeRef<Prototype>();
-        }
-
-        public void EncodeBools(BoolEncoder boolEncoder)
-        {
-            boolEncoder.EncodeBool(ShouldPersist);
-        }
-
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            stream.WriteRawInt32(PowerSpecIndex);
-            boolEncoder.WriteBuffer(stream);   // ShouldPersist
-            stream.WritePrototypeRef<Prototype>(AssociatedTransformMode);
-            stream.WritePrototypeRef<Prototype>(_primaryAction);
-            stream.WritePrototypeRef<Prototype>(_secondaryAction);
-
-            stream.WriteRawVarint32((uint)_actionKeys.Length);
-            foreach (PrototypeId powerSlot in _actionKeys)
-                stream.WritePrototypeRef<Prototype>(powerSlot);
         }
 
         public override string ToString()

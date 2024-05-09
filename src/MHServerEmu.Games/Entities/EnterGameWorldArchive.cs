@@ -1,12 +1,10 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
@@ -101,73 +99,6 @@ namespace MHServerEmu.Games.Entities
                 success &= Serializer.Transfer(archive, ref _attachedEntityList);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _replicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            _entityId = stream.ReadRawVarint64();
-
-            // This archive contains additional flags combined with LocomotionMessageFlags in a single 32-bit value
-            uint allFieldFlags = stream.ReadRawVarint32();
-            _locoFieldFlags = (LocomotionMessageFlags)(allFieldFlags & 0xFFF);
-            _extraFieldFlags = (EnterGameWorldMessageFlags)(allFieldFlags >> LocoFlagCount);
-
-            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
-                _entityPrototypeRef = stream.ReadPrototypeRef<EntityPrototype>();
-
-            _position = new(stream, 3);
-
-            _orientation = _locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
-                ? new(stream, 6)
-                : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-
-            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-            {
-                _locomotionState = new();
-                _locomotionState.Decode(stream, LocoFieldFlags);
-            }
-
-            if (_extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAvatarWorldInstanceId))
-                _avatarWorldInstanceId = stream.ReadRawVarint32();
-
-            if (_extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
-            {
-                _attachedEntityList.Clear();
-                ulong numAttachedEntities = stream.ReadRawVarint64();
-                for (ulong i = 0; i < numAttachedEntities; i++)
-                    _attachedEntityList.Add(stream.ReadRawVarint64());
-            }
-        }
-
-        public void Encode(CodedOutputStream cos)
-        {
-            cos.WriteRawVarint64((uint)_replicationPolicy);
-            cos.WriteRawVarint64(_entityId);
-            cos.WriteRawVarint32((uint)_locoFieldFlags | ((uint)_extraFieldFlags << LocoFlagCount));     // Combine flags
-
-            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
-                cos.WritePrototypeRef<EntityPrototype>(_entityPrototypeRef);
-
-            _position.Encode(cos);
-
-            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                _orientation.Encode(cos);
-            else
-                cos.WriteRawZigZagFloat(_orientation.Yaw, 6);
-
-            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-                _locomotionState.Encode(cos, _locoFieldFlags);
-
-            if (_extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAvatarWorldInstanceId))
-                cos.WriteRawVarint32(_avatarWorldInstanceId);
-
-            if (_extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
-            {
-                cos.WriteRawVarint64((ulong)_attachedEntityList.Count);
-                foreach (ulong entityId in _attachedEntityList)
-                    cos.WriteRawVarint64(entityId);
-            }
         }
 
         public ByteString ToByteString()

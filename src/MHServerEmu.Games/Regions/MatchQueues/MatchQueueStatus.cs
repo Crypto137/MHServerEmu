@@ -1,13 +1,10 @@
 ﻿using System.Text;
 using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Regions.MatchQueues
 {
@@ -95,49 +92,6 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            ulong numRegionStatuses = stream.ReadRawVarint64();
-
-            for (ulong i = 0; i < numRegionStatuses; i++)
-            {
-                PrototypeId regionRef = stream.ReadPrototypeRef<Prototype>();
-                PrototypeId difficultyTierRef = stream.ReadPrototypeRef<Prototype>();
-                ulong regionRequestGroupId = stream.ReadRawVarint64();
-                uint playersInQueue = stream.ReadRawVarint32();
-
-                if (regionRef == PrototypeId.Invalid) continue;
-
-                for (uint j = 0; j < playersInQueue; j++)
-                {
-                    ulong playerGuid = stream.ReadRawVarint64();
-                    string playerName = stream.ReadRawString();
-                    var status = (RegionRequestQueueUpdateVar)stream.ReadRawVarint32();
-
-                    UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, regionRequestGroupId, status, playerName);
-                }
-            }
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64((ulong)_regionStatusDict.Count);
-            foreach (var kvp in _regionStatusDict)
-            {
-                stream.WritePrototypeRef<Prototype>(kvp.Key.Item1);
-                stream.WritePrototypeRef<Prototype>(kvp.Key.Item2);
-                stream.WriteRawVarint64(kvp.Value.RegionRequestGroupId);
-                stream.WriteRawVarint32((uint)kvp.Value.PlayerInfoDict.Count);
-
-                foreach (var entry in kvp.Value.PlayerInfoDict)
-                {
-                    stream.WriteRawVarint64(entry.Key);
-                    stream.WriteRawString(entry.Value.PlayerName);
-                    stream.WriteRawVarint32((uint)entry.Value.Status);
-                }
-            }
         }
 
         /// <summary>

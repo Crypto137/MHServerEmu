@@ -1,7 +1,5 @@
 ﻿using System.Collections;
 using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -64,42 +62,6 @@ namespace MHServerEmu.Games.Social.Communities
             }
 
             return success;
-        }
-
-        public bool Decode(CodedInputStream stream)
-        {
-            int numCircles = stream.ReadRawInt32();
-            for (int i = 0; i < numCircles; i++)
-            {
-                string circleName = stream.ReadRawString();
-
-                if (Enum.TryParse(circleName, out CircleId circleId) == false)
-                    return Logger.ErrorReturn(false, $"Decode(): Unable to find system circle enum value for name {circleName}");
-
-                CommunityCircle circle = GetCircle(circleId);
-
-                if (circle == null)
-                    Logger.ErrorReturn(false, $"Decode(): Unable to get community circle for header. name={circleName}, id=0x{(int)circleId:X}, community={Community}");
-
-                _archiveCircles.Add(circle.Id);
-            }
-
-            return true;
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            // Generate a set of circles that need to be serialized
-            _archiveCircles.Clear();
-            CreateArchiveCircleIds(/* Archive archive */);
-
-            // Write all circle names
-            stream.WriteRawInt32(_archiveCircles.Count);
-            foreach (CircleId circleId in _archiveCircles)
-            {
-                string circleName = GetCircle(circleId).Name;
-                stream.WriteRawString(circleName);
-            }
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -13,14 +12,6 @@ namespace MHServerEmu.Games.UI.Widgets
 
         public UIWidgetMissionText(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
 
-        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            base.Decode(stream, boolDecoder);
-
-            _missionName = (LocaleStringId)stream.ReadRawVarint64();
-            _missionObjectiveName = (LocaleStringId)stream.ReadRawVarint64();
-        }
-
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
@@ -29,14 +20,6 @@ namespace MHServerEmu.Games.UI.Widgets
             success &= Serializer.Transfer(archive, ref _missionObjectiveName);
 
             return success;
-        }
-
-        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            base.Encode(stream, boolEncoder);
-
-            stream.WriteRawVarint64((ulong)_missionName);
-            stream.WriteRawVarint64((ulong)_missionObjectiveName);
         }
 
         protected override void BuildString(StringBuilder sb)

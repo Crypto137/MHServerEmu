@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -91,56 +89,6 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
-        public void Decode(CodedInputStream stream)
-        {
-            _type = (RegionTransitionType)stream.ReadRawInt32();
-
-            _regionRef = stream.ReadPrototypeRef<Prototype>();
-            _areaRef = stream.ReadPrototypeRef<Prototype>();
-            _cellRef = stream.ReadPrototypeRef<Prototype>();
-            _entityRef = stream.ReadPrototypeRef<Prototype>();
-            _targetRef = stream.ReadPrototypeRef<Prototype>();
-
-            _unk2 = stream.ReadRawInt32();
-
-            _name = stream.ReadRawString();
-            _nameId = (LocaleStringId)stream.ReadRawVarint64();
-
-            _regionId = stream.ReadRawVarint64();
-
-            float x = stream.ReadRawFloat();
-            float y = stream.ReadRawFloat();
-            float z = stream.ReadRawFloat();
-            _position = new Vector3(x, y, z);
-
-            _entityId = stream.ReadRawVarint64();
-            _unkId2 = stream.ReadRawVarint64();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawInt32((int)_type);
-
-            stream.WritePrototypeRef<Prototype>(_regionRef);
-            stream.WritePrototypeRef<Prototype>(_areaRef);
-            stream.WritePrototypeRef<Prototype>(_cellRef);
-            stream.WritePrototypeRef<Prototype>(_entityRef);
-            stream.WritePrototypeRef<Prototype>(_targetRef);
-
-            stream.WriteRawInt32(_unk2);
-
-            stream.WriteRawString(_name);
-            stream.WriteRawVarint64((ulong)_nameId);
-
-            stream.WriteRawVarint64(_regionId);
-
-            stream.WriteRawFloat(_position.X);
-            stream.WriteRawFloat(_position.Y);
-            stream.WriteRawFloat(_position.Z);
-
-            stream.WriteRawVarint64(_entityId);
-            stream.WriteRawVarint64(_unkId2);
-        }
         public override string ToString()
         {
             StringBuilder sb = new();
