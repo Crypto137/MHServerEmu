@@ -1,4 +1,4 @@
-﻿
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -7,52 +7,52 @@ namespace MHServerEmu.Games.Behavior
 {
     public class AIController
     {
-        private ProceduralAI.ProceduralAI _brain { get; set; }
-
-        public BehaviorSensorySystem Senses { get; set; }
-        
-        public WorldEntity Owner { get; set; }
-        
-        public Game Game { get; internal set; }
-        
+        private static readonly Logger Logger = LogManager.CreateLogger();
+        public Agent Owner { get; set; }
+        public Game Game { get; private set; }
+        public ProceduralAI.ProceduralAI Brain { get; private set; }
+        public BehaviorSensorySystem Senses { get; private set; }
+        public BehaviorBlackboard Blackboard { get; private set; }   
         public bool IsEnabled { get; private set; }
-        
-        public ReplicatedPropertyCollection Properties { get; internal set; } // This seems to be returned by the Blackboard property? (need to check in IDA)
-        
-        public WorldEntity TargetEntity => Senses.GetCurrentTarget(); // Should we null check senses here?
-
+        public WorldEntity TargetEntity => Senses.GetCurrentTarget();
         public WorldEntity InteractEntity => GetInteractEntityHelper();
-
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
-        
-        public bool IsOwnerValid()
+
+        public AIController(Game game, Agent owner)
         {
-            if (Owner != null)
-            {
-                if(!Owner.IsInWorld ||
-                    Owner.IsSimulated || 
-                    Owner.TestStatus(EntityStatus.PendingDestroy) || 
-                    Owner.TestStatus(EntityStatus.Destroyed))
-                {
-                    return false;
-                }
-            }
-            
-            return true;
+            Game = game;
+            Owner = owner;
+            Senses = new ();
+            Blackboard = new (owner);
+            Brain = new (); // TODO Init ProceduralAIProfilePrototype
         }
 
-        public bool GetDesiredIsWalkingState(MovementSpeedOverride movementSpeedOverride)
+        public bool IsOwnerValid()
         {
-            var locomotor = Owner?.Locomotor;
+            if (Owner != null && Owner.IsInWorld && Owner.IsSimulated 
+                && Owner.TestStatus(EntityStatus.PendingDestroy) == false 
+                && Owner.TestStatus(EntityStatus.Destroyed) == false)
+                return true;
             
+            return false;
+        }
+
+        public bool GetDesiredIsWalkingState(MovementSpeedOverride speedOverride)
+        {
+            var locomotor = Owner?.Locomotor;            
             if (locomotor != null && locomotor.SupportsWalking)
             {
-                if (movementSpeedOverride == MovementSpeedOverride.Walk)
+                if (speedOverride == MovementSpeedOverride.Walk)               
                     return true;
-                
-                return Senses.GetCurrentTarget() == null;
+                 else if (speedOverride == MovementSpeedOverride.Default) 
+                    return Senses.GetCurrentTarget() == null;
             }
-            
+            else
+            {
+                if (speedOverride == MovementSpeedOverride.Walk)
+                    Logger.Warn("An AI agent's behavior has a movement context with a MovementSpeed of Walk, " +
+                        $"but the agent's Locomotor doesn't support Walking.\nAgent [{Owner}]");
+            }            
             return false;
         }
         
@@ -66,18 +66,20 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
-        public float GetAggroRangeAlly()
-        {
-            return Properties.HasProperty(PropertyEnum.AIAggroRangeOverrideAlly) ? 
-                Properties[PropertyEnum.AIAggroRangeOverrideAlly].ToFloat() : 
-                Properties[PropertyEnum.AIAggroRangeAlly].ToFloat();
+        public float AggroRangeAlly 
+        { 
+            get => 
+                Blackboard.PropertyCollection.HasProperty(PropertyEnum.AIAggroRangeOverrideAlly) ?
+                Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeOverrideAlly] :
+                Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeAlly];
         }
 
-        public float GetAggroRangeHostile()
-        {
-            return Properties.HasProperty(PropertyEnum.AIAggroRangeOverrideHostile)
-                ? Properties[PropertyEnum.AIAggroRangeOverrideHostile].ToFloat()
-                : Properties[PropertyEnum.AIAggroRangeHostile].ToFloat();
+        public float AggroRangeHostile 
+        { 
+            get => 
+                Blackboard.PropertyCollection.HasProperty(PropertyEnum.AIAggroRangeOverrideHostile) ?
+                Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeOverrideHostile] : 
+                Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeHostile]; 
         }
 
         public void OnAIActivated()
@@ -102,22 +104,18 @@ namespace MHServerEmu.Games.Behavior
         
         public void ProcessInterrupts()
         {
-            //if(_brain == null)
+            if (Brain == null) return;
             //  Some debug stuff
-
-            return;
+            // TODO Brain ProcessInterrupts
         }
 
         public void SetIsEnabled(bool enabled)
         {
             IsEnabled = enabled;
-
             if (enabled)
-            { 
                 OnAIEnabled();
-            }
-
-            OnAIDisabled();
+            else
+                OnAIDisabled();
         }
         
         private void OnAIDisabled()
@@ -125,26 +123,18 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
         
-        private bool HasNotExceededMaxThinksPerFrame(TimeSpan elapsed)
+        private bool HasNotExceededMaxThinksPerFrame(TimeSpan timeOffset)
         {
-            if (Game == null)
+            if (Game == null || Brain == null) return false;
+
+            if (timeOffset == TimeSpan.Zero && Brain.LastThinkQTime == Game.NumQuantumFixedTimeUpdates && Brain.ThinkCountPerFrame > 4)
             {
+                Logger.Warn($"Tried to schedule too many thinks on the same frame. Frame: {Game.NumQuantumFixedTimeUpdates}, " +
+                    $"Agent: {Owner}, Think count: {Brain?.ThinkCountPerFrame}");
                 return false;
             }
 
-            if (_brain == null)
-            {
-                return false;
-            }
-
-            var notExceeded = true;
-
-            if (elapsed == TimeSpan.Zero)
-            {   
-                // ToDo: Fill me in we are looking up timesteps in the game object 
-            }
-
-            return notExceeded;
+            return true;
         }
     }
 }

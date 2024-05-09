@@ -13,6 +13,8 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         private short _curState;
         private PState[] _states = new PState[MaxConcurrentStates];
         private ProceduralAIProfilePrototype _procedurealProfile;
+        public ulong LastThinkQTime { get; set; }
+        public uint ThinkCountPerFrame { get; set; }
 
         public void StopOwnerLocomotor()
         {
