@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -20,7 +21,7 @@ namespace MHServerEmu.Games.Entities
         HasAttachedEntities         = 1 << 3
     }
 
-    public class EnterGameWorldArchive
+    public class EnterGameWorldArchive : ISerialize
     {
         private const int LocoFlagCount = 12;
 
@@ -35,7 +36,7 @@ namespace MHServerEmu.Games.Entities
         private uint _avatarWorldInstanceId;
         private List<ulong> _attachedEntityList = new();
 
-        public AOINetworkPolicyValues ReplicationPolicy { get => _replicationPolicy; }
+        public AOINetworkPolicyValues ReplicationPolicy { get => _replicationPolicy; set => _replicationPolicy = value; }
         public ulong EntityId { get => _entityId; set => _entityId = value; }
         public LocomotionMessageFlags LocoFieldFlags { get => _locoFieldFlags; set => _locoFieldFlags = value; }
         public EnterGameWorldMessageFlags ExtraFieldFlags { get => _extraFieldFlags; set => _extraFieldFlags = value; }
@@ -57,6 +58,49 @@ namespace MHServerEmu.Games.Entities
             _orientation = new(orientation, 0f, 0f);
             _locomotionState = new(moveSpeed);
             _avatarWorldInstanceId = 1;
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            success &= Serializer.Transfer(archive, ref _entityId);
+
+            // This archive contains additional flags combined with LocomotionMessageFlags in a single 32-bit value
+            // TODO: build flags
+            uint flags = (uint)_locoFieldFlags | ((uint)_extraFieldFlags << LocoFlagCount);
+            success &= Serializer.Transfer(archive, ref flags);
+            _locoFieldFlags = (LocomotionMessageFlags)(flags & 0xFFF);
+            _extraFieldFlags = (EnterGameWorldMessageFlags)(flags >> LocoFlagCount);
+
+            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
+                success &= Serializer.Transfer(archive, ref _entityPrototypeRef);
+
+            success &= Serializer.TransferVectorFixed(archive, ref _position, 3);
+
+            bool yawOnly = _locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+            success &= Serializer.TransferOrientationFixed(archive, ref _orientation, yawOnly, 6);
+
+            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+            {
+                if (archive.IsPacking)
+                    success &= LocomotionState.SerializeTo(archive, _locomotionState, _locoFieldFlags);
+                else
+                {
+                    if (_locomotionState == null) _locomotionState = new();
+                    success &= LocomotionState.SerializeFrom(archive, _locomotionState, _locoFieldFlags);
+                }
+            }
+
+            if (_extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAvatarWorldInstanceId))
+                success &= Serializer.Transfer(archive, ref _avatarWorldInstanceId);
+
+            // TODO: IsNewOnServer, IsClientEntityHidden
+
+            if (_extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
+                success &= Serializer.Transfer(archive, ref _attachedEntityList);
+
+            return success;
         }
 
         public void Decode(CodedInputStream stream)
@@ -128,12 +172,10 @@ namespace MHServerEmu.Games.Entities
 
         public ByteString ToByteString()
         {
-            using (MemoryStream ms = new())
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                Encode(cos);
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
+                Serialize(archive);
+                return archive.ToByteString();
             }
         }
 
