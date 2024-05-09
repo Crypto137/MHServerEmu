@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // Entity
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.LocomotionState = new(0f);
+            BaseData.LocomotionState = new();
             BaseData.EntityId = entityId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc | EntityCreateMessageFlags.HasAvatarWorldInstanceId;

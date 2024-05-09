@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
             EntityId = entityId;
             EntityPrototypeRef = prototypeId;
-            LocomotionState = new(0f);
+            LocomotionState = new();
 
             FieldFlags = EntityCreateMessageFlags.None;
             LocoFieldFlags = LocomotionMessageFlags.None;

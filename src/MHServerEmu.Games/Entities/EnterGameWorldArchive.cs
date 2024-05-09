@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Entities
             _extraFieldFlags = EnterGameWorldMessageFlags.HasAvatarWorldInstanceId;
             _position = position;
             _orientation = new(orientation, 0f, 0f);
-            _locomotionState = new(moveSpeed);
+            _locomotionState = new() { BaseMoveSpeed = moveSpeed };
             _avatarWorldInstanceId = 1;
         }
 
