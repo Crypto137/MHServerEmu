@@ -29,7 +29,10 @@ namespace MHServerEmu.Games.Behavior
         {
             if (Owner != null)
             {
-                if(!Owner.IsInWorld || Owner.IsSimulated || Owner.TestStatus(EntityStatus.PendingDestroy) || Owner.TestStatus(EntityStatus.Destroyed))
+                if(!Owner.IsInWorld ||
+                    Owner.IsSimulated || 
+                    Owner.TestStatus(EntityStatus.PendingDestroy) || 
+                    Owner.TestStatus(EntityStatus.Destroyed))
                 {
                     return false;
                 }
@@ -114,15 +117,15 @@ namespace MHServerEmu.Games.Behavior
                 OnAIEnabled();
             }
 
-            onAIDisabled();
+            OnAIDisabled();
         }
         
-        private void onAIDisabled()
+        private void OnAIDisabled()
         {
             throw new NotImplementedException();
         }
         
-        private bool hasNotExceededMaxThinksPerFrame(TimeSpan elapsed)
+        private bool HasNotExceededMaxThinksPerFrame(TimeSpan elapsed)
         {
             if (Game == null)
             {
