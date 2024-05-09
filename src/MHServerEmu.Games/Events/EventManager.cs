@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnUseInteractableObject(PlayerConnection playerConnection, Entity interactObject)
         {
-            var proto = interactObject.BaseData.PrototypeId;
+            var proto = interactObject.BaseData.EntityPrototypeRef;
             Logger.Trace($"UseInteractableObject {GameDatabase.GetPrototypeName(proto)}");
 
             if (proto == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
@@ -182,7 +182,7 @@ namespace MHServerEmu.Games.Events
         private void OnPreInteractPower(PlayerConnection playerConnection, Entity interactObject)
         {
             ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-            PrototypeId proto = interactObject.BaseData.PrototypeId;
+            PrototypeId proto = interactObject.BaseData.EntityPrototypeRef;
             var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
             if (world == null) return;
             var preIteractPower = world.PreInteractPower;
@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.Events
         private void OnPreInteractPowerEnd(PlayerConnection playerConnection, Entity interactObject)
         {
             ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-            PrototypeId proto = interactObject.BaseData.PrototypeId;
+            PrototypeId proto = interactObject.BaseData.EntityPrototypeRef;
             var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
             if (world == null) return;
             PrototypeId preIteractPower = world.PreInteractPower;

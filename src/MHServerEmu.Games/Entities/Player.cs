@@ -105,11 +105,11 @@ namespace MHServerEmu.Games.Entities
             // Base Data
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.EntityId = 14646212;
-            BaseData.PrototypeId = (PrototypeId)18307315963852687724;
-            BaseData.FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasDbId;
+            BaseData.EntityPrototypeRef = (PrototypeId)18307315963852687724;
+            BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.DbId = 867587;
-            BaseData.LocomotionState = new(0f);
+            BaseData.DbId = 0x20000000000D3D03;
+            BaseData.LocomotionState = new();
 
             // Archive Data
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
@@ -456,22 +456,14 @@ namespace MHServerEmu.Games.Entities
             account.Player.RawAvatar = (long)CurrentAvatar.EntityPrototype.DataRef;
             foreach (Avatar avatar in AvatarList)
             {
-                DBAvatar dbAvatar = account.GetAvatar((long)avatar.BaseData.PrototypeId);
+                DBAvatar dbAvatar = account.GetAvatar((long)avatar.BaseData.EntityPrototypeRef);
                 dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
 
                 // Encode key mapping
-                var abilityKeyMapping = avatar.CurrentAbilityKeyMapping;
-
-                BoolEncoder boolEncoder = new();
-                abilityKeyMapping.EncodeBools(boolEncoder);
-                boolEncoder.Cook();
-
-                using (MemoryStream ms = new())
+                using (Archive archive = new(ArchiveSerializeType.Database))
                 {
-                    CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                    abilityKeyMapping.Encode(cos, boolEncoder);
-                    cos.Flush();
-                    dbAvatar.RawAbilityKeyMapping = ms.ToArray();
+                    avatar.CurrentAbilityKeyMapping.Serialize(archive);
+                    dbAvatar.RawAbilityKeyMapping = archive.AccessAutoBuffer().ToArray();
                 }
             }
         }
@@ -537,7 +529,7 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public IEnumerable<PrototypeId> GetStashInventoryProtoRefs(bool getLocked, bool getUnlocked)
         {
-            var playerProto = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.PrototypeId);
+            var playerProto = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.EntityPrototypeRef);
             if (playerProto == null) yield break;
             if (playerProto.StashInventories == null) yield break;
 
@@ -713,16 +705,14 @@ namespace MHServerEmu.Games.Entities
 
             foreach (Avatar avatar in AvatarList)
             {
-                if (avatar.BaseData.PrototypeId == prototypeId)
+                if (avatar.BaseData.EntityPrototypeRef == prototypeId)
                 {
+                    avatar.BaseData.InvLoc.Set(Id, (PrototypeId)9555311166682372646, 0);
                     CurrentAvatar = avatar;
-                    avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)9555311166682372646;
-                    avatar.BaseData.InvLoc.Slot = 0;
                     continue;
                 }
 
-                avatar.BaseData.InvLoc.InventoryRef = (PrototypeId)5235960671767829134;
-                avatar.BaseData.InvLoc.Slot = librarySlot++;
+                avatar.BaseData.InvLoc.Set(Id, (PrototypeId)5235960671767829134, librarySlot++);
             }
         }
 

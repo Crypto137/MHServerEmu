@@ -65,7 +65,7 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
-            var avatar = (AvatarPrototypeId)playerConnection.Player.CurrentAvatar.BaseData.PrototypeId;
+            var avatar = (AvatarPrototypeId)playerConnection.Player.CurrentAvatar.BaseData.EntityPrototypeRef;
             switch (avatar)
             {
                 case AvatarPrototypeId.BlackPanther:

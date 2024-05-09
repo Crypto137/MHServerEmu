@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -262,7 +263,10 @@ namespace MHServerEmu.Games.Network
             var updateAvatarState = message.As<NetMessageUpdateAvatarState>();
             if (updateAvatarState == null) return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to retrieve message");
 
-            UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
+            UpdateAvatarStateArchive avatarState = new();
+            using (Archive archive = new(ArchiveSerializeType.Replication, updateAvatarState.ArchiveData))
+                avatarState.Serialize(archive);
+
             // Logger spam
             //Logger.Trace(avatarState.ToString());
             //Logger.Trace(avatarState.Position.ToString());
@@ -439,7 +443,7 @@ namespace MHServerEmu.Games.Network
                         .SetOrientation(targetRot.ToNetStructPoint3())
                         .SetCellId(cellid)
                         .SetAreaId(areaid)
-                        .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.PrototypeId)
+                        .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.EntityPrototypeRef)
                         .Build());
 
                     LastPosition = targetPos;

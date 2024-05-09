@@ -98,9 +98,9 @@ namespace MHServerEmu.Games.Entities
         }
 
         public DateTime DeadTime { get; private set; }
-        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
-        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId); }
-        public PrototypeId PrototypeDataRef { get => BaseData.PrototypeId; }
+        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
+        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.EntityPrototypeRef); }
+        public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
@@ -259,7 +259,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             return NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(BaseData.Serialize())
+                .SetBaseData(BaseData.ToByteString())
                 .SetArchiveData(archiveData)
                 .Build();
         }

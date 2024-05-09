@@ -59,17 +59,23 @@ namespace MHServerEmu.Games.Network
             StringBuilder sb = new();
 
             // Parse base data
-            EntityBaseData baseData = new(entityCreate.BaseData);
+            EntityBaseData baseData = new();
+            using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.BaseData))
+            {
+                baseData.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                baseData.Serialize(archive);
+            }
+
             sb.AppendLine($"BaseData: {baseData}");
 
             // Get blueprint for this entity
-            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.PrototypeId);
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.EntityPrototypeRef);
             sb.AppendLine($"Blueprint: {GameDatabase.GetBlueprintName(blueprint.Id)} (bound to {blueprint.RuntimeBindingClassType.Name})");
 
             // Deserialize archive data
             using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData))
             {
-                Entity entity = DummyGame.AllocateEntity(baseData.PrototypeId);
+                Entity entity = DummyGame.AllocateEntity(baseData.EntityPrototypeRef);
                 entity.BaseData = baseData;
                 entity.Serialize(archive);
                 entity.ReplicationPolicy = archive.GetReplicationPolicyEnum();

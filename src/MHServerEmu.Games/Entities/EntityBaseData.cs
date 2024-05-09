@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
@@ -11,113 +12,71 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
-    // Unused flag names from old protocols:
-    // isNewOnServer, initConditionComponent, isClientEntityHidden, startFullInWorldHierarchyUpdate
+    // Unused bool field names from 1.24: initConditionComponent, startFullInWorldHierarchyUpdate
     [Flags]
     public enum EntityCreateMessageFlags : uint
     {
         None                        = 0,
         HasPositionAndOrientation   = 1 << 0,
-        HasActivePowerPrototypeId   = 1 << 1,
-        Flag2                       = 1 << 2,
+        HasActivePowerPrototypeRef  = 1 << 1,
+        IsNewOnServer               = 1 << 2,
         HasSourceEntityId           = 1 << 3,
         HasSourcePosition           = 1 << 4,
-        HasInterestPolicies         = 1 << 5,
+        HasNonProximityInterest     = 1 << 5,
         HasInvLoc                   = 1 << 6,
         HasInvLocPrev               = 1 << 7,
         HasDbId                     = 1 << 8,
         HasAvatarWorldInstanceId    = 1 << 9,
         OverrideSnapToFloorOnSpawn  = 1 << 10,
         HasBoundsScaleOverride      = 1 << 11,
-        Flag12                      = 1 << 12,
-        Flag13                      = 1 << 13,
-        HasUnkVector                = 1 << 14,
-        Flag15                      = 1 << 15
+        IsClientEntityHidden        = 1 << 12,
+        Flag13                      = 1 << 13,  // Unused
+        HasAttachedEntities         = 1 << 14,
+        IgnoreNavi                  = 1 << 15
     }
 
-    public class EntityBaseData
+    public class EntityBaseData : ISerialize
     {
-        // Note: in old client builds (July 2014 and earlier) this used to be a protobuf message with 20+ fields.
-        // It was probably converted to an archive for optimization reasons.
-        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
-        public ulong EntityId { get; set; }
-        public PrototypeId PrototypeId { get; set; }
-        public EntityCreateMessageFlags FieldFlags { get; set; }
-        public LocomotionMessageFlags LocoFieldFlags { get; set; }
-        public AOINetworkPolicyValues InterestPolicies { get; set; }
-        public uint AvatarWorldInstanceId { get; set; }
-        public uint DbId { get; set; }
-        public Vector3 Position { get; set; }
-        public Orientation Orientation { get; set; }
-        public LocomotionState LocomotionState { get; set; }
-        public float BoundsScaleOverride { get; }
-        public ulong SourceEntityId { get; }
-        public Vector3 SourcePosition { get; }
-        public PrototypeId ActivePowerPrototypeId { get; }
-        public InventoryLocation InvLoc { get; set; }
-        public InventoryLocation InvLocPrev { get; set; }
-        public ulong[] UnkVector { get; } = Array.Empty<ulong>();
+        // This used to be a regular protobuf message, but it was converted to archive in 1.25.
+        // This data is deserialized into EntitySettings in GameConnection::handleEntityCreateMessage().
 
-        public EntityBaseData(ByteString data)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
+        private AOINetworkPolicyValues _replicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
+        private ulong _entityId;
+        private PrototypeId _entityPrototypeRef;
+        private EntityCreateMessageFlags _fieldFlags;
+        private LocomotionMessageFlags _locoFieldFlags;
+        private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
+        private uint _avatarWorldInstanceId;
+        private ulong _dbId;
+        private Vector3 _position = Vector3.Zero;
+        private Orientation _orientation = Orientation.Zero;
+        private LocomotionState _locomotionState;
+        private float _boundsScaleOverride;
+        private ulong _sourceEntityId;
+        private Vector3 _sourcePosition = Vector3.Zero;
+        private PrototypeId _activePowerPrototypeRef;
+        private InventoryLocation _invLoc;
+        private InventoryLocation _invLocPrev;
+        private List<ulong> _attachedEntityList = new();
 
-            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            EntityId = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeRef<EntityPrototype>();
-            FieldFlags = (EntityCreateMessageFlags)stream.ReadRawVarint32();
-            LocoFieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
-
-            InterestPolicies = FieldFlags.HasFlag(EntityCreateMessageFlags.HasInterestPolicies)
-                ? (AOINetworkPolicyValues)stream.ReadRawVarint32()
-                : AOINetworkPolicyValues.AOIChannelProximity;    // This defaults to 0x1 if no policies are specified
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
-                AvatarWorldInstanceId = stream.ReadRawVarint32();
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
-                DbId = stream.ReadRawVarint32();
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
-            {
-                Position = new(stream);
-
-                Orientation = LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
-                    ? new(stream)
-                    : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-            }
-
-            if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-            {
-                LocomotionState = new();
-                LocomotionState.Decode(stream, LocoFieldFlags);
-            }
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
-                BoundsScaleOverride = stream.ReadRawZigZagFloat(8);
-            
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
-                SourceEntityId = stream.ReadRawVarint64();
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
-                SourcePosition = new(stream);
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeId))
-                ActivePowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
-                InvLoc = new(stream);
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                InvLocPrev = new(stream);
-
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasUnkVector))
-            {
-                UnkVector = new ulong[stream.ReadRawVarint64()];
-                for (int i = 0; i < UnkVector.Length; i++)
-                    UnkVector[i] = stream.ReadRawVarint64();
-            }
-        }
+        public AOINetworkPolicyValues ReplicationPolicy { get => _replicationPolicy; set => _replicationPolicy = value; }
+        public ulong EntityId { get => _entityId; set => _entityId = value; }
+        public PrototypeId EntityPrototypeRef { get => _entityPrototypeRef; set => _entityPrototypeRef = value; }
+        public EntityCreateMessageFlags FieldFlags { get => _fieldFlags; set => _fieldFlags = value; }
+        public LocomotionMessageFlags LocoFieldFlags { get => _locoFieldFlags; set => _locoFieldFlags = value; }
+        public AOINetworkPolicyValues InterestPolicies { get => _interestPolicies; set => _interestPolicies = value; }
+        public uint AvatarWorldInstanceId { get => _avatarWorldInstanceId; set => _avatarWorldInstanceId = value; }
+        public ulong DbId { get => _dbId; set => _dbId = value; }
+        public Vector3 Position { get => _position; set => _position = value; }
+        public Orientation Orientation { get => _orientation; set => _orientation = value; }
+        public LocomotionState LocomotionState { get => _locomotionState; set => _locomotionState = value; }
+        public float BoundsScaleOverride { get => _boundsScaleOverride; }
+        public ulong SourceEntityId { get => _sourceEntityId; }
+        public Vector3 SourcePosition { get => _sourcePosition; }
+        public PrototypeId ActivePowerPrototypeRef { get => _activePowerPrototypeRef; }
+        public InventoryLocation InvLoc { get => _invLoc; set => _invLoc = value; }
+        public InventoryLocation InvLocPrev { get => _invLocPrev; set => _invLocPrev = value; }
+        public List<ulong> AttachedEntityList { get => _attachedEntityList; }
 
         public EntityBaseData() { }
 
@@ -125,7 +84,7 @@ namespace MHServerEmu.Games.Entities
         {
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
             EntityId = entityId;
-            PrototypeId = prototypeId;
+            EntityPrototypeRef = prototypeId;
             LocomotionState = new(0f);
 
             FieldFlags = EntityCreateMessageFlags.None;
@@ -141,95 +100,251 @@ namespace MHServerEmu.Games.Entities
             if (snap) FieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
         }
 
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            // TODO: build flags
+
+            success &= Serializer.Transfer(archive, ref _entityId);
+            success &= Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref _entityPrototypeRef);
+
+            uint fieldFlags = (uint)_fieldFlags;
+            success &= Serializer.Transfer(archive, ref fieldFlags);
+            _fieldFlags = (EntityCreateMessageFlags)fieldFlags;
+
+            uint locoFieldFlags = (uint)_locoFieldFlags;
+            success &= Serializer.Transfer(archive, ref locoFieldFlags);
+            _locoFieldFlags = (LocomotionMessageFlags)locoFieldFlags;
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest))
+            {
+                uint interestPolicies = (uint)_interestPolicies;
+                success &= Serializer.Transfer(archive, ref interestPolicies);
+                _interestPolicies = (AOINetworkPolicyValues)interestPolicies;
+            }
+            else if (archive.IsUnpacking)
+                _interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
+                success &= Serializer.Transfer(archive, ref _avatarWorldInstanceId);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
+                success &= Serializer.Transfer(archive, ref _dbId);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
+            {
+                success &= Serializer.TransferVectorFixed(archive, ref _position, 3);
+
+                bool yawOnly = _locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+                success &= Serializer.TransferOrientationFixed(archive, ref _orientation, yawOnly, 6);
+            }
+
+            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+            {
+                if (archive.IsPacking)
+                    success &= LocomotionState.SerializeTo(archive, _locomotionState, _locoFieldFlags);
+                else
+                {
+                    if (_locomotionState == null) _locomotionState = new();
+                    success &= LocomotionState.SerializeFrom(archive, _locomotionState, _locoFieldFlags);
+                }
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
+                success &= Serializer.TransferFloatFixed(archive, ref _boundsScaleOverride, 8);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
+                success &= Serializer.Transfer(archive, ref _sourceEntityId);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
+                success &= Serializer.TransferVectorFixed(archive, ref _sourcePosition, 3);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
+                success &= Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref _activePowerPrototypeRef);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
+            {
+                if (archive.IsPacking)
+                    success &= InventoryLocation.SerializeTo(archive, _invLoc);
+                else
+                {
+                    if (_invLoc == null) _invLoc = new();
+                    success &= InventoryLocation.SerializeFrom(archive, _invLoc);
+                }
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
+            {
+                if (archive.IsPacking)
+                    success &= InventoryLocation.SerializeTo(archive, _invLocPrev);
+                else
+                {
+                    if (_invLocPrev == null) _invLocPrev = new();
+                    success &= InventoryLocation.SerializeFrom(archive, _invLocPrev);
+                }
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
+                success &= Serializer.Transfer(archive, ref _attachedEntityList);
+
+            return success;
+        }
+
+        public void Decode(CodedInputStream stream)
+        {
+            _replicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint64();
+            _entityId = stream.ReadRawVarint64();
+            _entityPrototypeRef = stream.ReadPrototypeRef<EntityPrototype>();
+            _fieldFlags = (EntityCreateMessageFlags)stream.ReadRawVarint32();
+            _locoFieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
+
+            _interestPolicies = FieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest)
+                ? (AOINetworkPolicyValues)stream.ReadRawVarint32()
+                : AOINetworkPolicyValues.AOIChannelProximity;
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
+                _avatarWorldInstanceId = stream.ReadRawVarint32();
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
+                _dbId = stream.ReadRawVarint64();
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
+            {
+                _position = new(stream);
+
+                _orientation = _locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
+                    ? new(stream)
+                    : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
+            }
+
+            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+            {
+                _locomotionState = new();
+                _locomotionState.Decode(stream, _locoFieldFlags);
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
+                _boundsScaleOverride = stream.ReadRawZigZagFloat(8);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
+                _sourceEntityId = stream.ReadRawVarint64();
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
+                _sourcePosition = new(stream);
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
+                _activePowerPrototypeRef = stream.ReadPrototypeRef<PowerPrototype>();
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
+            {
+                _invLoc = new();
+                _invLoc.Decode(stream);
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
+            {
+                _invLocPrev = new();
+                _invLocPrev.Decode(stream);
+            }
+
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
+            {
+                _attachedEntityList.Clear();
+                ulong numAttachedEntities = stream.ReadRawVarint64();
+                for (ulong i = 0; i < numAttachedEntities; i++)
+                    _attachedEntityList.Add(stream.ReadRawVarint64());
+            }
+        }
+
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint32((uint)ReplicationPolicy);
-            stream.WriteRawVarint64(EntityId);
-            stream.WritePrototypeRef<EntityPrototype>(PrototypeId);
-            stream.WriteRawVarint32((uint)FieldFlags);
-            stream.WriteRawVarint32((uint)LocoFieldFlags);
+            stream.WriteRawVarint64((ulong)_replicationPolicy);
+            stream.WriteRawVarint64(_entityId);
+            stream.WritePrototypeRef<EntityPrototype>(_entityPrototypeRef);
+            stream.WriteRawVarint32((uint)_fieldFlags);
+            stream.WriteRawVarint32((uint)_locoFieldFlags);
 
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInterestPolicies))
-                stream.WriteRawVarint32((uint)InterestPolicies);
+            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest))
+                stream.WriteRawVarint32((uint)_interestPolicies);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
-                stream.WriteRawVarint32(AvatarWorldInstanceId);
+                stream.WriteRawVarint32(_avatarWorldInstanceId);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
-                stream.WriteRawVarint32(DbId);
+                stream.WriteRawVarint64(_dbId);
 
             // Location
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
             {
-                Position.Encode(stream);
+                _position.Encode(stream);
 
-                if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                    Orientation.Encode(stream);
+                if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
+                    _orientation.Encode(stream);
                 else
-                    stream.WriteRawZigZagFloat(Orientation.Yaw, 6);
+                    stream.WriteRawZigZagFloat(_orientation.Yaw, 6);
             }
 
-            if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-                LocomotionState.Encode(stream, LocoFieldFlags);
+            if (_locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+                _locomotionState.Encode(stream, _locoFieldFlags);
 
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
-                stream.WriteRawZigZagFloat(BoundsScaleOverride, 8);
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
+                stream.WriteRawZigZagFloat(_boundsScaleOverride, 8);
 
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
-                stream.WriteRawVarint64(SourceEntityId);
+            if (_fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
+                stream.WriteRawVarint64(_sourceEntityId);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
-                SourcePosition.Encode(stream);
+                _sourcePosition.Encode(stream);
 
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeId))
-                stream.WritePrototypeRef<PowerPrototype>(ActivePowerPrototypeId);
+            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
+                stream.WritePrototypeRef<PowerPrototype>(_activePowerPrototypeRef);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
-                InvLoc.Encode(stream);
+                _invLoc.Encode(stream);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                InvLocPrev.Encode(stream);
+                _invLocPrev.Encode(stream);
 
-            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasUnkVector))
+            if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
             {
-                stream.WriteRawVarint64((ulong)UnkVector.Length);
-                for (int i = 0; i < UnkVector.Length; i++)
-                    stream.WriteRawVarint64(UnkVector[i]);
+                stream.WriteRawVarint64((ulong)_attachedEntityList.Count);
+                foreach (ulong entityId in _attachedEntityList)
+                    stream.WriteRawVarint64(entityId);
             }
         }
 
-        public ByteString Serialize()
+        public ByteString ToByteString()
         {
-            using (MemoryStream ms = new())
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                Encode(cos);
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
+                Serialize(archive);
+                return archive.ToByteString();
             }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"EntityId: {EntityId}");
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
-            sb.AppendLine($"FieldFlags: {FieldFlags}");
-            sb.AppendLine($"LocoFieldFlags: {LocoFieldFlags}");
-            sb.AppendLine($"InterestPolicies: {InterestPolicies}");
-            sb.AppendLine($"AvatarWorldInstanceId: {AvatarWorldInstanceId}");
-            sb.AppendLine($"DbId: {DbId}");
-            sb.AppendLine($"Position: {Position}");
-            sb.AppendLine($"Orientation: {Orientation}");
-            sb.AppendLine($"LocomotionState: {LocomotionState}");
-            sb.AppendLine($"BoundsScaleOverride: {BoundsScaleOverride}");
-            sb.AppendLine($"SourceEntityId: {SourceEntityId}");
-            sb.AppendLine($"SourcePosition: {SourcePosition}");
-            sb.AppendLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypeName(ActivePowerPrototypeId)}");
-            sb.AppendLine($"InvLoc: {InvLoc}");
-            sb.AppendLine($"InvLocPrev: {InvLocPrev}");
-            for (int i = 0; i < UnkVector.Length; i++) sb.AppendLine($"UnkVector{i}: 0x{UnkVector[i]:X}");
+            sb.AppendLine($"{nameof(_replicationPolicy)}: {_replicationPolicy}");
+            sb.AppendLine($"{nameof(_entityId)}: {_entityId}");
+            sb.AppendLine($"{nameof(_entityPrototypeRef)}: {GameDatabase.GetPrototypeName(_entityPrototypeRef)}");
+            sb.AppendLine($"{nameof(_fieldFlags)}: {_fieldFlags}");
+            sb.AppendLine($"{nameof(_locoFieldFlags)}: {_locoFieldFlags}");
+            sb.AppendLine($"{nameof(_interestPolicies)}: {_interestPolicies}");
+            sb.AppendLine($"{nameof(_avatarWorldInstanceId)}: {_avatarWorldInstanceId}");
+            sb.AppendLine($"{nameof(_dbId)}: 0x{_dbId:X}");
+            sb.AppendLine($"{nameof(_position)}: {_position}");
+            sb.AppendLine($"{nameof(_orientation)}: {_orientation}");
+            sb.AppendLine($"{nameof(_locomotionState)}: {_locomotionState}");
+            sb.AppendLine($"{nameof(_boundsScaleOverride)}: {_boundsScaleOverride}");
+            sb.AppendLine($"{nameof(_sourceEntityId)}: {_sourceEntityId}");
+            sb.AppendLine($"{nameof(_sourcePosition)}: {_sourcePosition}");
+            sb.AppendLine($"{nameof(_activePowerPrototypeRef)}: {GameDatabase.GetPrototypeName(_activePowerPrototypeRef)}");
+            sb.AppendLine($"{nameof(_invLoc)}: {_invLoc}");
+            sb.AppendLine($"{nameof(_invLocPrev)}: {_invLocPrev}");
+            for (int i = 0; i < _attachedEntityList.Count; i++)
+                sb.AppendLine($"{nameof(_attachedEntityList)}[{i}]: {_attachedEntityList[i]}");
             return sb.ToString();
         }
     }
