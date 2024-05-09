@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Despawn : IAIState
+    public class Despawn : IAIState, ISingleton<Despawn>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,11 +25,20 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class DespawnContext : IStateContext
+    public struct DespawnContext : IStateContext
     {
-        public DespawnContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public bool DespawnOwner;
+        public bool DespawnTarget;
+        public bool UseKillInsteadOfDestroy;
+
+        public DespawnContext(AIController ownerController, DespawnContextPrototype proto)
         {
-         
+            OwnerController = ownerController;
+            DespawnOwner = proto.DespawnOwner;
+            DespawnTarget = proto.DespawnTarget;
+            UseKillInsteadOfDestroy = proto.UseKillInsteadOfDestroy;
         }
     }
+
 }

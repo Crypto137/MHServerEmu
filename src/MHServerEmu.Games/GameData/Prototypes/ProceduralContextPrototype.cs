@@ -1,4 +1,8 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Behavior.ProceduralAI;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using Microsoft.VisualBasic;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -88,6 +92,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralAIProfilePrototype : BrainPrototype
     {
+        public static StaticBehaviorReturnType HandleContext<TState, TContext, TContextProto>(ProceduralAI proceduralAI, AIController ownerController,
+            TContextProto contextProto, ProceduralContextPrototype proceduralContext = null)
+            where TContextProto : Prototype
+            where TContext : IStateContext
+            where TState : ISingleton<TState>, IAIState
+        {
+            var context = IStateContext.Create(ownerController, contextProto);
+            return proceduralAI.HandleContext(ISingleton<TState>.Instance, context, proceduralContext);
+        }
     }
 
     public class ProceduralProfileWithTargetPrototype : ProceduralAIProfilePrototype

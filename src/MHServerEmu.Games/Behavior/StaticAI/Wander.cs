@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Wander : IAIState
+    public class Wander : IAIState, ISingleton<Wander>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,21 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class WanderContext : IStateContext
+    public struct WanderContext : IStateContext
     {
-        public WanderContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public WanderBasePointType FromPoint;
+        public MovementSpeedOverride MovementSpeed;
+        public float RangeMax;
+        public float RangeMin;
+
+        public WanderContext(AIController ownerController, WanderContextPrototype proto)
         {
+            OwnerController = ownerController;
+            FromPoint = proto.FromPoint;
+            RangeMax = proto.RangeMax;
+            RangeMin = proto.RangeMin;
+            MovementSpeed = proto.MovementSpeed;
         }
     }
 }

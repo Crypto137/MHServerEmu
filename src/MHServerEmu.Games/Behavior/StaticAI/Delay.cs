@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Delay : IAIState
+    public class Delay : IAIState, ISingleton<Delay>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,18 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class DelayContext : IStateContext
+    public struct DelayContext : IStateContext
     {
-        public DelayContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public int MinDelayMS;
+        public int MaxDelayMS;
+
+        public DelayContext(AIController ownerController, DelayContextPrototype proto)
         {
+            OwnerController = ownerController;
+            MinDelayMS = proto.MinDelayMS;
+            MaxDelayMS = proto.MaxDelayMS;
         }
     }
+
 }

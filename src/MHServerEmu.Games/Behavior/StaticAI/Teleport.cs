@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Teleport : IAIState
+    public class Teleport : IAIState, ISingleton<Teleport>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,16 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class TeleportContext : IStateContext
+    public struct TeleportContext : IStateContext
     {
-        public TeleportContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public TeleportType TeleportType;
+
+        public TeleportContext(AIController ownerController, TeleportContextPrototype proto)
         {
+            OwnerController = ownerController;
+            TeleportType = proto.TeleportType;
         }
     }
+
 }

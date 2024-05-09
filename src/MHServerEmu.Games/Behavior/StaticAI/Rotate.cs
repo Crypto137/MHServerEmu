@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Rotate : IAIState
+    public class Rotate : IAIState, ISingleton<Rotate>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,22 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class RotateContext : IStateContext
+    public struct RotateContext : IStateContext
     {
-        public RotateContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public bool Clockwise;
+        public bool RotateTowardsTarget;
+        public int Degrees;
+        public float SpeedOverride;
+
+        public RotateContext(AIController ownerController, RotateContextPrototype proto)
         {
+            OwnerController = ownerController;
+            Clockwise = proto.Clockwise;
+            RotateTowardsTarget = proto.RotateTowardsTarget;
+            Degrees = proto.Degrees;
+            SpeedOverride = proto.SpeedOverride;
         }
     }
+
 }

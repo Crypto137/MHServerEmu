@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Flee : IAIState
+    public class Flee : IAIState, ISingleton<Flee>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,26 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class FleeContext : IStateContext
+    public struct FleeContext : IStateContext
     {
-        public FleeContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public TimeSpan FleeTime;
+        public float FleeTimeVariance;
+        public float FleeHalfAngle;
+        public float FleeDistanceMin;
+        public bool FleeTowardAllies;
+        public float FleeTowardAlliesPercentChance;
+
+        public FleeContext(AIController ownerController, FleeContextPrototype proto)
         {
+            OwnerController = ownerController;
+            FleeTime = TimeSpan.FromSeconds(proto.FleeTime);
+            FleeTimeVariance = proto.FleeTimeVariance;
+            FleeHalfAngle = proto.FleeHalfAngle;
+            FleeDistanceMin = proto.FleeDistanceMin;
+            FleeTowardAllies = proto.FleeTowardAllies;
+            FleeTowardAlliesPercentChance = proto.FleeTowardAlliesPercentChance;
         }
     }
+
 }

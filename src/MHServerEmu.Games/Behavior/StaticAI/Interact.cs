@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Interact : IAIState
+    public class Interact : IAIState, ISingleton<Interact>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,13 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class InteractContext : IStateContext
+    public struct InteractContext : IStateContext
     {
-        public InteractContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+
+        public InteractContext(AIController ownerController, InteractContextPrototype proto)
         {
+            OwnerController = ownerController;
         }
     }
 }

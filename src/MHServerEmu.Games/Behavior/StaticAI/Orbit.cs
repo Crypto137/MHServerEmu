@@ -1,7 +1,8 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Orbit : IAIState
+    public class Orbit : IAIState, ISingleton<Orbit>
     {
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
@@ -24,10 +25,16 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class OrbitContext : IStateContext
+    public struct OrbitContext : IStateContext
     {
-        public OrbitContext(AIController ownerController) : base(ownerController)
+        public AIController OwnerController { get; set; }
+        public float ThetaInDegrees;
+
+        public OrbitContext(AIController ownerController, OrbitContextPrototype proto)
         {
+            OwnerController = ownerController;
+            ThetaInDegrees = proto.ThetaInDegrees;
         }
     }
+
 }
