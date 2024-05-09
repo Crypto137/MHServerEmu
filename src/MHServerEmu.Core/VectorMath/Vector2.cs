@@ -1,6 +1,4 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Core.VectorMath
 {
@@ -19,18 +17,6 @@ namespace MHServerEmu.Core.VectorMath
         {
             X = x;
             Y = y;
-        }
-
-        public Vector2(CodedInputStream stream, int precision = 3)
-        {
-            X = stream.ReadRawZigZagFloat(precision);
-            Y = stream.ReadRawZigZagFloat(precision);
-        }
-
-        public void Encode(CodedOutputStream stream, int precision = 3)
-        {
-            stream.WriteRawZigZagFloat(X, precision);
-            stream.WriteRawZigZagFloat(Y, precision);
         }
 
         public NetStructPoint2 ToNetStructPoint2() => NetStructPoint2.CreateBuilder().SetX(X).SetY(Y).Build();

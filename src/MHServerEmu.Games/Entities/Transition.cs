@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -89,32 +88,6 @@ namespace MHServerEmu.Games.Entities
             success &= Serializer.Transfer(archive, ref _destinationList);
 
             return success;
-        }
-
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-
-            _transitionName = stream.ReadRawString();
-
-            _destinationList.Clear();
-            uint numDestinations = stream.ReadRawVarint32();
-            for (uint i = 0; i < numDestinations; i++)
-            {
-                Destination destination = new();
-                destination.Decode(stream);
-                _destinationList.Add(destination);
-            }
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-
-            stream.WriteRawString(_transitionName);
-            stream.WriteRawVarint32((uint)_destinationList.Count);
-            foreach (Destination destination in _destinationList)
-                destination.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Network;
@@ -30,18 +29,6 @@ namespace MHServerEmu.Games.Properties
             
             success &= base.SerializeWithDefault(archive, defaultCollection);
             return success;
-        }
-
-        public override void Decode(CodedInputStream stream)
-        {
-            _replicationId = stream.ReadRawVarint64();
-            base.Decode(stream);
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64(_replicationId);
-            base.Encode(stream);
         }
 
         public override string ToString()

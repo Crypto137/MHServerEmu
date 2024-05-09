@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -28,33 +26,6 @@ namespace MHServerEmu.Games.UI.Widgets
             // UIWidgetReadyCheck::calculateNumberReady()
             
             return success;
-        }
-
-        public override void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            base.Decode(stream, boolDecoder);
-
-            _playerReadyStateDict.Clear();
-            ulong numStates = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numStates; i++)
-            {
-                ulong key = stream.ReadRawVarint64();
-                PlayerReadyState readyState = new();
-                readyState.Decode(stream);
-                _playerReadyStateDict.Add(key, readyState);
-            }
-        }
-
-        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            base.Encode(stream, boolEncoder);
-
-            stream.WriteRawVarint64((ulong)_playerReadyStateDict.Count);
-            foreach (var kvp in _playerReadyStateDict)
-            {
-                stream.WriteRawVarint64(kvp.Key);
-                kvp.Value.Encode(stream);
-            }
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -104,18 +75,6 @@ namespace MHServerEmu.Games.UI.Widgets
                 }
 
                 return success;
-            }
-
-            public void Decode(CodedInputStream stream)
-            {
-                PlayerName = stream.ReadRawString();
-                StateValue = (PlayerReadyStateValue)stream.ReadRawInt32();
-            }
-
-            public void Encode(CodedOutputStream stream)
-            {
-                stream.WriteRawString(PlayerName);
-                stream.WriteRawInt32((int)StateValue);
             }
 
             public override string ToString()

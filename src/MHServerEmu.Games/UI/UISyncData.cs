@@ -1,12 +1,9 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.UI
 {
@@ -65,23 +62,6 @@ namespace MHServerEmu.Games.UI
 
             return success;
         }
-
-        public virtual void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            _areaList.Clear();
-            int numAreas = stream.ReadRawInt32();
-            for (int i = 0; i < numAreas; i++)
-                _areaList.Add(stream.ReadPrototypeRef<Prototype>());
-        }
-
-        public virtual void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            stream.WriteRawInt32(_areaList.Count);
-            foreach (PrototypeId areaRef in _areaList)
-                stream.WritePrototypeRef<Prototype>(areaRef);
-        }
-
-        public virtual void EncodeBools(BoolEncoder boolEncoder) { }
 
         public virtual void UpdateUI() { }
 

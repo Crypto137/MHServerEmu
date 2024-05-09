@@ -302,8 +302,9 @@ namespace MHServerEmu.Games.Network
 
             if (avatarState.FieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && currentAvatar.Locomotor != null)
             {
+                // TODO: Deserialize straight into a copy of the existing state using LocomotionState.SerializeFrom()
                 LocomotionState locomotionState = new(currentAvatar.Locomotor.LastSyncState);
-                locomotionState.StateFrom(avatarState.LocomotionState); // LocomotionState.SerializeFrom
+                locomotionState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
                 currentAvatar.Locomotor.SetSyncState(locomotionState, position, orientation);
             }
 

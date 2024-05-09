@@ -563,48 +563,6 @@ namespace MHServerEmu.Games.Properties
             return success;
         }
 
-        #region REMOVEME: Old Serialization
-
-        /// <summary>
-        /// Decodes <see cref="PropertyCollection"/> data from a <see cref="CodedInputStream"/>.
-        /// </summary>
-        public virtual void Decode(CodedInputStream stream)
-        {
-            uint propertyCount = stream.ReadRawUInt32();
-            for (int i = 0; i < propertyCount; i++)
-            {
-                PropertyId id = new(stream.ReadRawVarint64().ReverseBytes());   // Id is reversed so that it can be efficiently encoded into varint when all params are 0
-                PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
-                PropertyValue value = ConvertBitsToValue(stream.ReadRawVarint64(), info.DataType);
-                SetPropertyValue(id, value, SetPropertyFlags.Flag0);
-            }
-        }
-
-        /// <summary>
-        /// Encodes <see cref="PropertyCollection"/> data to a <see cref="CodedOutputStream"/>.
-        /// </summary>
-        public virtual void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawUInt32((uint)_baseList.Count);
-            foreach (var kvp in _baseList)
-                OLD_SerializePropertyForPacking(kvp, stream);
-        }
-
-        /// <summary>
-        /// Serializes a key/value pair of <see cref="PropertyId"/> and <see cref="PropertyValue"/> to a <see cref="CodedOutputStream"/>.
-        /// </summary>
-        protected static bool OLD_SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
-        {
-            // TODO: Serialize only properties that are different from the base collection for replication 
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-            ulong valueBits = ConvertValueToBits(kvp.Value, info.DataType);
-            stream.WriteRawVarint64(kvp.Key.Raw.ReverseBytes());
-            stream.WriteRawVarint64(valueBits);
-            return true;
-        }
-
-        #endregion
-
         /// <summary>
         /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.

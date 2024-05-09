@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -68,27 +67,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            if (_currentConditionDict.Count > 0)
-                Logger.Warn($"Decode(): _currentConditionDict is not empty");
-
-            uint numConditions = stream.ReadRawVarint32();
-            for (ulong i = 0; i < numConditions; i++)
-            {
-                Condition condition = new();
-                condition.Decode(stream);
-                InsertCondition(condition);
-            }
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint32((uint)_currentConditionDict.Count);
-            foreach (Condition condition in _currentConditionDict.Values)
-                condition.Encode(stream);
         }
 
         /// <summary>

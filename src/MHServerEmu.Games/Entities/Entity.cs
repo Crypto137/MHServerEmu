@@ -169,8 +169,8 @@ namespace MHServerEmu.Games.Entities
         public Entity(EntityBaseData baseData, ByteString archiveData)
         {
             BaseData = baseData;
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData.ToByteArray());
-            Decode(stream);
+            using (Archive archive = new(ArchiveSerializeType.Replication, archiveData))
+                Serialize(archive);
         }
 
         public Entity(Game game)
@@ -224,29 +224,6 @@ namespace MHServerEmu.Games.Entities
         {
             PropertyCollection defaultCollection = null;    // TODO: Get the default collection from the prototype
             return Properties.SerializeWithDefault(archive, defaultCollection);
-        }
-
-        protected virtual void Decode(CodedInputStream stream)
-        {
-            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            Properties.Decode(stream);
-        }
-
-        public virtual void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint32((uint)ReplicationPolicy);
-            Properties.Encode(stream);
-        }
-
-        public ByteString OLD_Serialize()
-        {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                Encode(cos);
-                cos.Flush();
-                return ByteString.CopyFrom(ms.ToArray());
-            }
         }
 
         public NetMessageEntityCreate ToNetMessageEntityCreate()

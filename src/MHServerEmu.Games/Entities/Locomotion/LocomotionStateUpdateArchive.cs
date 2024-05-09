@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -55,44 +54,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 success &= LocomotionState.SerializeFrom(archive, _locomotionState, _fieldFlags);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _replicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
-            _entityId = stream.ReadRawVarint64();
-            _fieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
-
-            if (_fieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
-                _entityPrototypeRef = stream.ReadPrototypeRef<EntityPrototype>();
-
-            Position = new(stream);
-
-            _orientation = _fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
-                ? new(stream)
-                : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-
-            _locomotionState = new();
-            _locomotionState.Decode(stream, FieldFlags);
-        }
-            
-        public void Encode(CodedOutputStream cos)
-        {
-            cos.WriteRawVarint64((ulong)_replicationPolicy);
-            cos.WriteRawVarint64(_entityId);
-            cos.WriteRawVarint32((uint)_fieldFlags);
-
-            if (_fieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
-                cos.WritePrototypeRef<EntityPrototype>(_entityPrototypeRef);
-
-            _position.Encode(cos, 3);
-
-            if (_fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                _orientation.Encode(cos, 6);
-            else
-                cos.WriteRawZigZagFloat(_orientation.Yaw, 6);
-
-            _locomotionState.Encode(cos, _fieldFlags);
         }
 
         public ByteString ToByteString()

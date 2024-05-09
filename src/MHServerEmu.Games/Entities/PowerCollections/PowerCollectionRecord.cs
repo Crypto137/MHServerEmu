@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -209,95 +207,6 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 success &= Serializer.Transfer(archive, ref _powerRefCount);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream, PowerCollectionRecord previousRecord)
-        {
-            _powerProto = stream.ReadPrototypeRef<PowerPrototype>().As<PowerPrototype>();
-
-            var flags = (SerializationFlags)stream.ReadRawVarint32();
-
-            int powerRank = flags.HasFlag(SerializationFlags.PowerRankIsZero) ? 0 : (int)stream.ReadRawVarint32();
-
-            // CharacterLevel
-            int characterLevel;
-            if (flags.HasFlag(SerializationFlags.CharacterLevelIsOne))
-                characterLevel = 1;
-            else if (flags.HasFlag(SerializationFlags.CharacterLevelIsFromPreviousRecord))
-                characterLevel = previousRecord._indexProps.CharacterLevel;
-            else
-                characterLevel = (int)stream.ReadRawVarint32();
-
-            // CombatLevel
-            int combatLevel;
-            if (flags.HasFlag(SerializationFlags.CombatLevelIsSameAsCharacterLevel))
-                combatLevel = _indexProps.CharacterLevel;
-            else if (flags.HasFlag(SerializationFlags.CombatLevelIsOne))
-                combatLevel = 1;
-            else if (flags.HasFlag(SerializationFlags.CombatLevelIsFromPreviousRecord))
-                combatLevel = previousRecord._indexProps.CombatLevel;
-            else
-                combatLevel = (int)stream.ReadRawVarint32();
-
-            int itemLevel = flags.HasFlag(SerializationFlags.ItemLevelIsOne) ? 1 : (int)stream.ReadRawVarint32();
-            float itemVariation = flags.HasFlag(SerializationFlags.ItemVariationIsOne) ? 1.0f : stream.ReadRawFloat();
-
-            _indexProps = new(powerRank, characterLevel, combatLevel, itemLevel, itemVariation);
-
-            _powerRefCount = flags.HasFlag(SerializationFlags.PowerRefCountIsOne) ? 1 : stream.ReadRawVarint32();
-        }
-
-        public void Encode(CodedOutputStream stream, PowerCollectionRecord previousRecord)
-        {
-            // Build serialization flags
-            SerializationFlags flags = SerializationFlags.None;
-
-            if (_powerRefCount == 1)
-                flags |= SerializationFlags.PowerRefCountIsOne;
-
-            if (_indexProps.PowerRank == 0)
-                flags |= SerializationFlags.PowerRankIsZero;
-
-            if (_indexProps.CharacterLevel == 1)
-                flags |= SerializationFlags.CharacterLevelIsOne;
-            else if (previousRecord != null && _indexProps.CharacterLevel == previousRecord._indexProps.CharacterLevel)
-                flags |= SerializationFlags.CharacterLevelIsFromPreviousRecord;
-
-            if (_indexProps.CombatLevel == _indexProps.CharacterLevel)
-                flags |= SerializationFlags.CombatLevelIsSameAsCharacterLevel;
-            else if (_indexProps.CombatLevel == 1)
-                flags |= SerializationFlags.CombatLevelIsOne;
-            else if (previousRecord != null && _indexProps.CombatLevel == previousRecord._indexProps.CombatLevel)
-                flags |= SerializationFlags.CombatLevelIsFromPreviousRecord;
-
-            if (_indexProps.ItemLevel == 1)
-                flags |= SerializationFlags.ItemLevelIsOne;
-
-            if (_indexProps.ItemVariation == 1.0f)
-                flags |= SerializationFlags.ItemVariationIsOne;
-
-            // Write data
-            stream.WritePrototypeRef<PowerPrototype>(PowerPrototypeRef);
-            stream.WriteRawVarint32((uint)flags);
-
-            if (flags.HasFlag(SerializationFlags.PowerRankIsZero) == false)
-                stream.WriteRawVarint32((uint)_indexProps.PowerRank);
-
-            if (flags.HasFlag(SerializationFlags.CharacterLevelIsOne) == false && flags.HasFlag(SerializationFlags.CharacterLevelIsFromPreviousRecord) == false)
-                stream.WriteRawVarint32((uint)_indexProps.CharacterLevel);
-
-            if (flags.HasFlag(SerializationFlags.CombatLevelIsOne) == false && flags.HasFlag(SerializationFlags.CombatLevelIsFromPreviousRecord) == false
-                && flags.HasFlag(SerializationFlags.CombatLevelIsSameAsCharacterLevel) == false)
-                stream.WriteRawVarint32((uint)_indexProps.CombatLevel);
-
-            if (flags.HasFlag(SerializationFlags.ItemLevelIsOne) == false)
-                stream.WriteRawVarint32((uint)_indexProps.ItemLevel);
-
-            if (flags.HasFlag(SerializationFlags.ItemVariationIsOne) == false)
-                stream.WriteRawFloat(_indexProps.ItemVariation);
-
-            if (flags.HasFlag(SerializationFlags.PowerRefCountIsOne) == false)
-                stream.WriteRawVarint32(_powerRefCount);
         }
 
         public override string ToString()

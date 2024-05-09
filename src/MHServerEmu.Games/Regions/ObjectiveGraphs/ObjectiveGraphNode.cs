@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -56,42 +55,6 @@ namespace MHServerEmu.Games.Regions.ObjectiveGraphs
             _type = (ObjectiveGraphType)type;
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _id = stream.ReadRawVarint64();
-            _position = new(stream);
-
-            _areaList.Clear();
-            ulong numAreas = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numAreas; i++)
-                _areaList.Add(stream.ReadRawVarint64());
-            _areaList.Sort();  // The client uses a sorted vector, does this actually need to be sorted?
-
-            _cellList.Clear();
-            ulong numCells = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numCells; i++)
-                _cellList.Add(stream.ReadRawVarint64());
-            _cellList.Sort();  // See above ^
-
-            _type = (ObjectiveGraphType)stream.ReadRawVarint32();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64(_id);
-            _position.Encode(stream);
-
-            stream.WriteRawVarint64((ulong)_areaList.Count);
-            foreach (ulong area in _areaList)
-                stream.WriteRawVarint64(area);
-
-            stream.WriteRawVarint64((ulong)_cellList.Count);
-            foreach (ulong cell in _cellList)
-                stream.WriteRawVarint64(cell);
-
-            stream.WriteRawVarint32((uint)_type);
         }
 
         public override string ToString()

@@ -1,6 +1,4 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Core.VectorMath
@@ -67,19 +65,6 @@ namespace MHServerEmu.Core.VectorMath
             }
         }
 
-        public Orientation(CodedInputStream stream, int precision = 6)
-        {
-            Yaw = stream.ReadRawZigZagFloat(precision);
-            Pitch = stream.ReadRawZigZagFloat(precision);
-            Roll = stream.ReadRawZigZagFloat(precision);
-        }
-
-        public void Encode(CodedOutputStream stream, int precision = 6)
-        {
-            stream.WriteRawZigZagFloat(Yaw, precision);
-            stream.WriteRawZigZagFloat(Pitch, precision);
-            stream.WriteRawZigZagFloat(Roll, precision);
-        }
         public NetStructPoint3 ToNetStructPoint3() => NetStructPoint3.CreateBuilder().SetX(Yaw).SetY(Pitch).SetZ(Roll).Build();
 
         public static Orientation operator +(Orientation a, Orientation b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch, a.Roll + b.Roll);

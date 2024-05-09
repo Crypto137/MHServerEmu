@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Entities
                 FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc,
                 InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner,
                 LocoFieldFlags = LocomotionMessageFlags.None,
-                LocomotionState = new(0f),
+                LocomotionState = new(),
                 InvLoc = invLoc
             };
 

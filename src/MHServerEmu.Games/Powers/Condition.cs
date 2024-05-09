@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
@@ -281,94 +279,6 @@ namespace MHServerEmu.Games.Powers
             }
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _serializationFlags = (ConditionSerializationFlags)stream.ReadRawVarint32();
-            _id = stream.ReadRawVarint64();
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorId) == false)
-                _creatorId = stream.ReadRawVarint64();
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoUltimateCreatorId) == false)
-                _ultimateCreatorId = stream.ReadRawVarint64();
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeRef) == false)
-                _conditionPrototypeRef = stream.ReadPrototypeRef<Prototype>();
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeRef) == false)
-                _creatorPowerPrototypeRef = stream.ReadPrototypeRef<Prototype>();
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCreatorPowerIndex))
-                _creatorPowerIndex = (int)stream.ReadRawVarint32();
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRef)
-                && SerializationFlags.HasFlag(ConditionSerializationFlags.OwnerAssetRefOverride))
-                _ownerAssetRef = (AssetId)stream.ReadRawVarint64();
-
-            _startTime = TimeSpan.FromMilliseconds(stream.ReadRawInt64() + 1);  // 1 == gamestarttime
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasPauseTime))
-                _pauseTime = TimeSpan.FromMilliseconds(stream.ReadRawInt64() + 1);  // 1 == gamestarttime
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasDuration))
-                _duration = stream.ReadRawInt64();
-
-            // For some reason _isEnabled is not updated during deserialization in the client.
-            // ConditionCollection does call Condition::serializationFlagIsDisabled() during OnUnpackComplete() though.
-            //_isEnabled = _serializationFlags.HasFlag(ConditionSerializationFlags.IsDisabled) == false;
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
-                _updateIntervalMS = stream.ReadRawInt32();
-
-            _properties.Decode(stream);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
-                _cancelOnFlags = (ConditionCancelOnFlags)stream.ReadRawVarint32();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            // TODO: Generate serialization flags on serialization
-
-            stream.WriteRawVarint32((uint)_serializationFlags);
-            stream.WriteRawVarint64(_id);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorId) == false)
-                stream.WriteRawVarint64(_creatorId);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoUltimateCreatorId) == false)
-                stream.WriteRawVarint64(_ultimateCreatorId);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeRef) == false)
-                stream.WritePrototypeRef<Prototype>(_conditionPrototypeRef);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeRef) == false)
-                stream.WritePrototypeRef<Prototype>(_creatorPowerPrototypeRef);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCreatorPowerIndex))
-                stream.WriteRawVarint32((uint)_creatorPowerIndex);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRef)
-                && _serializationFlags.HasFlag(ConditionSerializationFlags.OwnerAssetRefOverride))
-                stream.WriteRawVarint64((ulong)_ownerAssetRef);
-
-            stream.WriteRawInt64((long)_startTime.TotalMilliseconds - 1);   // 1 == gamestarttime
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasPauseTime))
-                stream.WriteRawInt64((long)_pauseTime.TotalMilliseconds - 1);    // 1 == gamestarttime
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasDuration))
-                stream.WriteRawInt64(_duration);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
-                stream.WriteRawInt32(_updateIntervalMS);
-
-            _properties.Encode(stream);
-
-            if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
-                stream.WriteRawVarint32((uint)CancelOnFlags);
         }
 
         public bool InitializeFromPowerMixinPrototype(ulong conditionId, PrototypeId creatorPowerPrototypeRef, int creatorPowerIndex, TimeSpan duration,

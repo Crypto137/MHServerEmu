@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Navi
@@ -21,47 +19,12 @@ namespace MHServerEmu.Games.Navi
 
         public NaviPathNode() { }
 
-        public void Decode(CodedInputStream stream, Vector3 previousVertex)
-        {
-            Vertex = new Vector3(stream, 3) + previousVertex;
-
-            // Vertex side and radius are encoded together in the same value
-            int vertexSideRadius = stream.ReadRawInt32();
-            if (vertexSideRadius < 0)
-            {
-                VertexSide = NaviSide.Left;
-                Radius = -vertexSideRadius;
-            }
-            else if (vertexSideRadius > 0)
-            {
-                VertexSide = NaviSide.Right;
-                Radius = vertexSideRadius;
-            }
-            else /* if (vertexSideRadius == 0) */
-            {
-                VertexSide = NaviSide.Point;
-                Radius = 0f;
-            }
-        }
-
         public NaviPathNode(Vector3 vertex, NaviSide vertexSide, float radius, bool hasInfluence)
         {
             Vertex = vertex;
             VertexSide = vertexSide;
             Radius = radius;
             HasInfluence = hasInfluence;
-        }
-
-        public void Encode(CodedOutputStream stream, Vector3 previousVertex)
-        {
-            Vector3 offset = Vertex - previousVertex;
-            offset.Encode(stream, 3);
-
-            // Combine vertex side with radius
-            int vertexSideRadius = (int)MathF.Round(Radius);
-            if (VertexSide == NaviSide.Left) vertexSideRadius = -vertexSideRadius;
-
-            stream.WriteRawInt32(vertexSideRadius);
         }
 
         public override string ToString()

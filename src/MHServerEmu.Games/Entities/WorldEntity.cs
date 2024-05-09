@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -157,33 +156,6 @@ namespace MHServerEmu.Games.Entities
                 success &= Serializer.Transfer(archive, ref _unkEvent);
 
             return success;
-        }
-
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-
-            _trackingContextMap = new();
-            _trackingContextMap.Decode(stream);
-
-            _conditionCollection = new(this);
-            _conditionCollection.Decode(stream);
-
-            _powerCollection = new(this);
-            _powerCollection.Decode(stream, ReplicationPolicy);
-
-            _unkEvent = stream.ReadRawInt32();
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-
-            _trackingContextMap.Encode(stream);
-            _conditionCollection.Encode(stream);
-            _powerCollection.Encode(stream, ReplicationPolicy);
-
-            stream.WriteRawInt32(_unkEvent);
         }
 
         protected override void BuildString(StringBuilder sb)

@@ -59,20 +59,6 @@ namespace MHServerEmu.Games.MetaGames
             base.Destroy();
         }
 
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-
-            _name.Decode(stream);
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-
-            _name.Encode(stream);
-        }
-
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);

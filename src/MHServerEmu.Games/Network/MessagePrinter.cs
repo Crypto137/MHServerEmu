@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions.Maps;
 
 namespace MHServerEmu.Games.Network
 {
@@ -110,7 +111,14 @@ namespace MHServerEmu.Games.Network
         private static string PrintNetMessageEntityEnterGameWorld(IMessage message)
         {
             var entityEnterGameWorld = (NetMessageEntityEnterGameWorld)message;
-            return $"ArchiveData: {new EnterGameWorldArchive(entityEnterGameWorld.ArchiveData)}";
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, entityEnterGameWorld.ArchiveData))
+            {
+                EnterGameWorldArchive enterGameWorldArchive = new();
+                enterGameWorldArchive.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                enterGameWorldArchive.Serialize(archive);
+                return $"ArchiveData: {enterGameWorldArchive}";
+            }
         }
 
         [PrintMethod(typeof(NetMessageLocomotionStateUpdate))]
@@ -183,7 +191,14 @@ namespace MHServerEmu.Games.Network
         private static string PrintNetMessageUpdateMiniMap(IMessage message)
         {
             var updateMiniMap = (NetMessageUpdateMiniMap)message;
-            return $"ArchiveData: {new MiniMapArchive(updateMiniMap.ArchiveData)}";
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, updateMiniMap.ArchiveData))
+            {
+                MiniMapArchive miniMapArchive = new();
+                miniMapArchive.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                miniMapArchive.Serialize(archive);
+                return $"ArchiveData: {miniMapArchive}";
+            }
         }
 
         #endregion

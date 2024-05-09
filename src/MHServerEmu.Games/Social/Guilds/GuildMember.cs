@@ -1,7 +1,5 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 
@@ -26,31 +24,8 @@ namespace MHServerEmu.Games.Social.Guilds
             return sb.ToString();
         }
 
-        // These two static methods are for serializing Player and Avatar entity guild information,
+        // This static method is for serializing Player and Avatar entity guild information,
         // rather than anything to do with GuildMember instances directly. Client-accurate.
-
-        public static void SerializeReplicationRuntimeInfo(CodedInputStream stream, BoolDecoder boolDecoder,
-            ref ulong guildId, ref string guildName, ref GuildMembership guildMembership)
-        {
-            if (boolDecoder.ReadBool(stream) == false) return;
-
-            guildId = stream.ReadRawVarint64();
-            guildName = stream.ReadRawString();
-            guildMembership = (GuildMembership)stream.ReadRawInt32();
-        }
-
-        public static void SerializeReplicationRuntimeInfo(CodedOutputStream stream, BoolEncoder boolEncoder,
-            ref ulong guildId, ref string guildName, ref GuildMembership guildMembership)
-        {
-            boolEncoder.WriteBuffer(stream);
-            if (guildId == InvalidGuildId) return;
-
-            stream.WriteRawVarint64(guildId);
-            stream.WriteRawString(guildName);
-            stream.WriteRawInt32((int)guildMembership);
-        }
-
-        // new implementation, TODO: remove the two old methods
         public static bool SerializeReplicationRuntimeInfo(Archive archive, ref ulong guildId, ref string guildName, ref GuildMembership guildMembership)
         {
             bool success = true;

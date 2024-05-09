@@ -1,14 +1,11 @@
 ﻿using System.Collections;
 using System.Text;
 using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Social.Communities
 {
@@ -152,87 +149,6 @@ namespace MHServerEmu.Games.Social.Communities
             }
 
             return success;
-        }
-
-        public bool Decode(CodedInputStream stream)
-        {
-            _regionRef = stream.ReadPrototypeRef<Prototype>();
-            _difficultyRef = stream.ReadPrototypeRef<Prototype>();
-
-            byte numSlots = stream.ReadRawByte();
-            Array.Resize(ref _slots, numSlots);
-            for (byte i = 0; i < numSlots; i++)
-            {
-                PrototypeId avatarRef = stream.ReadPrototypeRef<Prototype>();
-                PrototypeId costumeRef = stream.ReadPrototypeRef<Prototype>();
-                int avatarLevel = stream.ReadRawInt32();
-                int prestigeLevel = stream.ReadRawInt32();
-
-                _slots[i] = new(avatarRef, costumeRef, avatarLevel, prestigeLevel);
-            }
-
-            _isOnline = (CommunityMemberOnlineStatus)stream.ReadRawInt32();
-
-            _playerName = stream.ReadRawString();
-            _secondaryPlayerName = stream.ReadRawString();
-            _consoleAccountIds[0] = stream.ReadRawVarint64();
-            _consoleAccountIds[1] = stream.ReadRawVarint64();
-
-            int numCircles = stream.ReadRawInt32();
-            for (int i = 0; i < numCircles; i++)
-            {
-                int archiveCircleId = stream.ReadRawInt32();
-                CommunityCircle circle = Community.CircleManager.GetCircleByArchiveCircleId(archiveCircleId);
-                if (circle == null)
-                    return Logger.ErrorReturn(false, $"Decode(): Circle not found when reading member. archiveCircleId=0x{archiveCircleId:X}, member={this}, community={Community}");
-
-                SetBitForCircle(_systemCircles, circle, true);
-            }
-
-            return true;
-        }
-
-        public bool Encode(CodedOutputStream stream)
-        {
-            stream.WritePrototypeRef<Prototype>(RegionRef);
-            stream.WritePrototypeRef<Prototype>(DifficultyRef);
-
-            stream.WriteRawByte((byte)_slots.Length);
-            foreach (AvatarSlotInfo slot in _slots)
-            {
-                stream.WritePrototypeRef<Prototype>(slot.AvatarRef);
-                stream.WritePrototypeRef<Prototype>(slot.CostumeRef);
-                stream.WriteRawInt32(slot.Level);
-                stream.WriteRawInt32(slot.PrestigeLevel);
-            }
-
-            stream.WriteRawInt32((int)IsOnline);
-            stream.WriteRawString(_playerName);
-            stream.WriteRawString(_secondaryPlayerName);
-            stream.WriteRawVarint64(_consoleAccountIds[0]);
-            stream.WriteRawVarint64(_consoleAccountIds[1]);
-
-            // The whole circle system is such a mess lol
-            int numCircles = 0;
-            foreach (CommunityCircle circle in Community.IterateCircles(this))
-            {
-                if (circle.ShouldArchiveTo(/* archive */))
-                    numCircles++;
-            }
-            stream.WriteRawInt32(numCircles);
-
-            foreach (CommunityCircle circle in Community.IterateCircles(this))
-            {
-                if (circle.ShouldArchiveTo(/* archive */) == false) continue;
-
-                int archiveCircleId = Community.CircleManager.GetArchiveCircleId(circle);
-                if (archiveCircleId == 1)
-                    return Logger.ErrorReturn(false, $"Encode(): Invalid archive circle id returned for circle in archive. circle={circle}");
-
-                stream.WriteRawInt32(archiveCircleId);
-            }
-
-            return true;
         }
 
         public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)

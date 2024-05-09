@@ -1,7 +1,5 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -141,83 +139,6 @@ namespace MHServerEmu.Games.Entities.Options
             success &= Serializer.Transfer(archive, ref _armorRarityVaporizeThresholdDict);
 
             return success;
-        }
-
-        public bool Decode(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            // NOTE: Archives use a different encoding order from protobufs (filters - tabs - options - thresholds)
-
-            // Chat channel filters
-            _chatChannelFilterDict.Clear();
-            ulong numChatChannelFilters = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numChatChannelFilters; i++)
-            {
-                PrototypeId channelProtoId = stream.ReadPrototypeRef<Prototype>();
-                bool isSubscribed = boolDecoder.ReadBool(stream);
-                _chatChannelFilterDict.Add(channelProtoId, isSubscribed);
-            }
-
-            // Chat tab channels
-            Array.Clear(_chatTabChannels);
-            ulong numChatTabChannels = stream.ReadRawVarint64();
-            if (numChatTabChannels > NumChatTabs)
-                return Logger.ErrorReturn(false, $"numChatTabChannels {numChatTabChannels} > NumChatTabs {NumChatTabs}");
-
-            for (int i = 0; i < _chatTabChannels.Length; i++)
-                _chatTabChannels[i] = stream.ReadPrototypeRef<Prototype>();
-
-            // Settings
-            Array.Clear(_optionSettings);
-            ulong numSettings = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numSettings; i++)
-                _optionSettings[i] = (long)stream.ReadRawVarint64();
-
-            // Vaporize thresholds
-            _armorRarityVaporizeThresholdDict.Clear();
-            ulong numVaporizeThresholds = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numVaporizeThresholds; i++)
-            {
-                var slot = (EquipmentInvUISlot)stream.ReadRawVarint64();
-                var rarityPrototypeRef = stream.ReadPrototypeRef<Prototype>();
-                _armorRarityVaporizeThresholdDict[slot] = rarityPrototypeRef;
-            }
-
-            return true;
-        }
-
-        public void EncodeBools(BoolEncoder boolEncoder)
-        {
-            foreach (bool isEnabled in _chatChannelFilterDict.Values)
-                boolEncoder.EncodeBool(isEnabled);
-        }
-
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            // Chat channel filters
-            stream.WriteRawVarint64((ulong)_chatChannelFilterDict.Count);
-            foreach (var kvp in _chatChannelFilterDict)
-            {
-                stream.WritePrototypeRef<Prototype>(kvp.Key);
-                boolEncoder.WriteBuffer(stream);    // isEnabled
-            }
-
-            // Chat tab channels
-            stream.WriteRawVarint64((ulong)_chatTabChannels.Length);
-            foreach (PrototypeId channel in _chatTabChannels)
-                stream.WritePrototypeRef<Prototype>(channel);
-
-            // Settings
-            stream.WriteRawVarint64((ulong)_optionSettings.Length);
-            foreach (long setting in _optionSettings)
-                stream.WriteRawInt64(setting);
-
-            // Vaporize thresholds
-            stream.WriteRawVarint64((ulong)_armorRarityVaporizeThresholdDict.Count);
-            foreach (var kvp in _armorRarityVaporizeThresholdDict)
-            {
-                stream.WriteRawVarint64((ulong)kvp.Key);
-                stream.WritePrototypeRef<Prototype>(kvp.Value);
-            }
         }
 
         /// <summary>

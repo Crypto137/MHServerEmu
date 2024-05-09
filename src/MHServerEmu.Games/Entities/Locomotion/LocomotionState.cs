@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -53,7 +51,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         // NOTE: Due to how LocomotionState serialization is implemented, we should be able to
         // get away with using C# auto properties instead of private fields.
         public LocomotionFlags LocomotionFlags { get; set; }
-        public LocomotorMethod Method { get; set; }
+        public LocomotorMethod Method { get; set; } = LocomotorMethod.Default;
         public float BaseMoveSpeed { get; set; }
         public int Height { get; set; }
         public ulong FollowEntityId { get; set; }
@@ -62,17 +60,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public int PathGoalNodeIndex { get; set; }
         public List<NaviPathNode> PathNodes { get; set; } = new();
 
-        public LocomotionState()
-        {
-            Method = LocomotorMethod.Default;
-            PathNodes = new();
-        }
-
-        public LocomotionState(float baseMoveSpeed)
-        {
-            BaseMoveSpeed = baseMoveSpeed;
-            PathNodes = new();
-        }
+        public LocomotionState() { }
 
         public LocomotionState(LocomotionState other)
         {
@@ -295,6 +283,60 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
+        public void UpdateFrom(LocomotionState update, LocomotionMessageFlags flags)
+        {
+            // TODO Replace with SerializeFrom()
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
+                LocomotionFlags = update.LocomotionFlags;
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                LocomotionFlags = LocomotionFlags.None;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
+                Method = update.Method;
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                Method = LocomotorMethod.Ground;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
+                BaseMoveSpeed = update.BaseMoveSpeed;
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                BaseMoveSpeed = 0f;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
+                Height = update.Height;
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                Height = 0;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
+                FollowEntityId = update.FollowEntityId;
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+                FollowEntityId = 0;
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
+            {
+                FollowEntityRangeStart = update.FollowEntityRangeStart;
+                FollowEntityRangeEnd = update.FollowEntityRangeEnd;
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+            {
+                FollowEntityRangeStart = 0f;
+                FollowEntityRangeEnd = 0f;
+            }
+
+            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
+            {
+                PathGoalNodeIndex = update.PathGoalNodeIndex;
+
+                PathNodes.Clear();
+                PathNodes.AddRange(update.PathNodes);
+            }
+            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
+            {
+                PathGoalNodeIndex = 0;
+                PathNodes.Clear();
+            }
+        }
+
         public static LocomotionMessageFlags GetFieldFlags(LocomotionState currentState, LocomotionState previousState, bool withPathNodes)
         {
             if (currentState == null) return LocomotionMessageFlags.NoLocomotionState;
@@ -367,84 +409,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return flags;
         }
 
-        public void Decode(CodedInputStream stream, LocomotionMessageFlags flags)
-        {
-            PathNodes.Clear();
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
-                LocomotionFlags = (LocomotionFlags)stream.ReadRawVarint64();
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
-                Method = (LocomotorMethod)stream.ReadRawVarint32();
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
-                BaseMoveSpeed = stream.ReadRawZigZagFloat(0);
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
-                Height = (int)stream.ReadRawVarint32();
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
-                FollowEntityId = stream.ReadRawVarint64();
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
-            {
-                FollowEntityRangeStart = stream.ReadRawZigZagFloat(0);
-                FollowEntityRangeEnd = stream.ReadRawZigZagFloat(0);
-            }
-
-            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
-            {
-                PathGoalNodeIndex = (int)stream.ReadRawVarint32();
-                int count = (int)stream.ReadRawVarint64();
-
-                Vector3 previousVertex = Vector3.Zero;
-                for (int i = 0; i < count; i++)
-                {
-                    NaviPathNode pathNode = new();
-                    pathNode.Decode(stream, previousVertex);
-                    previousVertex = pathNode.Vertex;
-                    PathNodes.Add(pathNode);
-                }
-            }
-        }
-
-        public void Encode(CodedOutputStream stream, LocomotionMessageFlags flags)
-        {
-            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
-                stream.WriteRawVarint64((ulong)LocomotionFlags);
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
-                stream.WriteRawVarint32((uint)Method);
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
-                stream.WriteRawZigZagFloat(BaseMoveSpeed, 0);
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
-                stream.WriteRawVarint32((uint)Height);
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
-                stream.WriteRawVarint64(FollowEntityId);
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
-            {
-                stream.WriteRawZigZagFloat(FollowEntityRangeStart, 0);
-                stream.WriteRawZigZagFloat(FollowEntityRangeEnd, 0);
-            }
-
-            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
-            {
-                stream.WriteRawVarint32((uint)PathGoalNodeIndex);
-                stream.WriteRawVarint64((ulong)PathNodes.Count);
-
-                Vector3 previousVertex = Vector3.Zero;
-                foreach (NaviPathNode naviVector in PathNodes)
-                {
-                    naviVector.Encode(stream, previousVertex);
-                    previousVertex = naviVector.Vertex;
-                }
-            }
-        }
-
         public override string ToString()
         {
             StringBuilder sb = new();
@@ -459,12 +423,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
             for (int i = 0; i < PathNodes.Count; i++)
                 sb.AppendLine($"{nameof(PathNodes)}[{i}]: {PathNodes[i]}");
             return sb.ToString();
-        }
-
-        public void StateFrom(LocomotionState locomotionState)
-        {
-            // TODO Replace with SerializeFrom()
-            Set(locomotionState);
         }
 
         public void Set(LocomotionState other)

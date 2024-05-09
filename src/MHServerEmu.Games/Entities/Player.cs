@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
@@ -194,128 +193,6 @@ namespace MHServerEmu.Games.Entities
             success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
 
             return success;
-        }
-
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-
-            BoolDecoder boolDecoder = new();
-
-            _missionManager.Decode(stream, boolDecoder);
-            _avatarProperties.Decode(stream);
-
-            _shardId = stream.ReadRawVarint64();
-
-            _playerName.Decode(stream);
-            _consoleAccountIds[0] = stream.ReadRawVarint64();
-            _consoleAccountIds[1] = stream.ReadRawVarint64();
-            _secondaryPlayerName.Decode(stream);
-
-            _matchQueueStatus.Decode(stream);
-
-            _emailVerified = boolDecoder.ReadBool(stream);
-            _accountCreationTimestamp = new(stream.ReadRawInt64() * 10);
-
-            _partyId.Decode(stream);
-
-            GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
-
-            // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
-            if (stream.ReadRawString() != string.Empty)
-                Logger.Warn($"Decode(): emptyString is not empty!");
-
-            _community = new(this);
-            _community.Initialize();
-            bool hasCommunityData = boolDecoder.ReadBool(stream);
-            if (hasCommunityData) Community.Decode(stream);
-
-            // Unknown bool, always false
-            if (boolDecoder.ReadBool(stream))
-                Logger.Warn($"Decode(): unkBool is true!");
-
-            _unlockedInventoryList.Clear();
-            ulong numUnlockedInventories = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numUnlockedInventories; i++)
-                _unlockedInventoryList.Add(stream.ReadPrototypeRef<Prototype>());
-
-            _badges.Clear();
-            ulong numBadges = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numBadges; i++)
-                _badges.Add((AvailableBadges)stream.ReadRawVarint32());
-
-            _gameplayOptions.Decode(stream, boolDecoder);
-
-            _achievementState.Decode(stream);
-
-            _stashTabOptionsDict.Clear();
-            ulong numStashTabOptions = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numStashTabOptions; i++)
-            {
-                PrototypeId stashTabRef = stream.ReadPrototypeRef<Prototype>();
-                StashTabOptions options = new();
-                options.Decode(stream);
-                _stashTabOptionsDict.Add(stashTabRef, options);
-            }
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-
-            // Prepare bool encoder
-            BoolEncoder boolEncoder = new();
-
-            _missionManager.EncodeBools(boolEncoder);
-
-            boolEncoder.EncodeBool(_emailVerified);
-            boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
-            boolEncoder.EncodeBool(true);   // hasCommunity TODO: Check archive's replication policy and send community only to owners
-            boolEncoder.EncodeBool(false);  // Unknown unused bool, always false
-
-            GameplayOptions.EncodeBools(boolEncoder);
-
-            boolEncoder.Cook();
-
-            // Encode
-            _missionManager.Encode(stream, boolEncoder);
-            _avatarProperties.Encode(stream);
-
-            stream.WriteRawVarint64(_shardId);
-            _playerName.Encode(stream);
-            stream.WriteRawVarint64(_consoleAccountIds[0]);
-            stream.WriteRawVarint64(_consoleAccountIds[1]);
-            _secondaryPlayerName.Encode(stream);
-            _matchQueueStatus.Encode(stream);
-            boolEncoder.WriteBuffer(stream);   // EmailVerified
-            stream.WriteRawInt64(AccountCreationTimestamp.Ticks / 10);
-            _partyId.Encode(stream);
-            GuildMember.SerializeReplicationRuntimeInfo(stream, boolEncoder, ref _guildId, ref _guildName, ref _guildMembership);
-            stream.WriteRawString(string.Empty);    // Mysterious always empty throwaway string
-
-            boolEncoder.WriteBuffer(stream);   // hasCommunity
-            _community.Encode(stream);
-
-            boolEncoder.WriteBuffer(stream);   // UnkBool
-
-            stream.WriteRawVarint64((ulong)_unlockedInventoryList.Count);
-            foreach (PrototypeId unlockedInventory in _unlockedInventoryList)
-                stream.WritePrototypeRef<Prototype>(unlockedInventory);
-
-            stream.WriteRawVarint64((ulong)_badges.Count);
-            foreach (AvailableBadges badge in _badges)
-                stream.WriteRawVarint32((uint)badge);
-
-            GameplayOptions.Encode(stream, boolEncoder);
-
-            AchievementState.Encode(stream);
-
-            stream.WriteRawVarint64((ulong)_stashTabOptionsDict.Count);
-            foreach (var kvp in _stashTabOptionsDict)
-            {
-                stream.WritePrototypeRef<Prototype>(kvp.Key);
-                kvp.Value.Encode(stream);
-            }
         }
 
         /// <summary>

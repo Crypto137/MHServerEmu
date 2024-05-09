@@ -1,6 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Common;
@@ -111,49 +109,6 @@ namespace MHServerEmu.Games.Missions
             success &= Serializer.Transfer(archive, ref _failRequiredCount);
 
             return success;
-        }
-
-        public void Decode(CodedInputStream stream)
-        {
-            _interactedEntityList.Clear();
-
-            _prototypeIndex = stream.ReadRawByte();
-            _objectiveState = (MissionObjectiveState)stream.ReadRawInt32();
-            _objectiveStateExpireTime = new(stream.ReadRawInt64() * 10);
-
-            ulong numInteractedEntities = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numInteractedEntities; i++)
-            {
-                ulong entityId = stream.ReadRawVarint64();
-                ulong regionId = stream.ReadRawVarint64();
-                // timestamp - ignored in replication
-                _interactedEntityList.Add(new(entityId, regionId));
-            }
-
-            _currentCount = (ushort)stream.ReadRawVarint32();
-            _requiredCount = (ushort)stream.ReadRawVarint32();
-            _failCurrentCount = (ushort)stream.ReadRawVarint32();
-            _failRequiredCount = (ushort)stream.ReadRawVarint32();
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawByte((byte)_prototypeIndex);
-            stream.WriteRawInt32((int)_objectiveState);
-            stream.WriteRawInt64(_objectiveStateExpireTime.Ticks / 10);
-            stream.WriteRawVarint32((uint)_interactedEntityList.Count);
-
-            foreach (InteractionTag tag in _interactedEntityList)
-            {
-                stream.WriteRawVarint64(tag.EntityId);
-                stream.WriteRawVarint64(tag.RegionId);
-                // timestamp - ignored in replication
-            }
-                
-            stream.WriteRawVarint32(_currentCount);
-            stream.WriteRawVarint32(_requiredCount);
-            stream.WriteRawVarint32(_failCurrentCount);
-            stream.WriteRawVarint32(_failRequiredCount);
         }
 
         public override string ToString()

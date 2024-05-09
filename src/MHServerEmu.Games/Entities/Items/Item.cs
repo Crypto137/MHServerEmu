@@ -41,18 +41,6 @@ namespace MHServerEmu.Games.Entities.Items
             return success;
         }
 
-        protected override void Decode(CodedInputStream stream)
-        {
-            base.Decode(stream);
-            _itemSpec.Decode(stream);
-        }
-
-        public override void Encode(CodedOutputStream stream)
-        {
-            base.Encode(stream);
-            _itemSpec.Encode(stream);
-        }
-
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
