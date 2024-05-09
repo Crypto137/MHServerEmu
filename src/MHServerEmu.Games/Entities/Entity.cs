@@ -98,9 +98,9 @@ namespace MHServerEmu.Games.Entities
         }
 
         public DateTime DeadTime { get; private set; }
-        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
-        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId); }
-        public PrototypeId PrototypeDataRef { get => BaseData.PrototypeId; }
+        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
+        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.EntityPrototypeRef); }
+        public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
@@ -161,6 +161,8 @@ namespace MHServerEmu.Games.Entities
 
         public int CurrentStackSize { get => Properties[PropertyEnum.InventoryStackCount]; }
         public int MaxStackSize { get => Properties[PropertyEnum.InventoryStackSizeMax]; }
+        public bool IsRootOwner { get => OwnerId == 0; }
+        public bool IsInGame { get => TestStatus(EntityStatus.InGame); }
 
         #endregion
 
@@ -195,8 +197,8 @@ namespace MHServerEmu.Games.Entities
 
             // New
             Properties = new(Game.CurrentRepId);
-            //if (entity.Properties != null) // We need to add a filter to the property serialization first
-            //    Properties.FlattenCopyFrom(entity.Properties, true); 
+            if (entity.Properties != null) // We need to add a filter to the property serialization first
+                Properties.FlattenCopyFrom(entity.Properties, true); 
             if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
             OnPropertyChange(); // Template solve for _flags
         }
@@ -249,9 +251,16 @@ namespace MHServerEmu.Games.Entities
 
         public NetMessageEntityCreate ToNetMessageEntityCreate()
         {
+            ByteString archiveData;
+            using (Archive archive = new Archive(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
+            {
+                Serialize(archive);
+                archiveData = archive.ToByteString();
+            }
+
             return NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(BaseData.Serialize())
-                .SetArchiveData(OLD_Serialize())
+                .SetBaseData(BaseData.ToByteString())
+                .SetArchiveData(archiveData)
                 .Build();
         }
 
@@ -272,10 +281,7 @@ namespace MHServerEmu.Games.Entities
         {
             //CancelScheduledLifespanExpireEvent();
             //CancelDestroyEvent();
-            if (Game == null) return;
-            var entityManager = Game.EntityManager;
-            if (entityManager == null) return;
-            entityManager.DestroyEntity(this);
+            Game?.EntityManager?.DestroyEntity(this);
         }
 
         public bool IsDestroyed()
@@ -360,6 +366,17 @@ namespace MHServerEmu.Games.Entities
             return null;
         }
 
+        public Entity GetRootOwner()
+        {
+            Entity owner = this;
+            while (owner != null)
+            {
+                if (owner.IsRootOwner) return owner;
+                owner = owner.GetOwner();
+            }
+            return this;
+        }
+
         public bool CanBePlayerOwned()
         {
             var prototype = EntityPrototype;
@@ -380,10 +397,111 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public bool TestStatus(EntityStatus status)
+        {
+            return Status.HasFlag(status);
+        }
+
+        public void SetStatus(EntityStatus status, bool set)
+        {
+            if (set) Status |= status;
+            else Status &= ~status;
+        }
+
+        public void ModifyCollectionMembership(EntityCollection collection, bool add)
+        {
+            if (collection == EntityCollection.All) return;
+            var list = GetInvasiveCollection(collection);
+            if (list != null)
+            {
+                bool isInCollection = IsInCollection(collection);
+                if (add && isInCollection == false)
+                {
+                    if (collection == EntityCollection.Simulated || collection == EntityCollection.Locomotion)
+                    {
+                        if (TestStatus(EntityStatus.Destroyed))
+                        {
+                            Logger.Debug($"Trying to add destroyed entity {ToString()} to collection {collection}");
+                            return;
+                        }                        
+                        if (IsInGame == false)
+                        {
+                            Logger.Debug($"Trying to add out of game entity {ToString()} to collection {collection}");
+                            return;
+                        }
+                        if (this is WorldEntity worldEntity && worldEntity.IsInWorld == false)
+                        { 
+                            Logger.Debug($"Trying to add out of world entity {ToString()} to collection {collection}");
+                            return;                           
+                        }
+                    }
+                    if (collection == EntityCollection.Simulated) _flags |= EntityFlags.IsSimulated;
+                    list.AddBack(this);
+                }
+                else if (add == false && isInCollection)
+                {
+                    list.Remove(this);
+                    if (collection == EntityCollection.Simulated) _flags &= ~EntityFlags.IsSimulated;
+                }
+            }
+        }
+
+        public virtual SimulateResult SetSimulated(bool simulated)
+        {
+            if (IsSimulated != simulated)
+            {
+                if (simulated == false || (this is WorldEntity worldEntity && worldEntity.IsInWorld))
+                    Logger.Debug($"An entity must be in the world to be simulated {ToString()}");
+                ModifyCollectionMembership(EntityCollection.Simulated, simulated);
+                return simulated ? SimulateResult.Set : SimulateResult.Clear;
+            }
+            return SimulateResult.None;
+        }
+
+        private bool IsInCollection(EntityCollection collection)
+        {
+            var list = GetInvasiveCollection(collection);
+            if (list != null) return list.Contains(this);
+            return false;
+        }
+
+        public InvasiveList<Entity> GetInvasiveCollection(EntityCollection collection)
+        {
+            EntityManager entityManager = Game?.EntityManager;
+            if (entityManager == null) return null;
+
+            return collection switch
+            {
+                EntityCollection.Simulated => entityManager.SimulatedEntities,
+                EntityCollection.Locomotion => entityManager.LocomotionEntities,
+                EntityCollection.All => entityManager.AllEntities,
+                _ => null,
+            };
+        }
+
+        public virtual void EnterGame(EntitySettings settings)
+        {
+            if (IsInGame == false) SetStatus(EntityStatus.InGame, true);
+            // TODO InventoryIterator
+        }
+
+        public virtual void ExitGame()
+        {
+            SetStatus(EntityStatus.InGame, false);
+            // TODO InventoryIterator
+        }
+
         private InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
         public InvasiveListNode<Entity> GetInvasiveListNode(int listId)
         {
             return _entityListNodes.GetInvasiveListNode(listId);
         }
+    }
+
+    public enum SimulateResult
+    {
+        None,
+        Set,
+        Clear
     }
 }

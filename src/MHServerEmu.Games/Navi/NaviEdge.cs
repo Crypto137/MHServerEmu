@@ -143,6 +143,17 @@ namespace MHServerEmu.Games.Navi
             }
             return false;
         }
+
+        public float Length2D() => Vector3.Distance2D(Points[1].Pos, Points[0].Pos);
+
+        public static NaviPoint SharedVertex(NaviEdge edge1, NaviEdge edge2)
+        {
+            if (edge1.Points[0] == edge2.Points[0] || edge1.Points[0] == edge2.Points[1])
+                return edge1.Points[0];
+            else
+                return edge1.Points[1];
+        }
+
     }
 
 }

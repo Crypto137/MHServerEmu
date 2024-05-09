@@ -9,7 +9,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
-    public enum AbilitySlot     // See UnrealEngine3\MarvelGame\Config\DefaultInput.ini for referebce
+    public enum AbilitySlot     // See UnrealEngine3\MarvelGame\Config\DefaultInput.ini for reference
     {
         Invalid = -1,
         PrimaryAction = 0,          // Left Click
@@ -32,36 +32,51 @@ namespace MHServerEmu.Games.Entities.Avatars
     /// <summary>
     /// Binds abilities to slots.
     /// </summary>
-    public class AbilityKeyMapping
+    public class AbilityKeyMapping : ISerialize
     {
         private const int NumActionKeySlots = 6;   // non-mouse slots
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private int _powerSpecIndex;
+        private bool _shouldPersist;
+        private PrototypeId _associatedTransformMode;
+
         // Assignable slots
         private PrototypeId _primaryAction = PrototypeId.Invalid;
         private PrototypeId _secondaryAction = PrototypeId.Invalid;
-        private readonly PrototypeId[] _actionKeys = new PrototypeId[NumActionKeySlots];
+        private PrototypeId[] _actionKeys = new PrototypeId[NumActionKeySlots];
 
-        public int PowerSpecIndex { get; set; }
-        public bool ShouldPersist { get; set; }
-        public PrototypeId AssociatedTransformMode { get; set; }
+        public int PowerSpecIndex { get => _powerSpecIndex; set => _powerSpecIndex = value; }
+        public bool ShouldPersist { get => _shouldPersist; set => _shouldPersist = value; }
+        public PrototypeId AssociatedTransformMode { get => _associatedTransformMode; set => _associatedTransformMode = value; }
 
-        public AbilityKeyMapping(int powerSpecIndex)
+        public AbilityKeyMapping() { }
+
+        public bool Serialize(Archive archive)
         {
-            PowerSpecIndex = powerSpecIndex;
+            bool success = true;
+
+            success &= Serializer.Transfer(archive, ref _powerSpecIndex);
+            success &= Serializer.Transfer(archive, ref _shouldPersist);
+            success &= Serializer.Transfer(archive, ref _associatedTransformMode);
+            success &= Serializer.Transfer(archive, ref _primaryAction);
+            success &= Serializer.Transfer(archive, ref _secondaryAction);
+            success &= Serializer.Transfer(archive, ref _actionKeys);
+
+            return success;
         }
 
-        public AbilityKeyMapping(CodedInputStream stream, BoolDecoder boolDecoder)
+        public void Decode(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PowerSpecIndex = stream.ReadRawInt32();
-            ShouldPersist = boolDecoder.ReadBool(stream);
-            AssociatedTransformMode = stream.ReadPrototypeRef<Prototype>();
+            _powerSpecIndex = stream.ReadRawInt32();
+            _shouldPersist = boolDecoder.ReadBool(stream);
+            _associatedTransformMode = stream.ReadPrototypeRef<Prototype>();
             _primaryAction = stream.ReadPrototypeRef<Prototype>();
             _secondaryAction = stream.ReadPrototypeRef<Prototype>();
 
-            int numPowerSlots = (int)stream.ReadRawVarint64();
-            for (int i = 0; i < numPowerSlots; i++)
+            uint numPowerSlots = stream.ReadRawVarint32();
+            for (uint i = 0; i < numPowerSlots; i++)
                 _actionKeys[i] = stream.ReadPrototypeRef<Prototype>();
         }
 
@@ -78,7 +93,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             stream.WritePrototypeRef<Prototype>(_primaryAction);
             stream.WritePrototypeRef<Prototype>(_secondaryAction);
 
-            stream.WriteRawVarint64((ulong)_actionKeys.Length);
+            stream.WriteRawVarint32((uint)_actionKeys.Length);
             foreach (PrototypeId powerSlot in _actionKeys)
                 stream.WritePrototypeRef<Prototype>(powerSlot);
         }
@@ -86,9 +101,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"{nameof(PowerSpecIndex)}: 0x{PowerSpecIndex:X}");
-            sb.AppendLine($"{nameof(ShouldPersist)}: {ShouldPersist}");
-            sb.AppendLine($"{nameof(AssociatedTransformMode)}: {GameDatabase.GetPrototypeName(AssociatedTransformMode)}");
+            sb.AppendLine($"{nameof(_powerSpecIndex)}: {_powerSpecIndex}");
+            sb.AppendLine($"{nameof(_shouldPersist)}: {_shouldPersist}");
+            sb.AppendLine($"{nameof(_associatedTransformMode)}: {GameDatabase.GetPrototypeName(_associatedTransformMode)}");
             sb.AppendLine($"{nameof(_primaryAction)}: {GameDatabase.GetPrototypeName(_primaryAction)}");
             sb.AppendLine($"{nameof(_secondaryAction)}: {GameDatabase.GetPrototypeName(_secondaryAction)}");
             for (int i = 0; i < _actionKeys.Length; i++)
@@ -167,7 +182,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public void SlotDefaultAbilities(Avatar avatar)
         {
-            AvatarPrototype avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatar.BaseData.PrototypeId);
+            AvatarPrototype avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatar.BaseData.EntityPrototypeRef);
 
             foreach (PowerProgressionEntryPrototype powerProgEntry in avatarProto.GetPowersUnlockedAtLevel(avatar.CharacterLevel, true))
             {

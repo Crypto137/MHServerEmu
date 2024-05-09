@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -11,10 +12,32 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Games.Events
 {
+    public class Event
+    {        
+        // TODO write worked Event and replace Action
+        private readonly List<Action> _actionList = new();
+
+        public void AddActionBack(Action handler)
+        {
+            _actionList.Add(handler);
+        }
+
+        public void Invoke()
+        {
+            foreach(var action in _actionList)
+                action();
+        }
+
+        public void UnregisterCallbacks()
+        {
+            _actionList.Clear();
+        }
+
+    }
+
     public class EventManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -98,7 +121,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnUseInteractableObject(PlayerConnection playerConnection, Entity interactObject)
         {
-            var proto = interactObject.BaseData.PrototypeId;
+            var proto = interactObject.BaseData.EntityPrototypeRef;
             Logger.Trace($"UseInteractableObject {GameDatabase.GetPrototypeName(proto)}");
 
             if (proto == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
@@ -159,7 +182,7 @@ namespace MHServerEmu.Games.Events
         private void OnPreInteractPower(PlayerConnection playerConnection, Entity interactObject)
         {
             ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-            PrototypeId proto = interactObject.BaseData.PrototypeId;
+            PrototypeId proto = interactObject.BaseData.EntityPrototypeRef;
             var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
             if (world == null) return;
             var preIteractPower = world.PreInteractPower;
@@ -179,24 +202,24 @@ namespace MHServerEmu.Games.Events
             ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
-                IdUserEntity = avatarEntityId,
-                IdTargetEntity = 0,
-                PowerPrototypeId = preIteractPower,
+                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
+                UserEntityId = avatarEntityId,
+                TargetEntityId = 0,
+                PowerPrototypeRef = preIteractPower,
                 UserPosition = playerConnection.LastPosition,
                 PowerRandomSeed = 2222,
                 FXRandomSeed = 2222
             };
 
             playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
-                 .SetArchiveData(activatePower.Serialize())
+                 .SetArchiveData(activatePower.ToByteString())
                  .Build());
         }
 
         private void OnPreInteractPowerEnd(PlayerConnection playerConnection, Entity interactObject)
         {
             ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-            PrototypeId proto = interactObject.BaseData.PrototypeId;
+            PrototypeId proto = interactObject.BaseData.EntityPrototypeRef;
             var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
             if (world == null) return;
             PrototypeId preIteractPower = world.PreInteractPower;
@@ -227,17 +250,17 @@ namespace MHServerEmu.Games.Events
             ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
-                IdUserEntity = avatarEntityId,
-                IdTargetEntity = avatarEntityId,
-                PowerPrototypeId = (PrototypeId)PowerPrototypes.Emotes.EmoteDance,
+                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
+                UserEntityId = avatarEntityId,
+                TargetEntityId = avatarEntityId,
+                PowerPrototypeRef = (PrototypeId)PowerPrototypes.Emotes.EmoteDance,
                 UserPosition = playerConnection.LastPosition,
                 PowerRandomSeed = 1111,
                 FXRandomSeed = 1111
             };
 
             playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
-                .SetArchiveData(activatePower.Serialize())
+                .SetArchiveData(activatePower.ToByteString())
                 .Build());
         }
 
@@ -280,6 +303,10 @@ namespace MHServerEmu.Games.Events
                     ghostRiderRideCondition.InitializeFromPowerMixinPrototype(666, powerId, 0, TimeSpan.Zero);
                     avatar.ConditionCollection.AddCondition(ghostRiderRideCondition);
 
+                    // Assign the hotspot power to the avatar
+                    PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
+                    avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
+
                     // Notify the client
                     AddConditionArchive conditionArchive = new()
                     {
@@ -295,11 +322,11 @@ namespace MHServerEmu.Games.Events
                     playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatar.Id)
                         .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
-                        .SetPowerRank(0)
-                        .SetCharacterLevel(60)
-                        .SetCombatLevel(60)
-                        .SetItemLevel(1)
-                        .SetItemVariation(1)
+                        .SetPowerRank(indexProps.PowerRank)
+                        .SetCharacterLevel(indexProps.CharacterLevel)
+                        .SetCombatLevel(indexProps.CombatLevel)
+                        .SetItemLevel(indexProps.ItemLevel)
+                        .SetItemVariation(indexProps.ItemVariation)
                         .Build());
 
                     break;
@@ -353,7 +380,7 @@ namespace MHServerEmu.Games.Events
 
                     // Remove the ride condition
                     avatar.ConditionCollection.RemoveCondition(666);
-                    // TODO: Remove the power from the collection
+                    avatar.UnassignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd);
 
                     // Notify the client
                     playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
@@ -395,93 +422,103 @@ namespace MHServerEmu.Games.Events
 
         private void OnStartThrowing(PlayerConnection playerConnection, ulong idTarget)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
+            Logger.Trace($"Event StartThrowing");
 
-            playerConnection.ThrowingObject = _game.EntityManager.GetEntityById(idTarget);
-            if (playerConnection.ThrowingObject == null) return;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
-            ulong avatarRepId = playerConnection.Player.CurrentAvatar.Properties.ReplicationId;
+            playerConnection.ThrowableEntity = _game.EntityManager.GetEntityById(idTarget);
+            if (playerConnection.ThrowableEntity == null) return;
 
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget));
-            Logger.Warn($"{GameDatabase.GetPrototypeName(playerConnection.ThrowingObject.BaseData.PrototypeId)}");
-            // ThrowObject.Prototype.WorldEntity.UnrealClass
+            Logger.Trace($"{GameDatabase.GetPrototypeName(playerConnection.ThrowableEntity.PrototypeDataRef)}");
 
-            var throwPrototype = GameDatabase.GetPrototype<WorldEntityPrototype>(playerConnection.ThrowingObject.BaseData.PrototypeId);
-            if (throwPrototype == null) return;
-            playerConnection.IsThrowing = true;
-            //if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
-            //    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
-            //        throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef), throwPrototype.UnrealClass));
+            var throwableProto = playerConnection.ThrowableEntity.EntityPrototype as WorldEntityPrototype;
+            if (throwableProto == null) return;
 
-            // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-            playerConnection.ThrowingCancelPower = throwPrototype.Properties[PropertyEnum.ThrowableRestorePower];
+            // Set throwable properties on the avatar
+            avatar.Properties[PropertyEnum.ThrowableOriginatorEntity] = idTarget;
+            avatar.Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableProto.UnrealClass;
+
+            // Assign throwable and throwable can powers to the avatar's power collection
+            PrototypeId throwablePowerRef = throwableProto.Properties[PropertyEnum.ThrowablePower];
+            PrototypeId throwableCancelPowerRef = throwableProto.Properties[PropertyEnum.ThrowableRestorePower];
+
+            PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
+            avatar.AssignPower(throwablePowerRef, indexProps);
+            avatar.AssignPower(throwableCancelPowerRef, indexProps);
+
+            // Notify the client
+            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget));
+
+            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorAssetRef), throwableProto.UnrealClass));
+
             playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(avatarEntityId)
-                .SetPowerProtoId((ulong)playerConnection.ThrowingCancelPower)
-                .SetPowerRank(0)
-                .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
-                .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
-                .SetItemLevel(1)
-                .SetItemVariation(1)
+                .SetEntityId(avatar.Id)
+                .SetPowerProtoId((ulong)throwableCancelPowerRef)
+                .SetPowerRank(indexProps.PowerRank)
+                .SetCharacterLevel(indexProps.CharacterLevel)
+                .SetCombatLevel(indexProps.CombatLevel)
+                .SetItemLevel(indexProps.ItemLevel)
+                .SetItemVariation(indexProps.ItemVariation)
                 .Build());
 
-            // ThrowObject.Prototype.ThrowablePowerProp.Value
-            playerConnection.ThrowingPower = throwPrototype.Properties[PropertyEnum.ThrowablePower];
             playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(avatarEntityId)
-                .SetPowerProtoId((ulong)playerConnection.ThrowingPower)
-                .SetPowerRank(0)
-                .SetCharacterLevel(60)
-                .SetCombatLevel(60)
-                .SetItemLevel(1)
-                .SetItemVariation(1)
+                .SetEntityId(avatar.Id)
+                .SetPowerProtoId((ulong)throwablePowerRef)
+                .SetPowerRank(indexProps.PowerRank)
+                .SetCharacterLevel(indexProps.CharacterLevel)
+                .SetCombatLevel(indexProps.CombatLevel)
+                .SetItemLevel(indexProps.ItemLevel)
+                .SetItemVariation(indexProps.ItemVariation)
                 .Build());
 
             playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
                 .SetIdEntity(idTarget)
                 .Build());
-
-            Logger.Trace($"Event StartThrowing");
         }
 
         private void OnEndThrowing(PlayerConnection playerConnection, PrototypeId powerId)
         {
-            ulong avatarRepId = playerConnection.Player.CurrentAvatar.Properties.ReplicationId;
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-            // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
-
-            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity)));
-
-            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef)));
-
-            // ThrowObject.Prototype.ThrowablePowerProp.Value
-            playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(avatarEntityId)
-                .SetPowerProtoId((ulong)playerConnection.ThrowingPower)
-                .Build());
-
-            // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-            playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(avatarEntityId)
-                .SetPowerProtoId((ulong)playerConnection.ThrowingCancelPower)
-                .Build());
-
             Logger.Trace("Event EndThrowing");
+
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            // Remove throwable properties
+            avatar.Properties.RemoveProperty(new(PropertyEnum.ThrowableOriginatorEntity));
+            avatar.Properties.RemoveProperty(new(PropertyEnum.ThrowableOriginatorAssetRef));
+
+            // Unassign throwable and throwable cancel powers
+            Power throwablePower = avatar.GetThrowablePower();
+            Power throwableCancelPower = avatar.GetThrowableCancelPower();
+
+            avatar.UnassignPower(throwablePower.PrototypeDataRef);
+            avatar.UnassignPower(throwableCancelPower.PrototypeDataRef);
 
             if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower"))
             {
-                if (playerConnection.ThrowingObject != null)
-                    playerConnection.SendMessage(playerConnection.ThrowingObject.ToNetMessageEntityCreate());
-                Logger.Trace("Event ThrownCancelPower");
+                if (playerConnection.ThrowableEntity != null)
+                    playerConnection.SendMessage(playerConnection.ThrowableEntity.ToNetMessageEntityCreate());
+                Logger.Trace("Event RestoreThrowable");
             }
             else
             {
-                playerConnection.ThrowingObject?.ToDead();
+                playerConnection.ThrowableEntity?.ToDead();
             }
-            playerConnection.ThrowingObject = null;
-            playerConnection.IsThrowing = false;
+
+            playerConnection.ThrowableEntity = null;
+
+            // Notify the client
+            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorEntity)));
+            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorAssetRef)));
+
+            playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                .SetEntityId(avatar.Id)
+                .SetPowerProtoId((ulong)throwablePower.PrototypeDataRef)
+                .Build());
+
+            playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                .SetEntityId(avatar.Id)
+                .SetPowerProtoId((ulong)throwableCancelPower.PrototypeDataRef)
+                .Build());
         }
 
         private void OnDiamondFormActivate(PlayerConnection playerConnection)

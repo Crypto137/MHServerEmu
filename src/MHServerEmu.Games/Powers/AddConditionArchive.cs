@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Powers
                 archive.Transfer(ref entityId);
                 Condition.Serialize(archive, null);
 
-                return ByteString.CopyFrom(archive.AccessAutoBuffer().ToArray());
+                return archive.ToByteString();
             }
         }
 

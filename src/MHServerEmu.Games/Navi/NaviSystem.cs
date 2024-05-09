@@ -96,13 +96,6 @@ namespace MHServerEmu.Games.Navi
         public NaviEdge Edge;
     }
 
-    public class NaviPathSearchState
-    {
-        public NaviPathSearchState()
-        {
-        }
-    }
-
     public class NaviSerialCheck
     {
         public NaviSerialCheck(NaviCdt naviCdt)

@@ -13,8 +13,12 @@
         public const float PiOverHalfCircleDegrees = 0.017453292f;
         public const float HalfCircleDegreesOverPi = 57.295776f;
 
+        public static float PositionSqTolerance => 2 * Square(0.125f);
+
         public static float ToRadians(float v) => v * PiOverHalfCircleDegrees;
+        public static float ToDegrees(float v) => v * HalfCircleDegreesOverPi;
         public static float SquareRoot(float f) => f > 0.0f ? MathF.Sqrt(f) : 0.0f;
+        public static float Square(float v) => v * v;
         public static int RoundDownToInt(float v) => (int)MathF.Floor(v);
 
         /// <summary>
@@ -35,7 +39,5 @@
             else
                 return (int)(value + 0.5f);
         }
-
-        public static float Square(float v) => v * v;
     }
 }

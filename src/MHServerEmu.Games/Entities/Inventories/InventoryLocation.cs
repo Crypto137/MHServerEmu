@@ -1,36 +1,79 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
+    // NOTE/TODO: This would not be client-accurate, but we can potentially refactor this as a readonly struct for optimization.
     public class InventoryLocation
     {
-        public ulong ContainerId { get; set; }          // invLocContainerEntityId
-        public PrototypeId InventoryRef { get; set; }   // invLocInventoryPrototypeId
-        public uint Slot { get; set; }
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public InventoryLocation(CodedInputStream stream)
-        {
-            ContainerId = stream.ReadRawVarint64();
-            InventoryRef = stream.ReadPrototypeRef<InventoryPrototype>();
-            Slot = stream.ReadRawVarint32();
-        }
+        public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
+
+        public ulong ContainerId { get; private set; } = 0;     // Entity id
+        public InventoryPrototype InventoryPrototype { get; private set; } = null;
+        public uint Slot { get; private set; } = InvalidSlot;
+
+        public PrototypeId InventoryRef { get => InventoryPrototype != null ? InventoryPrototype.DataRef : PrototypeId.Invalid; }
+        public InventoryCategory InventoryCategory { get => InventoryPrototype != null ? InventoryPrototype.Category : InventoryCategory.None; }
+        public ConvenienceLabel InventoryConvenienceLabel { get => InventoryPrototype != null ? InventoryPrototype.ConvenienceLabel : ConvenienceLabel.None; }
+
+        public bool IsValid { get => ContainerId != 0 && InventoryRef != PrototypeId.Invalid && Slot != InvalidSlot; }
+
+        public InventoryLocation() { }
 
         public InventoryLocation(ulong containerId, PrototypeId inventoryRef, uint slot)
         {
             ContainerId = containerId;
-            InventoryRef = inventoryRef;
+            InventoryPrototype = inventoryRef.As<InventoryPrototype>();
             Slot = slot;
         }
 
-        public InventoryLocation()
+        public static bool SerializeTo(Archive archive, InventoryLocation invLoc)
         {
-            ContainerId = 0;
-            InventoryRef = PrototypeId.Invalid;
-            Slot = 0xFFFFFFFF; // -1
+            if (archive.IsPacking == false) return Logger.WarnReturn(false, "SerializeTo(): archive.IsPacking == false");
+
+            bool success = true;
+            
+            ulong containerId = invLoc.ContainerId;
+            PrototypeId inventoryRef = invLoc.InventoryRef;
+            uint slot = invLoc.Slot;
+
+            success &= Serializer.Transfer(archive, ref containerId);
+            success &= Serializer.TransferPrototypeEnum<InventoryPrototype>(archive, ref inventoryRef);
+            success &= Serializer.Transfer(archive, ref slot);
+
+            return success;
+        }
+
+        public static bool SerializeFrom(Archive archive, InventoryLocation invLoc)
+        {
+            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "SerializeFrom(): archive.IsUnpacking == false");
+
+            bool success = true;
+
+            ulong containerId = invLoc.ContainerId;
+            PrototypeId inventoryRef = invLoc.InventoryRef;
+            uint slot = invLoc.Slot;
+
+            success &= Serializer.Transfer(archive, ref containerId);
+            success &= Serializer.TransferPrototypeEnum<InventoryPrototype>(archive, ref inventoryRef);
+            success &= Serializer.Transfer(archive, ref slot);
+
+            invLoc.Set(containerId, inventoryRef, slot);
+
+            return success;
+        }
+
+        public void Decode(CodedInputStream stream)
+        {
+            ContainerId = stream.ReadRawVarint64();
+            InventoryPrototype = stream.ReadPrototypeRef<InventoryPrototype>().As<InventoryPrototype>();
+            Slot = stream.ReadRawVarint32();
         }
 
         public void Encode(CodedOutputStream stream)
@@ -40,13 +83,32 @@ namespace MHServerEmu.Games.Entities.Inventories
             stream.WriteRawVarint64(Slot);
         }
 
+        public Inventory GetInventory()
+        {
+            // NYI
+            Logger.Warn("GetInventory(): Not yet implemented!");
+            return null;
+        }
+
+        public void Set(ulong containerId, PrototypeId inventoryRef, uint slot)
+        {
+            ContainerId = containerId;
+            InventoryPrototype = inventoryRef.As<InventoryPrototype>();
+            Slot = slot;
+        }
+
+        public void Set(InventoryLocation other)
+        {
+            ContainerId = other.ContainerId;
+            InventoryPrototype = other.InventoryPrototype;
+            Slot = other.Slot;
+        }
+
+        public void Clear() => Set(0, PrototypeId.Invalid, InvalidSlot);
+
         public override string ToString()
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(ContainerId)}: {ContainerId}");
-            sb.AppendLine($"{nameof(InventoryRef)}: {GameDatabase.GetPrototypeName(InventoryRef)}");
-            sb.AppendLine($"{nameof(Slot)}: {Slot}");
-            return sb.ToString();
+            return $"{nameof(ContainerId)}={ContainerId}, {nameof(InventoryRef)}={GameDatabase.GetPrototypeName(InventoryRef)}, {nameof(Slot)}={Slot}";
         }
     }
 }

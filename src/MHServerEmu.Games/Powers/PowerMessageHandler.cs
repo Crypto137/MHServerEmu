@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Powers
 
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
-                Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
+                Logger.Trace($"AddEvent EndThrowing for {GameDatabase.GetPrototypeName(powerPrototypeId)}");
                 var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
                 _game.EventManager.AddEvent(playerConnection, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
                 return true;
@@ -126,14 +126,15 @@ namespace MHServerEmu.Games.Powers
 
             //Logger.Trace(tryActivatePower.ToString());
 
-            PowerResultArchive archive = new(tryActivatePower);
-            if (archive.TargetEntityId > 0)
+            PowerResults results = new();
+            results.Init(tryActivatePower);
+            if (results.TargetEntityId > 0)
             {                
                 playerConnection.SendMessage(NetMessagePowerResult.CreateBuilder()
-                    .SetArchiveData(archive.Serialize())
+                    .SetArchiveData(results.ToByteString())
                     .Build());
 
-                TestHit(playerConnection, archive.TargetEntityId, (int)archive.DamagePhysical);
+                TestHit(playerConnection, results.TargetEntityId, (int)results.DamagePhysical);
             }
 
             return true;
@@ -165,13 +166,11 @@ namespace MHServerEmu.Games.Powers
                             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                             EntityId = entityId,
                             FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                            Position = new(entity.RegionLocation.Position),
-                            Orientation = new(),
-                            LocomotionState = new(0)
+                            Position = new(entity.RegionLocation.Position)
                         };
-                        locomotion.Orientation.Yaw = Vector3.Angle(locomotion.Position, playerConnection.LastPosition);
+                        locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
                         playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                            .SetArchiveData(locomotion.Serialize())
+                            .SetArchiveData(locomotion.ToByteString())
                             .Build());
                     }
                     if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])

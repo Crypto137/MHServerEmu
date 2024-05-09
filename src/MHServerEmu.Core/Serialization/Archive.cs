@@ -70,9 +70,10 @@ namespace MHServerEmu.Core.Serialization
         /// <summary>
         /// Constructs a new <see cref="Archive"/> instance for packing.
         /// </summary>
-        public Archive(ArchiveSerializeType serializeType, ulong replicationPolicy)
+        public Archive(ArchiveSerializeType serializeType, ulong replicationPolicy = 0)
         {
-            if (serializeType != ArchiveSerializeType.Replication) throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
+            if ((serializeType == ArchiveSerializeType.Replication || serializeType == ArchiveSerializeType.Database) == false)
+                throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
             _bufferStream = new(1024);
             _cos = CodedOutputStream.CreateInstance(_bufferStream);
@@ -90,7 +91,8 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public Archive(ArchiveSerializeType serializeType, byte[] buffer)
         {
-            if (serializeType != ArchiveSerializeType.Replication) throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
+            if ((serializeType == ArchiveSerializeType.Replication || serializeType == ArchiveSerializeType.Database) == false)
+                throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
             _bufferStream = new(buffer);
             _cis = CodedInputStream.CreateInstance(_bufferStream);
@@ -103,12 +105,29 @@ namespace MHServerEmu.Core.Serialization
         }
 
         /// <summary>
+        /// Constructs a new <see cref="Archive"/> instance for unpacking.
+        /// </summary>
+        public Archive(ArchiveSerializeType serializeType, ByteString buffer) : this(serializeType, ByteString.Unsafe.GetBuffer(buffer))
+        {
+            // We use ByteString.Unsafe here to avoid copying data one extra time (ByteString -> Stream instead of ByteString -> Buffer -> Stream).
+        }
+
+        /// <summary>
         /// Returns the <see cref="MemoryStream"/> instance that acts as the AutoBuffer for this <see cref="Archive"/>.
         /// </summary>
         /// <remarks>
         /// AutoBuffer is the name of the data structure that backs archives in the client.
         /// </remarks>
         public MemoryStream AccessAutoBuffer() => _bufferStream;
+
+        /// <summary>
+        /// Converts the underlying <see cref="MemoryStream"/> to <see cref="ByteString"/>.
+        /// </summary>
+        public ByteString ToByteString()
+        {
+            // We use ByteString.Unsafe here to avoid copying data one extra time (Stream -> ByteString instead of Stream -> Buffer -> ByteString).
+            return ByteString.Unsafe.FromBytes(_bufferStream.ToArray());
+        }
 
         /// <summary>
         /// Writes the header for this <see cref="Archive"/>. Returns <see langword="true"/> if successful.

@@ -268,6 +268,8 @@ namespace MHServerEmu.Games.Powers
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
                     success &= Serializer.Transfer(archive, ref _updateIntervalMS);
 
+                success &= Serializer.Transfer(archive, ref _properties);
+
                 // Default cancel on flags are taken from the ConditionPrototype
                 _cancelOnFlags = _conditionPrototype.CancelOnFlags;
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))

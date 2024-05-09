@@ -92,6 +92,46 @@ namespace MHServerEmu.Games.Navi
 
             return contains;
         }
+
+        public static float TriangleArcPathDistance(NaviEdge edge1, NaviEdge edge2, float radius)
+        {
+            Vector3 a, b, c;
+            if (edge1.Points[0] == edge2.Points[0])
+            {
+                a = edge1.Point(1);
+                b = edge1.Point(0);
+                c = edge2.Point(1);
+            }
+            else if (edge1.Points[0] == edge2.Points[1])
+            {
+                a = edge1.Point(1);
+                b = edge1.Point(0);
+                c = edge2.Point(0);
+            }
+            else if (edge1.Points[1] == edge2.Points[0])
+            {
+                a = edge1.Point(0);
+                b = edge1.Point(1);
+                c = edge2.Point(1);
+            }
+            else if (edge1.Points[1] == edge2.Points[1])
+            {
+                a = edge1.Point(0);
+                b = edge1.Point(1);
+                c = edge2.Point(0);
+            }
+            else
+                return 0.0f;
+
+            Vector3 ab = Vector3.Normalize2D(a - b);
+            Vector3 cb = Vector3.Normalize2D(c - b);
+            return radius * MathF.Acos(Vector3.Dot(ab, cb));
+        }
+
+        public static bool IsAngleObtuse2D(Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            return Vector3.Dot2D(p0 - p1, p2 - p1) < 0.0f;
+        }
     }
 
 }

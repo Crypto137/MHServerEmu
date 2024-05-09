@@ -7,5 +7,10 @@ namespace MHServerEmu.Games.Behavior
     {
         
         public WorldEntity Owner { get; internal set; }
+
+        internal bool IsOwnerValid()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

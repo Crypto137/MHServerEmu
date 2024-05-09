@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -117,7 +118,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     {
                         PowerPrototype powerProto = entryProto.PowerAssignment.Ability.As<PowerPrototype>();
 
-                        if (powerProto.IsUltimate)
+                        if (Power.IsUltimatePower(powerProto))
                         {
                             if (UltimatePowerRef != PrototypeId.Invalid) Logger.Warn($"PostProcess(): Avatar has more than one ultimate power defined ({this})");
                             UltimatePowerRef = entryProto.PowerAssignment.Ability;

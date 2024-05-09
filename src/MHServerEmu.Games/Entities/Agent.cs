@@ -39,6 +39,21 @@ namespace MHServerEmu.Games.Entities
 
         }
 
+        public override bool CanRotate
+        {
+            get
+            {
+                Player ownerPlayer = GetOwnerOfType<Player>();
+                if ( IsInKnockback || IsInKnockdown || IsInKnockup 
+                    || IsImmobilized || IsImmobilizedByHitReact || IsSystemImmobilized 
+                    || IsStunned || IsMesmerized ||
+                    (ownerPlayer != null && ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)
+                    || NPCAmbientLock)
+                    return false;
+                return true;
+            }
+        }
+
         // New
         public Agent(Game game) : base(game) { }
 
@@ -93,16 +108,16 @@ namespace MHServerEmu.Games.Entities
             Condition condition = new();
             condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
             condition.StartTime = Clock.GameTime;
-            ConditionCollection.AddCondition(condition);
+            _conditionCollection.AddCondition(condition);
 
-            PowerCollection.AssignPower(startPowerRef, new());
+            AssignPower(startPowerRef, new());
             
             return true;
         }
 
         public bool AppendOnStartActions(PrototypeId targetRef)
         {
-            if (GameDatabase.InteractionManager.GetStartAction(BaseData.PrototypeId, targetRef, out MissionActionEntityPerformPowerPrototype action))
+            if (GameDatabase.InteractionManager.GetStartAction(BaseData.EntityPrototypeRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
                 return AppendStartPower(action.PowerPrototype);
             return false;
         }

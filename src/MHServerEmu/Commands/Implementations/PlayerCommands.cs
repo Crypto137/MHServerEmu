@@ -96,7 +96,7 @@ namespace MHServerEmu.Commands.Implementations
 
             // Update player and avatar properties
             avatar.Properties[PropertyEnum.CostumeCurrent] = costumeId;
-            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = costumeId;
+            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.EntityPrototypeRef] = costumeId;
 
             // Send client property updates (TODO: Remove this when we have those generated automatically)
             // Avatar entity
@@ -104,7 +104,7 @@ namespace MHServerEmu.Commands.Implementations
                 avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), costumeId));
 
             // Player entity
-            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
+            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.EntityPrototypeRef);
             client.SendMessage(1, Property.ToNetMessageSetProperty(
                 player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumeId));
 

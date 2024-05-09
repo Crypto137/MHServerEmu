@@ -336,6 +336,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (_interactionDataCached == false) BuildInteractionDataCache();
             return KeywordsInteractionData;
         }
+
+        [DoNotCopy]
+        public virtual LocomotorPrototype Locomotor { get => null; }
     }
 
     public class StateChangePrototype : Prototype
