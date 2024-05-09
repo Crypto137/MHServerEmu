@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Teleport : IAIState, ISingleton<Teleport>
+    public class Teleport : IAIState
     {
+        public static Teleport Instance { get; } = new();
+        private Teleport() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

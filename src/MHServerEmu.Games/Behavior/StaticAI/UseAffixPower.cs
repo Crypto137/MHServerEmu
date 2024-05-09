@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class UseAffixPower : IAIState, ISingleton<UseAffixPower>
+    public class UseAffixPower : IAIState
     {
+        public static UseAffixPower Instance { get; } = new();
+        private UseAffixPower() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

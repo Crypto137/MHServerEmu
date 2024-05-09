@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class MoveTo : IAIState, ISingleton<MoveTo>
+    public class MoveTo : IAIState
     {
+        public static MoveTo Instance { get; } = new();
+        private MoveTo() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

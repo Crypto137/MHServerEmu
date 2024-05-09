@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Wander : IAIState, ISingleton<Wander>
+    public class Wander : IAIState
     {
+        public static Wander Instance { get; } = new();
+        private Wander() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Despawn : IAIState, ISingleton<Despawn>
+    public class Despawn : IAIState
     {
+        public static Despawn Instance { get; } = new();
+        private Despawn() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

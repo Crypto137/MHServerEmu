@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Delay : IAIState, ISingleton<Delay>
+    public class Delay : IAIState
     {
+        public static Delay Instance { get; } = new();
+        private Delay() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

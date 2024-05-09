@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Flank : IAIState, ISingleton<Flank>
+    public class Flank : IAIState
     {
+        public static Flank Instance { get; } = new();
+        private Flank() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

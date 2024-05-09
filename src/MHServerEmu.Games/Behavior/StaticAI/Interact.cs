@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Interact : IAIState, ISingleton<Interact>
+    public class Interact : IAIState
     {
+        public static Interact Instance { get; } = new();
+        private Interact() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

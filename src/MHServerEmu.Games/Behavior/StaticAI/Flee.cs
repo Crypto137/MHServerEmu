@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Flee : IAIState, ISingleton<Flee>
+    public class Flee : IAIState
     {
+        public static Flee Instance { get; } = new();
+        private Flee() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

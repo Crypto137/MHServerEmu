@@ -3,8 +3,11 @@ using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class UsePower : IAIState, ISingleton<UsePower>
+    public class UsePower : IAIState
     {
+        public static UsePower Instance { get; } = new();
+        private UsePower() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

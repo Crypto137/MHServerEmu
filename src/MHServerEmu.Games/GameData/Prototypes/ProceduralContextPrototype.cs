@@ -2,7 +2,6 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using Microsoft.VisualBasic;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -24,6 +23,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralContextPrototype : Prototype
     {
+        public virtual void OnStart(AIController owningController, ProceduralAIProfilePrototype procedurealProfile) { }
+        public virtual void OnEnd(AIController owningController, ProceduralAIProfilePrototype procedurealProfile) { }
     }
 
     public class ProceduralUsePowerContextSwitchTargetPrototype : Prototype
@@ -96,10 +97,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             TContextProto contextProto, ProceduralContextPrototype proceduralContext = null)
             where TContextProto : Prototype
             where TContext : IStateContext
-            where TState : ISingleton<TState>, IAIState
+            where TState : IAIState
         {
-            var context = IStateContext.Create(ownerController, contextProto);
-            return proceduralAI.HandleContext(ISingleton<TState>.Instance, context, proceduralContext);
+            (IAIState instance, IStateContext context) = IStateContext.Create(ownerController, contextProto);
+            return proceduralAI.HandleContext(instance, ref context, proceduralContext);
+        }
+
+        public static bool ValidateContext(ProceduralAI proceduralAI, AIController ownerController, UsePowerContextPrototype contextProto)
+        {
+            IStateContext context = new UsePowerContext(ownerController, contextProto);
+            return proceduralAI.ValidateContext(UsePower.Instance, ref context);
         }
     }
 

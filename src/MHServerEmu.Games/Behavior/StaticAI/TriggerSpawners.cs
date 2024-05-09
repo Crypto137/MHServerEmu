@@ -3,8 +3,11 @@ using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class TriggerSpawners : IAIState, ISingleton<TriggerSpawners>
+    public class TriggerSpawners : IAIState
     {
+        public static TriggerSpawners Instance { get; } = new();
+        private TriggerSpawners() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

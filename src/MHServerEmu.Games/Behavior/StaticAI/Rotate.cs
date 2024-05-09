@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Rotate : IAIState, ISingleton<Rotate>
+    public class Rotate : IAIState
     {
+        public static Rotate Instance { get; } = new();
+        private Rotate() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

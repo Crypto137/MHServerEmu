@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Flock : IAIState, ISingleton<Flock>
+    public class Flock : IAIState
     {
+        public static Flock Instance { get; } = new();
+        private Flock() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();

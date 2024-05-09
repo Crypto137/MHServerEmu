@@ -2,8 +2,11 @@
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
-    public class Orbit : IAIState, ISingleton<Orbit>
+    public class Orbit : IAIState
     {
+        public static Orbit Instance { get; } = new();
+        private Orbit() { }
+
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             throw new NotImplementedException();
