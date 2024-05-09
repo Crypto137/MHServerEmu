@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Behavior
     public class AIController
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public Agent Owner { get; set; }
+        public Agent Owner { get; private set; }
         public Game Game { get; private set; }
         public ProceduralAI.ProceduralAI Brain { get; private set; }
         public BehaviorSensorySystem Senses { get; private set; }
