@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Events
         {
             Logger.Warn($"Forсed loading");
             playerConnection.AOI.LoadedCellCount = loadedCellCount;
-            playerConnection.Game.FinishLoading(playerConnection);
+            playerConnection.FinishLoading();
         }
 
         private void OnEmoteDance(PlayerConnection playerConnection, AvatarPrototypeId avatar)

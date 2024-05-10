@@ -224,7 +224,7 @@ namespace MHServerEmu.Games.Regions
 
             // Get PlayerRegions
             HashSet<RegionPrototypeId> playerRegions = new();
-            foreach (var playerConnection in Game.NetworkManager.TempRemoveMeIterateConnections())
+            foreach (var playerConnection in Game.NetworkManager)
             {
                 var regionRef = (RegionPrototypeId)playerConnection.RegionDataRef; // TODO use RegionID
                 playerRegions.Add(regionRef); 
