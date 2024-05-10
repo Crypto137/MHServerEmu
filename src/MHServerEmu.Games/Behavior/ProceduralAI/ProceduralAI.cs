@@ -13,6 +13,13 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         private short _curState;
         private PState[] _states = new PState[MaxConcurrentStates];
         private ProceduralAIProfilePrototype _procedurealProfile;
+        private Game _game;
+
+        public ProceduralAI(Game game)
+        {
+            _game = game;
+        }
+
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }
         public ProceduralAIProfilePrototype PartialOverrideBehavior { get; private set; }

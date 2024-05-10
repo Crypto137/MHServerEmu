@@ -1,7 +1,9 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Behavior
@@ -25,7 +27,13 @@ namespace MHServerEmu.Games.Behavior
             Owner = owner;
             Senses = new ();
             Blackboard = new (owner);
-            Brain = new (); // TODO Init ProceduralAIProfilePrototype
+            Brain = new (game); 
+        }
+
+        internal bool Initialize(BehaviorProfilePrototype behaviorProfile, SpawnSpec spec, PropertyCollection collection)
+        {
+            // TODO Init ProceduralAIProfilePrototype
+            throw new NotImplementedException();
         }
 
         public bool IsOwnerValid()
@@ -144,6 +152,11 @@ namespace MHServerEmu.Games.Behavior
         }
 
         internal void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype primaryPower)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void OnAIExitedWorld()
         {
             throw new NotImplementedException();
         }

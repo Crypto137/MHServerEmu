@@ -29,6 +29,12 @@ namespace MHServerEmu.Games.Generators.Population
             Properties = new();
         }
 
+        public SpawnSpec()
+        {
+            // TODO check std::shared_ptr<Gazillion::SpawnSpec>
+            Properties = new();
+        }
+
         public void Spawn()
         {
             if (Group == null) return;

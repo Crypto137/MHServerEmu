@@ -2,11 +2,14 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -16,6 +19,7 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
 
@@ -54,7 +58,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        // New
         public Agent(Game game) : base(game) { }
 
         public override void Initialize(EntitySettings settings)
@@ -69,6 +72,23 @@ namespace MHServerEmu.Games.Entities
             InitLocomotor(settings.LocomotorHeightOverride);
         }
 
+        private bool InitAI(EntitySettings settings)
+        {
+            var agentPrototype = AgentPrototype;
+            if (agentPrototype == null || Game == null || this is Avatar) return false;
+
+            var behaviorProfile = agentPrototype.BehaviorProfile;
+            if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
+            {
+                AIController = new(Game, this);
+                PropertyCollection collection = new ();
+                collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
+                SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec();
+                return AIController.Initialize(behaviorProfile, spec, collection);
+            }
+            return false;
+        }
+
         private bool InitLocomotor(float height = 0.0f)
         {
             if (Locomotor != null)
@@ -79,15 +99,30 @@ namespace MHServerEmu.Games.Entities
                 Locomotor.Initialize(agentPrototype.Locomotion, this, height);
                 Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
             }
-
             return true;
         }
-
 
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
             RegionLocation.Cell.EnemySpawn(); // Calc Enemy
+            // ActivePowerRef = settings.PowerPrototype
+
+            if (AIController != null) 
+            {
+                var behaviorProfile = AgentPrototype?.BehaviorProfile;
+                if (behaviorProfile == null) return;
+                AIController.Initialize(behaviorProfile, null, null);
+            }
+            else InitAI(settings);
+
+            AIController?.OnAIEnteredWorld();
+        }
+
+        public override void OnExitedWorld()
+        {
+            base.OnExitedWorld();
+            AIController?.OnAIExitedWorld();
         }
 
         public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this
