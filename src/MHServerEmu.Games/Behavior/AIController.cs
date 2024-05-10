@@ -142,5 +142,10 @@ namespace MHServerEmu.Games.Behavior
         {
             throw new NotImplementedException();
         }
+
+        internal void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype primaryPower)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
