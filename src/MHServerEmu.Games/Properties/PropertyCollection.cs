@@ -66,14 +66,14 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyValue this[PropertyEnum propertyEnum, AssetId param0]
         {
-            get => GetProperty(new(propertyEnum, Property.ToParam(param0)));
-            set => SetProperty(value, new(propertyEnum, Property.ToParam(param0)));
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
         }
 
         public PropertyValue this[PropertyEnum propertyEnum, PrototypeId param0]
         {
-            get => GetProperty(new(propertyEnum, Property.ToParam(propertyEnum, 0, param0)));
-            set => SetProperty(value, new(propertyEnum, Property.ToParam(propertyEnum, 0, param0)));
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
         }
 
         // 2 params
@@ -86,8 +86,8 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyValue this[PropertyEnum propertyEnum, int param0, PrototypeId param1]
         {
-            get => GetProperty(new(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)));
-            set => SetProperty(value, new(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)));
+            get => GetProperty(new(propertyEnum, param0, param1));
+            set => SetProperty(value, new(propertyEnum, param0, param1));
         }
 
         // 3 params
