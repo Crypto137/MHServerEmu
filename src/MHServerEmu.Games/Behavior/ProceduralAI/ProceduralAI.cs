@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         private ProceduralAIProfilePrototype _procedurealProfile;
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }
+        public ProceduralAIProfilePrototype PartialOverrideBehavior { get; private set; }
 
         public void StopOwnerLocomotor()
         {

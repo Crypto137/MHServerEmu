@@ -1,6 +1,10 @@
 ﻿using MHServerEmu.Games.Behavior.ProceduralAI;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.Collections;
+using MHServerEmu.Games.Entities.Locomotion;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -21,12 +25,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
             IStateContext context = new UsePowerContext(ownerController, contextProto);
             return proceduralAI.ValidateContext(UsePower.Instance, ref context);
         }
+
+        public bool HandleOverrideBehavior(AIController ownerController)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void Think(AIController ownerController)
+        {
+            throw new Exception("ProceduralAIProfilePrototype.THINK() - BASE CLASS SHOULD NOT BE CALLED");
+        }
     }
 
     public class ProceduralProfileWithTargetPrototype : ProceduralAIProfilePrototype
     {
         public SelectEntityContextPrototype SelectTarget { get; protected set; }
         public PrototypeId NoTargetOverrideProfile { get; protected set; }
+
+        public bool DefaultSensory(WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
+            SelectEntityContextPrototype selectTarget, CombatTargetType targetType, CombatTargetFlags flags = CombatTargetFlags.None)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DefaultMeleeMovement(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
+            WorldEntity target, MoveToContextPrototype moveToTarget, OrbitContextPrototype orbitTarget)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ProceduralProfileWithAttackPrototype : ProceduralProfileWithTargetPrototype
@@ -35,6 +61,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int AttackRateMinMS { get; protected set; }
         public ProceduralUsePowerContextPrototype[] GenericProceduralPowers { get; protected set; }
         public ProceduralUseAffixPowerContextPrototype AffixSettings { get; protected set; }
+
+        public virtual void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            ownerController.AddPowersToPicker(powerPicker, GenericProceduralPowers);
+        }
+
+        public StaticBehaviorReturnType HandleProceduralPower(AIController ownerController, ProceduralAI proceduralAI, GRandom random, 
+            long currentTime, Picker<ProceduralUsePowerContextPrototype> powerPicker, bool affixes)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
@@ -157,6 +194,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity; 
+            if (DefaultSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false 
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random; 
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+        }
     }
 
     public class ProceduralProfileBasicMelee2PowerPrototype : ProceduralProfileWithAttackPrototype

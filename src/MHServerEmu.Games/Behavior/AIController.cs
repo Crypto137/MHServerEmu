@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -135,6 +136,11 @@ namespace MHServerEmu.Games.Behavior
             }
 
             return true;
+        }
+
+        internal void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype[] genericProceduralPowers)
+        {
+            throw new NotImplementedException();
         }
     }
 }
