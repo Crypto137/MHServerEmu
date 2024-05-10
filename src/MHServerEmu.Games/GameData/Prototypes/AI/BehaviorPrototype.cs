@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Tables;
 
@@ -215,6 +216,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AIEntityAttributePrototype : Prototype
     {
         public ComparisonOperatorType OperatorType { get; protected set; }
+
+        internal bool Check(Agent aggressor, WorldEntity target)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class AIEntityAttributeHasKeywordPrototype : AIEntityAttributePrototype

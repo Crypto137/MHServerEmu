@@ -1,16 +1,136 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Behavior
 {
     public class Combat
     {
-        private static bool CheckAggroDistance(Agent agressor, WorldEntity target, float distance)
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static int GetNumTargetsInRange(Agent aggressor, float rangeMax, float rangeMin, CombatTargetType targetType,
+            CombatTargetFlags flags, AIEntityAttributePrototype[] attributes = null)
+        {
+            if (aggressor == null) return 0;
+            if (aggressor.Region == null) 
+                Logger.Warn($"Agent not in region when trying to count targets in range! Agent: {aggressor}");
+
+            int numTargets = 0;
+            Sphere volume = new (aggressor.RegionLocation.Position, rangeMax + aggressor.Bounds.GetRadius());
+            foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (target == null) continue;
+                if (ValidTarget(aggressor.Game, aggressor, target, targetType, false, flags)
+                    && (attributes == null || PassesAttributesCheck(aggressor, target, attributes)) 
+                    && (rangeMin == 0.0f || (aggressor.GetDistanceTo(target, true) >= rangeMin)))
+                    numTargets++;
+            }
+
+            return numTargets;
+        }
+
+        private static bool PassesAttributesCheck(Agent aggressor, WorldEntity target, AIEntityAttributePrototype[] attributes)
+        {
+            foreach (var attrib in attributes)
+                if (attrib != null && attrib.Check(aggressor, target) == false)
+                    return false;
+            return true;
+        }
+
+        private static bool ValidTarget(Game game, Agent aggressor, WorldEntity target, CombatTargetType targetType, bool inTarget, 
+            CombatTargetFlags flags, AlliancePrototype allianceOverride = null, float aggroRangeOverride = 0.0f)
+        {
+            if (game == null || aggressor == null || target == null || aggressor == target) return false;
+            if (target.IsInWorld == false) return false;
+
+            if (flags.HasFlag(CombatTargetFlags.CheckAgent) && target is not Agent) return false;
+            if (flags.HasFlag(CombatTargetFlags.CheckItem) && target is not Item) return false;
+
+            AlliancePrototype allianceProto = allianceOverride ?? aggressor.GetAlliancePrototype();
+            if (flags.HasFlag(CombatTargetFlags.IgnoreTargetable) == false)
+            {
+                if (target.IsTargetable(aggressor) == false && target.HasAITargetableOverride == false) return false;
+                Player player = target.GetOwnerOfType<Player>();
+                if (player != null && player.IsTargetable(allianceProto) == false) return false;
+            }
+
+            if (flags.HasFlag(CombatTargetFlags.IgnoreDead) == false && target.IsDead) return false;
+            if (flags.HasFlag(CombatTargetFlags.CheckInvulnerable) && target.Properties[PropertyEnum.Invulnerable]) return false;
+
+            if (flags.HasFlag(CombatTargetFlags.IgnoreStealth) == false)
+            {
+                float stealth = target.Properties[PropertyEnum.Stealth];
+                if (stealth > 0.0f)
+                {
+                    stealth -= target.Properties[PropertyEnum.StealthPenalty];
+                    if (stealth > 0.0f)
+                    {
+                        stealth -= aggressor.Properties[PropertyEnum.StealthDetection];
+                        if (stealth > 0.0f)
+                            return false;
+                    }
+                }
+            }
+
+            AIController aggressorsController = aggressor.AIController;
+            if (aggressorsController == null) return false;
+
+            float aggroRange = 0.0f;
+            if (flags.HasFlag(CombatTargetFlags.IgnoreHostile) == false)
+            {
+                switch (targetType)
+                {
+                    case CombatTargetType.Hostile:
+                        if (aggressor.IsHostileTo(target, allianceProto) == false) return false;
+                        aggroRange = (aggroRangeOverride > 0.0f) ? aggroRangeOverride : aggressorsController.AggroRangeHostile;
+                        break;
+                    case CombatTargetType.Ally:
+                        if (aggressor.IsFriendlyTo(target, allianceProto) == false) return false;
+                        aggroRange = (aggroRangeOverride > 0.0f) ? aggroRangeOverride : aggressorsController.AggroRangeHostile;
+                        break;
+                    default:
+                        Logger.Warn("Invalid combat target type.");
+                        break;
+                }
+            }
+
+            if (inTarget)         
+            {            
+                BehaviorBlackboard aggressorBlackboard = aggressorsController.Blackboard;
+                if (flags.HasFlag(CombatTargetFlags.IgnoreAggroDropRange) == false)
+                    if (CheckAggroDistance(aggressor, target, aggressorBlackboard.PropertyCollection[PropertyEnum.AIAggroDropRange]) == false)
+                        return false;
+
+                if (flags.HasFlag(CombatTargetFlags.IgnoreAggroLOSChance) == false && flags.HasFlag(CombatTargetFlags.IgnoreLOS) == false)
+                {
+                    float chance = aggressorBlackboard.PropertyCollection[PropertyEnum.AIAggroDropByLOSChance];
+                    if (chance > 0.0f && aggressor.LineOfSightTo(target) == false)
+                        if (game.Random.NextFloat() < chance) return false;
+                }
+            }
+            else
+            {
+                if (flags.HasFlag(CombatTargetFlags.IgnoreAggroDistance) == false && flags.HasFlag(CombatTargetFlags.IgnoreHostile) == false)
+                    if (CheckAggroDistance(aggressor, target, aggroRange) == false) return false;
+
+                if (flags.HasFlag(CombatTargetFlags.IgnoreLOS) == false)
+                    if (aggressor.LineOfSightTo(target) == false) return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckAggroDistance(Agent aggressor, WorldEntity target, float distance)
         {
             if (distance > 0.0)
             {
                 float distanceSq = distance * distance;
-                if (distanceSq < Vector3.DistanceSquared2D(agressor.RegionLocation.Position, target.RegionLocation.Position)) 
+                if (distanceSq < Vector3.DistanceSquared2D(aggressor.RegionLocation.Position, target.RegionLocation.Position)) 
                     return false;
             }
             return true;
@@ -21,7 +141,18 @@ namespace MHServerEmu.Games.Behavior
     public enum CombatTargetFlags
     {
         None = 0,
-
+        Flag0 = 1 << 0,
+        CheckInvulnerable    = 1 << 1,
+        CheckAgent           = 1 << 2,
+        CheckItem            = 1 << 3,
+        IgnoreAggroDistance  = 1 << 4,
+        IgnoreAggroDropRange = 1 << 5,
+        IgnoreAggroLOSChance = 1 << 6,
+        IgnoreStealth        = 1 << 7,
+        IgnoreDead           = 1 << 8,
+        IgnoreHostile        = 1 << 9,
+        IgnoreLOS            = 1 << 10,
+        IgnoreTargetable     = 1 << 11,
     }
 
     public enum CombatTargetType

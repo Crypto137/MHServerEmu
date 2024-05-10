@@ -693,5 +693,10 @@ namespace MHServerEmu.Games.Entities
                 foreach( var message in messages)
                     playerConnection.PostMessage(message);
         }
+
+        internal bool IsTargetable(AlliancePrototype allianceProto)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

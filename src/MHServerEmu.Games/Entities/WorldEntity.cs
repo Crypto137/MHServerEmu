@@ -250,6 +250,16 @@ namespace MHServerEmu.Games.Entities
             return GameDatabase.GetPrototype<AlliancePrototype>(GetAlliance());
         }
 
+        internal bool IsHostileTo(WorldEntity target, AlliancePrototype allianceProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool LineOfSightTo(WorldEntity other, float radius = 0.0f, float padding = 0.0f, float height = 0.0f)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             var proto = WorldEntityPrototype;
@@ -751,6 +761,11 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        internal float GetDistanceTo(WorldEntity other, bool calcRadius)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
 
@@ -767,6 +782,11 @@ namespace MHServerEmu.Games.Entities
             if (Vector3.LengthSqr(delta) >= MathHelper.PositionSqTolerance)
                 return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == true;
             return false;
+        }
+
+        internal bool IsTargetable(Agent aggressor)
+        {
+            throw new NotImplementedException();
         }
     }
 
