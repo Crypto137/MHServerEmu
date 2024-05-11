@@ -532,6 +532,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpecialPowerNumSummons { get; protected set; }
         public float SpecialPowerMaxRadius { get; protected set; }
         public float SpecialPowerMinRadius { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, MeleePower);
+            ownerController.AddPowersToPicker(powerPicker, SpecialPower);
+        }
     }
 
     public class ProceduralProfileLadyDeathstrikePrototype : ProceduralProfileWithAttackPrototype
@@ -817,6 +824,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TriggerSpawnersContextPrototype SpawnTurrets { get; protected set; }
         public TriggerSpawnersContextPrototype SpawnDrDoomPhase2 { get; protected set; }
         public TriggerSpawnersContextPrototype DestroyTurretsOnDeath { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, SummonTurretPowerAnimOnly);
+            ownerController.AddPowersToPicker(powerPicker, SummonDoombotAnimOnly);
+            ownerController.AddPowersToPicker(powerPicker, SummonOrbSpawners);
+        }
     }
 
     public class ProceduralProfileDrDoomPhase2Prototype : ProceduralProfileWithAttackPrototype
@@ -841,6 +856,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] CosmicSummonEntities { get; protected set; }
         public CurveId CosmicSummonsNumEntities { get; protected set; }
         public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, RapidFirePower);
+            ownerController.AddPowersToPicker(powerPicker, CosmicSummonsAnimOnly);
+        }
     }
 
     public class ProceduralProfileDrDoomPhase1OrbSpawnerPrototype : ProceduralProfileWithAttackPrototype
@@ -919,6 +941,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
         public SelectEntityContextPrototype SpecialSelectTarget { get; protected set; }
         public int SpecialPowerChangeTgtIntervalMS { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, TripleShotPower);
+            ownerController.AddPowersToPicker(powerPicker, SpecialPower);
+        }
     }
 
     public class ProceduralProfileMoleManPrototype : ProceduralProfileBasicRangePrototype
@@ -960,6 +989,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype DisappearPower { get; protected set; }
         public int LifeTimeMinMS { get; protected set; }
         public int LifeTimeMaxMS { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, DisappearPower);
+        }
     }
 
     public class ProceduralProfileGorgonPrototype : ProceduralProfileWithAttackPrototype
@@ -968,6 +1003,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype StoneGaze { get; protected set; }
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, StoneGaze);
+        }
     }
 
     public class ProceduralProfileBotAIPrototype : ProceduralProfileWithAttackPrototype
@@ -989,6 +1030,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype MarkForDeath { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, MarkForDeath);
+        }
     }
 
     public class ProceduralProfileRhinoPrototype : ProceduralProfileBasicMeleePrototype
@@ -1016,6 +1063,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype SweepingBeamPowerCounterClock { get; protected set; }
         public RotateContextPrototype SweepingBeamClock { get; protected set; }
         public RotateContextPrototype SweepingBeamCounterClock { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, SweepingBeamPowerClock);
+            ownerController.AddPowersToPicker(powerPicker, SweepingBeamPowerCounterClock);
+        }
     }
 
     public class ProceduralProfileMeleeFlockerPrototype : ProceduralProfileWithAttackPrototype
@@ -1027,6 +1081,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileLizardBossPrototype : ProceduralProfileBasicMeleePrototype
     {
         public ProceduralUsePowerContextPrototype LizardSwarmPower { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, LizardSwarmPower);
+        }
     }
 
     public class ProceduralProfilePetDirectedPrototype : ProceduralProfilePetPrototype
@@ -1202,6 +1262,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveIntoMeleeRange { get; protected set; }
         public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
         public PrototypeId HellfireProtoRef { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, MeleePower);
+        }
     }
 
     public class ProceduralProfileSlagPrototype : ProceduralProfileWithEnragePrototype
@@ -1229,6 +1295,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpecialPowerNumSummons { get; protected set; }
         public float SpecialPowerMaxRadius { get; protected set; }
         public float SpecialPowerMinRadius { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, PrimaryPower);
+            ownerController.AddPowersToPicker(powerPicker, SpecialPower);
+        }
     }
 
     public class ProceduralProfileMistressOfMagmaPrototype : ProceduralProfileWithEnragePrototype
@@ -1236,6 +1309,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype BombDancePower { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, BombDancePower);
+        }
     }
 
     public class ProceduralProfileSurturPrototype : ProceduralProfileWithEnragePrototype
@@ -1285,6 +1364,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ProceduralUsePowerContextPrototype MarkTargetPower { get; protected set; }
         public PrototypeId MarkTargetVFXRemoval { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, PrimaryPower);
+            ownerController.AddPowersToPicker(powerPicker, MarkTargetPower);
+        }
     }
 
     public class ProceduralProfileMissionAllyPrototype : ProceduralProfileWithAttackPrototype
