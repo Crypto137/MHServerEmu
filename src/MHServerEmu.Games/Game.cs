@@ -299,12 +299,10 @@ namespace MHServerEmu.Games
                 connection.ReceiveMessage(message.Item2);
             }
 
-            // Update event manager
             EventManager.Update();
-            // Update locomote
-            EntityManager.LocomoteEntities();
-            // Update physics manager
-            EntityManager.PhysicsResolveEntities();
+            // Re-enable this when we get rid of multithreading issues
+            //EntityManager.LocomoteEntities();
+            //EntityManager.PhysicsResolveEntities();
 
             // Send responses to all clients
             NetworkManager.SendAllPendingMessages();
