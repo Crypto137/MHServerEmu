@@ -172,6 +172,12 @@ namespace MHServerEmu.Games.Network
             _pendingMessageList.Clear();
         }
 
+        public bool CanSendOrReceiveMessages()
+        {
+            // TODO: Block message processing during certain states (e.g. malicious client sending messages while loading).
+            return true;
+        }
+
         public void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).

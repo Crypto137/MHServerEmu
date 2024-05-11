@@ -35,9 +35,6 @@ namespace MHServerEmu.Games
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly object _gameLock = new();
-        private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
-
         private readonly Stopwatch _gameTimer = new();
         private TimeSpan _accumulatedFixedTimeUpdateTime;   // How much has passed since the last fixed time update
         private TimeSpan _lastFixedTimeUpdateStartTime;     // When was the last time we tried to do a fixed time update
@@ -103,14 +100,6 @@ namespace MHServerEmu.Games
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
         }
 
-        public void HandleClientMessage(FrontendClient client, MessagePackage message)
-        {
-            lock (_gameLock)
-            {
-                _mailbox.Post(client, message);
-            }
-        }
-
         public void AddClient(FrontendClient client)
         {
             NetworkManager.AsyncAddClient(client);
@@ -119,6 +108,11 @@ namespace MHServerEmu.Games
         public void RemoveClient(FrontendClient client)
         {
             NetworkManager.AsyncRemoveClient(client);
+        }
+
+        public void PostMessage(FrontendClient client, MessagePackage message)
+        {
+            NetworkManager.AsyncPostMessage(client, message);
         }
 
         /// <summary>
@@ -139,17 +133,12 @@ namespace MHServerEmu.Games
 
         public void MovePlayerToRegion(PlayerConnection playerConnection, PrototypeId regionDataRef, PrototypeId waypointDataRef)
         {
-            // This lock is still here because it is still technically possible to call MovePlayerToRegion() asynchronously from commands.
-            // This should not happen in practice since the only way to invoke those commands is from the game.
-            lock (_gameLock)
-            {
-                playerConnection.ExitGame();
+            playerConnection.ExitGame();
 
-                playerConnection.RegionDataRef = regionDataRef;
-                playerConnection.WaypointDataRef = waypointDataRef;
+            playerConnection.RegionDataRef = regionDataRef;
+            playerConnection.WaypointDataRef = waypointDataRef;
 
-                NetworkManager.SetPlayerConnectionPending(playerConnection);
-            }
+            NetworkManager.SetPlayerConnectionPending(playerConnection);
         }
 
         public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
@@ -240,7 +229,10 @@ namespace MHServerEmu.Games
 
             while (true)
             {
+                // NOTE: We process input in NetworkManager.ReceiveAllPendingMessages() outside of UpdateFixedTime(), same as the client.
+
                 NetworkManager.Update();                            // Add / remove clients
+                NetworkManager.ReceiveAllPendingMessages();         // Process input
                 NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
                 UpdateFixedTime();                                  // Update simulation state
             }
@@ -264,45 +256,36 @@ namespace MHServerEmu.Games
                 return;
             }
 
-            lock (_gameLock)    // Lock to prevent state from being modified mid-update
+            int timesUpdated = 0;
+
+            while (_accumulatedFixedTimeUpdateTime >= FixedTimeBetweenUpdates)
             {
-                int timesUpdated = 0;
+                _accumulatedFixedTimeUpdateTime -= FixedTimeBetweenUpdates;
 
-                while (_accumulatedFixedTimeUpdateTime >= FixedTimeBetweenUpdates)
-                {
-                    _accumulatedFixedTimeUpdateTime -= FixedTimeBetweenUpdates;
+                TimeSpan fixedUpdateStartTime = _gameTimer.Elapsed;
 
-                    TimeSpan fixedUpdateStartTime = _gameTimer.Elapsed;
+                DoFixedTimeUpdate();
+                _frameCount++;
+                timesUpdated++;
 
-                    DoFixedTimeUpdate();
-                    _frameCount++;
-                    timesUpdated++;
+                _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - fixedUpdateStartTime;
 
-                    _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - fixedUpdateStartTime;
-
-                    if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
-                        Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
-                }
-
-                if (timesUpdated > 1)
-                    Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single update to catch up");
+                if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
+                    Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
             }
+
+            if (timesUpdated > 1)
+                Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single update to catch up");
         }
 
         private void DoFixedTimeUpdate()
         {
-            // Handle all queued messages
-            while (_mailbox.HasMessages)
-            {
-                var message = _mailbox.PopNextMessage();
-                PlayerConnection connection = NetworkManager.GetPlayerConnection(message.Item1);
-                connection.ReceiveMessage(message.Item2);
-            }
-
             EventManager.Update();
             // Re-enable this when we get rid of multithreading issues
             //EntityManager.LocomoteEntities();
             //EntityManager.PhysicsResolveEntities();
+
+            // TODO: EntityManager.ProcessDeferredLists()
 
             // Send responses to all clients
             NetworkManager.SendAllPendingMessages();

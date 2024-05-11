@@ -12,12 +12,12 @@ namespace MHServerEmu.Core.Network
         public uint Id { get; }
 
         /// <summary>
-        /// Constructs a new <see cref="MailboxMessage"/> from the provided <see cref="MessagePackage"/>.
+        /// Constructs a new <see cref="MailboxMessage{TClient}"/>.
         /// </summary>
-        public MailboxMessage(MessagePackage message)
+        public MailboxMessage(uint id, IMessage message)
         {
-            Id = message.Id;
-            _message = message.Deserialize();
+            Id = id;
+            _message = message;
         }
 
         /// <summary>
