@@ -39,5 +39,15 @@ namespace MHServerEmu.Games.Behavior
         {
             throw new NotImplementedException();
         }
+
+        internal bool ShouldSense()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void ValidateCurrentTarget(CombatTargetType targetType)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

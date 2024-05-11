@@ -1,26 +1,64 @@
-﻿using MHServerEmu.Games.Behavior.ProceduralAI;
-using MHServerEmu.Games.Behavior.StaticAI;
-using MHServerEmu.Games.Behavior;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Core.System.Random;
-using MHServerEmu.Core.Collections;
-using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Powers;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Behavior.ProceduralAI;
+using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class ProceduralAIProfilePrototype : BrainPrototype
     {
-        public static StaticBehaviorReturnType HandleContext<TState, TContext, TContextProto>(ProceduralAI proceduralAI, AIController ownerController,
+        public static StaticBehaviorReturnType HandleContext<TContextProto>(ProceduralAI proceduralAI, AIController ownerController,
             TContextProto contextProto, ProceduralContextPrototype proceduralContext = null)
             where TContextProto : Prototype
-            where TContext : IStateContext
-            where TState : IAIState
         {
             (IAIState instance, IStateContext context) = IStateContext.Create(ownerController, contextProto);
             return proceduralAI.HandleContext(instance, ref context, proceduralContext);
+        }
+
+        public static bool HandleMovementContext<TContextProto>(ProceduralAI proceduralAI, AIController ownerController, 
+            Locomotor locomotor, TContextProto contextProto, bool checkPower, out StaticBehaviorReturnType movementResult, ProceduralContextPrototype proceduralContext = null)
+             where TContextProto : Prototype
+        {
+            movementResult = StaticBehaviorReturnType.None;
+            if (locomotor == null)
+            {
+                ProceduralAI.Logger.Warn($"Can't move without a locomotor! {locomotor}");
+                return false;
+            }
+            (IAIState instance, IStateContext context) = IStateContext.Create(ownerController, contextProto);
+            movementResult = proceduralAI.HandleContext(instance, ref context, proceduralContext);
+            if (ResetTargetAndStateIfPathFails(proceduralAI, ownerController, locomotor, ref context, checkPower))
+                return false;
+            return true;
+        }
+
+        private static bool ResetTargetAndStateIfPathFails(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
+            ref IStateContext context, bool checkPower)
+        {
+            Agent owner = ownerController.Owner;
+            if (owner == null) return false;
+            if (locomotor == null)
+            {
+                ProceduralAI.Logger.Warn($"Agent [{owner}] doesn't have a locomotor and should not be calling this function");
+                return false;
+            }
+
+            if (locomotor.LastGeneratedPathResult == NaviPathResult.FailedNoPathFound)
+            {
+                bool resetTarget = true;
+                if (checkPower) resetTarget = proceduralAI.LastPowerResult == StaticBehaviorReturnType.Failed;
+                if (resetTarget) ownerController.ResetCurrentTargetState();
+                proceduralAI.SwitchProceduralState(null, ref context, StaticBehaviorReturnType.Failed);
+                return true;
+            }
+
+            return false;
         }
 
         public static bool ValidateContext(ProceduralAI proceduralAI, AIController ownerController, UsePowerContextPrototype contextProto)
@@ -36,7 +74,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool HandleOverrideBehavior(AIController ownerController)
         {
-            throw new NotImplementedException();
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return false;
+
+            ProceduralAIProfilePrototype fullOverrideBehavior = proceduralAI.FullOverrideBehavior;
+            if (fullOverrideBehavior != null && fullOverrideBehavior.GetType() != GetType())
+            {
+                fullOverrideBehavior.Think(ownerController);
+                if (ownerController.IsOwnerValid() == false) return true;
+                return proceduralAI.FullOverrideBehavior != null;
+            }
+            return false;
         }
 
         public virtual void Think(AIController ownerController)
@@ -50,8 +98,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public SelectEntityContextPrototype SelectTarget { get; protected set; }
         public PrototypeId NoTargetOverrideProfile { get; protected set; }
 
-        public bool DefaultSensory(WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
+        [Flags]
+        protected enum SelectTargetFlags
+        {
+            None,
+            NoTargetOverride = 1 << 0,
+            NotifyAllies = 1 << 1,
+        }
+
+        public bool DefaultSensory(ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
             SelectEntityContextPrototype selectTarget, CombatTargetType targetType, CombatTargetFlags flags = CombatTargetFlags.None)
+        {
+            BehaviorSensorySystem senses = ownerController.Senses;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return false;
+
+            if (senses.ShouldSense())
+            {
+                senses.Sense();
+                if (agent.IsDormant == false)
+                {
+                    if (target == null || target.IsAliveInWorld == false ||
+                        (selectTarget.LockEntityOnceSelected == false && ownerController.ActivePowerRef == PrototypeId.Invalid))
+                        SelectTargetEntity(agent, ref target, ownerController, proceduralAI, selectTarget, targetType,
+                                     SelectTargetFlags.NoTargetOverride | SelectTargetFlags.NotifyAllies, flags);
+                    else
+                        senses.ValidateCurrentTarget(targetType);
+                }
+                else
+                    return false;
+            }
+
+            if (target == null || target.IsInWorld == false || agent.IsDormant) return false;
+
+            return true;
+        }
+
+        protected void SelectTargetEntity(Agent agent, ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, SelectEntityContextPrototype selectTarget, CombatTargetType targetType, SelectTargetFlags selectTargetFlags, CombatTargetFlags flags)
         {
             throw new NotImplementedException();
         }
@@ -59,8 +142,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public void DefaultMeleeMovement(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
             WorldEntity target, MoveToContextPrototype moveToTarget, OrbitContextPrototype orbitTarget)
         {
-            throw new NotImplementedException();
+            if (target == null) return;
+            if (proceduralAI.GetState(0) != Orbit.Instance)
+            {
+                HandleMovementContext(proceduralAI, ownerController, locomotor, moveToTarget, false, out var movementResult); 
+                if (movementResult == StaticBehaviorReturnType.Running || movementResult == StaticBehaviorReturnType.Completed) 
+                    return;
+            }
+
+            HandleMovementContext(proceduralAI, ownerController, locomotor, orbitTarget, false, out var orbitResult);
+            if (orbitResult == StaticBehaviorReturnType.Running) return;
+          
+            if (orbitResult == StaticBehaviorReturnType.Failed)
+            {
+                if (NoTargetOverrideProfile == PrototypeId.Invalid 
+                    || ownerController.Blackboard.PropertyCollection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] == true)
+                    return;
+
+                var profile = GameDatabase.GetPrototype<ProceduralProfileDefaultActiveOverridePrototype>(NoTargetOverrideProfile);
+                if (profile == null)
+                {
+                    ProceduralAI.Logger.Warn($"default melee movement for [{ToString()}] requires NoTargetOverrideProfile to be a ProceduralProfileDefaultActiveOverridePrototype");
+                    return;
+                }
+
+                HandleMovementContext(proceduralAI, ownerController, locomotor, profile.Wander, false, out _);
+            }
         }
+
     }
 
     public class ProceduralProfileWithAttackPrototype : ProceduralProfileWithTargetPrototype
@@ -75,7 +184,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ownerController.AddPowersToPicker(powerPicker, GenericProceduralPowers);
         }
 
-        public StaticBehaviorReturnType HandleProceduralPower(AIController ownerController, ProceduralAI proceduralAI, GRandom random, 
+        protected StaticBehaviorReturnType HandleProceduralPower(AIController ownerController, ProceduralAI proceduralAI, GRandom random, 
             long currentTime, Picker<ProceduralUsePowerContextPrototype> powerPicker, bool affixes)
         {
             throw new NotImplementedException();
@@ -216,7 +325,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (HandleOverrideBehavior(ownerController)) return;
 
             WorldEntity target = ownerController.TargetEntity; 
-            if (DefaultSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false 
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false 
                 && proceduralAI.PartialOverrideBehavior == null) return;
 
             GRandom random = game.Random; 
@@ -256,7 +365,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (HandleOverrideBehavior(ownerController)) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (DefaultSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
                 && proceduralAI.PartialOverrideBehavior == null) return;
 
             GRandom random = game.Random;

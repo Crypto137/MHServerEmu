@@ -23,6 +23,8 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }
         public ProceduralAIProfilePrototype PartialOverrideBehavior { get; private set; }
+        public StaticBehaviorReturnType LastPowerResult { get; internal set; }
+        public ProceduralAIProfilePrototype FullOverrideBehavior { get; internal set; }
 
         public void StopOwnerLocomotor()
         {
@@ -58,7 +60,8 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             state.Start(stateContext);
             proceduralContext?.OnStart(_owningController, _procedurealProfile);
         }
-        private StaticBehaviorReturnType SwitchProceduralState(IAIState state, ref IStateContext stateContext, StaticBehaviorReturnType returnType, ProceduralContextPrototype proceduralContext)
+
+        public  StaticBehaviorReturnType SwitchProceduralState(IAIState state, ref IStateContext stateContext, StaticBehaviorReturnType returnType, ProceduralContextPrototype proceduralContext = null)
         {
             throw new NotImplementedException();
         }
@@ -80,6 +83,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             return false;
         }
 
+        public IAIState GetState(int stateIndex)
+        {
+            if (stateIndex < 0 || stateIndex >= MaxConcurrentStates) return null;
+            return _states[stateIndex].State;
+        }
     }
 
     public struct PState

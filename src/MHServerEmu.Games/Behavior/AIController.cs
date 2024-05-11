@@ -161,5 +161,10 @@ namespace MHServerEmu.Games.Behavior
         {
             throw new NotImplementedException();
         }
+
+        internal void ResetCurrentTargetState()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

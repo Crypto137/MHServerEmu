@@ -58,6 +58,7 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsTeamUpAgent { get => false; }
         public virtual bool IsSummonedPet { get => false; }
         public bool IsInWorld { get => RegionLocation.IsValid(); }
+        public bool IsAliveInWorld { get => IsInWorld && !IsDead; }
         public EntityPhysics Physics { get; private set; }
         public bool HasNavigationInfluence { get; private set; }
         public NavigationInfluence NaviInfluence { get; private set; }
