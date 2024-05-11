@@ -90,6 +90,7 @@ namespace MHServerEmu.Games.Behavior
                 Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeOverrideHostile] : 
                 Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeHostile]; 
         }
+        public PrototypeId ActivePowerRef { get; internal set; }
 
         public void OnAIActivated()
         {

@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
 {
     public class ProceduralAI
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        public static readonly Logger Logger = LogManager.CreateLogger();
 
         public const short MaxConcurrentStates = 2;
         private AIController _owningController;
