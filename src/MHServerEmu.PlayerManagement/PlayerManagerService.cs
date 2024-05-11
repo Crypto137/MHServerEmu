@@ -90,7 +90,7 @@ namespace MHServerEmu.PlayerManagement
                         return;
                     }
 
-                    game.Handle(client, message);
+                    game.HandleClientMessage(client, message);
                     break;
             }
         }
@@ -143,7 +143,7 @@ namespace MHServerEmu.PlayerManagement
                 }
 
                 _playerDict.Add(client.Session.Account.Id, client);
-                _gameManager.GetAvailableGame().AddPlayer(client);
+                _gameManager.GetAvailableGame().AddClient(client);
             }
 
             return true;
@@ -161,7 +161,7 @@ namespace MHServerEmu.PlayerManagement
                 if (_playerDict.ContainsKey(client.Session.Account.Id) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client.Session.Account} not found");
 
-                GetGameByPlayer(client)?.RemovePlayer(client);
+                GetGameByPlayer(client)?.RemoveClient(client);
 
                 _playerDict.Remove(playerId);
                 _sessionManager.RemoveSession(client.Session.Id);

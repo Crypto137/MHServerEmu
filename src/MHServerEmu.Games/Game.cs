@@ -7,7 +7,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Random;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -15,11 +14,9 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games
@@ -34,10 +31,10 @@ namespace MHServerEmu.Games
         private const int TargetFrameRate = 20;
         public static readonly TimeSpan StartTime = TimeSpan.FromMilliseconds(1);
         public readonly TimeSpan FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
+        public readonly NetStructGameOptions GameOptions;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly NetStructGameOptions _gameOptions;
         private readonly object _gameLock = new();
         private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
 
@@ -75,7 +72,7 @@ namespace MHServerEmu.Games
 
             // Initialize game options
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
-            _gameOptions = config.ToProtobuf();
+            GameOptions = config.ToProtobuf();
 
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
@@ -107,7 +104,7 @@ namespace MHServerEmu.Games
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
         }
 
-        public void Handle(FrontendClient client, MessagePackage message)
+        public void HandleClientMessage(FrontendClient client, MessagePackage message)
         {
             lock (_gameLock)
             {
@@ -115,74 +112,14 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void Handle(FrontendClient client, IEnumerable<MessagePackage> messages)
+        public void AddClient(FrontendClient client)
         {
-            foreach (MessagePackage message in messages) Handle(client, message);
+            NetworkManager.AsyncAddClient(client);
         }
 
-        public void AddPlayer(FrontendClient client)
+        public void RemoveClient(FrontendClient client)
         {
-            lock (_gameLock)
-            {
-                client.GameId = Id;
-                PlayerConnection playerConnection = NetworkManager.AddPlayer(client);
-                foreach (IMessage message in GetBeginLoadingMessages(playerConnection))
-                    SendMessage(playerConnection, message);
-
-                Logger.Trace($"Player {client.Session.Account} added to {this}");
-            }
-        }
-
-        public void RemovePlayer(FrontendClient client)
-        {
-            lock (_gameLock)
-            {
-                NetworkManager.RemovePlayer(client);
-                Logger.Trace($"Player {client.Session.Account} removed from {this}");
-            }
-        }
-
-        public void MovePlayerToRegion(PlayerConnection playerConnetion, PrototypeId regionDataRef, PrototypeId waypointDataRef)
-        {
-            lock (_gameLock)
-            {
-                foreach (IMessage message in GetExitGameMessages())
-                    SendMessage(playerConnetion, message);
-
-                playerConnetion.RegionDataRef = regionDataRef;
-                playerConnetion.WaypointDataRef = waypointDataRef;
-
-                foreach (IMessage message in GetBeginLoadingMessages(playerConnetion))
-                    SendMessage(playerConnetion, message);
-            }
-        }
-
-        public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
-        {   
-            // TODO change Reload without exit of region
-            lock (_gameLock)
-            {
-                var entityManager = playerConnection.Game.EntityManager;
-                var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
-                if (worldEntity == null) return;
-
-                foreach (IMessage message in GetExitGameMessages())
-                    SendMessage(playerConnection, message);
-
-                playerConnection.RegionDataRef = (PrototypeId)worldEntity.Region.PrototypeId;
-                playerConnection.EntityToTeleport = worldEntity;
-
-                foreach (IMessage message in GetBeginLoadingMessages(playerConnection))
-                    SendMessage(playerConnection, message);
-            }
-        }
-
-        public void FinishLoading(PlayerConnection playerConnection)
-        {
-            foreach (IMessage message in GetFinishLoadingMessages(playerConnection))
-                SendMessage(playerConnection, message);
-
-            playerConnection.IsLoading = false;
+            NetworkManager.AsyncRemoveClient(client);
         }
 
         /// <summary>
@@ -201,6 +138,102 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
+        public void MovePlayerToRegion(PlayerConnection playerConnection, PrototypeId regionDataRef, PrototypeId waypointDataRef)
+        {
+            // This lock is still here because it is still technically possible to call MovePlayerToRegion() asynchronously from commands.
+            // This should not happen in practice since the only way to invoke those commands is from the game.
+            lock (_gameLock)
+            {
+                playerConnection.ExitGame();
+
+                playerConnection.RegionDataRef = regionDataRef;
+                playerConnection.WaypointDataRef = waypointDataRef;
+
+                NetworkManager.SetPlayerConnectionPending(playerConnection);
+            }
+        }
+
+        public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
+        {
+            // TODO change Reload without exit of region
+            var entityManager = playerConnection.Game.EntityManager;
+            var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
+            if (worldEntity == null) return;
+
+            playerConnection.ExitGame();
+
+            playerConnection.RegionDataRef = (PrototypeId)worldEntity.Region.PrototypeId;
+            playerConnection.EntityToTeleport = worldEntity;
+
+            NetworkManager.SetPlayerConnectionPending(playerConnection);
+        }
+
+        public void GetRegionAsync(PlayerConnection playerConnection)
+        {
+            Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
+            if (region != null) EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
+            else EventManager.AddEvent(playerConnection, EventEnum.ErrorInRegion, 0, playerConnection.RegionDataRef);
+        }
+
+        public Entity AllocateEntity(PrototypeId entityRef)
+        {
+            var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);
+
+            Entity entity;
+            if (proto is SpawnerPrototype)
+                entity = new Spawner(this);
+            else if (proto is TransitionPrototype)
+                entity = new Transition(this);
+            else if (proto is AvatarPrototype)
+                entity = new Avatar(this);
+            else if (proto is MissilePrototype)
+                entity = new Missile(this);
+            else if (proto is PropPrototype) // DestructiblePropPrototype
+                entity = new WorldEntity(this);
+            else if (proto is AgentPrototype) // AgentTeamUpPrototype OrbPrototype SmartPropPrototype
+                entity = new Agent(this);
+            else if (proto is ItemPrototype) // CharacterTokenPrototype BagItemPrototype CostumePrototype CraftingIngredientPrototype
+                                             // CostumeCorePrototype CraftingRecipePrototype ArmorPrototype ArtifactPrototype
+                                             // LegendaryPrototype MedalPrototype RelicPrototype TeamUpGearPrototype
+                                             // InventoryStashTokenPrototype EmoteTokenPrototype
+                entity = new Item(this);
+            else if (proto is KismetSequenceEntityPrototype)
+                entity = new KismetSequenceEntity(this);
+            else if (proto is HotspotPrototype)
+                entity = new Hotspot(this);
+            else if (proto is WorldEntityPrototype)
+                entity = new WorldEntity(this);
+            else if (proto is MissionMetaGamePrototype)
+                entity = new MissionMetaGame(this);
+            else if (proto is PvPPrototype)
+                entity = new PvP(this);
+            else if (proto is MetaGamePrototype) // MatchMetaGamePrototype
+                entity = new MetaGame(this);
+            else if (proto is PlayerPrototype)
+                entity = new Player(this);
+            else
+                entity = new Entity(this);
+
+            return entity;
+        }
+
+        public IEnumerable<Region> RegionIterator()
+        {            
+            foreach (Region region in RegionManager.AllRegions) 
+                yield return region;
+        }
+
+        // StartTime is always a TimeSpan of 1 ms, so we can make both Game::GetTimeFromStart() and Game::GetTimeFromDelta() static
+
+        public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
+        public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
+
+        public TimeSpan GetCurrentTime()
+        {
+            // TODO check EventScheduler
+            return Clock.GameTime;
+        }
+
         private void Update()
         {
             Current = this;
@@ -208,7 +241,9 @@ namespace MHServerEmu.Games
 
             while (true)
             {
-                UpdateFixedTime();
+                NetworkManager.Update();                            // Add / remove clients
+                NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
+                UpdateFixedTime();                                  // Update simulation state
             }
         }
 
@@ -274,159 +309,6 @@ namespace MHServerEmu.Games
 
             // Send responses to all clients
             NetworkManager.SendAllPendingMessages();
-        }
-
-        private List<IMessage> GetBeginLoadingMessages(PlayerConnection playerConnection)
-        {
-            List<IMessage> messageList = new();
-
-            // Add server info messages
-            messageList.Add(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
-                .SetCurrentservergameid(Id)
-                .SetGamestarttime((ulong)StartTime.TotalMilliseconds)
-                .Build());
-
-            messageList.Add(NetMessageServerVersion.CreateBuilder().SetVersion(Version).Build());
-            messageList.Add(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
-            messageList.Add(NetMessageReadyForTimeSync.DefaultInstance);
-
-            // Load local player data
-            messageList.Add(NetMessageLocalPlayer.CreateBuilder()
-                .SetLocalPlayerEntityId(playerConnection.Player.BaseData.EntityId)
-                .SetGameOptions(_gameOptions)
-                .Build());
-
-            messageList.Add(playerConnection.Player.ToNetMessageEntityCreate());
-
-            messageList.AddRange(playerConnection.Player.AvatarList.Select(avatar => avatar.ToNetMessageEntityCreate()));
-
-            messageList.Add(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
-
-            // Before changing to the actual destination region the game seems to first change into a transitional region
-            messageList.Add(NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build());
-
-            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)playerConnection.RegionDataRef)
-                .Build());
-
-            // Run region generation as a task
-            Task.Run(() => GetRegionAsync(playerConnection));
-            playerConnection.AOI.LoadedCellCount = 0;
-            playerConnection.IsLoading = true;
-
-            playerConnection.Player.IsOnLoadingScreen = true;
-
-            return messageList;
-        }
-
-        private void GetRegionAsync(PlayerConnection playerConnection)
-        {
-            Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
-            if (region != null) EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
-            else EventManager.AddEvent(playerConnection, EventEnum.ErrorInRegion, 0, playerConnection.RegionDataRef);
-        }
-
-        private List<IMessage> GetFinishLoadingMessages(PlayerConnection playerConnection)
-        {
-            List<IMessage> messageList = new();
-
-            Vector3 entrancePosition = new(playerConnection.StartPositon);
-            Orientation entranceOrientation = new(playerConnection.StartOrientation);
-            var player = playerConnection.Player;
-            var avatar = player.CurrentAvatar;
-            entrancePosition = avatar.FloorToCenter(entrancePosition);
-
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, entranceOrientation.Yaw, 350f);
-            messageList.Add(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
-                .Build());
-
-            playerConnection.AOI.Update(entrancePosition);
-            messageList.AddRange(playerConnection.AOI.Messages);
-
-            // Load power collection
-            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(playerConnection));
-
-            // Dequeue loading screen
-            messageList.Add(NetMessageDequeueLoadingScreen.DefaultInstance);
-
-            // Load KismetSeq for Region
-            messageList.AddRange(player.OnLoadAndPlayKismetSeq(playerConnection));
-
-            return messageList;
-        }
-
-        public IMessage[] GetExitGameMessages()
-        {
-            return new IMessage[]
-            {
-                NetMessageBeginExitGame.DefaultInstance,
-                NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build()
-            };
-        }
-
-        public Entity AllocateEntity(PrototypeId entityRef)
-        {
-            var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);
-
-            Entity entity;
-            if (proto is SpawnerPrototype)
-                entity = new Spawner(this);
-            else if (proto is TransitionPrototype)
-                entity = new Transition(this);
-            else if (proto is AvatarPrototype)
-                entity = new Avatar(this);
-            else if (proto is MissilePrototype)
-                entity = new Missile(this);
-            else if (proto is PropPrototype) // DestructiblePropPrototype
-                entity = new WorldEntity(this);
-            else if (proto is AgentPrototype) // AgentTeamUpPrototype OrbPrototype SmartPropPrototype
-                entity = new Agent(this);
-            else if (proto is ItemPrototype) // CharacterTokenPrototype BagItemPrototype CostumePrototype CraftingIngredientPrototype
-                                             // CostumeCorePrototype CraftingRecipePrototype ArmorPrototype ArtifactPrototype
-                                             // LegendaryPrototype MedalPrototype RelicPrototype TeamUpGearPrototype
-                                             // InventoryStashTokenPrototype EmoteTokenPrototype
-                entity = new Item(this);
-            else if (proto is KismetSequenceEntityPrototype)
-                entity = new KismetSequenceEntity(this);
-            else if (proto is HotspotPrototype)
-                entity = new Hotspot(this);
-            else if (proto is WorldEntityPrototype)
-                entity = new WorldEntity(this);
-            else if (proto is MissionMetaGamePrototype)
-                entity = new MissionMetaGame(this);
-            else if (proto is PvPPrototype)
-                entity = new PvP(this);
-            else if (proto is MetaGamePrototype) // MatchMetaGamePrototype
-                entity = new MetaGame(this);
-            else if (proto is PlayerPrototype)
-                entity = new Player(this);
-            else
-                entity = new Entity(this);
-
-            return entity;
-        }
-
-        public IEnumerable<Region> RegionIterator()
-        {            
-            foreach (Region region in RegionManager.AllRegions) 
-                yield return region;
-        }
-
-        // StartTime is always a TimeSpan of 1 ms, so we can make both Game::GetTimeFromStart() and Game::GetTimeFromDelta() static
-
-        public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
-        public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
-
-        public TimeSpan GetCurrentTime()
-        {
-            // TODO check EventScheduler
-            return Clock.GameTime;
         }
     }
 }

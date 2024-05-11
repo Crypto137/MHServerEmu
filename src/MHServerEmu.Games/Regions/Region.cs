@@ -758,23 +758,23 @@ namespace MHServerEmu.Games.Regions
                     Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.Orientation);
                     if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
-                    playerConnection.StartPositon = position;
+                    playerConnection.StartPosition = position;
                     playerConnection.StartOrientation = orientation;
                     playerConnection.EntityToTeleport = null;
                 }
                 else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Orientation orientation))
                 {
-                    playerConnection.StartPositon = position;
+                    playerConnection.StartPosition = position;
                     playerConnection.StartOrientation = orientation;
                 }
                 else
                 {
-                    playerConnection.StartPositon = StartArea.Cells.First().Value.RegionBounds.Center;
+                    playerConnection.StartPosition = StartArea.Cells.First().Value.RegionBounds.Center;
                     playerConnection.StartOrientation = Orientation.Zero;
                 }
 
                 playerConnection.AOI.Reset(this);
-                playerConnection.AOI.Update(playerConnection.StartPositon, true);
+                playerConnection.AOI.Update(playerConnection.StartPosition, true);
                 messageList.AddRange(playerConnection.AOI.Messages);
             }
 

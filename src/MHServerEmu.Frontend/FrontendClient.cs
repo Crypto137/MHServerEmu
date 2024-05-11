@@ -27,6 +27,11 @@ namespace MHServerEmu.Frontend
             Connection = connection;
         }
 
+        public override string ToString()
+        {
+            return Session != null ? Session.Account.ToString() : "No Session";
+        }
+
         /// <summary>
         /// Parses received data.
         /// </summary>

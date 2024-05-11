@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -12,6 +13,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -38,6 +40,8 @@ namespace MHServerEmu.Games.Network
 
         public Game Game { get; }
 
+        public ulong PlayerDbId { get => _dbAccount.Id; }
+
         // Player State
         public Player Player { get; private set; }
 
@@ -50,7 +54,7 @@ namespace MHServerEmu.Games.Network
         public Entity ThrowableEntity { get; set; }
 
         public AreaOfInterest AOI { get; private set; }
-        public Vector3 StartPositon { get; internal set; }
+        public Vector3 StartPosition { get; internal set; }
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
 
@@ -140,6 +144,7 @@ namespace MHServerEmu.Games.Network
         #region NetClient Implementation
 
         // Do not use these methods directly, these are for the PlayerConnectionManager.
+        // C# has no friends T_T
 
         /// <summary>
         /// Adds a new <see cref="IMessage"/> to the pending message list.
@@ -167,7 +172,100 @@ namespace MHServerEmu.Games.Network
             _pendingMessageList.Clear();
         }
 
+        public void OnDisconnect()
+        {
+            // Post-disconnection cleanup (save data, remove entities, etc).
+            UpdateDBAccount();
+        }
+
         #endregion
+
+        #region Loading and Exiting
+        
+        public void BeginLoading()
+        {
+            SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
+                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
+                .SetCurrentservergameid(Game.Id)
+                .SetGamestarttime((ulong)Game.StartTime.TotalMilliseconds)
+                .Build());
+
+            SendMessage(NetMessageServerVersion.CreateBuilder().SetVersion(Game.Version).Build());
+            SendMessage(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
+            SendMessage(NetMessageReadyForTimeSync.DefaultInstance);
+
+            // Load local player data
+            SendMessage(NetMessageLocalPlayer.CreateBuilder()
+                .SetLocalPlayerEntityId(Player.BaseData.EntityId)
+                .SetGameOptions(Game.GameOptions)
+                .Build());
+
+            SendMessage(Player.ToNetMessageEntityCreate());
+
+            foreach (IMessage message in Player.AvatarList.Select(avatar => avatar.ToNetMessageEntityCreate()))
+                SendMessage(message);
+
+            SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
+
+            // Before changing to the actual destination region the game seems to first change into a transitional region
+            SendMessage(NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(0)
+                .SetServerGameId(0)
+                .SetClearingAllInterest(false)
+                .Build());
+
+            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
+                .SetRegionPrototypeId((ulong)RegionDataRef)
+                .Build());
+
+            // Run region generation as a task
+            Task.Run(() => Game.GetRegionAsync(this));
+            AOI.LoadedCellCount = 0;
+            IsLoading = true;
+
+            Player.IsOnLoadingScreen = true;
+        }
+
+        public void FinishLoading()
+        {
+            var avatar = Player.CurrentAvatar;
+            Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
+
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, StartOrientation.Yaw, 350f);
+            SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
+                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
+                .Build());
+
+            AOI.Update(entrancePosition);
+            foreach (IMessage message in AOI.Messages)
+                SendMessage(message);
+
+            // Load power collection
+            foreach (IMessage message in PowerLoader.LoadAvatarPowerCollection(this))
+                SendMessage(message);
+
+            // Dequeue loading screen
+            SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
+
+            // Load KismetSeq for Region
+            foreach (IMessage message in Player.OnLoadAndPlayKismetSeq(this))
+                SendMessage(message);
+
+            IsLoading = false;
+        }
+
+        public void ExitGame()
+        {
+            SendMessage(NetMessageBeginExitGame.DefaultInstance);
+            SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
+        }
+
+        #endregion
+
+        public void Disconnect()
+        {
+            _frontendClient.Disconnect();
+        }
 
         #region Message Handling
 
@@ -324,8 +422,7 @@ namespace MHServerEmu.Games.Network
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
                 {
-                    Game.FinishLoading(this);
-
+                    FinishLoading();
                 }
                 else
                 {
@@ -621,11 +718,6 @@ namespace MHServerEmu.Games.Network
 
             AOI.InitPlayerView((PrototypeId)changeCameraSettings.CameraSettings);
             return true;
-        }
-
-        public void Disconnect()
-        {
-            _frontendClient.Disconnect();
         }
 
         #endregion
