@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Games.Network
@@ -19,7 +20,13 @@ namespace MHServerEmu.Games.Network
         private readonly Dictionary<ulong, PlayerConnection> _dbIdConnectionDict = new();
         private readonly Game _game;
 
-        // We swap queues with a lock when handling async client events
+        // Incoming messages are asynchronously posted to a mailbox where they are deserialized and stored for later retrieval.
+        // When it's time to process messages, we copy all messages stored in our mailbox to a list.
+        // Although we call it a "list" to match the client, it functions more like a queue (FIFO, pop/peeks).
+        private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
+        private readonly MessageList<FrontendClient> _messagesToProcessList = new();
+
+        // We swap queues with a lock when handling async client connect / disconnect events
         private Queue<FrontendClient> _asyncAddClientQueue = new();
         private Queue<FrontendClient> _asyncRemoveClientQueue = new();
         private Queue<FrontendClient> _addClientQueue = new();
@@ -103,6 +110,41 @@ namespace MHServerEmu.Games.Network
         {
             lock (_asyncRemoveClientQueue)
                 _asyncRemoveClientQueue.Enqueue(client);
+        }
+
+        /// <summary>
+        /// Handles an incoming <see cref="MessagePackage"/> asynchronously.
+        /// </summary>
+        public void AsyncPostMessage(FrontendClient client, MessagePackage message)
+        {
+            // If the message fails to deserialize it means either data got corrupted somehow or we have a hacker trying to mess things up.
+            // In both cases it's better to bail out.
+            if (_mailbox.Post(client, message) == false)
+            {
+                Logger.Error($"AsyncPostMessage(): Deserialization failed, disconnecting client {client} from {_game}");
+                client.Disconnect();
+            }
+        }
+
+        /// <summary>
+        /// Processes all asynchronously posted messages.
+        /// </summary>
+        public void ReceiveAllPendingMessages()
+        {
+            // We reuse the same message list every time to avoid unnecessary allocations.
+            _mailbox.GetAllMessages(_messagesToProcessList);
+
+            while (_messagesToProcessList.HasMessages)
+            {
+                (FrontendClient client, MailboxMessage message) = _messagesToProcessList.PopNextMessage();
+                PlayerConnection playerConnection = GetPlayerConnection(client);
+
+                if (playerConnection != null && playerConnection.CanSendOrReceiveMessages())
+                    playerConnection.ReceiveMessage(message);
+
+                // If the player connection was removed or it is currently unable to receive messages,
+                // this message will be lost, like tears in rain...
+            }
         }
 
         /// <summary>

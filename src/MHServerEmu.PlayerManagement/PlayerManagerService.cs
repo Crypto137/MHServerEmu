@@ -90,7 +90,7 @@ namespace MHServerEmu.PlayerManagement
                         return;
                     }
 
-                    game.HandleClientMessage(client, message);
+                    game.PostMessage(client, message);
                     break;
             }
         }

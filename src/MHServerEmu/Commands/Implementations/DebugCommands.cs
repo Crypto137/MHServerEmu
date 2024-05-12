@@ -24,6 +24,15 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
+        [Command("forcegc", "Requests the garbage collector to reclaim unused server memory.", AccountUserLevel.Admin)]
+        public string ForceGC(string[] @params, FrontendClient client)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            
+            return "Manual garbage collection successfully requested.";
+        }
+
         [Command("cell", "Shows current cell.", AccountUserLevel.User)]
         public string Cell(string[] @params, FrontendClient client)
         {
