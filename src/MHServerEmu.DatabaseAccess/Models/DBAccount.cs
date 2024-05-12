@@ -39,6 +39,14 @@ namespace MHServerEmu.DatabaseAccess.Models
         [JsonIgnore]
         public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
 
+        /// <summary>
+        /// Constructs an empty <see cref="DBAccount"/> instance.
+        /// </summary>
+        public DBAccount() { }
+
+        /// <summary>
+        /// Constructs a <see cref="DBAccount"/> instance with the provided data.
+        /// </summary>
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
             Id = IdGenerator.Generate();
@@ -54,11 +62,14 @@ namespace MHServerEmu.DatabaseAccess.Models
             InitializeData();
         }
 
+        /// <summary>
+        /// Constructs a default <see cref="DBAccount"/> instance with the provided data.
+        /// </summary>
         public DBAccount(string playerName, long region, long waypoint, long avatar, int volume)
         {
-            // Default account for using with BypassAuth
-            Id = 0;
-            Email = "default@account.mh";
+            // Default account is used when BypassAuth is enabled
+            Id = 0x2000000000000001;
+            Email = "default@mhserveremu";
             PlayerName = playerName;
             UserLevel = AccountUserLevel.Admin;
 
@@ -69,8 +80,6 @@ namespace MHServerEmu.DatabaseAccess.Models
             Player.RawAvatar = avatar;
             Player.AOIVolume = volume;
         }
-
-        public DBAccount() { }
 
         /// <summary>
         /// Retrieves the <see cref="DBAvatar"/> for the specified prototype id.

@@ -223,8 +223,11 @@ namespace MHServerEmu.Games.Network
                 if (_dbIdConnectionDict.Remove(dbId) == false)
                     Logger.Warn($"RemoveDisconnectedClients(): Account id  0x{dbId:X} not found");
 
-                // Save data and clean up
+                // Update db models and clean up
                 playerConnection.OnDisconnect();
+
+                // Remove game id to let the player manager know that it is now safe to write to the database.
+                client.GameId = 0;
 
                 Logger.Info($"Removed client {client} from {_game}");
             }

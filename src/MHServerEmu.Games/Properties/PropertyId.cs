@@ -111,6 +111,8 @@ namespace MHServerEmu.Games.Properties
             Raw = raw;
         }
 
+        public static implicit operator PropertyId(PropertyEnum propertyEnum) => new(propertyEnum);
+
         public int CompareTo(PropertyId other)
         {
             return Raw.CompareTo(other.Raw);
