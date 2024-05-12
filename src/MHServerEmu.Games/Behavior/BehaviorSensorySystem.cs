@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Behavior
             }
         }
 
-        private void UpdateAvatarSensory()
+        public void UpdateAvatarSensory()
         {
             throw new NotImplementedException();
         }

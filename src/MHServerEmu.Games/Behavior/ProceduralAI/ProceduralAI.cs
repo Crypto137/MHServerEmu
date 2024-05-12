@@ -88,6 +88,16 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             if (stateIndex < 0 || stateIndex >= MaxConcurrentStates) return null;
             return _states[stateIndex].State;
         }
+
+        internal void PushSubstate()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void PopSubstate()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public struct PState

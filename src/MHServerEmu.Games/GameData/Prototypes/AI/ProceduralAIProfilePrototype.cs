@@ -9,6 +9,7 @@ using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -38,6 +39,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (ResetTargetAndStateIfPathFails(proceduralAI, ownerController, locomotor, ref context, checkPower))
                 return false;
             return true;
+        }
+
+        protected virtual StaticBehaviorReturnType HandleUsePowerContext(AIController ownerController, ProceduralAI proceduralAI, GRandom random,
+            long currentTime, UsePowerContextPrototype powerContext, ProceduralContextPrototype proceduralContext = null)
+        {
+            return HandleContext(proceduralAI, ownerController, powerContext, proceduralContext);
         }
 
         private static bool ResetTargetAndStateIfPathFails(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
@@ -172,7 +179,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        protected static void DefaultRangedMovement(ProceduralAI proceduralAI, AIController ownerController, Agent agent, WorldEntity target, MoveToContextPrototype moveToContextProto, OrbitContextPrototype orbitContextProto)
+        protected static void DefaultRangedMovement(ProceduralAI proceduralAI, AIController ownerController, Agent agent, WorldEntity target, 
+            MoveToContextPrototype moveToContextProto, OrbitContextPrototype orbitContextProto)
         {
             if (moveToContextProto == null || orbitContextProto == null || target == null) return;
 
@@ -188,7 +196,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (proceduralAI.GetState(0) != Orbit.Instance)
                 {
-                    HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, moveToContextProto, true, out var moveToResult, null);
+                    HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, moveToContextProto, true, out var moveToResult);
                     if (moveToResult == StaticBehaviorReturnType.Running || moveToResult == StaticBehaviorReturnType.Completed)
                         return;
                 }
@@ -201,7 +209,51 @@ namespace MHServerEmu.Games.GameData.Prototypes
             HandleRotateToTarget(agent, target);
         }
 
-        private static void HandleRotateToTarget(Agent agent, WorldEntity target)
+        protected static void DefaultRangedFlankerMovement(ProceduralAI proceduralAI, AIController ownerController, Agent agent, WorldEntity target, 
+            long currentTime, MoveToContextPrototype moveToContextProto, ProceduralFlankContextPrototype flankContextProto)
+        {
+            if (target == null) return;
+
+            IAIState state = proceduralAI.GetState(0);
+            bool toMove = state == Orbit.Instance;
+            if (toMove == false && state != Flank.Instance)
+            {
+                toMove = IsPastMaxDistanceOrLostLOS(agent, target, moveToContextProto.RangeMax, moveToContextProto.EnforceLOS,
+                    (float)ownerController.Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius], moveToContextProto.LOSSweepPadding);
+            }
+
+            if (toMove)
+            {
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, moveToContextProto, true, out var moveToResult);
+                if (moveToResult == StaticBehaviorReturnType.Running)
+                    return;
+            }
+
+            if (HandleProceduralFlank(proceduralAI, ownerController, agent.Locomotor, currentTime, flankContextProto, true) == StaticBehaviorReturnType.Running)
+                return;           
+
+            HandleRotateToTarget(agent, target);
+        }
+
+        protected static StaticBehaviorReturnType HandleProceduralFlank(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
+            long currentTime, ProceduralFlankContextPrototype proceduralFlankContext, bool checkPower)
+        {
+            if (proceduralFlankContext == null)
+            {
+                ProceduralAI.Logger.Warn($"AI profile trying to flank without a flank context!\nEntity: {ownerController.Owner}");
+                return StaticBehaviorReturnType.None;
+            }
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
+            float flankTime = blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime];
+            if (proceduralAI.GetState(0) == Flank.Instance || currentTime > flankTime)
+                HandleMovementContext(proceduralAI, ownerController, locomotor, proceduralFlankContext.FlankContext, checkPower, out contextResult, proceduralFlankContext);
+
+            return contextResult;
+        }
+
+        protected static void HandleRotateToTarget(Agent agent, WorldEntity target)
         {
             if (agent.CanRotate && target != null && target.IsInWorld)
             {
@@ -254,6 +306,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime, Picker<ProceduralUsePowerContextPrototype> powerPicker, bool affixes)
         {
             throw new NotImplementedException();
+        }
+
+        protected override StaticBehaviorReturnType HandleUsePowerContext(AIController ownerController, ProceduralAI proceduralAI, GRandom random, 
+            long currentTime, UsePowerContextPrototype powerContext, ProceduralContextPrototype proceduralContext = null)
+        {
+            var contextResult = base.HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, powerContext, proceduralContext);
+            UpdateNextAttackThinkTime(ownerController.Blackboard, random, currentTime, contextResult);
+            return contextResult;
+        }
+
+        private void UpdateNextAttackThinkTime(BehaviorBlackboard blackboard, GRandom random, long currentTime, StaticBehaviorReturnType contextResult)
+        {
+            if (contextResult == StaticBehaviorReturnType.Completed)
+                blackboard.PropertyCollection[PropertyEnum.AIProceduralNextAttackTime] = currentTime + random.Next(AttackRateMinMS, AttackRateMaxMS);
         }
     }
 
@@ -359,17 +425,91 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileStationaryTurretPrototype : ProceduralProfileWithAttackPrototype
     {
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+
+            HandleRotateToTarget(agent, target);
+        }
     }
 
     public class ProceduralProfileRotatingTurretPrototype : ProceduralAIProfilePrototype
     {
         public UsePowerContextPrototype Power { get; protected set; }
         public RotateContextPrototype Rotate { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            BehaviorSensorySystem senses = ownerController.Senses;
+            if (senses.ShouldSense())
+                senses.UpdateAvatarSensory();
+
+            if (agent.IsDormant == false)
+                if (HandleContext(proceduralAI, ownerController, Power) == StaticBehaviorReturnType.Running)
+                {
+                    proceduralAI.PushSubstate();
+                    HandleContext(proceduralAI, ownerController, Rotate);
+                    proceduralAI.PopSubstate();
+                }
+        }
     }
 
     public class ProceduralProfileRotatingTurretWithTargetPrototype : ProceduralProfileWithAttackPrototype
     {
         public RotateContextPrototype Rotate { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+                {
+                    proceduralAI.PushSubstate();
+                    HandleContext(proceduralAI, ownerController, Rotate);
+                    proceduralAI.PopSubstate();
+                }
+        }
     }
 
     public class ProceduralProfileBasicMeleePrototype : ProceduralProfileWithAttackPrototype
@@ -501,6 +641,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.AddPowersToPicker(powerPicker, Power2);
             ownerController.AddPowersToPicker(powerPicker, PowerSwap);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+        }
+
     }
 
     public class ProceduralProfileMultishotRangePrototype : ProceduralProfileWithAttackPrototype
@@ -516,6 +683,94 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PopulatePowerPicker(ownerController, powerPicker);
             ownerController.AddPowersToPicker(powerPicker, MultishotPower);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int numShotsProp = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (numShotsProp > 0)
+            {
+                if (MultishotLooper(ownerController, proceduralAI, agent, game.Random, currentTime, numShotsProp) == StaticBehaviorReturnType.Running)
+                    return;
+            }
+            else
+            {
+                GRandom random = game.Random;
+                Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                PopulatePowerPicker(ownerController, powerPicker);
+                StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+                if (powerResult == StaticBehaviorReturnType.Running) return;
+                if (powerResult == StaticBehaviorReturnType.Completed)
+                {
+                    numShotsProp = 1;
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = numShotsProp;
+
+                    if (MultishotLooper(ownerController, proceduralAI, agent, game.Random, currentTime, numShotsProp) == StaticBehaviorReturnType.Running)
+                        return;
+                }
+            }
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultRangedMovement(proceduralAI, ownerController, agent, target, MoveToTarget, OrbitTarget);
+        }
+
+        protected StaticBehaviorReturnType MultishotLooper(AIController ownerController, ProceduralAI proceduralAI, Agent agent, GRandom random, long currentTime, int numShotsProp)
+        {
+            var collection =  ownerController.Blackboard.PropertyCollection;
+
+            if (numShotsProp >= NumShots)
+            { 
+                collection.RemoveProperty(PropertyEnum.AICustomStateVal1); 
+                return StaticBehaviorReturnType.Completed;
+            }
+
+            while (numShotsProp < NumShots)
+            {
+                var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, MultishotPower.PowerContext);
+                if (powerResult == StaticBehaviorReturnType.Running)
+                    return powerResult;
+                else if (powerResult == StaticBehaviorReturnType.Completed)
+                {
+                    ++numShotsProp;
+                    if (numShotsProp >= NumShots)
+                        collection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+                    else
+                    {
+                        collection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                        if (RetargetPerShot)
+                        {
+                            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            if (selectedEntity != null && selectedEntity != agent)
+                                SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType);
+                        }
+                    }
+                }
+                else if (powerResult == StaticBehaviorReturnType.Failed)
+                {
+                    collection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+                    return powerResult;
+                }
+            }
+
+            return StaticBehaviorReturnType.Completed;
+        }
+
     }
 
     public class ProceduralProfileMultishotFlankerPrototype : ProceduralProfileWithAttackPrototype
@@ -531,6 +786,87 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PopulatePowerPicker(ownerController, powerPicker);
             ownerController.AddPowersToPicker(powerPicker, MultishotPower);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int numShotsProp = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (numShotsProp > 0)
+            {
+                if (MultishotLooper(ownerController, proceduralAI, agent, game.Random, currentTime, numShotsProp) == StaticBehaviorReturnType.Running)
+                    return;
+            }
+            else
+            {
+                GRandom random = game.Random;
+                Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                PopulatePowerPicker(ownerController, powerPicker);
+                StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+                if (powerResult == StaticBehaviorReturnType.Running) return;
+                if (powerResult == StaticBehaviorReturnType.Completed)
+                {
+                    numShotsProp = 1;
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = numShotsProp;
+
+                    if (MultishotLooper(ownerController, proceduralAI, agent, game.Random, currentTime, numShotsProp) == StaticBehaviorReturnType.Running)
+                        return;
+                }
+            }
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+        }
+
+        protected StaticBehaviorReturnType MultishotLooper(AIController ownerController, ProceduralAI proceduralAI, Agent agent, GRandom random, long currentTime, int numShotsProp)
+        {
+            var collection = ownerController.Blackboard.PropertyCollection;
+
+            while (numShotsProp < NumShots)
+            {
+                var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, MultishotPower.PowerContext);
+                if (powerResult == StaticBehaviorReturnType.Running)
+                    return powerResult;
+                else if (powerResult == StaticBehaviorReturnType.Completed)
+                {
+                    ++numShotsProp;
+                    if (numShotsProp >= NumShots)
+                        collection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+                    else
+                    {
+                        collection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                        if (RetargetPerShot)
+                        {
+                            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            if (selectedEntity != null && selectedEntity != agent)
+                                SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType);
+                        }
+                    }
+                }
+                else if (powerResult == StaticBehaviorReturnType.Failed)
+                {
+                    collection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+                    return powerResult;
+                }
+            }
+
+            return StaticBehaviorReturnType.Completed;
+        }
     }
 
     public class ProceduralProfileMultishotHiderPrototype : ProceduralProfileWithAttackPrototype
@@ -540,14 +876,120 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int NumShots { get; protected set; }
         public bool RetargetPerShot { get; protected set; }
 
+        private enum State
+        {
+            Hide,
+            Multishot,
+            Unhide
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
-            if (stateVal == 1)
+            if ((State)stateVal == State.Multishot)
                 ownerController.AddPowersToPicker(powerPicker, MultishotPower);
             else
                 ownerController.AddPowersToPicker(powerPicker, HidePower);
             base.PopulatePowerPicker(ownerController, powerPicker);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            var powerContext = HidePower?.PowerContext;
+            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            Power hidePower = agent.GetPower(powerContext.Power);
+            if (hidePower == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+            switch ((State)state)                
+            {
+                case State.Hide:
+                    GRandom random = game.Random;
+                    Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                    PopulatePowerPicker(ownerController, powerPicker);
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.Multishot;
+                    break;
+
+                case State.Multishot:
+                    int numShotsProp = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                    random = game.Random;
+                    if (numShotsProp > 0)
+                        MultishotLooper(ownerController, proceduralAI, agent, random, currentTime, numShotsProp);
+                    else
+                    {
+                        powerPicker = new(random);
+                        PopulatePowerPicker(ownerController, powerPicker);
+                        if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Completed)
+                        {
+                            numShotsProp = 1;
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = numShotsProp;
+                            MultishotLooper(ownerController, proceduralAI, agent, game.Random, currentTime, numShotsProp);
+                        }
+                    }
+                    break;
+
+                case State.Unhide:
+                    random = game.Random;
+                    if (HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, HidePower.PowerContext) == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.Hide;
+                    break;
+            }
+        }
+
+        protected StaticBehaviorReturnType MultishotLooper(AIController ownerController, ProceduralAI proceduralAI, Agent agent, GRandom random, long currentTime, int numShotsProp)
+        {
+            var collection = ownerController.Blackboard.PropertyCollection;
+
+            while (numShotsProp < NumShots)
+            {
+                var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, MultishotPower.PowerContext);
+                if (powerResult == StaticBehaviorReturnType.Running)
+                    return powerResult;
+                else if (powerResult == StaticBehaviorReturnType.Completed)
+                {
+                    ++numShotsProp;
+                    if (numShotsProp >= NumShots)
+                    {
+                        collection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+                        collection[PropertyEnum.AICustomStateVal2] = (int)State.Unhide;
+                    }
+                    else
+                    {
+                        collection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
+                        if (RetargetPerShot)
+                        {
+                            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            if (selectedEntity != null && selectedEntity != agent)
+                                SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType);
+                        }
+                    }
+                }
+                else if (powerResult == StaticBehaviorReturnType.Failed)
+                {
+                    collection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+                    collection[PropertyEnum.AICustomStateVal2] = (int)State.Unhide;
+                    return powerResult;
+                }
+            }
+
+            return StaticBehaviorReturnType.Completed;
         }
     }
 
@@ -1258,7 +1700,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if ((State)stateVal == State.ComboPower)
                 {
                     var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectEntityForTumbleCombo);
-                    WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
+                    WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
                     if (selectedEntity != null)
                     {
                         if (SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType) == false)
