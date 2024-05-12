@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -149,6 +150,28 @@ namespace MHServerEmu.Games.Properties
 
             if (updateValue)
                 UpdateCurvePropertyValue(curveProp, flags, info);
+        }
+
+        public void AdjustProperty(int delta, PropertyId propertyId)
+        {
+            if (delta == 0) return;
+
+            if (GetBaseValue(propertyId, out PropertyValue value) == false)
+                value = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum).DefaultValue;
+
+            value += delta;
+            SetProperty(value, propertyId);
+        }
+
+        public void AdjustProperty(float delta, PropertyId propertyId)
+        {
+            if (Segment.EpsilonTest(delta, 0f)) return;
+
+            if (GetBaseValue(propertyId, out PropertyValue value) == false)
+                value = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum).DefaultValue;
+
+            value += delta;
+            SetProperty(value, propertyId);
         }
 
         /// <summary>
