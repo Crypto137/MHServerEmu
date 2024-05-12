@@ -39,5 +39,10 @@
             else
                 return (int)(value + 0.5f);
         }
+
+        public static bool IsBelowOrEqual(long value, long maxValue, float thresholdPct)
+        {
+            return value <= (maxValue * thresholdPct);
+        }
     }
 }

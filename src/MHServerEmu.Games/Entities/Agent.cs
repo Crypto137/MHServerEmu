@@ -201,6 +201,11 @@ namespace MHServerEmu.Games.Entities
             return info.IsValid;
         }
 
+        internal int GetPowerRank(PrototypeId powerRef)
+        {
+            throw new NotImplementedException();
+        }
+
         // Old
         public Agent(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 

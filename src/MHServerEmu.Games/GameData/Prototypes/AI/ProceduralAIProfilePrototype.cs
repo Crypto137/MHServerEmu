@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.ProceduralAI;
@@ -182,6 +183,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             ownerController.AddPowersToPicker(powerPicker, GenericProceduralPowers);
+        }
+
+        protected static bool AddPowerToPickerIfStartedPowerIsContextPower(AIController ownerController, 
+            ProceduralUsePowerContextPrototype powerToAdd, PrototypeId startedPowerRef, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {  
+            var powerContext = powerToAdd?.PowerContext;
+            if (powerContext == null 
+                || powerContext.Power == PrototypeId.Invalid 
+                || startedPowerRef != powerContext.Power) return false;
+
+            ownerController.AddPowersToPicker(powerPicker, powerToAdd);
+            return true;
         }
 
         protected StaticBehaviorReturnType HandleProceduralPower(AIController ownerController, ProceduralAI proceduralAI, GRandom random, 
@@ -746,6 +759,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
         public int MaxDistToMasterBeforeTeleport { get; protected set; }
         public ProceduralUsePowerContextPrototype[] TeamUpPowerProgressionPowers { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            if (TeamUpPowerProgressionPowers.HasValue())
+            {
+                PrototypeId activePowerRef = ownerController.ActivePowerRef;
+                foreach (var proceduralPower in TeamUpPowerProgressionPowers)
+                {
+                    var powerContext = proceduralPower?.PowerContext;
+                    if (powerContext == null || powerContext.Power == PrototypeId.Invalid) continue;
+
+                    PrototypeId powerRef = proceduralPower.PowerContext.Power;
+                    var rank = agent.GetPowerRank(powerRef);
+                    bool isActivePower = activePowerRef != PrototypeId.Invalid && powerRef == activePowerRef;
+                    if (rank > 0 || isActivePower)
+                        ownerController.AddPowersToPicker(powerPicker, proceduralPower);
+                }
+            }
+        }
+
     }
 
     public class ProceduralProfilePetPrototype : ProceduralProfileWithAttackPrototype
@@ -908,6 +945,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype MovementPower { get; protected set; }
         public ProceduralUsePowerContextPrototype LowHealthPower { get; protected set; }
         public float LowHealthPowerThresholdPct { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            PrototypeId startedPowerRef = ownerController.ActivePowerRef;
+            if (startedPowerRef != PrototypeId.Invalid)
+            {
+                if (AddPowerToPickerIfStartedPowerIsContextPower(ownerController, LowHealthPower, startedPowerRef, powerPicker)
+                    || AddPowerToPickerIfStartedPowerIsContextPower(ownerController, MovementPower, startedPowerRef, powerPicker))
+                    return;
+            }
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            long health = agent.Properties[PropertyEnum.Health];
+            long maxHealth = agent.Properties[PropertyEnum.HealthMax];
+            if (MathHelper.IsBelowOrEqual(health, maxHealth, LowHealthPowerThresholdPct))
+                ownerController.AddPowersToPicker(powerPicker, LowHealthPower);
+            ownerController.AddPowersToPicker(powerPicker, MovementPower);
+            base.PopulatePowerPicker(ownerController, powerPicker);
+        }
     }
 
     public class ProceduralProfileMandarinPrototype : ProceduralProfileWithAttackPrototype
@@ -916,6 +972,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
         public SelectEntityContextPrototype SequencePowerSelectTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype[] SequencePowers { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            if (SequencePowers.HasValue())
+            {
+                int powerIndex = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                if (powerIndex < 0 || powerIndex >= SequencePowers.Length) return;
+                ProceduralUsePowerContextPrototype sequencePowerContext = SequencePowers[powerIndex];
+                if (sequencePowerContext != null)
+                    ownerController.AddPowersToPicker(powerPicker, sequencePowerContext);
+            }
+        }
     }
 
     public class ProceduralProfileSabretoothPrototype : ProceduralProfileWithAttackPrototype
@@ -926,6 +995,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public SelectEntityContextPrototype MovementPowerSelectTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype LowHealthPower { get; protected set; }
         public float LowHealthPowerThresholdPct { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            PrototypeId startedPowerRef = ownerController.ActivePowerRef;
+            if (startedPowerRef != PrototypeId.Invalid)
+            {
+                if (AddPowerToPickerIfStartedPowerIsContextPower(ownerController, LowHealthPower, startedPowerRef, powerPicker)
+                    || AddPowerToPickerIfStartedPowerIsContextPower(ownerController, MovementPower, startedPowerRef, powerPicker))
+                    return;
+            }
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            long health = agent.Properties[PropertyEnum.Health];
+            long maxHealth = agent.Properties[PropertyEnum.HealthMax];
+            if (MathHelper.IsBelowOrEqual(health, maxHealth, LowHealthPowerThresholdPct))
+                ownerController.AddPowersToPicker(powerPicker, LowHealthPower);
+
+            CombatTargetFlags flags = CombatTargetFlags.IgnoreAggroDistance | CombatTargetFlags.IgnoreStealth;
+            if (Combat.GetNumTargetsInRange(agent, 1600, 150.0f, CombatTargetType.Hostile, flags) > 0)
+                ownerController.AddPowersToPicker(powerPicker, MovementPower);
+            base.PopulatePowerPicker(ownerController, powerPicker);
+        }
     }
 
     public class ProceduralProfileMeleePowerOnHitPrototype : ProceduralProfileWithAttackPrototype
@@ -933,6 +1024,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype PowerOnHit { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            if (PowerOnHit == null) return;
+            PrototypeId startedPowerRef = ownerController.ActivePowerRef;
+            if (startedPowerRef != PrototypeId.Invalid)
+            {
+                if (AddPowerToPickerIfStartedPowerIsContextPower(ownerController, PowerOnHit, startedPowerRef, powerPicker))
+                    return;
+            }
+            else
+            {
+                int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                if (stateVal != 0)
+                    ownerController.AddPowersToPicker(powerPicker, PowerOnHit);
+            }
+            base.PopulatePowerPicker(ownerController, powerPicker);
+        }
     }
 
     public class ProceduralProfileGrimReaperPrototype : ProfMeleePwrSpecialAtHealthPctPrototype
@@ -1047,6 +1156,45 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype TumblePower { get; protected set; }
         public ProceduralUsePowerContextPrototype TumbleComboPower { get; protected set; }
         public SelectEntityContextPrototype SelectEntityForTumbleCombo { get; protected set; }
+
+        private enum State
+        {
+            Default,
+            ComboPower
+        }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            var blackboard = ownerController.Blackboard;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            PrototypeId startedPowerRef = ownerController.ActivePowerRef;
+
+            if (startedPowerRef != PrototypeId.Invalid)
+            {
+                if (AddPowerToPickerIfStartedPowerIsContextPower(ownerController, TumbleComboPower, startedPowerRef, powerPicker))
+                    return;
+            }
+            else
+            {
+                if ((State)stateVal == State.ComboPower)
+                {
+                    var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectEntityForTumbleCombo);
+                    WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
+                    if (selectedEntity != null)
+                    {
+                        if (SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType) == false)
+                            return;
+                        ownerController.AddPowersToPicker(powerPicker, TumbleComboPower);
+                        return;
+                    }
+                    else 
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                }
+            }
+
+            ownerController.AddPowersToPicker(powerPicker, TumblePower);
+            base.PopulatePowerPicker(ownerController, powerPicker);
+        }
     }
 
     public class ProceduralProfileControlledMobOverridePrototype : ProceduralProfileWithTargetPrototype
@@ -1456,6 +1604,51 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId CenterPlatformKeyword { get; protected set; }
         public PrototypeId RightPlatformKeyword { get; protected set; }
         public PrototypeId LeftPlatformKeyword { get; protected set; }
+
+        private enum PlatformEnum
+        {
+            Left,
+            Right,
+            Center            
+        }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            ownerController.AddPowersToPicker(powerPicker, PsionicBlastLeft);
+            ownerController.AddPowersToPicker(powerPicker, PsionicBlastCenter);
+            ownerController.AddPowersToPicker(powerPicker, PsionicBlastRight);
+            ownerController.AddPowersToPicker(powerPicker, SpikeDanceVFXOnly);
+            ownerController.AddPowersToPicker(powerPicker, SpikeDanceSingleVFXOnly);
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;            
+            ulong entityId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4];
+            if (entityId != 0)
+            {
+                PlatformEnum randomPlatformIndex = (PlatformEnum)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+                switch (randomPlatformIndex)
+                {
+                    case PlatformEnum.Left:
+                        ownerController.AddPowersToPicker(powerPicker, PrisonBeamPowerLeft);
+                        break;
+                    case PlatformEnum.Right:
+                        ownerController.AddPowersToPicker(powerPicker, PrisonBeamPowerRight);
+                        break;
+                    case PlatformEnum.Center:
+                        ownerController.AddPowersToPicker(powerPicker, PrisonBeamPowerCenter);
+                        break;
+                    default:
+                        ProceduralAI.Logger.Warn($"Onslaught has an invalid platform enum stored in AICustomStateVal2: Index = {randomPlatformIndex}");
+                        break;
+                }
+            }
+            else
+            {
+                ownerController.AddPowersToPicker(powerPicker, PrisonPowerCenter);
+                ownerController.AddPowersToPicker(powerPicker, PrisonPowerLeft);
+                ownerController.AddPowersToPicker(powerPicker, PrisonPowerRight);
+            }
+        }
     }
 
     public class ProcProfileSpikeDanceControllerPrototype : ProceduralAIProfilePrototype
@@ -1551,10 +1744,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RestrictedModeTimerMS { get; protected set; }
         public bool NoMoveInRestrictedMode { get; protected set; }
 
+        private enum State
+        {
+            Default,
+            StartPower = 1,
+            ProceduralPowers = 2,
+            EndPower = 3,
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-            if (stateVal == 2)
+            if ((State)stateVal == State.ProceduralPowers)
                 ownerController.AddPowersToPicker(powerPicker, RestrictedModeProceduralPowers);
             else
                 base.PopulatePowerPicker(ownerController, powerPicker);
@@ -1625,6 +1826,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ProceduralUsePowerContextPrototype SpecialCommandPower { get; protected set; }
         public PrototypeId SkrullNickFuryRef { get; protected set; }
+
+        private enum State
+        {
+            Default,
+            Ready,
+            SpecialPower
+        }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if ((State)stateVal == State.SpecialPower)
+                ownerController.AddPowersToPicker(powerPicker, SpecialCommandPower);
+            else
+                base.PopulatePowerPicker(ownerController, powerPicker);
+        }
     }
 
     public class ProceduralProfileKaeciliusPrototype : ProceduralProfileBasicRangePrototype
@@ -1640,6 +1857,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
         public PrototypeId RevengeSupport { get; protected set; }
+
+        public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
+        {
+            base.PopulatePowerPicker(ownerController, powerPicker);
+            int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (stateVal == 1)
+                ownerController.AddPowersToPicker(powerPicker, RevengePower);
+        }
     }
 
     public class ProceduralProfileRangedRevengePrototype : ProceduralProfileBasicRangePrototype
