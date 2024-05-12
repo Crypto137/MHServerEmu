@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.ProceduralAI;
 using MHServerEmu.Games.Behavior.StaticAI;
@@ -140,18 +141,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             throw new NotImplementedException();
         }
 
-        public void DefaultMeleeMovement(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
-            WorldEntity target, MoveToContextPrototype moveToTarget, OrbitContextPrototype orbitTarget)
+        protected void DefaultMeleeMovement(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
+            WorldEntity target, MoveToContextPrototype moveToContextProto, OrbitContextPrototype orbitContextProto)
         {
             if (target == null) return;
             if (proceduralAI.GetState(0) != Orbit.Instance)
             {
-                HandleMovementContext(proceduralAI, ownerController, locomotor, moveToTarget, false, out var movementResult); 
+                HandleMovementContext(proceduralAI, ownerController, locomotor, moveToContextProto, false, out var movementResult); 
                 if (movementResult == StaticBehaviorReturnType.Running || movementResult == StaticBehaviorReturnType.Completed) 
                     return;
             }
 
-            HandleMovementContext(proceduralAI, ownerController, locomotor, orbitTarget, false, out var orbitResult);
+            HandleMovementContext(proceduralAI, ownerController, locomotor, orbitContextProto, false, out var orbitResult);
             if (orbitResult == StaticBehaviorReturnType.Running) return;
           
             if (orbitResult == StaticBehaviorReturnType.Failed)
@@ -171,6 +172,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+        protected static void DefaultRangedMovement(ProceduralAI proceduralAI, AIController ownerController, Agent agent, WorldEntity target, MoveToContextPrototype moveToContextProto, OrbitContextPrototype orbitContextProto)
+        {
+            if (moveToContextProto == null || orbitContextProto == null || target == null) return;
+
+            IAIState state = proceduralAI.GetState(0);
+            bool toMove = state == Orbit.Instance || state == MoveTo.Instance;
+            if (toMove == false)
+            {
+                toMove = IsPastMaxDistanceOrLostLOS(agent, target, moveToContextProto.RangeMax, moveToContextProto.EnforceLOS,
+                    (float)ownerController.Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius], moveToContextProto.LOSSweepPadding);
+            }
+
+            if (toMove)
+            {
+                if (proceduralAI.GetState(0) != Orbit.Instance)
+                {
+                    HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, moveToContextProto, true, out var moveToResult, null);
+                    if (moveToResult == StaticBehaviorReturnType.Running || moveToResult == StaticBehaviorReturnType.Completed)
+                        return;
+                }
+
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, orbitContextProto, true, out var orbitResult);
+                if (orbitResult == StaticBehaviorReturnType.Running || orbitResult == StaticBehaviorReturnType.Completed)
+                    return;
+            }
+
+            HandleRotateToTarget(agent, target);
+        }
+
+        private static void HandleRotateToTarget(Agent agent, WorldEntity target)
+        {
+            if (agent.CanRotate && target != null && target.IsInWorld)
+            {
+                Locomotor locomotor = agent.Locomotor;
+                if (locomotor == null)
+                {
+                    ProceduralAI.Logger.Warn($"Agent [{agent}] does not have a locomotor and should not be calling this function");
+                    return;
+                }
+                locomotor.LookAt(target.RegionLocation.Position);
+            }
+        }
+
+        private static bool IsPastMaxDistanceOrLostLOS(Agent agent, WorldEntity target, float rangeMax, bool enforceLOS, float radius, float padding)
+        {
+            if (target == null || target.IsInWorld == false) return false;
+            float boundsRadius = agent.Bounds.Radius + target.Bounds.Radius;
+            float distanceSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, target.RegionLocation.Position);
+            if (distanceSq > MathHelper.Square(boundsRadius + rangeMax)) return true;
+            if (enforceLOS && agent.LineOfSightTo(target, radius, padding) == false) return true;
+            return false;
+        }
     }
 
     public class ProceduralProfileWithAttackPrototype : ProceduralProfileWithTargetPrototype
@@ -403,6 +456,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultRangedMovement(proceduralAI, ownerController, agent, target, MoveToTarget, OrbitTarget);
+        }
     }
 
     public class ProceduralProfileAlternateRange2Prototype : ProceduralProfileWithAttackPrototype
