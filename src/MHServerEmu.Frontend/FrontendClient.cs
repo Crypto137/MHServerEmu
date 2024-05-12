@@ -12,12 +12,17 @@ namespace MHServerEmu.Frontend
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ulong _gameId;
+
         public TcpClientConnection Connection { get; }
 
         public IFrontendSession Session { get; private set; } = null;
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
-        public ulong GameId { get; set; }
+
+        // Set game id atomically using Interlocked because this is used asynchronously to determine whether the client is in a game.
+        public ulong GameId { get => _gameId; set => Interlocked.Exchange(ref _gameId, value); }
+        public bool IsInGame { get => _gameId != 0; }
 
         /// <summary>
         /// Constructs a new <see cref="FrontendClient"/> instance for the provided <see cref="TcpClientConnection"/>.
