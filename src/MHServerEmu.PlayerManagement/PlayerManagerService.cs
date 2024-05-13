@@ -308,9 +308,10 @@ namespace MHServerEmu.PlayerManagement
 
             if (statusCode == AuthStatusCode.Success)
             {
+                // Avoid extra allocations and copying by using Unsafe.FromBytes() for session key and token
                 authTicket = AuthTicket.CreateBuilder()
-                    .SetSessionKey(ByteString.CopyFrom(session.Key))
-                    .SetSessionToken(ByteString.CopyFrom(session.Token))
+                    .SetSessionKey(ByteString.Unsafe.FromBytes(session.Key))
+                    .SetSessionToken(ByteString.Unsafe.FromBytes(session.Token))
                     .SetSessionId(session.Id)
                     .SetFrontendServer(_frontendAddress)
                     .SetFrontendPort(_frontendPort)
