@@ -62,6 +62,16 @@ namespace MHServerEmu.PlayerManagement
         public void Shutdown()
         {
             // TODO: Shut down all games
+
+            // Wait for all data to be saved
+            bool waitingForSave;
+            lock (_pendingSaveDict) waitingForSave = _pendingSaveDict.Count > 0;
+
+            while (waitingForSave)
+            {
+                Thread.Sleep(1);
+                lock (_pendingSaveDict) waitingForSave = _pendingSaveDict.Count > 0;
+            }
         }
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
@@ -112,7 +122,8 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
-            return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount} | Pending Saves: {_pendingSaveDict.Count}";
+            lock (_pendingSaveDict)
+                return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount} | Pending Saves: {_pendingSaveDict.Count}";
         }
 
         #endregion
