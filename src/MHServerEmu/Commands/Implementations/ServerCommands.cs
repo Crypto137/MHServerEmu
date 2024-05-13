@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -10,6 +12,8 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("server", "Allows you to interact with the server.", AccountUserLevel.User)]
     public class ServerCommands : CommandGroup
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         [Command("status", "Usage: server status", AccountUserLevel.User)]
         public string Status(string[] @params, FrontendClient client)
         {
@@ -28,9 +32,27 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
+        [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast", AccountUserLevel.Admin)]
+        public string Broadcast(string[] @params, FrontendClient client)
+        {
+            if (@params.Length == 0) return "Invalid arguments. Type 'help server broadcast' to get help.";
+
+            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IMessageBroadcaster;
+            if (groupingManager == null) return "Failed to connect to the grouping manager.";
+
+            string message = string.Join(' ', @params);
+
+            groupingManager.BroadcastMessage(ChatServerNotification.CreateBuilder().SetTheMessage(message).Build());
+            Logger.Trace($"Broadcasting server notification: \"{message}\"");
+
+            return string.Empty;
+        }
+
         [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]
         public string Shutdown(string[] @params, FrontendClient client)
         {
+            string shutdownRequester = client == null ? "the server console" : client.ToString();
+            Logger.Info($"Server shutdown request received from {shutdownRequester}");
             ServerApp.Instance.Shutdown();
             return string.Empty;
         }

@@ -16,7 +16,7 @@ namespace MHServerEmu.PlayerManagement
     /// <summary>
     /// An <see cref="IGameService"/> that manages connected players and routes messages to relevant <see cref="Game"/> instances.
     /// </summary>
-    public class PlayerManagerService : IGameService, IFrontendService
+    public class PlayerManagerService : IGameService, IFrontendService, IMessageBroadcaster
     {
         // TODO: Implement a way to request saves from the game without disconnecting.
 

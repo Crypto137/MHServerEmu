@@ -8,7 +8,7 @@ using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Grouping
 {
-    public class GroupingManagerService : IGameService, IFrontendService
+    public class GroupingManagerService : IGameService, IFrontendService, IMessageBroadcaster
     {
         private const ushort MuxChannel = 2;    // All messages come from GroupingManager over mux channel 2
 
@@ -113,7 +113,7 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void BroadcastMessage(MessagePackage message)
+        public void BroadcastMessage(IMessage message)
         {
             lock (_playerLock)
             {
@@ -157,11 +157,11 @@ namespace MHServerEmu.Grouping
             Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{client.Session.Account})]: {chat.TheMessage.Body}");
 
             // Right now all messages are broadcasted to all connected players
-            BroadcastMessage(new(ChatNormalMessage.CreateBuilder()
+            BroadcastMessage(ChatNormalMessage.CreateBuilder()
                 .SetRoomType(chat.RoomType)
                 .SetFromPlayerName(client.Session.Account.PlayerName)
                 .SetTheMessage(chat.TheMessage)
-                .Build()));
+                .Build());
 
             return true;
         }
