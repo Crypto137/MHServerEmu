@@ -1,6 +1,9 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Behavior.ProceduralAI
 {
@@ -13,18 +16,49 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         private short _curState;
         private PState[] _states = new PState[MaxConcurrentStates];
         private ProceduralAIProfilePrototype _procedurealProfile;
-        private Game _game;
 
-        public ProceduralAI(Game game)
-        {
-            _game = game;
-        }
+        public BrainPrototype BrainPrototype { get; private set; }
+
+        private Game _game;
 
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }
         public ProceduralAIProfilePrototype PartialOverrideBehavior { get; private set; }
         public StaticBehaviorReturnType LastPowerResult { get; internal set; }
         public ProceduralAIProfilePrototype FullOverrideBehavior { get; internal set; }
+
+        public ProceduralAI(Game game, AIController owningController)
+        {
+            _game = game;
+            _owningController = owningController;
+        }
+
+        public void Initialize(BehaviorProfilePrototype profile)
+        {
+            PrototypeId brainRef;
+            if (profile.Brain != PrototypeId.Invalid)
+                brainRef = profile.Brain;
+            else                
+                brainRef = _owningController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride];
+            
+            Agent agent = _owningController.Owner;
+            // TODO Init PropertyEnum.AIPartialOverride;
+            // GetOverrideByType
+
+            _procedurealProfile = brainRef.As<ProceduralAIProfilePrototype>();
+            BrainPrototype = _procedurealProfile;
+
+            if (agent.IsControlledEntity)
+            {
+                ulong masterAvatarDbGuid = agent.Properties[PropertyEnum.AIMasterAvatarDbGuid];
+                if (masterAvatarDbGuid != 0)
+                {
+                    // TODO Set PropertyEnum.AIAssistedEntityID = DBAvatarId
+                }               
+            }
+
+            _procedurealProfile.Init(agent); // Init Powers for agent
+        }
 
         public void StopOwnerLocomotor()
         {
@@ -98,6 +132,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             throw new NotImplementedException();
         }
+
     }
 
     public struct PState

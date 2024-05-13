@@ -21,6 +21,16 @@ namespace MHServerEmu.Games.Generators.Population
         public PrototypeId MissionRef { get; set; }
         public List<EntitySelectorActionPrototype> Actions { get; private set; }
         public ScriptRoleKeyEnum RoleKey { get; internal set; }
+        public float LeashDistance 
+        { 
+            get 
+            {
+                PopulationObjectPrototype objectProto = Group?.ObjectProto;
+                if (objectProto != null)
+                    return objectProto.LeashDistance;
+                return 3000.0f; // Default LeashDistance in PopulationObject
+            } 
+        }
 
         public SpawnSpec(ulong id, SpawnGroup group)
         {
@@ -107,6 +117,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PrototypeId EncounterRef {  get; set; }
         public PopulationManager PopulationManager { get; set; }
         public ulong SpawnerId { get; set; }
+        public PopulationObjectPrototype ObjectProto { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {

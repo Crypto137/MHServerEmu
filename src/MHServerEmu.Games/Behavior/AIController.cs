@@ -27,13 +27,15 @@ namespace MHServerEmu.Games.Behavior
             Owner = owner;
             Senses = new ();
             Blackboard = new (owner);
-            Brain = new (game); 
+            Brain = new (game, this); 
         }
 
-        internal bool Initialize(BehaviorProfilePrototype behaviorProfile, SpawnSpec spec, PropertyCollection collection)
+        public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
         {
-            // TODO Init ProceduralAIProfilePrototype
-            throw new NotImplementedException();
+            Senses.Initialize(this, profile, spec);
+            Blackboard.Initialize(profile, spec, collection);
+            Brain.Initialize(profile);
+            return true;
         }
 
         public bool IsOwnerValid()
