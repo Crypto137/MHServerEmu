@@ -1020,6 +1020,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PopulatePowerPicker(ownerController, powerPicker);
             ownerController.AddPowersToPicker(powerPicker, PrimaryPower);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+        }
     }
 
     public class ProceduralProfileSkirmisherPrototype : ProceduralProfileWithAttackPrototype
@@ -1126,6 +1152,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileNoMoveDefaultSensoryPrototype : ProceduralProfileWithAttackPrototype
     {
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+        }
     }
 
     public class ProceduralProfileNoMoveSimplifiedSensoryPrototype : ProceduralProfileWithAttackPrototype
@@ -1142,6 +1187,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileNoMoveNoSensePrototype : ProceduralProfileWithAttackPrototype
     {
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (ownerController.TargetEntity == null)
+                SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+        }
     }
 
     public class ProceduralProfileMoveToUniqueTargetNoPowerPrototype : ProceduralProfileWithTargetPrototype
@@ -1152,11 +1215,49 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileWanderNoPowerPrototype : ProceduralAIProfilePrototype
     {
         public WanderContextPrototype WanderMovement { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, WanderMovement, false, out _);
+        }
     }
 
     public class ProceduralProfileBasicWanderPrototype : ProceduralProfileWithAttackPrototype
     {
         public WanderContextPrototype WanderMovement { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, WanderMovement, false, out _);
+        }
     }
 
     public class ProceduralProfilePvPMeleePrototype : ProceduralProfileWithAttackPrototype
@@ -1517,6 +1618,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype LowHealthPower { get; protected set; }
         public float LowHealthPowerThresholdPct { get; protected set; }
 
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             PrototypeId startedPowerRef = ownerController.ActivePowerRef;
@@ -1545,6 +1670,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype PowerOnHit { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -1670,6 +1821,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileRhinoPrototype : ProceduralProfileBasicMeleePrototype
     {
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            if (proceduralAI.GetState(0) != UsePower.Instance) {
+                WorldEntity target = ownerController.TargetEntity;
+                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                    && proceduralAI.PartialOverrideBehavior == null) return;
+            }
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, ownerController.TargetEntity, MoveToTarget, OrbitTarget);
+        }
     }
 
     public class ProceduralProfileBlackCatPrototype : ProceduralProfileBasicMeleePrototype
@@ -1767,6 +1943,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+        }
     }
 
     public class ProceduralProfileLokiPhase2Prototype : ProceduralProfileWithAttackPrototype
@@ -2353,6 +2553,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Default,
             Ready,
             SpecialPower
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            if (proceduralAI.GetState(0) != UsePower.Instance 
+                && blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == (int)State.Ready)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.SpecialPower;
+
+            base.Think(ownerController);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
