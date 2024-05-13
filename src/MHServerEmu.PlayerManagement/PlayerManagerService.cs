@@ -226,13 +226,6 @@ namespace MHServerEmu.PlayerManagement
 
             while (true)
             {
-                if (numAttempts > MaxAsyncRetryAttempts)
-                {
-                    Logger.Warn($"AddPlayerToGameAsync(): Failed to add player to a game after {numAttempts} attempts, disconnecting");
-                    client.Disconnect();
-                    return;
-                }
-
                 numAttempts++;
 
                 lock (_pendingSaveDict)
@@ -241,6 +234,14 @@ namespace MHServerEmu.PlayerManagement
                 if (hasSavePending == false) break;
 
                 refreshRequired = true;
+
+                if (numAttempts >= MaxAsyncRetryAttempts)
+                {
+                    Logger.Warn($"AddPlayerToGameAsync(): Failed to add player to a game after {numAttempts} attempts, disconnecting");
+                    client.Disconnect();
+                    return;
+                }
+
                 await Task.Delay(GameFrameTimeMS);
             }
 
@@ -262,19 +263,20 @@ namespace MHServerEmu.PlayerManagement
 
             while (true)
             {
-                // Players should generally leave games during the next game update. If it didn't happen, something must have gone terribly wrong.
-                if (numAttempts > MaxAsyncRetryAttempts)
-                {
-                    Logger.Warn($"SavePlayerDataAsync(): Failed to save player data after {numAttempts} attempts, bailing out");
-                    lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
-                    return;
-                }
-
                 numAttempts++;
 
                 // Wait for the client to leave the game they are in
                 if (client.IsInGame)
                 {
+                    // Players should generally leave games during the next game update.
+                    // If it didn't happen, something must have gone terribly wrong.
+                    if (numAttempts >= MaxAsyncRetryAttempts)
+                    {
+                        Logger.Warn($"SavePlayerDataAsync(): Failed to save player data after {numAttempts} attempts, bailing out");
+                        lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
+                        return;
+                    }
+
                     await Task.Delay(GameFrameTimeMS);
                     continue;
                 }
