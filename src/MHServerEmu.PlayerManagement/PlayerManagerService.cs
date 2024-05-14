@@ -16,7 +16,7 @@ namespace MHServerEmu.PlayerManagement
     /// <summary>
     /// An <see cref="IGameService"/> that manages connected players and routes messages to relevant <see cref="Game"/> instances.
     /// </summary>
-    public class PlayerManagerService : IGameService, IFrontendService
+    public class PlayerManagerService : IGameService, IFrontendService, IMessageBroadcaster
     {
         // TODO: Implement a way to request saves from the game without disconnecting.
 
@@ -62,6 +62,16 @@ namespace MHServerEmu.PlayerManagement
         public void Shutdown()
         {
             // TODO: Shut down all games
+
+            // Wait for all data to be saved
+            bool waitingForSave;
+            lock (_pendingSaveDict) waitingForSave = _pendingSaveDict.Count > 0;
+
+            while (waitingForSave)
+            {
+                Thread.Sleep(1);
+                lock (_pendingSaveDict) waitingForSave = _pendingSaveDict.Count > 0;
+            }
         }
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
@@ -112,7 +122,8 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
-            return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount} | Pending Saves: {_pendingSaveDict.Count}";
+            lock (_pendingSaveDict)
+                return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount} | Pending Saves: {_pendingSaveDict.Count}";
         }
 
         #endregion
@@ -226,13 +237,6 @@ namespace MHServerEmu.PlayerManagement
 
             while (true)
             {
-                if (numAttempts > MaxAsyncRetryAttempts)
-                {
-                    Logger.Warn($"AddPlayerToGameAsync(): Failed to add player to a game after {numAttempts} attempts, disconnecting");
-                    client.Disconnect();
-                    return;
-                }
-
                 numAttempts++;
 
                 lock (_pendingSaveDict)
@@ -241,6 +245,14 @@ namespace MHServerEmu.PlayerManagement
                 if (hasSavePending == false) break;
 
                 refreshRequired = true;
+
+                if (numAttempts >= MaxAsyncRetryAttempts)
+                {
+                    Logger.Warn($"AddPlayerToGameAsync(): Failed to add player to a game after {numAttempts} attempts, disconnecting");
+                    client.Disconnect();
+                    return;
+                }
+
                 await Task.Delay(GameFrameTimeMS);
             }
 
@@ -262,19 +274,20 @@ namespace MHServerEmu.PlayerManagement
 
             while (true)
             {
-                // Players should generally leave games during the next game update. If it didn't happen, something must have gone terribly wrong.
-                if (numAttempts > MaxAsyncRetryAttempts)
-                {
-                    Logger.Warn($"SavePlayerDataAsync(): Failed to save player data after {numAttempts} attempts, bailing out");
-                    lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
-                    return;
-                }
-
                 numAttempts++;
 
                 // Wait for the client to leave the game they are in
                 if (client.IsInGame)
                 {
+                    // Players should generally leave games during the next game update.
+                    // If it didn't happen, something must have gone terribly wrong.
+                    if (numAttempts >= MaxAsyncRetryAttempts)
+                    {
+                        Logger.Warn($"SavePlayerDataAsync(): Failed to save player data after {numAttempts} attempts, bailing out");
+                        lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
+                        return;
+                    }
+
                     await Task.Delay(GameFrameTimeMS);
                     continue;
                 }
@@ -306,9 +319,10 @@ namespace MHServerEmu.PlayerManagement
 
             if (statusCode == AuthStatusCode.Success)
             {
+                // Avoid extra allocations and copying by using Unsafe.FromBytes() for session key and token
                 authTicket = AuthTicket.CreateBuilder()
-                    .SetSessionKey(ByteString.CopyFrom(session.Key))
-                    .SetSessionToken(ByteString.CopyFrom(session.Token))
+                    .SetSessionKey(ByteString.Unsafe.FromBytes(session.Key))
+                    .SetSessionToken(ByteString.Unsafe.FromBytes(session.Token))
                     .SetSessionId(session.Id)
                     .SetFrontendServer(_frontendAddress)
                     .SetFrontendPort(_frontendPort)

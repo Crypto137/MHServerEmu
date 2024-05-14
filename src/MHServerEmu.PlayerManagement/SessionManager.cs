@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
@@ -99,9 +100,9 @@ namespace MHServerEmu.PlayerManagement
             // Verify the token if auth is enabled
             if (_playerManager.Config.BypassAuth == false)
             {
-                // Try to decrypt the token
-                if (CryptographyHelper.TryDecryptToken(credentials.EncryptedToken.ToByteArray(), session.Key,
-                    credentials.Iv.ToByteArray(), out byte[] decryptedToken) == false)
+                // Try to decrypt the token (we avoid extra allocations and copying by accessing buffers directly with Unsafe.GetBuffer())
+                if (CryptographyHelper.TryDecryptToken(ByteString.Unsafe.GetBuffer(credentials.EncryptedToken), session.Key,
+                    ByteString.Unsafe.GetBuffer(credentials.Iv), out byte[] decryptedToken) == false)
                 {
                     lock (_sessionLock) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
                     return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for sessionId 0x{session.Id:X}"); ;

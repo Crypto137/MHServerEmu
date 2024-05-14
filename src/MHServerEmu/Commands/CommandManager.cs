@@ -122,7 +122,8 @@ namespace MHServerEmu.Commands
             command = string.Empty;
             parameters = string.Empty;
 
-            if (input == string.Empty || input[0] != CommandPrefix) return false;
+            // Only input that starts with our command prefix char followed by something else can be a command
+            if (input.Length < 2 || input[0] != CommandPrefix) return false;
 
             // Remove the prefix
             input = input.Substring(1);
