@@ -104,6 +104,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual void Init(Agent agent){ }
 
+        protected static void InitPowers(Agent agent, ProceduralUsePowerContextPrototype[] proceduralPowers)
+        {
+            if (proceduralPowers.HasValue())
+                foreach(var proceduralPower in proceduralPowers)
+                    InitPower(agent, proceduralPower);
+        }
+
+        protected static void InitPowers(Agent agent, PrototypeId[] powers)
+        {
+            if (powers.HasValue())
+                foreach (var power in powers)
+                    InitPower(agent, power);
+        }
+
         protected static void InitPower(Agent agent, ProceduralUsePowerContextPrototype proceduralPower)
         {
             InitPower(agent, proceduralPower?.PowerContext);
@@ -138,6 +152,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             None,
             NoTargetOverride = 1 << 0,
             NotifyAllies = 1 << 1,
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            if (ownerController.Senses.CanLeash)
+            {
+                AIGlobalsPrototype aiGlobalsPrototype = GameDatabase.AIGlobalsPrototype;
+                InitPower(agent, aiGlobalsPrototype.LeashReturnHeal);
+                InitPower(agent, aiGlobalsPrototype.LeashReturnImmunity);
+            }
         }
 
         public bool DefaultSensory(ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
@@ -310,6 +337,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype[] GenericProceduralPowers { get; protected set; }
         public ProceduralUseAffixPowerContextPrototype AffixSettings { get; protected set; }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            Game game = agent.Game;
+            if (game == null) return;
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+
+            long nextAttackThinkTime = (long)game.GetCurrentTime().TotalMilliseconds + game.Random.Next(AttackRateMinMS, AttackRateMaxMS);
+            ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextAttackTime] = nextAttackThinkTime;
+            InitPowers(agent, GenericProceduralPowers);
+        }
+
         public virtual void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             ownerController.AddPowersToPicker(powerPicker, GenericProceduralPowers);
@@ -462,6 +502,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int ShrinkageDurationMS { get; protected set; }
         public float ShrinkageMinScale { get; protected set; }
         public bool DestroyOrbOnUnSimOrTargetLoss { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            InitPower(agent, EffectPower);
+        }
     }
 
     public class ProceduralProfileStationaryTurretPrototype : ProceduralProfileWithAttackPrototype
@@ -1411,6 +1458,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PathGroup { get; protected set; }
         public PathMethod PathMethod { get; protected set; }
         public float PathThreshold { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            BehaviorBlackboard blackboard = agent?.AIController?.Blackboard;
+            if (blackboard == null) return;
+            blackboard.PropertyCollection[PropertyEnum.AIAggroDropRange] = AggroDropRadius;
+            blackboard.PropertyCollection[PropertyEnum.AIAggroDropRange] = AggroDropByLOSChance;
+            blackboard.PropertyCollection[PropertyEnum.AIAggroRangeHostile] = AggroRadius;
+
+            InitPower(agent, PrimaryPower);
+        }
     }
 
     public class ProceduralProfilePvPTowerPrototype : ProceduralProfileWithAttackPrototype
@@ -1565,6 +1624,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
         public int MaxDistToMasterBeforeTeleport { get; protected set; }
         public ProceduralUsePowerContextPrototype[] TeamUpPowerProgressionPowers { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPowers(agent, TeamUpPowerProgressionPowers);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -1767,6 +1832,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             GenericProcedural,
         }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, TeleportToEntityPower);
+            InitPowers(agent, SummonProceduralPowers);
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
@@ -1825,6 +1897,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
         public SelectEntityContextPrototype SequencePowerSelectTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype[] SequencePowers { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPowers(agent, SequencePowers);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -2240,6 +2318,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfilePetDirectedPrototype : ProceduralProfilePetPrototype
     {
         public ProceduralUsePowerContextPrototype[] DirectedPowers { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPowers(agent, DirectedPowers);
+        }
     }
 
     public class ProceduralProfileLokiPhase1Prototype : ProceduralProfileWithAttackPrototype
@@ -2304,6 +2388,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int FlankToMasterDelayMS { get; protected set; }
         public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
         public int MaxDistToMasterBeforeTeleport { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPowers(agent, ProjectionPowers);
+        }
     }
 
     public class ProceduralProfileEyeOfAgamottoPrototype : ProceduralProfileStationaryTurretPrototype
@@ -2337,6 +2427,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype EnragePower { get; protected set; }
         public float EnrageTimerAvatarSearchRadius { get; protected set; }
         public ProceduralUsePowerContextPrototype[] PostEnragePowers { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, EnragePower);
+            InitPowers(agent, PostEnragePowers);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -2443,6 +2540,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
         public PrototypeId HellfireProtoRef { get; protected set; }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, MeleePower);
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
@@ -2462,6 +2565,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ObeliskKeyword { get; protected set; }
         public PrototypeId[] ObeliskDamageMonolithPowers { get; protected set; }
         public PrototypeId DisableShield { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, DisableShield);
+            InitPowers(agent, ObeliskDamageMonolithPowers);
+        }
     }
 
     public class ProceduralProfileHellfirePrototype : ProceduralProfileWithEnragePrototype
@@ -2475,6 +2585,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpecialPowerNumSummons { get; protected set; }
         public float SpecialPowerMaxRadius { get; protected set; }
         public float SpecialPowerMinRadius { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, PrimaryPower);
+            InitPower(agent, SpecialPower);
+            InitPower(agent, SpecialSummonPower);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -2519,6 +2637,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId MiniBossMistress { get; protected set; }
         public PrototypeId MiniBossMonolith { get; protected set; }
         public PrototypeId MiniBossSlag { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, FirePillarPower);
+
+            Game game = agent.Game;
+            var blackboard = agent?.AIController?.Blackboard;
+            if (game == null || blackboard == null) return;
+
+            long firePillarCooldown = (long)game.GetCurrentTime().TotalMilliseconds + game.Random.Next(FirePillarMinCooldownMS, FirePillarMaxCooldownMS);
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = firePillarCooldown;
+        }
     }
 
     public class ProceduralProfileSurturPortalPrototype : ProceduralProfileNoMoveNoSensePrototype
@@ -2544,6 +2675,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DeadEntityForDetonateIslandPower { get; protected set; }
         public PrototypeId DetonateIslandPower { get; protected set; }
         public PrototypeId FullyHealedPower { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, DetonateIslandPower);
+            InitPower(agent, FullyHealedPower);
+        }
     }
 
     public class ProceduralProfileFireGiantChaserPrototype : ProceduralProfileBasicMeleePrototype
@@ -2612,6 +2750,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId WeaponCrate4UnlockPower { get; protected set; }
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, ActivateHulkBusterAnimOnly);
+            InitPowers(agent, WeaponsCratesAnimOnlyPowers);
+        }
     }
 
     public class ProceduralProfileHulkBusterOSPrototype : ProceduralProfileWithAttackPrototype
@@ -2622,6 +2768,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype ShieldRedSkull { get; protected set; }
         public ProceduralUsePowerContextPrototype DeactivatedAnimOnly { get; protected set; }
         public ProceduralUsePowerContextPrototype ActivatingAnimOnly { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, ShieldRedSkull);
+            InitPower(agent, DeactivatedAnimOnly);
+            InitPower(agent, ActivatingAnimOnly);
+        }
     }
 
     public class ProceduralProfileSymbioteDrainPrototype : ProceduralProfileWithAttackPrototype
@@ -2629,6 +2783,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype SymbiotePower1 { get; protected set; }
         public ProceduralUsePowerContextPrototype SymbiotePower2 { get; protected set; }
         public ProceduralUsePowerContextPrototype SymbiotePower3 { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, SymbiotePower1);
+            InitPower(agent, SymbiotePower2);
+            InitPower(agent, SymbiotePower3);
+        }
     }
 
     public class ProceduralProfileOnslaughtPrototype : ProceduralProfileWithEnragePrototype
@@ -2660,7 +2822,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             Left,
             Right,
-            Center            
+            Center
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, PsionicBlastLeft);
+            InitPower(agent, PsionicBlastCenter);
+            InitPower(agent, PsionicBlastRight);
+            InitPower(agent, SpikeDanceVFXOnly);
+            InitPower(agent, PrisonBeamPowerCenter);
+            InitPower(agent, PrisonPowerCenter);
+            InitPower(agent, SpikeDanceSingleVFXOnly);
+            InitPower(agent, CallSentinelPower);
+            InitPower(agent, CallSentinelPowerVFXOnly);
+            InitPower(agent, PrisonBeamPowerLeft);
+            InitPower(agent, PrisonBeamPowerRight);
+            InitPower(agent, PrisonPowerLeft);
+            InitPower(agent, PrisonPowerRight);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -2713,6 +2893,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileSpikeDanceMobPrototype : ProceduralProfileWithAttackPrototype
     {
         public ProceduralUsePowerContextPrototype SpikeDanceMissile { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, SpikeDanceMissile);
+        }
     }
 
     public class ProceduralProfileNullifierPrototype : ProceduralProfileNoMoveNoSensePrototype
@@ -2720,6 +2906,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ShieldEngineerKeyword { get; protected set; }
         public ProceduralUsePowerContextPrototype BeamPower { get; protected set; }
         public PrototypeId NullifierAntiShield { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, BeamPower);
+        }
     }
 
     public class ProceduralProfileStrangeCauldronPrototype : ProceduralProfileNoMoveNoSensePrototype
@@ -2733,6 +2925,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype ChargeNullifierPower { get; protected set; }
         public float NullifierSearchRadius { get; protected set; }
         public PrototypeId NullifierAntiShield { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, ChargeNullifierPower);
+        }
     }
 
     public class ProcProfileNullifierAntiShieldPrototype : ProceduralProfileWithEnragePrototype
@@ -2741,6 +2939,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ShieldDamagePower { get; protected set; }
         public PrototypeId ShieldEngineerSpawner { get; protected set; }
         public float SpawnerSearchRadius { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, ShieldDamagePower);
+        }
     }
 
     public class ProceduralProfileMadameHydraPrototype : ProceduralProfileWithAttackPrototype
@@ -2752,6 +2956,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype TeleportPower { get; protected set; }
         public int SummonHydraMinCooldownMS { get; protected set; }
         public int SummonHydraMaxCooldownMS { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, SummonHydraPower);
+            InitPower(agent, InvulnerablePower);
+            InitPower(agent, TeleportPower);
+
+            Game game = agent.Game;
+            var blackboard = agent?.AIController?.Blackboard;
+            if (game == null || blackboard == null) return;
+
+            long summonCooldown = (long)game.GetCurrentTime().TotalMilliseconds + game.Random.Next(SummonHydraMinCooldownMS, SummonHydraMaxCooldownMS);
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = summonCooldown;
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -2817,6 +3036,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             EndPower = 3,
         }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, RestrictedModeStartPower);
+            InitPower(agent, RestrictedModeEndPower);
+            InitPowers(agent, RestrictedModeProceduralPowers);
+
+            Game game = agent.Game;
+            var blackboard = agent?.AIController?.Blackboard;
+            if (game == null || blackboard == null) return;
+
+            long restrictedCooldown = (long)game.GetCurrentTime().TotalMilliseconds + game.Random.Next(RestrictedModeMinCooldownMS, RestrictedModeMaxCooldownMS);
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = restrictedCooldown;
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
@@ -2830,6 +3064,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileUltronEMPPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
         public ProceduralUsePowerContextPrototype EMPPower { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, EMPPower);
+        }
     }
 
     public class ProcProfileQuicksilverTeamUpPrototype : ProceduralProfileTeamUpPrototype
@@ -2916,6 +3156,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             SpecialPower
         }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, SpecialCommandPower);
+        }
+
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;
@@ -2950,12 +3196,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype HealFinalFormPower { get; protected set; }
         public ProceduralUsePowerContextPrototype DeathPreventerPower { get; protected set; }
         public PrototypeId Cauldron { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, FalseDeathPower);
+            InitPower(agent, HealFinalFormPower);
+            InitPower(agent, DeathPreventerPower);
+
+            if (HotspotSpawners.HasValue())
+            {
+                var firstSpawner = HotspotSpawners[0];
+                foreach (var hotspotSpawner in HotspotSpawners)
+                {
+                    bool init = hotspotSpawner.InitTargets(agent, firstSpawner == hotspotSpawner);
+                    if (init == false) return;
+                    InitPower(agent, hotspotSpawner.PowerToUse);
+                }
+            }
+        }
     }
 
     public class ProceduralProfileMeleeRevengePrototype : ProceduralProfileBasicMeleePrototype
     {
         public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
         public PrototypeId RevengeSupport { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, RevengePower);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -2970,6 +3241,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
         public PrototypeId RevengeSupport { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, RevengePower);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {

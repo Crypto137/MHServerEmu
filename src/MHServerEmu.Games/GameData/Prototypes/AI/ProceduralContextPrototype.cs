@@ -1,5 +1,11 @@
-﻿using MHServerEmu.Games.Behavior;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -87,7 +93,63 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float HealthThreshold { get; protected set; }
         public PrototypeId PowerToUse { get; protected set; }
         public PrototypeId[] Targets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
+
+        public bool InitTargets(Agent agent, bool addToBlackboard)
+        {
+            if (Targets.IsNullOrEmpty()) return false;
+            return SearchForTargets(agent, addToBlackboard, false);
+        }
+
+        public bool SearchForTargets(Agent agent, bool addToBlackboard, bool clearFirst) // ProfileKaecilius only
+        {
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return false;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            Region region = agent.Region;
+            if (region == null) return false;
+
+            int targetsFound = 0;
+            Sphere volume = new (agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            foreach (WorldEntity targetEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (targetEntity != null)
+                    foreach (var target in Targets)
+                    {
+                        if (target == targetEntity.PrototypeDataRef)
+                        {
+                            if (addToBlackboard)
+                            {
+                                AddTargetEntityToBlackboard(targetEntity, blackboard, clearFirst);
+                                clearFirst = false;
+                            }
+                            targetsFound++;
+                            break;
+                        }
+                    }
+            }
+
+            return (targetsFound == Targets.Length);
+        }
+
+        private static bool AddTargetEntityToBlackboard(WorldEntity targetEntity, BehaviorBlackboard blackboard, bool clearFirst)
+        {
+            if (clearFirst)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = 0;
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = 0;
+            }
+            if (blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] == 0)
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = targetEntity.Id;
+            else if (blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] == 0)
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = targetEntity.Id;
+            else if (blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] == 0)
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = targetEntity.Id;
+            else
+                return false;
+            return true;
+        }
     }
 
-    
+
 }
