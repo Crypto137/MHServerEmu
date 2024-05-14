@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Tables;
@@ -435,6 +436,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float MaxDistanceToTarget { get; protected set; }
         public bool IgnoreOutOfPositionFailure { get; protected set; }
         public PrototypeId[] DifficultyTierRestrictions { get; protected set; }
+
+        public bool HasDifficultyTierRestriction(PrototypeId difficultyRef)
+        {
+            if (DifficultyTierRestrictions.HasValue() && DifficultyTierRestrictions.Contains(difficultyRef))
+                return true;
+            return false;
+        }
     }
 
     public class MoveToContextPrototype : Prototype
