@@ -152,6 +152,9 @@ namespace MHServerEmu.Games.Properties
                 UpdateCurvePropertyValue(curveProp, flags, info);
         }
 
+        /// <summary>
+        /// Adds the specified <see cref="int"/> delta to the <see cref="PropertyValue"/> with the provided <see cref="PropertyId"/>.
+        /// </summary>
         public void AdjustProperty(int delta, PropertyId propertyId)
         {
             if (delta == 0) return;
@@ -163,6 +166,9 @@ namespace MHServerEmu.Games.Properties
             SetProperty(value, propertyId);
         }
 
+        /// <summary>
+        /// Adds the specified <see cref="float"/> delta to the <see cref="PropertyValue"/> with the provided <see cref="PropertyId"/>.
+        /// </summary>
         public void AdjustProperty(float delta, PropertyId propertyId)
         {
             if (Segment.EpsilonTest(delta, 0f)) return;
@@ -212,6 +218,22 @@ namespace MHServerEmu.Games.Properties
                 RemoveProperty(propertyId);
 
             return true;
+        }
+
+        /// <summary>
+        /// Returns the number of properties with non-default values in this <see cref="PropertyCollection"/> that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public int NumPropertiesInRange(PropertyEnum propertyEnum)
+        {
+            int numProperties = 0;
+
+            if (propertyEnum != PropertyEnum.Invalid)
+            {
+                foreach (var kvp in IteratePropertyRange(propertyEnum))
+                    numProperties++;
+            }
+
+            return numProperties;
         }
 
         /// <summary>
