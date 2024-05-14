@@ -1,0 +1,327 @@
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Games.Behavior.ProceduralAI;
+using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Games.GameData.Prototypes
+{
+
+    public class ProceduralProfileWithTargetPrototype : ProceduralAIProfilePrototype
+    {
+        public SelectEntityContextPrototype SelectTarget { get; protected set; }
+        public PrototypeId NoTargetOverrideProfile { get; protected set; }
+
+        [Flags]
+        protected enum SelectTargetFlags
+        {
+            None,
+            NoTargetOverride = 1 << 0,
+            NotifyAllies = 1 << 1,
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            if (ownerController.Senses.CanLeash)
+            {
+                AIGlobalsPrototype aiGlobalsPrototype = GameDatabase.AIGlobalsPrototype;
+                InitPower(agent, aiGlobalsPrototype.LeashReturnHeal);
+                InitPower(agent, aiGlobalsPrototype.LeashReturnImmunity);
+            }
+        }
+
+        public bool DefaultSensory(ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
+            SelectEntityContextPrototype selectTarget, CombatTargetType targetType, CombatTargetFlags flags = CombatTargetFlags.None)
+        {
+            BehaviorSensorySystem senses = ownerController.Senses;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return false;
+
+            if (senses.ShouldSense())
+            {
+                senses.Sense();
+                if (agent.IsDormant == false)
+                {
+                    if (target == null || target.IsAliveInWorld == false ||
+                        (selectTarget.LockEntityOnceSelected == false && ownerController.ActivePowerRef == PrototypeId.Invalid))
+                        SelectTargetEntity(agent, ref target, ownerController, proceduralAI, selectTarget, targetType,
+                                     SelectTargetFlags.NoTargetOverride | SelectTargetFlags.NotifyAllies, flags);
+                    else
+                        senses.ValidateCurrentTarget(targetType);
+                }
+                else
+                    return false;
+            }
+
+            if (target == null || target.IsInWorld == false || agent.IsDormant) return false;
+
+            return true;
+        }
+
+        protected void SelectTargetEntity(Agent agent, ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, SelectEntityContextPrototype selectTarget, CombatTargetType targetType, SelectTargetFlags selectTargetFlags, CombatTargetFlags flags)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected void DefaultMeleeMovement(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor,
+            WorldEntity target, MoveToContextPrototype moveToContextProto, OrbitContextPrototype orbitContextProto)
+        {
+            if (target == null) return;
+            if (proceduralAI.GetState(0) != Orbit.Instance)
+            {
+                HandleMovementContext(proceduralAI, ownerController, locomotor, moveToContextProto, false, out var movementResult);
+                if (movementResult == StaticBehaviorReturnType.Running || movementResult == StaticBehaviorReturnType.Completed)
+                    return;
+            }
+
+            HandleMovementContext(proceduralAI, ownerController, locomotor, orbitContextProto, false, out var orbitResult);
+            if (orbitResult == StaticBehaviorReturnType.Running) return;
+
+            if (orbitResult == StaticBehaviorReturnType.Failed)
+            {
+                if (NoTargetOverrideProfile == PrototypeId.Invalid
+                    || ownerController.Blackboard.PropertyCollection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] == true)
+                    return;
+
+                var profile = GameDatabase.GetPrototype<ProceduralProfileDefaultActiveOverridePrototype>(NoTargetOverrideProfile);
+                if (profile == null)
+                {
+                    ProceduralAI.Logger.Warn($"default melee movement for [{ToString()}] requires NoTargetOverrideProfile to be a ProceduralProfileDefaultActiveOverridePrototype");
+                    return;
+                }
+
+                HandleMovementContext(proceduralAI, ownerController, locomotor, profile.Wander, false, out _);
+            }
+        }
+
+        protected static void DefaultRangedMovement(ProceduralAI proceduralAI, AIController ownerController, Agent agent, WorldEntity target,
+            MoveToContextPrototype moveToContextProto, OrbitContextPrototype orbitContextProto)
+        {
+            if (moveToContextProto == null || orbitContextProto == null || target == null) return;
+
+            IAIState state = proceduralAI.GetState(0);
+            bool toMove = state == Orbit.Instance || state == MoveTo.Instance;
+            if (toMove == false)
+            {
+                toMove = IsPastMaxDistanceOrLostLOS(agent, target, moveToContextProto.RangeMax, moveToContextProto.EnforceLOS,
+                    (float)ownerController.Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius], moveToContextProto.LOSSweepPadding);
+            }
+
+            if (toMove)
+            {
+                if (proceduralAI.GetState(0) != Orbit.Instance)
+                {
+                    HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, moveToContextProto, true, out var moveToResult);
+                    if (moveToResult == StaticBehaviorReturnType.Running || moveToResult == StaticBehaviorReturnType.Completed)
+                        return;
+                }
+
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, orbitContextProto, true, out var orbitResult);
+                if (orbitResult == StaticBehaviorReturnType.Running || orbitResult == StaticBehaviorReturnType.Completed)
+                    return;
+            }
+
+            HandleRotateToTarget(agent, target);
+        }
+
+        protected static void DefaultRangedFlankerMovement(ProceduralAI proceduralAI, AIController ownerController, Agent agent, WorldEntity target,
+            long currentTime, MoveToContextPrototype moveToContextProto, ProceduralFlankContextPrototype flankContextProto)
+        {
+            if (target == null) return;
+
+            IAIState state = proceduralAI.GetState(0);
+            bool toMove = state == Orbit.Instance;
+            if (toMove == false && state != Flank.Instance)
+            {
+                toMove = IsPastMaxDistanceOrLostLOS(agent, target, moveToContextProto.RangeMax, moveToContextProto.EnforceLOS,
+                    (float)ownerController.Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius], moveToContextProto.LOSSweepPadding);
+            }
+
+            if (toMove)
+            {
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, moveToContextProto, true, out var moveToResult);
+                if (moveToResult == StaticBehaviorReturnType.Running)
+                    return;
+            }
+
+            if (HandleProceduralFlank(proceduralAI, ownerController, agent.Locomotor, currentTime, flankContextProto, true) == StaticBehaviorReturnType.Running)
+                return;
+
+            HandleRotateToTarget(agent, target);
+        }
+
+        protected static StaticBehaviorReturnType HandleProceduralFlank(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor,
+            long currentTime, ProceduralFlankContextPrototype proceduralFlankContext, bool checkPower)
+        {
+            if (proceduralFlankContext == null)
+            {
+                ProceduralAI.Logger.Warn($"AI profile trying to flank without a flank context!\nEntity: {ownerController.Owner}");
+                return StaticBehaviorReturnType.None;
+            }
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
+            float flankTime = blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime];
+            if (proceduralAI.GetState(0) == Flank.Instance || currentTime > flankTime)
+                HandleMovementContext(proceduralAI, ownerController, locomotor, proceduralFlankContext.FlankContext, checkPower, out contextResult, proceduralFlankContext);
+
+            return contextResult;
+        }
+
+        protected static void HandleRotateToTarget(Agent agent, WorldEntity target)
+        {
+            if (agent.CanRotate && target != null && target.IsInWorld)
+            {
+                Locomotor locomotor = agent.Locomotor;
+                if (locomotor == null)
+                {
+                    ProceduralAI.Logger.Warn($"Agent [{agent}] does not have a locomotor and should not be calling this function");
+                    return;
+                }
+                locomotor.LookAt(target.RegionLocation.Position);
+            }
+        }
+
+        private static bool IsPastMaxDistanceOrLostLOS(Agent agent, WorldEntity target, float rangeMax, bool enforceLOS, float radius, float padding)
+        {
+            if (target == null || target.IsInWorld == false) return false;
+            float boundsRadius = agent.Bounds.Radius + target.Bounds.Radius;
+            float distanceSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, target.RegionLocation.Position);
+            if (distanceSq > MathHelper.Square(boundsRadius + rangeMax)) return true;
+            if (enforceLOS && agent.LineOfSightTo(target, radius, padding) == false) return true;
+            return false;
+        }
+    }
+
+    public class ProceduralProfileUsePowerEnticerOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public UsePowerContextPrototype Power { get; protected set; }
+        public new SelectEntityContextPrototype SelectTarget { get; protected set; }
+    }
+
+    public class ProceduralProfileFearOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public FleeContextPrototype FleeFromTarget { get; protected set; }
+        public WanderContextPrototype WanderIfNoTarget { get; protected set; }
+    }
+
+    public class ProceduralProfileRunToTargetAndDespawnOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public PrototypeId Invulnerability { get; protected set; }
+        public int NumberOfWandersBeforeDestroy { get; protected set; }
+        public MoveToContextPrototype RunToTarget { get; protected set; }
+        public WanderContextPrototype WanderIfMoveFails { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, Invulnerability);
+        }
+    }
+
+    public class ProceduralProfileDefaultActiveOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public DelayContextPrototype DelayAfterWander { get; protected set; }
+        public WanderContextPrototype Wander { get; protected set; }
+        public WanderContextPrototype WanderInPlace { get; protected set; }
+    }
+
+    public class ProceduralProfileFleeOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public FleeContextPrototype FleeFromTarget { get; protected set; }
+    }
+
+    public class ProceduralProfileOrbPrototype : ProceduralProfileWithTargetPrototype
+    {
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public int InitialMoveToDelayMS { get; protected set; }
+        public StateChangePrototype InvalidTargetState { get; protected set; }
+        public float OrbRadius { get; protected set; }
+        public PrototypeId EffectPower { get; protected set; }
+        public bool AcceptsAggroRangeBonus { get; protected set; }
+        public int ShrinkageDelayMS { get; protected set; }
+        public int ShrinkageDurationMS { get; protected set; }
+        public float ShrinkageMinScale { get; protected set; }
+        public bool DestroyOrbOnUnSimOrTargetLoss { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            InitPower(agent, EffectPower);
+        }
+    }
+
+    public class ProceduralProfileFastballSpecialWolverinePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public WanderContextPrototype MoveToNoTarget { get; protected set; }
+        public UsePowerContextPrototype Power { get; protected set; }
+        public int PowerChangeTargetIntervalMS { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+            InitPower(agent, Power);
+        }
+    }
+
+    public class ProceduralProfileSeekingMissilePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public SelectEntityContextPrototype SecondaryTargetSelection { get; protected set; }
+        public int SeekDelayMS { get; protected set; }
+        public float SeekDelaySpeed { get; protected set; }
+    }
+
+    public class ProceduralProfileSeekingMissileUniqueTargetPrototype : ProceduralProfileWithTargetPrototype
+    {
+    }
+
+    public class ProceduralProfileMoveToUniqueTargetNoPowerPrototype : ProceduralProfileWithTargetPrototype
+    {
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+    }
+
+    public class ProceduralProfileVanityPetPrototype : ProceduralProfileWithTargetPrototype
+    {
+        public MoveToContextPrototype PetFollow { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MinTimerWhileNotMovingFidgetMS { get; protected set; }
+        public int MaxTimerWhileNotMovingFidgetMS { get; protected set; }
+        public float MaxDistToMasterBeforeTeleport { get; protected set; }
+    }
+
+    public class ProceduralProfileControlledMobOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public MoveToContextPrototype ControlFollow { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public float MaxDistToMasterBeforeTeleport { get; protected set; }
+        public int MaxDistToMasterBeforeFollow { get; protected set; }
+    }
+
+    public class ProceduralProfileSpikedBallPrototype : ProceduralProfileWithTargetPrototype
+    {
+        public float MoveToSummonerDistance { get; protected set; }
+        public float IdleDistanceFromSummoner { get; protected set; }
+        public RotateContextPrototype Rotate { get; protected set; }
+        public int SeekDelayMS { get; protected set; }
+        public float Acceleration { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public WanderContextPrototype Wander { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MaxDistToMasterBeforeTeleport { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+    }
+
+    public class ProceduralProfileTaserTrapPrototype : ProceduralProfileWithTargetPrototype
+    {
+        public PrototypeId TaserHotspot { get; protected set; }
+    }
+
+}
