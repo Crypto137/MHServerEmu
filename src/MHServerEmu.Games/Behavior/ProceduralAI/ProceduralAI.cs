@@ -133,6 +133,10 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             throw new NotImplementedException();
         }
 
+        public void OnOwnerExitWorld()
+        {
+            _procedurealProfile?.OnOwnerExitWorld(_owningController);
+        }
     }
 
     public struct PState

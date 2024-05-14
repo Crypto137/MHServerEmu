@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -116,7 +117,49 @@ namespace MHServerEmu.Games.Entities
             }
             else InitAI(settings);
 
-            AIController?.OnAIEnteredWorld();
+            if (AIController != null)
+            {
+                AIController.OnAIEnteredWorld();
+                ActivateAI();
+            }
+        }
+
+        public void ActivateAI()
+        {
+            if (AIController == null) return;
+            BehaviorBlackboard blackboard = AIController.Blackboard;
+            if (blackboard.PropertyCollection[PropertyEnum.AIStartsEnabled])
+                AIController.SetIsEnabled(true);
+            blackboard.SpawnOffset = (SpawnSpec != null) ? SpawnSpec.Transform.Translation : Vector3.Zero;
+            if (IsInWorld)
+                AIController.OnAIActivated();
+        }
+
+        public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            // TODO other events
+
+            if (AIController != null)
+            {
+                AIController.OnAIKilled();
+                AIController.SetIsEnabled(false);
+            }
+
+            EndAllPowers(false);
+
+            Locomotor locomotor = Locomotor;
+            if (locomotor != null)
+            {
+                locomotor.Stop();
+                locomotor.SetMethod(LocomotorMethod.Default, 0.0f);
+            }
+
+            base.OnKilled(killer, killFlags, directKiller);
+        }
+
+        public void Think()
+        {
+            AIController?.Think();
         }
 
         public override void OnExitedWorld()

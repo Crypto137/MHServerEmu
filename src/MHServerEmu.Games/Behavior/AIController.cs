@@ -96,12 +96,12 @@ namespace MHServerEmu.Games.Behavior
 
         public void OnAIActivated()
         {
-            throw new NotImplementedException();
+            OnAIEnabled();
         }
 
         public void OnAIEnteredWorld()
         {
-            throw new NotImplementedException();
+            OnAIEnabled();
         }
 
         public void OnAIAllianceChange()
@@ -109,16 +109,16 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
-        public void OnAIEnabled()
+        private void ScheduleAIThinkEvent(TimeSpan timeSpan, bool useGlobalThinkVariance, bool ignoreActivePower)
         {
             throw new NotImplementedException();
+            // HasNotExceededMaxThinksPerFrame
+            // AIThinkEvent
         }
-        
-        public void ProcessInterrupts()
+
+        private void ClearScheduledThinkEvent()
         {
-            if (Brain == null) return;
-            //  Some debug stuff
-            // TODO Brain ProcessInterrupts
+            throw new NotImplementedException();
         }
 
         public void SetIsEnabled(bool enabled)
@@ -129,12 +129,30 @@ namespace MHServerEmu.Games.Behavior
             else
                 OnAIDisabled();
         }
-        
+
+        private void OnAIEnabled()
+        {
+            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(0), true, false);
+        }        
+
         private void OnAIDisabled()
         {
-            throw new NotImplementedException();
+            ClearScheduledThinkEvent();
         }
-        
+
+        public void OnAIExitedWorld()
+        {
+            OnAIDisabled();
+            Brain?.OnOwnerExitWorld();
+        }
+
+        public void ProcessInterrupts()
+        {
+            if (Brain == null) return;
+            //  Some debug stuff
+            // TODO Brain ProcessInterrupts
+        }
+
         private bool HasNotExceededMaxThinksPerFrame(TimeSpan timeOffset)
         {
             if (Game == null || Brain == null) return false;
@@ -159,12 +177,17 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
-        internal void OnAIExitedWorld()
+        internal void ResetCurrentTargetState()
         {
             throw new NotImplementedException();
         }
 
-        internal void ResetCurrentTargetState()
+        internal void Think()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void OnAIKilled()
         {
             throw new NotImplementedException();
         }

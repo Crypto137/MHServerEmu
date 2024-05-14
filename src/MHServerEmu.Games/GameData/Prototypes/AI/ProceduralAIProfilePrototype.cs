@@ -139,6 +139,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 agent.AssignPower(power, indexPowerProps);
             }
         }
+
+        public virtual void OnOwnerExitWorld(AIController ownerController) { }
     }
 
     public class ProceduralProfileWithTargetPrototype : ProceduralAIProfilePrototype

@@ -175,6 +175,16 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
 
+        public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EndAllPowers(bool v)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Destroy()
         {
             if (Game == null) return;
@@ -796,6 +806,12 @@ namespace MHServerEmu.Games.Entities
         Forced = 0,
         NonForced = 1,
         Sync = 2,
+    }
+
+    [Flags]
+    public enum KillFlags
+    {
+        None,
     }
 
     [Flags]

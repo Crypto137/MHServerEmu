@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Behavior
         private Agent _owner; 
         public PropertyCollection PropertyCollection { get; private set; }
         public Vector3 SpawnPoint { get; private set; }
-        public Vector3 SpawnOffset { get; private set; }
+        public Vector3 SpawnOffset { get; set; }
 
         public BehaviorBlackboard(Agent owner)
         {
