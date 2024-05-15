@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Regions
         public List<DividedStartLocation> DividedStartLocations { get; } = new();
         public int RegionLevel { get; private set; }
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
-        public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); }
+        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
         public List<ulong> MetaGames { get; private set; } = new();
         public ConnectionNodeList Targets { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
@@ -610,7 +610,7 @@ namespace MHServerEmu.Games.Regions
             while (MetaGames.Any())
             {
                 var metaGameId = MetaGames.First();
-                var metaGame = Game.EntityManager.GetEntityById(metaGameId);
+                var metaGame = Game.EntityManager.GetEntity<Entity>(metaGameId);
                 metaGame?.Destroy();
                 MetaGames.Remove(metaGameId);
             }

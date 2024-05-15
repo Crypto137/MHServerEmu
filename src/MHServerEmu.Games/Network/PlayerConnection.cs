@@ -467,13 +467,13 @@ namespace MHServerEmu.Games.Network
 
             Logger.Trace($"Received PerformPreInteractPower for {performPreInteractPower.IdTarget}");
 
-            if (Game.EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
+            var interactableObject = Game.EntityManager.GetEntity<Entity>(performPreInteractPower.IdTarget);
+            if (interactableObject == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to get entity {performPreInteractPower.IdTarget}");
+
+            if (Game.EventManager.HasEvent(this, EventEnum.PreInteractPowerEnd) == false)
             {
-                if (Game.EventManager.HasEvent(this, EventEnum.PreInteractPowerEnd) == false)
-                {
-                    Game.EventManager.AddEvent(this, EventEnum.PreInteractPower, 0, interactObject);
-                    Game.EventManager.AddEvent(this, EventEnum.PreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
-                }
+                Game.EventManager.AddEvent(this, EventEnum.PreInteractPower, 0, interactableObject);
+                Game.EventManager.AddEvent(this, EventEnum.PreInteractPowerEnd, 1000, interactableObject); // ChargingTimeMS    
             }
 
             return true;
@@ -493,68 +493,67 @@ namespace MHServerEmu.Games.Network
                 SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
             }
 
-            if (Game.EntityManager.TryGetEntityById(useInteractableObject.IdTarget, out Entity interactableObject))
+            var interactableObject = Game.EntityManager.GetEntity<Entity>(useInteractableObject.IdTarget);
+            if (interactableObject == null) return Logger.WarnReturn(false, $"OnUseInteractableObject(): Failed to get entity {useInteractableObject.IdTarget}");
+
+            if (interactableObject is Transition teleport)
             {
-                if (interactableObject is Transition)
+                if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
                 {
-                    Transition teleport = interactableObject as Transition;
-                    if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
-                    {
-                        teleport.TeleportToLastTown(this);
-                        return true;
-                    }
-                    if (teleport.DestinationList.Count == 0 || teleport.DestinationList[0].Type == RegionTransitionType.Waypoint) return true;
-                    Logger.Trace($"Destination entity {teleport.DestinationList[0].EntityRef}");
-
-                    if (teleport.DestinationList[0].Type == RegionTransitionType.TowerUp ||
-                        teleport.DestinationList[0].Type == RegionTransitionType.TowerDown)
-                    {
-                        teleport.TeleportToEntity(this, teleport.DestinationList[0].EntityId);
-                        return true;
-                    }
-
-                    if (RegionDataRef != teleport.DestinationList[0].RegionRef)
-                    {
-                        teleport.TeleportClient(this);
-                        return true;
-                    }
-
-                    if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
-
-                    if (AOI.CheckTargeCell(target))
-                    {
-                        teleport.TeleportClient(this);
-                        return true;
-                    }
-
-                    var teleportEntity = target.TransitionPrototype;
-                    if (teleportEntity == null) return true;
-                    Vector3 targetPos = new(target.RegionLocation.Position);
-                    Orientation targetRot = target.RegionLocation.Orientation;
-
-                    teleportEntity.CalcSpawnOffset(targetRot, targetPos);
-
-                    Logger.Trace($"Teleporting to {targetPos}");
-
-                    uint cellid = target.Properties[PropertyEnum.MapCellId];
-                    uint areaid = target.Properties[PropertyEnum.MapAreaId];
-                    Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
-
-                    SendMessage(NetMessageEntityPosition.CreateBuilder()
-                        .SetIdEntity(Player.CurrentAvatar.Id)
-                        .SetFlags((uint)ChangePositionFlags.Teleport)
-                        .SetPosition(targetPos.ToNetStructPoint3())
-                        .SetOrientation(targetRot.ToNetStructPoint3())
-                        .SetCellId(cellid)
-                        .SetAreaId(areaid)
-                        .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.EntityPrototypeRef)
-                        .Build());
-
-                    LastPosition = targetPos;
+                    teleport.TeleportToLastTown(this);
+                    return true;
                 }
-                else
-                    Game.EventManager.AddEvent(this, EventEnum.UseInteractableObject, 0, interactableObject);
+                if (teleport.DestinationList.Count == 0 || teleport.DestinationList[0].Type == RegionTransitionType.Waypoint) return true;
+                Logger.Trace($"Destination entity {teleport.DestinationList[0].EntityRef}");
+
+                if (teleport.DestinationList[0].Type == RegionTransitionType.TowerUp ||
+                    teleport.DestinationList[0].Type == RegionTransitionType.TowerDown)
+                {
+                    teleport.TeleportToEntity(this, teleport.DestinationList[0].EntityId);
+                    return true;
+                }
+
+                if (RegionDataRef != teleport.DestinationList[0].RegionRef)
+                {
+                    teleport.TeleportClient(this);
+                    return true;
+                }
+
+                if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
+
+                if (AOI.CheckTargeCell(target))
+                {
+                    teleport.TeleportClient(this);
+                    return true;
+                }
+
+                var teleportEntity = target.TransitionPrototype;
+                if (teleportEntity == null) return true;
+                Vector3 targetPos = new(target.RegionLocation.Position);
+                Orientation targetRot = target.RegionLocation.Orientation;
+
+                teleportEntity.CalcSpawnOffset(targetRot, targetPos);
+
+                Logger.Trace($"Teleporting to {targetPos}");
+
+                uint cellId = target.Properties[PropertyEnum.MapCellId];
+                uint areaId = target.Properties[PropertyEnum.MapAreaId];
+                Logger.Trace($"Teleporting to areaid {areaId} cellid {cellId}");
+
+                SendMessage(NetMessageEntityPosition.CreateBuilder()
+                    .SetIdEntity(Player.CurrentAvatar.Id)
+                    .SetFlags((uint)ChangePositionFlags.Teleport)
+                    .SetPosition(targetPos.ToNetStructPoint3())
+                    .SetOrientation(targetRot.ToNetStructPoint3())
+                    .SetCellId(cellId)
+                    .SetAreaId(areaId)
+                    .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.EntityPrototypeRef)
+                    .Build());
+
+                LastPosition = targetPos;
             }
+            else
+                Game.EventManager.AddEvent(this, EventEnum.UseInteractableObject, 0, interactableObject);
 
             return true;
         }

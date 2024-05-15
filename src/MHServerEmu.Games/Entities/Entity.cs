@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.Entities
 
         public Entity GetOwner()
         {
-            return Game.EntityManager.GetEntityById(OwnerId);
+            return Game.EntityManager.GetEntity<Entity>(OwnerId);
         }
 
         public T GetOwnerOfType<T>() where T : Entity
