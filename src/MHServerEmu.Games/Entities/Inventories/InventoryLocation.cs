@@ -13,6 +13,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
 
+        public static readonly InventoryLocation Invalid = new();
+
         public ulong ContainerId { get; private set; } = 0;     // Entity id
         public InventoryPrototype InventoryPrototype { get; private set; } = null;
         public uint Slot { get; private set; } = InvalidSlot;
