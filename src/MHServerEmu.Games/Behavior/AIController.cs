@@ -213,11 +213,9 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnOwnerExitWorld();
         }
 
-        public void ProcessInterrupts()
+        public void ProcessInterrupts(BehaviorInterruptType interrupt)
         {
-            if (Brain == null) return;
-            //  Some debug stuff
-            // TODO Brain ProcessInterrupts
+            Brain?.ProcessInterrupts(interrupt);
         }
 
         private bool HasNotExceededMaxThinksPerFrame(TimeSpan timeOffset)
@@ -247,7 +245,7 @@ namespace MHServerEmu.Games.Behavior
         public void ResetCurrentTargetState()
         {
             SetTargetEntity(null);
-            Senses.SetInterrupt(BehaviorInterruptType.NoTarget);
+            Senses.Interrupt = BehaviorInterruptType.NoTarget;
             var collection = Blackboard.PropertyCollection;
             collection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
             collection.RemoveProperty(PropertyEnum.AINextHostileSense);

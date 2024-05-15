@@ -268,6 +268,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 _owningController.OnAIBehaviorChange();
             }
         }
+
+        internal void ProcessInterrupts(BehaviorInterruptType interrupt)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum OverrideType

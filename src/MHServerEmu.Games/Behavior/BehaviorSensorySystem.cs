@@ -11,8 +11,19 @@ namespace MHServerEmu.Games.Behavior
     public class BehaviorSensorySystem
     {
         private AIController _pAIController;
-        private float _leashDistanceSq = 3000.0f * 3000.0f; // Default LeashDistance in PopulationObject
+        public List<ulong> PotentialAllyTargetIds { get; private set; }
+        public List<ulong> PotentialHostileTargetIds { get; private set; }
+
+        private float _leashDistanceSq;
         public bool CanLeash { get; private set; }
+        public BehaviorInterruptType Interrupt { get; set; }
+
+        public BehaviorSensorySystem()
+        {
+            PotentialAllyTargetIds = new();
+            PotentialHostileTargetIds = new();
+            _leashDistanceSq = 3000.0f * 3000.0f; // Default LeashDistance in PopulationObject
+        }
 
         public void Sense()
         {
@@ -59,7 +70,17 @@ namespace MHServerEmu.Games.Behavior
 
         private void HandleInterrupts()
         {
-            throw new NotImplementedException();
+            if (Interrupt != BehaviorInterruptType.None)
+            {
+                if (_pAIController == null) return;
+                _pAIController.ProcessInterrupts(Interrupt);
+                ClearInterrupts();
+            }
+        }
+
+        private void ClearInterrupts()
+        {
+            Interrupt = BehaviorInterruptType.None;
         }
 
         public WorldEntity GetCurrentTarget()
@@ -73,11 +94,6 @@ namespace MHServerEmu.Games.Behavior
         }
 
         internal void ValidateCurrentTarget(CombatTargetType targetType)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void SetInterrupt(BehaviorInterruptType interruptType)
         {
             throw new NotImplementedException();
         }
