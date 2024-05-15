@@ -128,4 +128,11 @@ namespace MHServerEmu.Games.Entities.Inventories
         // Missing in the client
         //AvatarRing = 0
     }
+
+    public enum InventoryMetaDataType : byte
+    {
+        Invalid,
+        Parent,
+        Item
+    }
 }

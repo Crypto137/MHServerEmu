@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
