@@ -1,38 +1,8 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)None)]
-    public enum InventoryCategory   // Entity/Inventory/Category.type
-    {
-        None = 0,
-        AvatarEquipment = 1,
-        BagItem = 2,
-        PlayerAdmin = 3,
-        PlayerAvatars = 4,
-        PlayerCraftingRecipes = 12,
-        PlayerGeneral = 5,
-        PlayerGeneralExtra = 6,
-        PlayerStashAvatarSpecific = 7,
-        PlayerStashGeneral = 8,
-        PlayerTrade = 10,
-        PlayerVendor = 11,
-        TeamUpEquipment = 13,
-        PlayerStashTeamUpGear = 9,
-    }
-
-    [AssetEnum((int)Invalid)]
-    public enum InventoryEvent
-    {
-        Invalid,
-        RegionChange,
-    }
-
-    #endregion
-
     public class InventoryPrototype : Prototype
     {
         public short Capacity { get; protected set; }
@@ -48,7 +18,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool VisibleToParty { get; protected set; }
         public bool VisibleToProximity { get; protected set; }
         public bool AvatarTeam { get; protected set; }
-        public ConvenienceLabel ConvenienceLabel { get; protected set; }
+        public InventoryConvenienceLabel ConvenienceLabel { get; protected set; }
         public bool PlaySoundOnAdd { get; protected set; }
         public bool CapacityUnlimited { get; protected set; }
         public bool VendorInvContentsCanBeBought { get; protected set; }

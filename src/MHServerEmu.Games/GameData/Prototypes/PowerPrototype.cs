@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -719,7 +720,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool TargetsDestructibles { get; protected set; }
         public bool LOSCheckAlongGround { get; protected set; }
         public EntityHealthState EntityHealthState { get; protected set; }
-        public ConvenienceLabel TargetsEntitiesInInventory { get; protected set; }
+        public InventoryConvenienceLabel TargetsEntitiesInInventory { get; protected set; }
         public bool TargetsFrontSideOnly { get; protected set; }
         public bool TargetsNonEnemies { get; protected set; }
         public bool WillTargetUltimateCreator { get; protected set; }

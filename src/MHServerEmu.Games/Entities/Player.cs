@@ -421,7 +421,7 @@ namespace MHServerEmu.Games.Entities
                 isLocked &= inventoryProto.LockedByDefault;
                 isLocked &= _unlockedInventoryList.Contains(inventoryProto.DataRef) == false;
                 // Although the unified stash from the console version is unlocked by default, we consider it always locked on PC
-                isLocked |= inventoryProto.ConvenienceLabel == ConvenienceLabel.UnifiedStash;
+                isLocked |= inventoryProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash;
 
                 if (isLocked && getLocked || isLocked == false && getUnlocked)
                     yield return invAssignmentProto.Inventory;

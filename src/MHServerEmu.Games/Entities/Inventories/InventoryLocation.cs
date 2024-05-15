@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public PrototypeId InventoryRef { get => InventoryPrototype != null ? InventoryPrototype.DataRef : PrototypeId.Invalid; }
         public InventoryCategory InventoryCategory { get => InventoryPrototype != null ? InventoryPrototype.Category : InventoryCategory.None; }
-        public ConvenienceLabel InventoryConvenienceLabel { get => InventoryPrototype != null ? InventoryPrototype.ConvenienceLabel : ConvenienceLabel.None; }
+        public InventoryConvenienceLabel InventoryConvenienceLabel { get => InventoryPrototype != null ? InventoryPrototype.ConvenienceLabel : InventoryConvenienceLabel.None; }
 
         public bool IsValid { get => ContainerId != 0 && InventoryRef != PrototypeId.Invalid && Slot != InvalidSlot; }
 

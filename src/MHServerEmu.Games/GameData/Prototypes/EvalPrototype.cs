@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -32,44 +33,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Energy = 1,
         Mental = 2,
         Any = 4,
-    }
-
-    [AssetEnum((int)None)]
-    public enum ConvenienceLabel
-    {
-        None = 0,
-        AvatarArtifact1 = 1,
-        AvatarArtifact2 = 2,
-        AvatarArtifact3 = 3,
-        AvatarArtifact4 = 4,
-        AvatarLegendary = 5,
-        AvatarInPlay = 6,
-        AvatarLibrary = 7,
-        AvatarLibraryHardcore = 8,
-        AvatarLibraryLadder = 9,
-        TeamUpLibrary = 10,
-        TeamUpGeneral = 11,
-        Costume = 12,
-        CraftingRecipesLearned = 13,
-        DEPRECATEDCraftingInProgress = 14,
-        CraftingResults = 15,
-        DangerRoomScenario = 16,
-        General = 17,
-        DEPRECATEDPlayerStash = 19,
-        Summoned = 20,
-        Trade = 21,
-        UIItems = 22,
-        DeliveryBox = 23,
-        ErrorRecovery = 24,
-        Controlled = 25,
-        VendorBuyback = 26,
-        PvP = 27,
-        PetItem = 18,
-        ItemLink = 28,
-        CouponAwards = 29,
-        UnifiedStash = 30,
-        // Not found in client
-        AvatarRing = 0
     }
 
     #endregion
@@ -307,7 +270,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalContext Context { get; protected set; }
         public PrototypeId Entity { get; protected set; }
-        public ConvenienceLabel Inventory { get; protected set; }
+        public InventoryConvenienceLabel Inventory { get; protected set; }
     }
 
     public class IsInPartyPrototype : EvalPrototype

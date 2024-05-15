@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         public PrototypeId PrototypeDataRef { get => Prototype != null ? Prototype.DataRef : PrototypeId.Invalid; }
 
         public InventoryCategory Category { get; private set; } = InventoryCategory.None;
-        public ConvenienceLabel ConvenienceLabel { get; private set; } = ConvenienceLabel.None;
+        public InventoryConvenienceLabel ConvenienceLabel { get; private set; } = InventoryConvenienceLabel.None;
         public int MaxCapacity { get; private set; }
 
         public Inventory(Game game)
