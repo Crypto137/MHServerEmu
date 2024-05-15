@@ -101,7 +101,7 @@ namespace MHServerEmu.Commands.Implementations
             // Send client property updates (TODO: Remove this when we have those generated automatically)
             // Avatar entity
             client.SendMessage(1, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), costumeId));
+                avatar.Properties.ReplicationId, PropertyEnum.CostumeCurrent, costumeId));
 
             // Player entity
             PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.EntityPrototypeRef);
@@ -127,7 +127,7 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             playerConnection.Player.Properties[PropertyEnum.OmegaPoints] = value;
 
-            client.SendMessage(1, Property.ToNetMessageSetProperty(playerConnection.Player.Properties.ReplicationId, new(PropertyEnum.OmegaPoints), value));
+            client.SendMessage(1, Property.ToNetMessageSetProperty(playerConnection.Player.Properties.ReplicationId, PropertyEnum.OmegaPoints, value));
             return $"Setting Omega points to {value}.";
         }
 
@@ -165,10 +165,10 @@ namespace MHServerEmu.Commands.Implementations
             var avatar = playerConnection.Player.CurrentAvatar;
 
             client.SendMessage(1, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, new(PropertyEnum.Endurance), 0f));
+                avatar.Properties.ReplicationId, PropertyEnum.Endurance, 0f));
 
             client.SendMessage(1, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, new(PropertyEnum.Endurance), avatar.Properties[PropertyEnum.Endurance]));
+                avatar.Properties.ReplicationId, PropertyEnum.Endurance, avatar.Properties[PropertyEnum.Endurance]));
 
             return $"Mana fixed.";
         }

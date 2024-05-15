@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.Powers
 
             // PowerRankBase needs to be set for the powers window to show powers without changing spec tabs
             // NOTE: PowerRankBase is also supposed to have a power prototype param
-            messageList.Add(Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.PowerRankBase), 1));
+            messageList.Add(Property.ToNetMessageSetProperty(replicationId, PropertyEnum.PowerRankBase, 1));
 
             return messageList;
         }

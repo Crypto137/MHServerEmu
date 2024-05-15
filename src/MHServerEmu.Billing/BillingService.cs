@@ -152,7 +152,7 @@ namespace MHServerEmu.Billing
             // Send client property updates (TODO: Remove this when we have those generated automatically)
             // Avatar entity
             client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient));
+                avatar.Properties.ReplicationId, PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient));
 
             // Player entity
             PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.EntityPrototypeRef);
