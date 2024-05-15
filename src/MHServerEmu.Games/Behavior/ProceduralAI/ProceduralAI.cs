@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -12,25 +13,32 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         public static readonly Logger Logger = LogManager.CreateLogger();
 
         public const short MaxConcurrentStates = 2;
-        private AIController _owningController;
+        private Game _game;
+        private readonly AIController _owningController;
         private short _curState;
-        private PState[] _states = new PState[MaxConcurrentStates];
-        private ProceduralAIProfilePrototype _procedurealProfile;
+        private readonly PState[] _states;
+        private ProfilePtr _proceduralPtr;
 
         public BrainPrototype BrainPrototype { get; private set; }
-
-        private Game _game;
-
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }
-        public ProceduralAIProfilePrototype PartialOverrideBehavior { get; private set; }
+
+        private ProfilePtr _partialOverridePtr;
+        public ProceduralAIProfilePrototype PartialOverrideBehavior { get => _partialOverridePtr.Profile; }
+
+        private ProfilePtr _fullOverridePtr;
+        public ProceduralAIProfilePrototype FullOverrideBehavior { get => _fullOverridePtr.Profile; }
         public StaticBehaviorReturnType LastPowerResult { get; internal set; }
-        public ProceduralAIProfilePrototype FullOverrideBehavior { get; internal set; }
 
         public ProceduralAI(Game game, AIController owningController)
         {
             _game = game;
             _owningController = owningController;
+            _proceduralPtr = new ();
+            _partialOverridePtr = new();
+            _fullOverridePtr = new();
+            _curState = 0;
+            _states = new PState[MaxConcurrentStates];
         }
 
         public void Initialize(BehaviorProfilePrototype profile)
@@ -42,11 +50,18 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 brainRef = _owningController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride];
             
             Agent agent = _owningController.Owner;
-            // TODO Init PropertyEnum.AIPartialOverride;
-            // GetOverrideByType
+            InitPartialOverride(agent);
+            var proceduralProfile = brainRef.As<ProceduralAIProfilePrototype>();
+            BrainPrototype = proceduralProfile;
+            InitProceduralProfile(ref _proceduralPtr, proceduralProfile);
+        }
 
-            _procedurealProfile = brainRef.As<ProceduralAIProfilePrototype>();
-            BrainPrototype = _procedurealProfile;
+        private bool InitProceduralProfile(ref ProfilePtr current, ProceduralAIProfilePrototype profile)
+        {
+            Agent agent = _owningController.Owner;
+            if (agent == null || profile == null) return false;
+
+            current.Profile = profile;
 
             if (agent.IsControlledEntity)
             {
@@ -54,10 +69,23 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 if (masterAvatarDbGuid != 0)
                 {
                     // TODO Set PropertyEnum.AIAssistedEntityID = DBAvatarId
-                }               
+                }
             }
 
-            _procedurealProfile.Init(agent); // Init Powers for agent
+            _proceduralPtr.Profile.Init(agent); // Init Powers for agent
+            return true;
+        }
+
+        private void InitPartialOverride(Agent agent)
+        {
+            ClearOverrideBehavior(OverrideType.Partial);
+            PrototypeId overrideRef = agent.Properties[PropertyEnum.AIPartialOverride];
+            if (overrideRef != PrototypeId.Invalid) 
+            {
+                var profile = overrideRef.As<ProceduralAIProfilePrototype>();
+                if (profile != null)
+                    SetOverride(profile, OverrideType.Partial);
+            }
         }
 
         public void StopOwnerLocomotor()
@@ -77,27 +105,82 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             if (_states[_curState].State == state)
                 result = state.Update(stateContext);
             else if (ValidateState(state, ref stateContext))
-                result = SwitchProceduralState(state, ref stateContext, StaticBehaviorReturnType.Interrupted, proceduralContext);
+                result = SwitchProceduralState(state, stateContext, StaticBehaviorReturnType.Interrupted, proceduralContext);
             else
                 return StaticBehaviorReturnType.Failed;
 
             if (result == StaticBehaviorReturnType.Completed || result == StaticBehaviorReturnType.Failed)
-                SwitchProceduralState(null, ref stateContext, result, null);
+                SwitchProceduralState(null, stateContext, result, null);
 
             return result;
         }
+
         public void StartState(IAIState state, ref IStateContext stateContext, ProceduralContextPrototype proceduralContext)
         {
             if ( _curState < 0 || _curState >= MaxConcurrentStates) return;
 
             _states[_curState] = new(state, proceduralContext);
             state.Start(stateContext);
-            proceduralContext?.OnStart(_owningController, _procedurealProfile);
+            proceduralContext?.OnStart(_owningController, _proceduralPtr.Profile);
         }
 
-        public  StaticBehaviorReturnType SwitchProceduralState(IAIState state, ref IStateContext stateContext, StaticBehaviorReturnType returnType, ProceduralContextPrototype proceduralContext = null)
+        public  StaticBehaviorReturnType SwitchProceduralState(IAIState state, IStateContext stateContext, StaticBehaviorReturnType currentBehaviorState, ProceduralContextPrototype proceduralContext = null)
         {
-            throw new NotImplementedException();
+            /* pointless check
+            AIController ownerController = stateContext.OwnerController;
+            Agent ownerAgent = null;
+            BehaviorBlackboard blackboard = null;
+            bool usePowerTargetPos = false;
+
+            if (ownerController != null)
+            {
+                ownerAgent = ownerController.Owner;
+                blackboard = ownerController.Blackboard;
+                usePowerTargetPos = blackboard.UsePowerTargetPos != Vector3.Zero;
+            }*/
+
+            EndStateAndLowerStates(currentBehaviorState);
+
+            if (state != null)
+            {
+                /* impossible compare
+                if (usePowerTargetPos && ownerController != null && blackboard != null && blackboard.UsePowerTargetPos == Vector3.Zero)
+                {
+                    PrototypeId activePowerRef = PrototypeId.Invalid;
+                    PrototypeId summonEntityOverrideRef = PrototypeId.Invalid;
+                    if (ownerAgent != null)
+                    {
+                        activePowerRef = ownerAgent.ActivePowerRef;
+                        summonEntityOverrideRef = ownerAgent.Properties[PropertyEnum.SummonEntityOverrideRef];
+                    }
+                    int aiPowerStartedCount = blackboard.PropertyCollection.NumPropertiesInRange(PropertyEnum.AIPowerStarted);
+                    Logger.Warn($"SwitchProceduralState stomped target position for power prior to startState? " +
+                        $"CurStateIdx=[{_curState}] " +
+                        $"AIPowerStarted=[{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}] " +
+                        $"AIPowerStartedCount=[{aiPowerStartedCount}] " +
+                        $"CurrentBehaviorState=[{currentBehaviorState}] " +
+                        $"AgentActivePower=[{GameDatabase.GetPrototypeName(activePowerRef)}] " +
+                        $"SummonEntityOverride=[{GameDatabase.GetPrototypeName(summonEntityOverrideRef)}] " +
+                        $"LastPowerActivated=[{GameDatabase.GetPrototypeName(blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated])}] " +
+                        $"TargetId=[{blackboard.PropertyCollection[PropertyEnum.AIUsePowerTargetID]}] " +
+                        $"OwnerAgent=[{ownerAgent}]");                 
+                }*/
+
+                StartState(state, ref stateContext, proceduralContext);
+                return state.Update(stateContext);
+            }
+
+            return StaticBehaviorReturnType.None; 
+        }
+
+        private void EndStateAndLowerStates(StaticBehaviorReturnType endState)
+        {
+            for (int i = _curState; i < MaxConcurrentStates; ++i)
+            {
+                _states[i].ProceduralContext?.OnEnd(_owningController, _proceduralPtr.Profile);
+                _states[i].State?.End(_owningController, endState);
+                _states[i] = new PState();
+            }
         }
 
         public bool ValidateContext(IAIState state, ref IStateContext stateContext)
@@ -123,20 +206,79 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             return _states[stateIndex].State;
         }
 
-        internal void PushSubstate()
+        public void PushSubstate()
         {
-            throw new NotImplementedException();
+            if (_curState < MaxConcurrentStates - 1) _curState++;
         }
 
-        internal void PopSubstate()
+        public void PopSubstate()
         {
-            throw new NotImplementedException();
+            if (_curState > 0) _curState--;
         }
 
         public void OnOwnerExitWorld()
         {
-            _procedurealProfile?.OnOwnerExitWorld(_owningController);
+            _proceduralPtr.Profile?.OnOwnerExitWorld(_owningController);
         }
+
+        public void SetOverride(ProceduralAIProfilePrototype profile, OverrideType overrideType)
+        {
+            if (profile == null)
+            {
+                ClearOverrideBehavior(overrideType);
+                return;
+            }
+
+            BehaviorBlackboard blackboard = _owningController.Blackboard;
+            blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomOverrideStateVal1);
+            StopOwnerLocomotor();
+            ProfilePtr tempOverride = GetOverrideByType(overrideType);
+            if (tempOverride.Profile == null) return;
+            if (tempOverride.Profile == profile)
+            {
+                Logger.Warn($"Trying to override a profile with itself: {profile}");
+                return;
+            }
+
+            if (InitProceduralProfile(ref tempOverride, profile))
+            {
+                SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+                _owningController.OnAIBehaviorChange();
+            }
+        }
+
+        private ProfilePtr GetOverrideByType(OverrideType overrideType)
+        {
+            return overrideType switch
+            {
+                OverrideType.Full => _fullOverridePtr,
+                OverrideType.Partial => _partialOverridePtr,
+                _ => new ProfilePtr()
+            };
+        }
+
+        private void ClearOverrideBehavior(OverrideType overrideType)
+        {
+            StopOwnerLocomotor();
+            SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+            ProfilePtr tempOverride = GetOverrideByType(overrideType);
+            if (tempOverride.Profile != null)
+            {
+                tempOverride.Profile = null;
+                _owningController.OnAIBehaviorChange();
+            }
+        }
+    }
+
+    public enum OverrideType
+    {
+        Full,
+        Partial
+    }
+
+    public struct ProfilePtr
+    {
+        public ProceduralAIProfilePrototype Profile;
     }
 
     public struct PState

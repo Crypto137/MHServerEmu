@@ -11,8 +11,9 @@ namespace MHServerEmu.Games.Behavior
     {
         private Agent _owner; 
         public PropertyCollection PropertyCollection { get; private set; }
-        public Vector3 SpawnPoint { get; private set; }
+        public Vector3 SpawnPoint { get; set; }
         public Vector3 SpawnOffset { get; set; }
+        public Vector3 UsePowerTargetPos { get; set; }
 
         public BehaviorBlackboard(Agent owner)
         {
@@ -20,6 +21,7 @@ namespace MHServerEmu.Games.Behavior
             PropertyCollection = new ();
             SpawnPoint = Vector3.Zero;
             SpawnOffset = Vector3.Zero;
+            UsePowerTargetPos = Vector3.Zero;
         }
 
         public void Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)

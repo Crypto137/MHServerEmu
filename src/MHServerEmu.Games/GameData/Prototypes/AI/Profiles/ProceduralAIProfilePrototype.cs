@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 bool resetTarget = true;
                 if (checkPower) resetTarget = proceduralAI.LastPowerResult == StaticBehaviorReturnType.Failed;
                 if (resetTarget) ownerController.ResetCurrentTargetState();
-                proceduralAI.SwitchProceduralState(null, ref context, StaticBehaviorReturnType.Failed);
+                proceduralAI.SwitchProceduralState(null, context, StaticBehaviorReturnType.Failed);
                 return true;
             }
 

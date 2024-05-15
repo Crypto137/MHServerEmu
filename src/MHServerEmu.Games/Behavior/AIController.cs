@@ -191,5 +191,10 @@ namespace MHServerEmu.Games.Behavior
         {
             throw new NotImplementedException();
         }
+
+        internal void OnAIBehaviorChange()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
