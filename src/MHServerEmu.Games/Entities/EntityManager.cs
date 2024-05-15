@@ -1,38 +1,16 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class EntitySettings
-    {
-        public ulong Id;
-        public PrototypeId EntityRef;
-        public ulong RegionId;
-        public Vector3 Position;
-        public Orientation Orientation;
-        public bool OverrideSnapToFloor;
-        public bool OverrideSnapToFloorValue;
-        public bool EnterGameWorld;
-        public bool HotspotSkipCollide;
-        public PropertyCollection Properties;
-        public Cell Cell;
-        public List<EntitySelectorActionPrototype> Actions;
-        public PrototypeId ActionsTarget;
-        public SpawnSpec SpawnSpec;
-        public float LocomotorHeightOverride;
-    }
-
     public enum EntityCollection
     {
         Simulated = 0,
@@ -48,6 +26,8 @@ namespace MHServerEmu.Games.Entities
 
     public class EntityManager
     {
+        public const ulong InvalidEntityId = 0;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Game _game;
@@ -69,11 +49,6 @@ namespace MHServerEmu.Games.Entities
             AllEntities = new(EntityCollection.All);
             SimulatedEntities = new(EntityCollection.Simulated);
             LocomotionEntities = new(EntityCollection.Locomotion);
-        }
-
-        public void PhysicsResolveEntities()
-        {
-            PhysicsManager.ResolveEntities();
         }
 
         public Entity CreateEntity(EntitySettings settings)
@@ -123,17 +98,9 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Orientation orientation)
-        {
-            EntityBaseData baseData = new (GetNextEntityId(), prototypeId, position, orientation);
-            WorldEntity worldEntity = new (baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId));
-            worldEntity.RegionId = regionId;
-            _entityDict.Add(baseData.EntityId, worldEntity);
-            return worldEntity;
-        }
-
         public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
 
+            // REMOVEME - Used for the bowling ball hack
             EntityBaseData baseData = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner,
@@ -173,18 +140,22 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"Unknown entity id '{entityId}' to destroy");
         }
 
-        public Entity GetEntityById(ulong entityId)
-        {
-            if (_entityDict.TryGetValue(entityId, out Entity entity)) return entity;
-            return null;
-        }
-
         public T GetEntity<T>(ulong entityId) where T : Entity
         {
-            return GetEntityById(entityId) as T;
+            // TODO: flags
+            if (entityId == InvalidEntityId) return null;
+
+            if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
+                return null;
+
+            return entity as T;
         }
 
-        public Entity GetEntityByPrototypeId(PrototypeId prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.EntityPrototypeRef == prototype);
+        public Entity GetEntityByPrototypeId(PrototypeId prototype)
+        {
+            // REMOVEME - Used for the bowling ball hack
+            return _entityDict.Values.FirstOrDefault(entity => entity.BaseData.EntityPrototypeRef == prototype);
+        }
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
@@ -204,38 +175,43 @@ namespace MHServerEmu.Games.Entities
             return default;
         }
 
-        public bool TryGetEntityById(ulong entityId, out Entity entity) => _entityDict.TryGetValue(entityId, out entity);
-        public ulong GetPropertyCollectionReplicationId(ulong entityId) => _entityDict[entityId].Properties.ReplicationId;
-        public bool TryGetPropertyCollectionReplicationId(ulong entityId, out ulong replicationId)
-        {
-            if (_entityDict.TryGetValue(entityId, out Entity entity))
-            {
-                replicationId = entity.Properties.ReplicationId;
-                return true;
-            }
-
-            replicationId = 0;
-            return false;
-        }
-
-        public IEnumerable<Entity> GetEntities()
+        public IEnumerable<Entity> IterateEntities()
         {
             foreach (var entity in _entityDict.Values)
                 yield return entity;
         }
 
-        public IEnumerable<Entity> GetEntities(Cell cell)
+        public IEnumerable<Entity> IterateEntities(Cell cell)
         {
             foreach (var entity in _entityDict.Values)
                 if (entity is WorldEntity worldEntity && worldEntity.Cell == cell)
                     yield return entity;
         }
 
-        public IEnumerable<Entity> GetEntities(Region region)
+        public IEnumerable<Entity> IterateEntities(Region region)
         {
             foreach (var entity in _entityDict.Values)
                 if (entity is WorldEntity worldEntity && worldEntity.Region == region)
                     yield return entity;
+        }
+
+        public void PhysicsResolveEntities()
+        {
+            PhysicsManager.ResolveEntities();
+        }
+
+        public void LocomoteEntities()
+        {
+            foreach (var entity in LocomotionEntities.Iterate())
+                if (entity is WorldEntity worldEntity)
+                    worldEntity?.Locomotor.Locomote();
+        }
+
+        private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
+        {
+            WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
+            if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
+            return invisibleId;
         }
 
         #region HardCodeRank
@@ -651,19 +627,5 @@ namespace MHServerEmu.Games.Entities
         };
 
         #endregion
-
-        private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
-        {
-            WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
-            if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
-            return invisibleId;
-        }
-
-        public void LocomoteEntities()
-        {
-            foreach (var entity in LocomotionEntities.Iterate())
-                if (entity is WorldEntity worldEntity)
-                    worldEntity?.Locomotor.Locomote();
-        }
     }
 }

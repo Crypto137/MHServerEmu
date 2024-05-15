@@ -188,7 +188,7 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetGame(client, out Game game);
 
-            var entity = game.EntityManager.GetEntityById(entityId);
+            var entity = game.EntityManager.GetEntity<Entity>(entityId);
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.EntityPrototypeRef)}");

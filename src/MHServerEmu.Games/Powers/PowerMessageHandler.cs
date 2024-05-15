@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.Powers
                         newHealth = 0;
                         entity.Properties[PropertyEnum.IsDead] = true;
                         playerConnection.SendMessage(
-                         Property.ToNetMessageSetProperty(repId, new(PropertyEnum.IsDead), true)
+                         Property.ToNetMessageSetProperty(repId, PropertyEnum.IsDead, true)
                          );
                     } else if (proto is AgentPrototype agent && agent.Locomotion.Immobile == false)
                     {
@@ -182,7 +182,7 @@ namespace MHServerEmu.Games.Powers
                     }
                     entity.Properties[PropertyEnum.Health] = newHealth;
                     playerConnection.SendMessage(
-                        Property.ToNetMessageSetProperty(repId, new(PropertyEnum.Health), newHealth)
+                        Property.ToNetMessageSetProperty(repId, PropertyEnum.Health, newHealth)
                         );
                     if (newHealth == 0)
                     {
@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Powers
                             .SetKillFlags(0).Build());
 
                         playerConnection.SendMessage(
-                            Property.ToNetMessageSetProperty(repId, new(PropertyEnum.NoEntityCollide), true)
+                            Property.ToNetMessageSetProperty(repId, PropertyEnum.NoEntityCollide, true)
                         );
                     }
                 }

@@ -426,7 +426,7 @@ namespace MHServerEmu.Games.Events
 
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            playerConnection.ThrowableEntity = _game.EntityManager.GetEntityById(idTarget);
+            playerConnection.ThrowableEntity = _game.EntityManager.GetEntity<Entity>(idTarget);
             if (playerConnection.ThrowableEntity == null) return;
 
             Logger.Trace($"{GameDatabase.GetPrototypeName(playerConnection.ThrowableEntity.PrototypeDataRef)}");
@@ -447,9 +447,9 @@ namespace MHServerEmu.Games.Events
             avatar.AssignPower(throwableCancelPowerRef, indexProps);
 
             // Notify the client
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget));
+            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity, idTarget));
 
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorAssetRef), throwableProto.UnrealClass));
+            playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef, throwableProto.UnrealClass));
 
             playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
@@ -483,8 +483,8 @@ namespace MHServerEmu.Games.Events
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             // Remove throwable properties
-            avatar.Properties.RemoveProperty(new(PropertyEnum.ThrowableOriginatorEntity));
-            avatar.Properties.RemoveProperty(new(PropertyEnum.ThrowableOriginatorAssetRef));
+            avatar.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+            avatar.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
 
             // Unassign throwable and throwable cancel powers
             Power throwablePower = avatar.GetThrowablePower();
@@ -507,8 +507,8 @@ namespace MHServerEmu.Games.Events
             playerConnection.ThrowableEntity = null;
 
             // Notify the client
-            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorEntity)));
-            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, new(PropertyEnum.ThrowableOriginatorAssetRef)));
+            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity));
+            playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef));
 
             playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
