@@ -1,6 +1,12 @@
-namespace MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Events;
 
-public class AIThinkEvent
+namespace MHServerEmu.Games.Behavior;
+public class AIThinkEvent : ScheduledEvent
 {
-    
+    public AIController OwnerController;
+
+    public override void OnTriggered()
+    {
+        OwnerController?.Think();
+    }
 }

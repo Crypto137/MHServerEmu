@@ -110,5 +110,10 @@ namespace MHServerEmu.Core.System
         }
 
         #endregion
+
+        public static TimeSpan Max(TimeSpan time1, TimeSpan time2)
+        {
+            return (time1 > time2) ? time1 : time2;
+        }
     }
 }

@@ -1,9 +1,12 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Behavior
@@ -11,12 +14,15 @@ namespace MHServerEmu.Games.Behavior
     public class AIController
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private EventGroup _pendingEvents = new();
+        private AIThinkEvent _thinkEvent = new();
         public Agent Owner { get; private set; }
         public Game Game { get; private set; }
         public ProceduralAI.ProceduralAI Brain { get; private set; }
         public BehaviorSensorySystem Senses { get; private set; }
         public BehaviorBlackboard Blackboard { get; private set; }   
         public bool IsEnabled { get; private set; }
+        public PrototypeId ActivePowerRef { get; internal set; }
         public WorldEntity TargetEntity => Senses.GetCurrentTarget();
         public WorldEntity InteractEntity => GetInteractEntityHelper();
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
@@ -69,12 +75,26 @@ namespace MHServerEmu.Games.Behavior
         
         private WorldEntity GetInteractEntityHelper()
         {
-            throw new NotImplementedException();
+            ulong interactEntityId = Blackboard.PropertyCollection[PropertyEnum.AIInteractEntityId];
+            WorldEntity interactedEntity = Game.EntityManager.GetEntity<WorldEntity>(interactEntityId);
+            return interactedEntity;
         }
-        
+
         private WorldEntity GetAssistedEntityHelper()
         {
-            throw new NotImplementedException();
+            if (Game == null) return null;
+            ulong assistedEntityId = Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID];
+            if (assistedEntityId == 0) return null;
+
+            Entity entity = Game.EntityManager.GetEntity<Entity>(assistedEntityId);
+            if (entity == null) return null;
+            if (entity is Player player) return player.CurrentAvatar;
+            if (entity is not WorldEntity assistedEntity)
+            {
+                Logger.Warn($"Assisted entity [{entity}] is not a WorldEntity.");
+                return null;
+            }
+            return assistedEntity;
         }
 
         public float AggroRangeAlly 
@@ -92,7 +112,6 @@ namespace MHServerEmu.Games.Behavior
                 Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeOverrideHostile] : 
                 Blackboard.PropertyCollection[PropertyEnum.AIAggroRangeHostile]; 
         }
-        public PrototypeId ActivePowerRef { get; internal set; }
 
         public void OnAIActivated()
         {
@@ -106,19 +125,67 @@ namespace MHServerEmu.Games.Behavior
 
         public void OnAIAllianceChange()
         {
-            throw new NotImplementedException();
+            ResetCurrentTargetState();
         }
 
-        private void ScheduleAIThinkEvent(TimeSpan timeSpan, bool useGlobalThinkVariance, bool ignoreActivePower)
+        private void ScheduleAIThinkEvent(TimeSpan timeOffset, bool useGlobalThinkVariance, bool ignoreActivePower = false)
         {
-            throw new NotImplementedException();
-            // HasNotExceededMaxThinksPerFrame
-            // AIThinkEvent
+            if (Game == null || Owner == null) return;
+            if (IsEnabled == false
+                || Owner.TestStatus(EntityStatus.PendingDestroy) 
+                || Owner.TestStatus(EntityStatus.Destroyed) 
+                || !Owner.IsInWorld || Owner.IsDead) return;
+
+            if (!ignoreActivePower && Owner.IsExecutingPower)
+            {
+                Power activePower = Owner.ActivePower;
+                if (activePower == null || activePower.IsChannelingPower == false) return;
+            }
+
+            GameEventScheduler eventScheduler = Game.GameEventScheduler;
+            if (eventScheduler == null) return;
+            TimeSpan fixedTimeOffset = timeOffset;
+
+            if (useGlobalThinkVariance && Blackboard.PropertyCollection[PropertyEnum.AIUseGlobalThinkVariance])
+            {
+                AIGlobalsPrototype aiGlobalsPrototype = GameDatabase.AIGlobalsPrototype;
+                if (aiGlobalsPrototype == null) return;
+                int thinkVariance = aiGlobalsPrototype.RandomThinkVarianceMS;
+                fixedTimeOffset += TimeSpan.FromMilliseconds(Game.Random.Next(0, thinkVariance));
+            }
+
+            if (_thinkEvent.IsValid() && Game.GetCurrentTime() + timeOffset < _thinkEvent.FireTime)
+            {
+                if (HasNotExceededMaxThinksPerFrame(timeOffset))
+                    eventScheduler.RescheduleEvent(_thinkEvent, fixedTimeOffset);
+            }
+            else if (!_thinkEvent.IsValid())
+            {
+                TimeSpan nextThinkTimeOffset = fixedTimeOffset;
+
+                if (HasNotExceededMaxThinksPerFrame(timeOffset) == false)
+                    nextThinkTimeOffset = TimeSpan.FromMilliseconds(Math.Max(100, (int)nextThinkTimeOffset.TotalMilliseconds));
+
+                if (nextThinkTimeOffset != TimeSpan.Zero)
+                    nextThinkTimeOffset += Clock.Max(Game.RealGameTime - Game.GetCurrentTime(), TimeSpan.Zero);
+
+                if (nextThinkTimeOffset < TimeSpan.Zero)
+                {
+                    Logger.Warn($"Agent tried to schedule a negative think time of {nextThinkTimeOffset.TotalMilliseconds}MS!\n  Agent: {Owner}");
+                    nextThinkTimeOffset = TimeSpan.Zero;
+                }
+
+                eventScheduler.ScheduleEvent(_thinkEvent, nextThinkTimeOffset, _pendingEvents);
+                _thinkEvent.OwnerController = this;
+            }
         }
 
         private void ClearScheduledThinkEvent()
         {
-            throw new NotImplementedException();
+            if (Game == null) return;            
+            GameEventScheduler eventScheduler = Game.GameEventScheduler;
+            if (eventScheduler == null) return;
+            eventScheduler.CancelEvent(_thinkEvent);
         }
 
         public void SetIsEnabled(bool enabled)
@@ -177,7 +244,18 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
-        internal void ResetCurrentTargetState()
+        public void ResetCurrentTargetState()
+        {
+            SetTargetEntity(null);
+            Senses.SetInterrupt(BehaviorInterruptType.NoTarget);
+            var collection = Blackboard.PropertyCollection;
+            collection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
+            collection.RemoveProperty(PropertyEnum.AINextHostileSense);
+            collection.RemoveProperty(PropertyEnum.AINextAllySense);
+            collection.RemoveProperty(PropertyEnum.AINextItemSense);
+        }
+
+        public void SetTargetEntity(WorldEntity target)
         {
             throw new NotImplementedException();
         }
@@ -192,9 +270,11 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
-        internal void OnAIBehaviorChange()
+        public void OnAIBehaviorChange()
         {
-            throw new NotImplementedException();
+            if (IsEnabled)
+                ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), false);
+            Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
         }
     }
 }

@@ -77,5 +77,26 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
+        internal void SetInterrupt(BehaviorInterruptType interruptType)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [Flags]
+    public enum BehaviorInterruptType
+    {
+        None = 0,
+        Alerted = 1 << 0,
+        AllyDeath = 1 << 1,
+        CollisionWithTarget = 1 << 2,
+        Command = 1 << 3,
+        Defeated = 1 << 4,
+        ForceIdle = 1 << 5,
+        InitialBranch = 1 << 6,
+        LeashDistanceMet = 1 << 7,
+        NoTarget = 1 << 8,
+        TargetSighted = 1 << 9,
+        Override = 1 << 10,
     }
 }

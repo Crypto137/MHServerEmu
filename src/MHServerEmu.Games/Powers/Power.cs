@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Powers
 
         public PropertyCollection Properties { get; } = new();
         public bool IsTravelPower { get => Prototype != null && Prototype.IsTravelPower; }
+        public bool IsChannelingPower { get; internal set; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {

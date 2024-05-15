@@ -60,6 +60,8 @@ namespace MHServerEmu.Games
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
         public ulong NumQuantumFixedTimeUpdates { get => throw new NotImplementedException(); }
+        public GameEventScheduler GameEventScheduler { get; private set; }
+        public TimeSpan RealGameTime { get; internal set; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
