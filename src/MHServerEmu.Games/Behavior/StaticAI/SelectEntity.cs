@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        internal static WorldEntity DoSelectEntity(ref SelectEntityContext selectionContext)
+        internal static WorldEntity DoSelectEntity(ref SelectEntityContext selectionContext, CombatTargetFlags flags = CombatTargetFlags.None)
         {
             throw new NotImplementedException();
         }

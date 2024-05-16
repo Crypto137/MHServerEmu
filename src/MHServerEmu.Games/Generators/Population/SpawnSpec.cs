@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Generators.Population
             Specs.Add(spec);
         }
 
-        public bool GetEntities(out List<WorldEntity> entities, SpawnGroupEntityQueryFilterFlags filterFlag, AlliancePrototype allianceProto)
+        public bool GetEntities(out List<WorldEntity> entities, SpawnGroupEntityQueryFilterFlags filterFlag, AlliancePrototype allianceProto = null)
         {
             entities = new();
             foreach (SpawnSpec spec in Specs)

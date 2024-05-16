@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [Flags]
         protected enum SelectTargetFlags
         {
-            None,
+            None = 0,
             NoTargetOverride = 1 << 0,
             NotifyAllies = 1 << 1,
         }
@@ -64,9 +64,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
-        protected void SelectTargetEntity(Agent agent, ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, SelectEntityContextPrototype selectTarget, CombatTargetType targetType, SelectTargetFlags selectTargetFlags, CombatTargetFlags flags)
+        protected bool SelectTargetEntity(Agent agent, ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
+            SelectEntityContextPrototype selectTarget, CombatTargetType targetType, SelectTargetFlags targetFlags, CombatTargetFlags flags)
         {
-            throw new NotImplementedException();
+            WorldEntity currentTarget = target;
+            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, selectTarget);
+            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext, flags);
+            if (selectedEntity == null)
+            {
+                if (currentTarget != null && Combat.ValidTarget(agent.Game, agent, currentTarget, targetType, true)) return true;
+                target = null;
+                ownerController.SetTargetEntity(null);
+                if (targetFlags.HasFlag(SelectTargetFlags.NoTargetOverride))
+                    if (NoTargetOverrideProfile != PrototypeId.Invalid && ownerController.Blackboard.PropertyCollection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] == false)
+                    {
+                        var profile = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(NoTargetOverrideProfile);
+                        proceduralAI.SetOverride(profile, OverrideType.Full);
+                    }
+                return false;
+            }
+            else
+            {
+                if (selectedEntity == currentTarget) return true;
+                SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType);
+                target = selectedEntity;
+                if (targetFlags.HasFlag(SelectTargetFlags.NotifyAllies))
+                    ownerController.Senses.NotifyAlliesOnTargetAquired();
+            }
+
+            return false;
         }
 
         protected void DefaultMeleeMovement(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor,

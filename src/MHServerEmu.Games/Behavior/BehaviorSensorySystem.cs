@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -96,6 +95,36 @@ namespace MHServerEmu.Games.Behavior
         internal void ValidateCurrentTarget(CombatTargetType targetType)
         {
             throw new NotImplementedException();
+        }
+
+        public void NotifyAlliesOnTargetAquired()
+        {
+            Agent ownerAgent = _pAIController.Owner;
+            if (ownerAgent == null) return;
+
+            List<WorldEntity> allies = GetPopulationGroup();
+            foreach (var entity in allies)
+            {
+                if (entity is not Agent ally) continue;
+                AIController brain = ally.AIController;
+                if (brain == null) continue;
+                if (brain.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] == 0)
+                {
+                    brain.SetTargetEntity(GetCurrentTarget());
+                    brain.Senses.Interrupt =BehaviorInterruptType.Alerted;
+                }
+            }
+        }
+
+        private List<WorldEntity> GetPopulationGroup()
+        {
+            List<WorldEntity> populationGroup = new ();
+            if (_pAIController != null)
+            {
+                Agent ownerAgent = _pAIController.Owner;
+                ownerAgent?.SpawnSpec?.Group?.GetEntities(out populationGroup, SpawnGroupEntityQueryFilterFlags.All);
+            }
+            return populationGroup;
         }
     }
 
