@@ -7,6 +7,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
@@ -552,6 +553,14 @@ namespace MHServerEmu.Games.Regions
                 return EntitySpatialPartition.IterateElementsInVolume(bound, context);
             else
                 return Enumerable.Empty<WorldEntity>();
+        }
+
+        public IEnumerable<Avatar> IterateAvatarsInVolume(Sphere bound)
+        {
+            if (EntitySpatialPartition != null)
+                return EntitySpatialPartition.IterateAvatarsInVolume(bound);
+            else
+                return Enumerable.Empty<Avatar>();
         }
 
         public PrototypeId PrototypeDataRef => RegionPrototype.DataRef;
