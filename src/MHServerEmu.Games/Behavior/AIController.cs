@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Behavior
             ResetCurrentTargetState();
         }
 
-        private void ScheduleAIThinkEvent(TimeSpan timeOffset, bool useGlobalThinkVariance, bool ignoreActivePower = false)
+        public void ScheduleAIThinkEvent(TimeSpan timeOffset, bool useGlobalThinkVariance = false, bool ignoreActivePower = false)
         {
             if (Game == null || Owner == null) return;
             if (IsEnabled == false
@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Behavior
             }
         }
 
-        private void ClearScheduledThinkEvent()
+        public void ClearScheduledThinkEvent()
         {
             if (Game == null) return;            
             GameEventScheduler eventScheduler = Game.GameEventScheduler;

@@ -153,6 +153,78 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Radius { get; protected set; }
         public AIEntityAttributePrototype[] EnticeeAttributes { get; protected set; }
         public PrototypeId EnticedBehavior { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            GRandom random = game.Random;
+
+            int subscriptions = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            int availableSubscriptions = Math.Min(MaxSubscriptionsPerActivation, MaxSubscriptions - subscriptions);
+            int subscribed = 0;
+
+            List<WorldEntity> potentialTargets = Combat.GetTargetsInRange(agent, Radius, 0.0f, CombatTargetType.Ally, CombatTargetFlags.IgnoreHostile, EnticeeAttributes);
+            foreach (WorldEntity potentialTarget in potentialTargets)
+            {
+                if (potentialTarget == null) return;
+                if (Subscribe(potentialTarget, agent, random, currentTime))
+                {
+                    availableSubscriptions--;
+                    subscribed++;
+                    if (availableSubscriptions <= 0)
+                        break;
+                }
+            }
+
+            blackboard.PropertyCollection.AdjustProperty(subscribed, PropertyEnum.AICustomStateVal1);
+
+            if (MaxSubscriptions > 0 && (subscriptions + subscribed) >= MaxSubscriptions)
+            {
+                ownerController.SetIsEnabled(false);
+                return;
+            }
+
+            if (subscribed > 0)
+            {
+                ownerController.ClearScheduledThinkEvent();
+                ownerController.ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(random.Next(CooldownMinMS, CooldownMaxMS)));
+            }
+        }
+
+        private bool Subscribe(WorldEntity subscriber, Agent enticed, GRandom random, long currentTime)
+        {
+            if (subscriber is not Agent subscriberAgent || subscriberAgent.IsExecutingPower) return false;
+
+            AIController controller = subscriberAgent.AIController;
+            if (controller == null) return false;
+                
+            var collection = controller.Blackboard.PropertyCollection;
+            if (collection.HasProperty(PropertyEnum.AIEnticedToID)) return false;
+            
+            long globalNextAvailableTime = collection[PropertyEnum.AIEnticerGlobalNextAvailableTime];
+            if (globalNextAvailableTime > 0 && currentTime < globalNextAvailableTime) return false;
+            
+            long nextAvailableTime = collection[PropertyEnum.AIEnticerTypeNextAvailableTime, enticed.PrototypeDataRef];
+            if (nextAvailableTime > 0 && currentTime < nextAvailableTime) return false;
+            
+            collection[PropertyEnum.AIEnticedToID] = enticed.Id;
+            collection[PropertyEnum.AIFullOverride] = EnticedBehavior;
+
+            globalNextAvailableTime = currentTime + random.Next(EnticeeGlobalEnticerCDMinMS, EnticeeGlobalEnticerCDMaxMS);
+            collection[PropertyEnum.AIEnticerGlobalNextAvailableTime] = globalNextAvailableTime;
+
+            nextAvailableTime = currentTime + random.Next(EnticeeEnticerCooldownMinMS, EnticeeEnticerCooldownMaxMS);
+            collection[PropertyEnum.AIEnticerTypeNextAvailableTime, enticed.PrototypeDataRef] = nextAvailableTime;
+            return true;
+        }
     }
 
     public class ProceduralProfileEnticedBehaviorPrototype : ProceduralAIProfilePrototype

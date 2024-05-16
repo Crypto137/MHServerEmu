@@ -13,14 +13,41 @@ namespace MHServerEmu.Games.Behavior
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public static List<WorldEntity> GetTargetsInRange(Agent aggressor, float rangeMax, float rangeMin, CombatTargetType targetType,
+            CombatTargetFlags flags, AIEntityAttributePrototype[] attributes)
+        {
+            List<WorldEntity> targets = new ();
+            if (aggressor == null) return targets;
+            if (aggressor.Region == null)
+            {
+                Logger.Warn($"Agent not in region when trying to count targets in range! Agent: {aggressor}");
+                return targets;
+            }
+
+            Sphere volume = new (aggressor.RegionLocation.Position, rangeMax + aggressor.Bounds.GetRadius());
+            foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (target == null) continue;
+                if (ValidTarget(aggressor.Game, aggressor, target, targetType, false, flags)
+                    && (attributes == null || PassesAttributesCheck(aggressor, target, attributes))
+                    && (rangeMin == 0f || (aggressor.GetDistanceTo(target, true) >= rangeMin)))
+                    targets.Add(target);
+            }
+
+            return targets;
+        }
+
         public static int GetNumTargetsInRange(Agent aggressor, float rangeMax, float rangeMin, CombatTargetType targetType,
             CombatTargetFlags flags, AIEntityAttributePrototype[] attributes = null)
         {
-            if (aggressor == null) return 0;
-            if (aggressor.Region == null) 
-                Logger.Warn($"Agent not in region when trying to count targets in range! Agent: {aggressor}");
-
             int numTargets = 0;
+            if (aggressor == null) return numTargets;
+            if (aggressor.Region == null)
+            {
+                Logger.Warn($"Agent not in region when trying to count targets in range! Agent: {aggressor}");
+                return numTargets;
+            }
+            
             Sphere volume = new (aggressor.RegionLocation.Position, rangeMax + aggressor.Bounds.GetRadius());
             foreach (WorldEntity target in aggressor.Region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
             {
