@@ -244,7 +244,31 @@ namespace MHServerEmu.Games.Entities
             return info.IsValid;
         }
 
-        internal int GetPowerRank(PrototypeId powerRef)
+        public int GetPowerRank(PrototypeId powerRef)
+        {
+            if (powerRef == PrototypeId.Invalid) return 0;
+            return Properties[PropertyEnum.PowerRankCurrentBest, powerRef];
+        }
+
+        public void SetDormant(bool dormant)
+        {
+            if (IsDormant != dormant)
+            {
+                if (dormant == false)
+                {
+                    AgentPrototype prototype = AgentPrototype;
+                    if (prototype == null) return;
+                    if (prototype.WakeRandomStartMS > 0 && IsControlledEntity == false)
+                        ScheduleRandomWakeStart(prototype.WakeRandomStartMS);
+                    else
+                        Properties[PropertyEnum.Dormant] = dormant;
+                }
+                else
+                    Properties[PropertyEnum.Dormant] = dormant;
+            }
+        }
+
+        private void ScheduleRandomWakeStart(int wakeRandomStartMS)
         {
             throw new NotImplementedException();
         }
