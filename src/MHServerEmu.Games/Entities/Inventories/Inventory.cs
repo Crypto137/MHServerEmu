@@ -53,6 +53,17 @@ namespace MHServerEmu.Games.Entities.Inventories
             return true;
         }
 
+        public ulong GetEntityInSlot(uint slot)
+        {
+            foreach (var kvp in this)
+            {
+                if (kvp.Key == slot)
+                    return kvp.Value.EntityId;
+            }
+
+            return Entity.InvalidId;
+        }
+
         public int GetCapacity()
         {
             if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");
@@ -235,6 +246,20 @@ namespace MHServerEmu.Games.Entities.Inventories
             return DoAddEntity(entity, slot, prevInvLoc);
         }
 
+        private InventoryResult CheckAddEntity(Entity entity, uint slot)
+        {
+            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "CheckAddEntity(): entity == null");
+            if (slot == InvalidSlot) return Logger.WarnReturn(InventoryResult.InvalidSlotParam, "CheckAddEntity(): slot == InvalidSlot");
+
+            InventoryResult canChangeInvResult = entity.CanChangeInventoryLocation(this);
+            if (canChangeInvResult != InventoryResult.Success)
+                return Logger.WarnReturn(canChangeInvResult, "CheckAddEntity(): canChangeInvResult != InventoryResult.Success");
+
+            if (IsSlotFree(slot) == false) return InventoryResult.SlotAlreadyOccupied;
+
+            return InventoryResult.Success;
+        }
+
         private InventoryResult DoAddEntity(Entity entity, uint slot, InventoryLocation prevInvLoc)
         {
             if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoAddEntity(): entity == null");
@@ -265,12 +290,51 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Success;
         }
 
-        private InventoryResult MoveEntityTo(Entity entity, Inventory destination, ref ulong? stackEntityId, bool useStacking, uint slot)
+        private InventoryResult RemoveEntity(Entity entity)
         {
-            return InventoryResult.Invalid;
+            return DoRemoveEntity(entity, true, false);
         }
 
-        private InventoryResult RemoveEntity(Entity entity)
+        private InventoryResult DoRemoveEntity(Entity entity, bool finalMove, bool withinSameInventory)
+        {
+            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoRemoveEntity(): entity == null");
+            if (entity.IsRootOwner == false) return Logger.WarnReturn(InventoryResult.IsRootOwner, "DoRemoveEntity(): entity.IsRootOwner == false");
+
+            Entity inventoryOwner = Owner;
+            if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoRemoveEntity(): inventoryOwner == null");
+
+            InventoryLocation invLoc = new(entity.InventoryLocation);
+
+            if (entity.GetOwnerInventory() != this)
+                return Logger.WarnReturn(InventoryResult.NotInInventory, 
+                    $"DoRemoveEntity(): Entity {entity.Id} expected to be in {this} inventory but is instead located at {invLoc} inventory location");
+
+            uint slot = invLoc.Slot;
+            if (slot == InvalidSlot)
+                return Logger.WarnReturn(InventoryResult.UnknownFailure, "DoRemoveEntity(): slot == InvalidSlot");
+
+            // NOTE: This is a bit simplified compared to the original, but should probably be fine. Original verify message below.
+            // Entity not in expected slot.  Slot contains entityId %lld, and entity %s is instead at invLoc %s
+            if (_entities.ContainsKey(slot) == false)
+                return Logger.WarnReturn(InventoryResult.NotFoundInThisInventory, "DoRemoveEntity(): Entity not in expected slot");
+
+            PreRemove(entity);
+
+            _entities.Remove(slot);
+            InventoryLocation prevInvLoc = new(entity.InventoryLocation);
+            entity.InventoryLocation.Clear();
+
+            PostRemove(entity, prevInvLoc, withinSameInventory);
+
+            if (finalMove)
+                PostFinalMove(entity, prevInvLoc, entity.InventoryLocation);
+
+            inventoryOwner.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+
+            return InventoryResult.Success;
+        }
+
+        private InventoryResult MoveEntityTo(Entity entity, Inventory destination, ref ulong? stackEntityId, bool useStacking, uint slot)
         {
             return InventoryResult.Invalid;
         }
@@ -313,31 +377,6 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Success;
         }
 
-        private InventoryResult CheckAddEntity(Entity entity, uint slot)
-        {
-            if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "CheckAddEntity(): entity == null");
-            if (slot == InvalidSlot) return Logger.WarnReturn(InventoryResult.InvalidSlotParam, "CheckAddEntity(): slot == InvalidSlot");
-
-            InventoryResult canChangeInvResult = entity.CanChangeInventoryLocation(this);
-            if (canChangeInvResult != InventoryResult.Success)
-                return Logger.WarnReturn(canChangeInvResult, "CheckAddEntity(): canChangeInvResult != InventoryResult.Success");
-
-            if (IsSlotFree(slot) == false) return InventoryResult.SlotAlreadyOccupied;
-
-            return InventoryResult.Success;
-        }
-
-        private ulong GetEntityInSlot(uint slot)
-        {
-            foreach (var kvp in this)
-            {
-                if (kvp.Key == slot)
-                    return kvp.Value.EntityId;
-            }
-
-            return Entity.InvalidId;
-        }
-
         private void PreAdd(Entity entity)
         {
 
@@ -353,7 +392,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         }
 
-        private void PostRemove(Entity entity, InventoryLocation prevInvLoc, bool unkBool)
+        private void PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)
         {
 
         }

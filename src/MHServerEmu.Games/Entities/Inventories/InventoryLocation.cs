@@ -7,7 +7,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 namespace MHServerEmu.Games.Entities.Inventories
 {
     // NOTE/TODO: This would not be client-accurate, but we can potentially refactor this as a readonly struct for optimization.
-    public class InventoryLocation
+    public class InventoryLocation : IEquatable<InventoryLocation>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -30,6 +30,13 @@ namespace MHServerEmu.Games.Entities.Inventories
             ContainerId = containerId;
             InventoryPrototype = inventoryRef.As<InventoryPrototype>();
             Slot = slot;
+        }
+
+        public InventoryLocation(InventoryLocation other)
+        {
+            ContainerId = other.ContainerId;
+            InventoryPrototype = other.InventoryPrototype;
+            Slot = other.Slot;
         }
 
         public static bool SerializeTo(Archive archive, InventoryLocation invLoc)
@@ -94,6 +101,19 @@ namespace MHServerEmu.Games.Entities.Inventories
         public override string ToString()
         {
             return $"{nameof(ContainerId)}={ContainerId}, {nameof(InventoryRef)}={GameDatabase.GetPrototypeName(InventoryRef)}, {nameof(Slot)}={Slot}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not InventoryLocation other) return false;
+            return Equals(other);
+        }
+
+        public bool Equals(InventoryLocation other)
+        {
+            return ContainerId.Equals(other.ContainerId)
+                && InventoryPrototype.Equals(other.InventoryPrototype)
+                && Slot.Equals(other.Slot);
         }
     }
 }
