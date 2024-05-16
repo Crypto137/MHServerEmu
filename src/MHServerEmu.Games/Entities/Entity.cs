@@ -409,6 +409,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public virtual bool IsAutoStackedWhenAddedToInventory()
+        {
+            return CanStack();
+        }
+
         public bool CanStackOnto(Entity other, bool isAdding = false)
         {
             if (CanStack() == false || other.CanStack() == false) return false;

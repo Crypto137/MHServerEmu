@@ -101,7 +101,9 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             if (entity != null && useStacking)
             {
-                // TODO: Stacking
+                // NOTE: GetAutoStackSlot() is part of GetFreeSlot() in the client
+                uint stackSlot = GetAutoStackSlot(entity, isAdding);
+                if (stackSlot != InvalidSlot) return stackSlot;
             }
 
             Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
@@ -129,7 +131,30 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InvalidSlot;
         }
 
-        public static InventoryResult ChangeEntityInventoryLocation(Entity entity, Inventory destination, uint slot, ref ulong stackEntityId, bool useStacking)
+        public uint GetAutoStackSlot(Entity entity, bool isAdding = false)
+        {
+            if (entity.CanStack() == false || entity.IsAutoStackedWhenAddedToInventory() == false)
+                return InvalidSlot;
+            
+            foreach (var kvp in this)
+            {
+                if (kvp.Key == entity.Id) continue;     // Stacking with itself sure sounds like a potential dupe
+                Entity existingEntity = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                
+                if (existingEntity == null)
+                {
+                    Logger.Warn($"GetAutoStackSlot(): Missing entity found while iterating inventory. Id={kvp.Value.EntityId}");
+                    continue;
+                }
+
+                if (entity.CanStackOnto(existingEntity, isAdding))
+                    return kvp.Key;
+            }
+
+            return InvalidSlot;
+        }
+
+        public static InventoryResult ChangeEntityInventoryLocation(Entity entity, Inventory destination, uint slot, ref ulong? stackEntityId, bool useStacking)
         {
             InventoryLocation invLoc = entity.InventoryLocation;
 
@@ -179,7 +204,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             return inventoryProto.IsPlayerStashInventory();
         }
 
-        private InventoryResult AddEntity(Entity entity, ref ulong stackEntityId, bool useStacking, uint slot, InventoryLocation prevInvLoc)
+        private InventoryResult AddEntity(Entity entity, ref ulong? stackEntityId, bool useStacking, uint slot, InventoryLocation prevInvLoc)
         {
             // NOTE: The entity is actually added at the very end in DoAddEntity(). Everything before it is validation.
 
@@ -240,7 +265,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Success;
         }
 
-        private InventoryResult MoveEntityTo(Entity entity, Inventory destination, ref ulong stackEntityId, bool useStacking, uint slot)
+        private InventoryResult MoveEntityTo(Entity entity, Inventory destination, ref ulong? stackEntityId, bool useStacking, uint slot)
         {
             return InventoryResult.Invalid;
         }
@@ -250,9 +275,42 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Invalid;
         }
 
-        private InventoryResult DoStacking(Entity source, Entity destination, ref ulong stackEntityId)
+        private InventoryResult DoStacking(Entity entityToStack, Entity entityToStackWith, ref ulong? stackEntityId)
         {
-            return InventoryResult.Invalid;
+            if (entityToStack == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoStacking(): entityToStack == null");
+            if (entityToStackWith == null) return Logger.WarnReturn(InventoryResult.InvalidStackEntity, "DoStacking(): entityToStackWith == null");
+            if (entityToStack.CanStackOnto(entityToStackWith) == false) return Logger.WarnReturn(InventoryResult.StackTypeMismatch,
+                "DoStacking(): entityToStack.CanStackOnto(entityToStackWith) == false");
+
+            int stackSize = entityToStackWith.CurrentStackSize + entityToStack.CurrentStackSize;
+            int stackSizeMax = entityToStackWith.Properties[PropertyEnum.InventoryStackSizeMax];
+            int remaining = stackSize - stackSizeMax;   // If > 0, it means entityToStack can't fit into entityToStackWith completely
+
+            if (remaining > 0 && entityToStack.InventoryLocation.IsValid == false)
+                return Logger.WarnReturn(InventoryResult.StackCombinePartial,
+                    "DoStacking(): remaining > 0 && entityToStack.InventoryLocation.IsValid == false");
+
+            // Prevent the target stack from overflowing
+            stackSize = Math.Min(stackSize, stackSizeMax);
+
+            // No idea what this is for
+            if (entityToStack.MissionPrototype != entityToStackWith.MissionPrototype)
+            {
+                entityToStack.Properties.RemoveProperty(PropertyEnum.MissionPrototype);
+                entityToStackWith.Properties.RemoveProperty(PropertyEnum.MissionPrototype);
+            }
+
+            // Update stack sizes
+            entityToStackWith.Properties[PropertyEnum.InventoryStackCount] = stackSize;
+
+            if (remaining > 0)
+                entityToStack.Properties[PropertyEnum.InventoryStackCount] = remaining;
+            else
+                entityToStack.Destroy();    // Destroy empty stacks
+
+            if (stackEntityId != null) stackEntityId = entityToStackWith.Id;
+
+            return InventoryResult.Success;
         }
 
         private InventoryResult CheckAddEntity(Entity entity, uint slot)

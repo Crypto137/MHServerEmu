@@ -1,14 +1,18 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class Item : WorldEntity
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private ItemSpec _itemSpec = new();     // ItemSpec needs to be initialized before the base constructor is called for packet parsing
                                                 // TODO: Fix this
 
@@ -39,6 +43,13 @@ namespace MHServerEmu.Games.Entities.Items
             bool success = base.Serialize(archive);
             success &= Serializer.Transfer(archive, ref _itemSpec);
             return success;
+        }
+
+        public override bool IsAutoStackedWhenAddedToInventory()
+        {
+            var itemProto = EntityPrototype as ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "IsAutoStackedWhenAddedToInventory(): itemProto == null");
+            return itemProto.StackSettings.AutoStackWhenAddedToInventory;
         }
 
         protected override void BuildString(StringBuilder sb)
