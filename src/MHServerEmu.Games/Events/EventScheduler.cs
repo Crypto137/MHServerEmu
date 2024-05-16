@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Events
 
     public class ScheduledEvent
     {
-        private object linkEvent;
+        private object linkEvent = null;
         public TimeSpan FireTime { get; private set; }
         public bool IsValid() { return linkEvent != null; }
         public virtual void OnTriggered() { }

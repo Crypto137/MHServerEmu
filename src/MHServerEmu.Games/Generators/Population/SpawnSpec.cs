@@ -130,5 +130,53 @@ namespace MHServerEmu.Games.Generators.Population
         {
             Specs.Add(spec);
         }
+
+        public bool GetEntities(out List<WorldEntity> entities, SpawnGroupEntityQueryFilterFlags filterFlag, AlliancePrototype allianceProto)
+        {
+            entities = new();
+            foreach (SpawnSpec spec in Specs)
+            {
+                WorldEntity entity = spec.ActiveEntity;
+                if (entity != null)
+                {
+                    if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled) 
+                        && (entity.IsDead || entity.IsDestroyed() || entity.IsControlledEntity))
+                        continue;
+
+                    if (EntityQueryAllianceCheck(filterFlag, entity, allianceProto))
+                        entities.Add(entity);
+                }
+            }
+            return entities.Count > 0;
+        }
+
+        private static bool EntityQueryAllianceCheck(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity entity, AlliancePrototype allianceProto)
+        {
+            if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.All))
+                return true;
+            
+            if (allianceProto != null)
+            {
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.Allies) && entity.IsFriendlyTo(allianceProto))
+                    return true;
+
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.Hostiles) && entity.IsHostileTo(allianceProto))
+                    return true;
+
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.Neutrals))
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
+    public enum SpawnGroupEntityQueryFilterFlags
+    {
+        Neutrals                    = 1 << 0,
+        Hostiles                    = 1 << 1,
+        Allies                      = 1 << 2,
+        NotDeadDestroyedControlled  = 1 << 3,
+        All                         = Neutrals | Hostiles | Allies
     }
 }

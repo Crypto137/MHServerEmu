@@ -705,12 +705,20 @@ namespace MHServerEmu.Games.Entities
             return IsFriendlyTo(other.GetAlliancePrototype(), allianceProto);
         }
 
-        private bool IsFriendlyTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceProto = null)
+        public bool IsFriendlyTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)
         {
             if (otherAllianceProto == null) return false;
-            AlliancePrototype thisAllianceProto = allianceProto ?? GetAlliancePrototype();
+            AlliancePrototype thisAllianceProto = allianceOverrideProto ?? GetAlliancePrototype();
             if (thisAllianceProto == null) return false;
             return thisAllianceProto.IsFriendlyTo(otherAllianceProto) && !thisAllianceProto.IsHostileTo(otherAllianceProto);
+        }
+
+        public bool IsHostileTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)
+        {
+            if (otherAllianceProto == null) return false;
+            AlliancePrototype thisAllianceProto = allianceOverrideProto ?? GetAlliancePrototype();
+            if (thisAllianceProto == null) return false;
+            return thisAllianceProto.IsHostileTo(otherAllianceProto);
         }
 
         public void RegisterForPendingPhysicsResolve()
@@ -737,6 +745,16 @@ namespace MHServerEmu.Games.Entities
         public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
 
         private Power GetActivePower()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TriggerEntityActionEvent(EntitySelectorActionEventType onDetectedEnemy)
         {
             throw new NotImplementedException();
         }

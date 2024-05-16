@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Behavior
             return true;
         }
 
-        private static bool ValidTarget(Game game, Agent aggressor, WorldEntity target, CombatTargetType targetType, bool inTarget, 
+        public static bool ValidTarget(Game game, Agent aggressor, WorldEntity target, CombatTargetType targetType, bool inTarget, 
             CombatTargetFlags flags, AlliancePrototype allianceOverride = null, float aggroRangeOverride = 0.0f)
         {
             if (game == null || aggressor == null || target == null || aggressor == target) return false;

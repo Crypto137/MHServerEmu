@@ -1,14 +1,20 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.ProceduralAI;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -358,6 +364,175 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AIEntityAttributePrototype[] AttributeList { get; protected set; }
         public PrototypeId AllianceOverride { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            long thinkTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
+            if (thinkTime == 0)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
+                return;
+            }
+
+            var allianceOverrideProto = AllianceOverride.As<AlliancePrototype>();
+            AlliancePrototype alliance = allianceOverrideProto ?? agent.GetAlliancePrototype();
+
+            float proximityRangeOverride = blackboard.PropertyCollection[PropertyEnum.AIProximityRangeOverride];
+            float aggroRangeHostile = ownerController.AggroRangeHostile;
+            float aggroRangeAlly = ownerController.AggroRangeAlly;
+
+            bool enemyDetect = agent.CanEntityActionTrigger(EntitySelectorActionEventType.OnDetectedEnemy);
+            bool enemyProximity = (proximityRangeOverride > aggroRangeHostile) && agent.CanEntityActionTrigger(EntitySelectorActionEventType.OnEnemyProximity);
+            bool playerDetect = agent.CanEntityActionTrigger(EntitySelectorActionEventType.OnDetectedPlayer);
+            bool playerProximity = (proximityRangeOverride > aggroRangeAlly) && agent.CanEntityActionTrigger(EntitySelectorActionEventType.OnPlayerProximity);
+            bool friendDetect = agent.CanEntityActionTrigger(EntitySelectorActionEventType.OnDetectedFriend);
+
+            float aggroRange = 0.0f;
+            if (playerDetect || enemyDetect)
+                aggroRange = Math.Max(aggroRange, aggroRangeHostile);
+            if (playerDetect || friendDetect)
+                aggroRange = Math.Max(aggroRange, aggroRangeAlly);
+
+            float maxRange = Math.Max(aggroRange, proximityRangeOverride);
+            if (maxRange == 0.0f) return;
+
+            Region region = agent.Region;
+            if (region == null || game.EntityManager == null) return;
+
+            Vector3 position = agent.RegionLocation.Position;
+
+            bool foundEnemy = false;
+            bool foundEnemyProximity = false;
+            bool foundPlayer = false;
+            bool foundPlayerProximity = false;
+            bool foundFriendlyEntity = false;
+
+            var volume = new Sphere(position, maxRange);
+
+            if ((playerDetect || playerProximity) 
+                && enemyDetect == false && enemyProximity == false && friendDetect == false)
+            {
+                foreach (Avatar worldEntity in region.IterateAvatarsInVolume(volume))
+                {
+                    if (worldEntity == null || worldEntity.IsInWorld == false) continue;
+
+                    if (playerDetect
+                        && Combat.ValidTarget(game, agent, worldEntity, CombatTargetType.Ally, false, CombatTargetFlags.None, alliance, aggroRange)
+                        && CheckAttributes(ownerController, AttributeList, worldEntity))
+                        {
+                            foundPlayer = true;
+                            foundPlayerProximity = true;
+                            break;
+                        }
+
+                    if (playerProximity && foundPlayerProximity == false
+                        && Combat.ValidTarget(game, agent, worldEntity, CombatTargetType.Ally, false, CombatTargetFlags.None, alliance, proximityRangeOverride)
+                        && CheckAttributes(ownerController, AttributeList, worldEntity))
+                            foundPlayerProximity = true;
+                }
+            }
+            else
+            {
+                foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                {
+                    if (worldEntity == null) continue;
+
+                    if (enemyDetect && foundEnemy == false                    
+                        && Combat.ValidTarget(game, agent, worldEntity, CombatTargetType.Hostile, false, CombatTargetFlags.CheckAgent, alliance, aggroRangeHostile)
+                        && CheckAttributes(ownerController, AttributeList, worldEntity))
+                        {
+                            foundEnemy = true;
+                            foundEnemyProximity = true;
+                            break;
+                        }                    
+
+                    if (enemyProximity && foundEnemyProximity == false
+                        && Combat.ValidTarget(game, agent, worldEntity, CombatTargetType.Hostile, false, CombatTargetFlags.CheckAgent, alliance, proximityRangeOverride)
+                        && CheckAttributes(ownerController, AttributeList, worldEntity))
+                            foundEnemyProximity = true;
+
+                    if (foundEnemy == false && foundEnemyProximity == false)
+                    {
+                        if ((playerDetect || friendDetect) 
+                            && (foundPlayer == false || foundFriendlyEntity == false)
+                            && Combat.ValidTarget(game, agent, worldEntity, CombatTargetType.Ally, false, CombatTargetFlags.CheckAgent, alliance, aggroRangeAlly)
+                            && CheckAttributes(ownerController, AttributeList, worldEntity))
+                            {
+                                if (worldEntity is Avatar)
+                                {
+                                    foundPlayer = true;
+                                    foundPlayerProximity = true;
+                                }
+                                else
+                                {
+                                    foundFriendlyEntity = true;
+                                }
+                            }
+
+                        if (playerProximity && foundPlayerProximity == false
+                            && worldEntity is Avatar
+                            && Combat.ValidTarget(game, agent, worldEntity, CombatTargetType.Ally, false, CombatTargetFlags.CheckAgent, alliance, proximityRangeOverride)
+                            && CheckAttributes(ownerController, AttributeList, worldEntity))
+                                foundPlayerProximity = true;
+                    }
+                }
+            }
+
+            if (foundEnemy)
+                agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedEnemy);
+
+            if (foundEnemyProximity)
+                agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnEnemyProximity);
+
+            if (foundEnemy == false && foundEnemyProximity == false)
+            {
+                if (foundPlayer)
+                {
+                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedPlayer);
+                    SpawnGroup spawnGroup = agent.SpawnGroup;
+                    if (spawnGroup != null && alliance != null)
+                    {
+                        var filterFlag = SpawnGroupEntityQueryFilterFlags.Allies | SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled;
+                        if (spawnGroup.GetEntities(out List <WorldEntity> allies, filterFlag, agent.GetAlliancePrototype()))                        
+                            foreach (var ally in allies)
+                                if (ally != agent)
+                                    ally.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedPlayer);                        
+                    }
+                }
+
+                if (foundPlayer == false && foundPlayerProximity)
+                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerProximity);
+
+                if (foundFriendlyEntity)
+                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedFriend);
+            }
+        }
+
+        private static bool CheckAttributes(AIController ownerController, AIEntityAttributePrototype[] attributeList, WorldEntity target)
+        {
+            Agent ownerAgent = ownerController.Owner;
+            if (ownerAgent == null || target.IsInWorld == false) return false;
+
+            if (attributeList.HasValue())
+                foreach (AIEntityAttributePrototype attrib in attributeList)
+                {
+                    if (attrib == null) return false;
+                    if (attrib.Check(ownerAgent, target)) return true;
+                }
+
+            return false;
+        }
     }
 
     public class ProceduralProfileLeashOverridePrototype : ProceduralAIProfilePrototype
