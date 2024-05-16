@@ -49,6 +49,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int InitialCooldownMaxMS { get; protected set; }
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
+
+        public bool AllowedInDifficulty(PrototypeId difficultyRef)
+        {
+            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
+        }
     }
 
     public class ProceduralUseAffixPowerContextPrototype : ProceduralContextPrototype

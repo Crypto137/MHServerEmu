@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
@@ -8,6 +9,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Behavior
 {
@@ -232,14 +234,19 @@ namespace MHServerEmu.Games.Behavior
             return true;
         }
 
-        internal void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype[] genericProceduralPowers)
+        public void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype[] powers)
         {
-            throw new NotImplementedException();
+            if (Owner.Region != null && powers.HasValue())
+                foreach (var power in powers)
+                    AddPowersToPicker(powerPicker, power);
         }
 
-        internal void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype primaryPower)
+        public void AddPowersToPicker(Picker<ProceduralUsePowerContextPrototype> powerPicker, ProceduralUsePowerContextPrototype power)
         {
-            throw new NotImplementedException();
+            if (power == null) return;
+            Region region = Owner.Region;
+            if (region != null && power.AllowedInDifficulty(region.GetDifficultyTierRef()))
+                powerPicker.Add(power, power.PickWeight);
         }
 
         public void ResetCurrentTargetState()
