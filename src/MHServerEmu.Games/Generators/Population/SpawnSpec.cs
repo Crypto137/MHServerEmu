@@ -150,6 +150,13 @@ namespace MHServerEmu.Games.Generators.Population
             return entities.Count > 0;
         }
 
+        public static List<WorldEntity> GetEntities(WorldEntity owner, SpawnGroupEntityQueryFilterFlags filterFlag = SpawnGroupEntityQueryFilterFlags.All)
+        {
+            List<WorldEntity> entities = new();
+            owner?.SpawnGroup?.GetEntities(out entities, filterFlag, owner.GetAlliancePrototype());
+            return entities;
+        }
+
         private static bool EntityQueryAllianceCheck(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity entity, AlliancePrototype allianceProto)
         {
             if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.All))

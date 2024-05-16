@@ -1,9 +1,12 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Behavior
 {
@@ -64,7 +67,79 @@ namespace MHServerEmu.Games.Behavior
 
         public void UpdateAvatarSensory()
         {
-            throw new NotImplementedException();
+            if (_pAIController == null) return;
+            Agent ownerAgent = _pAIController.Owner;
+            if (ownerAgent == null) return;
+
+            BehaviorBlackboard blackboard = _pAIController.Blackboard;
+            AgentPrototype prototype = ownerAgent.AgentPrototype;
+            if (prototype == null) return;
+
+            bool ownerIsDormant = ownerAgent.IsDormant;
+            float hostilePlayersNearbyCheckRange = blackboard.PropertyCollection[PropertyEnum.AIHostilePlayersNearbyCheckRange];
+            float wakeRange = prototype.WakeRange;
+            float returnToDormantRange = prototype.ReturnToDormantRange;
+            float maxRange;
+
+            if (ownerIsDormant)
+            {
+                if (Segment.IsNearZero(wakeRange) || wakeRange < 0.0f) return;
+                maxRange = wakeRange;
+            }
+            else
+            {
+                if ((Segment.IsNearZero(returnToDormantRange) || returnToDormantRange < 0.0f) 
+                    && (Segment.IsNearZero(hostilePlayersNearbyCheckRange) || hostilePlayersNearbyCheckRange < 0.0f)) return;
+                maxRange = Math.Max(returnToDormantRange, hostilePlayersNearbyCheckRange);
+            }
+
+            Vector3 position = ownerAgent.RegionLocation.Position;
+            int numHostileNearby = 0;
+            bool returnToDormant = returnToDormantRange > 0f;
+
+            if (maxRange > 0)
+            {
+                Region ownersRegion = ownerAgent.Region;
+                if (ownersRegion == null) return;
+
+                foreach (Avatar avatar in ownersRegion.IterateAvatarsInVolume(new Sphere(position, maxRange)))
+                {
+                    if (avatar == null || avatar.IsInWorld == false) continue;
+
+                    Vector3 avatarPosition = avatar.RegionLocation.Position;
+                    float distToAvatarSq = Vector3.DistanceSquared(position, avatarPosition);
+
+                    if (ownerIsDormant)
+                    {
+                        if (wakeRange > 0 && distToAvatarSq <= wakeRange * wakeRange)
+                        {
+                            ownerAgent.SetDormant(false);
+                            List<WorldEntity> entities = SpawnGroup.GetEntities(ownerAgent, SpawnGroupEntityQueryFilterFlags.All);
+                            foreach (WorldEntity entity in entities)
+                                if (entity is Agent groupAgent && ownerAgent != groupAgent && groupAgent.IsDormant)
+                                    groupAgent.SetDormant(false);
+                            break;
+                        }
+                    }
+                    else if (returnToDormant && distToAvatarSq <= returnToDormantRange * returnToDormantRange)
+                    {
+                        returnToDormant = false;
+                        if (Segment.IsNearZero(hostilePlayersNearbyCheckRange) || hostilePlayersNearbyCheckRange < 0f)
+                            break;
+                    }
+
+                    if (hostilePlayersNearbyCheckRange > 0.0f 
+                        && distToAvatarSq <= hostilePlayersNearbyCheckRange * hostilePlayersNearbyCheckRange
+                        && Combat.ValidTarget(ownerAgent.Game, ownerAgent, avatar, CombatTargetType.Hostile, false))
+                            numHostileNearby++;
+                }
+
+                if (ownerIsDormant == false && returnToDormant)
+                    ownerAgent.SetDormant(true);
+
+                if (numHostileNearby > 0)
+                    blackboard.PropertyCollection[PropertyEnum.AINumHostilePlayersNearby] = numHostileNearby;
+            }
         }
 
         private void HandleInterrupts()
@@ -84,17 +159,46 @@ namespace MHServerEmu.Games.Behavior
 
         public WorldEntity GetCurrentTarget()
         {
-            throw new NotImplementedException();
+            if (_pAIController == null) return null;
+
+            ulong targetId = _pAIController.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID];
+            if (targetId != 0)
+            {
+                Entity targetEntity = _pAIController.Game.EntityManager.GetEntity<Entity>(targetId);
+                if (targetEntity == null) return null;
+                if (targetEntity is WorldEntity targetWorldEntity)
+                    return targetWorldEntity;
+            }
+            return null;
         }
 
-        internal bool ShouldSense()
+        public bool ShouldSense()
         {
-            throw new NotImplementedException();
+            if (_pAIController == null) return false;
+            BehaviorBlackboard blackboard = _pAIController.Blackboard;
+            Game game = _pAIController.Game;
+            if (game == null)  return false;
+
+            if (game.GetCurrentTime().TotalMilliseconds > blackboard.PropertyCollection[PropertyEnum.AINextSensoryUpdate])
+            {
+                blackboard.PropertyCollection[PropertyEnum.AINextSensoryUpdate] = (long)game.RealGameTime.TotalMilliseconds + 1000;
+                return true;
+            }
+            return false;
         }
 
-        internal void ValidateCurrentTarget(CombatTargetType targetType)
+        public void ValidateCurrentTarget(CombatTargetType targetType)
         {
-            throw new NotImplementedException();
+            if (_pAIController == null) return;
+            BehaviorBlackboard blackboard = _pAIController.Blackboard;
+            Agent agent = _pAIController.Owner;
+            if (agent == null) return;
+            if (blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] != 0)
+            {
+                WorldEntity target = GetCurrentTarget();
+                if (Combat.ValidTarget(agent.Game, agent, target, targetType, true) == false)
+                    _pAIController.ResetCurrentTargetState();
+            }
         }
 
         public void NotifyAlliesOnTargetAquired()
@@ -111,7 +215,7 @@ namespace MHServerEmu.Games.Behavior
                 if (brain.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] == 0)
                 {
                     brain.SetTargetEntity(GetCurrentTarget());
-                    brain.Senses.Interrupt =BehaviorInterruptType.Alerted;
+                    brain.Senses.Interrupt = BehaviorInterruptType.Alerted;
                 }
             }
         }
