@@ -13,13 +13,15 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
 
+        public static readonly InventoryLocation Invalid = new();
+
         public ulong ContainerId { get; private set; } = 0;     // Entity id
         public InventoryPrototype InventoryPrototype { get; private set; } = null;
         public uint Slot { get; private set; } = InvalidSlot;
 
         public PrototypeId InventoryRef { get => InventoryPrototype != null ? InventoryPrototype.DataRef : PrototypeId.Invalid; }
         public InventoryCategory InventoryCategory { get => InventoryPrototype != null ? InventoryPrototype.Category : InventoryCategory.None; }
-        public ConvenienceLabel InventoryConvenienceLabel { get => InventoryPrototype != null ? InventoryPrototype.ConvenienceLabel : ConvenienceLabel.None; }
+        public InventoryConvenienceLabel InventoryConvenienceLabel { get => InventoryPrototype != null ? InventoryPrototype.ConvenienceLabel : InventoryConvenienceLabel.None; }
 
         public bool IsValid { get => ContainerId != 0 && InventoryRef != PrototypeId.Invalid && Slot != InvalidSlot; }
 

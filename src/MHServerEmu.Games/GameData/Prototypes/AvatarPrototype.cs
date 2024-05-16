@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Powers;
 
@@ -272,7 +273,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AvatarModePrototype : Prototype
     {
         public AvatarMode AvatarModeEnum { get; protected set; }
-        public ConvenienceLabel Inventory { get; protected set; }
+        public InventoryConvenienceLabel Inventory { get; protected set; }
     }
 
     public class StatProgressionEntryPrototype : Prototype

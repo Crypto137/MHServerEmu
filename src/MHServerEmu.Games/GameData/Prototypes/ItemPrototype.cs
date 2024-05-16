@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 
@@ -79,7 +80,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalExpirationTimeMS { get; protected set; }
         public ItemTooltipPropertyBlockSettingsPrototype[] TooltipCustomPropertyBlocks { get; protected set; }
         public float LootDropWeightMultiplier { get; protected set; }
-        public ConvenienceLabel DestinationFromVendor { get; protected set; }
+        public InventoryConvenienceLabel DestinationFromVendor { get; protected set; }
         public EvalPrototype EvalDisplayLevel { get; protected set; }
         public bool CanBroadcast { get; protected set; }
         public EquipmentInvUISlot DefaultEquipmentSlot { get; protected set; }

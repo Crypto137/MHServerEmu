@@ -101,6 +101,8 @@ namespace MHServerEmu.Games.Entities
         public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.EntityPrototypeRef); }
         public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
+
+        public InventoryCollection InventoryCollection { get; } = new();
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
@@ -372,6 +374,18 @@ namespace MHServerEmu.Games.Entities
             }
 
             return false;
+        }
+
+        public Inventory GetInventoryByRef(PrototypeId invProtoRef)
+        {
+            return InventoryCollection.GetInventoryByRef(invProtoRef);
+        }
+
+        public Inventory GetOwnerInventory()
+        {
+            Entity container = Game.EntityManager.GetEntity<Entity>(InventoryLocation.ContainerId);
+            if (container == null) return null;
+            return container.GetInventoryByRef(InventoryLocation.InventoryRef);
         }
 
         public bool TestStatus(EntityStatus status)
