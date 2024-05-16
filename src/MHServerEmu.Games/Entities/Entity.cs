@@ -76,6 +76,8 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity : ISerialize
     {
+        public const ulong InvalidId = 0;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         protected EntityFlags _flags;
@@ -386,6 +388,35 @@ namespace MHServerEmu.Games.Entities
             Entity container = Game.EntityManager.GetEntity<Entity>(InventoryLocation.ContainerId);
             if (container == null) return null;
             return container.GetInventoryByRef(InventoryLocation.InventoryRef);
+        }
+
+        public InventoryResult CanChangeInventoryLocation(Inventory destination)
+        {
+            return InventoryResult.Success;
+        }
+
+        public bool CanStack()
+        {
+            if (MaxStackSize < 2) return false;
+            if (CurrentStackSize > MaxStackSize) Logger.WarnReturn(false, "CanStack(): CurrentStackSize > MaxStackSize");
+            if (CurrentStackSize == MaxStackSize) return false;
+            return true;
+        }
+
+        public bool CanStackOnto(Entity other, bool isAdding = false)
+        {
+            if (CanStack() == false || other.CanStack() == false) return false;
+            if (PrototypeDataRef != other.PrototypeDataRef) return false;
+            if (isAdding && CurrentStackSize + other.CurrentStackSize > other.MaxStackSize) return false;
+            return true;
+        }
+
+        public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+        }
+
+        public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
         }
 
         public bool TestStatus(EntityStatus status)

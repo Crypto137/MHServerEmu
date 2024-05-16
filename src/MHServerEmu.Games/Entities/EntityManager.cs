@@ -26,8 +26,6 @@ namespace MHServerEmu.Games.Entities
 
     public class EntityManager
     {
-        public const ulong InvalidEntityId = 0;
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Game _game;
@@ -143,7 +141,7 @@ namespace MHServerEmu.Games.Entities
         public T GetEntity<T>(ulong entityId) where T : Entity
         {
             // TODO: flags
-            if (entityId == InvalidEntityId) return null;
+            if (entityId == Entity.InvalidId) return null;
 
             if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
                 return null;

@@ -11,19 +11,17 @@ namespace MHServerEmu.Games.Entities.Inventories
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
-
         public static readonly InventoryLocation Invalid = new();
 
         public ulong ContainerId { get; private set; } = 0;     // Entity id
         public InventoryPrototype InventoryPrototype { get; private set; } = null;
-        public uint Slot { get; private set; } = InvalidSlot;
+        public uint Slot { get; private set; } = Inventory.InvalidSlot;
 
         public PrototypeId InventoryRef { get => InventoryPrototype != null ? InventoryPrototype.DataRef : PrototypeId.Invalid; }
         public InventoryCategory InventoryCategory { get => InventoryPrototype != null ? InventoryPrototype.Category : InventoryCategory.None; }
         public InventoryConvenienceLabel InventoryConvenienceLabel { get => InventoryPrototype != null ? InventoryPrototype.ConvenienceLabel : InventoryConvenienceLabel.None; }
 
-        public bool IsValid { get => ContainerId != 0 && InventoryRef != PrototypeId.Invalid && Slot != InvalidSlot; }
+        public bool IsValid { get => ContainerId != 0 && InventoryRef != PrototypeId.Invalid && Slot != Inventory.InvalidSlot; }
 
         public InventoryLocation() { }
 
@@ -91,7 +89,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             Slot = other.Slot;
         }
 
-        public void Clear() => Set(0, PrototypeId.Invalid, InvalidSlot);
+        public void Clear() => Set(0, PrototypeId.Invalid, Inventory.InvalidSlot);
 
         public override string ToString()
         {
