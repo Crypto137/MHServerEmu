@@ -395,6 +395,12 @@ namespace MHServerEmu.Games.Entities
             return InventoryResult.Success;
         }
 
+        public bool ValidateInventorySlot(Inventory inventory, uint slot)
+        {
+            // this literally does nothing
+            return true;
+        }
+
         public bool CanStack()
         {
             if (MaxStackSize < 2) return false;

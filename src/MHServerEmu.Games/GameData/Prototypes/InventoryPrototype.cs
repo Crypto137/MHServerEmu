@@ -61,6 +61,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return false;
         }
+
+        public int GetSoftCapacityDefaultSlots()
+        {
+            // TODO: consoles
+            return SoftCapacityDefaultSlotsPC;
+        }
+
+        public IEnumerable<PrototypeId> GetSoftCapacitySlotGroups()
+        {
+            // TODO: consoles
+            return SoftCapacitySlotGroupsPC;
+        }
     }
 
     public class InventoryExtraSlotsGroupPrototype : Prototype

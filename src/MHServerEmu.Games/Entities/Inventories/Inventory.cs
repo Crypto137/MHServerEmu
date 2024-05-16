@@ -2,16 +2,18 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
-    public class Inventory : IEnumerable<(uint, Inventory.InvEntry)>
+    public class Inventory : IEnumerable<KeyValuePair<uint, Inventory.InvEntry>>
     {
         public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private HashSet<(uint, InvEntry)> _entities = new();
+        // The client uses a set of std::pair here, the main requirement is that this has to be sorted by key (slot)
+        private SortedDictionary<uint, InvEntry> _entities = new();
 
         public Game Game { get; }
         public ulong OwnerId { get; private set; }
@@ -31,6 +33,11 @@ namespace MHServerEmu.Games.Entities.Inventories
             Game = game;
         }
 
+        public override string ToString()
+        {
+            return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}";
+        }
+
         public bool Initialize(PrototypeId prototypeRef, ulong ownerId)
         {
             var prototype = prototypeRef.As<InventoryPrototype>();
@@ -48,12 +55,78 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public int GetCapacity()
         {
-            return 0;
+            if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");
+
+            int nSoftCap = Prototype.GetSoftCapacityDefaultSlots();
+            if (nSoftCap < 0) return MaxCapacity;
+
+            if (Owner == null) return Logger.WarnReturn(MaxCapacity, "GetCapacity(): Owner == null");
+
+            foreach (PrototypeId slotGroupRef in Prototype.GetSoftCapacitySlotGroups())
+            {
+                var slotGroup = slotGroupRef.As<InventoryExtraSlotsGroupPrototype>();
+                int extraSlots = Owner.Properties[PropertyEnum.InventoryExtraSlotsAvailable, slotGroup.DataRef];
+
+                if (slotGroup.MaxExtraSlotCount > 0)
+                    extraSlots = Math.Min(extraSlots, slotGroup.MaxExtraSlotCount);
+
+                nSoftCap += extraSlots;
+            }
+
+            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner.Id}");
+
+            return Math.Min(nSoftCap, MaxCapacity);
         }
 
         public bool IsSlotFree(uint slot)
         {
-            return false;
+            if (slot == InvalidSlot) return Logger.WarnReturn(false, $"IsSlotFree(): Called with the invalid slot id for inventory {this}");
+            if (Game == null) return Logger.WarnReturn(false, "IsSlotFree(): Game == null");
+
+            if (Count >= GetCapacity()) return false;
+            if (slot >= GetCapacity()) return false;
+            if (GetEntityInSlot(slot) != Entity.InvalidId) return false;
+
+            Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
+            if (inventoryOwner == null) return Logger.WarnReturn(false, "IsSlotFree(): inventoryOwner == null");
+
+            if (inventoryOwner.ValidateInventorySlot(this, slot) == false) return false;
+
+            return true;
+        }
+
+        public uint GetFreeSlot(Entity entity, bool useStacking, bool isAdding = false)
+        {
+            if (Game == null) return Logger.WarnReturn(InvalidSlot, "GetFreeSlot(): Game == null");
+
+            if (entity != null && useStacking)
+            {
+                // TODO: Stacking
+            }
+
+            Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
+            if (inventoryOwner == null) return Logger.WarnReturn(InvalidSlot, "GetFreeSlot(): inventoryOwner == null");
+
+            // Make sure we actually have free slots
+            if (Count >= GetCapacity()) return InvalidSlot;
+
+            // Look for a free slot between occupied ones
+            // NOTE: This requires the slot / InvEntry collection to be sorted by slot
+            uint slot = 0;
+            foreach (var kvp in this)
+            {
+                if (kvp.Key != slot && inventoryOwner.ValidateInventorySlot(this, slot))
+                    return slot;
+
+                slot++;
+            }
+
+            // If there are no free spaces in between occupied slots, get a free slot from the end
+            slot = (uint)Count;
+            if (inventoryOwner.ValidateInventorySlot(this, slot))
+                return slot;
+
+            return InvalidSlot;
         }
 
         public static InventoryResult ChangeEntityInventoryLocation(Entity entity, Inventory destination, uint slot, ref ulong stackEntityId, bool useStacking)
@@ -141,10 +214,9 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoAddEntity(): entity == null");
 
-            Entity owner = Game.EntityManager.GetEntity<Entity>(OwnerId);
-            if (owner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoAddEntity(): owner == null");
+            Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
+            if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoAddEntity(): owner == null");
 
-            if (slot < 0) return Logger.WarnReturn(InventoryResult.InvalidSlotParam, "DoAddEntity(): slot < 0");    // This is pretty meaningless with uint, but let's just follow the client
             if (slot >= GetCapacity()) return Logger.WarnReturn(InventoryResult.SlotExceedsCapacity, "DoAddEntity(): slot >= GetCapacity()");
 
             if (GetEntityInSlot(slot) != Entity.InvalidId) return InventoryResult.SlotAlreadyOccupied;
@@ -157,13 +229,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             PreAdd(entity);
 
-            _entities.Add((slot, new InvEntry(entity.Id, entity.PrototypeDataRef, null)));
+            _entities.Add(slot, new InvEntry(entity.Id, entity.PrototypeDataRef, null));
             entity.InventoryLocation.Set(OwnerId, PrototypeDataRef, slot);
             InventoryLocation invLoc = entity.InventoryLocation;
 
             PostAdd(entity, prevInvLoc, invLoc);
             PostFinalMove(entity, prevInvLoc, invLoc);
-            owner.OnOtherEntityAddedToMyInventory(entity, invLoc, false);
+            inventoryOwner.OnOtherEntityAddedToMyInventory(entity, invLoc, false);
 
             return InventoryResult.Success;
         }
@@ -197,17 +269,12 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Success;
         }
 
-        private uint GetFreeSlot(Entity entity, bool useStacking, bool isAdding = false)
-        {
-            return InvalidSlot;
-        }
-
         private ulong GetEntityInSlot(uint slot)
         {
-            foreach (var entry in this)
+            foreach (var kvp in this)
             {
-                if (entry.Item1 == slot)
-                    return entry.Item2.EntityId;
+                if (kvp.Key == slot)
+                    return kvp.Value.EntityId;
             }
 
             return Entity.InvalidId;
@@ -239,7 +306,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         }
 
         // Inventory::Iterator
-        public IEnumerator<(uint, InvEntry)> GetEnumerator() => _entities.GetEnumerator();
+        public IEnumerator<KeyValuePair<uint, InvEntry>> GetEnumerator() => _entities.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public readonly struct InvEntry : IComparable<InvEntry>
