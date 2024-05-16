@@ -199,12 +199,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class ProceduralProfileUsePowerEnticerOverridePrototype : ProceduralProfileWithTargetPrototype
-    {
-        public UsePowerContextPrototype Power { get; protected set; }
-        public new SelectEntityContextPrototype SelectTarget { get; protected set; }
-    }
-
     public class ProceduralProfileFearOverridePrototype : ProceduralProfileWithTargetPrototype
     {
         public FleeContextPrototype FleeFromTarget { get; protected set; }

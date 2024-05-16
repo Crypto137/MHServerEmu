@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         private short _curState;
         private readonly PState[] _states;
         private ProfilePtr _proceduralPtr;
-
+        public ProceduralAIProfilePrototype Behavior { get => _proceduralPtr.Profile; }
         public BrainPrototype BrainPrototype { get; private set; }
         public ulong LastThinkQTime { get; set; }
         public uint ThinkCountPerFrame { get; set; }

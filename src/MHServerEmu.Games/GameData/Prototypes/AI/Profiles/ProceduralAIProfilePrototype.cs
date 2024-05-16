@@ -94,6 +94,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
+        protected static void HandleEnticerBehaviorResultStatus(Game game, BehaviorBlackboard blackboard, bool completed)
+        {
+            ulong enticerId = blackboard.PropertyCollection[PropertyEnum.AIEnticedToID];
+            Agent enticer = game.EntityManager.GetEntity<Agent>(enticerId);
+            if (enticer != null)
+            {
+                AIController enticerController = enticer.AIController;
+                if (enticerController == null) return;
+                if (enticerController.Brain is not ProceduralAI enticersBrain) return;
+                if (enticersBrain.Behavior is not ProceduralProfileEnticerPrototype enticersProfile) return;
+                enticersProfile.HandleEnticementBehaviorCompletion(enticerController, completed);
+            }
+            blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+            blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIEnticedToID);
+        }
+
         public virtual void Think(AIController ownerController)
         {
             ProceduralAI.Logger.Error("ProceduralAIProfilePrototype.THINK() - BASE CLASS SHOULD NOT BE CALLED");
@@ -199,6 +215,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+        public void HandleEnticementBehaviorCompletion(AIController enticerController, bool completed)
+        {
+            if (completed == false)
+            {
+                enticerController.Blackboard.PropertyCollection.AdjustProperty(-1, PropertyEnum.AICustomStateVal1);
+                if (enticerController.IsEnabled == false)
+                    enticerController.SetIsEnabled(true);
+            }
+        }
+
         private bool Subscribe(WorldEntity subscriber, Agent enticed, GRandom random, long currentTime)
         {
             if (subscriber is not Agent subscriberAgent || subscriberAgent.IsExecutingPower) return false;
@@ -233,6 +259,99 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToEnticer { get; protected set; }
         public PrototypeId DynamicBehavior { get; protected set; }
         public bool OrientToEnticerOrientation { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            bool notCompleted = false;
+            if (MoveToEnticer != null)
+            {
+                StaticBehaviorReturnType interactResult = HandleContext(proceduralAI, ownerController, MoveToEnticer);
+                if (interactResult == StaticBehaviorReturnType.Running) return;
+                notCompleted = interactResult != StaticBehaviorReturnType.Completed;
+            } 
+            else if (FlankToEnticer != null)
+            {
+                StaticBehaviorReturnType interactResult = HandleContext(proceduralAI, ownerController, FlankToEnticer);
+                if (interactResult == StaticBehaviorReturnType.Running) return;
+                notCompleted = interactResult != StaticBehaviorReturnType.Completed;
+            }
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            if (notCompleted)
+                HandleEnticerBehaviorResultStatus(game, blackboard, false);
+            else
+            {
+                if (OrientToEnticerOrientation && agent.CanRotate)
+                {
+                    Locomotor locomotor = agent.Locomotor;
+                    if (locomotor != null)
+                    {
+                        ulong enticerId = blackboard.PropertyCollection[PropertyEnum.AIEnticedToID];
+                        WorldEntity enticer = game.EntityManager.GetEntity<WorldEntity>(enticerId);
+                        if (enticer == null) return;
+                        locomotor.LookAt(enticer.Forward + agent.RegionLocation.Position);
+                    }
+                }
+                blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = DynamicBehavior;
+            }
+        }
+    }
+
+    public class ProceduralProfileInteractEnticerOverridePrototype : ProceduralAIProfilePrototype
+    {
+        public InteractContextPrototype Interact { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            if (Interact == null) return;
+            StaticBehaviorReturnType interactResult = HandleContext(proceduralAI, ownerController, Interact);
+            if (interactResult == StaticBehaviorReturnType.Running) return;
+
+            HandleEnticerBehaviorResultStatus(game, ownerController.Blackboard, interactResult == StaticBehaviorReturnType.Completed);
+        }
+    }
+
+    public class ProceduralProfileUsePowerEnticerOverridePrototype : ProceduralProfileWithTargetPrototype
+    {
+        public UsePowerContextPrototype Power { get; protected set; }
+        public new SelectEntityContextPrototype SelectTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            if (Power == null) return;
+            if (SelectTarget != null)
+            {
+                CombatTargetFlags flags = CombatTargetFlags.IgnoreHostile;
+                WorldEntity target = ownerController.TargetEntity;
+                SelectTargetEntity(agent, ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile, SelectTargetFlags.None, flags);
+            }
+
+            StaticBehaviorReturnType interactResult = HandleContext(proceduralAI, ownerController, Power);
+            if (interactResult == StaticBehaviorReturnType.Running) return;
+
+            HandleEnticerBehaviorResultStatus(game, ownerController.Blackboard, interactResult == StaticBehaviorReturnType.Completed);
+        }
     }
 
     public class ProceduralProfileSenseOnlyPrototype : ProceduralAIProfilePrototype
@@ -240,12 +359,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AIEntityAttributePrototype[] AttributeList { get; protected set; }
         public PrototypeId AllianceOverride { get; protected set; }
     }
-
-    public class ProceduralProfileInteractEnticerOverridePrototype : ProceduralAIProfilePrototype
-    {
-        public InteractContextPrototype Interact { get; protected set; }
-    }
-
 
     public class ProceduralProfileLeashOverridePrototype : ProceduralAIProfilePrototype
     {
