@@ -216,11 +216,6 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             if (_curState > 0) _curState--;
         }
 
-        public void OnOwnerExitWorld()
-        {
-            _proceduralPtr.Profile?.OnOwnerExitWorld(_owningController);
-        }
-
         public void SetOverride(ProceduralAIProfilePrototype profile, OverrideType overrideType)
         {
             if (profile == null)
@@ -269,9 +264,26 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             }
         }
 
-        internal void ProcessInterrupts(BehaviorInterruptType interrupt)
+        public void Think()
         {
-            throw new NotImplementedException();
+            _proceduralPtr.Profile?.Think(_owningController);
+        }
+
+        public void ProcessInterrupts(BehaviorInterruptType interrupt)
+        {
+            _proceduralPtr.Profile?.ProcessInterrupts(_owningController, interrupt);
+        }
+
+        public void OnOwnerExitWorld()
+        {
+            _proceduralPtr.Profile?.OnOwnerExitWorld(_owningController);
+        }
+
+        public void OnOwnerKilled()
+        {
+            SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+            _proceduralPtr.Profile?.OnOwnerKilled(_owningController);
+            StopOwnerLocomotor();
         }
     }
 

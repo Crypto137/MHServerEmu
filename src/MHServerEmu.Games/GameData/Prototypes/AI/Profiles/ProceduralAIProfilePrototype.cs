@@ -160,6 +160,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         public virtual void OnOwnerExitWorld(AIController ownerController) { }
+        public virtual void OnOwnerKilled(AIController ownerController) { }
+        public virtual void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype

@@ -48,12 +48,14 @@ namespace MHServerEmu.Games.Behavior
 
         public bool IsOwnerValid()
         {
-            if (Owner != null && Owner.IsInWorld && Owner.IsSimulated 
-                && Owner.TestStatus(EntityStatus.PendingDestroy) == false 
-                && Owner.TestStatus(EntityStatus.Destroyed) == false)
-                return true;
+            if (Owner == null 
+                || Owner.IsInWorld == false 
+                || Owner.IsSimulated == false 
+                || Owner.TestStatus(EntityStatus.PendingDestroy) 
+                || Owner.TestStatus(EntityStatus.Destroyed))
+                return false;
             
-            return false;
+            return true;
         }
 
         public bool GetDesiredIsWalkingState(MovementSpeedOverride speedOverride)
@@ -265,14 +267,27 @@ namespace MHServerEmu.Games.Behavior
             throw new NotImplementedException();
         }
 
-        internal void Think()
+        public void Think()
         {
-            throw new NotImplementedException();
+            if (IsOwnerValid() == false || Owner.IsDead || IsEnabled == false ) return;
+
+            if (Brain.LastThinkQTime == Game.NumQuantumFixedTimeUpdates)
+                Brain.ThinkCountPerFrame++;
+            else
+            {
+                Brain.LastThinkQTime = Game.NumQuantumFixedTimeUpdates;
+                Brain.ThinkCountPerFrame = 0;
+            }
+
+            // TODO update think event
+
+            Brain?.Think();
         }
 
-        internal void OnAIKilled()
+        public void OnAIKilled()
         {
-            throw new NotImplementedException();
+            OnAIDisabled();
+            Brain?.OnOwnerKilled();
         }
 
         public void OnAIBehaviorChange()
