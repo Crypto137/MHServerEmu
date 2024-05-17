@@ -395,6 +395,27 @@ namespace MHServerEmu.Games.Entities
             return InventoryResult.Success;
         }
 
+        public InventoryResult ChangeInventoryLocation(Inventory destination, uint destSlot = Inventory.InvalidSlot)
+        {
+            ulong? stackEntityId = null;
+            return ChangeInventoryLocation(destination, destSlot, ref stackEntityId, true);
+        }
+
+        public InventoryResult ChangeInventoryLocation(Inventory destInventory, uint destSlot, ref ulong? stackEntityId, bool allowStacking)
+        {
+            allowStacking &= IsInGame;
+
+            // If we have a valid destination, it means we are adding or moving, so we need to verify that this entity matches the destination inventory
+            if (destInventory != null)
+            {
+                InventoryResult destInventoryResult = CanChangeInventoryLocation(destInventory);
+                if (destInventoryResult != InventoryResult.Success) return Logger.WarnReturn(destInventoryResult,
+                    $"ChangeInventoryLocation(): result=[{destInventoryResult}] allowStacking=[{allowStacking}] destSlot=[{destSlot}] destInventory=[{destInventory}] entity=[{Id}]");
+            }
+
+            return Inventory.ChangeEntityInventoryLocation(this, destInventory, destSlot, ref stackEntityId, allowStacking);
+        }
+
         public bool ValidateInventorySlot(Inventory inventory, uint slot)
         {
             // this literally does nothing
