@@ -546,7 +546,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId LeashReturnTeleport { get; protected set; }
         public PrototypeId LeashReturnInvulnerability { get; protected set; }
 
-
         public override void Init(Agent agent)
         {
             base.Init(agent);
@@ -555,6 +554,96 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, LeashReturnTeleport);
             InitPower(agent, LeashReturnInvulnerability);
         }
+
+        public enum State
+        {
+            Default = 0,
+            Move = 1,
+            Teleport = 2
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            if (agent.CanMove == false || agent.IsExecutingPower) return;
+
+            var collection = ownerController.Blackboard.PropertyCollection;
+
+            State state = (State)(int)collection[PropertyEnum.AICustomOverrideStateVal1];
+            if (state == State.Default)
+            {
+                if (LeashReturnHeal != PrototypeId.Invalid 
+                    && !ownerController.AttemptActivatePower(LeashReturnHeal, agent.Id, agent.RegionLocation.Position)) 
+                    return;
+                if (LeashReturnImmunity != PrototypeId.Invalid
+                    && !ownerController.AttemptActivatePower(LeashReturnImmunity, agent.Id, agent.RegionLocation.Position)) 
+                    return;
+                if (LeashReturnInvulnerability != PrototypeId.Invalid
+                    && !ownerController.AttemptActivatePower(LeashReturnInvulnerability, agent.Id, agent.RegionLocation.Position)) 
+                    return;
+            }
+
+            if (state == State.Default || state == State.Move)
+            {
+                if (MoveToSpawn != null)
+                {
+                    StaticBehaviorReturnType moveResult = HandleContext(proceduralAI, ownerController, MoveToSpawn, null);
+                    if (moveResult == StaticBehaviorReturnType.Running)
+                    {
+                        collection[PropertyEnum.AICustomOverrideStateVal1] = (int)State.Move;
+                        return;
+                    }
+                    else if (moveResult == StaticBehaviorReturnType.Completed)
+                    {
+                        if (LeashReturnHeal != PrototypeId.Invalid
+                            && !ownerController.AttemptActivatePower(LeashReturnHeal, agent.Id, agent.RegionLocation.Position))
+                            return;
+
+                        if (LeashReturnImmunity != PrototypeId.Invalid
+                            && !ownerController.AttemptActivatePower(LeashReturnImmunity, agent.Id, agent.RegionLocation.Position))
+                            return;
+
+                        collection[PropertyEnum.AIIsLeashing] = false;
+                        return;
+                    }
+                }
+
+                if (LeashReturnTeleport != PrototypeId.Invalid)
+                {
+                    if (ownerController.AttemptActivatePower(LeashReturnTeleport, agent.Id, agent.RegionLocation.Position) == false)
+                        return;
+
+                    collection[PropertyEnum.AICustomOverrideStateVal1] = (int)State.Teleport;
+                    return;
+                }
+            }
+
+            if (state == State.Teleport && agent.ActivePowerRef == LeashReturnTeleport) return;
+
+            Region agentsRegion = agent.Region;
+            if (agentsRegion == null) return;
+
+            if (LeashReturnHeal != PrototypeId.Invalid
+                && !ownerController.AttemptActivatePower(LeashReturnHeal, agent.Id, agent.RegionLocation.Position))
+                return;
+
+            if (LeashReturnImmunity != PrototypeId.Invalid
+                && !ownerController.AttemptActivatePower(LeashReturnImmunity, agent.Id, agent.RegionLocation.Position))
+                return;
+
+            if (LeashReturnInvulnerability != PrototypeId.Invalid
+                && !ownerController.AttemptActivatePower(LeashReturnInvulnerability, agent.Id, agent.RegionLocation.Position))
+                return;
+
+            HandleContext(proceduralAI, ownerController, TeleportToSpawn, null);
+
+            collection[PropertyEnum.AIIsLeashing] = false;
+        }
+
     }
 
     public class ProceduralProfileRunToExitAndDespawnOverridePrototype : ProceduralAIProfilePrototype

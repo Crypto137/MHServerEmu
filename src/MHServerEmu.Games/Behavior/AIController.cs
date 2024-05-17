@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -295,6 +296,11 @@ namespace MHServerEmu.Games.Behavior
             if (IsEnabled)
                 ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), false);
             Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
+        }
+
+        internal bool AttemptActivatePower(PrototypeId powerRef, ulong enitityId, Vector3 position)
+        {
+            throw new NotImplementedException();
         }
     }
 }
