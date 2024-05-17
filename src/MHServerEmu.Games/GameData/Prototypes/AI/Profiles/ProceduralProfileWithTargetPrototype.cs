@@ -65,7 +65,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         protected bool SelectTargetEntity(Agent agent, ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI,
-            SelectEntityContextPrototype selectTarget, CombatTargetType targetType, SelectTargetFlags targetFlags, CombatTargetFlags flags)
+            SelectEntityContextPrototype selectTarget, CombatTargetType targetType, SelectTargetFlags targetFlags = SelectTargetFlags.None, 
+            CombatTargetFlags flags = CombatTargetFlags.None)
         {
             WorldEntity currentTarget = target;
             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, selectTarget);
@@ -86,7 +87,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             else
             {
                 if (selectedEntity == currentTarget) return true;
-                SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectEntityType);
+                SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                 target = selectedEntity;
                 if (targetFlags.HasFlag(SelectTargetFlags.NotifyAllies))
                     ownerController.Senses.NotifyAlliesOnTargetAquired();
@@ -223,6 +224,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (enforceLOS && agent.LineOfSightTo(target, radius, padding) == false) return true;
             return false;
         }
+
+        protected bool CommonSimplifiedSensory(WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, 
+            SelectEntityContextPrototype selectTarget, CombatTargetType targetType)
+        {
+            BehaviorSensorySystem senses = ownerController.Senses;
+            if (senses.ShouldSense())
+            {
+                if (selectTarget == null) return false;
+                Agent agent = ownerController.Owner;
+                if (agent == null) return false;
+
+                if (target == null || target.IsAliveInWorld == false || selectTarget.LockEntityOnceSelected == false)
+                {
+                    if (SelectTargetEntity(agent, ref target, ownerController, proceduralAI, selectTarget, targetType))
+                        return true;
+                }
+                else
+                    senses.ValidateCurrentTarget(targetType);
+            }
+
+            if (target == null || target.IsInWorld == false)
+                return false;
+
+            return true;
+        }
+
     }
 
     public class ProceduralProfileFearOverridePrototype : ProceduralProfileWithTargetPrototype
@@ -290,6 +317,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, Power);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (Power == null || Power.Power == PrototypeId.Invalid) return;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            WorldEntity target = ownerController.TargetEntity;
+            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+
+            StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, Power, null);
+            if (contextResult == StaticBehaviorReturnType.Running)
+            {
+                int targetCounter = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                if (targetCounter == 0)
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+                else
+                {
+                    long powerStartTime = agent.Properties[PropertyEnum.PowerCooldownStartTime, Power.Power];
+                    if (currentTime > (powerStartTime + PowerChangeTargetIntervalMS * targetCounter))
+                    {
+                        var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+                        target = SelectEntity.DoSelectEntity(ref selectionContext);
+                        if (target != null)
+                        {
+                            if (SelectEntity.RegisterSelectedEntity(ownerController, target, selectionContext.SelectionType) == false) return;
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = targetCounter + 1;
+                        }
+                    }
+                }
+
+                proceduralAI.PushSubstate();
+                if (target != null)
+                    HandleContext(proceduralAI, ownerController, MoveToTarget);
+                else
+                    HandleContext(proceduralAI, ownerController, MoveToNoTarget);
+                proceduralAI.PopSubstate();
+            }
+            else if (contextResult == StaticBehaviorReturnType.Completed)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 0;
+        }
     }
 
     public class ProceduralProfileSeekingMissilePrototype : ProceduralProfileWithTargetPrototype
@@ -301,11 +375,52 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileSeekingMissileUniqueTargetPrototype : ProceduralProfileWithTargetPrototype
     {
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+
+            Locomotor locomotor = agent.Locomotor;
+            if (locomotor == null) return;
+
+            ulong targetId = target.Id;
+            if (target != null)
+            {
+                if (locomotor.FollowEntityId != targetId)
+                {
+                    locomotor.FollowEntity(targetId, 0.0f);
+                    target.Properties[PropertyEnum.FocusTargetedOnByID] = agent.Id;
+                    ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = target.Id;
+                }
+            }
+
+        }
     }
 
     public class ProceduralProfileMoveToUniqueTargetNoPowerPrototype : ProceduralProfileWithTargetPrototype
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+            HandleContext(proceduralAI, ownerController, MoveToTarget);
+        }
     }
 
     public class ProceduralProfileVanityPetPrototype : ProceduralProfileWithTargetPrototype

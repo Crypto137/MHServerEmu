@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             public float MinDistanceThreshold;
             public SelectEntityPoolType PoolType;
             public SelectEntityMethodType SelectionMethod;
-            public SelectEntityType SelectEntityType;
+            public SelectEntityType SelectionType;
             public bool LockEntityOnceSelected;
             public float CellOrRegionAABBScale;
             public PrototypeId AlliancePriority;
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 MinDistanceThreshold = proto.MinDistanceThreshold;                
                 MaxDistanceThreshold = proto.MaxDistanceThreshold;
                 LockEntityOnceSelected = proto.LockEntityOnceSelected;
-                SelectEntityType = proto.SelectEntityType;
+                SelectionType = proto.SelectEntityType;
                 CellOrRegionAABBScale = proto.CellOrRegionAABBScale;
                 AlliancePriority = proto.AlliancePriority;
                 ComparisonEnum = 0;

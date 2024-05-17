@@ -555,7 +555,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, LeashReturnInvulnerability);
         }
 
-        public enum State
+        private enum State
         {
             Default = 0,
             Move = 1,
@@ -654,6 +654,48 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public SelectEntityContextPrototype SelectPortalToExitFrom { get; protected set; }
         public DelayContextPrototype DelayBeforeDestroyOnMoveExitFail { get; protected set; }
         public bool VanishesIfMoveToExitFails { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (target == null || target is not Transition)
+            {
+                var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectPortalToExitFrom);
+                selectionContext.StaticEntities = true;
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                if (selectedEntity != null)
+                    SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
+            }
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            if (DelayBeforeRunToExit != null && blackboard.PropertyCollection[PropertyEnum.AIRunToExitDelayFired] == false)
+            {
+                StaticBehaviorReturnType delayResult = HandleContext(proceduralAI, ownerController, DelayBeforeRunToExit);
+                if (delayResult == StaticBehaviorReturnType.Running) return;
+                else if (delayResult == StaticBehaviorReturnType.Completed)
+                    blackboard.PropertyCollection[PropertyEnum.AIRunToExitDelayFired] = true;
+            }
+
+            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, RunToExit, false, out var movementResult);
+            if (movementResult == StaticBehaviorReturnType.Running) return;
+            else if (movementResult == StaticBehaviorReturnType.Completed)
+            {
+                agent.Destroy();
+                return;
+            }
+
+            if (VanishesIfMoveToExitFails)
+            {
+                StaticBehaviorReturnType delayResult = HandleContext(proceduralAI, ownerController, DelayBeforeDestroyOnMoveExitFail);
+                if (delayResult == StaticBehaviorReturnType.Completed)
+                    agent.Destroy();
+            }
+        }
     }
 
     public class ProceduralProfileRotatingTurretPrototype : ProceduralAIProfilePrototype
