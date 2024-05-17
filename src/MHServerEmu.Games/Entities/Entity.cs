@@ -76,6 +76,8 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity : ISerialize
     {
+        public const ulong InvalidId = 0;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         protected EntityFlags _flags;
@@ -345,6 +347,12 @@ namespace MHServerEmu.Games.Entities
             return null;
         }
 
+        public T GetSelfOrOwnerOfType<T>() where T : Entity
+        {
+            if (this is T typedOwner) return typedOwner;
+            return GetOwnerOfType<T>();
+        }
+
         public Entity GetRootOwner()
         {
             Entity owner = this;
@@ -386,6 +394,76 @@ namespace MHServerEmu.Games.Entities
             Entity container = Game.EntityManager.GetEntity<Entity>(InventoryLocation.ContainerId);
             if (container == null) return null;
             return container.GetInventoryByRef(InventoryLocation.InventoryRef);
+        }
+
+        public InventoryResult CanChangeInventoryLocation(Inventory destInventory)
+        {
+            PropertyEnum propertyEnum = PropertyEnum.Invalid;
+            return CanChangeInventoryLocation(destInventory, ref propertyEnum);
+        }
+
+        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, ref PropertyEnum propertyRestriction)
+        {
+            InventoryResult result = destInventory.PassesContainmentFilter(PrototypeDataRef);
+            if (result != InventoryResult.Success) return result;
+
+            return destInventory.PassesEquipmentRestrictions(this, ref propertyRestriction);
+        }
+
+        public InventoryResult ChangeInventoryLocation(Inventory destination, uint destSlot = Inventory.InvalidSlot)
+        {
+            ulong? stackEntityId = null;
+            return ChangeInventoryLocation(destination, destSlot, ref stackEntityId, true);
+        }
+
+        public InventoryResult ChangeInventoryLocation(Inventory destInventory, uint destSlot, ref ulong? stackEntityId, bool allowStacking)
+        {
+            allowStacking &= IsInGame;
+
+            // If we have a valid destination, it means we are adding or moving, so we need to verify that this entity matches the destination inventory
+            if (destInventory != null)
+            {
+                InventoryResult destInventoryResult = CanChangeInventoryLocation(destInventory);
+                if (destInventoryResult != InventoryResult.Success) return Logger.WarnReturn(destInventoryResult,
+                    $"ChangeInventoryLocation(): result=[{destInventoryResult}] allowStacking=[{allowStacking}] destSlot=[{destSlot}] destInventory=[{destInventory}] entity=[{Id}]");
+            }
+
+            return Inventory.ChangeEntityInventoryLocation(this, destInventory, destSlot, ref stackEntityId, allowStacking);
+        }
+
+        public bool ValidateInventorySlot(Inventory inventory, uint slot)
+        {
+            // this literally does nothing
+            return true;
+        }
+
+        public bool CanStack()
+        {
+            if (MaxStackSize < 2) return false;
+            if (CurrentStackSize > MaxStackSize) Logger.WarnReturn(false, "CanStack(): CurrentStackSize > MaxStackSize");
+            if (CurrentStackSize == MaxStackSize) return false;
+            return true;
+        }
+
+        public virtual bool IsAutoStackedWhenAddedToInventory()
+        {
+            return CanStack();
+        }
+
+        public bool CanStackOnto(Entity other, bool isAdding = false)
+        {
+            if (CanStack() == false || other.CanStack() == false) return false;
+            if (PrototypeDataRef != other.PrototypeDataRef) return false;
+            if (isAdding && CurrentStackSize + other.CurrentStackSize > other.MaxStackSize) return false;
+            return true;
+        }
+
+        public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+        }
+
+        public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
         }
 
         public bool TestStatus(EntityStatus status)

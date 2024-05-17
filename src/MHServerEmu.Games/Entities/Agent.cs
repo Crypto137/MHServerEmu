@@ -5,8 +5,9 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -271,6 +272,12 @@ namespace MHServerEmu.Games.Entities
         private void ScheduleRandomWakeStart(int wakeRandomStartMS)
         {
             throw new NotImplementedException();
+        }
+
+        public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
+        {
+            // TODO
+            return InventoryResult.Invalid;
         }
 
         // Old

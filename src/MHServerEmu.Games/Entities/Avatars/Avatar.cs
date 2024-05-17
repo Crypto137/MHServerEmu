@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -332,6 +333,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
+        }
+
+        public InventoryResult GetEquipmentInventoryAvailableStatus(PrototypeId invProtoRef)
+        {
+            // TODO
+            return InventoryResult.Invalid;
         }
 
         protected override void BuildString(StringBuilder sb)

@@ -194,6 +194,7 @@ namespace MHServerEmu.Games.Properties
         public static implicit operator PropertyValue(CurveId value) => new(value);
         public static implicit operator PropertyValue(AssetId value) => new(value);
         public static implicit operator PropertyValue(Vector3 value) => new(value);
+        public static implicit operator PropertyValue(TimeSpan value) => new((long)value.TotalMilliseconds);
 
         public static implicit operator bool(PropertyValue value) => value.ToBool();
         public static implicit operator float(PropertyValue value) => value.ToFloat();
@@ -205,5 +206,6 @@ namespace MHServerEmu.Games.Properties
         public static implicit operator CurveId(PropertyValue value) => value.ToCurveId();
         public static implicit operator AssetId(PropertyValue value) => value.ToAssetId();
         public static implicit operator Vector3(PropertyValue value) => value.ToVector3();
+        public static implicit operator TimeSpan(PropertyValue value) => TimeSpan.FromMilliseconds(value.ToLong());
     }
 }

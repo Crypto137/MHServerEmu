@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayName { get; protected set; }
 
         /// <summary>
-        /// Returns <see langword="true"/> is this <see cref="InventoryPrototype"/> is for a player stash inventory.
+        /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for a player stash inventory.
         /// </summary>
         public bool IsPlayerStashInventory()
         {
@@ -46,7 +46,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         /// <summary>
-        /// Returns <see langword="true"/> is entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this prototype.
+        /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for avatar or team-up equipment.
+        /// </summary>
+        public bool IsEquipmentInventory()
+        {
+            return Category == InventoryCategory.AvatarEquipment || Category == InventoryCategory.TeamUpEquipment;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.
         /// </summary>
         public bool AllowEntity(EntityPrototype entityPrototype)
         {
@@ -60,6 +68,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return false;
+        }
+
+        public int GetSoftCapacityDefaultSlots()
+        {
+            // TODO: consoles
+            return SoftCapacityDefaultSlotsPC;
+        }
+
+        public IEnumerable<PrototypeId> GetSoftCapacitySlotGroups()
+        {
+            // TODO: consoles
+            return SoftCapacitySlotGroupsPC;
         }
     }
 
