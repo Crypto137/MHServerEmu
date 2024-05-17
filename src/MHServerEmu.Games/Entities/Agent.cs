@@ -2,8 +2,9 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -164,6 +165,12 @@ namespace MHServerEmu.Games.Entities
                 info.InitNonProgressionPower(powerProtoRef);
 
             return info.IsValid;
+        }
+
+        public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
+        {
+            // TODO
+            return InventoryResult.Invalid;
         }
 
         // Old

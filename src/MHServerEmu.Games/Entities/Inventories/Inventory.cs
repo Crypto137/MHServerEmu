@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -24,6 +26,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public InventoryCategory Category { get; private set; } = InventoryCategory.None;
         public InventoryConvenienceLabel ConvenienceLabel { get; private set; } = InventoryConvenienceLabel.None;
+        public bool IsEquipment { get => Prototype != null && Prototype.IsEquipmentInventory(); }
         public int MaxCapacity { get; private set; }
 
         public int Count { get => _entities.Count; }
@@ -163,6 +166,44 @@ namespace MHServerEmu.Games.Entities.Inventories
             }
 
             return InvalidSlot;
+        }
+
+        public InventoryResult PassesContainmentFilter(PrototypeId entityProtoRef)
+        {
+            if (Prototype == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesContainmentFilter(): Prototype == null");
+            
+            var entityProto = entityProtoRef.As<EntityPrototype>();
+            if (entityProto == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesContainmentFilter(): entityProto == null");
+
+            if (Prototype.AllowEntity(entityProto) == false)
+                return InventoryResult.InvalidDestInvContainmentFilters;
+
+            return InventoryResult.Success;
+        }
+
+        public InventoryResult PassesEquipmentRestrictions(Entity entity, ref PropertyEnum propertyRestriction)
+        {
+            InventoryResult result = InventoryResult.Success;
+            if (IsEquipment == false) return result;
+
+            Entity inventoryOwner = Game.EntityManager.GetEntity<Entity>(OwnerId);
+            if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesEquipmentRestrictions(): inventoryOwner == null");
+
+            Agent inventoryAgentOwner = inventoryOwner.GetSelfOrOwnerOfType<Agent>();
+            if (inventoryAgentOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "PassesEquipmentRestrictions(): Found an equipment inventory belonging to a non-agent");
+
+            Item item = entity as Item;
+            if (item == null) return Logger.WarnReturn(InventoryResult.InvalidNotAnItem, "PassesEquipmentRestrictions(): item == null");
+
+            result = inventoryAgentOwner.CanEquip(item, ref propertyRestriction);
+            if (result == InventoryResult.Success)
+            {
+                Avatar inventoryAvatarOwner = inventoryOwner.GetSelfOrOwnerOfType<Avatar>();
+                if (inventoryAvatarOwner != null)
+                    result = inventoryAvatarOwner.GetEquipmentInventoryAvailableStatus(PrototypeDataRef);
+            }
+
+            return result;
         }
 
         public static InventoryResult ChangeEntityInventoryLocation(Entity entity, Inventory destInventory, uint destSlot, ref ulong? stackEntityId, bool allowStacking)

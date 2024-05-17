@@ -347,6 +347,12 @@ namespace MHServerEmu.Games.Entities
             return null;
         }
 
+        public T GetSelfOrOwnerOfType<T>() where T : Entity
+        {
+            if (this is T typedOwner) return typedOwner;
+            return GetOwnerOfType<T>();
+        }
+
         public Entity GetRootOwner()
         {
             Entity owner = this;
@@ -390,9 +396,18 @@ namespace MHServerEmu.Games.Entities
             return container.GetInventoryByRef(InventoryLocation.InventoryRef);
         }
 
-        public InventoryResult CanChangeInventoryLocation(Inventory destination)
+        public InventoryResult CanChangeInventoryLocation(Inventory destInventory)
         {
-            return InventoryResult.Success;
+            PropertyEnum propertyEnum = PropertyEnum.Invalid;
+            return CanChangeInventoryLocation(destInventory, ref propertyEnum);
+        }
+
+        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, ref PropertyEnum propertyRestriction)
+        {
+            InventoryResult result = destInventory.PassesContainmentFilter(PrototypeDataRef);
+            if (result != InventoryResult.Success) return result;
+
+            return destInventory.PassesEquipmentRestrictions(this, ref propertyRestriction);
         }
 
         public InventoryResult ChangeInventoryLocation(Inventory destination, uint destSlot = Inventory.InvalidSlot)
