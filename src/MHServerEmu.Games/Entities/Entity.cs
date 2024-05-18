@@ -480,14 +480,20 @@ namespace MHServerEmu.Games.Entities
         {
         }
 
+        public void OnDeallocate()
+        {
+        }
+
+        // NOTE: TestStatus and SetStatus can be potentially replaced with an indexer property
+
         public bool TestStatus(EntityStatus status)
         {
             return Status.HasFlag(status);
         }
 
-        public void SetStatus(EntityStatus status, bool set)
+        public void SetStatus(EntityStatus status, bool value)
         {
-            if (set) Status |= status;
+            if (value) Status |= status;
             else Status &= ~status;
         }
 
