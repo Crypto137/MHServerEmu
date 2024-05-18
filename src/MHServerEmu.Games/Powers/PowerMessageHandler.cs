@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Powers
                     int newHealth = health - damage;
                     if (newHealth <= 0)
                     {
-                        entity.ToDead();
+                        entity.Kill();
                         newHealth = 0;
                         entity.Properties[PropertyEnum.IsDead] = true;
                         playerConnection.SendMessage(

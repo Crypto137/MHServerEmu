@@ -501,7 +501,7 @@ namespace MHServerEmu.Games.Events
             }
             else
             {
-                playerConnection.ThrowableEntity?.ToDead();
+                playerConnection.ThrowableEntity?.Kill();
             }
 
             playerConnection.ThrowableEntity = null;
