@@ -80,7 +80,11 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
             var proto = WorldEntityPrototype;
-            ShouldSnapToFloorOnSpawn = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : proto.SnapToFloorOnSpawn;
+
+            ShouldSnapToFloorOnSpawn = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
+                ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
+                : proto.SnapToFloorOnSpawn;
+
             OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
             RegionLocation.Initialize(this);
             SpawnSpec = settings.SpawnSpec;

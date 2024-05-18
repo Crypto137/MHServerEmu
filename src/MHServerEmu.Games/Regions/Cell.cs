@@ -245,10 +245,12 @@ namespace MHServerEmu.Games.Regions
             EntitySettings settings = new();
             settings.EntityRef = entityProto.DataRef;
 
-            settings.OverrideSnapToFloor = entityMarker.OverrideSnapToFloor;
-            settings.OverrideSnapToFloorValue = entityMarker.OverrideSnapToFloorValue;
+            if (entityMarker.OverrideSnapToFloor)
+                settings.OptionFlags |= EntitySettingsOptionFlags.HasOverrideSnapToFloor;
+            if (entityMarker.OverrideSnapToFloorValue)
+                settings.OptionFlags |= EntitySettingsOptionFlags.OverrideSnapToFloorValue;
             if (PrototypeId == (PrototypeId)13763955919309774578 && entityProto.DataRef == (PrototypeId)3814814281271024430)
-                settings.OverrideSnapToFloor = true; // Fix Mandarin
+                settings.OptionFlags |= EntitySettingsOptionFlags.HasOverrideSnapToFloor;   // Fix Mandarin
 
             if (entityProto.Bounds != null)
                 entityPosition.Z += entityProto.Bounds.GetBoundHalfHeight();

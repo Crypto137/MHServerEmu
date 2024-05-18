@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Entities
         {
             entity.OnPostInit(settings);
             // TODO InventoryLocation
-            if (settings.EnterGameWorld)
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld))
             {
                 var owner = entity.GetOwner();
                 if (owner == null || owner.IsInGame)

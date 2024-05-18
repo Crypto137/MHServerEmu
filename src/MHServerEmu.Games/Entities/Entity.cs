@@ -185,15 +185,18 @@ namespace MHServerEmu.Games.Entities
         public virtual void Initialize(EntitySettings settings)
         {   
             // Old
-            var entity = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
+            var entityProto = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
             bool OverrideSnapToFloor = false;
-            if (entity is WorldEntityPrototype worldEntityProto)
+            if (entityProto is WorldEntityPrototype worldEntityProto)
             {
-                bool snapToFloor = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : worldEntityProto.SnapToFloorOnSpawn;
+                bool snapToFloor = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
+                    ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
+                    : worldEntityProto.SnapToFloorOnSpawn;
+
                 OverrideSnapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
             }
 
-            BaseData = (settings.EnterGameWorld == false)
+            BaseData = (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld) == false)   // This should probably be the other way around
                 ? new EntityBaseData(settings.Id, settings.EntityRef, settings.Position, settings.Orientation, OverrideSnapToFloor)
                 : new EntityBaseData(settings.Id, settings.EntityRef, null, null);
 
@@ -201,10 +204,10 @@ namespace MHServerEmu.Games.Entities
 
             // New
             Properties = new(Game.CurrentRepId);
-            if (entity.Properties != null) // We need to add a filter to the property serialization first
-                Properties.FlattenCopyFrom(entity.Properties, true); 
+            if (entityProto.Properties != null) // TODO: Filter properties during serialization
+                Properties.FlattenCopyFrom(entityProto.Properties, true); 
             if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
-            OnPropertyChange(); // Template solve for _flags
+            OnPropertyChange(); // Temporary solution for for _flags
         }
 
         public virtual void OnPropertyChange()
