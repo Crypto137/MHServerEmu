@@ -1,10 +1,13 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using System.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
-    public class InventoryCollection
+    // TODO: InventoryIterator
+
+    public class InventoryCollection : IEnumerable<Inventory>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -43,12 +46,17 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public bool GetInventoryForItem(Item item, InventoryCategory category, out Inventory inventory)
         {
-            throw new NotImplementedException();
+            // TODO
+            inventory = null;
+            return false;
         }
 
         public void Clear()
         {
             _inventoryDict.Clear();
         }
+
+        public IEnumerator<Inventory> GetEnumerator() => _inventoryDict.Values.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

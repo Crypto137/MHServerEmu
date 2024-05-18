@@ -35,6 +35,8 @@ namespace MHServerEmu.Games.Entities
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
+        public bool IsDestroyingAllEntities { get; private set; } = false;
+
         public PhysicsManager PhysicsManager { get; set; }
         public EntityInvasiveCollection AllEntities { get; private set; }
         public EntityInvasiveCollection SimulatedEntities { get; private set; }
@@ -126,16 +128,22 @@ namespace MHServerEmu.Games.Entities
 
         public void DestroyEntity(Entity entity)
         {
+            if (entity == null)
+
+            // Destroy entities belonging to this entity
+            entity.DestroyContained();
+
+            // Remove this entity from the inventory it is in
+            if (entity.InventoryLocation.IsValid)
+                entity.ChangeInventoryLocation(null);
+
             // TODO 
             entity.Status = EntityStatus.Destroyed;
             entity.ExitGame();
-            // TODO  clear all contained
 
-            ulong entityId = entity.Id;
-            if (_entityDict.ContainsKey(entityId))
-                _entityDict.Remove(entityId);
-            else
-                Logger.Warn($"Unknown entity id '{entityId}' to destroy");
+            // TODO: Entity destruction queue
+            if (_entityDict.Remove(entity.Id) == false)
+                Logger.Warn($"DestroyEntity(): Unknown entity id '{entity.Id}'");
         }
 
         public T GetEntity<T>(ulong entityId) where T : Entity

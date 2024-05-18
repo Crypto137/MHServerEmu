@@ -67,6 +67,41 @@ namespace MHServerEmu.Games.Entities.Inventories
             return Entity.InvalidId;
         }
 
+        public bool DestroyContained()
+        {
+            if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
+
+            // NOTE: We convert entry collection to list to be able to remove entries while we iterate.
+            // The original implementation uses a custom iterator here that restarts after every removed item.
+            foreach (var kvp in _entities.ToList())
+            {
+                Entity contained = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                if (contained == null)
+                {
+                    Logger.Warn("DestroyContained(): contained == null");
+                    continue;
+                }
+
+                bool isDestroyingAllEntities = false;
+                if (Game.EntityManager == null)
+                    Logger.Warn("DestroyContained(): Game.EntityManager == null");
+                else
+                    isDestroyingAllEntities = Game.EntityManager.IsDestroyingAllEntities;
+
+                // Entities that have the DetachOnContainerDestroyed are not destroyed (unless the EntityManager is currently cleaning up all entities)
+                if (contained.Properties[PropertyEnum.DetachOnContainerDestroyed] && isDestroyingAllEntities == false)
+                {
+                    contained.ChangeInventoryLocation(null);
+                    contained.OnDetachedFromDestroyedContainer();
+                    continue;
+                }
+
+                contained.Destroy();
+            }
+
+            return true;
+        }
+
         public int GetCapacity()
         {
             if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");

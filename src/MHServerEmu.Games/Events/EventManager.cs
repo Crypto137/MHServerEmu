@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.Events
                 if (bowlingBall != null)
                 { // TODO: test if ball already in Inventary
                     playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
-                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall);
+                    bowlingBall.Destroy();
                 }
 
                 AffixSpec[] affixSpec = { new AffixSpec((PrototypeId)4906559676663600947, 0, 1) }; // BindingInformation                        

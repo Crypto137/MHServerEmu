@@ -265,6 +265,16 @@ namespace MHServerEmu.Games.Entities
             Game?.EntityManager?.DestroyEntity(this);
         }
 
+        public bool DestroyContained()
+        {
+            if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
+
+            foreach (Inventory inventory in InventoryCollection)
+                inventory.DestroyContained();
+
+            return true;
+        }
+
         public bool IsDestroyed()
         {
             return Status.HasFlag(EntityStatus.Destroyed);
@@ -463,6 +473,10 @@ namespace MHServerEmu.Games.Entities
         }
 
         public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+        }
+
+        public void OnDetachedFromDestroyedContainer()
         {
         }
 

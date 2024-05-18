@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Powers
                 if (bowlingBall != null)
                 {
                     playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
-                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall);
+                    bowlingBall.Destroy();
                 }
             }
 
