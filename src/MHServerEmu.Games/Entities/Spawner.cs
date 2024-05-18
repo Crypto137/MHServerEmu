@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
         public bool DebugLog;
 
-        public SpawnerPrototype SpawnerPrototype => EntityPrototype as SpawnerPrototype;
+        public SpawnerPrototype SpawnerPrototype => Prototype as SpawnerPrototype;
 
         // New
         public Spawner(Game game) : base(game) 

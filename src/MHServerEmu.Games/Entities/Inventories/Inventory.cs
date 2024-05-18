@@ -67,6 +67,41 @@ namespace MHServerEmu.Games.Entities.Inventories
             return Entity.InvalidId;
         }
 
+        public bool DestroyContained()
+        {
+            if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
+
+            // NOTE: We convert entry collection to list to be able to remove entries while we iterate.
+            // The original implementation uses a custom iterator here that restarts after every removed item.
+            foreach (var kvp in _entities.ToList())
+            {
+                Entity contained = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                if (contained == null)
+                {
+                    Logger.Warn("DestroyContained(): contained == null");
+                    continue;
+                }
+
+                bool isDestroyingAllEntities = false;
+                if (Game.EntityManager == null)
+                    Logger.Warn("DestroyContained(): Game.EntityManager == null");
+                else
+                    isDestroyingAllEntities = Game.EntityManager.IsDestroyingAllEntities;
+
+                // Entities that have the DetachOnContainerDestroyed are not destroyed (unless the EntityManager is currently cleaning up all entities)
+                if (contained.Properties[PropertyEnum.DetachOnContainerDestroyed] && isDestroyingAllEntities == false)
+                {
+                    contained.ChangeInventoryLocation(null);
+                    contained.OnDetachedFromDestroyedContainer();
+                    continue;
+                }
+
+                contained.Destroy();
+            }
+
+            return true;
+        }
+
         public int GetCapacity()
         {
             if (Prototype == null) return Logger.WarnReturn(0, "GetCapacity(): Prototype == null");
@@ -87,7 +122,7 @@ namespace MHServerEmu.Games.Entities.Inventories
                 nSoftCap += extraSlots;
             }
 
-            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner.Id}");
+            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner}");
 
             return Math.Min(nSoftCap, MaxCapacity);
         }
@@ -222,7 +257,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
                 if (prevInventory == null)
                     return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for move with entity {entity.Id} at invLoc {invLoc}");
+                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for move with entity {entity} at invLoc {invLoc}");
 
                 return prevInventory.MoveEntityTo(entity, destInventory, ref stackEntityId, allowStacking, destSlot);
             }
@@ -232,13 +267,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
                 if (invLoc.IsValid == false)
                     return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Trying to remove entity {entity.Id} from inventory, but it is not in any inventory");
+                        $"ChangeEntityInventoryLocation(): Trying to remove entity {entity} from inventory, but it is not in any inventory");
 
                 Inventory inventory = entity.GetOwnerInventory();
 
                 if (inventory == null)
                     return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for remove with entity {entity.Id} at invLoc {invLoc}");
+                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for remove with entity {entity} at invLoc {invLoc}");
 
                 return inventory.RemoveEntity(entity);
             }
@@ -316,7 +351,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             if (existingInvLoc.IsValid)
                 return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory,
-                    $"DoAddEntity(): Entity {entity.Id} not expected in inventory, but is located at {existingInvLoc}");
+                    $"DoAddEntity(): Entity {entity} not expected in inventory, but is located at {existingInvLoc}");
 
             PreAdd(entity);
 
@@ -348,7 +383,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             if (entity.GetOwnerInventory() != this)
                 return Logger.WarnReturn(InventoryResult.NotInInventory, 
-                    $"DoRemoveEntity(): Entity {entity.Id} expected to be in {this} inventory but is instead located at {invLoc} inventory location");
+                    $"DoRemoveEntity(): Entity {entity} expected to be in {this} inventory but is instead located at {invLoc} inventory location");
 
             uint slot = invLoc.Slot;
             if (slot == InvalidSlot)

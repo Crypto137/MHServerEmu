@@ -11,6 +11,14 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
+    [Flags]
+    public enum GetEntityFlags
+    {
+        None                = 0,
+        DestroyedOnly       = 1 << 0,
+        UnpackedOnly        = 1 << 1
+    }
+
     public enum EntityCollection
     {
         Simulated = 0,
@@ -30,10 +38,13 @@ namespace MHServerEmu.Games.Entities
 
         private readonly Game _game;
         private readonly Dictionary<ulong, Entity> _entityDict = new();
+        private readonly Queue<ulong> _entityDeletionQueue = new();
 
         private ulong _nextEntityId = 1000;
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
+
+        public bool IsDestroyingAllEntities { get; private set; } = false;
 
         public PhysicsManager PhysicsManager { get; set; }
         public EntityInvasiveCollection AllEntities { get; private set; }
@@ -71,7 +82,7 @@ namespace MHServerEmu.Games.Entities
         {
             entity.OnPostInit(settings);
             // TODO InventoryLocation
-            if (settings.EnterGameWorld)
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld))
             {
                 var owner = entity.GetOwner();
                 if (owner == null || owner.IsInGame)
@@ -124,29 +135,43 @@ namespace MHServerEmu.Games.Entities
             return item;
         }
 
-        public void DestroyEntity(Entity entity)
+        public bool DestroyEntity(Entity entity)
         {
-            // TODO 
-            entity.Status = EntityStatus.Destroyed;
-            entity.ExitGame();
-            // TODO  clear all contained
+            if (entity == null) return Logger.WarnReturn(false, "DestroyEntity(): entity == null");
 
-            ulong entityId = entity.Id;
-            if (_entityDict.ContainsKey(entityId))
-                _entityDict.Remove(entityId);
-            else
-                Logger.Warn($"Unknown entity id '{entityId}' to destroy");
+            if (entity.TestStatus(EntityStatus.PendingDestroy)) return Logger.WarnReturn(false,
+                $"DestroyEntity(): Entity already marked as PendingDestroy, this means that something was using an entity reference even though it was pending destroy which needs to be fixed! Entity: {entity}");
+
+            if (entity.TestStatus(EntityStatus.Destroyed)) return Logger.WarnReturn(false,
+                $"DestroyEntity(): Entity already marked as Destroy, this means that something was using an entity reference even though it was destroyed which needs to be fixed! Entity: {entity}");
+
+            entity.SetStatus(EntityStatus.PendingDestroy, true);
+
+            // Destroy entities belonging to this entity
+            entity.DestroyContained();
+
+            // Remove this entity from the inventory it is in
+            if (entity.InventoryLocation.IsValid)
+                entity.ChangeInventoryLocation(null);
+
+            // Finish destruction
+            entity.SetStatus(EntityStatus.PendingDestroy, false);
+            entity.SetStatus(EntityStatus.Destroyed, true);
+            _entityDeletionQueue.Enqueue(entity.Id);    // Enqueue entity for deletion at the end of the next frame
+
+            // Remove entity from the game
+            entity.ExitGame();
+
+            // TODO: Remove dbId lookup
+
+            return true;
         }
 
-        public T GetEntity<T>(ulong entityId) where T : Entity
+        public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
         {
-            // TODO: flags
-            if (entityId == Entity.InvalidId) return null;
-
-            if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
-                return null;
-
-            return entity as T;
+            // NOTE: This public method is used to prevent destroyed entities from being accessed externally.
+            flags &= ~GetEntityFlags.DestroyedOnly;
+            return GetEntity(entityId, flags) as T;
         }
 
         public Entity GetEntityByPrototypeId(PrototypeId prototype)
@@ -203,6 +228,58 @@ namespace MHServerEmu.Games.Entities
             foreach (var entity in LocomotionEntities.Iterate())
                 if (entity is WorldEntity worldEntity)
                     worldEntity?.Locomotor.Locomote();
+        }
+
+        public void ProcessDeferredLists()
+        {
+            // TODO: ProcessCondemnedPowerList()
+            ProcessDestroyed();
+        }
+
+        private Entity GetEntity(ulong entityId, GetEntityFlags flags)
+        {
+            if (entityId == Entity.InvalidId) return Logger.WarnReturn<Entity>(null, "GetEntity(): entityId == Entity.InvalidId");
+
+            if (_entityDict.TryGetValue(entityId, out Entity entity) && ValidateEntityForGet(entity, flags))
+                return entity;
+
+            // It appears there should be some kind of fallback to packed entities, but this code is not present in the client.
+            //if (flags.HasFlag(GetEntityFlags.DestroyedOnly) == false && flags.HasFlag(GetEntityFlags.UnpackedOnly) == false)
+            //    return null;    // TODO: TryUnpackArchivedEntity(entityId);
+
+            return null;
+        }
+
+        private bool ValidateEntityForGet(Entity entity, GetEntityFlags flags)
+        {
+            if (entity == null) return false;
+            return entity.TestStatus(EntityStatus.Destroyed) == flags.HasFlag(GetEntityFlags.DestroyedOnly);
+        }
+
+        private bool ProcessDestroyed()
+        {
+            if (_game == null) return Logger.WarnReturn(false, "ProcessDestroyed(): _game == null");
+
+            // Delete all destroyed entities
+            while (_entityDeletionQueue.Count != 0)
+            {
+                ulong entityId = _entityDeletionQueue.Dequeue();
+
+                if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
+                    Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
+                else
+                    DeleteEntity(entity);
+            }
+
+            return true;
+        }
+
+        private bool DeleteEntity(Entity entity)
+        {
+            if (entity == null) return Logger.WarnReturn(false, "DeleteEntity(): entity == null");
+            _entityDict.Remove(entity.Id);
+            entity.OnDeallocate();
+            return true;
         }
 
         private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)

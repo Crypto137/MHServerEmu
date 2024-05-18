@@ -765,7 +765,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.Position);
                     Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.Orientation);
-                    if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
+                    if (playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
                     playerConnection.StartPosition = position;
                     playerConnection.StartOrientation = orientation;

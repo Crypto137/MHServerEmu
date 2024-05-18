@@ -62,8 +62,9 @@ namespace MHServerEmu.Games.Generators.Population
             var entityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
             if (SnapToFloor != null)
             {
-                settings.OverrideSnapToFloor = true;
-                settings.OverrideSnapToFloorValue = SnapToFloor == true;
+                settings.OptionFlags |= EntitySettingsOptionFlags.HasOverrideSnapToFloor;
+                if (SnapToFloor == true)
+                    settings.OptionFlags |= EntitySettingsOptionFlags.OverrideSnapToFloorValue;
             }
             if (entityProto.Bounds != null)
             {

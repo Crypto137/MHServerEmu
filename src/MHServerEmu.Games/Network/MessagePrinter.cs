@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network
                 entity.BaseData = baseData;
                 entity.Serialize(archive);
                 entity.ReplicationPolicy = archive.GetReplicationPolicyEnum();
-                sb.Append($"ArchiveData: {entity}");
+                sb.Append($"ArchiveData: {entity.ToStringVerbose()}");
             }
 
             return sb.ToString();

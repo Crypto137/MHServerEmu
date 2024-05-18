@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public AIController AIController { get; private set; }
-        public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
+        public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
 
         public override bool IsSummonedPet
@@ -277,7 +277,7 @@ namespace MHServerEmu.Games.Entities
         public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
         {
             // TODO
-            return InventoryResult.Invalid;
+            return InventoryResult.Success;     // Bypass property restrictions
         }
 
         // Old

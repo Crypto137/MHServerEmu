@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Powers
                 if (bowlingBall != null)
                 {
                     playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
-                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall);
+                    bowlingBall.Destroy();
                 }
             }
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Powers
                     int newHealth = health - damage;
                     if (newHealth <= 0)
                     {
-                        entity.ToDead();
+                        entity.Kill();
                         newHealth = 0;
                         entity.Properties[PropertyEnum.IsDead] = true;
                         playerConnection.SendMessage(

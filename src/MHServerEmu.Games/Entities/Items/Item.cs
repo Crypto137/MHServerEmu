@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public override bool IsAutoStackedWhenAddedToInventory()
         {
-            var itemProto = EntityPrototype as ItemPrototype;
+            var itemProto = Prototype as ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(false, "IsAutoStackedWhenAddedToInventory(): itemProto == null");
             return itemProto.StackSettings.AutoStackWhenAddedToInventory;
         }

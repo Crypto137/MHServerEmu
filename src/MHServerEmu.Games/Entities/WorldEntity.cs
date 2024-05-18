@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Entities
         public Region Region { get => RegionLocation.Region; }
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
-        public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
+        public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
         public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
@@ -81,7 +81,11 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
             var proto = WorldEntityPrototype;
-            ShouldSnapToFloorOnSpawn = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : proto.SnapToFloorOnSpawn;
+
+            ShouldSnapToFloorOnSpawn = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
+                ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
+                : proto.SnapToFloorOnSpawn;
+
             OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
             RegionLocation.Initialize(this);
             SpawnSpec = settings.SpawnSpec;

@@ -284,11 +284,11 @@ namespace MHServerEmu.Games
         private void DoFixedTimeUpdate()
         {
             EventManager.Update();
-            // Re-enable this when we get rid of multithreading issues
+
+            // Re-enable locomotion and physics when we get rid of multithreading issues
             //EntityManager.LocomoteEntities();
             //EntityManager.PhysicsResolveEntities();
-
-            // TODO: EntityManager.ProcessDeferredLists()
+            EntityManager.ProcessDeferredLists();
 
             // Send responses to all clients
             NetworkManager.SendAllPendingMessages();

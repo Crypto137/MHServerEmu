@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Generators.Population
             {
                 spawnTarget.Type = SpawnTargetType.Spawner;
                 spawnTarget.Location = location;
-                spawnTarget.SpawnerProto = spawner.EntityPrototype as SpawnerPrototype;
+                spawnTarget.SpawnerProto = spawner.Prototype as SpawnerPrototype;
             }
             List<PrototypeId> spawnArea = new()
             {

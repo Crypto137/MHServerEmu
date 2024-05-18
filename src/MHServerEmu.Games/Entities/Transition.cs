@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Entities
 
         public List<Destination> DestinationList { get => _destinationList; }
 
-        public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
+        public TransitionPrototype TransitionPrototype { get { return Prototype as TransitionPrototype; } }
 
         // New
         public Transition(Game game) : base(game) { }

@@ -13,6 +13,8 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
+    #region Enums
+
     [Flags]
     public enum EntityFlags : ulong
     {
@@ -74,11 +76,22 @@ namespace MHServerEmu.Games.Entities
         // TODO etc
     }
 
+    public enum SimulateResult
+    {
+        None,
+        Set,
+        Clear
+    }
+
+    #endregion
+
     public class Entity : ISerialize
     {
         public const ulong InvalidId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
 
         protected EntityFlags _flags;
         public ulong Id => BaseData.EntityId;
@@ -99,8 +112,8 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public DateTime DeadTime { get; private set; }
-        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
+        public DateTime DeathTime { get; private set; }
+        public EntityPrototype Prototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.EntityPrototypeRef); }
         public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
 
@@ -182,18 +195,23 @@ namespace MHServerEmu.Games.Entities
             Game = game;
         }
 
+        public virtual void PreInitialize(EntitySettings settings) { }
+
         public virtual void Initialize(EntitySettings settings)
         {   
             // Old
-            var entity = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
+            var entityProto = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
             bool OverrideSnapToFloor = false;
-            if (entity is WorldEntityPrototype worldEntityProto)
+            if (entityProto is WorldEntityPrototype worldEntityProto)
             {
-                bool snapToFloor = settings.OverrideSnapToFloor ? settings.OverrideSnapToFloorValue : worldEntityProto.SnapToFloorOnSpawn;
+                bool snapToFloor = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
+                    ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
+                    : worldEntityProto.SnapToFloorOnSpawn;
+
                 OverrideSnapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
             }
 
-            BaseData = (settings.EnterGameWorld == false)
+            BaseData = (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld) == false)   // This should probably be the other way around
                 ? new EntityBaseData(settings.Id, settings.EntityRef, settings.Position, settings.Orientation, OverrideSnapToFloor)
                 : new EntityBaseData(settings.Id, settings.EntityRef, null, null);
 
@@ -201,28 +219,19 @@ namespace MHServerEmu.Games.Entities
 
             // New
             Properties = new(Game.CurrentRepId);
-            if (entity.Properties != null) // We need to add a filter to the property serialization first
-                Properties.FlattenCopyFrom(entity.Properties, true); 
+            if (entityProto.Properties != null) // TODO: Filter properties during serialization
+                Properties.FlattenCopyFrom(entityProto.Properties, true); 
             if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
-            OnPropertyChange(); // Template solve for _flags
+            OnPropertyChange(); // Temporary solution for for _flags
         }
 
-        public virtual void OnPropertyChange()
+        public virtual void OnPostInit(EntitySettings settings)
         {
-            if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
-            if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
-            if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
+            // TODO init
         }
 
-        // Base data is required for all entities, so there's no parameterless constructor
+        // REMOVEME || old note: Base data is required for all entities, so there's no parameterless constructor
         public Entity(EntityBaseData baseData) { BaseData = baseData; }
-
-        public Entity(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection)
-        {
-            BaseData = baseData;
-            ReplicationPolicy = replicationPolicy;
-            Properties = propertyCollection;
-        }
 
         public virtual bool Serialize(Archive archive)
         {
@@ -253,9 +262,51 @@ namespace MHServerEmu.Games.Entities
 
         public override string ToString()
         {
+            return $"{nameof(Id)}={Id}, {nameof(Prototype)}={Prototype}";
+        }
+
+        public string ToStringVerbose()
+        {
             StringBuilder sb = new();
             BuildString(sb);
             return sb.ToString();
+        }
+
+        public virtual void EnterGame(EntitySettings settings)
+        {
+            if (IsInGame == false) SetStatus(EntityStatus.InGame, true);
+            // TODO InventoryIterator
+        }
+
+        public virtual void ExitGame()
+        {
+            SetStatus(EntityStatus.InGame, false);
+            // TODO InventoryIterator
+        }
+
+        // NOTE: TestStatus and SetStatus can be potentially replaced with an indexer property
+
+        public bool TestStatus(EntityStatus status)
+        {
+            return Status.HasFlag(status);
+        }
+
+        public void SetStatus(EntityStatus status, bool value)
+        {
+            if (value) Status |= status;
+            else Status &= ~status;
+        }
+
+        public virtual SimulateResult SetSimulated(bool simulated)
+        {
+            if (IsSimulated != simulated)
+            {
+                if (simulated == false || (this is WorldEntity worldEntity && worldEntity.IsInWorld))
+                    Logger.Debug($"SetSimulated(): An entity must be in the world to be simulated {ToString()}");
+                ModifyCollectionMembership(EntityCollection.Simulated, simulated);
+                return simulated ? SimulateResult.Set : SimulateResult.Clear;
+            }
+            return SimulateResult.None;
         }
 
         public virtual void Destroy()
@@ -265,16 +316,19 @@ namespace MHServerEmu.Games.Entities
             Game?.EntityManager?.DestroyEntity(this);
         }
 
+        public bool DestroyContained()
+        {
+            if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
+
+            foreach (Inventory inventory in InventoryCollection)
+                inventory.DestroyContained();
+
+            return true;
+        }
+
         public bool IsDestroyed()
         {
             return Status.HasFlag(EntityStatus.Destroyed);
-        }
-
-        // Test Dead for respawn
-        public void ToDead()
-        {
-            _flags |= EntityFlags.IsDead;
-            DeadTime = DateTime.Now;
         }
 
         public bool IsAlive()
@@ -282,7 +336,7 @@ namespace MHServerEmu.Games.Entities
             if (IsDead == false) return true;
 
             // Respawn entity if needed
-            if (DateTime.Now.Subtract(DeadTime).TotalMinutes >= 1)
+            if (DateTime.Now.Subtract(DeathTime).TotalMinutes >= 1)
             {
                 _flags &= ~EntityFlags.IsDead;
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
@@ -292,17 +346,47 @@ namespace MHServerEmu.Games.Entities
 
             return false;
         }
+
+        // Test death for respawning
+        public void Kill()
+        {
+            _flags |= EntityFlags.IsDead;
+            DeathTime = DateTime.Now;
+        }
+
         public bool IsAPrototype(PrototypeId protoRef)
         {
             return GameDatabase.DataDirectory.PrototypeIsAPrototype(PrototypeDataRef, protoRef);
         }
 
-        public virtual void PreInitialize(EntitySettings settings) {}
+        #region Event Handlers
 
-        public virtual void OnPostInit(EntitySettings settings)
+        public virtual void OnPropertyChange()
         {
-            // TODO init
+            if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
+            if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
+            if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
         }
+
+        public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+        }
+
+        public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+        }
+
+        public void OnDetachedFromDestroyedContainer()
+        {
+        }
+
+        public void OnDeallocate()
+        {
+        }
+
+        #endregion
+
+        #region Inventory Management
 
         public RegionLocation GetOwnerLocation()
         {
@@ -366,7 +450,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanBePlayerOwned()
         {
-            var prototype = EntityPrototype;
+            var prototype = Prototype;
             if (prototype is AvatarPrototype) return true;
             if (prototype is AgentTeamUpPrototype) return true;
             if (prototype is MissilePrototype) return IsMissilePlayerOwned;
@@ -458,73 +542,41 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
-        {
-        }
+        #endregion
 
-        public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
-        {
-        }
+        #region Invasive List Implementation
 
-        public bool TestStatus(EntityStatus status)
+        public bool ModifyCollectionMembership(EntityCollection collection, bool add)
         {
-            return Status.HasFlag(status);
-        }
-
-        public void SetStatus(EntityStatus status, bool set)
-        {
-            if (set) Status |= status;
-            else Status &= ~status;
-        }
-
-        public void ModifyCollectionMembership(EntityCollection collection, bool add)
-        {
-            if (collection == EntityCollection.All) return;
+            if (collection == EntityCollection.All) return true;
             var list = GetInvasiveCollection(collection);
-            if (list != null)
-            {
-                bool isInCollection = IsInCollection(collection);
-                if (add && isInCollection == false)
-                {
-                    if (collection == EntityCollection.Simulated || collection == EntityCollection.Locomotion)
-                    {
-                        if (TestStatus(EntityStatus.Destroyed))
-                        {
-                            Logger.Debug($"Trying to add destroyed entity {ToString()} to collection {collection}");
-                            return;
-                        }                        
-                        if (IsInGame == false)
-                        {
-                            Logger.Debug($"Trying to add out of game entity {ToString()} to collection {collection}");
-                            return;
-                        }
-                        if (this is WorldEntity worldEntity && worldEntity.IsInWorld == false)
-                        { 
-                            Logger.Debug($"Trying to add out of world entity {ToString()} to collection {collection}");
-                            return;                           
-                        }
-                    }
-                    if (collection == EntityCollection.Simulated) _flags |= EntityFlags.IsSimulated;
-                    list.AddBack(this);
-                }
-                else if (add == false && isInCollection)
-                {
-                    list.Remove(this);
-                    if (collection == EntityCollection.Simulated) _flags &= ~EntityFlags.IsSimulated;
-                }
-            }
-        }
+            if (list == null) return Logger.WarnReturn(false, "ModifyCollectionMembership(): list == null");
 
-        public virtual SimulateResult SetSimulated(bool simulated)
-        {
-            if (IsSimulated != simulated)
+            bool isInCollection = IsInCollection(collection);
+            if (add && isInCollection == false)
             {
-                if (simulated == false || (this is WorldEntity worldEntity && worldEntity.IsInWorld))
-                    Logger.Debug($"An entity must be in the world to be simulated {ToString()}");
-                ModifyCollectionMembership(EntityCollection.Simulated, simulated);
-                return simulated ? SimulateResult.Set : SimulateResult.Clear;
+                if (collection == EntityCollection.Simulated || collection == EntityCollection.Locomotion)
+                {
+                    if (TestStatus(EntityStatus.Destroyed))
+                        return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add destroyed entity {ToString()} to collection {collection}");
+                     
+                    if (IsInGame == false)
+                        return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of game entity {ToString()} to collection {collection}");
+      
+                    if (this is WorldEntity worldEntity && worldEntity.IsInWorld == false)
+                        return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of world entity {ToString()} to collection {collection}");
+                }
+
+                if (collection == EntityCollection.Simulated) _flags |= EntityFlags.IsSimulated;
+                list.AddBack(this);
             }
-            return SimulateResult.None;
+            else if (add == false && isInCollection)
+            {
+                list.Remove(this);
+                if (collection == EntityCollection.Simulated) _flags &= ~EntityFlags.IsSimulated;
+            }
+
+            return true;
         }
 
         private bool IsInCollection(EntityCollection collection)
@@ -548,29 +600,11 @@ namespace MHServerEmu.Games.Entities
             };
         }
 
-        public virtual void EnterGame(EntitySettings settings)
-        {
-            if (IsInGame == false) SetStatus(EntityStatus.InGame, true);
-            // TODO InventoryIterator
-        }
-
-        public virtual void ExitGame()
-        {
-            SetStatus(EntityStatus.InGame, false);
-            // TODO InventoryIterator
-        }
-
-        private InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
         public InvasiveListNode<Entity> GetInvasiveListNode(int listId)
         {
             return _entityListNodes.GetInvasiveListNode(listId);
         }
-    }
 
-    public enum SimulateResult
-    {
-        None,
-        Set,
-        Clear
+        #endregion
     }
 }
