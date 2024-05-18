@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Entities
     public class Hotspot : WorldEntity
     {
         public bool IsMissionHotspot { get; private set; }
-        public HotspotPrototype HotspotPrototype { get => EntityPrototype as HotspotPrototype; }
+        public HotspotPrototype HotspotPrototype { get => Prototype as HotspotPrototype; }
 
         private Dictionary<MissionConditionContext, int> ConditionEntityCounter;
         private bool _skipCollide;
@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
             _flags |= EntityFlags.IsHotspot;
-            if (EntityPrototype.Properties[PropertyEnum.MissionHotspot]) IsMissionHotspot = true;
+            if (Prototype.Properties[PropertyEnum.MissionHotspot]) IsMissionHotspot = true;
             _skipCollide = settings.HotspotSkipCollide;
         }
 

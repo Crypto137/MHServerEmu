@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public DateTime DeadTime { get; private set; }
-        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
+        public EntityPrototype Prototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.EntityPrototypeRef); }
         public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
 
@@ -253,6 +253,11 @@ namespace MHServerEmu.Games.Entities
 
         public override string ToString()
         {
+            return $"{nameof(Id)}={Id}, {nameof(Prototype)}={Prototype}";
+        }
+
+        public string ToStringVerbose()
+        {
             StringBuilder sb = new();
             BuildString(sb);
             return sb.ToString();
@@ -376,7 +381,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanBePlayerOwned()
         {
-            var prototype = EntityPrototype;
+            var prototype = Prototype;
             if (prototype is AvatarPrototype) return true;
             if (prototype is AgentTeamUpPrototype) return true;
             if (prototype is MissilePrototype) return IsMissilePlayerOwned;

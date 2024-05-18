@@ -25,12 +25,12 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (invProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CreateAndAddInventory(): invProtoRef == PrototypeId.Invalid");
             
             if (GetInventoryByRef(invProtoRef) != null)
-                return Logger.WarnReturn(false, $"Trying to add a duplicate Inventory [{GameDatabase.GetPrototypeName(invProtoRef)}] to an entity's InventoryCollection.\nEntity: [{_owner?.Id}]");
+                return Logger.WarnReturn(false, $"Trying to add a duplicate Inventory [{GameDatabase.GetPrototypeName(invProtoRef)}] to an entity's InventoryCollection.\nEntity: [{_owner}]");
 
             Inventory inventory = new(_owner.Game);
 
             if (inventory.Initialize(invProtoRef, _owner.Id) == false)
-                return Logger.WarnReturn(false, $"Failed to initialize inventory [{GameDatabase.GetPrototypeName(invProtoRef)}] for entity [{_owner?.Id}]");
+                return Logger.WarnReturn(false, $"Failed to initialize inventory [{GameDatabase.GetPrototypeName(invProtoRef)}] for entity [{_owner}]");
 
             _inventoryDict.Add(invProtoRef, inventory);
             return true;

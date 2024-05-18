@@ -278,7 +278,7 @@ namespace MHServerEmu.Games.Events
                 .SetOrientation(targetRot.ToNetStructPoint3())
                 .SetCellId(cellid)
                 .SetAreaId(areaid)
-                .SetEntityPrototypeId((ulong)playerConnection.Player.CurrentAvatar.EntityPrototype.DataRef)
+                .SetEntityPrototypeId((ulong)playerConnection.Player.CurrentAvatar.Prototype.DataRef)
                 .Build());
 
             playerConnection.LastPosition = targetPos;
@@ -431,7 +431,7 @@ namespace MHServerEmu.Games.Events
 
             Logger.Trace($"{GameDatabase.GetPrototypeName(playerConnection.ThrowableEntity.PrototypeDataRef)}");
 
-            var throwableProto = playerConnection.ThrowableEntity.EntityPrototype as WorldEntityPrototype;
+            var throwableProto = playerConnection.ThrowableEntity.Prototype as WorldEntityPrototype;
             if (throwableProto == null) return;
 
             // Set throwable properties on the avatar

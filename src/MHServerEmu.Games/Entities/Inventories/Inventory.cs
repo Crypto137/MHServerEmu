@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Entities.Inventories
                 nSoftCap += extraSlots;
             }
 
-            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner.Id}");
+            if (nSoftCap > MaxCapacity) Logger.Warn($"GetCapacity(): Inventory softcap over max inventory limit. INVENTORY={this} OWNER={Owner}");
 
             return Math.Min(nSoftCap, MaxCapacity);
         }
@@ -257,7 +257,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
                 if (prevInventory == null)
                     return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for move with entity {entity.Id} at invLoc {invLoc}");
+                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for move with entity {entity} at invLoc {invLoc}");
 
                 return prevInventory.MoveEntityTo(entity, destInventory, ref stackEntityId, allowStacking, destSlot);
             }
@@ -267,13 +267,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
                 if (invLoc.IsValid == false)
                     return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Trying to remove entity {entity.Id} from inventory, but it is not in any inventory");
+                        $"ChangeEntityInventoryLocation(): Trying to remove entity {entity} from inventory, but it is not in any inventory");
 
                 Inventory inventory = entity.GetOwnerInventory();
 
                 if (inventory == null)
                     return Logger.WarnReturn(InventoryResult.NotInInventory,
-                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for remove with entity {entity.Id} at invLoc {invLoc}");
+                        $"ChangeEntityInventoryLocation(): Unable to get owner inventory for remove with entity {entity} at invLoc {invLoc}");
 
                 return inventory.RemoveEntity(entity);
             }
@@ -351,7 +351,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             if (existingInvLoc.IsValid)
                 return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory,
-                    $"DoAddEntity(): Entity {entity.Id} not expected in inventory, but is located at {existingInvLoc}");
+                    $"DoAddEntity(): Entity {entity} not expected in inventory, but is located at {existingInvLoc}");
 
             PreAdd(entity);
 
@@ -383,7 +383,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             if (entity.GetOwnerInventory() != this)
                 return Logger.WarnReturn(InventoryResult.NotInInventory, 
-                    $"DoRemoveEntity(): Entity {entity.Id} expected to be in {this} inventory but is instead located at {invLoc} inventory location");
+                    $"DoRemoveEntity(): Entity {entity} expected to be in {this} inventory but is instead located at {invLoc} inventory location");
 
             uint slot = invLoc.Slot;
             if (slot == InvalidSlot)

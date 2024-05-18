@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public AgentPrototype AgentPrototype { get => EntityPrototype as AgentPrototype; }
+        public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
 
         public override bool IsSummonedPet

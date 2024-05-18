@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Entities
         public Region Region { get => RegionLocation.Region; }
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
-        public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
+        public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
         public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }

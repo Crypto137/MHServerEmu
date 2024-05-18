@@ -140,10 +140,10 @@ namespace MHServerEmu.Games.Entities
             if (entity == null) return Logger.WarnReturn(false, "DestroyEntity(): entity == null");
 
             if (entity.TestStatus(EntityStatus.PendingDestroy)) return Logger.WarnReturn(false,
-                $"DestroyEntity(): Entity already marked as PendingDestroy, this means that something was using an entity reference even though it was pending destroy which needs to be fixed! Entity: {entity.Id}");
+                $"DestroyEntity(): Entity already marked as PendingDestroy, this means that something was using an entity reference even though it was pending destroy which needs to be fixed! Entity: {entity}");
 
             if (entity.TestStatus(EntityStatus.Destroyed)) return Logger.WarnReturn(false,
-                $"DestroyEntity(): Entity already marked as Destroy, this means that something was using an entity reference even though it was destroyed which needs to be fixed! Entity: {entity.Id}");
+                $"DestroyEntity(): Entity already marked as Destroy, this means that something was using an entity reference even though it was destroyed which needs to be fixed! Entity: {entity}");
 
             entity.SetStatus(EntityStatus.PendingDestroy, true);
 

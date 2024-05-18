@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Agent CurrentTeamUpAgent { get; set; } = null;
 
-        public AvatarPrototype AvatarPrototype { get => EntityPrototype as AvatarPrototype; }
+        public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
 
         public override bool IsMovementAuthoritative => false;

@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.MetaGames
             Region region = Game.RegionManager.GetRegion(RegionId);           
             if (region == null) return;
             var popManager = region.PopulationManager;
-            if (EntityPrototype is not MetaGamePrototype metaGameProto) return;
+            if (Prototype is not MetaGamePrototype metaGameProto) return;
             if (metaGameProto.GameModes.HasValue())
             {
                 var gameMode = metaGameProto.GameModes.First().As<MetaGameModePrototype>();
