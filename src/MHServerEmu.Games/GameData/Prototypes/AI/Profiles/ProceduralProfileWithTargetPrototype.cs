@@ -336,20 +336,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, Power, null);
             if (contextResult == StaticBehaviorReturnType.Running)
             {
-                int targetCounter = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-                if (targetCounter == 0)
+                int changeTargetCount = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                if (changeTargetCount == 0)
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
                 else
                 {
                     long powerStartTime = agent.Properties[PropertyEnum.PowerCooldownStartTime, Power.Power];
-                    if (currentTime > (powerStartTime + PowerChangeTargetIntervalMS * targetCounter))
+                    if (currentTime > (powerStartTime + PowerChangeTargetIntervalMS * changeTargetCount))
                     {
                         var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
                         target = SelectEntity.DoSelectEntity(ref selectionContext);
                         if (target != null)
                         {
                             if (SelectEntity.RegisterSelectedEntity(ownerController, target, selectionContext.SelectionType) == false) return;
-                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = targetCounter + 1;
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = changeTargetCount + 1;
                         }
                     }
                 }

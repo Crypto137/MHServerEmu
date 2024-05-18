@@ -760,7 +760,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public void TriggerEntityActionEvent(EntitySelectorActionEventType onDetectedEnemy)
+        public void TriggerEntityActionEvent(EntitySelectorActionEventType actionType)
         {
             throw new NotImplementedException();
         }

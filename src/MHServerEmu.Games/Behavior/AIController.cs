@@ -289,6 +289,7 @@ namespace MHServerEmu.Games.Behavior
         {
             OnAIDisabled();
             Brain?.OnOwnerKilled();
+            Senses?.NotifyAlliesOnOwnerKilled();
         }
 
         public void OnAIBehaviorChange()
@@ -301,6 +302,12 @@ namespace MHServerEmu.Games.Behavior
         internal bool AttemptActivatePower(PrototypeId powerRef, ulong enitityId, Vector3 position)
         {
             throw new NotImplementedException();
+        }
+
+        public void OnAILeaderDeath()
+        {
+            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
+            Brain?.OnAllyGotKilled();          
         }
     }
 }

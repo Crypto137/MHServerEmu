@@ -285,6 +285,12 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             _proceduralPtr.Profile?.OnOwnerKilled(_owningController);
             StopOwnerLocomotor();
         }
+
+        public void OnAllyGotKilled()
+        {
+            _proceduralPtr.Profile?.OnOwnerAllyDeath(_owningController);
+            _owningController.Owner?.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyGotKilled);
+        }
     }
 
     public enum OverrideType

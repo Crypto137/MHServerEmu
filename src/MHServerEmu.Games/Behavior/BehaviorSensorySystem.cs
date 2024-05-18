@@ -230,6 +230,32 @@ namespace MHServerEmu.Games.Behavior
             }
             return populationGroup;
         }
+
+        public void NotifyAlliesOnOwnerKilled()
+        {
+            Agent ownerAgent = _pAIController.Owner;
+            if (ownerAgent == null) return;
+
+            List<WorldEntity> allies = GetPopulationGroup();
+            foreach (var entity in allies)
+            {
+                if (entity is not Agent ally) continue;
+                AIController brain = ally.AIController;
+                if (brain == null) continue;                
+                brain.Senses?.OnLeaderDeath(ownerAgent);
+            }
+        }
+
+        public void OnLeaderDeath(Agent leader)
+        {
+            Interrupt = BehaviorInterruptType.AllyDeath;
+            if (_pAIController == null) return;
+            _pAIController.OnAILeaderDeath();
+
+            var collection = _pAIController.Blackboard?.PropertyCollection;
+            if (collection != null && leader != null && collection[PropertyEnum.AILeaderID] == leader.Id)
+                collection[PropertyEnum.AILeaderID] = 0;
+        }
     }
 
     [Flags]

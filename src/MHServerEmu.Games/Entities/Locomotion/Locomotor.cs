@@ -961,7 +961,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
-        public bool FollowEntity(ulong targetId, float range, LocomotionOptions options = null, bool clearPath = true)
+        public bool FollowEntity(ulong targetId, float range = 0.0f, LocomotionOptions options = null, bool clearPath = true)
         {
             options ??= DefaultFollowEntityLocomotionOptions;
             return FollowEntity(targetId, range, range, options, clearPath);

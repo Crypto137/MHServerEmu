@@ -7,7 +7,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
-using static MHServerEmu.Games.GameData.Prototypes.ProceduralProfileLeashOverridePrototype;
+using MHServerEmu.Games.Entities.Locomotion;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -86,6 +86,70 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, SpecialPower);
         }
 
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+            if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
+            {
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
+
+                if (SpecialPower?.PowerContext == null || SpecialPower.PowerContext.Power == PrototypeId.Invalid) return;
+                if (activePowerRef == PrototypeId.Invalid || SpecialPower.PowerContext.Power != activePowerRef) return;                
+                if (powerResult == StaticBehaviorReturnType.Running)
+                {
+                    int changeTargetCount = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                    if (changeTargetCount == 0)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+                    else
+                    {
+                        long powerStartTime = agent.Properties[PropertyEnum.PowerCooldownStartTime, activePowerRef];
+                        if (currentTime > powerStartTime + SpecialPowerChangeTgtIntervalMS * changeTargetCount)
+                        {
+                            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SpecialPowerSelectTarget);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            if (selectedEntity == null || SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType) == false)
+                                return;
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = changeTargetCount + 1;
+                        }
+                    }
+
+                    target = ownerController.TargetEntity;
+                    if (target == null) return;
+                    Locomotor locomotor = agent.Locomotor;
+                    ulong targetId = target.Id;
+                    locomotor.FollowEntity(targetId, agent.Bounds.Radius);
+                }
+                else
+                {
+                    Locomotor locomotor = agent.Locomotor;
+                    locomotor.Stop();
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 0;
+                }
+                
+                return;
+            }
+
+            DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
@@ -118,6 +182,57 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
             InitPower(agent, ChasePower);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            if (proceduralAI.GetState(0) == Flank.Instance)
+            {
+                HandleProceduralFlank(proceduralAI, ownerController, agent.Locomotor, currentTime, FlankTarget, true);
+                return;
+            }
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+            if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
+            {
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                PrototypeId lastPowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
+                UsePowerContextPrototype chasePowerContext = ChasePower?.PowerContext;
+
+                if (chasePowerContext == null || chasePowerContext.Power == PrototypeId.Invalid) return;
+                if (lastPowerRef != chasePowerContext.Power || target == null) return;
+                
+                ulong targetId = target.Id;
+                Locomotor locomotor = agent.Locomotor;
+                if (powerResult == StaticBehaviorReturnType.Running)
+                {
+                    if (locomotor.FollowEntityId != targetId)
+                        locomotor.FollowEntity(targetId);
+                }
+                else
+                    locomotor.Stop();                
+
+                return;
+            }
+
+            DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -472,6 +587,72 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, TripleShotPower);
             InitPower(agent, SpecialPower);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            if (CheckAgentHealthAndUsePower(ownerController, proceduralAI, currentTime, agent)) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            StaticBehaviorReturnType powerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+            if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
+            {
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
+
+                if (SpecialPower?.PowerContext == null || SpecialPower.PowerContext.Power == PrototypeId.Invalid) return;
+                if (activePowerRef == PrototypeId.Invalid || SpecialPower.PowerContext.Power != activePowerRef) return;
+                if (powerResult == StaticBehaviorReturnType.Running)
+                {
+                    int changeTargetCount = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
+                    if (changeTargetCount == 0)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = 1;
+                    else
+                    {
+                        long powerStartTime = agent.Properties[PropertyEnum.PowerCooldownStartTime, activePowerRef];
+                        if (currentTime > powerStartTime + SpecialPowerChangeTgtIntervalMS * changeTargetCount)
+                        {
+                            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SpecialSelectTarget);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            if (selectedEntity == null || SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType) == false)
+                                return;
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = changeTargetCount + 1;
+                        }
+                    }
+
+                    target = ownerController.TargetEntity;
+                    if (target == null) return;
+                    Locomotor locomotor = agent.Locomotor;
+                    ulong targetId = target.Id;
+                    locomotor.FollowEntity(targetId, agent.Bounds.Radius);
+                }
+                else
+                {
+                    Locomotor locomotor = agent.Locomotor;
+                    locomotor.Stop();
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = 0;
+                }
+
+                return;
+            }
+
+            DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
