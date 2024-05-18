@@ -337,8 +337,27 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public InventoryResult GetEquipmentInventoryAvailableStatus(PrototypeId invProtoRef)
         {
-            // TODO
-            return InventoryResult.Invalid;
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(InventoryResult.UnknownFailure, "GetEquipmentInventoryAvailableStatus(): avatarProto == null");
+
+            foreach (AvatarEquipInventoryAssignmentPrototype equipInvEntryProto in avatarProto.EquipmentInventories)
+            {
+                if (equipInvEntryProto == null)
+                {
+                    Logger.Warn("GetEquipmentInventoryAvailableStatus(): equipInvEntryProto == null");
+                    continue;
+                }
+
+                if (equipInvEntryProto.Inventory == invProtoRef)
+                {
+                    if (CharacterLevel < equipInvEntryProto.UnlocksAtCharacterLevel)
+                        return InventoryResult.InvalidEquipmentInventoryNotUnlocked;
+                    else
+                        return InventoryResult.Success;
+                }
+            }
+
+            return InventoryResult.UnknownFailure;
         }
 
         protected override void BuildString(StringBuilder sb)

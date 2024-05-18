@@ -170,7 +170,7 @@ namespace MHServerEmu.Games.Entities
         public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
         {
             // TODO
-            return InventoryResult.Invalid;
+            return InventoryResult.Success;     // Bypass property restrictions
         }
 
         // Old
