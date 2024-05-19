@@ -52,5 +52,10 @@
         {
             return value <= (maxValue * thresholdPct);
         }
+
+        public static float Ratio(long value, long maxValue)
+        {
+            return value / (float)maxValue;
+        }
     }
 }

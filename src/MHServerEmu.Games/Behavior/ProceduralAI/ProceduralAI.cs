@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             };
         }
 
-        private void ClearOverrideBehavior(OverrideType overrideType)
+        public void ClearOverrideBehavior(OverrideType overrideType)
         {
             StopOwnerLocomotor();
             SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);

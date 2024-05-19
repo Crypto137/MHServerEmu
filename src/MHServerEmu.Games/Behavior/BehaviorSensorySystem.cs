@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Behavior
         public List<ulong> PotentialHostileTargetIds { get; private set; }
 
         private float _leashDistanceSq;
-        public bool CanLeash { get; private set; }
+        public bool CanLeash { get; set; }
         public BehaviorInterruptType Interrupt { get; set; }
 
         public BehaviorSensorySystem()
@@ -255,6 +255,11 @@ namespace MHServerEmu.Games.Behavior
             var collection = _pAIController.Blackboard?.PropertyCollection;
             if (collection != null && leader != null && collection[PropertyEnum.AILeaderID] == leader.Id)
                 collection[PropertyEnum.AILeaderID] = 0;
+        }
+
+        internal void NotifyAlliesOnTargetAcquired()
+        {
+            throw new NotImplementedException();
         }
     }
 

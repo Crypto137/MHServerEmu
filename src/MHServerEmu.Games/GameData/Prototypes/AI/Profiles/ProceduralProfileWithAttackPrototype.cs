@@ -1617,11 +1617,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent.IsDormant) return;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
-            WorldEntity owner = ownerController.AssistedEntity;
-            if (owner != null && owner.IsInWorld)
+            WorldEntity master = ownerController.AssistedEntity;
+            if (master != null && master.IsInWorld)
             {                
-                float distanceSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, owner.RegionLocation.Position);
-                if (distanceSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
+                if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
                 {
                     if (ownerController.ActivePowerRef == PrototypeId.Invalid)
                     {
@@ -1637,7 +1637,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == StateMoveToOwner
                 || CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
             {
-                MoveToOwner(ownerController, owner);
+                MoveToOwner(ownerController, master);
                 return;
             }
 
@@ -1957,22 +1957,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             long nextFindBestTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
-            WorldEntity owner = ownerController.AssistedEntity;
+            WorldEntity avatarAlly = ownerController.AssistedEntity;
 
-            if (owner == null || (nextFindBestTime != 0 && currentTime > nextFindBestTime))
+            if (avatarAlly == null || (nextFindBestTime != 0 && currentTime > nextFindBestTime))
                 FindBestAvatarAllyToFollow(ownerController);
-            else if (owner != null && owner.IsInWorld)
+            else if (avatarAlly != null && avatarAlly.IsInWorld)
             {                
-                if (owner.Region != agent.Region)
+                if (avatarAlly.Region != agent.Region)
                 {
-                    owner.Properties.AdjustProperty(-1, PropertyEnum.NumMissionAllies);
+                    avatarAlly.Properties.AdjustProperty(-1, PropertyEnum.NumMissionAllies);
                     agent.Properties.RemoveProperty(PropertyEnum.PowerUserOverrideID);
                     agent.Properties.RemoveProperty(PropertyEnum.MissionAllyOfAvatarDbGuid);
                     return;
                 }
 
-                float distanceSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, owner.RegionLocation.Position);
-                if (distanceSq > MaxDistToAvatarAllyBeforeTele * MaxDistToAvatarAllyBeforeTele)
+                float distanceToAvatarAllySq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, avatarAlly.RegionLocation.Position);
+                if (distanceToAvatarAllySq > MaxDistToAvatarAllyBeforeTele * MaxDistToAvatarAllyBeforeTele)
                 {
                     if (ownerController.ActivePowerRef == PrototypeId.Invalid)
                     {

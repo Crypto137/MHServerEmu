@@ -256,6 +256,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public FleeContextPrototype FleeFromTarget { get; protected set; }
         public WanderContextPrototype WanderIfNoTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (target == null || target.IsInWorld == false)
+            {
+                var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                if (selectedEntity != null && selectedEntity.IsInWorld)
+                {
+                    SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
+                    target = selectedEntity;
+                }
+            }
+
+            if (target != null && target.IsInWorld)
+                HandleContext(proceduralAI, ownerController, FleeFromTarget);
+            else
+                HandleContext(proceduralAI, ownerController, WanderIfNoTarget);
+        }
     }
 
     public class ProceduralProfileRunToTargetAndDespawnOverridePrototype : ProceduralProfileWithTargetPrototype
@@ -270,6 +293,48 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, Invulnerability);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            if (proceduralAI.GetState(0) != MoveTo.Instance 
+                && proceduralAI.GetState(0) != Wander.Instance 
+                && ownerController.AttemptActivatePower(Invulnerability, agent.Id, agent.RegionLocation.Position) == false) return;            
+
+            StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
+            if (proceduralAI.GetState(0) != Wander.Instance)
+            {
+                contextResult = HandleContext(proceduralAI, ownerController, RunToTarget);
+                if (contextResult == StaticBehaviorReturnType.Running) return;
+            }
+
+            if (contextResult == StaticBehaviorReturnType.Failed || proceduralAI.GetState(0) == Wander.Instance)
+            {
+                contextResult = HandleContext(proceduralAI, ownerController, WanderIfMoveFails);
+                if (contextResult == StaticBehaviorReturnType.Running) return;
+                else if (contextResult == StaticBehaviorReturnType.Completed || contextResult == StaticBehaviorReturnType.Failed)
+                {
+                    BehaviorBlackboard blackboard = ownerController.Blackboard;
+                    int runToExitWanderCount = blackboard.PropertyCollection[PropertyEnum.AIRunToExitWanderCount];
+                    if (runToExitWanderCount < NumberOfWandersBeforeDestroy)
+                    {
+                        blackboard.PropertyCollection[PropertyEnum.AIRunToExitWanderCount] = runToExitWanderCount + 1;
+                        return;
+                    }
+                }
+            }
+
+            if (ownerController.AttemptActivatePower(Invulnerability, agent.Id, agent.RegionLocation.Position))
+                agent.Destroy();
+        }
     }
 
     public class ProceduralProfileDefaultActiveOverridePrototype : ProceduralProfileWithTargetPrototype
@@ -277,11 +342,85 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DelayContextPrototype DelayAfterWander { get; protected set; }
         public WanderContextPrototype Wander { get; protected set; }
         public WanderContextPrototype WanderInPlace { get; protected set; }
+
+        private enum State
+        {
+            WanderInPlace = 0,
+            Delay = 1,
+            Wander = 2
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            BehaviorSensorySystem senses = ownerController.Senses;
+
+            if (senses.ShouldSense())
+            {
+                senses.Sense();
+                ProceduralAIProfilePrototype baseProfile = proceduralAI.Behavior;
+                if (baseProfile == null) return;
+                if (baseProfile is not ProceduralProfileWithTargetPrototype targetProfile)
+                {
+                    ProceduralAI.Logger.Warn($"Agent {ownerController.Owner} has {baseProfile} which contains an invalid select target. " +
+                        $"Make sure {baseProfile} derives from ProceduralProfileWithTargetPrototype");
+                    return;
+                }
+
+                var selectionContext = new SelectEntity.SelectEntityContext(ownerController, targetProfile.SelectTarget);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                if (selectedEntity != null && proceduralAI.GetState(0) != UsePower.Instance)
+                {
+                    blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.WanderInPlace;
+                    SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
+                    senses.NotifyAlliesOnTargetAcquired();
+                    proceduralAI.ClearOverrideBehavior(OverrideType.Full);
+                    return;
+                }
+            }
+
+            StaticBehaviorReturnType contextResult;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal];
+            switch ((State)stateVal)
+            {
+                case State.WanderInPlace:
+                    contextResult = HandleContext(proceduralAI, ownerController, WanderInPlace);
+                    if (contextResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
+                    break;
+
+                case State.Delay:
+                    contextResult = HandleContext(proceduralAI, ownerController, DelayAfterWander);
+                    if (contextResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Wander;
+                    break;
+
+                case State.Wander:
+                default:
+                    contextResult = HandleContext(proceduralAI, ownerController, Wander);
+                    if (contextResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.Delay;
+                    break;
+            }
+        }
+
     }
 
     public class ProceduralProfileFleeOverridePrototype : ProceduralProfileWithTargetPrototype
     {
         public FleeContextPrototype FleeFromTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+
+            if (HandleContext(proceduralAI, ownerController, FleeFromTarget) == StaticBehaviorReturnType.Running) return;
+            proceduralAI.ClearOverrideBehavior(OverrideType.Full);
+        }
     }
 
     public class ProceduralProfileOrbPrototype : ProceduralProfileWithTargetPrototype
@@ -438,6 +577,63 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
         public float MaxDistToMasterBeforeTeleport { get; protected set; }
         public int MaxDistToMasterBeforeFollow { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            AIController ownerController = agent?.AIController;
+            if (ownerController == null) return;
+
+            // Off leash and clear Full override behavior
+            ownerController.Senses.CanLeash = false;
+            ownerController.Brain?.ClearOverrideBehavior(OverrideType.Full);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            if (agent.IsDormant) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            WorldEntity master = ownerController.AssistedEntity;
+
+            if (master != null && master.IsInWorld)
+            {
+                float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
+                if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                {
+                    blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = 0;
+                    HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);
+                    ownerController.ResetCurrentTargetState();
+                }
+                else if (master.Locomotor != null && master.Locomotor.IsMoving)
+                {
+                    if (blackboard.PropertyCollection[PropertyEnum.AIAggroState] == false)
+                    {
+                        MoveToContextPrototype controlFollowProto = ControlFollow;
+                        if (controlFollowProto == null) return;
+                        if (distanceToMasterSq > MaxDistToMasterBeforeFollow * MaxDistToMasterBeforeFollow)
+                        {
+                            agent.Properties[PropertyEnum.AIControlPowerLock] = true;
+                            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, ControlFollow, false, out var movetoResult);
+                            if (movetoResult == StaticBehaviorReturnType.Running) return;
+                        }
+                    }
+                }
+            }
+
+            Locomotor locomotor = agent.Locomotor;
+            if (locomotor != null && locomotor.IsFollowingEntity == false && agent.HasAIControlPowerLock)
+            {
+                ownerController.ResetCurrentTargetState();
+                agent.Properties.RemoveProperty(PropertyEnum.AIControlPowerLock);
+            }
+        }
     }
 
     public class ProceduralProfileSpikedBallPrototype : ProceduralProfileWithTargetPrototype
