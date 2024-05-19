@@ -109,6 +109,23 @@ namespace MHServerEmu.Games.Entities
             return condition.Id;
         }
 
+        public IEnumerable<Condition> IterateConditions(bool skipDisabled)
+        {
+            if (skipDisabled)
+            {
+                foreach (Condition condition in _currentConditionDict.Values)
+                {
+                    if (condition.IsEnabled)
+                        yield return condition;
+                }
+            }
+            else
+            {
+                foreach (Condition condition in _currentConditionDict.Values)
+                    yield return condition;
+            }
+        }
+
         public int GetNumberOfStacks(Condition condition)
         {
             throw new NotImplementedException();
