@@ -82,7 +82,9 @@ namespace MHServerEmu.Games.Regions
         public PathCache PathCache { get; private set; }
         public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
         public EntityTracker EntityTracker { get; private set; } // Entity tracker
-        public TuningTable Difficulty { get; private set; } // Difficulty table
+
+        private TuningTable _difficulty; // Difficulty table
+        public TuningTable TuningTable { get => _difficulty; }
         public MissionManager MissionManager { get; private set; } // Mission manager
         public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; } // Entity spatial partition
         public CellSpatialPartition CellSpatialPartition { get; private set; } // Cell spatial partition
@@ -165,12 +167,12 @@ namespace MHServerEmu.Games.Regions
             if (globals == null)
                 return Logger.ErrorReturn(false, "Unable to get globals prototype for region initialize");
 
-            Difficulty = new(this);
+            _difficulty = new(this);
 
             RegionDifficultySettingsPrototype difficultySettings = regionProto.GetDifficultySettings();
             if (difficultySettings != null)
             {
-                Difficulty.SetTuningTable(difficultySettings.TuningTable);
+                _difficulty.SetTuningTable(difficultySettings.TuningTable);
 
                 /* if (HasProperty(PropertyEnum.DifficultyIndex))
                        TuningTable.SetDifficultyIndex(GetProperty<int>(PropertyEnum.DifficultyIndex), false);

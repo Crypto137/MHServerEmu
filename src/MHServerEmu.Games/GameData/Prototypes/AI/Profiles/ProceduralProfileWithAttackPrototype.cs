@@ -873,6 +873,63 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, SpeedRemovalPower);
         }
 
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            proceduralAI.PartialOverrideBehavior?.Think(ownerController);
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+
+            if (proceduralAI.LastPowerResult == StaticBehaviorReturnType.Completed)
+            {
+                if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == 1)
+                {
+                    if (SpeedRemovalPower == null || SpeedRemovalPower.Power == PrototypeId.Invalid) return;
+                    ownerController.AttemptActivatePower(SpeedRemovalPower.Power, agent.Id, agent.RegionLocation.Position);
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 0;
+                }
+            }
+
+            if (proceduralAI.GetState(0) != Orbit.Instance && target != null)
+            {
+                if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == 0)
+                {
+                    float distabceFromTargetSq = Vector3.Distance2D(agent.RegionLocation.Position, target.RegionLocation.Position);
+                    distabceFromTargetSq = Math.Abs(distabceFromTargetSq - (agent.Bounds.Radius + target.Bounds.Radius));
+
+                    if (distabceFromTargetSq > DistanceFromTargetForSpeedBonus)
+                    {
+                        if (ExtraSpeedPower == null || ExtraSpeedPower.Power == PrototypeId.Invalid) return;
+                        ownerController.AttemptActivatePower(ExtraSpeedPower.Power, agent.Id, agent.RegionLocation.Position);
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+                    }
+                }
+
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, MoveToTarget, false, out var movetoResult, null);
+                if (movetoResult == StaticBehaviorReturnType.Running || movetoResult == StaticBehaviorReturnType.Completed) return;
+            }
+
+            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, OrbitTarget, false, out _);
+        }
+
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
