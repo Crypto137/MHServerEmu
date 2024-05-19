@@ -2,13 +2,17 @@
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
-    public class CurveDirectory
+    public sealed class CurveDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<CurveId, CurveRecord> _curveRecordDict = new();
 
+        public static CurveDirectory Instance { get; } = new();
+
         public int RecordCount { get => _curveRecordDict.Count; }
+
+        private CurveDirectory() { }
 
         public CurveRecord CreateCurveRecord(CurveId id, CurveRecordFlags flags)
         {

@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.GameData
     /// <summary>
     /// A singleton that manages all static game data.
     /// </summary>
-    public class DataDirectory
+    public sealed class DataDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -44,9 +44,9 @@ namespace MHServerEmu.Games.GameData
         public static DataDirectory Instance { get; } = new();
 
         // Subdirectories
-        public CurveDirectory CurveDirectory { get; } = new();
-        public AssetDirectory AssetDirectory { get; } = new();
-        public ReplacementDirectory ReplacementDirectory { get; } = new();
+        public CurveDirectory CurveDirectory { get; } = CurveDirectory.Instance;
+        public AssetDirectory AssetDirectory { get; } = AssetDirectory.Instance;
+        public ReplacementDirectory ReplacementDirectory { get; } = ReplacementDirectory.Instance;
 
         // Quick access for blueprints
         public BlueprintId KeywordBlueprint { get; private set; } = BlueprintId.Invalid;
