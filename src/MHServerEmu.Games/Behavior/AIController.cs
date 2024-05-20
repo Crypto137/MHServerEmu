@@ -265,7 +265,16 @@ namespace MHServerEmu.Games.Behavior
 
         public void SetTargetEntity(WorldEntity target)
         {
-            throw new NotImplementedException();
+            ulong oldTarget = Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID];
+            ulong newTarget = target?.Id ?? 0;
+
+            if (oldTarget != newTarget)
+            {
+                Brain?.OnOwnerTargetSwitch(oldTarget, newTarget);
+                Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = newTarget;
+            }
+
+            // TODO update think event
         }
 
         public void Think()

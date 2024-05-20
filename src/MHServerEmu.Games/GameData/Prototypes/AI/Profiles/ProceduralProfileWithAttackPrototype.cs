@@ -1525,6 +1525,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             target = ownerController.TargetEntity;
             DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
         }
+
+        public override void OnOwnerTargetSwitch(AIController ownerController, ulong oldTarget, ulong newTarget)
+        {
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (state == (int)State.Pickup)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Attack;
+        }
     }
 
     public class ProceduralProfileMeleeAllyDeathFleePrototype : ProceduralProfileWithAttackPrototype
@@ -1632,6 +1640,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, RangedPower);
             InitPower(agent, HotspotPower);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running)
+            {
+                PrototypeId activePower = ownerController.ActivePowerRef;
+                if (activePower == PrototypeId.Invalid) return;
+                var powerContext = HotspotPower?.PowerContext;
+                if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+                if (activePower == powerContext.Power)
+                {
+                    proceduralAI.PushSubstate();
+                    HandleContext(proceduralAI, ownerController, HotspotDroppingMovement);
+                    proceduralAI.PopSubstate();
+                }
+                return;
+            }
+
+            DefaultRangedMovement(proceduralAI, ownerController, agent, target, MoveToTarget, OrbitTarget);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -1755,6 +1800,62 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
         public bool IsRanged { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+            if (agent.IsDormant) return;
+
+            WorldEntity master = ownerController.AssistedEntity;
+            if (master != null && master.IsInWorld)
+            {
+                float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
+                if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                {
+                    if (ownerController.ActivePowerRef == PrototypeId.Invalid)
+                    {
+                        ownerController.Blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = 0;
+                        HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway, null);
+                        ownerController.ResetCurrentTargetState();
+                    }
+                }
+            }
+
+            WorldEntity target = ownerController.TargetEntity;
+
+            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            {
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, PetFollow, false, out _);
+                return;
+            }
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            HandleDefaultPetMovement(proceduralAI, ownerController, currentTime, target);
+        }
+
+        protected void HandleDefaultPetMovement(ProceduralAI proceduralAI, AIController ownerController, long currentTime, WorldEntity target)
+        {
+            Agent agent = ownerController.Owner;
+
+            if (IsRanged && FlankTarget != null)
+                DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+            else if (IsRanged)
+                DefaultRangedMovement(proceduralAI, ownerController, agent, target, MoveToTarget, OrbitTarget);
+            else
+                DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+        }
     }
 
     public class ProceduralProfileMeleePowerOnHitPrototype : ProceduralProfileWithAttackPrototype

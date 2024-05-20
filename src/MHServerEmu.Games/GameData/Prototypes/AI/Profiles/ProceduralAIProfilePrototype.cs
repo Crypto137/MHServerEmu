@@ -162,6 +162,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnOwnerExitWorld(AIController ownerController) { }
         public virtual void OnOwnerKilled(AIController ownerController) { }
         public virtual void OnOwnerAllyDeath(AIController ownerController) { }
+        public virtual void OnOwnerTargetSwitch(AIController ownerController, ulong oldTarget, ulong newTarget) { }
         public virtual void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt) { }
 
     }
@@ -761,6 +762,56 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
             InitPower(agent, Fidget);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+            if (agent.IsDormant) return;
+
+            WorldEntity master = ownerController.AssistedEntity;
+            if (master != null && master.IsInWorld)
+            {
+                float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
+                if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                {
+                    if (ownerController.ActivePowerRef == PrototypeId.Invalid)
+                    {
+                        ownerController.Blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = 0;
+                        HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway, null);
+                        ownerController.ResetCurrentTargetState();
+                    }
+                }
+            }
+
+            WorldEntity target = ownerController.TargetEntity;
+
+            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            {
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, PetFollow, false, out var movementResult);
+                if (movementResult != StaticBehaviorReturnType.Running) 
+                {
+                    if (Fidget?.PowerContext != null 
+                        && ownerController.Blackboard.PropertyCollection.HasProperty(PropertyEnum.AIAggroTime))
+                        HandleUsePowerCheckCooldown(ownerController, proceduralAI, game.Random, currentTime, Fidget.PowerContext, Fidget);
+                }
+                return;
+            }
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            HandleDefaultPetMovement(proceduralAI, ownerController, currentTime, target);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)

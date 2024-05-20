@@ -6,6 +6,8 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -539,7 +541,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = target.Id;
                 }
             }
+        }
 
+        public override void OnOwnerKilled(AIController ownerController)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            ulong focusTargetId = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID];
+            WorldEntity focusTarget = agent.Game.EntityManager.GetEntity<WorldEntity>(focusTargetId);
+            focusTarget?.Properties.RemoveProperty(PropertyEnum.FocusTargetedOnByID);
+        }
+
+        public override void OnOwnerTargetSwitch(AIController ownerController, ulong oldTarget, ulong newTarget)
+        {
+            OnOwnerKilled(ownerController); // same code
         }
     }
 
@@ -560,6 +575,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
             HandleContext(proceduralAI, ownerController, MoveToTarget);
         }
+
+        public override void OnOwnerTargetSwitch(AIController ownerController, ulong oldTarget, ulong newTarget)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            WorldEntity target = agent.Game.EntityManager.GetEntity<WorldEntity>(newTarget);
+            if (target != null && oldTarget != 0)
+            {
+                target.Properties[PropertyEnum.FocusTargetedOnByID] = agent.Id;
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = newTarget;
+            }
+            if (oldTarget != 0)
+            {
+                WorldEntity focusTarget = agent.Game.EntityManager.GetEntity<WorldEntity>(oldTarget);
+                focusTarget?.Properties.RemoveProperty(PropertyEnum.FocusTargetedOnByID);
+            }
+        }
     }
 
     public class ProceduralProfileVanityPetPrototype : ProceduralProfileWithTargetPrototype
@@ -569,6 +602,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinTimerWhileNotMovingFidgetMS { get; protected set; }
         public int MaxTimerWhileNotMovingFidgetMS { get; protected set; }
         public float MaxDistToMasterBeforeTeleport { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            if (agent.IsDormant) return;
+
+            WorldEntity master = ownerController.AssistedEntity;
+            if (master != null && master.IsInWorld)
+            {
+                float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
+                if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                    HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);
+            }
+
+            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, PetFollow, false, out _);
+        }
     }
 
     public class ProceduralProfileControlledMobOverridePrototype : ProceduralProfileWithTargetPrototype

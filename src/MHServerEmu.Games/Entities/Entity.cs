@@ -473,6 +473,17 @@ namespace MHServerEmu.Games.Entities
             return InventoryCollection.GetInventoryByRef(invProtoRef);
         }
 
+        public Inventory GetInventory(InventoryConvenienceLabel label)
+        {
+            return GetInventoryInternal(label);
+        }
+
+        private Inventory GetInventoryInternal(InventoryConvenienceLabel label)
+        {
+            // TODO InventoryIterator
+            throw new NotImplementedException();
+        }
+
         public Inventory GetOwnerInventory()
         {
             Entity container = Game.EntityManager.GetEntity<Entity>(InventoryLocation.ContainerId);
