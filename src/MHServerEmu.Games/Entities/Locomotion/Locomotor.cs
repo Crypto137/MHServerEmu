@@ -1204,7 +1204,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             _syncStateTime = TimeSpan.Zero;
         }
 
-        public void SetMethod(LocomotorMethod method, float moveSpeedOverride)
+        public void SetMethod(LocomotorMethod method, float moveSpeedOverride = 0.0f)
         {
             LocomotionState.Method = (method == LocomotorMethod.Default) ? _defaultMethod : method;
             if (_moveSpeedOverride != moveSpeedOverride)

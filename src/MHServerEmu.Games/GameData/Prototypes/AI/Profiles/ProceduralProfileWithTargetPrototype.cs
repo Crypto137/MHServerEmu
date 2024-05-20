@@ -6,8 +6,6 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Core.Collections;
-using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -217,7 +215,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        private static bool IsPastMaxDistanceOrLostLOS(Agent agent, WorldEntity target, float rangeMax, bool enforceLOS, float radius, float padding)
+        protected static bool IsPastMaxDistanceOrLostLOS(Agent agent, WorldEntity target, float rangeMax, bool enforceLOS, float radius, float padding)
         {
             if (target == null || target.IsInWorld == false) return false;
             float boundsRadius = agent.Bounds.Radius + target.Bounds.Radius;

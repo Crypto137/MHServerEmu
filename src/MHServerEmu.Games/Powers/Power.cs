@@ -96,5 +96,16 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal bool IsInRange(WorldEntity target, RangeCheckType checkType)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public enum RangeCheckType
+    {
+        Activation,
+        Application
     }
 }

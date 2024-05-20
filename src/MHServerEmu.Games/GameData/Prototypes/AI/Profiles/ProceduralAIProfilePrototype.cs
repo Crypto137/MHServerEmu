@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
@@ -13,6 +14,7 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -833,6 +835,41 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinSpeedDegreeUpdateIntervalMS { get; protected set; }
         public int MovementSpeedVariance { get; protected set; }
         public int RandomDegreeFromForward { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            long timeUpdate = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1]; // Error!!! replace to AICustomTimeVal1
+            int intervalUpdate = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (currentTime >= (timeUpdate + intervalUpdate))
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = currentTime; // Error!!! replace to AICustomTimeVal1
+                GRandom random = game.Random;
+                intervalUpdate = random.Next(MinSpeedDegreeUpdateIntervalMS, MaxSpeedDegreeUpdateIntervalMS);
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = intervalUpdate;
+
+                Vector3 direction = Vector3.Normalize(agent.Forward);
+                float angle = MathHelper.ToRadians(random.Next(-RandomDegreeFromForward, RandomDegreeFromForward));
+                direction = Vector3.AxisAngleRotate(direction, Vector3.ZAxis, angle);
+                Orientation orientation = Orientation.FromDeltaVector(direction);
+                agent.ChangeRegionPosition(null, orientation);
+
+                Locomotor locomotor = agent.Locomotor;
+                if (locomotor == null) return;
+                float speed = locomotor.GetCurrentSpeed() + random.Next(-MovementSpeedVariance, MovementSpeedVariance);
+                agent.Properties[PropertyEnum.MovementSpeedOverride] = Math.Abs(speed);
+                LocomotionOptions locomotionOptions = new() { BaseMoveSpeed = speed };
+                locomotor.MoveForward(locomotionOptions);
+            }
+        }
     }
 
     public class ProceduralProfileFrozenOrbPrototype : ProceduralAIProfilePrototype
@@ -956,6 +993,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
             InitPower(agent, LOSChannelPower);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            Power activePower = agent.ActivePower;
+            var powerContext = LOSChannelPower?.PowerContext;
+            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+
+            if (activePower != null && activePower.PrototypeDataRef == powerContext.Power)
+            {
+                WorldEntity target = ownerController.TargetEntity;
+                if (target == null || activePower.IsInRange(target, RangeCheckType.Application) == false || agent.LineOfSightTo(target) == false)
+                    proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+                else
+                    HandleRotateToTarget(agent, target);
+            } 
+            base.Think(ownerController);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
