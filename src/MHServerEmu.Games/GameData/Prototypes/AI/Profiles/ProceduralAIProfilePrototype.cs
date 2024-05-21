@@ -884,6 +884,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, ShardPower);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            var blackboard = ownerController.Blackboard;
+            long lastTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
+            int deltaBursts = 1000 / ShardBurstsPerSecond;
+
+            if ((currentTime - lastTime) < deltaBursts) return;
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
+
+            float delta = (float)game.FixedTimeBetweenUpdates.TotalSeconds;
+            int lastAngle = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            int angle = (lastAngle + (int)(Math.Abs(ShardRotationSpeed) * delta)) % 360;
+            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = angle;
+
+            int shardStep = 360 / ShardsPerBurst;
+            var shardDirection = Vector3.Flatten(agent.Forward, Axis.Z);
+            for (int i = 0; i < ShardsPerBurst; i++)
+            {
+                int shardAngle = angle + i * shardStep;
+                var transform = Transform3.BuildTransform(Vector3.Zero, new Orientation(MathHelper.ToRadians(shardAngle), 0.0f, 0.0f));
+                shardDirection = transform * shardDirection;
+                ownerController.AttemptActivatePower(ShardPower, 0, agent.RegionLocation.Position + shardDirection * 100.0f);
+            }
+        }
     }
 
     public class ProceduralProfilePetDirectedPrototype : ProceduralProfilePetPrototype
@@ -895,8 +928,126 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPowers(agent, DirectedPowers);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+            if (agent.IsDormant) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            WorldEntity target = ownerController.TargetEntity;
+            WorldEntity master = ownerController.AssistedEntity;
+
+            Queue<CustomPowerQueueEntry> powerQueue = blackboard.CustomPowerQueue;
+
+            if (powerQueue != null && powerQueue.Count > 0)
+            {
+                CustomPowerQueueEntry customPowerEntry = powerQueue.Peek();
+                PrototypeId customPowerDataRef = customPowerEntry.PowerRef;
+                if (customPowerDataRef == PrototypeId.Invalid) return;
+
+                var procUsePowerContextProto = GetDirectedPowerUseContext(customPowerDataRef);
+                if (procUsePowerContextProto == null)
+                {
+                    ProceduralAI.Logger.Warn($"Failed to get directed power use context [{GameDatabase.GetPrototypeName(customPowerDataRef)}] for agent [{agent}]");
+                    return;
+                }
+
+                var usePowerContextProto = procUsePowerContextProto.PowerContext;
+                if (usePowerContextProto == null) return;
+
+                var customPowerUse = false;
+                if (proceduralAI.GetState(0) == UsePower.Instance)
+                {
+                    if (ownerController.ActivePowerRef != customPowerDataRef)
+                    {
+                        proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+                        blackboard.UsePowerTargetPos = customPowerEntry.TargetPos;
+                    }
+                    else
+                        customPowerUse = true;
+                }
+                else
+                    blackboard.UsePowerTargetPos = customPowerEntry.TargetPos;
+
+                if (customPowerEntry.TargetId != 0 && (target == null || target.Id != customPowerEntry.TargetId))
+                {
+                    var targetEntity = game.EntityManager.GetEntity<WorldEntity>(customPowerEntry.TargetId);
+                    ownerController.ResetCurrentTargetState();
+                    ownerController.SetTargetEntity(targetEntity);
+                }
+
+                var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, usePowerContextProto, procUsePowerContextProto);
+                if (powerResult == StaticBehaviorReturnType.Failed && customPowerUse == false)
+                {
+                    if (powerQueue.Count == 0)
+                        ProceduralAI.Logger.Warn($"Custom power queue already empty when handling failed power use [{GameDatabase.GetPrototypeName(customPowerDataRef)}] for agent [{agent}]");                    
+                    else
+                        powerQueue.Dequeue();
+                }
+                if (powerResult == StaticBehaviorReturnType.Running) return;
+            }
+
+            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+
+            if (master != null && master.IsInWorld)
+            {
+                if (blackboard.PropertyCollection.HasProperty(PropertyEnum.AICustomStateVal1) == true)
+                {
+                    StaticBehaviorReturnType movetoResult = HandleContext(proceduralAI, ownerController, PetFollow);
+                    if (movetoResult == StaticBehaviorReturnType.Completed || movetoResult == StaticBehaviorReturnType.Failed)
+                    {
+                        blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = 0;
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = false;
+                        ownerController.ResetCurrentTargetState();
+                    }
+                    else if (movetoResult == StaticBehaviorReturnType.Running) return;
+                }
+
+                float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
+                if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                {
+                    blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = 0;
+                    HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);
+                    ownerController.ResetCurrentTargetState();
+                }
+            }
+
+            if (target == null)
+            {
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, PetFollow, false, out _);
+                return;
+            }
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            HandleDefaultPetMovement(proceduralAI, ownerController, currentTime, target);
+        }
+
+        private ProceduralUsePowerContextPrototype GetDirectedPowerUseContext(PrototypeId directedPowerDataRef)
+        {
+            if (DirectedPowers.HasValue())
+                foreach (var directedPower in DirectedPowers)
+                {
+                    var powerContext = directedPower?.PowerContext;
+                    if (powerContext != null && powerContext.Power == directedPowerDataRef)
+                        return directedPower;
+                }
+            return null;
+        }
     }
- 
+
     public class ProceduralProfileSyncAttackPrototype : ProceduralProfileBasicMeleePrototype
     {
         public ProceduralSyncAttackContextPrototype[] SyncAttacks { get; protected set; }

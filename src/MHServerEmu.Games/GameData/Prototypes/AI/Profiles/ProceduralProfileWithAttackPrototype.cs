@@ -274,6 +274,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public virtual void OnPowerStarted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext) { }
+        public virtual void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            if (powerContext.TargetSwitch != null && powerContext.TargetSwitch.SwitchPermanently == false)
+            {
+                var selectTargetContext = powerContext.TargetSwitch.SelectTarget;
+                if (selectTargetContext == null) return;
+
+                var blackboard = ownerController.Blackboard;
+                var prevTargetId = blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerPrevTargetId];
+                var prevTarget = ownerController.Game.EntityManager.GetEntity<WorldEntity>(prevTargetId);
+                if (prevTarget == null) return;
+
+                var targetType = CombatTargetType.Hostile;
+                switch (selectTargetContext.PoolType)
+                {
+                    case SelectEntityPoolType.PotentialEnemiesOfAgent:
+                        targetType = CombatTargetType.Hostile;
+                        break;
+                    case SelectEntityPoolType.PotentialAlliesOfAgent:
+                        targetType = CombatTargetType.Ally;
+                        break;
+                }
+
+                if (Combat.ValidTarget(ownerController.Game, ownerController.Owner, prevTarget, targetType, false))
+                    SelectEntity.RegisterSelectedEntity(ownerController, prevTarget, selectTargetContext.SelectEntityType);
+            }
+        }
+
     }
 
     public class ProceduralProfileStationaryTurretPrototype : ProceduralProfileWithAttackPrototype
@@ -1913,6 +1942,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             base.PopulatePowerPicker(ownerController, powerPicker);
         }
+
+        public override void OnPowerStarted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            if (powerContext == PowerOnHit)
+            {
+                Agent agent = ownerController.Owner;
+                if (agent == null) return;
+                ulong attackerId = ownerController.Blackboard.PropertyCollection[PropertyEnum.AILastAttackerID];
+                WorldEntity attacker = agent.Game.EntityManager.GetEntity<WorldEntity>(attackerId);
+                if (attacker != null)
+                    agent.OrientToward(attacker.RegionLocation.Position);
+                ownerController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomStateVal1);
+            }
+        }
+
     }
 
     public class ProceduralProfileBotAIPrototype : ProceduralProfileWithAttackPrototype
@@ -1922,6 +1966,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public SelectEntityContextPrototype SelectTargetItem { get; protected set; }
         public WanderContextPrototype WanderMovement { get; protected set; }
         public ProceduralUsePowerContextPrototype[] SlottedAbilities { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            WorldEntity target = ownerController.TargetEntity;
+            DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            if (target != null) 
+            {
+                DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+                return;
+            }
+
+            HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, WanderMovement, false, out _);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {

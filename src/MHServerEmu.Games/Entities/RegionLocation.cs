@@ -127,6 +127,11 @@ namespace MHServerEmu.Games.Entities
                 return ProjectToFloor(region, regionPos);
         }
 
+        public Vector3 ProjectToFloor()
+        {
+            return ProjectToFloor(Cell, Position);
+        }
+
         public override string ToString()
         {
             return string.Format("rloc.pos={0}, rloc.rot={1}, rloc.region={2}, rloc.area={3}, rloc.cell={4}, rloc.entity={5}",

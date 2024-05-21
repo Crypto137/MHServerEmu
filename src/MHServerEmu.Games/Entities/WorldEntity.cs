@@ -800,6 +800,11 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        internal bool HasConditionWithKeyword(PrototypeId keywordRef)
+        {
+            throw new NotImplementedException();
+        }
+
         internal float GetDistanceTo(WorldEntity other, bool calcRadius)
         {
             throw new NotImplementedException();

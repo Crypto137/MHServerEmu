@@ -8,6 +8,7 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
@@ -38,6 +39,19 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateEntities;
         public bool GenerateLog;
+    }
+
+    public enum PositionCheckFlags
+    {
+        None = 0,
+        CheckCanBlockedEntity   = 1 << 0,
+        CheckCanBlockedAvatar   = 1 << 1,
+        CheckCanPathTo          = 1 << 2,
+        CheckCanSweepTo         = 1 << 3,
+        CheckCanSweepRadius     = 1 << 4,
+        CheckCanPathToEntities  = 1 << 5,
+        CheckInRadius           = 1 << 6,
+        CheckClearOfEntity      = 1 << 7,
     }
 
     public class Region : IMissionManagerOwner
@@ -915,6 +929,16 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
+        public static PathFlags GetPathFlagsForEntity(WorldEntityPrototype entityProto)
+        {
+            return entityProto != null ? Locomotor.GetPathFlags(entityProto.NaviMethod) : PathFlags.None;
+        }
+
+        internal bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags checkFlags, BlockingCheckFlags blockingFlags, 
+            float minRadius, float maxRadius, out Vector3 outPosition)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class DividedStartLocation

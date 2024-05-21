@@ -1,6 +1,6 @@
-﻿
-using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Properties;
@@ -14,6 +14,7 @@ namespace MHServerEmu.Games.Behavior
         public Vector3 SpawnPoint { get; set; }
         public Vector3 SpawnOffset { get; set; }
         public Vector3 UsePowerTargetPos { get; set; }
+        public Queue<CustomPowerQueueEntry> CustomPowerQueue { get; internal set; }
 
         public BehaviorBlackboard(Agent owner)
         {
@@ -47,5 +48,12 @@ namespace MHServerEmu.Games.Behavior
             if (collection != null)
                 PropertyCollection.FlattenCopyFrom(collection, false);
         }
+    }
+
+    public struct CustomPowerQueueEntry
+    {
+        public PrototypeId PowerRef;
+        public Vector3 TargetPos;
+        public ulong TargetId;
     }
 }
