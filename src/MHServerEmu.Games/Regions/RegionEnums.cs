@@ -35,6 +35,7 @@ namespace MHServerEmu.Games.Regions
         InvasionSafeAbodeRegion = 17072997612720691719,     // Fury's Toolshed
 
         // Prologue
+        TutorialBankRegion = 15109540093298418681,
         TimesSquareTutorialRegion = 13422564811632352998,
         NPERaftRegion = 11602117409128454445,               // Raft Landing Pad
 
