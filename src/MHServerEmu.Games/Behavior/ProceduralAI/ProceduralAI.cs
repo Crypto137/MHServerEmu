@@ -305,6 +305,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             _proceduralPtr.Profile?.OnEntityDeadEvent(_owningController, deadEvent);
         }
+
+        public void OnAIBroadcastBlackboardEvent(AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            _proceduralPtr.Profile?.OnAIBroadcastBlackboardEvent(_owningController, broadcastEvent);
+        }
     }
 
     public enum OverrideType

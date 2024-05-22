@@ -2366,6 +2366,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Init(Agent agent)
         {
             base.Init(agent);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            Region region = agent.Region;
+            if (region == null) return;
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
+
             InitPower(agent, DisableShield);
             InitPowers(agent, ObeliskDamageMonolithPowers);
         }
@@ -2393,6 +2400,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
                 PopulatePowerPicker(ownerController, powerPicker);
                 HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+            }
+        }
+
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            if (broadcastEvent.Broadcaster == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var broadcaster = broadcastEvent.Broadcaster;
+            if (broadcaster == null) return;
+            var broadcasterBlackboard = broadcastEvent.Blackboard;
+            if (broadcasterBlackboard == null) return;
+
+            int obeliskState = broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (broadcaster.HasKeyword(ObeliskKeyword.As<KeywordPrototype>()) && obeliskState == 1)
+            {
+                var blackboard = ownerController.Blackboard;
+                int powersActivated = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+
+                if (ObeliskDamageMonolithPowers.HasValue())
+                {
+                    int damagePowers = ObeliskDamageMonolithPowers.Length;
+                    if (damagePowers > 0 && powersActivated < damagePowers)
+                    {
+                        var obeliskPowerRef = ObeliskDamageMonolithPowers[Math.Min(powersActivated, damagePowers - 1)];
+                        if (ownerController.AttemptActivatePower(obeliskPowerRef, agent.Id, agent.RegionLocation.Position) == false) return;
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = powersActivated + 1;
+
+                        if (powersActivated + 1 >= damagePowers)
+                            ownerController.AttemptActivatePower(DisableShield, agent.Id, agent.RegionLocation.Position);
+                    }
+                }
             }
         }
     }
@@ -2788,6 +2827,108 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileObeliskHealerPrototype : ProceduralProfileBasicMeleePrototype
     {
         public PrototypeId[] ObeliskTargets { get; protected set; }
+
+        private enum State
+        {
+            TargetObelisk,
+            MoveToObelisk,
+            HealObelisk,
+            AllObelisksHealed
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (agent.IsDormant) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            int obelixHealed = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+            switch ((State)stateVal)
+            {
+                case State.TargetObelisk:
+
+                    bool obeliskTargetFound = false;
+                    if (ObeliskTargets.HasValue())
+                    {
+                        var obeliskDataRef = ObeliskTargets[Math.Min(obelixHealed, ObeliskTargets.Length - 1)];
+                        if (obeliskDataRef == PrototypeId.Invalid) return;
+                        var region = agent.Region;
+                        if (region == null) return;
+
+                        var volume = new Sphere(agent.RegionLocation.Position, 3200.0f);
+                        foreach (var targetEntity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+                            if (targetEntity != null && targetEntity.PrototypeDataRef == obeliskDataRef)
+                            {
+                                blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = targetEntity.Id;
+                                ownerController.SetTargetEntity(targetEntity);
+                                obeliskTargetFound = true;
+                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToObelisk;
+                                break;
+                            }                
+                    }
+
+                    if (obeliskTargetFound == false)
+                        ProceduralAI.Logger.Warn($"The obelisk healer cannot find an obelisk to heal! {agent}");
+
+                    break;
+
+                case State.MoveToObelisk:
+
+                    var obeliskTarget = ownerController.AssistedEntity;
+                    if (obeliskTarget != null)
+                    {
+                        var contextResult = HandleContext(proceduralAI, ownerController, MoveToTarget);
+                        if (contextResult == StaticBehaviorReturnType.Completed)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.HealObelisk;
+                        else if (contextResult == StaticBehaviorReturnType.Failed || contextResult == StaticBehaviorReturnType.Interrupted)
+                            ProceduralAI.Logger.Warn($"The obelisk healer {agent} cannot move to an obelisk {obeliskTarget} to heal!");
+                    }
+                    else
+                        ProceduralAI.Logger.Warn($"The obelisk healer cannot find an obelisk to move to because its AssistedEntity is NULL! {agent}");
+
+                    break;
+
+                case State.HealObelisk:
+
+                    var target = ownerController.TargetEntity;
+                    var assistedEntity = ownerController.AssistedEntity;
+                    if (target == null || assistedEntity == null || target != assistedEntity) return;
+
+                    GRandom random = game.Random;
+                    Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                    PopulatePowerPicker(ownerController, powerPicker);
+                    var proceduralPowerResult = HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+                    if (proceduralPowerResult == StaticBehaviorReturnType.Completed)
+                    {
+                        long health = assistedEntity.Properties[PropertyEnum.Health];
+                        long maxHealth = assistedEntity.Properties[PropertyEnum.HealthMaxOther];
+                        if (health == maxHealth)
+                        {
+                            obelixHealed = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+                            if (obelixHealed == ObeliskTargets.Length)
+                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.AllObelisksHealed;
+                            else
+                            {
+                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TargetObelisk;
+                                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = obelixHealed + 1;
+                            }
+                        }
+                    }
+                    else if (proceduralPowerResult == StaticBehaviorReturnType.Failed || proceduralPowerResult == StaticBehaviorReturnType.Interrupted)
+                        ProceduralAI.Logger.Warn($"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\n" +
+                            $"Healer: {agent}\nObelisk: {assistedEntity}");
+
+                    break;
+            }
+        }
     }
 
     public class ProceduralProfileObeliskPrototype : ProceduralProfileNoMoveDefaultSensoryPrototype
@@ -2801,6 +2942,71 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, DetonateIslandPower);
             InitPower(agent, FullyHealedPower);
+
+            Region region = agent.Region;
+            if (region == null) return;
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            ownerController.RegisterForEntityDeadEvents(region, true);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (agent.IsDormant) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (stateVal == 0)
+            {
+                WorldEntity target = ownerController.TargetEntity;
+                if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                    && proceduralAI.PartialOverrideBehavior == null) return;
+
+                GRandom random = game.Random;
+                Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                PopulatePowerPicker(ownerController, powerPicker);
+                if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+                long health = agent.Properties[PropertyEnum.Health];
+                long maxHealth = agent.Properties[PropertyEnum.HealthMaxOther];
+
+                if (health == maxHealth)
+                {
+                    if (ownerController.AttemptActivatePower(FullyHealedPower, agent.Id, agent.RegionLocation.Position) == false) return;
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+
+                    Region region = agent.Region;
+                    if (region == null) return;
+                    ownerController.RegisterForEntityDeadEvents(region, false);
+                    AIBroadcastBlackboardGameEvent evt = new(agent, blackboard);
+                    region.AIBroadcastBlackboardEvent.Invoke(evt);
+                }
+            }
+        }
+
+        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        {
+            if (deadEvent.Defender == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+
+            var defender = deadEvent.Defender.PrototypeDataRef;
+            var blackboard = ownerController.Blackboard;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (stateVal != 1 && defender == DeadEntityForDetonateIslandPower)
+            {
+                WorldEntity deadArcher = deadEvent.Defender;
+                if (deadArcher == null) return;
+                ownerController.AttemptActivatePower(DetonateIslandPower, deadArcher.Id, deadArcher.RegionLocation.Position);
+            }
         }
     }
 

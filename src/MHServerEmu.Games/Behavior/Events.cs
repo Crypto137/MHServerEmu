@@ -17,4 +17,16 @@ namespace MHServerEmu.Games.Behavior
     {
         public WorldEntity Defender;
     }
+
+    public class AIBroadcastBlackboardGameEvent
+    {
+        public WorldEntity Broadcaster;
+        public BehaviorBlackboard Blackboard;
+
+        public AIBroadcastBlackboardGameEvent(WorldEntity broadcaster, BehaviorBlackboard blackboard)
+        {
+            Broadcaster = broadcaster;
+            Blackboard = blackboard;
+        }
+    }
 }

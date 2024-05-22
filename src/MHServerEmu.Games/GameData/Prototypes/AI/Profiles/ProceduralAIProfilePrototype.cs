@@ -168,6 +168,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnOwnerOverlapBegin(AIController ownerController, WorldEntity attacker) { }
         public virtual void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt) { }
         public virtual void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent) { }
+        public virtual void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype

@@ -113,7 +113,9 @@ namespace MHServerEmu.Games.Regions
         public List<ulong> MetaGames { get; private set; } = new();
         public ConnectionNodeList Targets { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
+
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
+        public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
 
         private BitList _collisionIds;
         private BitList _collisionBits;

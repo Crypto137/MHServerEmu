@@ -30,6 +30,7 @@ namespace MHServerEmu.Games.Behavior
         public WorldEntity InteractEntity => GetInteractEntityHelper();
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
         public Action<EntityDeadGameEvent> EntityDeadEvent { get; private set; }
+        public Action<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent { get; private set; }
 
         public AIController(Game game, Agent owner)
         {
@@ -39,6 +40,7 @@ namespace MHServerEmu.Games.Behavior
             Blackboard = new (owner);
             Brain = new (game, this);
             EntityDeadEvent = OnAIEntityDeadEvent;
+            AIBroadcastBlackboardEvent = OnAIBroadcastBlackboardEvent;
         }
 
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
@@ -326,9 +328,14 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnAllyGotKilled();          
         }
 
-        public void OnAIEntityDeadEvent(EntityDeadGameEvent deadEvent)
+        private void OnAIEntityDeadEvent(EntityDeadGameEvent deadEvent)
         {
             Brain?.OnEntityDeadEvent(deadEvent);
+        }
+
+        private void OnAIBroadcastBlackboardEvent(AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            Brain?.OnAIBroadcastBlackboardEvent(broadcastEvent);
         }
 
         public void RegisterForEntityDeadEvents(Region region, bool register)
@@ -337,6 +344,14 @@ namespace MHServerEmu.Games.Behavior
                 region.EntityDeadEvent.AddActionBack(EntityDeadEvent);
             else
                 region.EntityDeadEvent.RemoveAction(EntityDeadEvent);
+        }
+
+        public void RegisterForAIBroadcastBlackboardEvents(Region region, bool register)
+        {
+            if (register)
+                region.AIBroadcastBlackboardEvent.AddActionBack(AIBroadcastBlackboardEvent);
+            else
+                region.AIBroadcastBlackboardEvent.RemoveAction(AIBroadcastBlackboardEvent);
         }
     }
 }
