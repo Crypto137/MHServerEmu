@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -295,6 +294,16 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         public void OnOwnerTargetSwitch(ulong oldTarget, ulong newTarget)
         {
             _proceduralPtr.Profile?.OnOwnerTargetSwitch(_owningController, oldTarget, newTarget);
+        }
+
+        public void OnOwnerOverlapBegin(WorldEntity attacker)
+        {
+            _proceduralPtr.Profile?.OnOwnerOverlapBegin(_owningController, attacker);
+        }
+
+        public void OnEntityDeadEvent(EntityDeadGameEvent deadEvent)
+        {
+            _proceduralPtr.Profile?.OnEntityDeadEvent(_owningController, deadEvent);
         }
     }
 

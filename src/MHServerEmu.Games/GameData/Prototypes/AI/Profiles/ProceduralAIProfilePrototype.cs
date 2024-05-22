@@ -165,8 +165,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnOwnerKilled(AIController ownerController) { }
         public virtual void OnOwnerAllyDeath(AIController ownerController) { }
         public virtual void OnOwnerTargetSwitch(AIController ownerController, ulong oldTarget, ulong newTarget) { }
+        public virtual void OnOwnerOverlapBegin(AIController ownerController, WorldEntity attacker) { }
         public virtual void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt) { }
-
+        public virtual void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
@@ -1045,6 +1046,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         return directedPower;
                 }
             return null;
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype proceduralPowerContext)
+        {
+            base.OnPowerEnded(ownerController, proceduralPowerContext);
+            var powerContext = proceduralPowerContext.PowerContext;
+            if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            var powerQueue = blackboard.CustomPowerQueue;
+            if (powerQueue != null)
+            {
+                PrototypeId customPowerDataRef = powerQueue.Peek().PowerRef;
+                if (powerContext.Power != customPowerDataRef) return;
+                powerQueue.Dequeue();
+                if (powerQueue.Count == 0)
+                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomThinkRateMS);               
+            }
         }
     }
 

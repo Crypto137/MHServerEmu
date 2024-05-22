@@ -6,6 +6,8 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -713,6 +715,156 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
         public int MaxDistToMasterBeforeTeleport { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            var summoner = agent.GetMostResponsiblePowerUser<Avatar>();
+            if (summoner == null)
+            {
+                ProceduralAI.Logger.Warn("The summoner of this AI Profile must be an avatar!");
+                return;
+            }
+
+            var blackboard = ownerController.Blackboard;
+            long lastTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
+            if (lastTime == 0)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
+                return;
+            }
+
+            if (summoner.IsInWorld)
+                if (Vector3.DistanceSquared(agent.RegionLocation.Position, summoner.RegionLocation.Position) > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                {
+                    ResetTarget(blackboard);
+                    HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);
+                }
+
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
+            float dalay = (float)TimeSpan.FromMilliseconds(currentTime - lastTime).TotalSeconds;
+            Vector3 currentPos = agent.RegionLocation.Position;
+            float distanceSummonerSq = Vector3.DistanceSquared(currentPos, summoner.RegionLocation.Position);
+
+            bool summonerTooFar = false;
+            WorldEntity newTarget = null;
+            if (distanceSummonerSq > MoveToSummonerDistance * MoveToSummonerDistance)
+            {
+                summonerTooFar = true;
+                newTarget = summoner;
+                blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = summoner.Id;
+            }
+            else
+            {
+                var targetId = blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID];
+                if (targetId != 0)
+                    newTarget = game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+                if (newTarget == null || newTarget.IsInWorld == false)
+                    newTarget = TrySelectNewTarget(ownerController, blackboard, currentTime);
+            }
+
+            if (newTarget == null)
+            {
+                HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, Wander, false, out _);
+                return;
+            }
+
+            float idleDistanceSq = IdleDistanceFromSummoner * IdleDistanceFromSummoner;
+            float speedRate;
+            Vector3 distanceTarget = newTarget.RegionLocation.Position - currentPos;
+            float distanceTargetSq = Vector3.LengthSquared(distanceTarget);
+            if (newTarget == summoner && distanceTargetSq < idleDistanceSq)
+            {
+                speedRate = Math.Min(1.0f, distanceTargetSq / idleDistanceSq);
+                speedRate *= speedRate < 0.05f ? 0.0f : speedRate;
+                blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFocusTargetingID);
+            }
+            else
+            {
+                speedRate = Math.Min(1.0f, agent.MovementSpeedRate + Acceleration * dalay);
+            }
+
+            var locomotor = agent.Locomotor;
+            if (locomotor == null) return;
+            float baseMoveSpeed = locomotor.DefaultRunSpeed;
+            agent.Properties[PropertyEnum.MovementSpeedRate] = speedRate;
+            agent.Properties[PropertyEnum.MovementSpeedOverride] = speedRate * baseMoveSpeed;
+
+            if (Segment.IsNearZero(speedRate) == false)
+            {
+                ownerController.SetTargetEntity(newTarget);
+                HandleMovementContext(proceduralAI, ownerController, locomotor, MoveToTarget, false, out var movetoResult, null);
+                if (movetoResult == StaticBehaviorReturnType.Running) return;
+
+                if (newTarget == summoner)
+                {
+                    if (movetoResult == StaticBehaviorReturnType.Failed && summonerTooFar)
+                    {
+                        ResetTarget(blackboard);
+                        HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway, null);
+                    }
+                    return;
+                }
+                else if (movetoResult == StaticBehaviorReturnType.Completed)
+                    TrySelectNewTarget(ownerController, blackboard, currentTime);
+                else if (movetoResult == StaticBehaviorReturnType.Failed)
+                    HandleMovementContext(proceduralAI, ownerController, locomotor, OrbitTarget, false, out _);
+            }
+        }
+
+        private WorldEntity TrySelectNewTarget(AIController ownerController, BehaviorBlackboard blackboard, long currentTime)
+        {
+            var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+            var selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+            if (selectedEntity == null || selectedEntity.Id == blackboard.PropertyCollection[PropertyEnum.AILastAttackerID])
+            {
+                long seekTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2];
+                long seekDelay = currentTime - seekTime;
+                if (seekTime != 0 && seekDelay > SeekDelayMS)
+                    ResetTarget(blackboard);
+                return null;
+            }
+            ResetTarget(blackboard);
+            blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = selectedEntity.Id;
+            return selectedEntity;
+        }
+
+        private static void ResetTarget(BehaviorBlackboard blackboard)
+        {
+            blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomTimeVal2);
+            blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AILastAttackerID);
+        }
+
+        public override void OnOwnerOverlapBegin(AIController ownerController, WorldEntity attacker)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var summoner = agent.GetMostResponsiblePowerUser<Avatar>();
+            if (attacker == summoner) return;
+
+            var target = ownerController.TargetEntity;
+            if (target == attacker)
+            {
+                var blackboard = ownerController.Blackboard;
+                blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFocusTargetingID);
+                var game = ownerController.Game;
+                if (game == null) return;
+
+                long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+                blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = attacker.Id;
+                blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2] = currentTime;
+                TrySelectNewTarget(ownerController, blackboard, currentTime);
+            }
+        }
+
     }
 
     public class ProceduralProfileTaserTrapPrototype : ProceduralProfileWithTargetPrototype

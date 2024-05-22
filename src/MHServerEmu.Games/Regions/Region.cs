@@ -6,9 +6,11 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
@@ -111,6 +113,7 @@ namespace MHServerEmu.Games.Regions
         public List<ulong> MetaGames { get; private set; } = new();
         public ConnectionNodeList Targets { get; private set; }
         public PopulationManager PopulationManager { get; private set; }
+        public Event<EntityDeadGameEvent> EntityDeadEvent = new();
 
         private BitList _collisionIds;
         private BitList _collisionBits;

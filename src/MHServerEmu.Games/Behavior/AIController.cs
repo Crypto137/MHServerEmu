@@ -29,6 +29,7 @@ namespace MHServerEmu.Games.Behavior
         public WorldEntity TargetEntity => Senses.GetCurrentTarget();
         public WorldEntity InteractEntity => GetInteractEntityHelper();
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
+        public Action<EntityDeadGameEvent> EntityDeadEvent { get; private set; }
 
         public AIController(Game game, Agent owner)
         {
@@ -36,7 +37,8 @@ namespace MHServerEmu.Games.Behavior
             Owner = owner;
             Senses = new ();
             Blackboard = new (owner);
-            Brain = new (game, this); 
+            Brain = new (game, this);
+            EntityDeadEvent = OnAIEntityDeadEvent;
         }
 
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
@@ -223,6 +225,11 @@ namespace MHServerEmu.Games.Behavior
             Brain?.ProcessInterrupts(interrupt);
         }
 
+        public void OnAIOverlapBegin(WorldEntity other)
+        {
+            Brain?.OnOwnerOverlapBegin(other);
+        }
+
         private bool HasNotExceededMaxThinksPerFrame(TimeSpan timeOffset)
         {
             if (Game == null || Brain == null) return false;
@@ -317,6 +324,19 @@ namespace MHServerEmu.Games.Behavior
         {
             ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
             Brain?.OnAllyGotKilled();          
+        }
+
+        public void OnAIEntityDeadEvent(EntityDeadGameEvent deadEvent)
+        {
+            Brain?.OnEntityDeadEvent(deadEvent);
+        }
+
+        public void RegisterForEntityDeadEvents(Region region, bool register)
+        {
+            if (register)
+                region.EntityDeadEvent.AddActionBack(EntityDeadEvent);
+            else
+                region.EntityDeadEvent.RemoveAction(EntityDeadEvent);
         }
     }
 }

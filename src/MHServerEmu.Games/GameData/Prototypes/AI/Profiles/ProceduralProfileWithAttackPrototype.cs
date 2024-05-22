@@ -204,11 +204,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             return StaticBehaviorReturnType.Failed;
         }
-
-        public virtual void OnPowerAttempted(AIController ownerController, ProceduralUsePowerContextPrototype proceduralPowerContext,
-            StaticBehaviorReturnType contextResult)
-        { }
-
+       
         public StaticBehaviorReturnType HandleUseAffixPowerContext(AIController ownerController, ProceduralAI proceduralAI, GRandom random, long currentTime)
         {
             BehaviorBlackboard blackboard = ownerController.Blackboard;
@@ -274,6 +270,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public virtual void OnPowerAttempted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext, StaticBehaviorReturnType contextResult) { }
         public virtual void OnPowerStarted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext) { }
         public virtual void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
         {
@@ -539,6 +536,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             proceduralAI.PartialOverrideBehavior?.Think(ownerController);
 
             DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            base.OnPowerEnded(ownerController, powerContext);
+            if (powerContext == PowerSwap)
+            {
+                var collection = ownerController.Blackboard.PropertyCollection;
+                int stateVal = collection[PropertyEnum.AICustomStateVal1];
+                    collection[PropertyEnum.AICustomStateVal1] = stateVal ^ 1;
+            }
         }
 
     }
