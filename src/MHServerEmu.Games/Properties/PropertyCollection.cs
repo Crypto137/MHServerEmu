@@ -444,8 +444,6 @@ namespace MHServerEmu.Games.Properties
         // TODO: If iteration is too slow, switch PropertyList to Dictionary<PropertyEnum, List<KeyValuePair<PropertyId, PropertyValue>>
         // or group KVPs by property enum in some other way.
 
-        public delegate bool PropertyEnumFilter(PropertyEnum propertyEnum);
-
         // IEnumerable implementation, iterates over _aggregateList
         public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _aggregateList.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -455,11 +453,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
         {
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    yield return kvp;
-            }
+            return _aggregateList.IteratePropertyRange(propertyEnum);
         }
 
         /// <summary>
@@ -472,12 +466,7 @@ namespace MHServerEmu.Games.Properties
         /// </remarks>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum[] enums)
         {
-            // TODO: Confirm if this is working as intended
-            foreach (var kvp in this)
-            {
-                if (enums.Contains(kvp.Key.Enum) == false) continue;
-                yield return kvp;
-            }
+            return _aggregateList.IteratePropertyRange(enums);
         }
 
         /// <summary>
@@ -486,17 +475,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, int param0)
         {
-            foreach (var kvp in this)
-            {
-                Property.FromParam(kvp.Key, 0, out int itParam0);
-
-                bool match = true;
-                match &= kvp.Key.Enum == propertyEnum;
-                match &= itParam0 == param0;
-
-                if (match == false) continue;
-                yield return kvp;
-            }
+            return _aggregateList.IteratePropertyRange(propertyEnum, param0);
         }
 
         /// <summary>
@@ -505,17 +484,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
         {
-            foreach (var kvp in this)
-            {
-                Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
-
-                bool match = true;
-                match &= kvp.Key.Enum == propertyEnum;
-                match &= itParam0 == param0;
-
-                if (match == false) continue;
-                yield return kvp;
-            }
+            return _aggregateList.IteratePropertyRange(propertyEnum, param0);
         }
 
         /// <summary>
@@ -524,19 +493,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
         {
-            foreach (var kvp in this)
-            {
-                Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
-                Property.FromParam(kvp.Key, 1, out PrototypeId itParam1);
-
-                bool match = true;
-                match &= kvp.Key.Enum == propertyEnum;
-                match &= itParam0 == param0;
-                match &= itParam1 == param1;
-
-                if (match == false) continue;
-                yield return kvp;
-            }
+            return _aggregateList.IteratePropertyRange(propertyEnum, param0, param1);
         }
 
         /// <summary>
@@ -546,19 +503,9 @@ namespace MHServerEmu.Games.Properties
         /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
         /// on every key/value pair rather than once per enum.
         /// </remarks>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter filter)
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyList.PropertyEnumFilter filter)
         {
-            if (filter == null)
-            {
-                Logger.Warn("IteratePropertyRange(): filter == null");
-                yield break;
-            }
-
-            foreach (var kvp in this)
-            {
-                if (filter(kvp.Key.Enum) == false) continue;
-                yield return kvp;
-            }
+            return _aggregateList.IteratePropertyRange(filter);
         }
 
         #endregion
