@@ -3101,12 +3101,260 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
 
-
         public override void Init(Agent agent)
         {
             base.Init(agent);
             InitPower(agent, ActivateHulkBusterAnimOnly);
             InitPowers(agent, WeaponsCratesAnimOnlyPowers);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            if (WeaponsCrate == PrototypeId.Invalid) return;
+
+            Region region = agent.Region;
+            if (region == null) return;
+            Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            foreach(WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (target != null && target.PrototypeDataRef == WeaponsCrate)
+                    blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = target.Id;
+            }
+        }
+
+        private enum State
+        {
+            Default,
+            ActivateHulkBuster,
+            MoveToCrate,
+            UseWeaponCrate,
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (agent.IsDormant) return;
+            
+            var blackboard = ownerController.Blackboard;
+            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            switch ((State)state)
+            {
+                case State.Default:
+
+                    if (proceduralAI.GetState(0) != UsePower.Instance)
+                    {
+                        int hulkBusterState = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2];
+                        var health = agent.Properties[PropertyEnum.Health];
+                        var maxHealth = agent.Properties[PropertyEnum.HealthMax];
+
+                        if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold1) && hulkBusterState < 1)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 1;
+                        else if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold2) && hulkBusterState < 2)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 2;
+                        else if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold3) && hulkBusterState < 3)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 3;
+                        else if (MathHelper.IsBelowOrEqual(health, maxHealth, HulkBusterHealthThreshold4) && hulkBusterState < 4)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = 4;
+
+                        if (hulkBusterState != blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2])
+                        {
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.ActivateHulkBuster;
+                            return;
+                        }
+                    }
+
+                    WorldEntity target = ownerController.TargetEntity;
+                    if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                        && proceduralAI.PartialOverrideBehavior == null) return;
+
+                    GRandom random = game.Random;
+                    Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                    PopulatePowerPicker(ownerController, powerPicker);
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+                    DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+                    break;
+
+                case State.ActivateHulkBuster:
+
+                    if (proceduralAI.GetState(0) != UsePower.Instance)
+                    {
+                        if (HulkBustersToActivate.HasValue())
+                        {
+                            int numHulkBusters = HulkBustersToActivate.Length;
+                            if (numHulkBusters > 0)
+                            {
+                                int hulkBusterIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] - 1;
+                                if (hulkBusterIndex < 0 || hulkBusterIndex > numHulkBusters - 1) {
+                                    ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to activate a Hulk Buster outside the bounds of his HulkBustersToActivate list {hulkBusterIndex}!");
+                                    return; 
+                                }
+                                var hulkBusterDataRef = HulkBustersToActivate[Math.Min(hulkBusterIndex, numHulkBusters - 1)];
+                                if (hulkBusterDataRef == PrototypeId.Invalid) return;
+                                blackboard.PropertyCollection[PropertyEnum.AICustomProtoRef1] = hulkBusterDataRef;
+
+                                var region = agent.Region;
+                                if (region == null) return;
+                                AIBroadcastBlackboardGameEvent evt = new (agent,blackboard);
+                                region.AIBroadcastBlackboardEvent.Invoke(evt);
+                            }
+                        }
+
+                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ActivateHulkBusterAnimOnly.PowerContext, ActivateHulkBusterAnimOnly);
+                        if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
+                        {
+                            ProceduralAI.Logger.Warn($"Red Skull failed to play his ActivateHulkBusterAnimOnly power! Reason: {powerResult}  RedSkull: {agent}");
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToCrate;
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        var hulkBusterUsePowerContext = ActivateHulkBusterAnimOnly?.PowerContext;
+                        if (hulkBusterUsePowerContext == null || hulkBusterUsePowerContext.Power == PrototypeId.Invalid) return;
+                        if (hulkBusterUsePowerContext.Power != ownerController.ActivePowerRef) 
+                        {
+                            ProceduralAI.Logger.Warn($"Red Skull {agent} should be activating his Hulk Buster power but is currently activating another power [{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}]!");
+                            return; 
+                        }
+                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, hulkBusterUsePowerContext, ActivateHulkBusterAnimOnly);
+                        if (powerResult == StaticBehaviorReturnType.Running) return;
+                    }
+
+                    break;
+
+                case State.MoveToCrate:
+
+                    var weaponsCrateTarget = ownerController.AssistedEntity;
+                    if (weaponsCrateTarget == null)
+                    {
+                        ProceduralAI.Logger.Warn($"Red Skull {agent} cannot find a weapon crate!");
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.UseWeaponCrate;
+                        return;
+                    }
+                    ownerController.SetTargetEntity(weaponsCrateTarget);
+
+                    var contextResult = HandleContext(proceduralAI, ownerController, MoveToWeaponsCrate);
+                    if (contextResult == StaticBehaviorReturnType.Failed || contextResult == StaticBehaviorReturnType.Interrupted)
+                    {
+                        ProceduralAI.Logger.Warn($"Red Skull cannot move to a weapon crate! Reason: {contextResult}  RedSkull: [{agent}]  WeaponCrate: [{weaponsCrateTarget}]");
+                        return;
+                    }
+                    if (contextResult != StaticBehaviorReturnType.Running) 
+                    { 
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.UseWeaponCrate;
+                        return; 
+                    }
+
+                    break;
+
+                case State.UseWeaponCrate:
+
+                    weaponsCrateTarget = ownerController.AssistedEntity;
+                    if (weaponsCrateTarget == null)
+                    {
+                        ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to play his WeaponsCratesAnimOnly when he doesn't have a target crate!");
+                        OnActivatedWeaponCrate(ownerController);
+                        return;
+                    }
+
+                    int weaponCrateIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
+                    var weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, weaponCrateIndex);
+                    var weaponsCratePowerContext = weaponsCrateUsePowerContext?.PowerContext;
+                    if (weaponsCratePowerContext == null || weaponsCratePowerContext.Power == PrototypeId.Invalid) return;
+
+                    if (proceduralAI.GetState(0) != UsePower.Instance)
+                    {
+                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, weaponsCratePowerContext, weaponsCrateUsePowerContext);
+                        if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
+                        {
+                            ProceduralAI.Logger.Warn($"Red Skull {agent} failed to play his WeaponsCratesAnimOnly power on a crate {weaponsCrateTarget}!");
+                            OnActivatedWeaponCrate(ownerController);
+                        }
+                    }
+                    else
+                    {
+                        if (weaponsCratePowerContext.Power != ownerController.ActivePowerRef)
+                        {
+                            ProceduralAI.Logger.Warn($"Red Skull {agent} should be activating his Weapons Crate power but is currently activating another power [{GameDatabase.GetPrototypeName(ownerController.ActivePowerRef)}]!");
+                            return;
+                        }
+                        HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, weaponsCratePowerContext, weaponsCrateUsePowerContext);
+                    }
+                    break;
+            }            
+        }
+
+        private ProceduralUsePowerContextPrototype GetWeaponCrateAnimPowerByIndex(AIController ownerController, int index)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return null;
+            if (WeaponsCratesAnimOnlyPowers.IsNullOrEmpty()) return null;
+            int numPowers = WeaponsCratesAnimOnlyPowers.Length;
+            if (index < 0 || index >= numPowers) return null;
+            return WeaponsCratesAnimOnlyPowers[index];
+        }
+
+        private void OnActivatedWeaponCrate(AIController ownerController)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var blackboard = ownerController.Blackboard;
+            var weaponsCrateTarget = ownerController.AssistedEntity;
+            if (weaponsCrateTarget == null)
+            {
+                ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to unlock a new power but when he doesn't have a target crate!");
+                return;
+            }
+
+            int weaponsUnlockIndex = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
+            switch (weaponsUnlockIndex)
+            {
+                case 0:
+                    agent.Properties[PropertyEnum.SinglePowerLock, WeaponCrate1UnlockPower] = false;
+                    break;
+                case 1:
+                    agent.Properties[PropertyEnum.SinglePowerLock, WeaponCrate2UnlockPower] = false;
+                    break;
+                case 2:
+                    agent.Properties[PropertyEnum.SinglePowerLock, WeaponCrate3UnlockPower] = false;
+                    break;
+                case 3:
+                    agent.Properties[PropertyEnum.SinglePowerLock, WeaponCrate4UnlockPower] = false;
+                    break;
+                default:
+                    ProceduralAI.Logger.Warn($"Red Skull {agent} is trying to unlock a new power with an invalid index {weaponsUnlockIndex}!");
+                    break;
+            }
+            blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal3);
+            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var blackboard = ownerController.Blackboard;
+            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+
+            base.OnPowerEnded(ownerController, powerContext);
+
+            if (powerContext == ActivateHulkBusterAnimOnly)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToCrate;
+            else if (state == (int)State.UseWeaponCrate)
+            {
+                int index = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3];
+                var weaponsCrateUsePowerContext = GetWeaponCrateAnimPowerByIndex(ownerController, index);
+                if (powerContext == weaponsCrateUsePowerContext)
+                    OnActivatedWeaponCrate(ownerController);
+            }
         }
     }
 
@@ -3125,7 +3373,148 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, ShieldRedSkull);
             InitPower(agent, DeactivatedAnimOnly);
             InitPower(agent, ActivatingAnimOnly);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            Region region = agent.Region;
+            if (region == null) return;
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
         }
+
+        private enum State
+        {
+            Default,
+            Deactivated,
+            Activating,
+            ShieldRedSkull,
+            MoveToTarget
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (agent.IsDormant) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            switch ((State)state)
+            {
+                case State.Default:
+                    var region = agent.Region;
+                    if (region == null)
+                    {
+                        ProceduralAI.Logger.Warn($"Entity is not in a valid region! Entity: {agent}");
+                        return;
+                    }
+                    Sphere volume = new(agent.RegionLocation.Position, 2500.0f);
+                    foreach (var nearbyAvatar in region.IterateAvatarsInVolume(volume))
+                        if (nearbyAvatar != null && nearbyAvatar.IsAliveInWorld)
+                        {
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Deactivated;
+                            break;
+                        }
+                    break;
+
+                case State.Deactivated:
+                    HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, DeactivatedAnimOnly.PowerContext, DeactivatedAnimOnly);
+                    break;
+
+                case State.Activating:
+                    HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ActivatingAnimOnly.PowerContext, ActivatingAnimOnly);
+                    break;
+
+                case State.ShieldRedSkull:
+                    WorldEntity redSkull = ownerController.TargetEntity;
+                    if (redSkull == null)
+                    {
+                        ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is NULL!");
+                        return;
+                    }
+                    if (redSkull.PrototypeDataRef != RedSkullAxis)
+                    {
+                        ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is not RedSkull, it's {redSkull}!");
+                        return;
+                    }
+                    HandleRotateToTarget(agent, redSkull);
+                    HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, ShieldRedSkull.PowerContext, ShieldRedSkull);
+                    break;
+
+                case State.MoveToTarget:
+
+                    WorldEntity target = ownerController.TargetEntity;
+                    if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                        && proceduralAI.PartialOverrideBehavior == null) return;
+
+                    GRandom random = game.Random;
+                    Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                    PopulatePowerPicker(ownerController, powerPicker);
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+                    DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+                    break;
+            }
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype proceduralPowerContext)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+
+            base.OnPowerEnded(ownerController, proceduralPowerContext);
+
+            var blackboard = ownerController.Blackboard;
+            if (proceduralPowerContext == ActivatingAnimOnly)
+            {
+                var game = ownerController.Game;
+                if (game == null) return;
+
+                var redSkullId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
+                var redSkull = game.EntityManager.GetEntity<WorldEntity>(redSkullId);
+                if (redSkull == null)
+                {
+                    ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is NULL!");
+                    return;
+                }
+                if (redSkull.PrototypeDataRef != RedSkullAxis)
+                {
+                    ProceduralAI.Logger.Warn($"Hulk Buster {agent} pending target is not RedSkull, it's {redSkull}!");
+                    return;
+                }
+                ownerController.SetTargetEntity(redSkull);
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.ShieldRedSkull;
+            }
+            else if (proceduralPowerContext == ShieldRedSkull)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToTarget;
+        }
+
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            if (broadcastEvent.Broadcaster == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var broadcaster = broadcastEvent.Broadcaster;
+            var broadcasterBlackboard = broadcastEvent.Blackboard;
+            if (broadcasterBlackboard == null) return;
+
+            if (broadcaster.PrototypeDataRef == RedSkullAxis 
+                && broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomProtoRef1] == agent.PrototypeDataRef)
+            {
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                ProceduralAI proceduralAI = ownerController.Brain;
+                if (proceduralAI == null) return;
+                proceduralAI.SwitchProceduralState(null, null, StaticBehaviorReturnType.Interrupted);
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Activating;
+            }
+        }   
+
     }
 
     public class ProceduralProfileSymbioteDrainPrototype : ProceduralProfileWithAttackPrototype
