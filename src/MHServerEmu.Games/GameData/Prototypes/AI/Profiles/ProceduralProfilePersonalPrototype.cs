@@ -3529,7 +3529,146 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, SymbiotePower1);
             InitPower(agent, SymbiotePower2);
             InitPower(agent, SymbiotePower3);
+
+            Region region = agent.Region;
+            if (region == null) return;
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            ownerController.RegisterForEntityDeadEvents(region, true);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            var blackboard = ownerController.Blackboard;
+            ulong targetId1 = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
+            ulong targetId2 = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2];
+            ulong targetId3 = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3];
+
+            if (targetId1 == 0)
+            {
+                ulong targetId = GetSymbioteTargetId(ownerController);
+                if (targetId != 0)
+                {
+                    var powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower1, targetId);
+                    if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = targetId;
+                }
+            }
+
+            if (targetId2 == 0)
+            {
+                ulong targetId = GetSymbioteTargetId(ownerController);
+                if (targetId != 0)
+                {
+                    var powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower2, targetId);
+                    if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = targetId;
+                }
+            }
+
+            if (targetId3 == 0)
+            {
+                ulong targetId = GetSymbioteTargetId(ownerController);
+                if (targetId != 0)
+                {
+                    var powerResult = ActivateSymbiotePowerOnTarget(ownerController, SymbiotePower3, targetId);
+                    if (powerResult == StaticBehaviorReturnType.Running || powerResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = targetId;
+                }
+            }
+        }
+
+        private StaticBehaviorReturnType ActivateSymbiotePowerOnTarget(AIController ownerController, ProceduralUsePowerContextPrototype symboitePower, ulong targetId)
+        {
+            var powerResult = StaticBehaviorReturnType.Failed;
+            var agent = ownerController.Owner;
+            if (agent == null || symboitePower == null) return powerResult;
+            var game = ownerController.Game;
+            if (game == null) return powerResult;
+            var proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return powerResult;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            ownerController.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = targetId;
+            powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, symboitePower.PowerContext, symboitePower);
+            return powerResult;
+        }
+
+        private static ulong GetSymbioteTargetId(AIController ownerController)
+        {
+            ulong targetId = 0;
+            var agent = ownerController.Owner;
+            if (agent == null) return targetId;
+
+            var blackboard = ownerController.Blackboard;
+            var region = agent.Region;
+            if (region == null) return targetId;
+
+            var game = ownerController.Game;
+            if (game == null) return targetId;
+
+            var manager = game.EntityManager;
+            var target1 = manager.GetEntity<WorldEntity>(blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1]);
+            var target2 = manager.GetEntity<WorldEntity>(blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2]);
+            var target3 = manager.GetEntity<WorldEntity>(blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3]);
+
+            Sphere volume = new (agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            Picker<ulong> targetPicker = new (game.Random);
+
+            foreach (var target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                if (target != null && target.IsHostileTo(agent) && target.IsDead == false 
+                    && target != target1 && target != target2 && target != target3)
+                {
+                    targetPicker.Add(target.Id);
+                    if (targetPicker.GetNumElements() >= 20) break;
+                }
+
+            if (targetPicker.Empty() == false)
+                targetPicker.Pick(out targetId);
+
+            return targetId;
+        }
+
+        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        {
+            if (deadEvent.Defender == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+
+            ulong deadEntityId = deadEvent.Defender.Id;
+            if (deadEntityId == 0) return;
+
+            var blackboard = ownerController.Blackboard;
+            if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1])
+            {
+                if (SymbiotePower1.PowerContext == null || SymbiotePower1.PowerContext.Power == PrototypeId.Invalid) return;
+                var symbiotePower = agent.GetPower(SymbiotePower1.PowerContext.Power);
+                symbiotePower?.EndPower(EndFlag.Force | EndFlag.ExplicitCancel);
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
+            }
+            else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2])
+            {
+                if (SymbiotePower2.PowerContext == null || SymbiotePower2.PowerContext.Power == PrototypeId.Invalid) return;
+                var symbiotePower = agent.GetPower(SymbiotePower2.PowerContext.Power);
+                symbiotePower?.EndPower(EndFlag.Force | EndFlag.ExplicitCancel);
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = 0;
+            }
+            else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3])
+            {
+                if (SymbiotePower3.PowerContext == null || SymbiotePower3.PowerContext.Power == PrototypeId.Invalid) return;
+                var symbiotePower = agent.GetPower(SymbiotePower3.PowerContext.Power);
+                symbiotePower?.EndPower(EndFlag.Force | EndFlag.ExplicitCancel);
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = 0;
+            }
+        }
+
     }
 
     public class ProceduralProfileOnslaughtPrototype : ProceduralProfileWithEnragePrototype

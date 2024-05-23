@@ -101,6 +101,20 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal void EndPower(EndFlag endFlag)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [Flags]
+    public enum EndFlag
+    {
+        None = 0,
+        ExplicitCancel = 1 << 0,
+        Interrupting = 1 << 3,
+        Force = 1 << 8,
     }
 
     public enum RangeCheckType

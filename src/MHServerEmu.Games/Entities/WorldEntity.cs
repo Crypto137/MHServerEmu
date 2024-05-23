@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.Entities
             return GameDatabase.GetPrototype<AlliancePrototype>(GetAlliance());
         }
 
-        internal bool IsHostileTo(WorldEntity target, AlliancePrototype allianceProto)
+        internal bool IsHostileTo(WorldEntity target, AlliancePrototype allianceProto = null)
         {
             throw new NotImplementedException();
         }
