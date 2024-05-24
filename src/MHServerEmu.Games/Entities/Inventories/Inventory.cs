@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public InventoryCategory Category { get; private set; } = InventoryCategory.None;
         public InventoryConvenienceLabel ConvenienceLabel { get; private set; } = InventoryConvenienceLabel.None;
-        public bool IsEquipment { get => Prototype != null && Prototype.IsEquipmentInventory(); }
+        public bool IsEquipment { get => Prototype != null && Prototype.IsEquipmentInventory; }
         public int MaxCapacity { get; private set; }
 
         public int Count { get => _entities.Count; }
@@ -288,7 +288,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (inventoryProto == null)
                 return Logger.WarnReturn(false, "IsPlayerStashInventory(): inventoryProto == null");
 
-            return inventoryProto.IsPlayerStashInventory();
+            return inventoryProto.IsPlayerStashInventory;
         }
 
         private InventoryResult AddEntity(Entity entity, ref ulong? stackEntityId, bool allowStacking, uint destSlot, InventoryLocation prevInvLoc)

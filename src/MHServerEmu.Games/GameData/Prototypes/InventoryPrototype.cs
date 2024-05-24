@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -40,18 +41,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for a player stash inventory.
         /// </summary>
-        public bool IsPlayerStashInventory()
-        {
-            return Category == InventoryCategory.PlayerStashAvatarSpecific || Category == InventoryCategory.PlayerStashGeneral;
-        }
+        [DoNotCopy]
+        public bool IsPlayerStashInventory { get => Category == InventoryCategory.PlayerStashAvatarSpecific || Category == InventoryCategory.PlayerStashGeneral; }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for avatar or team-up equipment.
         /// </summary>
-        public bool IsEquipmentInventory()
-        {
-            return Category == InventoryCategory.AvatarEquipment || Category == InventoryCategory.TeamUpEquipment;
-        }
+        [DoNotCopy]
+        public bool IsEquipmentInventory { get => Category == InventoryCategory.AvatarEquipment || Category == InventoryCategory.TeamUpEquipment; }
 
         /// <summary>
         /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.

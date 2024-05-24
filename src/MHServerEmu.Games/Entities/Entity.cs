@@ -542,6 +542,31 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        protected virtual bool InitInventories(bool populateInventories)
+        {
+            bool success = true;
+
+            EntityPrototype entityPrototype = Prototype;
+            if (entityPrototype == null) return Logger.WarnReturn(false, "InitInventories(): entityPrototype == null");
+
+            foreach (EntityInventoryAssignmentPrototype invAssignmentProto in entityPrototype.Inventories)
+            {
+                if (AddInventory(invAssignmentProto.Inventory, invAssignmentProto.LootTable) == false)
+                {
+                    Logger.Warn($"InitInventories(): Failed to add inventory, invProtoRef={GameDatabase.GetPrototypeName(invAssignmentProto.Inventory)}");
+                    success = false;
+                }
+            }
+
+            return success;
+        }
+
+        protected bool AddInventory(PrototypeId invProtoRef, PrototypeId lootTableRef = PrototypeId.Invalid)
+        {
+            // lootTableRef seems to be unused
+            return InventoryCollection.CreateAndAddInventory(invProtoRef);
+        }
+
         #endregion
 
         #region Invasive List Implementation

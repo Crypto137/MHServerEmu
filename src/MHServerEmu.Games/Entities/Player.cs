@@ -95,6 +95,11 @@ namespace MHServerEmu.Games.Entities
         public Avatar CurrentAvatar { get; private set; }
         public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
 
+        // Console stuff - not implemented
+        public bool IsConsolePlayer { get => false; }
+        public bool IsConsoleUI { get => false; }
+        public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
+
         // new
         public Player(Game game) : base(game) { }
 
@@ -124,6 +129,10 @@ namespace MHServerEmu.Games.Entities
             _community = new(this);
             _community.Initialize();
             _gameplayOptions.SetOwner(this);
+
+            // init inventory - todo: move this to Entity.Initialize()
+            InventoryCollection.Initialize(this);
+            InitInventories(true);
         }
 
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData)
@@ -556,6 +565,38 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        protected override bool InitInventories(bool populateInventories)
+        {
+            bool success = base.InitInventories(populateInventories);
+
+            PlayerPrototype playerProto = Prototype as PlayerPrototype;
+            if (playerProto == null) return Logger.WarnReturn(false, "InitInventories(): playerProto == null");
+
+            foreach (EntityInventoryAssignmentPrototype invEntryProto in playerProto.StashInventories)
+            {
+                var stashInvProto = invEntryProto.Inventory.As<PlayerStashInventoryPrototype>();
+                if (stashInvProto == null)
+                {
+                    Logger.Warn("InitInventories(): stashInvProto == null");
+                    continue;
+                }
+
+                if (stashInvProto.IsPlayerStashInventory && IsUsingUnifiedStash == false && stashInvProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash)
+                    continue;
+
+                if (stashInvProto.LockedByDefault == false)
+                {
+                    if (AddInventory(invEntryProto.Inventory) == false)
+                    {
+                        Logger.Warn($"InitInventories(): Failed to add inventory, invProtoRef={GameDatabase.GetPrototypeName(invEntryProto.Inventory)}");
+                        success = false;
+                    }
+                }
+            }
+
+            return success;
         }
 
         /// <summary>

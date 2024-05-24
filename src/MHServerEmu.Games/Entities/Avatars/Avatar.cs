@@ -360,6 +360,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             return InventoryResult.UnknownFailure;
         }
 
+        protected override bool InitInventories(bool populateInventories)
+        {
+            return base.InitInventories(populateInventories);
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);

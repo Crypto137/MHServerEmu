@@ -173,6 +173,12 @@ namespace MHServerEmu.Games.Entities
             return InventoryResult.Success;     // Bypass property restrictions
         }
 
+        protected override bool InitInventories(bool populateInventories)
+        {
+            // TODO
+            return base.InitInventories(populateInventories);
+        }
+
         // Old
         public Agent(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
