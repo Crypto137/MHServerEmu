@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
@@ -43,50 +44,21 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
 
-        // new
         public Avatar(Game game) : base(game) { }
 
-        // old
-        public Avatar(ulong entityId, ulong replicationId) : base(new EntityBaseData())
+        public override void Initialize(EntitySettings settings)
         {
-            // Entity
+            base.Initialize(settings);
+
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.LocomotionState = new();
-            BaseData.EntityId = entityId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc | EntityCreateMessageFlags.HasAvatarWorldInstanceId;
-            
+
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
-            Properties = new(replicationId);
 
-            // WorldEntity
-            _trackingContextMap = new();
-            _conditionCollection = new(this);
-            _powerCollection = new(this);
-            _unkEvent = 134463198;
-
-            // Avatar
-            _playerName = new(++replicationId, string.Empty);
-            _ownerPlayerDbId = 0x20000000000D3D03;   // D3D03 == 867587 from Player's EntityBaseData
-        }
-
-        public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public Avatar(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection, PowerCollection powerCollection, int unkEvent,
-            ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, ulong guildId, string guildName, GuildMembership guildMembership, IEnumerable<AbilityKeyMapping> abilityKeyMappings)
-            : base(baseData)
-        {
-            _trackingContextMap = trackingContextMap;
-            _conditionCollection = conditionCollection;
-            _powerCollection = powerCollection;
-            _unkEvent = unkEvent;
-
-            _playerName = playerName;
-            _ownerPlayerDbId = ownerPlayerDbId;
-            _guildId = guildId;
-            _guildName = guildName;
-            _guildMembership = guildMembership;
-            _abilityKeyMappingList.AddRange(abilityKeyMappings);
+            _playerName = new(Game.CurrentRepId, string.Empty);
+            _ownerPlayerDbId = 0x20000000000D3D03;
         }
 
         public override bool Serialize(Archive archive)

@@ -17,9 +17,7 @@ namespace MHServerEmu.Games.Entities
         public SpawnerPrototype SpawnerPrototype => Prototype as SpawnerPrototype;
 
         // New
-        public Spawner(Game game) : base(game) 
-        {
-        }
+        public Spawner(Game game) : base(game) { }
 
         public override void Initialize(EntitySettings settings)
         {
@@ -27,20 +25,6 @@ namespace MHServerEmu.Games.Entities
             // old
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             _flags |= EntityFlags.NoCollide;
-        }
-
-        // Old
-        public Spawner(EntityBaseData baseData) : base(baseData)
-        {
-        }
-
-        public Spawner(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData)
-        {
-        }
-
-        public Spawner(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties) : 
-            base(baseData, replicationPolicy, properties)
-        {           
         }
 
         public override void OnEnteredWorld(EntitySettings settings)

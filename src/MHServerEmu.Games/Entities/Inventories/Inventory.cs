@@ -67,6 +67,27 @@ namespace MHServerEmu.Games.Entities.Inventories
             return Entity.InvalidId;
         }
 
+        public ulong GetAnyEntity()
+        {
+            if (_entities.Any())
+                return _entities.First().Value.EntityId;
+
+            return 0;
+        }
+
+        public Entity GetMatchingEntity(PrototypeId entityRef)
+        {
+            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn<Entity>(null, "GetMatchingEntity(): entityRef == PrototypeId.Invalid");
+
+            foreach (var kvp in this)
+            {
+                if (kvp.Value.PrototypeDataRef == entityRef)
+                    return Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+            }
+
+            return null;
+        }
+
         public bool DestroyContained()
         {
             if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
@@ -374,7 +395,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         private InventoryResult DoRemoveEntity(Entity entity, bool finalMove, bool withinSameInventory)
         {
             if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoRemoveEntity(): entity == null");
-            if (entity.IsRootOwner == false) return Logger.WarnReturn(InventoryResult.IsRootOwner, "DoRemoveEntity(): entity.IsRootOwner == false");
+            if (entity.IsRootOwner) return Logger.WarnReturn(InventoryResult.IsRootOwner, "DoRemoveEntity(): entity.IsRootOwner");
 
             Entity inventoryOwner = Owner;
             if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoRemoveEntity(): inventoryOwner == null");

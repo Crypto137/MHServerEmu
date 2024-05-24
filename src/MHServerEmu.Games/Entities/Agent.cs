@@ -1,5 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities.Inventories;
@@ -178,10 +177,5 @@ namespace MHServerEmu.Games.Entities
             // TODO
             return base.InitInventories(populateInventories);
         }
-
-        // Old
-        public Agent(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public Agent(EntityBaseData baseData) : base(baseData) { }
     }
 }

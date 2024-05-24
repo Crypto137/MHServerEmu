@@ -67,7 +67,6 @@ namespace MHServerEmu.Games.Entities
         public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
         public PrototypeId ActivePowerRef { get; private set; }
 
-        // New
         public WorldEntity(Game game) : base(game)
         {
             SpatialPartitionLocation = new(this);
@@ -112,20 +111,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         // Old
-        public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
-
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
-
-        public WorldEntity(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties) : base(baseData)
-        {
-            ReplicationPolicy = replicationPolicy;
-            Properties = properties;
-            _trackingContextMap = new();
-            _conditionCollection = new(this);
-            _powerCollection = new(this);
-            _unkEvent = 0;
-            SpatialPartitionLocation = new(this);
-        }
 
         public override bool Serialize(Archive archive)
         {

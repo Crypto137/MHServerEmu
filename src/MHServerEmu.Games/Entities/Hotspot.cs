@@ -1,5 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Games.Dialog;
+﻿using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -103,11 +102,6 @@ namespace MHServerEmu.Games.Entities
                 return hotspotLeaveProto.TargetFilter != null && hotspotLeaveProto.EntityFilter != null && hotspotLeaveProto.EntityFilter.Evaluate(this, new(missionRef));
             return false;
         }
-
-        // old
-        public Hotspot(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public Hotspot(EntityBaseData baseData) : base(baseData) { }
     }
 
     public class MissionConditionContext

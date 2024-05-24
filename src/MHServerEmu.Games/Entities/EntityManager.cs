@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Entities
         private readonly Dictionary<ulong, Entity> _entityDict = new();
         private readonly Queue<ulong> _entityDeletionQueue = new();
 
-        private ulong _nextEntityId = 1000;
+        private ulong _nextEntityId = 1;
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
@@ -238,7 +238,8 @@ namespace MHServerEmu.Games.Entities
 
         private Entity GetEntity(ulong entityId, GetEntityFlags flags)
         {
-            if (entityId == Entity.InvalidId) return Logger.WarnReturn<Entity>(null, "GetEntity(): entityId == Entity.InvalidId");
+            if (entityId == Entity.InvalidId)
+                return Logger.WarnReturn<Entity>(null, "GetEntity(): entityId == Entity.InvalidId");
 
             if (_entityDict.TryGetValue(entityId, out Entity entity) && ValidateEntityForGet(entity, flags))
                 return entity;
@@ -268,7 +269,10 @@ namespace MHServerEmu.Games.Entities
                 if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
                     Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
                 else
+                {
                     DeleteEntity(entity);
+                    Logger.Trace($"Deleting entity {entity}");
+                }   
             }
 
             return true;

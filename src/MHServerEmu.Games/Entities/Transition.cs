@@ -37,46 +37,18 @@ namespace MHServerEmu.Games.Entities
 
         public TransitionPrototype TransitionPrototype { get { return Prototype as TransitionPrototype; } }
 
-        // New
         public Transition(Game game) : base(game) { }
 
         public override void Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
             // old
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
             if (destination != null)
                 _destinationList.Add(destination);
-        }
-
-        // Old
-        public Transition(EntityBaseData baseData, ReplicatedPropertyCollection properties, Destination destination) : base(baseData)
-        {
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
-            Properties = properties;
-            _trackingContextMap = new();
-            _conditionCollection = new(this);
-            _powerCollection = new(this);
-            _unkEvent = 0;
-
-            if (destination != null)
-                _destinationList.Add(destination);
-        }
-
-        public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public Transition(EntityBaseData baseData, EntityTrackingContextMap trackingContextMap, ConditionCollection conditionCollection,
-            PowerCollection powerCollection, int unkEvent, 
-            string transitionName, IEnumerable<Destination> destinations) : base(baseData)
-        {
-            _trackingContextMap = trackingContextMap;
-            _conditionCollection = conditionCollection;
-            _powerCollection = powerCollection;
-            _unkEvent = unkEvent;
-            _transitionName = transitionName;
-            _destinationList.AddRange(destinations);
         }
 
         public override bool Serialize(Archive archive)

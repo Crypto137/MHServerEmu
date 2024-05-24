@@ -7,7 +7,6 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -114,23 +113,29 @@ namespace MHServerEmu.Games.Network
             AOI = new(this, _dbAccount.Player.AOIVolume);
 
             // Create player and avatar entities
-            Player = new(new EntityBaseData());
-            Player.InitializeFromDBAccount(_dbAccount);
+            EntitySettings playerSettings = new();
+            //playerSettings.Id = 14646212;
+            playerSettings.EntityRef = (PrototypeId)18307315963852687724;
+            playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
 
-            ulong avatarEntityId = Player.Id + 1;
-            ulong avatarRepId = Player.Properties.ReplicationId + 4;
-            uint slot = 0;
+            Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
+            Player.LoadFromDBAccount(_dbAccount);
+
+            Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+
+            //ulong avatarEntityId = Player.Id + 1;
             foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
-                Avatar avatar = new(avatarEntityId, avatarRepId);
-                avatar.BaseData.InvLoc = new(Player.Id, (PrototypeId)5235960671767829134, slot++);
-                avatarEntityId++;
-                avatarRepId += 2;
+                EntitySettings avatarSettings = new();
+                //avatarSettings.Id = avatarEntityId++;
+                avatarSettings.EntityRef = avatarRef;
+                avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
 
+                Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
+                avatar.ChangeInventoryLocation(avatarLibrary);
                 avatar.InitializeFromDBAccount(avatarRef, _dbAccount);
-                Player.AvatarList.Add(avatar);
             }
 
             var avatarDataRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
@@ -186,6 +191,7 @@ namespace MHServerEmu.Games.Network
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
+            Game.EntityManager.DestroyEntity(Player);
         }
 
         #endregion
@@ -212,8 +218,8 @@ namespace MHServerEmu.Games.Network
 
             SendMessage(Player.ToNetMessageEntityCreate());
 
-            foreach (IMessage message in Player.AvatarList.Select(avatar => avatar.ToNetMessageEntityCreate()))
-                SendMessage(message);
+            foreach (Avatar avatar in Player.IterateAvatars())
+                SendMessage(avatar.ToNetMessageEntityCreate());
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 

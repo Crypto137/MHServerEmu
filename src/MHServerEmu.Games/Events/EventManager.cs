@@ -1,8 +1,10 @@
 ﻿using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
@@ -11,7 +13,6 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Events
 {
@@ -634,9 +635,16 @@ namespace MHServerEmu.Games.Events
 
         private bool OnEndMagikUltimate(PlayerConnection playerConnection)
         {
-            // Make sure we still get Magik in case the player switched to another avatar
-            Avatar avatar = playerConnection.Player.AvatarList.FirstOrDefault(avatar => avatar.PrototypeDataRef == (PrototypeId)AvatarPrototypeId.Magik);
-            if (avatar == null) return Logger.WarnReturn(false, "OnEndMagikUltimate(): avatar == null");
+            Player player = playerConnection.Player;
+            Avatar avatar = player.CurrentAvatar;
+
+            if (avatar.PrototypeDataRef != (PrototypeId)AvatarPrototypeId.Magik)
+            {
+                // Make sure we still get Magik in case the player switched to another avatar
+                Inventory avatarLibrary = player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+                avatar = avatarLibrary.GetMatchingEntity((PrototypeId)AvatarPrototypeId.Magik) as Avatar;
+                if (avatar == null) return Logger.WarnReturn(false, "OnEndMagikUltimate(): avatar == null");
+            }
 
             Condition magikUltimateCondition = avatar.ConditionCollection.GetCondition(777);
             if (magikUltimateCondition == null) return Logger.WarnReturn(false, "OnEndMagikUltimate(): magikUltimateCondition == null");
