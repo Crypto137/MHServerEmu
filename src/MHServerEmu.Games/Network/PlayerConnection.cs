@@ -7,8 +7,10 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
@@ -50,6 +52,7 @@ namespace MHServerEmu.Games.Network
 
         public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
         public Vector3 LastPosition { get; set; }
+        public Orientation LastOrientation { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
         public Entity ThrowableEntity { get; set; }
 
@@ -116,12 +119,13 @@ namespace MHServerEmu.Games.Network
 
             ulong avatarEntityId = Player.Id + 1;
             ulong avatarRepId = Player.Properties.ReplicationId + 4;
+            uint slot = 0;
             foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 Avatar avatar = new(avatarEntityId, avatarRepId);
-                avatar.BaseData.InvLoc = new(Player.Id, PrototypeId.Invalid, 0);
+                avatar.BaseData.InvLoc = new(Player.Id, (PrototypeId)5235960671767829134, slot++);
                 avatarEntityId++;
                 avatarRepId += 2;
 
@@ -136,7 +140,7 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(avatarDataRef)}");
             }
 
-            Player.SetAvatar(avatarDataRef);
+            Player.SwitchAvatar(avatarDataRef, out _);
         }
 
         #endregion
@@ -377,6 +381,7 @@ namespace MHServerEmu.Games.Network
 
             //Vector3 oldPosition = client.LastPosition;
             LastPosition = avatarState.Position;
+            LastOrientation = avatarState.Orientation;
             AOI.Region.Visited();
             // AOI
             if (IsLoading == false && AOI.ShouldUpdate(avatarState.Position))
@@ -611,10 +616,54 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"Received NetMessageSwitchAvatar");
             Logger.Trace(switchAvatar.ToString());
 
-            // A hack for changing avatar in-game
-            Player.SetAvatar((PrototypeId)switchAvatar.AvatarPrototypeId);
-            //ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {GameDatabase.GetFormattedPrototypeName(Player.CurrentAvatar.EntityPrototype.DataRef)}.");
-            Game.MovePlayerToRegion(this, RegionDataRef, WaypointDataRef);
+            // Switch avatar
+            // NOTE: This is preliminary implementation that will change once we have inventories working
+            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
+                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
+
+            // Destroy the avatar we are switching to on the client
+            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(Player.CurrentAvatar.Id).Build());
+
+            // Destroy the previous avatar on the client
+            SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
+                .SetIdEntity(prevAvatar.Id)
+                .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
+                .SetExitGameWorld(true)
+                .Build());
+
+            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(prevAvatar.Id).Build());
+
+            // Recreate the previous avatar
+            SendMessage(prevAvatar.ToNetMessageEntityCreate());
+
+            // Recreate the avatar we just switched to
+            SendMessage(Player.CurrentAvatar.ToNetMessageEntityCreate());
+
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new(Player.CurrentAvatar.Id, LastPosition, LastOrientation.Yaw, 350f);
+            SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
+                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
+                .Build());
+
+            // Power collection needs to be loaded after the avatar enters world
+            foreach (IMessage powerMsg in PowerLoader.LoadAvatarPowerCollection(this))
+                SendMessage(powerMsg);
+
+            // Activate the swap in power for the avatar to become playable
+            ActivatePowerArchive activatePower = new();
+            activatePower.Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
+                ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
+                ActivatePowerMessageFlags.HasPowerRandomSeed;
+
+            activatePower.PowerPrototypeRef = GameDatabase.GlobalsPrototype.AvatarSwapInPower;
+            activatePower.UserEntityId = Player.CurrentAvatar.Id;
+            activatePower.TargetPosition = LastPosition;
+            activatePower.FXRandomSeed = 100;
+            activatePower.PowerRandomSeed = 100;
+
+            SendMessage(NetMessageActivatePower.CreateBuilder()
+                .SetArchiveData(activatePower.ToByteString())
+                .Build());
+
             return true;
         }
 

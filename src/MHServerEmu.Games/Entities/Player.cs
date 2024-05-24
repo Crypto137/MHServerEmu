@@ -576,21 +576,34 @@ namespace MHServerEmu.Games.Entities
 
         #region Hacky Avatar Management
 
-        public void SetAvatar(PrototypeId prototypeId)
+        public bool SwitchAvatar(PrototypeId avatarProtoRef, out Avatar prevAvatar)
         {
-            uint librarySlot = 0;
+            prevAvatar = CurrentAvatar;
+            Avatar avatar = AvatarList.Find(avatar => avatar.PrototypeDataRef == avatarProtoRef);
+            if (avatar == null)
+                Logger.WarnReturn(false, $"SwitchAvatar(): Failed to find avatar entity for avatarProtoRef {GameDatabase.GetPrototypeName(avatarProtoRef)}");
 
-            foreach (Avatar avatar in AvatarList)
+            // If no current avatar, just put it in the play inventory
+            if (prevAvatar == null)
             {
-                if (avatar.BaseData.EntityPrototypeRef == prototypeId)
-                {
-                    avatar.BaseData.InvLoc.Set(Id, (PrototypeId)9555311166682372646, 0);
-                    CurrentAvatar = avatar;
-                    continue;
-                }
-
-                avatar.BaseData.InvLoc.Set(Id, (PrototypeId)5235960671767829134, librarySlot++);
+                avatar.BaseData.InvLoc.Set(Id, (PrototypeId)9555311166682372646, 0);            // AvatarInPlay
+                CurrentAvatar = avatar;
+                return true;
             }
+
+            // Swap avatars if there is a current one
+            // TODO: Replace with inventory methods
+            if (avatar.BaseData.InvLoc == prevAvatar.BaseData.InvLoc)
+                Logger.WarnReturn(false, $"SwitchAvatar(): Attempting to switch avatar to the one that is already in play {GameDatabase.GetPrototypeName(avatarProtoRef)}");
+
+            if (avatar.BaseData.InvLoc.InventoryRef != (PrototypeId)5235960671767829134)    // AvatarLibrary
+                return Logger.WarnReturn(false, $"SwitchAvatar(): Avatar {avatar} is not in avatar library");
+
+            prevAvatar.BaseData.InvLoc.Set(avatar.BaseData.InvLoc);
+            avatar.BaseData.InvLoc.Set(Id, (PrototypeId)9555311166682372646, 0);            // AvatarInPlay
+            CurrentAvatar = avatar;
+
+            return true;
         }
 
         #endregion

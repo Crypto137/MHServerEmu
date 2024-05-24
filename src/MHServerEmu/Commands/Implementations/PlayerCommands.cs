@@ -28,7 +28,7 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
-            playerConnection.Player.SetAvatar((PrototypeId)avatar);
+            playerConnection.Player.SwitchAvatar((PrototypeId)avatar, out _);
             game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
             return $"Changing avatar to {avatar}.";
         }

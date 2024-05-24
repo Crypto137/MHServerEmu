@@ -25,6 +25,9 @@ namespace MHServerEmu.Games.Powers
             // Gather all the powers we need to unlock
             List<PrototypeId> powersToUnlockList = new();
 
+            // Swap in power needed for the avatar to become playable after swapping
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+
             // Progression table powers
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
                 powersToUnlockList.Add(powerProgressionEntry.PowerAssignment.Ability);
