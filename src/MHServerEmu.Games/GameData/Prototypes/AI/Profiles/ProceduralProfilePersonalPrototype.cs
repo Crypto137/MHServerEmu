@@ -3700,7 +3700,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             Left,
             Right,
-            Center
+            Center,
+            None
         }
 
         public override void Init(Agent agent)
@@ -3719,6 +3720,166 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, PrisonBeamPowerRight);
             InitPower(agent, PrisonPowerLeft);
             InitPower(agent, PrisonPowerRight);
+
+            if (PlatformMarkerLeft == PrototypeId.Invalid 
+                || PlatformMarkerCenter == PrototypeId.Invalid 
+                || PlatformMarkerRight == PrototypeId.Invalid) return;
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            Region region = agent.Region;
+            if (region == null) return;
+
+            Sphere volume = new(agent.RegionLocation.Position, ownerController.AggroRangeHostile);
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (target == null) continue;
+                if (target.PrototypeDataRef == PlatformMarkerLeft)
+                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = target.Id;
+                else if (target.PrototypeDataRef == PlatformMarkerCenter)
+                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = target.Id;
+                else if (target.PrototypeDataRef == PlatformMarkerRight)
+                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = target.Id;
+            }
+        }
+
+        private enum State
+        {
+            Default,
+            SpikeDance,
+            SpikeDanceSingle
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            HandleEnrage(ownerController);
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            EnrageState enrageState = (EnrageState)(int)blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
+            if (enrageState != EnrageState.Enraging)
+            {
+                long health = agent.Properties[PropertyEnum.Health];
+                long maxHealth = agent.Properties[PropertyEnum.HealthMax];
+                if (MathHelper.IsBelowOrEqual(health, maxHealth, SummonPowerThreshold1))
+                {
+                    if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] < 1)
+                    {
+                        AttemptCallSentinelPower(ownerController);
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = 1;                       
+                    }
+                    else if (MathHelper.IsBelowOrEqual(health, maxHealth, SummonPowerThreshold2))
+                    {
+                        if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] < 2)
+                        {
+                            AttemptCallSentinelPower(ownerController);
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = 2;
+                        }
+                    }
+                }
+          
+                int state = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+                switch ((State)state)
+                {
+                    case State.Default:
+
+                        WorldEntity target = ownerController.TargetEntity;
+                        if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                            && proceduralAI.PartialOverrideBehavior == null) return;
+
+                        GRandom random = game.Random;
+                        Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                        PopulatePowerPicker(ownerController, powerPicker);
+                        HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);                        
+                        break;
+
+                    case State.SpikeDance:
+
+                        StaticBehaviorReturnType powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SpikeDanceVFXOnly.PowerContext, SpikeDanceVFXOnly);
+                        if (powerResult != StaticBehaviorReturnType.Running)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                        break;
+
+                    case State.SpikeDanceSingle:
+
+                        powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SpikeDanceSingleVFXOnly.PowerContext, SpikeDanceSingleVFXOnly);
+                        if (powerResult != StaticBehaviorReturnType.Running)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                        break;
+                }
+            }
+        }
+
+        private void AttemptCallSentinelPower(AIController ownerController)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var blackboard = ownerController.Blackboard;
+            var game = ownerController.Game;
+            if (game == null) return;
+            var manager = game.EntityManager;
+
+            if (ownerController.AttemptActivatePower(CallSentinelPowerVFXOnly, agent.Id, agent.RegionLocation.Position) == false)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPowerVFXOnly has failed.");
+                return;
+            }
+
+            ulong leftPlatformMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
+            if (leftPlatformMarkerId == 0)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught does not have a left platform marker.");
+                return;
+            }
+            var leftMarker = manager.GetEntity<WorldEntity>(leftPlatformMarkerId);
+            if (leftMarker == null)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught's left platform marker doesn't exist.");
+                return;
+            }
+
+            ulong centerPlatformMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2];
+            if (centerPlatformMarkerId == 0)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught does not have a center platform marker.");
+                return;
+            }
+            var centerMarker = manager.GetEntity<WorldEntity>(centerPlatformMarkerId);
+            if (centerMarker == null)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught's center platform marker doesn't exist.");
+                return;
+            }
+
+            ulong rightPlatformMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3];
+            if (rightPlatformMarkerId == 0)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught does not have a right platform marker.");
+                return;
+            }
+            var rightMarker = manager.GetEntity<WorldEntity>(rightPlatformMarkerId);
+            if (rightMarker == null)
+            {
+                ProceduralAI.Logger.Warn($"Onslaught's right platform marker doesn't exist.");
+                return;
+            }
+
+            if (ownerController.AttemptActivatePower(CallSentinelPower, 0, leftMarker.RegionLocation.Position) == false)
+                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPower has failed for the left platform.");
+
+            if (ownerController.AttemptActivatePower(CallSentinelPower, 0, centerMarker.RegionLocation.Position) == false)
+                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPower has failed for the center platform.");
+
+            if (ownerController.AttemptActivatePower(CallSentinelPower, 0, rightMarker.RegionLocation.Position) == false)
+                ProceduralAI.Logger.Warn($"Onslaught's CallSentinelPower has failed for the right platform.");
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -3756,6 +3917,141 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.AddPowersToPicker(powerPicker, PrisonPowerCenter);
                 ownerController.AddPowersToPicker(powerPicker, PrisonPowerLeft);
                 ownerController.AddPowersToPicker(powerPicker, PrisonPowerRight);
+            }
+        }
+
+        public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
+
+            var blackboard = ownerController.Blackboard;
+            var agent = ownerController.Owner;
+            if (agent == null) return false;
+            var region = agent.Region;
+            if (region == null) return false;
+            WorldEntity targetAvatar;
+
+            if (powerContext == PsionicBlastLeft)
+            {
+                targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, PlatformEnum.Left);
+                if (targetAvatar == null) return false;
+                ownerController.SetTargetEntity(targetAvatar);
+            }
+            else if (powerContext == PsionicBlastCenter)
+            {
+                targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, PlatformEnum.Center);
+                if (targetAvatar == null) return false;
+                ownerController.SetTargetEntity(targetAvatar);
+            }
+            else if (powerContext == PsionicBlastRight)
+            {
+                targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, PlatformEnum.Right);
+                if (targetAvatar == null) return false;
+                ownerController.SetTargetEntity(targetAvatar);
+            }
+            else if (powerContext == SpikeDanceVFXOnly)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDance;
+                var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                region.AIBroadcastBlackboardEvent.Invoke(evt);
+            }
+            else if (powerContext == SpikeDanceSingleVFXOnly)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDanceSingle;
+                var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                region.AIBroadcastBlackboardEvent.Invoke(evt);
+            }
+            else if (powerContext == PrisonPowerCenter || powerContext == PrisonPowerLeft || powerContext == PrisonPowerRight)
+            {
+                PlatformEnum platform = PlatformEnum.None;
+                if (powerContext == PrisonPowerLeft) platform = PlatformEnum.Left;
+                else if (powerContext == PrisonPowerCenter) platform = PlatformEnum.Center;
+                else if (powerContext == PrisonPowerRight) platform = PlatformEnum.Right;
+
+                targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, platform);
+                if (targetAvatar == null) return false;
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)platform;
+                ownerController.SetTargetEntity(targetAvatar);
+            }
+            else if (powerContext == PrisonBeamPowerCenter || powerContext == PrisonBeamPowerLeft || powerContext == PrisonBeamPowerRight)
+            {
+                PlatformEnum platform = PlatformEnum.None;
+                if (powerContext == PrisonBeamPowerLeft) platform = PlatformEnum.Left;
+                else if (powerContext == PrisonBeamPowerCenter) platform = PlatformEnum.Center;
+                else if (powerContext == PrisonBeamPowerRight) platform = PlatformEnum.Right;
+
+                ulong prisonId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4];
+                targetAvatar = GetRandomAvatarNearPlatformMarker(ownerController, platform, prisonId);
+                if (targetAvatar == null) return false;
+                ownerController.SetTargetEntity(targetAvatar);
+            }
+
+            return true;
+        }
+
+        private WorldEntity GetRandomAvatarNearPlatformMarker(AIController ownerController, PlatformEnum platform, ulong ignoreId = 0)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return null;
+            var region = agent.Region;
+            if (region == null) return null;
+            var game = ownerController.Game;
+            if (game == null) return null;
+
+            WorldEntity target = null;
+            Picker<WorldEntity> targetPicker = new (game.Random);
+            Sphere volume = new (agent.RegionLocation.Position, 3000.0f);
+            foreach (WorldEntity targetAvatar in region.IterateAvatarsInVolume(volume))
+                if (targetAvatar != null && targetAvatar.IsDead == false && targetAvatar.Id != ignoreId)
+                {
+                    bool onPlatform;
+                    switch (platform)
+                    {
+                        case PlatformEnum.Left:
+                            onPlatform = targetAvatar.HasConditionWithKeyword(LeftPlatformKeyword);
+                            break;
+                        case PlatformEnum.Right:
+                            onPlatform = targetAvatar.HasConditionWithKeyword(RightPlatformKeyword);
+                            break;
+                        case PlatformEnum.Center:
+                            onPlatform = targetAvatar.HasConditionWithKeyword(CenterPlatformKeyword) == false;
+                            break;
+                        default:
+                            ProceduralAI.Logger.Warn($"invalid platform enum passed into GetRandomAvatarNearPlatformMarker: Enum = {platform}");
+                            return null;
+                    }
+
+                    if (onPlatform)
+                        targetPicker.Add(targetAvatar);
+                }
+
+            if (targetPicker.Empty() == false)
+                targetPicker.Pick(out target);
+
+            return target;
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            var blackboard = ownerController.Blackboard;
+            if (powerContext == PrisonPowerCenter || powerContext == PrisonPowerLeft || powerContext == PrisonPowerRight)
+            {
+                var target = ownerController.TargetEntity;
+                if (target == null) return;
+                if (target.HasConditionWithKeyword(PrisonKeyword))
+                    blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4] = target.Id;
+                else
+                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomStateVal2);
+            }
+            else if (powerContext == PrisonBeamPowerCenter || powerContext == PrisonBeamPowerLeft || powerContext == PrisonBeamPowerRight)
+            {
+                ulong prisonId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId4];
+                var prisoner = ownerController.Game.EntityManager.GetEntity<WorldEntity>(prisonId);
+                if (prisoner == null || prisoner.IsInWorld == false || prisoner.HasConditionWithKeyword(PrisonKeyword) == false)
+                {
+                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomEntityId4);
+                    blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomStateVal2);
+                }
             }
         }
     }

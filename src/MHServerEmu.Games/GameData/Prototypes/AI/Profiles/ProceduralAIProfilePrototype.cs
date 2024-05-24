@@ -1202,6 +1202,105 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SpikeDanceMob { get; protected set; }
         public int MaxSpikeDanceActivations { get; protected set; }
         public float SpikeDanceMobSearchRadius { get; protected set; }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            Region region = agent.Region;
+            if (region == null) return;
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
+            ownerController.SetIsEnabled(false);
+        }
+
+        private enum  State
+        {
+            Default,
+            SpikeDance,
+            SpikeDanceSingle
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            var proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var game = agent.Game;
+            if (game == null) return;
+
+            if (ownerController.TargetEntity == null)
+                SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
+
+            var blackboard = ownerController.Blackboard;
+            State state = (State)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            List<Agent> targetList = new ();
+
+            if (state == State.SpikeDance)
+            {
+                var ownerGame = ownerController.Game;
+                if (ownerGame == null) return;
+                var numSpikes = ownerGame.Random.Next(1, MaxSpikeDanceActivations + 1);
+                targetList = GetSpikeDanceMobTargets(ownerController, numSpikes);
+            }
+            else if (state == State.SpikeDanceSingle)
+                targetList = GetSpikeDanceMobTargets(ownerController, 1);
+
+            foreach (var spikeDanceMob in targetList)
+            {
+                if (spikeDanceMob == null) continue;
+                var mobController = spikeDanceMob.AIController;
+                if (mobController == null) continue;
+                mobController.SetIsEnabled(true);
+                mobController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.SpikeDance;
+            }
+
+            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+            ownerController.SetIsEnabled(false);
+        }
+
+        private List<Agent> GetSpikeDanceMobTargets(AIController ownerController, int numSpikes)
+        {
+            List<Agent> spikeTargets = new();
+            var agent = ownerController.Owner;
+            if (agent == null) return spikeTargets;
+            var region = agent.Region;
+            if (region == null) return spikeTargets;
+            var game = ownerController.Game;
+            if (game == null) return spikeTargets;
+
+            Picker<Agent> targetPicker = new (game.Random);
+            Sphere volume = new (agent.RegionLocation.Position, SpikeDanceMobSearchRadius);
+            foreach (var entity in region.IterateEntitiesInVolume(volume, new()))
+                if (entity is Agent entityAgent && GameDatabase.DataDirectory.PrototypeIsAPrototype(entityAgent.PrototypeDataRef, SpikeDanceMob))
+                    targetPicker.Add(entityAgent);
+
+            for (int i = 0; i < numSpikes && targetPicker.Empty() == false; i++)
+                if (targetPicker.PickRemove(out Agent randomAgent))
+                    spikeTargets.Add(randomAgent);
+
+            return spikeTargets;
+        }
+
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            if (broadcastEvent.Broadcaster == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var broadcaster = broadcastEvent.Broadcaster;
+            var broadcasterBlackboard = broadcastEvent.Blackboard;
+            if (broadcasterBlackboard == null) return;
+
+            State stateVal = (State)(int)broadcasterBlackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (broadcaster.PrototypeDataRef == Onslaught)
+                if (stateVal == State.SpikeDance || stateVal == State.SpikeDanceSingle)
+                {
+                    ownerController.SetIsEnabled(true);
+                    ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)stateVal;
+                }
+        }
     }
 
     public class ProceduralProfileMeleeRevengePrototype : ProceduralProfileBasicMeleePrototype

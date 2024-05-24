@@ -2302,6 +2302,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
             InitPower(agent, SpikeDanceMissile);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            ownerController.SetIsEnabled(false);
+        }
+
+        private enum State
+        {
+            Default,
+            SpikeDance
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (ownerController.TargetEntity == null)
+                SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            State stateVal = (State)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (stateVal == State.SpikeDance && HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SpikeDanceMissile.PowerContext, SpikeDanceMissile) != StaticBehaviorReturnType.Running)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                ownerController.SetIsEnabled(false);
+                return;
+            }
         }
     }
 
