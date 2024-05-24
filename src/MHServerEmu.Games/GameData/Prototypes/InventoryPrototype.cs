@@ -50,6 +50,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsEquipmentInventory { get => Category == InventoryCategory.AvatarEquipment || Category == InventoryCategory.TeamUpEquipment; }
 
+        [DoNotCopy]
+        public bool IsPlayerGeneralInventory { get => Category == InventoryCategory.PlayerGeneral; }
+
         /// <summary>
         /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.
         /// </summary>

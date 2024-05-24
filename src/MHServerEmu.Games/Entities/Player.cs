@@ -324,6 +324,7 @@ namespace MHServerEmu.Games.Entities
         public void SaveToDBAccount(DBAccount account)
         {
             account.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
+
             foreach (Avatar avatar in IterateAvatars())
             {
                 DBAvatar dbAvatar = account.GetAvatar((long)avatar.BaseData.EntityPrototypeRef);
@@ -620,11 +621,11 @@ namespace MHServerEmu.Games.Entities
         
         public IEnumerable<Avatar> IterateAvatars()
         {
-            // temp until we have inventor iterator
-            foreach (var kvp in GetInventory(InventoryConvenienceLabel.AvatarLibrary))
-                yield return Game.EntityManager.GetEntity<Avatar>(kvp.Value.EntityId);
-
-            yield return Game.EntityManager.GetEntity<Avatar>(GetInventory(InventoryConvenienceLabel.AvatarInPlay).GetAnyEntity());
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.PlayerAvatars))
+            {
+                foreach (var kvp in inventory)
+                    yield return Game.EntityManager.GetEntity<Avatar>(kvp.Value.EntityId);
+            }
         }
 
         #endregion

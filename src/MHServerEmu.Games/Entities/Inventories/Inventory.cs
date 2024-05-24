@@ -88,6 +88,42 @@ namespace MHServerEmu.Games.Entities.Inventories
             return null;
         }
 
+        public int GetMatchingEntities(PrototypeId entityRef, List<ulong> matchList = null)
+        {
+            // NOTE: This is probably used for things like checking if a player has enough of something (e.g. crafting materials)
+            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetMatchingEntities(): entityRef == PrototypeId.Invalid");
+
+            int numMatches = 0;
+
+            foreach (var kvp in this)
+            {
+                if (kvp.Value.PrototypeDataRef == entityRef)
+                {
+                    Entity entity = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                    if (entity != null)
+                    {
+                        numMatches += entity.CurrentStackSize;
+                        matchList?.Add(entity.Id);
+                    }
+                }
+            }
+
+            return numMatches;
+        }
+
+        public bool ContainsMatchingEntity(PrototypeId entityRef)
+        {
+            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ContainsMatchingEntity(): entityRef == PrototypeId.Invalid");
+
+            foreach (var kvp in this)
+            {
+                if (kvp.Value.PrototypeDataRef == entityRef)
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool DestroyContained()
         {
             if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
