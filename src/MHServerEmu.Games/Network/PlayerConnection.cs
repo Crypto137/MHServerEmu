@@ -112,24 +112,21 @@ namespace MHServerEmu.Games.Network
 
             AOI = new(this, _dbAccount.Player.AOIVolume);
 
-            // Create player and avatar entities
+            // Create player entity
             EntitySettings playerSettings = new();
-            //playerSettings.Id = 14646212;
-            playerSettings.EntityRef = (PrototypeId)18307315963852687724;
+            playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
             playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
 
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
             Player.LoadFromDBAccount(_dbAccount);
 
+            // Create avatars
             Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
-
-            //ulong avatarEntityId = Player.Id + 1;
             foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 EntitySettings avatarSettings = new();
-                //avatarSettings.Id = avatarEntityId++;
                 avatarSettings.EntityRef = avatarRef;
                 avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
 
@@ -138,6 +135,17 @@ namespace MHServerEmu.Games.Network
                 avatar.InitializeFromDBAccount(avatarRef, _dbAccount);
             }
 
+            // Create team-up entities
+            Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                EntitySettings teamUpSettings = new();
+                teamUpSettings.EntityRef = teamUpRef;
+                Entity teamUp = Game.EntityManager.CreateEntity(teamUpSettings);
+                teamUp.ChangeInventoryLocation(teamUpLibrary);
+            }
+
+            // Make sure we have a valid current avatar ref
             var avatarDataRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
             if (dataDirectory.PrototypeIsA<AvatarPrototype>(avatarDataRef) == false)
             {
@@ -145,6 +153,7 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(avatarDataRef)}");
             }
 
+            // Switch to the current avatar
             Player.SwitchAvatar(avatarDataRef, out _);
         }
 
@@ -220,6 +229,12 @@ namespace MHServerEmu.Games.Network
 
             foreach (Avatar avatar in Player.IterateAvatars())
                 SendMessage(avatar.ToNetMessageEntityCreate());
+
+            foreach (var kvp in Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
+            {
+                var teamUp = Game.EntityManager.GetEntity<Agent>(kvp.Value.EntityId);
+                SendMessage(teamUp.ToNetMessageEntityCreate());
+            }
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
