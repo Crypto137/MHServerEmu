@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Entities
         private readonly Dictionary<ulong, Entity> _entityDict = new();
         private readonly Dictionary<ulong, Entity> _entityDbGuidDict = new();
         private readonly HashSet<Player> _players = new();
-        private readonly Queue<ulong> _entityDeletionQueue = new();
+        private readonly LinkedList<ulong> _entitiesPendingDestruction = new();     // NOTE: Change this to a regular List<ulong> if this causes GC issues
 
         private ulong _nextEntityId = 1;
         private ulong GetNextEntityId() { return _nextEntityId++; }
@@ -75,7 +75,11 @@ namespace MHServerEmu.Games.Entities
             if (settings.Id == 0) settings.Id = GetNextEntityId();
 
             Entity entity;
-            // TODO: ProcessPendingDestroyImmediate()
+
+            // If the requested id is already used by an entity that is pending deletion, finish its deletion immediately
+            Entity destroyedEntity = GetDestroyedEntity<Entity>(settings.Id);
+            if (destroyedEntity != null)
+                ProcessPendingDestroyImmediate(destroyedEntity);
 
             // Check for id collisions
             entity = GetEntity(settings.Id, GetEntityFlags.UnpackedOnly);
@@ -157,7 +161,7 @@ namespace MHServerEmu.Games.Entities
             // Finish destruction
             entity.SetStatus(EntityStatus.PendingDestroy, false);
             entity.SetStatus(EntityStatus.Destroyed, true);
-            _entityDeletionQueue.Enqueue(entity.Id);    // Enqueue entity for deletion at the end of the next frame
+            _entitiesPendingDestruction.AddLast(entity.Id);    // Enqueue entity for deletion at the end of the next frame
 
             // Remove entity from the game
             entity.ExitGame();
@@ -283,6 +287,11 @@ namespace MHServerEmu.Games.Entities
             return null;
         }
 
+        private T GetDestroyedEntity<T>(ulong entityId) where T : Entity
+        {
+            return GetEntity(entityId, GetEntityFlags.DestroyedOnly) as T;
+        }
+
         private bool ValidateEntityForGet(Entity entity, GetEntityFlags flags)
         {
             if (entity == null) return false;
@@ -294,9 +303,9 @@ namespace MHServerEmu.Games.Entities
             if (_game == null) return Logger.WarnReturn(false, "ProcessDestroyed(): _game == null");
 
             // Delete all destroyed entities
-            while (_entityDeletionQueue.Count != 0)
+            while (_entitiesPendingDestruction.Any())
             {
-                ulong entityId = _entityDeletionQueue.Dequeue();
+                ulong entityId = _entitiesPendingDestruction.First.Value;
 
                 if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
                     Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
@@ -305,8 +314,23 @@ namespace MHServerEmu.Games.Entities
                     Logger.Trace($"Deleting entity {entity}");
                     DeleteEntity(entity);
                 }
+
+                _entitiesPendingDestruction.RemoveFirst();
             }
 
+            return true;
+        }
+
+        private bool ProcessPendingDestroyImmediate(Entity destroyedEntity)
+        {
+            if (destroyedEntity == null) return Logger.WarnReturn(false, "ProcessPendingDestroyImmediate(): destroyedEntity == null");
+
+            // Remove destroyed entity from pending
+            if (_entitiesPendingDestruction.Remove(destroyedEntity.Id) == false)
+                Logger.WarnReturn(false, $"ProcessPendingDestroyImmediate(): Entity {destroyedEntity} is not found in the pending destruction list");
+
+            // Delete it manually
+            DeleteEntity(destroyedEntity);
             return true;
         }
 
