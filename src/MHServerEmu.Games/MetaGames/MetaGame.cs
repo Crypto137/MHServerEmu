@@ -31,20 +31,6 @@ namespace MHServerEmu.Games.MetaGames
             region.RegisterMetaGame(this);
         }
 
-        // old 
-        public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public MetaGame(EntityBaseData baseData) : base(baseData) { }
-
-        public MetaGame(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
-            ReplicatedVariable<string> name) : base(baseData)
-        {
-            ReplicationPolicy = replicationPolicy;
-            Properties = properties;
-
-            _name = name;
-        }
-
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);

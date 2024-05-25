@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
 
         public InventoryCollection InventoryCollection { get; } = new();
-        public InventoryLocation InventoryLocation { get; private set; } = new();
+        public InventoryLocation InventoryLocation { get => BaseData.InvLoc; set => BaseData.InvLoc = value; }
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
         #region Flag Properties
@@ -183,17 +183,13 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        public Entity(EntityBaseData baseData, ByteString archiveData)
-        {
-            BaseData = baseData;
-            using (Archive archive = new(ArchiveSerializeType.Replication, archiveData))
-                Serialize(archive);
-        }
-
         public Entity(Game game)
         {
             Game = game;
         }
+
+        // REMOVEME || old note: Base data is required for all entities, so there's no parameterless constructor
+        public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
         public virtual void PreInitialize(EntitySettings settings) { }
 
@@ -223,15 +219,15 @@ namespace MHServerEmu.Games.Entities
                 Properties.FlattenCopyFrom(entityProto.Properties, true); 
             if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
             OnPropertyChange(); // Temporary solution for for _flags
+
+            InventoryCollection.Initialize(this);
+            InitInventories(settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.PopulateInventories));
         }
 
         public virtual void OnPostInit(EntitySettings settings)
         {
             // TODO init
         }
-
-        // REMOVEME || old note: Base data is required for all entities, so there's no parameterless constructor
-        public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
         public virtual bool Serialize(Archive archive)
         {
@@ -468,6 +464,17 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public Inventory GetInventory(InventoryConvenienceLabel convenienceLabel)
+        {
+            foreach (Inventory inventory in InventoryCollection)
+            {
+                if (inventory.ConvenienceLabel == convenienceLabel)
+                    return inventory;
+            }
+
+            return null;
+        }
+
         public Inventory GetInventoryByRef(PrototypeId invProtoRef)
         {
             return InventoryCollection.GetInventoryByRef(invProtoRef);
@@ -551,6 +558,31 @@ namespace MHServerEmu.Games.Entities
             if (PrototypeDataRef != other.PrototypeDataRef) return false;
             if (isAdding && CurrentStackSize + other.CurrentStackSize > other.MaxStackSize) return false;
             return true;
+        }
+
+        protected virtual bool InitInventories(bool populateInventories)
+        {
+            bool success = true;
+
+            EntityPrototype entityPrototype = Prototype;
+            if (entityPrototype == null) return Logger.WarnReturn(false, "InitInventories(): entityPrototype == null");
+
+            foreach (EntityInventoryAssignmentPrototype invAssignmentProto in entityPrototype.Inventories)
+            {
+                if (AddInventory(invAssignmentProto.Inventory, invAssignmentProto.LootTable) == false)
+                {
+                    Logger.Warn($"InitInventories(): Failed to add inventory, invProtoRef={GameDatabase.GetPrototypeName(invAssignmentProto.Inventory)}");
+                    success = false;
+                }
+            }
+
+            return success;
+        }
+
+        protected bool AddInventory(PrototypeId invProtoRef, PrototypeId lootTableRef = PrototypeId.Invalid)
+        {
+            // lootTableRef seems to be unused
+            return InventoryCollection.CreateAndAddInventory(invProtoRef);
         }
 
         #endregion

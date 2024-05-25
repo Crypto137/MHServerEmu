@@ -93,43 +93,36 @@ namespace MHServerEmu.Games.Entities
 
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
-        public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
 
-        // new
+        // Console stuff - not implemented
+        public bool IsConsolePlayer { get => false; }
+        public bool IsConsoleUI { get => false; }
+        public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
+
         public Player(Game game) : base(game) { }
 
-        // old
-        public Player(EntityBaseData baseData) : base(baseData)
+        public override void Initialize(EntitySettings settings)
         {
-            // Base Data
+            base.Initialize(settings);
+
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.EntityId = 14646212;
-            BaseData.EntityPrototypeRef = (PrototypeId)18307315963852687724;
             BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.DbId = 0x20000000000D3D03;
             BaseData.LocomotionState = new();
 
-            // Archive Data
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
-            Properties.ReplicationId = 9078332;
+            Properties.ReplicationId = Game.CurrentRepId;
 
             _missionManager.Owner = this;
-            _avatarProperties.ReplicationId = 9078333;
+            _avatarProperties.ReplicationId = Game.CurrentRepId;
             _shardId = 3;
-            _playerName = new(9078334, string.Empty);
+            _playerName = new(Game.CurrentRepId, string.Empty);
             _secondaryPlayerName = new(0, string.Empty);
             _matchQueueStatus.SetOwner(this);
-            _partyId = new(9078335, 0);
+            _partyId = new(Game.CurrentRepId, 0);
             _community = new(this);
             _community.Initialize();
-            _gameplayOptions.SetOwner(this);
-        }
-
-        public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData)
-        {
-            _missionManager.Owner = this;
-            _matchQueueStatus.SetOwner(this);
             _gameplayOptions.SetOwner(this);
         }
 
@@ -198,7 +191,7 @@ namespace MHServerEmu.Games.Entities
         /// <summary>
         /// Initializes this <see cref="Player"/> from data contained in the provided <see cref="DBAccount"/>.
         /// </summary>
-        public void InitializeFromDBAccount(DBAccount account)
+        public void LoadFromDBAccount(DBAccount account)
         {
             // Adjust properties
             foreach (var accountAvatar in account.Avatars.Values)
@@ -331,7 +324,8 @@ namespace MHServerEmu.Games.Entities
         public void SaveToDBAccount(DBAccount account)
         {
             account.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
-            foreach (Avatar avatar in AvatarList)
+
+            foreach (Avatar avatar in IterateAvatars())
             {
                 DBAvatar dbAvatar = account.GetAvatar((long)avatar.BaseData.EntityPrototypeRef);
                 dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
@@ -558,6 +552,38 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        protected override bool InitInventories(bool populateInventories)
+        {
+            bool success = base.InitInventories(populateInventories);
+
+            PlayerPrototype playerProto = Prototype as PlayerPrototype;
+            if (playerProto == null) return Logger.WarnReturn(false, "InitInventories(): playerProto == null");
+
+            foreach (EntityInventoryAssignmentPrototype invEntryProto in playerProto.StashInventories)
+            {
+                var stashInvProto = invEntryProto.Inventory.As<PlayerStashInventoryPrototype>();
+                if (stashInvProto == null)
+                {
+                    Logger.Warn("InitInventories(): stashInvProto == null");
+                    continue;
+                }
+
+                if (stashInvProto.IsPlayerStashInventory && IsUsingUnifiedStash == false && stashInvProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash)
+                    continue;
+
+                if (stashInvProto.LockedByDefault == false)
+                {
+                    if (AddInventory(invEntryProto.Inventory) == false)
+                    {
+                        Logger.Warn($"InitInventories(): Failed to add inventory, invProtoRef={GameDatabase.GetPrototypeName(invEntryProto.Inventory)}");
+                        success = false;
+                    }
+                }
+            }
+
+            return success;
+        }
+
         /// <summary>
         /// Add the specified badge to this <see cref="Player"/>. Returns <see langword="true"/> if successful.
         /// </summary>
@@ -574,22 +600,31 @@ namespace MHServerEmu.Games.Entities
         public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
 
 
-        #region Hacky Avatar Management
+        #region Avatar Management
 
-        public void SetAvatar(PrototypeId prototypeId)
+        public bool SwitchAvatar(PrototypeId avatarProtoRef, out Avatar prevAvatar)
         {
-            uint librarySlot = 0;
+            Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+            Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
 
-            foreach (Avatar avatar in AvatarList)
+            prevAvatar = CurrentAvatar;
+
+            Avatar avatar = avatarLibrary.GetMatchingEntity(avatarProtoRef) as Avatar;
+            if (avatar == null)
+                Logger.WarnReturn(false, $"SwitchAvatar(): Failed to find avatar entity for avatarProtoRef {GameDatabase.GetPrototypeName(avatarProtoRef)}");
+
+            avatar.ChangeInventoryLocation(avatarInPlay, 0);
+            CurrentAvatar = avatar;
+
+            return true;
+        }
+        
+        public IEnumerable<Avatar> IterateAvatars()
+        {
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.PlayerAvatars))
             {
-                if (avatar.BaseData.EntityPrototypeRef == prototypeId)
-                {
-                    avatar.BaseData.InvLoc.Set(Id, (PrototypeId)9555311166682372646, 0);
-                    CurrentAvatar = avatar;
-                    continue;
-                }
-
-                avatar.BaseData.InvLoc.Set(Id, (PrototypeId)5235960671767829134, librarySlot++);
+                foreach (var kvp in inventory)
+                    yield return Game.EntityManager.GetEntity<Avatar>(kvp.Value.EntityId);
             }
         }
 

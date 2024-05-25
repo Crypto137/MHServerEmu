@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Entities
         private ulong _sourceEntityId;
         private Vector3 _sourcePosition = Vector3.Zero;
         private PrototypeId _activePowerPrototypeRef;
-        private InventoryLocation _invLoc;
+        private InventoryLocation _invLoc = new();
         private InventoryLocation _invLocPrev;
         private List<ulong> _attachedEntityList = new();
 

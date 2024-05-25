@@ -50,21 +50,6 @@ namespace MHServerEmu.Games.Entities.Inventories
         InvalidRestrictedByOtherItem = 34,
     };
 
-    // NOTE: Most iteration flags are for filtering by category or convenience label
-    [Flags]
-    public enum InventoryIterationFlag
-    {
-        None                        = 0,
-        PlayerGeneral               = 1 << 0,
-        PlayerGeneralExtra          = 1 << 1,
-        PlayerAvatars               = 1 << 2,
-        PlayerStashAvatarSpecific   = 1 << 3,
-        PlayerStashGeneral          = 1 << 4,
-        DeliveryBoxAndErrorRecovery = 1 << 5,
-        Equipment                   = 1 << 6,
-        SortByPrototypeRef          = 1 << 7
-    }
-
     [AssetEnum((int)None)]
     public enum InventoryCategory   // Entity/Inventory/Category.type
     {

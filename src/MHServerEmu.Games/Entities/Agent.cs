@@ -1,5 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
@@ -70,6 +69,10 @@ namespace MHServerEmu.Games.Entities
 
             // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
+
+            // Agents (team-ups and players) need an invloc to be recognized as belonging to the player
+            BaseData.FieldFlags |= EntityCreateMessageFlags.HasInvLoc;
+
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
         }
@@ -280,9 +283,10 @@ namespace MHServerEmu.Games.Entities
             return InventoryResult.Success;     // Bypass property restrictions
         }
 
-        // Old
-        public Agent(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public Agent(EntityBaseData baseData) : base(baseData) { }
+        protected override bool InitInventories(bool populateInventories)
+        {
+            // TODO
+            return base.InitInventories(populateInventories);
+        }
     }
 }

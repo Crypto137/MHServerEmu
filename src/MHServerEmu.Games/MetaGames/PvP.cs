@@ -1,8 +1,6 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.MetaGames
 {
@@ -11,13 +9,7 @@ namespace MHServerEmu.Games.MetaGames
         private ReplicatedVariable<int> _team1 = new();
         private ReplicatedVariable<int> _team2 = new();
 
-        // new
         public PvP(Game game) : base(game) { }
-
-        // old
-        public PvP(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public PvP(EntityBaseData baseData) : base(baseData) { }
 
         public override bool Serialize(Archive archive)
         {

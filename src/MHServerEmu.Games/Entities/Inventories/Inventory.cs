@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public InventoryCategory Category { get; private set; } = InventoryCategory.None;
         public InventoryConvenienceLabel ConvenienceLabel { get; private set; } = InventoryConvenienceLabel.None;
-        public bool IsEquipment { get => Prototype != null && Prototype.IsEquipmentInventory(); }
+        public bool IsEquipment { get => Prototype != null && Prototype.IsEquipmentInventory; }
         public int MaxCapacity { get; private set; }
 
         public int Count { get => _entities.Count; }
@@ -65,6 +65,63 @@ namespace MHServerEmu.Games.Entities.Inventories
             }
 
             return Entity.InvalidId;
+        }
+
+        public ulong GetAnyEntity()
+        {
+            if (_entities.Any())
+                return _entities.First().Value.EntityId;
+
+            return 0;
+        }
+
+        public Entity GetMatchingEntity(PrototypeId entityRef)
+        {
+            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn<Entity>(null, "GetMatchingEntity(): entityRef == PrototypeId.Invalid");
+
+            foreach (var kvp in this)
+            {
+                if (kvp.Value.PrototypeDataRef == entityRef)
+                    return Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+            }
+
+            return null;
+        }
+
+        public int GetMatchingEntities(PrototypeId entityRef, List<ulong> matchList = null)
+        {
+            // NOTE: This is probably used for things like checking if a player has enough of something (e.g. crafting materials)
+            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetMatchingEntities(): entityRef == PrototypeId.Invalid");
+
+            int numMatches = 0;
+
+            foreach (var kvp in this)
+            {
+                if (kvp.Value.PrototypeDataRef == entityRef)
+                {
+                    Entity entity = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                    if (entity != null)
+                    {
+                        numMatches += entity.CurrentStackSize;
+                        matchList?.Add(entity.Id);
+                    }
+                }
+            }
+
+            return numMatches;
+        }
+
+        public bool ContainsMatchingEntity(PrototypeId entityRef)
+        {
+            if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ContainsMatchingEntity(): entityRef == PrototypeId.Invalid");
+
+            foreach (var kvp in this)
+            {
+                if (kvp.Value.PrototypeDataRef == entityRef)
+                    return true;
+            }
+
+            return false;
         }
 
         public bool DestroyContained()
@@ -288,7 +345,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (inventoryProto == null)
                 return Logger.WarnReturn(false, "IsPlayerStashInventory(): inventoryProto == null");
 
-            return inventoryProto.IsPlayerStashInventory();
+            return inventoryProto.IsPlayerStashInventory;
         }
 
         private InventoryResult AddEntity(Entity entity, ref ulong? stackEntityId, bool allowStacking, uint destSlot, InventoryLocation prevInvLoc)
@@ -374,7 +431,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         private InventoryResult DoRemoveEntity(Entity entity, bool finalMove, bool withinSameInventory)
         {
             if (entity == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "DoRemoveEntity(): entity == null");
-            if (entity.IsRootOwner == false) return Logger.WarnReturn(InventoryResult.IsRootOwner, "DoRemoveEntity(): entity.IsRootOwner == false");
+            if (entity.IsRootOwner) return Logger.WarnReturn(InventoryResult.IsRootOwner, "DoRemoveEntity(): entity.IsRootOwner");
 
             Entity inventoryOwner = Owner;
             if (inventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "DoRemoveEntity(): inventoryOwner == null");
