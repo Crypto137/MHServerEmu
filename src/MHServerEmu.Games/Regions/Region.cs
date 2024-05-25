@@ -116,6 +116,8 @@ namespace MHServerEmu.Games.Regions
 
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
         public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
+        public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
+        public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
 
         private BitList _collisionIds;
         private BitList _collisionBits;

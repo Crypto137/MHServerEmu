@@ -29,4 +29,21 @@ namespace MHServerEmu.Games.Behavior
             Blackboard = blackboard;
         }
     }
+
+    public class PlayerInteractGameEvent
+    {
+        public Player Player;
+        public WorldEntity InteractableObject;
+
+        public PlayerInteractGameEvent(Player player, WorldEntity interactableObject)
+        {
+            Player = player;
+            InteractableObject = interactableObject;
+        }
+    }
+
+    public class EntityAggroedGameEvent
+    {
+
+    }
 }

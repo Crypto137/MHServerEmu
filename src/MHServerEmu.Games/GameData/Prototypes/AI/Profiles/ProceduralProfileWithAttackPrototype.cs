@@ -2240,7 +2240,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
         }
 
-        private void FindBestAvatarAllyToFollow(AIController ownerController)
+        public void FindBestAvatarAllyToFollow(AIController ownerController)
         {
             Agent agent = ownerController.Owner;
             if (agent == null) return;

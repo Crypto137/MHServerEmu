@@ -30,7 +30,10 @@ namespace MHServerEmu.Games.Behavior
         public WorldEntity InteractEntity => GetInteractEntityHelper();
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
         public Action<EntityDeadGameEvent> EntityDeadEvent { get; private set; }
+        public Action<EntityAggroedGameEvent> EntityAggroedEvent { get; private set; }
         public Action<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent { get; private set; }
+        public Action<PlayerInteractGameEvent> PlayerInteractEvent { get; private set; }
+
 
         public AIController(Game game, Agent owner)
         {
@@ -40,7 +43,9 @@ namespace MHServerEmu.Games.Behavior
             Blackboard = new (owner);
             Brain = new (game, this);
             EntityDeadEvent = OnAIEntityDeadEvent;
+            EntityAggroedEvent = OnAIEntityAggroedGameEvent;
             AIBroadcastBlackboardEvent = OnAIBroadcastBlackboardEvent;
+            PlayerInteractEvent = OnAIOnPlayerInteractEvent;
         }
 
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
@@ -338,6 +343,24 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnAIBroadcastBlackboardEvent(broadcastEvent);
         }
 
+        private void OnAIOnPlayerInteractEvent(PlayerInteractGameEvent broadcastEvent)
+        {
+            Brain?.OnPlayerInteractEvent(broadcastEvent);
+        }
+
+        private void OnAIEntityAggroedGameEvent(EntityAggroedGameEvent broadcastEvent)
+        {
+            Brain?.OnEntityAggroedEvent(broadcastEvent);
+        }
+
+        public void RegisterForEntityAggroedEvents(Region region, bool register)
+        {
+            if (register)
+                region.EntityAggroedEvent.AddActionBack(EntityAggroedEvent);
+            else
+                region.EntityAggroedEvent.RemoveAction(EntityAggroedEvent);
+        }
+
         public void RegisterForEntityDeadEvents(Region region, bool register)
         {
             if (register)
@@ -352,6 +375,14 @@ namespace MHServerEmu.Games.Behavior
                 region.AIBroadcastBlackboardEvent.AddActionBack(AIBroadcastBlackboardEvent);
             else
                 region.AIBroadcastBlackboardEvent.RemoveAction(AIBroadcastBlackboardEvent);
+        }
+
+        public void RegisterForPlayerInteractEvents(Region region, bool register)
+        {
+            if (register)
+                region.PlayerInteractEvent.AddActionBack(PlayerInteractEvent);
+            else
+                region.PlayerInteractEvent.RemoveAction(PlayerInteractEvent);
         }
     }
 }

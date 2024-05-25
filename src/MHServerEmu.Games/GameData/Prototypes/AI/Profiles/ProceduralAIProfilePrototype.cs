@@ -169,6 +169,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt) { }
         public virtual void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent) { }
         public virtual void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent) { }
+        public virtual void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent) { }
+        public virtual void OnEntityAggroedEvent(AIController ownerController, EntityAggroedGameEvent aggroedEvent) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
