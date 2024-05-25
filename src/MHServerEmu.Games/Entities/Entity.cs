@@ -377,7 +377,7 @@ namespace MHServerEmu.Games.Entities
         {
         }
 
-        public void OnDeallocate()
+        public virtual void OnDeallocate()
         {
         }
 

@@ -123,6 +123,7 @@ namespace MHServerEmu.Games.Entities
             _secondaryPlayerName = new(0, string.Empty);
             _partyId = new(Game.CurrentRepId, 0);
 
+            Game.EntityManager.AddPlayer(this);
             _matchQueueStatus.SetOwner(this);
 
             _community = new(this);
@@ -629,6 +630,12 @@ namespace MHServerEmu.Games.Entities
         }
 
         #endregion
+
+        public override void OnDeallocate()
+        {
+            Game.EntityManager.RemovePlayer(this);
+            base.OnDeallocate();
+        }
 
         public List<IMessage> OnLoadAndPlayKismetSeq(PlayerConnection playerConnection)
         {

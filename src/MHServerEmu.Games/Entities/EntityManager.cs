@@ -34,6 +34,7 @@ namespace MHServerEmu.Games.Entities
         private readonly Game _game;
 
         private readonly Dictionary<ulong, Entity> _entityDict = new();
+        private readonly HashSet<Player> _players = new();
         private readonly Queue<ulong> _entityDeletionQueue = new();
 
         private ulong _nextEntityId = 1;
@@ -41,6 +42,8 @@ namespace MHServerEmu.Games.Entities
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
         public bool IsDestroyingAllEntities { get; private set; } = false;
+
+        public IEnumerable<Player> Players { get => _players; }
 
         public PhysicsManager PhysicsManager { get; set; }
         public EntityInvasiveCollection AllEntities { get; private set; }
@@ -140,6 +143,22 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool AddPlayer(Player player)
+        {
+            if (player == null) return Logger.WarnReturn(false, "AddPlayer(): player == null");
+            bool playerAdded = _players.Add(player);
+            if (playerAdded == false) Logger.Warn($"AddPlayer(): Failed to add player {player}");
+            return playerAdded;
+        }
+
+        public bool RemovePlayer(Player player)
+        {
+            if (player == null) return Logger.WarnReturn(false, "RemovePlayer(): player == null");
+            bool playerRemoved = _players.Remove(player);
+            if (playerRemoved == false) Logger.Warn($"RemovePlayer(): Failed to remove player {player}");
+            return playerRemoved;
+        }
+
         public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
         {
             // NOTE: This public method is used to prevent destroyed entities from being accessed externally.
@@ -237,9 +256,9 @@ namespace MHServerEmu.Games.Entities
                     Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
                 else
                 {
-                    DeleteEntity(entity);
                     Logger.Trace($"Deleting entity {entity}");
-                }   
+                    DeleteEntity(entity);
+                }
             }
 
             return true;
