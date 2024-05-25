@@ -1,13 +1,12 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using System.Collections.Concurrent;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Missions;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.UI;
 using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.Regions
@@ -21,6 +20,8 @@ namespace MHServerEmu.Games.Regions
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
 
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
+
+        private ConcurrentQueue<Region> _shutdownQueue = new();
 
         public static void ClearRegionDict() => _regionDict?.Clear();
         public IEnumerable<Region> AllRegions => _allRegions.Values;
@@ -144,6 +145,17 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
+        public void ProcessPendingRegions()
+        {
+            while (_shutdownQueue.TryDequeue(out Region region))
+            {
+                TimeSpan lifetime = DateTime.Now - region.CreatedTime;
+                string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
+                Logger.Info($"Shutdown region = {region}, Lifetime = {formattedLifetime}");
+                region.Shutdown();
+            }
+        }
+
         // NEW
         public Region GetRegion(ulong id)
         {
@@ -200,8 +212,10 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes
-        private const int UnVisitedTime = 5; // 5 minutes
+        //private const int CleanUpIntervalMS = 1000 * 60 * 5;
+        private const int CleanUpIntervalMS = 1000 * 10;
+        private static readonly TimeSpan CleanUpTime = TimeSpan.FromMilliseconds(CleanUpIntervalMS);
+        private static readonly TimeSpan UnvisitedTime = TimeSpan.FromMilliseconds(CleanUpIntervalMS);
 
         public async Task CleanUpRegionsAsync()
         {            
@@ -219,7 +233,7 @@ namespace MHServerEmu.Games.Regions
                 if (_allRegions.Count == 0) return;
             }            
             var currentTime = DateTime.Now;
-            Logger.Debug($"CleanUp");
+            Logger.Info($"Running region cleanup...");
 
             // Get PlayerRegions
             HashSet<RegionPrototypeId> playerRegions = new();
@@ -240,7 +254,6 @@ namespace MHServerEmu.Games.Regions
                     {
                         visitedTime = region.VisitedTime;
                     }
-                    TimeSpan timeDifference = currentTime - visitedTime;
 
                     if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
                     {
@@ -249,26 +262,22 @@ namespace MHServerEmu.Games.Regions
                     else
                     {
                         // TODO check all active local teleport to this Region
-                        if (timeDifference.TotalMinutes > UnVisitedTime)
+                        if (currentTime - visitedTime >= UnvisitedTime)
                             toShutdown.Add(region);
                     }
                 }
             }
 
-            // ShoutDown all unactived regions
+            // Queue all inactive regions for shutdown
             foreach (Region region in toShutdown)
             {
                 lock (_managerLock)
                 {
                     _allRegions.Remove(region.Id);
                     _regionDict.Remove(region.PrototypeId);
-                }
-                TimeSpan lifetime = DateTime.Now - region.CreatedTime;
-                string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
-                Logger.Warn($"Shutdown region = {region}, Lifetime = {formattedLifetime}");
-                region.Shutdown();                
+                    _shutdownQueue.Enqueue(region);
+                }              
             }
-
         }
 
         #region Hardcoded

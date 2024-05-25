@@ -245,7 +245,10 @@ namespace MHServerEmu.Games
                 NetworkManager.Update();                            // Add / remove clients
                 NetworkManager.ReceiveAllPendingMessages();         // Process input
                 NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
+
                 UpdateFixedTime();                                  // Update simulation state
+
+                RegionManager.ProcessPendingRegions();              // Process any regions pending shutdowns (TODO: Add generation here as well)
             }
         }
 
