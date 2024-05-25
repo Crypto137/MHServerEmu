@@ -32,6 +32,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Game _game;
+
         private readonly Dictionary<ulong, Entity> _entityDict = new();
         private readonly Queue<ulong> _entityDeletionQueue = new();
 
@@ -49,10 +50,15 @@ namespace MHServerEmu.Games.Entities
         public EntityManager(Game game)
         {            
             _game = game;
-            PhysicsManager = new(game);
+            PhysicsManager = new();
             AllEntities = new(EntityCollection.All);
             SimulatedEntities = new(EntityCollection.Simulated);
             LocomotionEntities = new(EntityCollection.Locomotion);
+        }
+
+        public bool Initialize()
+        {
+            return PhysicsManager.Initialize(_game);
         }
 
         public Entity CreateEntity(EntitySettings settings)

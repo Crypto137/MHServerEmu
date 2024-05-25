@@ -20,7 +20,6 @@ namespace MHServerEmu.Games.Regions
 
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
 
-        private readonly EntityManager _entityManager;
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
         public static void ClearRegionDict() => _regionDict?.Clear();
@@ -33,9 +32,9 @@ namespace MHServerEmu.Games.Regions
         private readonly Dictionary<ulong, Region> _matches = new();
         public Game Game { get; private set; }
         private readonly object _managerLock = new();
-        public RegionManager(EntityManager entityManager)
+
+        public RegionManager()
         {
-            _entityManager = entityManager;
             _areaId = 1;
             _cellId = 1;
         }
@@ -174,7 +173,7 @@ namespace MHServerEmu.Games.Regions
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
-                    ulong numEntities = _entityManager.PeekNextEntityId();
+                    ulong numEntities = Game.EntityManager.PeekNextEntityId();
                     Logger.Debug($"GenerateRegion {GameDatabase.GetFormattedPrototypeName((PrototypeId)prototype)}");
                     try
                     {
@@ -189,7 +188,7 @@ namespace MHServerEmu.Games.Regions
                     {
                         region.ArchiveData = GetArchiveData(prototype);
                         EntityHelper.SetUpHardcodedEntities(region);
-                        ulong entities = _entityManager.PeekNextEntityId() - numEntities;
+                        ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
                         Logger.Debug($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
                         region.CreatedTime = DateTime.Now;
 
