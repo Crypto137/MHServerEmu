@@ -91,16 +91,18 @@ namespace MHServerEmu.Games.Entities
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        protected EntityFlags _flags;
         private InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
 
-        protected EntityFlags _flags;
-        public ulong Id => BaseData.EntityId;
-        public EntityBaseData BaseData { get; set; }
+        public EntityBaseData BaseData { get; set; } = new();
+        public ulong Id { get => BaseData.EntityId; set => BaseData.EntityId = value; }
+        public ulong DatabaseUniqueId { get => BaseData.DbId; set => BaseData.DbId = value; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
+
         public ulong RegionId { get; set; } = 0;
         public Game Game { get; set; } 
         public EntityStatus Status { get; set; }
-        public ulong DatabaseUniqueId { get => BaseData.DbId; }
-        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
+
         public ReplicatedPropertyCollection Properties { get; set; } = new();
 
         public virtual ulong PartyId
@@ -113,9 +115,9 @@ namespace MHServerEmu.Games.Entities
         }
 
         public DateTime DeathTime { get; private set; }
-        public EntityPrototype Prototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.EntityPrototypeRef); }
+        public EntityPrototype Prototype { get; private set; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(BaseData.EntityPrototypeRef); }
-        public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; }
+        public PrototypeId PrototypeDataRef { get => BaseData.EntityPrototypeRef; private set => BaseData.EntityPrototypeRef = value; }
 
         public InventoryCollection InventoryCollection { get; } = new();
         public InventoryLocation InventoryLocation { get => BaseData.InvLoc; set => BaseData.InvLoc = value; }
@@ -190,23 +192,46 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void PreInitialize(EntitySettings settings) { }
 
-        public virtual void Initialize(EntitySettings settings)
+        public virtual bool Initialize(EntitySettings settings)
         {   
             // Old
             var entityProto = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
-            bool OverrideSnapToFloor = false;
+            bool overrideSnapToFloor = false;
             if (entityProto is WorldEntityPrototype worldEntityProto)
             {
                 bool snapToFloor = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
                     ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
                     : worldEntityProto.SnapToFloorOnSpawn;
 
-                OverrideSnapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
+                overrideSnapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
             }
 
-            BaseData = (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld) == false)   // This should probably be the other way around
-                ? new EntityBaseData(settings.Id, settings.EntityRef, settings.Position, settings.Orientation, OverrideSnapToFloor)
-                : new EntityBaseData(settings.Id, settings.EntityRef, null, null);
+            // ---
+
+            if (Game == null) return Logger.WarnReturn(false, "Initialize(): Game == null");
+
+            Id = settings.Id;
+            if (Id == InvalidId) return Logger.WarnReturn(false, "Initialize(): Id == Entity.InvalidId");
+
+            DatabaseUniqueId = settings.DbGuid;
+
+            PrototypeDataRef = settings.EntityRef;
+            if (PrototypeDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "Initialize(): Invalid PrototypeDataRef");
+
+            Prototype = PrototypeDataRef.As<EntityPrototype>();
+            if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
+
+            // Is this correct? Should the flag NOT be set?
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld) == false)
+            {
+                BaseData.Position = settings.Position;
+                BaseData.Orientation = settings.Orientation;
+
+                if (settings.Position != null && settings.Orientation != null)
+                    BaseData.FieldFlags |= EntityCreateMessageFlags.HasPositionAndOrientation;
+
+                if (overrideSnapToFloor) BaseData.FieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
+            }
 
             RegionId = settings.RegionId;
 
@@ -223,6 +248,8 @@ namespace MHServerEmu.Games.Entities
 
             InventoryCollection.Initialize(this);
             InitInventories(settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.PopulateInventories));
+
+            return true;
         }
 
         public virtual void OnPostInit(EntitySettings settings)

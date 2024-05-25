@@ -79,26 +79,6 @@ namespace MHServerEmu.Games.Entities
 
         public EntityBaseData() { }
 
-        public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Orientation orientation, bool snap = false)
-        {
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
-            EntityId = entityId;
-            EntityPrototypeRef = prototypeId;
-            LocomotionState = new();
-
-            FieldFlags = EntityCreateMessageFlags.None;
-            LocoFieldFlags = LocomotionMessageFlags.None;
-
-            if (position != null && orientation != null)
-            {
-                Position = position;
-                Orientation = orientation;
-                FieldFlags |= EntityCreateMessageFlags.HasPositionAndOrientation;
-            }
-
-            if (snap) FieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
-        }
-
         public bool Serialize(Archive archive)
         {
             bool success = true;

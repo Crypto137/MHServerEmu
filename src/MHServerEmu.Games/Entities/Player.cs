@@ -105,14 +105,13 @@ namespace MHServerEmu.Games.Entities
             _gameplayOptions.SetOwner(this);
         }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
 
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.DbId = 0x20000000000D3D03;
             BaseData.LocomotionState = new();
 
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
@@ -128,6 +127,8 @@ namespace MHServerEmu.Games.Entities
 
             _community = new(this);
             _community.Initialize();
+
+            return true;
         }
 
         public override bool Serialize(Archive archive)
@@ -670,6 +671,11 @@ namespace MHServerEmu.Games.Entities
             if (messages.Count > 0)
                 foreach (var message in messages)
                     playerConnection.PostMessage(message);
+        }
+
+        public override string ToString()
+        {
+            return $"{base.ToString()}, dbGuid=0x{DatabaseUniqueId:X}";
         }
 
         protected override void BuildString(StringBuilder sb)

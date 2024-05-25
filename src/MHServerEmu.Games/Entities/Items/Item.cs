@@ -16,13 +16,15 @@ namespace MHServerEmu.Games.Entities.Items
 
         public Item(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
 
             // Apply ItemSpec if one was provided with entity settings
             if (settings.ItemSpec != null)
                 ApplyItemSpec(settings.ItemSpec);
+
+            return true;
         }
 
         public override bool Serialize(Archive archive)

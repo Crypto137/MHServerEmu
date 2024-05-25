@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Entities
             NaviInfluence = new();
         }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
             var proto = WorldEntityPrototype;
@@ -107,6 +107,8 @@ namespace MHServerEmu.Games.Entities
             _conditionCollection = new(this);
             _powerCollection = new(this);
             _unkEvent = 0;
+
+            return true;
         }
 
         public override bool Serialize(Archive archive)

@@ -1,13 +1,10 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -46,7 +43,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
 
@@ -57,8 +54,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
 
-            _playerName = new(Game.CurrentRepId, string.Empty);
-            _ownerPlayerDbId = 0x20000000000D3D03;
+            return true;
         }
 
         public override bool Serialize(Archive archive)
@@ -80,6 +76,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             success &= Serializer.Transfer(archive, ref _abilityKeyMappingList);
 
             return success;
+        }
+
+        public void SetPlayer(Player player)
+        {
+            _playerName.Value = player.GetName();
+            _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
         /// <summary>

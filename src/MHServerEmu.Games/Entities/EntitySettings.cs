@@ -36,6 +36,7 @@ namespace MHServerEmu.Games.Entities
     public class EntitySettings
     {
         public ulong Id { get; set; }
+        public ulong DbGuid { get; set; }
         public PrototypeId EntityRef { get; set; }
         public ulong RegionId { get; set; }
         public Vector3 Position { get; set; }

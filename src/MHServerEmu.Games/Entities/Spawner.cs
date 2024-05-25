@@ -19,12 +19,15 @@ namespace MHServerEmu.Games.Entities
         // New
         public Spawner(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
             // old
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             _flags |= EntityFlags.NoCollide;
+
+            return true;
         }
 
         public override void OnEnteredWorld(EntitySettings settings)

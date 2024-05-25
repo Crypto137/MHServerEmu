@@ -34,6 +34,7 @@ namespace MHServerEmu.Games.Entities
         private readonly Game _game;
 
         private readonly Dictionary<ulong, Entity> _entityDict = new();
+        private readonly Dictionary<ulong, Entity> _entityDbGuidDict = new();
         private readonly HashSet<Player> _players = new();
         private readonly Queue<ulong> _entityDeletionQueue = new();
 
@@ -66,14 +67,37 @@ namespace MHServerEmu.Games.Entities
 
         public Entity CreateEntity(EntitySettings settings)
         {
-            Entity entity = _game.AllocateEntity(settings.EntityRef);
+            if (IsDestroyingAllEntities) return null;   // Prevent new entities from being created during cleanup
+
+            if (settings.EntityRef == PrototypeId.Invalid)
+                return Logger.WarnReturn<Entity>(null, "CreateEntity(): Invalid prototype ref provided in settings");
+
+            if (settings.Id == 0) settings.Id = GetNextEntityId();
+
+            Entity entity;
+            // TODO: ProcessPendingDestroyImmediate()
+
+            // Check for id collisions
+            entity = GetEntity(settings.Id, GetEntityFlags.UnpackedOnly);
+            if (entity != null)
+                return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity id, existing entity found: {entity}");
+
+            if (settings.DbGuid != 0)
+            {
+                entity = GetEntityByDbGuid(settings.DbGuid, GetEntityFlags.UnpackedOnly);
+                if (entity != null)
+                    return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity dbid, existing entity found: {entity}");
+            }
+
+            entity = _game.AllocateEntity(settings.EntityRef);
+
             entity.ModifyCollectionMembership(EntityCollection.All, true);
 
-            if (settings.Id == 0)
-                settings.Id = GetNextEntityId();
-            // TODO  SetStatus
-
             _entityDict.Add(settings.Id, entity);
+            if (settings.DbGuid != 0)
+                _entityDbGuidDict[settings.DbGuid] = entity;
+
+            // TODO  SetStatus
 
             entity.PreInitialize(settings);
             entity.Initialize(settings);
@@ -138,7 +162,9 @@ namespace MHServerEmu.Games.Entities
             // Remove entity from the game
             entity.ExitGame();
 
-            // TODO: Remove dbId lookup
+            // Remove DbId lookup
+            if (entity.DatabaseUniqueId != 0)
+                _entityDbGuidDict.Remove(entity.DatabaseUniqueId);
 
             return true;
         }
@@ -161,9 +187,20 @@ namespace MHServerEmu.Games.Entities
 
         public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
         {
-            // NOTE: This public method is used to prevent destroyed entities from being accessed externally.
-            flags &= ~GetEntityFlags.DestroyedOnly;
-            return GetEntity(entityId, flags) as T;
+            // This validation happens here rather than in the private method because the private method
+            // is used in CreateEntity() to check for id/dbGuid collisions.
+            if (entityId == Entity.InvalidId) return Logger.WarnReturn<T>(null, "GetEntity(): entityId == Entity.InvalidId");
+
+            // Prevent destroyed entities from being accessed externally.
+            return GetEntity(entityId, flags & ~GetEntityFlags.DestroyedOnly) as T;
+        }
+
+        public T GetEntityByDbGuid<T>(ulong dbGuid, GetEntityFlags flags = GetEntityFlags.None) where T: Entity
+        {
+            // Same as above, but for DbGuid
+            if (dbGuid == 0) return Logger.WarnReturn<T>(null, "GetEntityByDbGuid(): dbGuid == 0");
+
+            return GetEntityByDbGuid(dbGuid, flags & ~GetEntityFlags.DestroyedOnly) as T;
         }
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
@@ -224,15 +261,24 @@ namespace MHServerEmu.Games.Entities
 
         private Entity GetEntity(ulong entityId, GetEntityFlags flags)
         {
-            if (entityId == Entity.InvalidId)
-                return Logger.WarnReturn<Entity>(null, "GetEntity(): entityId == Entity.InvalidId");
-
             if (_entityDict.TryGetValue(entityId, out Entity entity) && ValidateEntityForGet(entity, flags))
                 return entity;
 
             // It appears there should be some kind of fallback to packed entities, but this code is not present in the client.
             //if (flags.HasFlag(GetEntityFlags.DestroyedOnly) == false && flags.HasFlag(GetEntityFlags.UnpackedOnly) == false)
             //    return null;    // TODO: TryUnpackArchivedEntity(entityId);
+
+            return null;
+        }
+
+        private Entity GetEntityByDbGuid(ulong dbGuid, GetEntityFlags flags)
+        {
+            if (_entityDbGuidDict.TryGetValue(dbGuid, out Entity entity) && ValidateEntityForGet(entity, flags))
+                return entity;
+
+            // It appears there should be some kind of fallback to packed entities, but this code is not present in the client.
+            //if (flags.HasFlag(GetEntityFlags.DestroyedOnly) == false && flags.HasFlag(GetEntityFlags.UnpackedOnly) == false)
+            //    return null;    // TODO: TryUnpackArchivedEntityByDbGuid(dbGuid);
 
             return null;
         }

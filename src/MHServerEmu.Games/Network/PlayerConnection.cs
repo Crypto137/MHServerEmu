@@ -86,6 +86,7 @@ namespace MHServerEmu.Games.Network
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
             Player.SaveToDBAccount(_dbAccount);
+            Logger.Trace($"Updated DBAccount {_dbAccount}");
         }
 
         /// <summary>
@@ -114,6 +115,7 @@ namespace MHServerEmu.Games.Network
 
             // Create player entity
             EntitySettings playerSettings = new();
+            playerSettings.DbGuid = _dbAccount.Id;
             playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
             playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
 
@@ -131,6 +133,7 @@ namespace MHServerEmu.Games.Network
                 avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
 
                 Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
+                avatar.SetPlayer(Player);
                 avatar.ChangeInventoryLocation(avatarLibrary);
                 avatar.InitializeFromDBAccount(avatarRef, _dbAccount);
             }
