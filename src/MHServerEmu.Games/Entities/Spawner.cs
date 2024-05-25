@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Entities
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
             if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}]");
-            if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.EntityPrototypeRef)) return;
+            if (EntityHelper.InvSpawners.Contains((EntityHelper.InvSpawner)BaseData.EntityPrototypeRef)) return;
             
             // if (spawnerProto.StartEnabled)
             Spawn();

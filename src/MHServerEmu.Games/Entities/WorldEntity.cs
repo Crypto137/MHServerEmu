@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            int health = EntityManager.GetRankHealth(proto);
+            int health = EntityHelper.GetRankHealth(proto);
             if (health > 0)
             {
                 Properties[PropertyEnum.Health] = health;
