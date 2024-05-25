@@ -212,8 +212,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        //private const int CleanUpIntervalMS = 1000 * 60 * 5;
-        private const int CleanUpIntervalMS = 1000 * 10;
+        private const int CleanUpIntervalMS = 1000 * 60 * 5;
         private static readonly TimeSpan CleanUpTime = TimeSpan.FromMilliseconds(CleanUpIntervalMS);
         private static readonly TimeSpan UnvisitedTime = TimeSpan.FromMilliseconds(CleanUpIntervalMS);
 
