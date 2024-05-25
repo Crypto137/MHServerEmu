@@ -44,6 +44,6 @@ namespace MHServerEmu.Games.Behavior
 
     public class EntityAggroedGameEvent
     {
-
+        public WorldEntity AggroEntity;
     }
 }

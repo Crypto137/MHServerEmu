@@ -12,6 +12,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Events;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -2352,7 +2353,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RestrictedModeTimerMS { get; protected set; }
         public bool NoMoveInRestrictedMode { get; protected set; }
 
-        private enum State
+        private enum RestrictedMode
         {
             Default,
             StartPower = 1,
@@ -2368,17 +2369,133 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPowers(agent, RestrictedModeProceduralPowers);
 
             Game game = agent.Game;
-            var blackboard = agent?.AIController?.Blackboard;
+            var blackboard = agent.AIController?.Blackboard;
             if (game == null || blackboard == null) return;
-
-            long restrictedCooldown = (long)game.GetCurrentTime().TotalMilliseconds + game.Random.Next(RestrictedModeMinCooldownMS, RestrictedModeMaxCooldownMS);
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long restrictedCooldown = currentTime + game.Random.Next(RestrictedModeMinCooldownMS, RestrictedModeMaxCooldownMS);
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = restrictedCooldown;
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            
+            if (HandleOverrideBehavior(ownerController)) return;
+            if (agent.IsDormant) return;
+           
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            RestrictedMode state = (RestrictedMode)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            switch (state)
+            {
+                case RestrictedMode.Default:
+
+                    GRandom random = game.Random;
+                    Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+                    PopulatePowerPicker(ownerController, powerPicker);
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+                    if (proceduralAI.GetState(0) != UsePower.Instance && currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1])
+                    {
+                        if (RestrictedModeStartPower != null)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)RestrictedMode.StartPower;
+                        else
+                            SwitchStates(ownerController, RestrictedMode.ProceduralPowers);
+                        return;
+                    }
+                    break;
+
+                case RestrictedMode.StartPower:
+
+                    if (RestrictedModeStartPower != null)
+                    {
+                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, RestrictedModeStartPower.PowerContext, RestrictedModeStartPower);
+                        if (powerResult == StaticBehaviorReturnType.Running) return;
+                    }
+                    else
+                        ProceduralAI.Logger.Warn($"Power Restricted Agent {agent} is trying to play their RestrictedModeStartPower which is NULL!!");
+
+                    SwitchStates(ownerController, RestrictedMode.ProceduralPowers);
+                    break;
+
+                case RestrictedMode.ProceduralPowers:
+
+                    random = game.Random;
+                    powerPicker = new(random);
+                    PopulatePowerPicker(ownerController, powerPicker);
+                    if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+                    if (proceduralAI.GetState(0) != UsePower.Instance && currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2])
+                    {
+                        if (RestrictedModeEndPower != null)
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)RestrictedMode.EndPower;
+                        else
+                            SwitchStates(ownerController, RestrictedMode.Default);
+                    }
+                    break;
+
+                case RestrictedMode.EndPower:
+
+                    if (RestrictedModeEndPower != null)
+                    {
+                        var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, RestrictedModeEndPower.PowerContext, RestrictedModeEndPower);
+                        if (powerResult == StaticBehaviorReturnType.Running) return;
+                    }
+                    else
+                        ProceduralAI.Logger.Warn($"Power Restricted Agent {agent} is trying to play their RestrictedModeEndPower which is NULL!!");
+
+                    SwitchStates(ownerController, RestrictedMode.Default);
+                    break;
+            }
+
+            if (state == RestrictedMode.Default || NoMoveInRestrictedMode == false)
+            {
+                if (IsRanged && FlankTarget != null)
+                    DefaultRangedFlankerMovement(proceduralAI, ownerController, agent, target, currentTime, MoveToTarget, FlankTarget);
+                else if (IsRanged)
+                    DefaultRangedMovement(proceduralAI, ownerController, agent, target, MoveToTarget, OrbitTarget);
+                else
+                    DefaultMeleeMovement(proceduralAI, ownerController, agent.Locomotor, target, MoveToTarget, OrbitTarget);
+            }
+        }
+
+        private void SwitchStates(AIController ownerController, RestrictedMode state)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+
+            switch (state)
+            {
+                case RestrictedMode.Default:
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)RestrictedMode.Default;
+                    blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime + game.Random.Next(RestrictedModeMinCooldownMS, RestrictedModeMaxCooldownMS);
+                    break;
+
+                case RestrictedMode.ProceduralPowers:
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)RestrictedMode.ProceduralPowers;
+                    blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2] = currentTime + RestrictedModeTimerMS;
+                    break;
+            }
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
-            int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
-            if ((State)stateVal == State.ProceduralPowers)
+            int state = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if ((RestrictedMode)state == RestrictedMode.ProceduralPowers)
                 ownerController.AddPowersToPicker(powerPicker, RestrictedModeProceduralPowers);
             else
                 base.PopulatePowerPicker(ownerController, powerPicker);

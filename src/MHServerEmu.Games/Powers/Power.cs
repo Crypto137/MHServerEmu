@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -103,6 +105,11 @@ namespace MHServerEmu.Games.Powers
         }
 
         internal void EndPower(EndFlag endFlag)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
         {
             throw new NotImplementedException();
         }
