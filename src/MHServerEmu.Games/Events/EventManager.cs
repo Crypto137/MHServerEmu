@@ -125,6 +125,8 @@ namespace MHServerEmu.Games.Events
             var proto = interactObject.BaseData.EntityPrototypeRef;
             Logger.Trace($"UseInteractableObject {GameDatabase.GetPrototypeName(proto)}");
 
+            Player player = playerConnection.Player;
+
             if (proto == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
             {
                 // bowlingBallItem = proto.LootTablePrototypeProp.Value->Table.Choices.Item.Item
@@ -132,49 +134,72 @@ namespace MHServerEmu.Games.Events
                                                                         // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
                 var itemPower = (PrototypeId)PowerPrototypes.Items.BowlingBallItemPower; // BowlingBallItemPower
                                                                                          // itemRarities = bowlingBallItem.Item.LootDropRestrictions.Rarity.AllowedRarities
-                var itemRarities = (PrototypeId)9254498193264414304; // R4Epic
+                var itemRarity = (PrototypeId)9254498193264414304; // R4Epic
 
-                Item bowlingBall = (Item)playerConnection.Game.EntityManager.GetEntityByPrototypeId(bowlingBallItem);
- 
+                // Destroy bowling balls that are already present in the player general inventory
+                Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
+
+                Entity bowlingBall = inventory.GetMatchingEntity(bowlingBallItem) as Item;
                 if (bowlingBall != null)
-                { // TODO: test if ball already in Inventary
-                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
+                {
                     bowlingBall.Destroy();
+                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
                 }
 
-                AffixSpec[] affixSpec = { new AffixSpec((PrototypeId)4906559676663600947, 0, 1) }; // BindingInformation                        
+                // Create a new ball
+                AffixSpec[] affixSpecs = { new AffixSpec((PrototypeId)4906559676663600947, 0, 1) }; // BindingInformation                        
                 int seed = _game.Random.Next();
                 float itemVariation = _game.Random.NextFloat();
-                bowlingBall = playerConnection.Game.EntityManager.CreateInvItem(
-                    bowlingBallItem,
-                    new(playerConnection.Player.Id, (PrototypeId)6731158030400100344, 0), // PlayerGeneral
-                    itemRarities, 1,
-                    itemVariation, seed,
-                    affixSpec,
-                    true);
 
+                ItemSpec itemSpec = new(bowlingBallItem, itemRarity, 1, 0, affixSpecs, seed,  0);
+
+                PropertyCollection properties = new();
+                properties[PropertyEnum.Requirement, (PrototypeId)4312898931213406054] = 1.0f;    // Property/Info/CharacterLevel.defaults
+                properties[PropertyEnum.ItemRarity] = itemRarity;
+                properties[PropertyEnum.ItemVariation] = itemVariation;
                 // TODO: applyItemSpecProperties 
-                bowlingBall.Properties[PropertyEnum.InventoryStackSizeMax] = 1000;          // Item.StackSettings
-                bowlingBall.Properties[PropertyEnum.ItemIsTradable] = false;                // DefaultSettings.IsTradable
-                bowlingBall.Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
-                bowlingBall.Properties[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
+                properties[PropertyEnum.InventoryStackSizeMax] = 1000;          // Item.StackSettings
+                properties[PropertyEnum.ItemIsTradable] = false;                // DefaultSettings.IsTradable
+                properties[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
+                properties[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
+
+                EntitySettings ballSettings = new()
+                {
+                    EntityRef = bowlingBallItem,
+                    ItemSpec = itemSpec,
+                    Properties = properties
+                };
+
+                bowlingBall = _game.EntityManager.CreateEntity(ballSettings);
+                bowlingBall.ChangeInventoryLocation(inventory);
+
+                bowlingBall.BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc;
+                bowlingBall.BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+                bowlingBall.BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
                 playerConnection.SendMessage(bowlingBall.ToNetMessageEntityCreate());
 
-                //  if (assign) // TODO: check power assigned by player
-                ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
-                playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                    .SetEntityId(avatarEntityId)
-                    .SetPowerProtoId((ulong)itemPower)
-                    .Build());
+                //  Unassign bowling ball power if the player already has one
+                Avatar avatar = player.CurrentAvatar;
+                if (avatar.HasPowerInPowerCollection(itemPower))
+                {
+                    avatar.UnassignPower((PrototypeId)PowerPrototypes.Items.BowlingBallItemPower);
+                    playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                        .SetEntityId(avatar.Id)
+                        .SetPowerProtoId((ulong)PowerPrototypes.Items.BowlingBallItemPower)
+                        .Build());
+                }
+
+                PowerIndexProperties indexProps = new(0, 60, 60, 1, itemVariation);
+                avatar.AssignPower(itemPower, indexProps);
 
                 playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                    .SetEntityId(avatarEntityId)
+                    .SetEntityId(avatar.Id)
                     .SetPowerProtoId((ulong)itemPower)
-                    .SetPowerRank(0)
-                    .SetCharacterLevel(60)
-                    .SetCombatLevel(60)
-                    .SetItemLevel(1)
+                    .SetPowerRank(indexProps.PowerRank)
+                    .SetCharacterLevel(indexProps.CharacterLevel)
+                    .SetCombatLevel(indexProps.CombatLevel)
+                    .SetItemLevel(indexProps.ItemLevel)
                     .SetItemVariation(itemVariation)
                     .Build());
             }

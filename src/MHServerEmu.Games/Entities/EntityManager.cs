@@ -1,12 +1,8 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Items;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -107,34 +103,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
-
-            // REMOVEME - Used for the bowling ball hack
-            EntityBaseData baseData = new()
-            {
-                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner,
-                EntityId = GetNextEntityId(),
-                EntityPrototypeRef = itemProto,
-                FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc,
-                InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner,
-                LocoFieldFlags = LocomotionMessageFlags.None,
-                LocomotionState = new(),
-                InvLoc = invLoc
-            };
-
-            if (isNewItem)
-            {
-                baseData.FieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
-                baseData.InvLocPrev = new();
-            }
-
-            var defRank = (PrototypeId)15168672998566398820; // Popcorn           
-            ItemSpec itemSpec = new(itemProto, rarity, itemLevel, 0, affixSpec, seed, 0);
-            Item item = new(baseData, _game.CurrentRepId, defRank, itemLevel, rarity, itemVariation, itemSpec);
-            _entityDict.Add(baseData.EntityId, item);
-            return item;
-        }
-
         public bool DestroyEntity(Entity entity)
         {
             if (entity == null) return Logger.WarnReturn(false, "DestroyEntity(): entity == null");
@@ -172,12 +140,6 @@ namespace MHServerEmu.Games.Entities
             // NOTE: This public method is used to prevent destroyed entities from being accessed externally.
             flags &= ~GetEntityFlags.DestroyedOnly;
             return GetEntity(entityId, flags) as T;
-        }
-
-        public Entity GetEntityByPrototypeId(PrototypeId prototype)
-        {
-            // REMOVEME - Used for the bowling ball hack
-            return _entityDict.Values.FirstOrDefault(entity => entity.BaseData.EntityPrototypeRef == prototype);
         }
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)

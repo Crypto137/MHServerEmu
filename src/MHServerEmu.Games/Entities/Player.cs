@@ -116,7 +116,6 @@ namespace MHServerEmu.Games.Entities
             BaseData.LocomotionState = new();
 
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
-            Properties.ReplicationId = Game.CurrentRepId;
 
             _avatarProperties.ReplicationId = Game.CurrentRepId;
             _shardId = 3;

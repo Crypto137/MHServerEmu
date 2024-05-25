@@ -188,9 +188,6 @@ namespace MHServerEmu.Games.Entities
             Game = game;
         }
 
-        // REMOVEME || old note: Base data is required for all entities, so there's no parameterless constructor
-        public Entity(EntityBaseData baseData) { BaseData = baseData; }
-
         public virtual void PreInitialize(EntitySettings settings) { }
 
         public virtual void Initialize(EntitySettings settings)
@@ -215,9 +212,13 @@ namespace MHServerEmu.Games.Entities
 
             // New
             Properties = new(Game.CurrentRepId);
+            
             if (entityProto.Properties != null) // TODO: Filter properties during serialization
                 Properties.FlattenCopyFrom(entityProto.Properties, true); 
-            if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, false);
+            
+            if (settings.Properties != null)
+                Properties.FlattenCopyFrom(settings.Properties, false);
+            
             OnPropertyChange(); // Temporary solution for for _flags
 
             InventoryCollection.Initialize(this);

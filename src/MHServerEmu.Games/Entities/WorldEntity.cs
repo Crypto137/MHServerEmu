@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -109,9 +108,6 @@ namespace MHServerEmu.Games.Entities
             _powerCollection = new(this);
             _unkEvent = 0;
         }
-
-        // Old
-        public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
 
         public override bool Serialize(Archive archive)
         {

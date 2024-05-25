@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
@@ -29,6 +30,9 @@ namespace MHServerEmu.Games.Entities
         DefaultOptions = EnterGameWorld | PopulateInventories | Flag9
     }
 
+    /// <summary>
+    /// Contains parameters for <see cref="Entity"/> creation.
+    /// </summary>
     public class EntitySettings
     {
         public ulong Id { get; set; }
@@ -46,5 +50,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId ActionsTarget { get; set; }
         public SpawnSpec SpawnSpec { get; set; }
         public float LocomotorHeightOverride { get; set; }
+
+        public ItemSpec ItemSpec { get; set; }
     }
 }
