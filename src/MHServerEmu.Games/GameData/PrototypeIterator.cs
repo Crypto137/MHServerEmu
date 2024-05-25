@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.GameData
     /// <summary>
     /// Iterates through prototype records using specified filters.
     /// </summary>
-    public class PrototypeIterator : IEnumerable<PrototypeId>
+    public readonly struct PrototypeIterator : IEnumerable<PrototypeId>
     {
         private readonly IEnumerable<PrototypeDataRefRecord> _prototypeRecords;
         private readonly PrototypeIterateFlags _flags;
@@ -64,9 +64,6 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
