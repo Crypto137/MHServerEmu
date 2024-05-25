@@ -77,6 +77,9 @@ namespace MHServerEmu.Games.Network
             using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData))
             {
                 Entity entity = DummyGame.AllocateEntity(baseData.EntityPrototypeRef);
+                if (entity is Player)   // Player entity needs to be initialized to have a community to deserialize into
+                    entity.Initialize(new() { EntityRef = baseData.EntityPrototypeRef, Id = baseData.EntityId });
+
                 entity.BaseData = baseData;
                 entity.Serialize(archive);
                 entity.ReplicationPolicy = archive.GetReplicationPolicyEnum();

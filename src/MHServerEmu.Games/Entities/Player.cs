@@ -99,7 +99,11 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
 
-        public Player(Game game) : base(game) { }
+        public Player(Game game) : base(game)
+        {
+            _missionManager.Owner = this;
+            _gameplayOptions.SetOwner(this);
+        }
 
         public override void Initialize(EntitySettings settings)
         {
@@ -114,16 +118,16 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
             Properties.ReplicationId = Game.CurrentRepId;
 
-            _missionManager.Owner = this;
             _avatarProperties.ReplicationId = Game.CurrentRepId;
             _shardId = 3;
             _playerName = new(Game.CurrentRepId, string.Empty);
             _secondaryPlayerName = new(0, string.Empty);
-            _matchQueueStatus.SetOwner(this);
             _partyId = new(Game.CurrentRepId, 0);
+
+            _matchQueueStatus.SetOwner(this);
+
             _community = new(this);
             _community.Initialize();
-            _gameplayOptions.SetOwner(this);
         }
 
         public override bool Serialize(Archive archive)
@@ -157,16 +161,7 @@ namespace MHServerEmu.Games.Entities
             bool hasCommunityData = true;
             success &= Serializer.Transfer(archive, ref hasCommunityData);
             if (hasCommunityData)
-            {
-                // TODO: Remove this when we get rid of old entity constructors
-                if (_community == null)
-                {
-                    _community = new(this);
-                    _community.Initialize();
-                }
-
                 success &= Serializer.Transfer(archive, ref _community);
-            }
 
             // Unknown bool, always false
             bool unkBool = false;
@@ -339,6 +334,15 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public Region GetRegion()
+        {
+            // TODO confirm if it's working
+            if (Game == null) return null;
+            var manager = Game.RegionManager;
+            if (manager == null) return null;
+            return manager.GetRegion(RegionId);
+        }
+
         /// <summary>
         /// Returns the name of the player for the specified <see cref="PlayerAvatarIndex"/>.
         /// </summary>
@@ -380,14 +384,16 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public bool UnlockInventory(PrototypeId invProtoRef)
         {
-            // Entity::GetInventoryByRef()
+            if (GetInventoryByRef(invProtoRef) != null)
+                return Logger.WarnReturn(false, $"UnlockInventory(): {GameDatabase.GetFormattedPrototypeName(invProtoRef)} already exists");
 
             if (_unlockedInventoryList.Contains(invProtoRef))
                 return Logger.WarnReturn(false, $"UnlockInventory(): {GameDatabase.GetFormattedPrototypeName(invProtoRef)} is already unlocked");
 
             _unlockedInventoryList.Add(invProtoRef);
 
-            // Entity::addInventory()
+            if (AddInventory(invProtoRef) == false || GetInventoryByRef(invProtoRef) == null)
+                return Logger.WarnReturn(false, $"UnlockInventory(): Failed to add {GameDatabase.GetFormattedPrototypeName(invProtoRef)}");
 
             if (Inventory.IsPlayerStashInventory(invProtoRef))
                 StashTabInsert(invProtoRef, 0);
@@ -408,14 +414,7 @@ namespace MHServerEmu.Games.Entities
             {
                 if (invAssignmentProto.Inventory == PrototypeId.Invalid) continue;
 
-                // TODO: isLocked = Entity::GetInventory() == null
-                // For now use prototype data + unlock list for this
-                var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>(invAssignmentProto.Inventory);
-                bool isLocked = true;
-                isLocked &= inventoryProto.LockedByDefault;
-                isLocked &= _unlockedInventoryList.Contains(inventoryProto.DataRef) == false;
-                // Although the unified stash from the console version is unlocked by default, we consider it always locked on PC
-                isLocked |= inventoryProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash;
+                bool isLocked = GetInventoryByRef(invAssignmentProto.Inventory) == null;
 
                 if (isLocked && getLocked || isLocked == false && getUnlocked)
                     yield return invAssignmentProto.Inventory;
@@ -432,7 +431,8 @@ namespace MHServerEmu.Games.Entities
             if (Inventory.IsPlayerStashInventory(inventoryRef) == false)
                 return Logger.WarnReturn(false, $"UpdateStashTabOptions(): {inventoryRef} is not a player stash ref");
 
-            // Entity::GetInventoryByRef() != nullptr
+            if (GetInventoryByRef(inventoryRef) == null)
+                return Logger.WarnReturn(false, $"UpdateStashTabOptions(): Inventory {GameDatabase.GetFormattedPrototypeName(inventoryRef)} not found");
 
             if (_stashTabOptionsDict.TryGetValue(inventoryRef, out StashTabOptions options) == false)
             {
@@ -467,7 +467,8 @@ namespace MHServerEmu.Games.Entities
             if (Inventory.IsPlayerStashInventory(insertedStashRef) == false)
                 return Logger.WarnReturn(false, $"StashTabInsert(): insertedStashRef {insertedStashRef} is not a player stash ref");
 
-            // Entity::GetInventoryByRef(insertedStashRef) != nullptr
+            if (GetInventoryByRef(insertedStashRef) == null)
+                return Logger.WarnReturn(false, $"StashTabInsert(): Inventory {GameDatabase.GetFormattedPrototypeName(insertedStashRef)} not found");
 
             // Get options for the tab we need to insert
             if (_stashTabOptionsDict.TryGetValue(insertedStashRef, out StashTabOptions options))
@@ -630,6 +631,41 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        public List<IMessage> OnLoadAndPlayKismetSeq(PlayerConnection playerConnection)
+        {
+            List<IMessage> messageList = new();
+
+            if (playerConnection.RegionDataRef != PrototypeId.Invalid)
+            {
+                KismetSeqPrototypeId kismetSeqRef = 0;
+                RegionPrototypeId regionPrototypeId = (RegionPrototypeId)playerConnection.RegionDataRef;
+                if (regionPrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
+                if (regionPrototypeId == RegionPrototypeId.TimesSquareTutorialRegion) kismetSeqRef = KismetSeqPrototypeId.Times01CaptainAmericaLanding;
+                if (kismetSeqRef != 0)
+                    messageList.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+            }
+
+            return messageList;
+        }
+
+        public void OnPlayKismetSeqDone(PlayerConnection playerConnection, PrototypeId kismetSeqPrototypeId)
+        {
+            List<IMessage> messages = new();
+            if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
+
+            if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
+            {
+                // TODO trigger by hotspot
+                KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
+                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+                kismetSeqRef = KismetSeqPrototypeId.RaftNPEJuggernautEscape;
+                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+            }
+            if (messages.Count > 0)
+                foreach (var message in messages)
+                    playerConnection.PostMessage(message);
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
@@ -683,50 +719,6 @@ namespace MHServerEmu.Games.Entities
                 if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
                     StashTabInsert(stashRef, 0);
             }
-        }
-
-        public List<IMessage> OnLoadAndPlayKismetSeq(PlayerConnection playerConnection)
-        {
-            
-            List<IMessage> messageList = new();
-            
-            if (playerConnection.RegionDataRef != PrototypeId.Invalid)
-            {
-                KismetSeqPrototypeId kismetSeqRef = 0;
-                RegionPrototypeId regionPrototypeId = (RegionPrototypeId)playerConnection.RegionDataRef;
-                if (regionPrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
-                if (regionPrototypeId == RegionPrototypeId.TimesSquareTutorialRegion) kismetSeqRef = KismetSeqPrototypeId.Times01CaptainAmericaLanding;
-                if (kismetSeqRef != 0)
-                    messageList.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-            }
-            return messageList;
-        }
-
-        public Region GetRegion()
-        {
-            // TODO check work
-            if (Game == null) return null;
-            var manager = Game.RegionManager;
-            if (manager == null) return null;
-            return manager.GetRegion(RegionId);
-        }
-
-        public void OnPlayKismetSeqDone(PlayerConnection playerConnection, PrototypeId kismetSeqPrototypeId)
-        {
-            List<IMessage> messages = new();
-            if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
-            
-            if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
-            {
-                // TODO trigger by hotspot
-                KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
-                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-                kismetSeqRef = KismetSeqPrototypeId.RaftNPEJuggernautEscape;
-                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-            }
-            if (messages.Count > 0)
-                foreach( var message in messages)
-                    playerConnection.PostMessage(message);
         }
     }
 }
