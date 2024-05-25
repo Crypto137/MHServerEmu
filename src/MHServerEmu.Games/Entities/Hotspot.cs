@@ -18,12 +18,15 @@ namespace MHServerEmu.Games.Entities
         // new
         public Hotspot(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
             _flags |= EntityFlags.IsHotspot;
             if (Prototype.Properties[PropertyEnum.MissionHotspot]) IsMissionHotspot = true;
             _skipCollide = settings.HotspotSkipCollide;
+
+            return true;
         }
 
         public override bool CanCollideWith(WorldEntity other)

@@ -19,12 +19,15 @@ namespace MHServerEmu.Games.Entities
         // New
         public Spawner(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
             // old
             BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             _flags |= EntityFlags.NoCollide;
+
+            return true;
         }
 
         public override void OnEnteredWorld(EntitySettings settings)
@@ -33,7 +36,7 @@ namespace MHServerEmu.Games.Entities
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
             if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}]");
-            if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.EntityPrototypeRef)) return;
+            if (EntityHelper.InvSpawners.Contains((EntityHelper.InvSpawner)BaseData.EntityPrototypeRef)) return;
             
             // if (spawnerProto.StartEnabled)
             Spawn();

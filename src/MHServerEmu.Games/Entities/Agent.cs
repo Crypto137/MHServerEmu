@@ -61,10 +61,10 @@ namespace MHServerEmu.Games.Entities
 
         public Agent(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             var agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
-            if (agentProto == null) return;
+            if (agentProto == null) return false;
             if (agentProto.Locomotion.Immobile == false) Locomotor = new();
 
             // GetPowerCollectionAllocateIfNull()
@@ -75,6 +75,8 @@ namespace MHServerEmu.Games.Entities
 
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
+
+            return true;
         }
 
         private bool InitAI(EntitySettings settings)

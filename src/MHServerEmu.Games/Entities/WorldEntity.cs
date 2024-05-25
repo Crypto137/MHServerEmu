@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -76,7 +75,7 @@ namespace MHServerEmu.Games.Entities
             NaviInfluence = new();
         }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
             var proto = WorldEntityPrototype;
@@ -93,7 +92,7 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            int health = EntityManager.GetRankHealth(proto);
+            int health = EntityHelper.GetRankHealth(proto);
             if (health > 0)
             {
                 Properties[PropertyEnum.Health] = health;
@@ -109,10 +108,9 @@ namespace MHServerEmu.Games.Entities
             _conditionCollection = new(this);
             _powerCollection = new(this);
             _unkEvent = 0;
-        }
 
-        // Old
-        public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
+            return true;
+        }
 
         public override bool Serialize(Archive archive)
         {

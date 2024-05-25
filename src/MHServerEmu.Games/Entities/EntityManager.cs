@@ -1,12 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Items;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -37,14 +32,19 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Game _game;
+
         private readonly Dictionary<ulong, Entity> _entityDict = new();
-        private readonly Queue<ulong> _entityDeletionQueue = new();
+        private readonly Dictionary<ulong, Entity> _entityDbGuidDict = new();
+        private readonly HashSet<Player> _players = new();
+        private readonly LinkedList<ulong> _entitiesPendingDestruction = new();     // NOTE: Change this to a regular List<ulong> if this causes GC issues
 
         private ulong _nextEntityId = 1;
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
         public bool IsDestroyingAllEntities { get; private set; } = false;
+
+        public IEnumerable<Player> Players { get => _players; }
 
         public PhysicsManager PhysicsManager { get; set; }
         public EntityInvasiveCollection AllEntities { get; private set; }
@@ -54,22 +54,54 @@ namespace MHServerEmu.Games.Entities
         public EntityManager(Game game)
         {            
             _game = game;
-            PhysicsManager = new(game);
+            PhysicsManager = new();
             AllEntities = new(EntityCollection.All);
             SimulatedEntities = new(EntityCollection.Simulated);
             LocomotionEntities = new(EntityCollection.Locomotion);
         }
 
+        public bool Initialize()
+        {
+            return PhysicsManager.Initialize(_game);
+        }
+
         public Entity CreateEntity(EntitySettings settings)
         {
-            Entity entity = _game.AllocateEntity(settings.EntityRef);
+            if (IsDestroyingAllEntities) return null;   // Prevent new entities from being created during cleanup
+
+            if (settings.EntityRef == PrototypeId.Invalid)
+                return Logger.WarnReturn<Entity>(null, "CreateEntity(): Invalid prototype ref provided in settings");
+
+            if (settings.Id == 0) settings.Id = GetNextEntityId();
+
+            Entity entity;
+
+            // If the requested id is already used by an entity that is pending deletion, finish its deletion immediately
+            Entity destroyedEntity = GetDestroyedEntity<Entity>(settings.Id);
+            if (destroyedEntity != null)
+                ProcessPendingDestroyImmediate(destroyedEntity);
+
+            // Check for id collisions
+            entity = GetEntity(settings.Id, GetEntityFlags.UnpackedOnly);
+            if (entity != null)
+                return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity id, existing entity found: {entity}");
+
+            if (settings.DbGuid != 0)
+            {
+                entity = GetEntityByDbGuid(settings.DbGuid, GetEntityFlags.UnpackedOnly);
+                if (entity != null)
+                    return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity dbid, existing entity found: {entity}");
+            }
+
+            entity = _game.AllocateEntity(settings.EntityRef);
+
             entity.ModifyCollectionMembership(EntityCollection.All, true);
 
-            if (settings.Id == 0)
-                settings.Id = GetNextEntityId();
-            // TODO  SetStatus
-
             _entityDict.Add(settings.Id, entity);
+            if (settings.DbGuid != 0)
+                _entityDbGuidDict[settings.DbGuid] = entity;
+
+            // TODO  SetStatus
 
             entity.PreInitialize(settings);
             entity.Initialize(settings);
@@ -107,34 +139,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
-
-            // REMOVEME - Used for the bowling ball hack
-            EntityBaseData baseData = new()
-            {
-                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner,
-                EntityId = GetNextEntityId(),
-                EntityPrototypeRef = itemProto,
-                FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc,
-                InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner,
-                LocoFieldFlags = LocomotionMessageFlags.None,
-                LocomotionState = new(),
-                InvLoc = invLoc
-            };
-
-            if (isNewItem)
-            {
-                baseData.FieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
-                baseData.InvLocPrev = new();
-            }
-
-            var defRank = (PrototypeId)15168672998566398820; // Popcorn           
-            ItemSpec itemSpec = new(itemProto, rarity, itemLevel, 0, affixSpec, seed, 0);
-            Item item = new(baseData, _game.CurrentRepId, defRank, itemLevel, rarity, itemVariation, itemSpec);
-            _entityDict.Add(baseData.EntityId, item);
-            return item;
-        }
-
         public bool DestroyEntity(Entity entity)
         {
             if (entity == null) return Logger.WarnReturn(false, "DestroyEntity(): entity == null");
@@ -157,27 +161,50 @@ namespace MHServerEmu.Games.Entities
             // Finish destruction
             entity.SetStatus(EntityStatus.PendingDestroy, false);
             entity.SetStatus(EntityStatus.Destroyed, true);
-            _entityDeletionQueue.Enqueue(entity.Id);    // Enqueue entity for deletion at the end of the next frame
+            _entitiesPendingDestruction.AddLast(entity.Id);    // Enqueue entity for deletion at the end of the next frame
 
             // Remove entity from the game
             entity.ExitGame();
 
-            // TODO: Remove dbId lookup
+            // Remove DbId lookup
+            if (entity.DatabaseUniqueId != 0)
+                _entityDbGuidDict.Remove(entity.DatabaseUniqueId);
 
             return true;
         }
 
-        public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
+        public bool AddPlayer(Player player)
         {
-            // NOTE: This public method is used to prevent destroyed entities from being accessed externally.
-            flags &= ~GetEntityFlags.DestroyedOnly;
-            return GetEntity(entityId, flags) as T;
+            if (player == null) return Logger.WarnReturn(false, "AddPlayer(): player == null");
+            bool playerAdded = _players.Add(player);
+            if (playerAdded == false) Logger.Warn($"AddPlayer(): Failed to add player {player}");
+            return playerAdded;
         }
 
-        public Entity GetEntityByPrototypeId(PrototypeId prototype)
+        public bool RemovePlayer(Player player)
         {
-            // REMOVEME - Used for the bowling ball hack
-            return _entityDict.Values.FirstOrDefault(entity => entity.BaseData.EntityPrototypeRef == prototype);
+            if (player == null) return Logger.WarnReturn(false, "RemovePlayer(): player == null");
+            bool playerRemoved = _players.Remove(player);
+            if (playerRemoved == false) Logger.Warn($"RemovePlayer(): Failed to remove player {player}");
+            return playerRemoved;
+        }
+
+        public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
+        {
+            // This validation happens here rather than in the private method because the private method
+            // is used in CreateEntity() to check for id/dbGuid collisions.
+            if (entityId == Entity.InvalidId) return Logger.WarnReturn<T>(null, "GetEntity(): entityId == Entity.InvalidId");
+
+            // Prevent destroyed entities from being accessed externally.
+            return GetEntity(entityId, flags & ~GetEntityFlags.DestroyedOnly) as T;
+        }
+
+        public T GetEntityByDbGuid<T>(ulong dbGuid, GetEntityFlags flags = GetEntityFlags.None) where T: Entity
+        {
+            // Same as above, but for DbGuid
+            if (dbGuid == 0) return Logger.WarnReturn<T>(null, "GetEntityByDbGuid(): dbGuid == 0");
+
+            return GetEntityByDbGuid(dbGuid, flags & ~GetEntityFlags.DestroyedOnly) as T;
         }
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
@@ -238,9 +265,6 @@ namespace MHServerEmu.Games.Entities
 
         private Entity GetEntity(ulong entityId, GetEntityFlags flags)
         {
-            if (entityId == Entity.InvalidId)
-                return Logger.WarnReturn<Entity>(null, "GetEntity(): entityId == Entity.InvalidId");
-
             if (_entityDict.TryGetValue(entityId, out Entity entity) && ValidateEntityForGet(entity, flags))
                 return entity;
 
@@ -249,6 +273,23 @@ namespace MHServerEmu.Games.Entities
             //    return null;    // TODO: TryUnpackArchivedEntity(entityId);
 
             return null;
+        }
+
+        private Entity GetEntityByDbGuid(ulong dbGuid, GetEntityFlags flags)
+        {
+            if (_entityDbGuidDict.TryGetValue(dbGuid, out Entity entity) && ValidateEntityForGet(entity, flags))
+                return entity;
+
+            // It appears there should be some kind of fallback to packed entities, but this code is not present in the client.
+            //if (flags.HasFlag(GetEntityFlags.DestroyedOnly) == false && flags.HasFlag(GetEntityFlags.UnpackedOnly) == false)
+            //    return null;    // TODO: TryUnpackArchivedEntityByDbGuid(dbGuid);
+
+            return null;
+        }
+
+        private T GetDestroyedEntity<T>(ulong entityId) where T : Entity
+        {
+            return GetEntity(entityId, GetEntityFlags.DestroyedOnly) as T;
         }
 
         private bool ValidateEntityForGet(Entity entity, GetEntityFlags flags)
@@ -262,19 +303,34 @@ namespace MHServerEmu.Games.Entities
             if (_game == null) return Logger.WarnReturn(false, "ProcessDestroyed(): _game == null");
 
             // Delete all destroyed entities
-            while (_entityDeletionQueue.Count != 0)
+            while (_entitiesPendingDestruction.Any())
             {
-                ulong entityId = _entityDeletionQueue.Dequeue();
+                ulong entityId = _entitiesPendingDestruction.First.Value;
 
                 if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
                     Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
                 else
                 {
-                    DeleteEntity(entity);
                     Logger.Trace($"Deleting entity {entity}");
-                }   
+                    DeleteEntity(entity);
+                }
+
+                _entitiesPendingDestruction.RemoveFirst();
             }
 
+            return true;
+        }
+
+        private bool ProcessPendingDestroyImmediate(Entity destroyedEntity)
+        {
+            if (destroyedEntity == null) return Logger.WarnReturn(false, "ProcessPendingDestroyImmediate(): destroyedEntity == null");
+
+            // Remove destroyed entity from pending
+            if (_entitiesPendingDestruction.Remove(destroyedEntity.Id) == false)
+                Logger.WarnReturn(false, $"ProcessPendingDestroyImmediate(): Entity {destroyedEntity} is not found in the pending destruction list");
+
+            // Delete it manually
+            DeleteEntity(destroyedEntity);
             return true;
         }
 
@@ -285,426 +341,5 @@ namespace MHServerEmu.Games.Entities
             entity.OnDeallocate();
             return true;
         }
-
-        private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
-        {
-            WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
-            if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
-            return invisibleId;
-        }
-
-        #region HardCodeRank
-
-        public static int GetRankHealth(EntityPrototype entity)
-        {
-            if (entity is PropPrototype)
-            {
-                return 200;
-            }
-            else if (entity is SpawnerPrototype || entity is HotspotPrototype)
-            {
-                return 0;
-            }
-            else if (entity is WorldEntityPrototype worldEntity)
-            {
-                return (RankPrototypeId)worldEntity.Rank switch
-                {
-                    RankPrototypeId.Popcorn => 600,
-                    RankPrototypeId.Champion => 800,
-                    RankPrototypeId.Elite => 1000,
-                    RankPrototypeId.MiniBoss => 1500,
-                    RankPrototypeId.Boss => 2000,
-                    _ => 1000,
-                };
-            }
-            return 0;
-
-        }
-
-        public enum RankPrototypeId : ulong
-        {
-            Popcorn = 15168672998566398820,
-            Champion = 3048000484526787506,
-            Elite = 17308931952834644598,
-            EliteMinion = 7470660573381266688,
-            EliteNamed = 11012647903754259579,
-            MiniBoss = 18093345044982008775,
-            Boss = 9550003146522364442,
-        } 
-
-        #endregion
-
-        #region Hardcode
-        public void HardcodedEntities(Region region)
-        {
-            //CellPrototype entry;
-            // Vector3 entityPosition;            
-
-            switch (region.PrototypeId)
-            {
-                case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
-
-                    /* TODO: OSRSkullJWooDecryptionController
-                    
-                    Area entryArea = region.AreaList[0];
-                    area = (ulong)entryArea.Prototype;
-                    entry = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(entryArea.CellList[1].PrototypeId)];
-                    npc = (EntityMarkerPrototype)entry.MarkerSet[0]; // SpawnMarkers/Types/MissionTinyV1.prototype
-                    areaOrigin = entryArea.CellList[1].PositionInArea;
-
-                    WorldEntity agent = _entityManager.CreateWorldEntity(region.Id, 
-                    GameDatabase.GetPrototypeId("Entity/Characters/Mobs/SHIELD/OneShots/SHIELDNamedJimmyWooVulnerable.prototype"),
-                    npc.Position + areaOrigin, npc.Rotation,
-                    608, (int)entryArea.Id, 608, (int)entryArea.CellList[1].Id, area, false, false);
-
-                    ulong controller = GameDatabase.GetPrototypeId("Missions/Prototypes/PVEEndgame/OneShots/RedSkull/Controllers/OSRSkullJWooDecryptionController.prototype");
-                    agent.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, 57));
-                    agent.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, 57));
-                    agent.PropertyCollection.List.Add(new(PropertyEnum.MissionPrototype, controller));
-                    agent.TrackingContextMap = new EntityTrackingContextMap[]{
-                        new EntityTrackingContextMap (controller, 15) 
-                    };*/
-
-                    break;
-
-            }
-
-            // Hack mode for Off Teleports / Blocker
-            List<WorldEntity> blockers = new();
-            foreach (var entity in region.IterateEntitiesInVolume(region.Bound, new()))
-            {
-                if (entity is Transition teleport)
-                {
-                    if (teleport.DestinationList.Count > 0 && teleport.DestinationList[0].Type == RegionTransitionType.Transition)
-                    {
-                        var teleportProto = teleport.TransitionPrototype;
-                        if (teleportProto.VisibleByDefault == false) // To fix
-                        {
-                            // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
-                            if (LockedTargets.Contains((InvTarget)teleport.DestinationList[0].TargetRef) == false) continue;
-                            if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
-                            PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
-                            entity.BaseData.EntityPrototypeRef = visibleParent;
-                            continue;
-                        }
-                        // Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
-                    }
-                }
-                else if (Blockers.Contains((BlockerEntity)entity.BaseData.EntityPrototypeRef))
-                {
-                    blockers.Add(entity);              
-                }
-
-            }
-            foreach (var entity in blockers) entity.ExitWorld();
-
-        }
-
-        public static readonly InvSpawner[] InvSpawners = new InvSpawner[]
-        {
-            InvSpawner.OperationsBountyChestSpawnerA100,
-            InvSpawner.OperationsBountyChestSpawnerB225,
-            InvSpawner.OperationsBountyChestSpawnerC350,
-            InvSpawner.DrDoomPhase2StarryExpanseSpawner,
-            InvSpawner.DrDoomPhase3StarryExpanseSpawner,
-            InvSpawner.DrDoomPhase2SpawnerEGc,
-            InvSpawner.DrDoomPhase2SpawnerEGr,
-            InvSpawner.DrDoomPhase3SpawnerEGc,
-            InvSpawner.DrDoomPhase3SpawnerEGr,
-        };
-
-        public enum InvSpawner : ulong
-        {
-            OperationsBountyChestSpawnerA100 = 18164666176037329599,
-            OperationsBountyChestSpawnerB225 = 11588501183449012936,
-            OperationsBountyChestSpawnerC350 = 16538587082423278280,
-            DrDoomPhase2SpawnerEGc = 4693116097212523005,
-            DrDoomPhase2SpawnerEGr = 3339796473761636876,
-            DrDoomPhase3SpawnerEGc = 16067664414561149438,
-            DrDoomPhase3SpawnerEGr = 12791301204692902413,
-            DrDoomPhase2StarryExpanseSpawner = 8902365322555041383,
-            DrDoomPhase3StarryExpanseSpawner = 8461250813795575400,
-        }
-
-
-        private static readonly InvTarget[] LockedTargets = new InvTarget[]
-        {
-            InvTarget.NPETrainingRoomEntry,
-            InvTarget.ResearchCorridorEntryTarget,
-            InvTarget.CH0202HoodContainerInteriorTarget,
-            InvTarget.CH0205TaskmasterTapeInteriorTarget,
-            InvTarget.LokiBossPhaseTwoTarget,
-            InvTarget.NPEAvengersTowerHubEntry,
-            InvTarget.XMansionBodySliderTarget,
-            InvTarget.BroodCavesBossINT,
-            InvTarget.BroodCavesEXTEntryTarget,
-            InvTarget.SauronCavesEXTEntryTarget,
-            InvTarget.GeneModEXITPortalTarget,
-            InvTarget.XMansionBlackbirdWaypoint,
-            InvTarget.AIMWeapFacToMODOKTarget,
-            InvTarget.HelicarrierEntryTarget,
-            InvTarget.CanalEntryTarget1,
-            InvTarget.AsgardHUBToSiegePCZTarget,
-            InvTarget.AsgardHUBToLokiBossTarget,
-            InvTarget.Ch10PagodaFloorBEntryTarget,
-            InvTarget.ToolshedHUBEntryTarget,
-            InvTarget.Ch10PagodaFloorCEntryTarget,
-            InvTarget.Ch10PagodaFloorDEntryTarget,
-            InvTarget.Ch10PagodaFloorEEntryTarget,
-            InvTarget.Ch10PagodaTopFloorEntryTarget,
-            InvTarget.NYCRooftopInvYardUpTarget,
-            // TR targets
-            InvTarget.TRShantyRooftopsTargetAccess,
-            InvTarget.CH05RecCenterExtTarget,   
-            InvTarget.ObjectiveAOutsideTarget,
-            InvTarget.ObjectiveBOutsideTarget,
-            InvTarget.ObjectiveCOutsideTarget,
-            InvTarget.TRCarParkTargetAccess,
-            InvTarget.TRGameCenterTargetAccess,
-            // DailyG
-            InvTarget.DailyGTimesSquareHotelDestinationTarget,
-            InvTarget.DailyGTimesSquareStreetDestinationTarget,
-            InvTarget.DailyGHighTownInvasionHotelDestTarget,
-            InvTarget.DrStrangeTimesSquareHotelDestinationTarget,
-            InvTarget.DrStrangeTimesSquareStreetDestinationTarget,
-            // OneShot
-            InvTarget.ZooEmployeeTargetAccess,
-            InvTarget.TRSeaWorldTargetAccess,
-            InvTarget.TRZooAquariumTargetAccess,
-            InvTarget.HydeBossExitTarget,
-            InvTarget.ZooJungleInstanceEntryTarget,
-            InvTarget.Hydra1ShotBaseEntryTarget,
-            InvTarget.Hydra1ShotBossEntryTarget2,
-            InvTarget.WakandaP1InRegionEndTarget,
-            InvTarget.WakandaP1BossEndTarget,
-            // Challange
-            InvTarget.UltronBossTargetG,
-            InvTarget.AsgardPvPRewardTarget,
-            InvTarget.RampToCalderaArrivalTarget,            
-            InvTarget.SurturOneWayArrivalTarget,
-            InvTarget.SlagOuterExitTarget,
-            InvTarget.MonoEntryTarget,
-            InvTarget.MoMRightExitArrivalTarget,
-            InvTarget.MoMLeftExitArrivalTarget,
-            InvTarget.AxisRaidNullifiersEntryTarget,
-            InvTarget.BossEntryTarget,
-        };
-
-        private static readonly InvTarget[] UnLockedTargets = new InvTarget[]
-        {
-            InvTarget.XManhattanEntryTarget1to60,
-            InvTarget.LokiBossEntryTarget,
-            InvTarget.SiegePCZEntryTarget,
-            InvTarget.CH0204AIMBaseEntryInteriorTarget,
-            InvTarget.CH0207TaskmasterBaseEntryInteriorTarget,
-            InvTarget.CH0208BrooklynCanneryStartTarget,
-            InvTarget.CH0403MGHStorageFrontInteriorTarget,
-            InvTarget.CH0404MGHGarageInteriorFrontTarget,
-            InvTarget.CH0404MGHFactoryInteriorFrontTarget,
-            InvTarget.CH0404MGHFactoryBossInteriorTarget,
-            InvTarget.CH0404MGHFactoryExteriorRearTarget,
-            InvTarget.CH0410FiskElevatorAFloor2Target,
-            InvTarget.SewersEntryTarget,
-            InvTarget.AIMLabToTrainingCampTarget,
-            InvTarget.ShieldOutpostEXTTarget,
-            InvTarget.NorwayDarkForestTarget,
-            InvTarget.AsgardiaInstanceEntryTarget,
-            InvTarget.AsgardiaBridgeTarget,
-            InvTarget.Ch10PagodaFloorAEntryTarget,
-            InvTarget.SovereignHotelRoofEntryTarget,  
-            // TR
-            InvTarget.CH0205TaskmasterTapeExteriorTarget,
-            InvTarget.CH05MutantWarehouseExtEntry,
-            // Invisible Exit
-            InvTarget.HydeBossEntryTarget,
-            InvTarget.MoMCenterEntryTarget,
-        };
-
-        private static readonly BlockerEntity[] Blockers = new BlockerEntity[]
-        {
-            BlockerEntity.GateBlockerRaftLivingLaser,
-            BlockerEntity.DestructibleExitDoors,
-            BlockerEntity.SurturRaidGateBlockerEntityMONO,
-            BlockerEntity.SurturRaidGateBlockerEntityMOM,
-            BlockerEntity.SurturRaidGateBlockerEntitySLAG,
-            BlockerEntity.SurturRaidGateBlockerEntitySURT,
-            BlockerEntity.OperationsBountyChestA,
-            BlockerEntity.OperationsBountyChestB,
-            BlockerEntity.OperationsBountyChestC,
-        };
-
-        public enum BlockerEntity : ulong
-        {
-            GateBlockerRaftLivingLaser = 12353403066566515268,
-            DestructibleExitDoors = 15556708167322245112,
-            SurturRaidGateBlockerEntityMONO = 14264436868519894710,
-            SurturRaidGateBlockerEntityMOM = 7506253403374886470,
-            SurturRaidGateBlockerEntitySLAG = 2107982419118661284,
-            SurturRaidGateBlockerEntitySURT = 7080009510741745355,
-            // Off BounntyChest
-            OperationsBountyChestA = 8947265512402064759,
-            OperationsBountyChestB = 16557893689139991928,
-            OperationsBountyChestC = 2614246491109856633,
-        }
-
-        public enum InvTarget : ulong
-        {
-            // NPERaftRegion
-            NPETrainingRoomEntry = 7210609263143097312,
-            // NPEAvengersTowerHUBRegion
-            BazaarFromAvengersTowerHubTarget = 15895543318574475572,
-            XManhattanEntryTarget1to60 = 2635481312889807924,
-            SubterraL5EntryTarget = 17508088629154751698,
-            UESvsDinosEntryTarget = 11375015409704837543,
-            XMansionEntry = 2908608236307814449,
-            RaftHelipadEntryTarget = 1419217567326872169,
-            MadripoorMainEntryTarget = 5578214614276448404,
-            CH0201ShippingyardEntryInteriorTarget = 14988590400532456514,
-            CH0401Respawn01Target = 13122305741551771460,
-            CH01HKSouthRooftopPlayerStart = 11237793595509253006,
-            // CH0106KPWarehouseRegion
-            WarehouseBossExteriorTarget = 10254792218958897947,
-            // CH0201ShippingYardRegion
-            CH0202HoodContainerInteriorTarget = 9608365637530952300,
-            CH0204AIMBaseEntryInteriorTarget = 4355410365228982789,            
-            // CH0205ConstructionRegion
-            CH0205TaskmasterTapeInteriorTarget = 11803462739553362667,
-            CH0207TaskmasterBaseEntryInteriorTarget = 10108529194301596944,
-            // CH0206TaskmasterVHSTapeConstructionRegion
-            CH0205TaskmasterTapeExteriorTarget = 17617241741145481969,
-            // CH0207TaskmasterRegion
-            CH0208BrooklynCanneryStartTarget = 17210189397093720615,
-            // CH0209HoodsHideoutRegion
-            NPEAvengersTowerHubEntry = 11334277059865941394,
-            // CH0401LowerEastRegion
-            CH0403MGHStorageFrontInteriorTarget = 15735845837126443530,
-            CH0404MGHGarageInteriorFrontTarget = 7726391931552539005,
-            // CH0403MGHStorageRegion
-            CH0403MGHStorageRearExteriorTarget = 4325468468211556753,
-            // CH0404MGHFactoryRegion
-            CH0404MGHFactoryInteriorFrontTarget = 11511146138818388494,
-            CH0404MGHFactoryBossInteriorTarget = 12796241511874961820,
-            CH0404MGHFactoryExteriorRearTarget = 11806303983103713685,
-            // CH0402UpperEastRegion
-            CH0408MobRearInteriorTarget = 11895422811237195421, // Exit from Bistro
-            // CH0408MaggiaRestaurantRegion
-            CH0408MobRearExteriorTarget = 17484766862257757859,
-            // CH0410FiskTowerRegion
-            CH0410FiskElevatorAFloor2Target = 12440915086139596806,
-            // CH0501MutantTownRegion
-            SewersEntryTarget = 14627094356933614733,
-            // CH0502MutantWarehouseRegion
-            CH05MutantWarehouseExtEntry = 241887477377605722,
-            // CH0503SupervillainRecCenterRegion
-            CH05RecCenterExtTarget = 10769034612749049342,
-            // CH0504PurifierChurchRegion
-            XMansionBodySliderTarget = 10156365377106549943,
-            // XaviersMansionRegion
-            FortStrykerEntryTarget = 3997829106751906038,
-            SlumsEntryTarget = 8492855896331000872,
-            JungleEntryTarget = 9647739674975804916,
-            HelicarrierEntryTarget = 1423746992940784646,
-            // CH0604AIMWeaponsLabRegion
-            AIMLabToTrainingCampTarget = 4821103317906694715,
-            // CH0702SauronCavesRegion
-            SauronCavesEXTEntryTarget = 8070077825000284522,
-            // CH0703BroodCavesRegion
-            BroodCavesBossINT = 4234011923218898400,
-            BroodCavesBossEXT = 4854258685993491942,
-            BroodCavesEXTEntryTarget = 685085247747793128,
-            // CH0704SHIELDScienceStationRegion
-            ShieldOutpostEXTTarget = 15087385534041563173,
-            // CH0706MutateCavesRegion
-            GeneModBossEXT = 12972244072243797149,
-            // CH0707SinisterLabRegion
-            GeneModEXITPortalTarget = 1472763862505496680,
-            XMansionBlackbirdWaypoint = 8769531952491273496,
-            // HelicarrierRegion
-            NorwayPCZEntryTarget = 15602868991888858554,
-            AIMWeaponFacExteriorEntryTarget = 725811344567509511,
-            HYDRAIslandLVL1Entry = 5599790498739985717,
-            LatveriaPCZEntryTarget = 14533918910337458007, 
-            ResearchCorridorEntryTarget = 6216551702482332010,
-            // CH0801AIMWeaponFacilityRegion
-            AIMWeapFacToMODOKTarget = 10175636343744765571,
-            // CH0805LatveriaPCZObjectiveARegion
-            ObjectiveAOutsideTarget = 18226452563201630105,
-            // CH0806LatveriaPCZObjectiveBRegion
-            ObjectiveBOutsideTarget = 11884989666270388122,
-            // CH0807LatveriaPCZObjectiveCRegion
-            ObjectiveCOutsideTarget = 2723149482678296475,
-            // CH0901NorwayPCZRegion
-            NorwayDarkForestTarget = 11767373299566321264,
-            AsgardiaInstanceEntryTarget = 15288093230286381150,
-            // CH0903AsgardiaInstanceRegion
-            AsgardiaBridgeTarget = 3437800305839709322,
-            // AsgardiaRegion
-            LokiBossEntryTarget = 11180315199281962291,
-            SiegePCZEntryTarget = 12537192004833254695,
-            // CH0904SiegePCZRegion
-            CanalEntryTarget1 = 8738154874827447293,
-            // CH0905CanalRegion
-            AsgardHUBToSiegePCZTarget = 14934666025878298319,
-            // CH0906LokiBossRegion
-            LokiBossPhaseTwoTarget = 15469485961670041196,
-            AsgardHUBToLokiBossTarget = 6343094346979221211,
-            // MadripoorInvasionRegion
-            Ch10PagodaFloorAEntryTarget = 589822349659285856,
-            // HandDojoRegion
-            Ch10PagodaFloorBEntryTarget = 3555544683987675489,
-            ToolshedHUBEntryTarget = 17221238477572612404,
-            Ch10PagodaFloorCEntryTarget = 2774131390855457122,
-            Ch10PagodaFloorEEntryTarget = 6093066063172282724,
-            Ch10PagodaTopFloorEntryTarget = 12955753604043975250,
-            Ch10PagodaFloorDEntryTarget = 4874741483775273315,
-            // NYCRooftopInvRegion
-            NYCRooftopInvYardUpTarget = 4811369732915800844,
-            // UpperMadripoorRegionL60
-            SovereignHotelRoofEntryTarget = 14195072671160937196,
-            // TRShantyRooftopsRegion
-            TRShantyRooftopsTargetAccess = 15095574082967449674,
-            // TRCarParkRegion
-            TRCarParkTargetAccess = 6385558882715249947,
-            // TRGameCenterRegion
-            TRGameCenterTargetAccess = 9921007488688860754,
-            // DailyGTimesSquareRegionL60
-            DailyGTimesSquareHotelDestinationTarget = 7040225978500524304,
-            DailyGTimesSquareStreetDestinationTarget = 4857786726277785995,
-            // DailyGHighTownInvasionRegionL60
-            DailyGHighTownInvasionHotelDestTarget = 12087150614603311702,
-            // DrStrangeTimesSquareRegionL60
-            DrStrangeTimesSquareHotelDestinationTarget = 17730529484168572441,
-            DrStrangeTimesSquareStreetDestinationTarget = 5991922233338179220,
-            // BronxZooRegionL60
-            TRSeaWorldTargetAccess = 3132193544495836603,
-            HydeBossExitTarget = 8006010142029130269,
-            HydeBossEntryTarget = 10506910663675357845,
-            ZooJungleInstanceEntryTarget = 18422336131966250598,
-            TRZooAquariumTargetAccess = 3981908949025697563,
-            ZooEmployeeTargetAccess = 5081698796864680364,
-            // HYDRAIslandPartDeuxRegionL60
-            Hydra1ShotBaseEntryTarget = 4042445796194922837,
-            Hydra1ShotBossEntryTarget2 = 9308897719218876785,
-            // WakandaP1RegionL60
-            WakandaP1InRegionEndTarget = 1487192153901117002,
-            WakandaP1BossEndTarget = 10099148393087708326,
-            // UltronRaidRegionGreen
-            UltronBossTargetG = 7879625668095978348,
-            // PvPDefenderTier5Region
-            AsgardPvPRewardTarget = 3428180377327967290,
-            // SurturRaidRegionGreen
-            RampToCalderaArrivalTarget = 8879645719174783216,
-            MoMRightExitArrivalTarget = 12919759216768590914,
-            SurturOneWayArrivalTarget = 3891105581744136409,
-            SlagOuterExitTarget = 7068172508433490462,
-            MonoEntryTarget = 2747204676526481547,
-            MoMCenterEntryTarget = 1963663328097935916,
-            MoMLeftExitArrivalTarget = 8318676114763097039,
-            // AxisRaidRegionGreen
-            AxisRaidNullifiersEntryTarget = 8684857023547056096,
-            BossEntryTarget = 6193630514385067431,
-        };
-
-        #endregion
     }
 }

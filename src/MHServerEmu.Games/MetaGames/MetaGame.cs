@@ -22,13 +22,16 @@ namespace MHServerEmu.Games.MetaGames
         // new
         public MetaGame(Game game) : base(game) { }
 
-        public override void Initialize(EntitySettings settings)
+        public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             _name = new(0, "");
             Region region = Game.RegionManager.GetRegion(settings.RegionId);
             region.RegisterMetaGame(this);
+
+            return true;
         }
 
         public override bool Serialize(Archive archive)

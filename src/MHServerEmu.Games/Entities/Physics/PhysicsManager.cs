@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Entities.Physics
         public int CurrentForceReadIndex => _currentForceReadWriteState ? 1 : 0;
         public int CurrentForceWriteIndex => _currentForceReadWriteState ? 0 : 1;
 
-        private readonly Game _game;
+        private Game _game;
         private readonly List<ForceSystem> _pendingForceSystems;
         private readonly List<ForceSystem> _activeForceSystems;
         private readonly Queue<OverlapEvent> _overlapEvents;
@@ -21,9 +21,8 @@ namespace MHServerEmu.Games.Entities.Physics
         private bool _currentForceReadWriteState;
         private int _physicsFrames;
 
-        public PhysicsManager(Game game)
+        public PhysicsManager()
         {
-            _game = game;
             _pendingForceSystems = new();
             _activeForceSystems = new();
             _overlapEvents = new();
@@ -31,6 +30,13 @@ namespace MHServerEmu.Games.Entities.Physics
             _entitiesResolving = new();
             _currentForceReadWriteState = false;
             _physicsFrames = 1;
+        }
+
+        public bool Initialize(Game game)
+        {
+            _game = game;
+            // TODO?: m_forceSystemMemberPool.Initialize( sizeof(ForceSystemMember), 64, 1 )
+            return true;
         }
 
         public void ResolveEntities()

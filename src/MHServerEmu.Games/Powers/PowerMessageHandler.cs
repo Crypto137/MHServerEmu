@@ -1,17 +1,17 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.Entities.Items;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Core.Network;
-using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -113,11 +113,13 @@ namespace MHServerEmu.Games.Powers
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
             {
-                Item bowlingBall = (Item)playerConnection.Game.EntityManager.GetEntityByPrototypeId((PrototypeId)7835010736274089329); // BowlingBallItem
+                Inventory inventory = playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
+                
+                Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
                 if (bowlingBall != null)
                 {
-                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
                     bowlingBall.Destroy();
+                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
                 }
             }
 
