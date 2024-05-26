@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         /// <summary>
         /// Constructs an <see cref="InventoryLocation"/> with the specified parameters. 
         /// </summary>
-        public InventoryLocation(ulong containerId, PrototypeId inventoryRef, uint slot)
+        public InventoryLocation(ulong containerId, PrototypeId inventoryRef, uint slot = Inventory.InvalidSlot)
         {
             ContainerId = containerId;
             InventoryPrototype = inventoryRef.As<InventoryPrototype>();

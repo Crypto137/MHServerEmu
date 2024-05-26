@@ -21,14 +21,14 @@ namespace MHServerEmu.Games.Entities
         PopulateInventories         = 1 << 6,   // Initialize inventory instances on creation
         Flag7                       = 1 << 7,
         ClientOnly                  = 1 << 8,   // Entity is client-only
-        Flag9                       = 1 << 9,
+        LogInventoryErrors          = 1 << 9,
         Flag10                      = 1 << 10,
         IsPacked                    = 1 << 11,
         IsClientEntityHidden        = 1 << 12,  // Hide avatar during swapping
         DeferAdapterChanges         = 1 << 13,  // Used for interaction with UE3
         DoNotAllowStackingOnCreate  = 1 << 14,  // Used as an argument in Inventory::ChangeEntityInventoryLocationOnCreate()
 
-        DefaultOptions = EnterGame | PopulateInventories | Flag9
+        DefaultOptions = EnterGame | PopulateInventories | LogInventoryErrors
     }
 
     /// <summary>
@@ -47,6 +47,7 @@ namespace MHServerEmu.Games.Entities
         public byte[] ArchiveData { get; set; }
 
         public InventoryLocation InventoryLocation { get; set; }
+        public InventoryLocation PreviousInventoryLocation { get; set; }
 
         public EntitySettingsOptionFlags OptionFlags { get; set; }
 

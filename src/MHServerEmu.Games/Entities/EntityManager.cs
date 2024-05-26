@@ -168,6 +168,45 @@ namespace MHServerEmu.Games.Entities
 
             entity.OnPostInit(settings);
 
+            // Add the new entity to an inventory if there is a location specified
+            InventoryLocation invLoc = settings.InventoryLocation;
+            if (invLoc != null && invLoc.ContainerId != Entity.InvalidId)
+            {
+                ulong ownerId = invLoc.ContainerId;
+                PrototypeId ownerInventoryRef = invLoc.InventoryRef;
+
+                settings.Results.InventoryResult = InventoryResult.UnknownFailure;
+
+                // Validate inventory location
+                if (ownerInventoryRef == PrototypeId.Invalid)
+                    return Logger.WarnReturn(false, $"FinalizeEntity(): Invalid owner invRef during create. invLoc={invLoc}, entity={entity}");
+
+                Entity owner = GetEntity<Entity>(settings.InventoryLocation.ContainerId);
+                if (owner == null)
+                    return Logger.WarnReturn(false, $"FinalizeEntity(): Unable to find owner entity with id {ownerId} for placement of entity {entity} into invLoc {invLoc}, maybe it despawned?");
+
+                Inventory ownerInventory = owner.GetInventoryByRef(ownerInventoryRef);
+                if (ownerInventory == null)
+                    return Logger.WarnReturn(false, $"FinalizeEntity(): Unable to find inventory {ownerInventory} in owner entity {owner} to put entity {entity} in it");
+
+                // Attempt to put the entity in the inventory it belongs to
+                settings.Results.InventoryResult = Inventory.ChangeEntityInventoryLocationOnCreate(entity, ownerInventory, invLoc.Slot,
+                    settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsPacked), settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.DoNotAllowStackingOnCreate) == false,
+                    settings.PreviousInventoryLocation);
+
+                // Report error if something went wrong
+                if (settings.Results.InventoryResult != InventoryResult.Success)
+                {
+                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.LogInventoryErrors))
+                        Logger.Warn($"CreateEntity(): Unable to add entity {entity} at invLoc {invLoc} of owner entity {owner} (error: {settings.Results.InventoryResult})");
+
+                    return false;
+                }
+
+                if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.ClientOnly) && entity.IsDestroyed())
+                    return true;
+            }
+
             if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame))
             {
                 var owner = entity.GetOwner();

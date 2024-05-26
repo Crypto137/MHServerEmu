@@ -163,15 +163,13 @@ namespace MHServerEmu.Games.Events
                 properties[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
                 properties[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
 
-                EntitySettings ballSettings = new()
-                {
-                    EntityRef = bowlingBallItem,
-                    ItemSpec = itemSpec,
-                    Properties = properties
-                };
+                EntitySettings ballSettings = new();
+                ballSettings.EntityRef = bowlingBallItem;
+                ballSettings.InventoryLocation = new(player.Id, inventory.PrototypeDataRef);
+                ballSettings.ItemSpec = itemSpec;
+                ballSettings.Properties = properties;
 
                 bowlingBall = _game.EntityManager.CreateEntity(ballSettings);
-                bowlingBall.ChangeInventoryLocation(inventory);
 
                 bowlingBall.BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc;
                 bowlingBall.BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;

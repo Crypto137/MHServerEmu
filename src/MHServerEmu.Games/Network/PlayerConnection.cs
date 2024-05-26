@@ -130,11 +130,12 @@ namespace MHServerEmu.Games.Network
 
                 EntitySettings avatarSettings = new();
                 avatarSettings.EntityRef = avatarRef;
-                avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+                avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories | EntitySettingsOptionFlags.LogInventoryErrors;
+                avatarSettings.InventoryLocation = new(Player.Id, avatarLibrary.PrototypeDataRef);
 
                 Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
+
                 avatar.SetPlayer(Player);
-                avatar.ChangeInventoryLocation(avatarLibrary);
                 avatar.InitializeFromDBAccount(avatarRef, _dbAccount);
             }
 
@@ -144,8 +145,10 @@ namespace MHServerEmu.Games.Network
             {
                 EntitySettings teamUpSettings = new();
                 teamUpSettings.EntityRef = teamUpRef;
-                Entity teamUp = Game.EntityManager.CreateEntity(teamUpSettings);
-                teamUp.ChangeInventoryLocation(teamUpLibrary);
+                teamUpSettings.OptionFlags = EntitySettingsOptionFlags.LogInventoryErrors;
+                teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
+
+                Game.EntityManager.CreateEntity(teamUpSettings);
             }
 
             // Make sure we have a valid current avatar ref
