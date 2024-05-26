@@ -8,7 +8,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
-    public class Inventory : IEnumerable<KeyValuePair<uint, Inventory.InvEntry>>
+    public class Inventory : IEnumerable<Inventory.InventoryIterationEntry>
     {
         public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
 
@@ -58,10 +58,10 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public ulong GetEntityInSlot(uint slot)
         {
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                if (kvp.Key == slot)
-                    return kvp.Value.EntityId;
+                if (entry.Slot == slot)
+                    return entry.Id;
             }
 
             return Entity.InvalidId;
@@ -79,10 +79,10 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn<Entity>(null, "GetMatchingEntity(): entityRef == PrototypeId.Invalid");
 
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                if (kvp.Value.PrototypeDataRef == entityRef)
-                    return Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                if (entry.ProtoRef == entityRef)
+                    return Game.EntityManager.GetEntity<Entity>(entry.Id);
             }
 
             return null;
@@ -95,11 +95,11 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             int numMatches = 0;
 
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                if (kvp.Value.PrototypeDataRef == entityRef)
+                if (entry.ProtoRef == entityRef)
                 {
-                    Entity entity = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                    Entity entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
                     if (entity != null)
                     {
                         numMatches += entity.CurrentStackSize;
@@ -115,9 +115,9 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entityRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ContainsMatchingEntity(): entityRef == PrototypeId.Invalid");
 
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                if (kvp.Value.PrototypeDataRef == entityRef)
+                if (entry.ProtoRef == entityRef)
                     return true;
             }
 
@@ -221,9 +221,9 @@ namespace MHServerEmu.Games.Entities.Inventories
             // Look for a free slot between occupied ones
             // NOTE: This requires the slot / InvEntry collection to be sorted by slot
             uint slot = 0;
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                if (kvp.Key != slot && inventoryOwner.ValidateInventorySlot(this, slot))
+                if (entry.Slot != slot && inventoryOwner.ValidateInventorySlot(this, slot))
                     return slot;
 
                 slot++;
@@ -242,19 +242,19 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (entity.CanStack() == false || entity.IsAutoStackedWhenAddedToInventory() == false)
                 return InvalidSlot;
             
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                if (kvp.Key == entity.Id) continue;     // Stacking with itself sure sounds like a potential dupe
-                Entity existingEntity = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                if (entry.Id == entity.Id) continue;     // Stacking with itself sure sounds like a potential dupe
+                Entity existingEntity = Game.EntityManager.GetEntity<Entity>(entry.Id);
                 
                 if (existingEntity == null)
                 {
-                    Logger.Warn($"GetAutoStackSlot(): Missing entity found while iterating inventory. Id={kvp.Value.EntityId}");
+                    Logger.Warn($"GetAutoStackSlot(): Missing entity found while iterating inventory. Id={entry.Id}");
                     continue;
                 }
 
                 if (entity.CanStackOnto(existingEntity, isAdding))
-                    return kvp.Key;
+                    return entry.Slot;
             }
 
             return InvalidSlot;
@@ -619,9 +619,29 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         }
 
-        // Inventory::Iterator
-        public IEnumerator<KeyValuePair<uint, InvEntry>> GetEnumerator() => _entities.GetEnumerator();
+        // Replacement implementation for Inventory::Iterator
+        public IEnumerator<InventoryIterationEntry> GetEnumerator()
+        {
+            foreach (var kvp in _entities)
+                yield return new(kvp);
+        }
+
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public readonly struct InventoryIterationEntry
+        {
+            private readonly KeyValuePair<uint, InvEntry> _kvp;
+
+            public uint Slot { get => _kvp.Key; }
+            public ulong Id { get => _kvp.Value.EntityId; }
+            public PrototypeId ProtoRef { get => _kvp.Value.PrototypeDataRef; }
+            public InventoryMetaData MetaData { get => _kvp.Value.MetaData; }
+
+            public InventoryIterationEntry(KeyValuePair<uint, InvEntry> kvp)
+            {
+                _kvp = kvp;
+            }
+        }
 
         public readonly struct InvEntry : IComparable<InvEntry>
         {

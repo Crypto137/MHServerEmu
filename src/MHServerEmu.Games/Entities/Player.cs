@@ -625,8 +625,8 @@ namespace MHServerEmu.Games.Entities
         {
             foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.PlayerAvatars))
             {
-                foreach (var kvp in inventory)
-                    yield return Game.EntityManager.GetEntity<Avatar>(kvp.Value.EntityId);
+                foreach (var entry in inventory)
+                    yield return Game.EntityManager.GetEntity<Avatar>(entry.Id);
             }
         }
 
