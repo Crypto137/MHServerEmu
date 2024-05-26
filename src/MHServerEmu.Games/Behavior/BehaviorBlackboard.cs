@@ -48,7 +48,22 @@ namespace MHServerEmu.Games.Behavior
             if (collection != null)
                 PropertyCollection.FlattenCopyFrom(collection, false);
         }
+
+        private Dictionary<Type, ProceduralProfileRuntimeData> _proceduralProfileData = new ();
+
+        public T GetProceduralProfileRuntimeData<T>() where T : ProceduralProfileRuntimeData
+        {
+            _proceduralProfileData.TryGetValue(typeof(T), out var runtimeData);
+            return runtimeData as T;
+        }
+
+        public void SetProceduralProfileRuntimeData<T>(T runtimeData) where T : ProceduralProfileRuntimeData
+        {
+            _proceduralProfileData[typeof(T)] = runtimeData;
+        }
     }
+
+    public class ProceduralProfileRuntimeData { }
 
     public struct CustomPowerQueueEntry
     {

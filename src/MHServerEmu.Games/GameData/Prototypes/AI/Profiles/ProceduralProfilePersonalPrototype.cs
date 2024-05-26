@@ -4810,6 +4810,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (region == null) return;
             ownerController.RegisterForPlayerInteractEvents(region, true);
             agent.Properties[PropertyEnum.Interactable] = true;
+            var transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
+            if (transitionGlobalsProto != null && transitionGlobalsProto.EnabledState != PrototypeId.Invalid)
+                agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.EnabledState;
         }
 
         private enum State
@@ -4857,6 +4860,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 BehaviorBlackboard blackboard = ownerController.Blackboard;
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.EMPPower;
                 agent.Properties[PropertyEnum.Interactable] = false;
+                var transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
+                if (transitionGlobalsProto != null && transitionGlobalsProto.DisabledState != PrototypeId.Invalid)
+                        agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.DisabledState;
             }
         }
     }
@@ -5122,6 +5128,111 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    public class ProceduralProfileStrangeCauldronPrototype : ProceduralProfileNoMoveNoSensePrototype
+    {
+        public PrototypeId KaeciliusPrototype { get; protected set; }
+
+        private enum State
+        {
+            Default,
+            Enabled,
+            Interactable,
+            DestroyAgent
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            Region region = agent.Region;
+            if (region == null) return;
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
+            ownerController.RegisterForPlayerInteractEvents(region, true);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            if (ownerController.TargetEntity == null)
+                SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            
+            if (stateVal == (int)State.Enabled)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Interactable;
+                agent.Properties[PropertyEnum.Interactable] = true;
+                SetCauldronEntityState(ownerController, true);
+            } 
+            else if (stateVal == (int)State.DestroyAgent)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
+                agent.Destroy();
+            }
+        }
+
+        private static void SetCauldronEntityState(AIController ownerController, bool enabled)
+        {
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+
+            var transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
+            if (transitionGlobalsProto == null) return;
+
+            if (enabled)
+            {
+                if (transitionGlobalsProto.EnabledState == PrototypeId.Invalid) return;
+                agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.EnabledState;
+            }
+            else
+            {
+                if (transitionGlobalsProto.DisabledState == PrototypeId.Invalid) return;
+                agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.DisabledState;
+            }
+        }
+
+        public override void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null || interactEvent.InteractableObject is not Agent interactableAgent) return;
+
+            if (interactableAgent == agent)
+            {
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.DestroyAgent;
+                agent.Properties[PropertyEnum.Interactable] = false;
+                SetCauldronEntityState(ownerController, false);
+
+                var region = agent.Region;
+                if (region == null) return;
+                var evt = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                region.AIBroadcastBlackboardEvent.Invoke(evt);
+            }
+        }
+
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            var broadcaster = broadcastEvent.Broadcaster;
+            if (broadcaster == null) return;
+            var blackboard = ownerController.Blackboard;
+
+            if (broadcaster.PrototypeDataRef == KaeciliusPrototype)
+            {
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Enabled;
+                blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = broadcaster.Id;
+            }
+        }
+    }
+
     public class ProceduralProfileKaeciliusPrototype : ProceduralProfileBasicRangePrototype
     {
         public ProceduralPowerWithSpecificTargetsPrototype[] HotspotSpawners { get; protected set; }
@@ -5137,22 +5248,169 @@ namespace MHServerEmu.Games.GameData.Prototypes
             InitPower(agent, HealFinalFormPower);
             InitPower(agent, DeathPreventerPower);
 
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            Region region = agent.Region;
+            if (region == null) return;
+            ownerController.RegisterForAIBroadcastBlackboardEvents(region, true);
+
             if (HotspotSpawners.HasValue())
             {
                 var firstSpawner = HotspotSpawners[0];
                 foreach (var hotspotSpawner in HotspotSpawners)
                 {
-                    bool init = hotspotSpawner.InitTargets(agent, firstSpawner == hotspotSpawner);
-                    if (init == false) return;
+                    if (hotspotSpawner.InitTargets(agent, firstSpawner == hotspotSpawner) == false) return;
                     InitPower(agent, hotspotSpawner.PowerToUse);
                 }
             }
         }
-    }
 
-    public class ProceduralProfileStrangeCauldronPrototype : ProceduralProfileNoMoveNoSensePrototype
-    {
-        public PrototypeId KaeciliusPrototype { get; protected set; }
+        private enum State
+        {
+            Default,
+            HotspotSpawners,
+            FalseDeath,
+            DeathPreventer,
+            FinalForm
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            var blackboard = ownerController.Blackboard;
+            PrototypeId activePowerRef = blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated];
+
+            if (HotspotSpawners.IsNullOrEmpty() 
+                || FalseDeathPower?.PowerContext == null || FalseDeathPower.PowerContext.Power == PrototypeId.Invalid 
+                || HealFinalFormPower?.PowerContext == null || HealFinalFormPower.PowerContext.Power == PrototypeId.Invalid) return;
+
+            long health = agent.Properties[PropertyEnum.Health];
+            long maxHealth = agent.Properties[PropertyEnum.HealthMax];
+
+            if (activePowerRef == FalseDeathPower.PowerContext.Power)
+            {
+                if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.DeathPreventer)
+                {
+                    if (agent.UnassignPower(activePowerRef) == false) return;
+                    blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated] = PrototypeId.Invalid;
+                }
+                else
+                    return;
+            }
+            var random = game.Random;
+            if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.Default)
+            {
+                if (proceduralAI.GetState(0) != UsePower.Instance ||
+                    activePowerRef == DeathPreventerPower.PowerContext.Power)
+                {
+                    var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, DeathPreventerPower.PowerContext, DeathPreventerPower);
+                    if (powerResult == StaticBehaviorReturnType.Running) return;
+                    if (powerResult == StaticBehaviorReturnType.Completed)
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.HotspotSpawners;
+                }
+            }
+            else if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.HotspotSpawners)
+            {
+                if ((proceduralAI.GetState(0) != UsePower.Instance || activePowerRef == FalseDeathPower.PowerContext.Power) 
+                    && MathHelper.IsBelowOrEqual(health, maxHealth, FalseDeathPower.HealthThreshold))
+                {
+                    var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, FalseDeathPower.PowerContext, FalseDeathPower);
+                    if (powerResult == StaticBehaviorReturnType.Running) return;
+                    if (powerResult == StaticBehaviorReturnType.Completed)
+                    {
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.FalseDeath;
+                        agent.SetDormant(true);
+
+                        var region = agent.Region;
+                        if (region == null) return;
+                        var broadcastEvent = new AIBroadcastBlackboardGameEvent(agent, blackboard);
+                        region.AIBroadcastBlackboardEvent.Invoke(broadcastEvent);
+                    }
+                }
+                else if (proceduralAI.GetState(0) != UsePower.Instance)
+                {
+                    int index = 1;
+                    foreach (var targetedPower in HotspotSpawners)
+                    {
+                        if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] < index 
+                            && MathHelper.IsBelowOrEqual(health, maxHealth, targetedPower.HealthThreshold))
+                        {
+                            AttemptHotspotSpawnerPower(ownerController, targetedPower);
+                            blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = index;
+
+                            var nextTarget = HotspotSpawners.ElementAtOrDefault(index);
+                            nextTarget?.SearchForTargets(agent, true, true);
+                        }
+                        index++;
+                    }
+                }
+            }
+            else if ((proceduralAI.GetState(0) != UsePower.Instance || activePowerRef == HealFinalFormPower.PowerContext.Power)
+                && blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] == (int)State.DeathPreventer)
+            {
+                var powerResult = HandleUsePowerContext(ownerController, proceduralAI, random, currentTime, HealFinalFormPower.PowerContext, HealFinalFormPower);
+                if (powerResult == StaticBehaviorReturnType.Running) return;
+                if (powerResult != StaticBehaviorReturnType.Completed)
+                    agent.Properties[PropertyEnum.Health] = agent.Properties[PropertyEnum.HealthMax];
+                agent.UnassignPower(DeathPreventerPower.PowerContext.Power);
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.FinalForm;
+            }
+
+            base.Think(ownerController);
+        }
+
+        private static void AttemptHotspotSpawnerPower(AIController ownerController, ProceduralPowerWithSpecificTargetsPrototype power)
+        {
+            var blackboard = ownerController.Blackboard;
+            var game = ownerController.Game;
+            if (game == null) return;
+            var manager = game.EntityManager;
+
+            ulong leftMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1];
+            if (leftMarkerId != 0)
+            {
+                var leftMarker = manager.GetEntity<WorldEntity>(leftMarkerId);
+                if (leftMarker != null && ownerController.AttemptActivatePower(power.PowerToUse, 0, leftMarker.RegionLocation.Position) == false)
+                    ProceduralAI.Logger.Warn("Kaecilius's hotspot spawner has failed for the first marker.");
+            }
+
+            ulong centerMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2];
+            if (centerMarkerId !=0)
+            {
+                var centerMarker = manager.GetEntity<WorldEntity>(centerMarkerId);
+                if (centerMarker != null && ownerController.AttemptActivatePower(power.PowerToUse, 0, centerMarker.RegionLocation.Position) == false)
+                    ProceduralAI.Logger.Warn("Kaecilius's hotspot spawner has failed for the second platform.");
+            }
+
+            ulong rightMarkerId = blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3];
+            if (rightMarkerId != 0)
+            {
+                var rightMarker = manager.GetEntity<WorldEntity>(rightMarkerId);
+                if (rightMarker != null && ownerController.AttemptActivatePower(power.PowerToUse, 0, rightMarker.RegionLocation.Position) == false)
+                    ProceduralAI.Logger.Warn("Kaecilius's hotspot spawner has failed for the third platform.");
+            }
+        }
+
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        {
+            if (broadcastEvent.Broadcaster == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var broadcaster = broadcastEvent.Broadcaster;
+            if (broadcaster == null) return;
+
+            if (broadcaster.PrototypeDataRef == Cauldron)
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal2] = (int)State.DeathPreventer;
+        }
     }
 
     public class ProceduralProfileVulturePrototype : ProceduralProfileWithAttackPrototype

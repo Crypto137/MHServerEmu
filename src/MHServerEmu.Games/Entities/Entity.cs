@@ -665,6 +665,11 @@ namespace MHServerEmu.Games.Entities
             return _entityListNodes.GetInvasiveListNode(listId);
         }
 
+        internal TimeSpan GetRemainingLifespan()
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

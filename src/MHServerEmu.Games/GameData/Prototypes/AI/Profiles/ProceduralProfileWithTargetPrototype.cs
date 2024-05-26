@@ -8,6 +8,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -867,9 +868,151 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     }
 
+
     public class ProceduralProfileTaserTrapPrototype : ProceduralProfileWithTargetPrototype
     {
         public PrototypeId TaserHotspot { get; protected set; }
+
+        public class RuntimeData : ProceduralProfileRuntimeData
+        {
+            public Dictionary<ulong, ulong> TaserHotspotIds { get; } = new ();
+        }
+
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            var ownerController = agent.AIController;
+            if (ownerController == null) return;
+            ownerController.Blackboard.SetProceduralProfileRuntimeData(new RuntimeData());
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            var senses = ownerController.Senses;
+            if (senses.ShouldSense() == false) return;
+
+            var proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+            var game = agent.Game;
+            if (game == null) return;
+            var manager = game.EntityManager;
+
+            var profileData = ownerController.Blackboard.GetProceduralProfileRuntimeData<RuntimeData>();
+            if (profileData == null) return;
+
+            List<ulong> trapsToRemove = new ();
+            foreach (var kvp in profileData.TaserHotspotIds)
+            {
+                var otherTrapId = kvp.Key;
+                var taserHotspotId = kvp.Value;
+
+                var otherTrap = manager.GetEntity<WorldEntity>(otherTrapId);
+                if (otherTrap == null || !otherTrap.IsAliveInWorld)
+                {
+                    var taserHotspot = manager.GetEntity<WorldEntity>(taserHotspotId);
+                    taserHotspot?.Destroy();
+                    trapsToRemove.Add(otherTrapId);
+                }
+            }
+
+            foreach (var otherTrapId in trapsToRemove)
+                profileData.TaserHotspotIds.Remove(otherTrapId);
+
+            var region = agent.Region;
+            if (region == null) return;
+            var volume = new Sphere(agent.RegionLocation.Position, ownerController.AggroRangeAlly);
+            foreach (var entity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (entity is not Agent otherTrap 
+                    || otherTrap.Id == agent.Id 
+                    || otherTrap.PrototypeDataRef != agent.PrototypeDataRef) continue;
+
+                if (IsTaserTrapPaired(agent, otherTrap) == false)
+                    AddTaserHotspot(agent, otherTrap);
+            }
+        }
+
+        private void AddTaserHotspot(Agent trap, Agent otherTrap)
+        {
+            var controller = trap.AIController;
+            var otherController = otherTrap.AIController;
+            if (controller == null || otherController == null) return;
+            var game = trap.Game;
+            if (game == null) return;
+            var entityMan = game.EntityManager;
+            if (entityMan == null) return;
+
+            EntitySettings taserHotspotSettings = new ();
+            var distance = trap.RegionLocation.Position - otherTrap.RegionLocation.Position;
+            var center =  distance * 0.5f;
+            var delta = Vector3.Normalize2D(Vector3.AxisAngleRotate(center, Vector3.Up, MathHelper.ToRadians(90.0f)));
+            taserHotspotSettings.EntityRef = TaserHotspot;
+            taserHotspotSettings.Orientation = Orientation.FromDeltaVector(delta);
+            taserHotspotSettings.Position = trap.RegionLocation.ProjectToFloor() - center;
+            taserHotspotSettings.RegionId = trap.RegionLocation.RegionId;
+
+            PropertyCollection properties = new ();
+            properties.FlattenCopyFrom(trap.Properties, false);
+            taserHotspotSettings.Properties = properties;
+
+            TimeSpan trapLifespan = trap.GetRemainingLifespan();
+            TimeSpan otherTrapLifespan = otherTrap.GetRemainingLifespan();
+            taserHotspotSettings.Lifespan = trapLifespan > otherTrapLifespan ? otherTrapLifespan : trapLifespan;
+            if (taserHotspotSettings.Lifespan <= TimeSpan.Zero)
+            {
+                ProceduralAI.Logger.Warn($"Taser Trap AI Profile does not support being used by entities with infinite lifespans! Offending owner: {trap}");
+                return;
+            }
+            var taserHotspotProto = TaserHotspot.As<HotspotPrototype>();
+            if (taserHotspotProto.Bounds is not BoxBoundsPrototype taserHotspotBoxBounds || taserHotspotBoxBounds.Length <= 0) 
+            {
+                ProceduralAI.Logger.Warn($"TaserHotspot bounds must be box bounds with a valid Length! Trap: {trap}");
+                return; 
+            }
+
+            if (entityMan.CreateEntity(taserHotspotSettings) is not WorldEntity taserHotspot) return;
+
+            float dist = Math.Max(1.0f, Vector3.Length(distance));
+            Bounds bounds = new(taserHotspot.Bounds);
+            bounds.InitializeBox(taserHotspotBoxBounds.Width, dist, taserHotspotBoxBounds.Height, false, taserHotspotBoxBounds.CollisionType);
+            taserHotspot.Bounds = bounds;
+
+            var runtimeData = controller.Blackboard.GetProceduralProfileRuntimeData<RuntimeData>();
+            if (runtimeData == null) return;
+            runtimeData.TaserHotspotIds[otherTrap.Id] = taserHotspot.Id;
+        }
+
+        private static bool IsTaserTrapPaired(Agent trap, Agent otherTrap)
+        {
+            bool IsTaserTrapPaired(Agent agent, ulong otherTrapId)
+            {
+                var controller = agent.AIController;
+                if (controller == null) return false;
+                var runtimeData = controller.Blackboard.GetProceduralProfileRuntimeData<RuntimeData>();
+                if (runtimeData == null) return false;
+
+                return runtimeData.TaserHotspotIds.ContainsKey(otherTrapId);
+            }
+
+            return IsTaserTrapPaired(trap, otherTrap.Id) || IsTaserTrapPaired(otherTrap, trap.Id);
+        }
+
+        public override void OnOwnerExitWorld(AIController ownerController)
+        {
+            var profileData = ownerController.Blackboard.GetProceduralProfileRuntimeData<RuntimeData>();
+            if (profileData == null) return;
+            var manager = ownerController.Game.EntityManager;
+            foreach (var kvp in profileData.TaserHotspotIds)
+            {
+                var taserHotspotId = kvp.Value;
+                var taserHotspot = manager.GetEntity<WorldEntity>(taserHotspotId);
+                taserHotspot?.Destroy();
+            }
+            profileData.TaserHotspotIds.Clear();
+        }
     }
 
 }

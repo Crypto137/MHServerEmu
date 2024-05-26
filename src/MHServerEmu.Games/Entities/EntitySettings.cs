@@ -53,5 +53,6 @@ namespace MHServerEmu.Games.Entities
         public float LocomotorHeightOverride { get; set; }
 
         public ItemSpec ItemSpec { get; set; }
+        public TimeSpan Lifespan { get; set; }
     }
 }
