@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Behavior
                 SpawnOffset = spec.Transform.Translation;
        
             PropertyCollection[PropertyEnum.AIAggroDropRange] = profile.AggroDropDistance;
-            PropertyCollection[PropertyEnum.AIAggroDropByLOSChance] = profile.AggroDropChanceLOS;
+            PropertyCollection[PropertyEnum.AIAggroDropByLOSChance] = profile.AggroDropChanceLOS / 100.0f;
             PropertyCollection[PropertyEnum.AIAggroRangeHostile] = profile.AggroRangeHostile;
             PropertyCollection[PropertyEnum.AIAggroRangeAlly] = profile.AggroRangeAlly;
 

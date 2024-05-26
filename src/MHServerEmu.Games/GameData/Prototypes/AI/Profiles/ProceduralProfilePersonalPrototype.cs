@@ -1510,6 +1510,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ownerController.AddPowersToPicker(powerPicker, SummonGigantoAnimPower);
             base.PopulatePowerPicker(ownerController, powerPicker);
         }
+
+        public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
+
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return false;
+
+            if (powerContext == MoloidInvasionPower)
+            {
+                if (HandleContext(proceduralAI, ownerController, MoloidInvasionSpawner) != StaticBehaviorReturnType.Completed) return false;
+            }
+            else if (powerContext == SummonGigantoAnimPower)
+            {
+                Game game = ownerController.Game;
+                if (game == null || GigantoSpawners.IsNullOrEmpty()) return false;
+                int randomIndex = game.Random.Next(0, GigantoSpawners.Length);
+                var triggerSpawnerProto = GigantoSpawners[randomIndex];
+                if (HandleContext(proceduralAI, ownerController, triggerSpawnerProto) != StaticBehaviorReturnType.Completed) return false;
+            }
+
+            return true;
+        }
     }
 
     public class ProceduralProfileVenomPrototype : ProceduralProfileWithAttackPrototype
@@ -1862,6 +1885,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ownerController.AddPowersToPicker(powerPicker, TumblePower);
             base.PopulatePowerPicker(ownerController, powerPicker);
         }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            base.OnPowerEnded(ownerController, powerContext);
+            var blackboard = ownerController.Blackboard;
+            if(powerContext == TumblePower)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.ComboPower;
+            else if (powerContext == TumbleComboPower)
+                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;            
+        }
     }
 
     public class ProceduralProfileLivingLaserPrototype : ProceduralProfileBasicRangePrototype
@@ -1968,6 +2001,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
             ownerController.AddPowersToPicker(powerPicker, LizardSwarmPower);
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            base.OnPowerEnded(ownerController, powerContext);
+            if (powerContext == LizardSwarmPower)
+            {
+                Agent agent = ownerController.Owner;
+                if (agent == null) return;
+                Game game = agent.Game;
+                if (game == null) return;
+                var manager = game.EntityManager;
+                Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
+                if (summonedInventory != null)                
+                    foreach (var kvp in summonedInventory)
+                    {
+                        ulong entityId = kvp.Value.EntityId;
+                        Agent summonedAgent = manager.GetEntity<Agent>(entityId);
+                        if (summonedAgent != null)
+                        {
+                            WorldEntity target = ownerController.TargetEntity;
+                            if (target == null) return;
+                            summonedAgent.Properties[PropertyEnum.TauntersID] = target.Id;
+                        }
+                    }
+            }
         }
     }
 
@@ -2856,6 +2915,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (index >= 0 && index < GenericProceduralPowers.Length)
                     ownerController.AddPowersToPicker(powerPicker, GenericProceduralPowers[index]);
             }
+        }
+
+        public override void OnPowerEnded(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            ownerController.Blackboard.PropertyCollection.AdjustProperty(1, PropertyEnum.AICustomStateVal1);
         }
     }
 

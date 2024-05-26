@@ -113,6 +113,11 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal float GetRange()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Flags]

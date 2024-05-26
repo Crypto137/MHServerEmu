@@ -1314,6 +1314,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
             InitPower(agent, RevengePower);
+
+            Region region = agent.Region;
+            if (region == null) return;
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            ownerController.RegisterForEntityDeadEvents(region, true);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -1322,6 +1328,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             if (stateVal == 1)
                 ownerController.AddPowersToPicker(powerPicker, RevengePower);
+        }
+
+        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        {
+            if (deadEvent.Defender?.PrototypeDataRef == RevengeSupport)
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
         }
     }
 
@@ -1334,6 +1346,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
             InitPower(agent, RevengePower);
+
+            Region region = agent.Region;
+            if (region == null) return;
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            ownerController.RegisterForEntityDeadEvents(region, true);
         }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
@@ -1342,6 +1360,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             if (stateVal == 1)
                 ownerController.AddPowersToPicker(powerPicker, RevengePower);
+        }
+
+        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        {
+            if (deadEvent.Defender?.PrototypeDataRef == RevengeSupport)
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
         }
     }
 

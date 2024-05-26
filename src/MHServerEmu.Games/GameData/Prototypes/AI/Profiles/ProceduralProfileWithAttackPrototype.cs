@@ -12,7 +12,6 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Events;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -1414,14 +1413,126 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Init(Agent agent)
         {
             base.Init(agent);
-            BehaviorBlackboard blackboard = agent?.AIController?.Blackboard;
-            if (blackboard == null) return;
-            blackboard.PropertyCollection[PropertyEnum.AIAggroDropRange] = AggroDropRadius;
-            blackboard.PropertyCollection[PropertyEnum.AIAggroDropRange] = AggroDropByLOSChance;
-            blackboard.PropertyCollection[PropertyEnum.AIAggroRangeHostile] = AggroRadius;
+
+            var owningController = agent.AIController;
+            if (owningController == null) return;
+            var collection = owningController.Blackboard.PropertyCollection;
+            collection[PropertyEnum.AIAggroDropRange] = AggroDropRadius;
+            collection[PropertyEnum.AIAggroDropByLOSChance] = AggroDropByLOSChance / 100.0f;
+            collection[PropertyEnum.AIAggroRangeHostile] = AggroRadius;
 
             InitPower(agent, PrimaryPower);
         }
+
+        public override void Think(AIController ownerController)
+        {
+            Agent agent = ownerController.Owner;
+            var collection = ownerController.Blackboard.PropertyCollection;
+            var game = ownerController.Game;
+
+            if (agent.HasPowerPreventionStatus)
+            {
+                agent.Locomotor.Stop();
+                return;
+            }
+
+            EntityManager manager = game.EntityManager;
+            bool validTarget = false;
+
+            ulong targetId = collection[PropertyEnum.AIRawTargetEntityID];
+            WorldEntity target = manager.GetEntity<WorldEntity>(targetId);
+            if (target != null)
+            {
+                TimeSpan markTime = game.GetCurrentTime() - (TimeSpan)collection[PropertyEnum.AIAttentionMarkTime];
+                if (markTime < TimeSpan.FromMilliseconds(AttentionSpanMS))
+                    validTarget = Combat.ValidTarget(game, agent, target, CombatTargetType.Hostile, true);
+            }
+
+            if (targetId != 0 && validTarget == false)
+            {
+                target = null;
+                targetId = 0;
+                collection[PropertyEnum.AIAssistOverrideTargetId] = 0;
+            }
+
+            if (validTarget == false)
+            {
+                targetId = Combat.GetClosestValidHostileTarget(agent, AggroRadius);
+                if (targetId != 0)
+                {
+                    collection[PropertyEnum.AIRawTargetEntityID] = targetId;
+                    collection[PropertyEnum.AIAttentionMarkTime] = game.GetCurrentTime();
+                    target = manager.GetEntity<WorldEntity>(targetId);
+                }
+                else
+                    target = null;
+            }
+
+            if (target != null)
+            {
+                var targetPosition = target.RegionLocation.Position;
+                bool activatePower = agent.IsExecutingPower;
+                IsInPositionForPowerResult positionResult = IsInPositionForPowerResult.Error;
+                float powerRange = 0.0f;
+
+                if (activatePower == false)
+                {
+                    var powerRef = PrimaryPower;
+                    var power = agent.GetPower(powerRef);
+                    if (power == null) return;
+
+                    powerRange = power.GetRange();
+                    positionResult = agent.IsInPositionForPower(power, target, targetPosition);
+                    if (positionResult == IsInPositionForPowerResult.Success)
+                    {
+                        PowerUseResult activatePowerResult = agent.CanActivatePower(power, targetId, targetPosition);
+                        if (activatePowerResult == PowerUseResult.Success)
+                        {
+                            agent.Locomotor.Stop();
+                            activatePower = ownerController.AttemptActivatePower(powerRef, targetId, targetPosition);
+                            if (activatePower)
+                                collection[PropertyEnum.AIAttentionMarkTime] = game.GetCurrentTime();
+                        }
+                        else if (activatePowerResult == PowerUseResult.Cooldown || activatePowerResult == PowerUseResult.RestrictiveCondition)
+                        {
+                            agent.Locomotor.Stop();
+                            return;
+                        }
+                    }
+                }
+
+                if (activatePower == false)
+                {
+                    if (positionResult != IsInPositionForPowerResult.NoPowerLOS || positionResult == IsInPositionForPowerResult.OutOfRange)
+                    {
+                        float range = Math.Max(powerRange, agent.Bounds.Radius + target.Bounds.Radius);
+                        FastMoveToTarget.Update(agent, range);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                collection[PropertyEnum.AIMoveToCurrentPathNodeIndex] = -1;
+
+                if (agent.Properties.HasProperty(PropertyEnum.AIMoveToPathNodeSetGroup))
+                    collection[PropertyEnum.AIMoveToPathNodeSetGroup] = agent.Properties[PropertyEnum.AIMoveToPathNodeSetGroup];
+                else
+                    collection[PropertyEnum.AIMoveToPathNodeSetGroup] = PathGroup;
+
+                if (agent.Properties.HasProperty(PropertyEnum.AIMoveToPathNodeSetMethod))
+                    collection[PropertyEnum.AIMoveToPathNodeSetMethod] = agent.Properties[PropertyEnum.AIMoveToPathNodeSetMethod];
+                else
+                    collection[PropertyEnum.AIMoveToPathNodeSetMethod] = (int)PathMethod;
+
+                collection[PropertyEnum.AIMoveToPathNodeAdvanceThres] = PathThreshold;
+                collection[PropertyEnum.AIMoveToPathNodeWalk] = agent.Properties[PropertyEnum.AIMoveToPathNodeWalk];
+
+                FastMoveToPath.Update(agent);
+                return;
+            }
+        }
+
     }
 
     public class ProceduralProfilePvPTowerPrototype : ProceduralProfileWithAttackPrototype
@@ -1429,6 +1540,50 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public SelectEntityContextPrototype SelectTarget2 { get; protected set; }
         public SelectEntityContextPrototype SelectTarget3 { get; protected set; }
         public SelectEntityContextPrototype SelectTarget4 { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            var flags = CombatTargetFlags.IgnoreStealth;
+            WorldEntity target = ownerController.TargetEntity;
+            if (Combat.ValidTarget(game, agent, target, CombatTargetType.Hostile, true, flags) == false)
+            {
+                var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext, flags);
+                if (selectedEntity == null)
+                {
+                    var selection2Context = new SelectEntity.SelectEntityContext(ownerController, SelectTarget2);
+                    selectedEntity = SelectEntity.DoSelectEntity(ref selection2Context, flags);
+                    if (selectedEntity == null)
+                    {
+                        var selection3Context = new SelectEntity.SelectEntityContext(ownerController, SelectTarget3);
+                        selectedEntity = SelectEntity.DoSelectEntity(ref selection3Context, flags);
+                        if (selectedEntity == null)
+                        {
+                            var selection4Context = new SelectEntity.SelectEntityContext(ownerController, SelectTarget4);
+                            selectedEntity = SelectEntity.DoSelectEntity(ref selection4Context, flags);
+                        }
+                    }
+                }
+
+                if (selectedEntity == null)
+                    ownerController.ResetCurrentTargetState();
+                else if (selectedEntity != target) 
+                    SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
+            }
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true);
+        }
     }
 
     public class ProceduralProfileMeleeDropWeaponPrototype : ProceduralProfileWithAttackPrototype

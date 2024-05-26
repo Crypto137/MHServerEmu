@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
@@ -161,6 +162,32 @@ namespace MHServerEmu.Games.Behavior
                     return false;
             }
             return true;
+        }
+
+        public static ulong GetClosestValidHostileTarget(Agent aggressor, float aggroRange)
+        {
+            if (aggressor == null || aggroRange <= 0.0f) return 0;
+            var region = aggressor.Region;
+            if (region == null) return 0;
+
+            var aggressorPosition = aggressor.RegionLocation.Position;
+            float closestDistanceSq = float.MaxValue;
+            ulong closestTargetId = 0;
+            Sphere volume = new (aggressorPosition, aggroRange);
+            foreach (var target in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (target == null) continue;
+                if (ValidTarget(aggressor.Game, aggressor, target, CombatTargetType.Hostile, false))
+                {               
+                    var distanceSq = Vector3.DistanceSquared(aggressorPosition, target.RegionLocation.Position);
+                    if (distanceSq < closestDistanceSq)
+                    {
+                        closestDistanceSq = distanceSq;
+                        closestTargetId = target.Id;
+                    }
+                }
+            }
+            return closestTargetId;
         }
     }
 

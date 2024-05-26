@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -58,6 +59,8 @@ namespace MHServerEmu.Games.Entities
                 return true;
             }
         }
+
+        public bool HasPowerPreventionStatus { get; internal set; }
 
         public Agent(Game game) : base(game) { }
 
@@ -290,5 +293,24 @@ namespace MHServerEmu.Games.Entities
             // TODO
             return base.InitInventories(populateInventories);
         }
+
+        internal IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal PowerUseResult CanActivatePower(Power power, ulong targetId, Vector3 targetPosition, ulong flags = 0, ulong itemSourceId = 0)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public enum IsInPositionForPowerResult
+    {
+        Error,
+        Success,
+        NotClearLocation,
+        OutOfRange,
+        NoPowerLOS
     }
 }
