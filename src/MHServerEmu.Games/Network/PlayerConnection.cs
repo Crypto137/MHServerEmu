@@ -233,9 +233,9 @@ namespace MHServerEmu.Games.Network
             foreach (Avatar avatar in Player.IterateAvatars())
                 SendMessage(avatar.ToNetMessageEntityCreate());
 
-            foreach (var kvp in Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
+            foreach (var entry in Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
             {
-                var teamUp = Game.EntityManager.GetEntity<Agent>(kvp.Value.EntityId);
+                var teamUp = Game.EntityManager.GetEntity<Agent>(entry.Id);
                 SendMessage(teamUp.ToNetMessageEntityCreate());
             }
 
