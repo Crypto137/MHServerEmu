@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
@@ -101,25 +102,79 @@ namespace MHServerEmu.Games.Entities
             if (settings.DbGuid != 0)
                 _entityDbGuidDict[settings.DbGuid] = entity;
 
-            // TODO  SetStatus
+            // Set status flags
 
-            entity.PreInitialize(settings);
-            entity.Initialize(settings);
-            FinalizeEntity(entity, settings);
+            // DBOps - database operations?
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.SuspendDBOpsWhileCreating))
+                entity.SetStatus(EntityStatus.DisableDBOps, true);
 
+            // Items seem to ignore binding checks during creation
+            entity.SetStatus(EntityStatus.SkipItemBindingCheck, true);
+
+            // Set for client-only entities (should be irrelevant for our purposes)
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.ClientOnly))
+                entity.SetStatus(EntityStatus.ClientOnly, true);
+
+            // Deserialization flag - currently unused until we implement persistent archives
+            if (settings.ArchiveData != null)
+                entity.SetStatus(EntityStatus.HasArchiveData, true);
+
+            // Set for avatars, seems to be used for interaction with UE3 (client only?)
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.DeferAdapterChanges))
+                entity.SetStatus(EntityStatus.DeferAdapterChanges, true);
+
+            bool initSuccess = entity.PreInitialize(settings);
+            initSuccess &= entity.Initialize(settings);
+            
+            // TODO: Archive deserialization
+            if (settings.ArchiveData?.Length > 0)
+                Logger.Warn("CreateEntity(): Archive data is provided, but persistent archives are not yet implemented!");
+
+            // TODO: Apply replication state
+
+            // Finish deserialization
+            entity.SetStatus(EntityStatus.HasArchiveData, false);
+
+            // TODO: entity.AdjustDifficulty()
+
+            initSuccess &= FinalizeEntity(entity, settings);
+
+            if (initSuccess == false)
+            {
+                // Entity initialization failed
+                Logger.Warn($"CreateEntity(): Entity initialization failed");
+                entity.Destroy();
+                return null;
+            }
+
+            // Resume DB ops
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.SuspendDBOpsWhileCreating))
+            {
+                if (entity.TestStatus(EntityStatus.DisableDBOps) == false)
+                    Logger.Warn($"CreateEntity(): Expected status set to disable db ops on {entity}");
+                entity.SetStatus(EntityStatus.DisableDBOps, false);
+            }
+
+            // Re-enable item binding
+            entity.SetStatus(EntityStatus.SkipItemBindingCheck, false);
+
+            settings.Results.Entity = entity;
             return entity;
         }
 
-        private void FinalizeEntity(Entity entity, EntitySettings settings)
+        private bool FinalizeEntity(Entity entity, EntitySettings settings)
         {
+            if (entity == null) return Logger.WarnReturn(false, "FinalizeEntity(): entity == null");
+
             entity.OnPostInit(settings);
-            // TODO InventoryLocation
-            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld))
+
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame))
             {
                 var owner = entity.GetOwner();
                 if (owner == null || owner.IsInGame)
                     entity.EnterGame(settings);
             }
+
             if (entity is WorldEntity worldEntity)
             {
                 worldEntity.RegisterActions(settings.Actions);
@@ -137,6 +192,8 @@ namespace MHServerEmu.Games.Entities
                     worldEntity.EnterWorld(region, position, settings.Orientation, settings);
                 }
             }
+
+            return true;
         }
 
         public bool DestroyEntity(Entity entity)

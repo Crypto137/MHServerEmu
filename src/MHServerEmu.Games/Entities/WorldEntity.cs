@@ -259,7 +259,7 @@ namespace MHServerEmu.Games.Entities
 
         public void EnableNavigationInfluence()
         {
-            if (IsInWorld == false || TestStatus(EntityStatus.ExitWorld)) return;
+            if (IsInWorld == false || TestStatus(EntityStatus.ExitingWorld)) return;
 
             if (HasNavigationInfluence == false)
             {
@@ -285,7 +285,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanInfluenceNavigationMesh()
         {
-            if (IsInWorld == false || TestStatus(EntityStatus.ExitWorld) || NoCollide || IsIntangible || IsCloneParent())
+            if (IsInWorld == false || TestStatus(EntityStatus.ExitingWorld) || NoCollide || IsIntangible || IsCloneParent())
                 return false;
 
             var prototype = WorldEntityPrototype;
@@ -437,8 +437,8 @@ namespace MHServerEmu.Games.Entities
             // TODO send packets for delete entities from world
             if (IsInWorld)
             {
-                bool exitStatus = !TestStatus(EntityStatus.ExitWorld);
-                SetStatus(EntityStatus.ExitWorld, true);
+                bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
+                SetStatus(EntityStatus.ExitingWorld, true);
                 Physics.ReleaseCollisionId();
                 // TODO IsAttachedToEntity()
                 Physics.DetachAllChildren();
@@ -454,7 +454,7 @@ namespace MHServerEmu.Games.Entities
                 ModifyCollectionMembership(EntityCollection.Locomotion, false);
 
                 if (exitStatus)
-                    SetStatus(EntityStatus.ExitWorld, false);
+                    SetStatus(EntityStatus.ExitingWorld, false);
             }
         }
 
