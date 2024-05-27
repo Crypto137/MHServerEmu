@@ -509,7 +509,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             if (_owner == null) return;
 
-            if (enabled && (!_owner.IsInWorld || _owner.TestStatus(EntityStatus.ExitWorld)))
+            if (enabled && (!_owner.IsInWorld || _owner.TestStatus(EntityStatus.ExitingWorld)))
             {
                 ResetState();
                 IsEnabled = false;

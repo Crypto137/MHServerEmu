@@ -67,13 +67,19 @@ namespace MHServerEmu.Games.Entities
 
     [Flags]
     public enum EntityStatus
-    {
-        PendingDestroy  = 1 << 0,
-        Destroyed       = 1 << 1,
-        ToTransform     = 1 << 2,
-        InGame          = 1 << 3,
-        ExitWorld       = 1 << 10,
-        // TODO etc
+    {                                       // Reference method
+        PendingDestroy          = 1 << 0,
+        Destroyed               = 1 << 1,
+        ToTransform             = 1 << 2,
+        InGame                  = 1 << 3,
+        DisableDBOps            = 1 << 4,   // EntityManager::CreateEntity()
+        Status5                 = 1 << 5,
+        SkipItemBindingCheck    = 1 << 6,   // CItem::CanChangeInventoryLocation()
+        HasArchiveData          = 1 << 7,
+        ClientOnly              = 1 << 8,   // CEntity::ExitGame()
+        EnteringWorld           = 1 << 9,   // WorldEntity::EnterWorld()
+        ExitingWorld            = 1 << 10,  // WorldEntity::EnterWorld()
+        DeferAdapterChanges     = 1 << 11   // CWorldEntity::OnEnteredWorld()
     }
 
     public enum SimulateResult
@@ -190,7 +196,10 @@ namespace MHServerEmu.Games.Entities
             Game = game;
         }
 
-        public virtual void PreInitialize(EntitySettings settings) { }
+        public virtual bool PreInitialize(EntitySettings settings)
+        {
+            return true;
+        }
 
         public virtual bool Initialize(EntitySettings settings)
         {   
@@ -222,7 +231,7 @@ namespace MHServerEmu.Games.Entities
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
             // Is this correct? Should the flag NOT be set?
-            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGameWorld) == false)
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame) == false)
             {
                 BaseData.Position = settings.Position;
                 BaseData.Orientation = settings.Orientation;

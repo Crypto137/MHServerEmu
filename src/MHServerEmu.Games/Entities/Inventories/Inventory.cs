@@ -336,6 +336,19 @@ namespace MHServerEmu.Games.Entities.Inventories
             }
         }
 
+        public static InventoryResult ChangeEntityInventoryLocationOnCreate(Entity entity, Inventory destInventory, uint destSlot, bool isPacked,
+            bool allowStacking, InventoryLocation prevInvLoc)
+        {
+            if (entity.InventoryLocation.IsValid)
+                return Logger.WarnReturn(InventoryResult.SourceEntityAlreadyInAnInventory, "ChangeEntityInventoryLocationOnCreate(): Entity is already in an inventory");
+
+            if (isPacked)
+                return destInventory.UnpackArchivedEntity(entity, destSlot);
+
+            ulong? stackEntityId = null;
+            return destInventory.AddEntity(entity, ref stackEntityId, allowStacking, destSlot, prevInvLoc);
+        }
+
         public static bool IsPlayerStashInventory(PrototypeId inventoryRef)
         {
             if (inventoryRef == PrototypeId.Invalid)
@@ -617,6 +630,11 @@ namespace MHServerEmu.Games.Entities.Inventories
         private void PostFinalMove(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
         {
 
+        }
+
+        private InventoryResult UnpackArchivedEntity(Entity entity, uint destSlot)
+        {
+            return Logger.WarnReturn(InventoryResult.Invalid, "UnpackArchivedEntity(): Not yet implemented");
         }
 
         // Replacement implementation for Inventory::Iterator
