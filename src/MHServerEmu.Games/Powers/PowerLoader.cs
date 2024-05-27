@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Powers
 
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             ulong replicationId = avatar.Properties.ReplicationId;
-            var avatarPrototype = GameDatabase.GetPrototype<AvatarPrototype>(avatar.BaseData.EntityPrototypeRef);
+            var avatarPrototype = avatar.AvatarPrototype;
 
             // Gather all the powers we need to unlock
             List<PrototypeId> powersToUnlockList = new();

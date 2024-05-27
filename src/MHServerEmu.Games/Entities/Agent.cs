@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool AppendOnStartActions(PrototypeId targetRef)
         {
-            if (GameDatabase.InteractionManager.GetStartAction(BaseData.EntityPrototypeRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
+            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
                 return AppendStartPower(action.PowerPrototype);
             return false;
         }

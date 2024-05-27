@@ -90,9 +90,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             DBAvatar dbAvatar = account.GetAvatar((long)prototypeId);
             AvatarPrototype prototype = GameDatabase.GetPrototype<AvatarPrototype>(prototypeId);
 
-            // Base Data
-            BaseData.EntityPrototypeRef = prototypeId;
-
             // Archive Data
             _playerName.Value = account.PlayerName;
 

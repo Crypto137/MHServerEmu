@@ -236,7 +236,7 @@ namespace MHServerEmu.Games.Network
             {
                 if (worldEntity.RegionLocation.Cell == null)
                 {
-                    Logger.Warn("UpdateEntity(): worldEntity.RegionLocation.Cell == null");
+                    Logger.Warn($"UpdateEntity(): worldEntity.RegionLocation.Cell == null, entity: {worldEntity}");
                     continue;
                 }
 

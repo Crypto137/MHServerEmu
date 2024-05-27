@@ -287,6 +287,13 @@ namespace MHServerEmu.Games.Entities
                 .Build();
         }
 
+        public void TEMP_ReplacePrototype(PrototypeId prototypeRef)
+        {
+            // Temp method for hacks that replace entity prototype after creation - use with caution and remove this later
+            Prototype = prototypeRef.As<EntityPrototype>();
+            PrototypeDataRef = prototypeRef;
+        }
+
         protected virtual void BuildString(StringBuilder sb)
         {
             sb.AppendLine($"{nameof(Properties)}: {Properties}");

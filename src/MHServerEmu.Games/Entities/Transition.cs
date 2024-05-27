@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Entities
                 destination = _destinationList[0];
             }
             destination.EntityId = transition.Id;
-            destination.EntityRef = transition.BaseData.EntityPrototypeRef;
+            destination.EntityRef = transition.PrototypeDataRef;
             destination.Type = TransitionPrototype.Type;
         }
 

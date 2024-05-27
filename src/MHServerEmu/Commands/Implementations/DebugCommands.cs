@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -21,6 +22,15 @@ namespace MHServerEmu.Commands.Implementations
         [Command("test", "Runs test code.", AccountUserLevel.Admin)]
         public string Test(string[] @params, FrontendClient client)
         {
+            byte[] buffer = Convert.FromHexString(@params[0]);
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
+            {
+                EntityBaseData entityBaseData = new();
+                entityBaseData.Serialize(archive);
+                Logger.Debug(entityBaseData.ToString());
+            }
+
             return string.Empty;
         }
 
@@ -191,7 +201,7 @@ namespace MHServerEmu.Commands.Implementations
             var entity = game.EntityManager.GetEntity<Entity>(entityId);
             if (entity == null) return "No entity found.";
 
-            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.EntityPrototypeRef)}");
+            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
             ChatHelper.SendMetagameMessageSplit(client, entity.Properties.ToString(), false);
             if (entity is WorldEntity worldEntity)
             {
