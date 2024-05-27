@@ -287,9 +287,7 @@ namespace MHServerEmu.Games.Entities
 
         public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
         {
-            // This validation happens here rather than in the private method because the private method
-            // is used in CreateEntity() to check for id/dbGuid collisions.
-            if (entityId == Entity.InvalidId) return Logger.WarnReturn<T>(null, "GetEntity(): entityId == Entity.InvalidId");
+            if (entityId == Entity.InvalidId) return null;
 
             // Prevent destroyed entities from being accessed externally.
             return GetEntity(entityId, flags & ~GetEntityFlags.DestroyedOnly) as T;
@@ -361,6 +359,9 @@ namespace MHServerEmu.Games.Entities
 
         private Entity GetEntity(ulong entityId, GetEntityFlags flags)
         {
+            // We should have a valid entity id by this point
+            if (entityId == Entity.InvalidId) return Logger.WarnReturn<Entity>(null, "GetEntity(): entityId == Entity.InvalidId");
+
             if (_entityDict.TryGetValue(entityId, out Entity entity) && ValidateEntityForGet(entity, flags))
                 return entity;
 
