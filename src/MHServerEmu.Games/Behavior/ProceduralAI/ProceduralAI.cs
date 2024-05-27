@@ -320,6 +320,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             _proceduralPtr.Profile?.OnEntityAggroedEvent(_owningController, broadcastEvent);
         }
+
+        public void OnMissileReturnEvent()
+        {
+            _proceduralPtr.Profile?.OnMissileReturnEvent(_owningController);
+        }
     }
 
     public enum OverrideType

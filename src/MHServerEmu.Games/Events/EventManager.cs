@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Events
     public class Event
     {        
         private readonly List<Action> _actionList = new();
+        public void AddActionFront(Action handler) => _actionList.Insert(0, handler);
         public void AddActionBack(Action handler) => _actionList.Add(handler);
         public void RemoveAction(Action handler) => _actionList.Remove(handler);
         public void Invoke()
@@ -32,6 +33,7 @@ namespace MHServerEmu.Games.Events
     public class Event<T>
     {
         private readonly List<Action<T>> _actionList = new();
+        public void AddActionFront(Action<T> handler) => _actionList.Insert(0, handler);
         public void AddActionBack(Action<T> handler) => _actionList.Add(handler);
         public void RemoveAction(Action<T> handler) => _actionList.Remove(handler);
         public void Invoke(T eventType)

@@ -455,7 +455,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Init(agent);
 
+            // InitialMoveToDelayMS
+            Game game = agent.Game;
+            var blackboard = agent.AIController?.Blackboard;
+            if (game == null || blackboard == null) return;
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = game.GetCurrentTime();
+
             InitPower(agent, EffectPower);
+        }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+
+            if (ShrinkageDurationMS > 0)
+            {
+                TimeSpan shrinkageTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
+                    + TimeSpan.FromSeconds(ShrinkageDelayMS) 
+                    + TimeSpan.FromSeconds(ShrinkageDurationMS);
+                if (game.GetCurrentTime() > shrinkageTime)
+                {
+                    agent.Destroy(); // or Kill
+                    return;
+                }
+            }
+
+            // DestroyOrbOnUnSimOrTargetLoss
+
+            // OrbRadius
+
+            if (MoveToTarget != null)
+            {
+                BehaviorSensorySystem senses = ownerController.Senses;
+                var target = ownerController.TargetEntity;
+                if (senses.ShouldSense())
+                {
+                    // TODO Check target
+                    // InvalidTargetState
+                    if (target is not Avatar) return;
+                    float aggroRange = ownerController.AggroRangeAlly;
+                    // TODO AcceptsAggroRangeBonus
+                    float distanceSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, target.RegionLocation.Position);
+                    if (distanceSq > MathHelper.Square(aggroRange)) return;
+                    ownerController.SetTargetEntity(target);
+                }
+                if (target != null)
+                    HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, MoveToTarget, false, out _);
+            }
         }
     }
 
@@ -525,6 +576,90 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public SelectEntityContextPrototype SecondaryTargetSelection { get; protected set; }
         public int SeekDelayMS { get; protected set; }
         public float SeekDelaySpeed { get; protected set; }
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            Locomotor locomotor = agent.Locomotor;
+            if (locomotor == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            int stateVal = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
+            if (stateVal != 1 && SeekDelayMS > 0)
+            {
+                long seekDelayTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
+                if (seekDelayTime == 0)
+                {
+                    blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
+                    return;
+                }
+
+                if (currentTime - seekDelayTime < SeekDelayMS)
+                    return;
+                else
+                {
+                    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+                    locomotor.SetMethod(LocomotorMethod.Default);
+                }
+            }
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) 
+            { 
+                if (SecondaryTargetSelection != null)
+                {
+                    if (SelectTargetEntity(agent, ref target, ownerController, proceduralAI, SecondaryTargetSelection, CombatTargetType.Hostile) == false) return;
+                }
+                else
+                    return; 
+            }
+
+            if (locomotor.FollowEntityId != target.Id)
+            {
+                locomotor.FollowEntity(target.Id, 0.0f);
+                locomotor.FollowEntityMissileReturnEvent.AddActionBack(ownerController.MissileReturnEvent);
+            }
+
+        }
+
+        public override void OnMissileReturnEvent(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            {
+                if (SecondaryTargetSelection != null)
+                {
+                    if (SelectTargetEntity(agent, ref target, ownerController, proceduralAI, SecondaryTargetSelection, CombatTargetType.Hostile) == false) return;
+                }
+                else
+                    return;
+            }
+
+            Locomotor locomotor = agent.Locomotor;
+            if (locomotor == null) return;
+
+            ulong targetId = target.Id;
+            if (target != null)
+            {
+                locomotor.FollowEntity(targetId, 0.0f);
+                locomotor.FollowEntityMissileReturnEvent.AddActionFront(ownerController.MissileReturnEvent);
+            }
+        }
     }
 
     public class ProceduralProfileSeekingMissileUniqueTargetPrototype : ProceduralProfileWithTargetPrototype
@@ -605,6 +740,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 WorldEntity focusTarget = agent.Game.EntityManager.GetEntity<WorldEntity>(oldTarget);
                 focusTarget?.Properties.RemoveProperty(PropertyEnum.FocusTargetedOnByID);
             }
+        }
+
+        public override void OnOwnerExitWorld(AIController ownerController)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+
+            ulong focusTargetId = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID];
+            WorldEntity focusTarget = agent.Game.EntityManager.GetEntity<WorldEntity>(focusTargetId);
+            focusTarget?.Properties.RemoveProperty(PropertyEnum.FocusTargetedOnByID);
         }
     }
 

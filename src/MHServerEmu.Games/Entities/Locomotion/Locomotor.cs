@@ -17,8 +17,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Event FollowEntityGiveUpEvent;
-        public Event ReturnTargetMissingEvent;
+        public Event FollowEntityGiveUpEvent { get; private set; }
+        public Event FollowEntityMissileReturnEvent { get; private set; }
 
         public const float MovementSweepPadding = 0.5f;
         public const float GiveUpGoalDistance = 16.0f;
@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public Locomotor()
         {
             FollowEntityGiveUpEvent = new();
-            ReturnTargetMissingEvent = new();
+            FollowEntityMissileReturnEvent = new();
             LocomotionState = new();
             _lastLocomotionState = new();
             _defaultMethod = LocomotorMethod.None;
@@ -844,7 +844,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     }
                     else
                     {
-                        ReturnTargetMissingEvent.Invoke();
+                        FollowEntityMissileReturnEvent.Invoke();
                         Stop();
                         if (IsSeekingMissile && _owner.IsInWorld)
                         {
@@ -1080,7 +1080,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         private void UnregisterFollowEvents()
         {
             FollowEntityGiveUpEvent.UnregisterCallbacks();
-            ReturnTargetMissingEvent.UnregisterCallbacks();
+            FollowEntityMissileReturnEvent.UnregisterCallbacks();
         }
 
         public bool MoveTo(Vector3 position, LocomotionOptions options)

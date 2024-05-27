@@ -118,6 +118,11 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal TimeSpan GetFullExecutionTime()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Flags]

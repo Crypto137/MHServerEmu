@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Behavior
         public Action<EntityAggroedGameEvent> EntityAggroedEvent { get; private set; }
         public Action<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent { get; private set; }
         public Action<PlayerInteractGameEvent> PlayerInteractEvent { get; private set; }
-
+        public Action MissileReturnEvent { get; private set; }
 
         public AIController(Game game, Agent owner)
         {
@@ -46,6 +46,7 @@ namespace MHServerEmu.Games.Behavior
             EntityAggroedEvent = OnAIEntityAggroedGameEvent;
             AIBroadcastBlackboardEvent = OnAIBroadcastBlackboardEvent;
             PlayerInteractEvent = OnAIOnPlayerInteractEvent;
+            MissileReturnEvent = OnAIMissileReturnEvent;
         }
 
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
@@ -331,6 +332,11 @@ namespace MHServerEmu.Games.Behavior
         {
             ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
             Brain?.OnAllyGotKilled();          
+        }
+
+        private void OnAIMissileReturnEvent()
+        {
+            Brain?.OnMissileReturnEvent();
         }
 
         private void OnAIEntityDeadEvent(EntityDeadGameEvent deadEvent)

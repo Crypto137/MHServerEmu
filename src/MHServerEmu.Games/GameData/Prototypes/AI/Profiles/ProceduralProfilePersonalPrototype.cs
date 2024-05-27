@@ -565,18 +565,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 bool toadSummoned = false;
                 Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
                 if (summonedInventory != null)
-                {
-                    foreach (var kvp in summonedInventory) // Inventory::Iterator
+                    foreach (var entry in summonedInventory)
                     {
-                        ulong summonedId = kvp.Value.EntityId;
-                        WorldEntity summoned = game.EntityManager.GetEntity<WorldEntity>(summonedId);
+                        WorldEntity summoned = game.EntityManager.GetEntity<WorldEntity>(entry.Id);
                         if (summoned != null && summoned.PrototypeDataRef == ToadPrototype)
                         {
                             toadSummoned = true;
                             break;
                         }
                     }
-                }
 
                 if (toadSummoned == false)
                 {
@@ -2015,10 +2012,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 var manager = game.EntityManager;
                 Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
                 if (summonedInventory != null)                
-                    foreach (var kvp in summonedInventory)
+                    foreach (var entry in summonedInventory)
                     {
-                        ulong entityId = kvp.Value.EntityId;
-                        Agent summonedAgent = manager.GetEntity<Agent>(entityId);
+                        Agent summonedAgent = manager.GetEntity<Agent>(entry.Id);
                         if (summonedAgent != null)
                         {
                             WorldEntity target = ownerController.TargetEntity;

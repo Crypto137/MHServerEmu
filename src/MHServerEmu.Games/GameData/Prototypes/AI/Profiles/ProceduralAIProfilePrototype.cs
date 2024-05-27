@@ -171,6 +171,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent) { }
         public virtual void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent) { }
         public virtual void OnEntityAggroedEvent(AIController ownerController, EntityAggroedGameEvent aggroedEvent) { }
+        public virtual void OnMissileReturnEvent(AIController ownerController) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
@@ -1069,6 +1070,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    // SkrullThorProfile
     public class ProceduralProfileSyncAttackPrototype : ProceduralProfileBasicMeleePrototype
     {
         public ProceduralSyncAttackContextPrototype[] SyncAttacks { get; protected set; }
@@ -1081,6 +1083,69 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PropertyEnum.AICustomEntityId3, 
             PropertyEnum.AICustomEntityId4
         };
+
+        public override void Think(AIController ownerController)
+        {
+            ProceduralAI proceduralAI = ownerController.Brain;
+            if (proceduralAI == null) return;
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            Game game = agent.Game;
+            if (game == null) return;
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+
+            if (HandleOverrideBehavior(ownerController)) return;
+
+            var collection = ownerController.Blackboard.PropertyCollection;
+            var manager = game.EntityManager;
+            bool updateSync = false;
+            for (int i = 0; i < IDPropertiesLength && i < SyncAttacks.Length; i++)
+            {
+                ulong targetId = collection[IDProperties[i]];
+                Agent targetAgent = null;
+                if (targetId != 0) targetAgent = manager.GetEntity<Agent>(targetId);
+                if (targetAgent == null || targetAgent.IsDead)
+                {
+                    collection[IDProperties[i]] = 0;
+                    updateSync = true;
+                    break;
+                }
+            }
+
+            if (updateSync)
+            {
+                Region region = agent.Region;
+                if (region == null) return;
+                float maxRange = ownerController.AggroRangeAlly;
+                Sphere volume = new(agent.RegionLocation.Position, maxRange);
+                foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                    if (worldEntity is Agent targetAgent)
+                        for (int index = 0; index < SyncAttacks.Length; index++)
+                        {
+                            var syncAttack = SyncAttacks[index];
+                            if (syncAttack.TargetEntity == targetAgent.PrototypeDataRef)
+                            {
+                                InitPower(agent, syncAttack.LeaderPower);
+                                InitPower(targetAgent, syncAttack.TargetEntityPower);
+                                var targetController = targetAgent.AIController;
+                                if (targetController != null)
+                                    targetController.Blackboard.PropertyCollection[PropertyEnum.AISyncAttackTargetPower] = syncAttack.TargetEntityPower;
+                                collection[IDProperties[index]] = targetAgent.Id;
+                            }
+                        }
+            }
+
+            WorldEntity target = ownerController.TargetEntity;
+            if (DefaultSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false
+                && proceduralAI.PartialOverrideBehavior == null) return;
+
+            GRandom random = game.Random;
+            Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
+            PopulatePowerPicker(ownerController, powerPicker);
+            if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
+
+            DefaultRangedMovement(proceduralAI, ownerController, agent, target, MoveToTarget, OrbitTarget);
+        }
 
         public override void PopulatePowerPicker(AIController ownerController, Picker<ProceduralUsePowerContextPrototype> powerPicker)
         {
@@ -1155,6 +1220,94 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return syncAttackIndices[randomIndex];
         }
 
+        public override void OnPowerStarted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            var collection = ownerController.Blackboard.PropertyCollection;
+            int lastSyncAttackIndex = collection[PropertyEnum.AICustomStateVal1];
+            if (lastSyncAttackIndex == -1) return;
+
+            if (SyncAttacks.IsNullOrEmpty() || lastSyncAttackIndex < 0 || lastSyncAttackIndex >= SyncAttacks.Length) return;
+
+            var syncAttackProto = SyncAttacks[lastSyncAttackIndex];
+            if (syncAttackProto == null) return;
+
+            if (syncAttackProto.LeaderPower != powerContext)
+            {
+                collection[PropertyEnum.AICustomStateVal1] = -1;
+                return;
+            }
+
+            if (lastSyncAttackIndex < 0 || lastSyncAttackIndex >= IDPropertiesLength) return;
+
+            var targetId = collection[IDProperties[lastSyncAttackIndex]];
+            Agent leader = ownerController.Owner;
+            if (leader == null) return;
+            Game game = leader.Game;
+            if (game == null) return;
+
+            Agent target = game.EntityManager.GetEntity<Agent>(targetId);
+            if (target == null) return;
+            AIController targetController = target.AIController;
+            if (targetController == null) return;
+            ProceduralAI targetAI = targetController.Brain;
+            if (targetAI == null) return;
+
+            targetController.SetTargetEntity(leader);
+            var targetEntityPowerProto = syncAttackProto.TargetEntityPower.As<ProceduralUsePowerContextPrototype>();
+            if (targetEntityPowerProto?.PowerContext == null || targetEntityPowerProto.PowerContext.Power == PrototypeId.Invalid)
+                return;
+
+            var targetEntityPower = target.GetPower(targetEntityPowerProto.PowerContext.Power);
+            if (targetEntityPower == null)
+            {
+                ProceduralAI.Logger.Warn($"SyncAttack target doesn't have TargetEntityPower assigned! \n" +
+                    $" Target: {target}\n" +
+                    $" Leader: {leader}\n" +
+                    $" Power: {GameDatabase.GetPrototypeName(targetEntityPowerProto.PowerContext.Power)}");
+                return;
+            }
+
+            var nextUpdateTime = game.GetCurrentTime() + targetEntityPower.GetFullExecutionTime();
+            targetController.Blackboard.PropertyCollection[PropertyEnum.AINextSensoryUpdate] = (long)nextUpdateTime.TotalMilliseconds;
+
+            target.OrientToward(leader.RegionLocation.Position);
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            HandleUsePowerContext(targetController, targetAI, game.Random, currentTime, targetEntityPowerProto.PowerContext, targetEntityPowerProto);
+        }
+
+        public override bool OnPowerPicked(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)
+        {
+            if (base.OnPowerPicked(ownerController, powerContext) == false) return false;
+
+            var collection = ownerController.Blackboard.PropertyCollection;
+            int lastSyncAttackIndex = collection[PropertyEnum.AICustomStateVal1];
+            if (lastSyncAttackIndex == -1) return true;
+
+            if (SyncAttacks.IsNullOrEmpty() || lastSyncAttackIndex < 0 || lastSyncAttackIndex >= SyncAttacks.Length) return false;
+
+            var syncAttackProto = SyncAttacks[lastSyncAttackIndex];
+            if (syncAttackProto == null) return false;
+
+            if (syncAttackProto.LeaderPower != powerContext)
+            {
+                collection[PropertyEnum.AICustomStateVal1] = -1;
+                return true;
+            }
+
+            var targetId = collection[IDProperties[lastSyncAttackIndex]];
+            Game game = ownerController.Game;
+            if (game == null) return false;
+
+            Agent target = game.EntityManager.GetEntity<Agent>(targetId);
+            if (target == null) return false;
+            Agent leader = ownerController.Owner;
+            if (leader == null) return false;
+
+            ownerController.SetTargetEntity(target);
+            leader.OrientToward(target.RegionLocation.Position);
+
+            return true;
+        }
     }
 
     public class ProceduralProfileLOSRangedPrototype : ProceduralProfileBasicRangePrototype

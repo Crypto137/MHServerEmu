@@ -2448,6 +2448,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             agent.Properties[PropertyEnum.PowerUserOverrideID] = bestAvatar?.Id ?? 0;
         }
 
+        public override void OnOwnerExitWorld(AIController ownerController)
+        {
+            Agent agent = ownerController.Owner;
+            WorldEntity master = ownerController.AssistedEntity;
+
+            if (agent != null && master != null)
+            {
+                master.Properties.AdjustProperty(-1, PropertyEnum.NumMissionAllies);
+                agent.Properties.RemoveProperty(PropertyEnum.PowerUserOverrideID);
+                agent.Properties.RemoveProperty(PropertyEnum.MissionAllyOfAvatarDbGuid);
+            }
+        }
+
     }
 
     public class ProceduralProfileSpikeDanceMobPrototype : ProceduralProfileWithAttackPrototype
