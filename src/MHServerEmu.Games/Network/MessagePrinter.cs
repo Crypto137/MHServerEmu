@@ -63,7 +63,6 @@ namespace MHServerEmu.Games.Network
             EntityBaseData baseData = new();
             using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.BaseData))
             {
-                baseData.ReplicationPolicy = archive.GetReplicationPolicyEnum();
                 baseData.Serialize(archive);
             }
 
@@ -82,7 +81,7 @@ namespace MHServerEmu.Games.Network
 
                 entity.BaseData = baseData;
                 entity.Serialize(archive);
-                entity.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                entity.InterestPolicies = archive.GetReplicationPolicyEnum();
                 sb.Append($"ArchiveData: {entity.ToStringVerbose()}");
             }
 

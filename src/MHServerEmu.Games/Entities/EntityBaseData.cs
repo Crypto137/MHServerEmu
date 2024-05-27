@@ -39,7 +39,6 @@ namespace MHServerEmu.Games.Entities
         // This used to be a regular protobuf message, but it was converted to archive in 1.25.
         // This data is deserialized into EntitySettings in GameConnection::handleEntityCreateMessage().
 
-        private AOINetworkPolicyValues _replicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
         private ulong _entityId;
         private PrototypeId _entityPrototypeRef;
         private EntityCreateMessageFlags _fieldFlags;
@@ -58,7 +57,6 @@ namespace MHServerEmu.Games.Entities
         private InventoryLocation _invLocPrev;
         private List<ulong> _attachedEntityList = new();
 
-        public AOINetworkPolicyValues ReplicationPolicy { get => _replicationPolicy; set => _replicationPolicy = value; }
         public ulong EntityId { get => _entityId; set => _entityId = value; }
         public PrototypeId EntityPrototypeRef { get => _entityPrototypeRef; set => _entityPrototypeRef = value; }
         public EntityCreateMessageFlags FieldFlags { get => _fieldFlags; set => _fieldFlags = value; }
@@ -172,7 +170,7 @@ namespace MHServerEmu.Games.Entities
 
         public ByteString ToByteString()
         {
-            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)ReplicationPolicy))
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)InterestPolicies))
             {
                 Serialize(archive);
                 return archive.ToByteString();
@@ -182,7 +180,6 @@ namespace MHServerEmu.Games.Entities
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"{nameof(_replicationPolicy)}: {_replicationPolicy}");
             sb.AppendLine($"{nameof(_entityId)}: {_entityId}");
             sb.AppendLine($"{nameof(_entityPrototypeRef)}: {GameDatabase.GetPrototypeName(_entityPrototypeRef)}");
             sb.AppendLine($"{nameof(_fieldFlags)}: {_fieldFlags}");

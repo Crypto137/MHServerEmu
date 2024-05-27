@@ -109,12 +109,11 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
 
-            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
             BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
             BaseData.LocomotionState = new();
 
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
             _avatarProperties.ReplicationId = Game.CurrentRepId;
             _shardId = 3;

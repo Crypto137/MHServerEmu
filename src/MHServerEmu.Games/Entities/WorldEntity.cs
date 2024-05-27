@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.Entities
             SpawnSpec = settings.SpawnSpec;
 
             // Old
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
+            InterestPolicies = AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
             int health = EntityHelper.GetRankHealth(proto);

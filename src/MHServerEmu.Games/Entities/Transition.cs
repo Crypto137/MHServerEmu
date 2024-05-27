@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
+            InterestPolicies = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
             if (destination != null)
