@@ -53,5 +53,23 @@ namespace MHServerEmu.Commands.Implementations
             game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
             return $"Reloading region {GameDatabase.GetPrototypeName(playerConnection.RegionDataRef)}.";
         }
+
+        [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe", AccountUserLevel.Admin)]
+        public string GenerateAllSafe(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetGame(client, out Game game);
+
+            int numRegions = 0;
+
+            foreach (var value in Enum.GetValues<RegionPrototypeId>())
+            {
+                Task.Run(() => game.RegionManager.GetRegion(value));
+                numRegions++;
+            }
+
+            return $"Generating {numRegions} regions.";
+        }
     }
 }
