@@ -10,7 +10,15 @@ namespace MHServerEmu.Games.Entities
 {
     public class RegionLocation
     {
-        public static readonly Logger Logger = LogManager.CreateLogger();
+        public enum SetPositionResult
+        {
+	        Invalid = -1,
+	        Success = 0,
+	        InvalidRegion = 1,
+	        InvalidCell = 2,
+        };
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private Region _region;
         public Region Region { get => _region; set { _region = value; Cell = null; } }
@@ -23,28 +31,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsValid() => _region != null;
 
         private Vector3 _position;
-        public Vector3 Position
-        {
-            get => IsValid() ? _position : Vector3.Zero;
-            set 
-            {
-                if (!Vector3.IsFinite(value))
-                {
-                    Logger.Warn($"Non-finite position ({value}) given to region location: {ToString()}");
-                    return;
-                }
-                if (_region == null) return;
-
-                Cell oldCell = Cell;
-                if (oldCell == null || !oldCell.IntersectsXY(value))
-                {
-                    Cell newCell = _region.GetCellAtPosition(value);
-                    if (newCell == null) return;
-                    else Cell = newCell;
-                }
-                _position = value;
-            }
-        }
+        public Vector3 Position { get => IsValid() ? _position : Vector3.Zero; private set => _position = value; }
 
         private Orientation _orientation;
         public Orientation Orientation
@@ -139,6 +126,29 @@ namespace MHServerEmu.Games.Entities
         }
 
         public void Initialize(WorldEntity worldEntity) { }
+
+        public SetPositionResult SetPosition(Vector3 value)
+        {
+            if (Vector3.IsFinite(value) == false)
+                return Logger.WarnReturn(SetPositionResult.Invalid, $"Non-finite position ({value}) given to region location: {ToString()}");
+
+            if (_region == null)
+                return SetPositionResult.InvalidRegion;
+
+            Cell oldCell = Cell;
+
+            if (oldCell == null || !oldCell.IntersectsXY(value))
+            {
+                Cell newCell = _region.GetCellAtPosition(value);
+                if (newCell == null)
+                    return SetPositionResult.InvalidCell;
+
+                Cell = newCell;
+            }
+
+            _position = value;
+            return SetPositionResult.Success;
+        }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
