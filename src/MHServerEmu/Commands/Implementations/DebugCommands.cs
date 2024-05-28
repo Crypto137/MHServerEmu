@@ -2,7 +2,6 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -22,15 +21,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("test", "Runs test code.", AccountUserLevel.Admin)]
         public string Test(string[] @params, FrontendClient client)
         {
-            byte[] buffer = Convert.FromHexString(@params[0]);
-
-            using (Archive archive = new(ArchiveSerializeType.Replication, buffer))
-            {
-                EntityBaseData entityBaseData = new();
-                entityBaseData.Serialize(archive);
-                Logger.Debug(entityBaseData.ToString());
-            }
-
             return string.Empty;
         }
 
