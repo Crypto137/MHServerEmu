@@ -209,7 +209,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             IStateContext useAffixPowerContext = new UseAffixPowerContext(ownerController, null);
-            var contextResult = proceduralAI.HandleContext(UseAffixPower.Instance, ref useAffixPowerContext, AffixSettings);
+            var contextResult = proceduralAI.HandleContext(UseAffixPower.Instance, useAffixPowerContext, AffixSettings);
             UpdateNextAttackThinkTime(blackboard, random, currentTime, contextResult);
             return contextResult;
         }

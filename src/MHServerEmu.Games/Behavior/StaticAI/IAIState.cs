@@ -4,9 +4,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 {
     public interface IAIState
     {        
-        public bool Validate(IStateContext context);
-        public void Start(IStateContext context);
-        public StaticBehaviorReturnType Update(IStateContext context);
+        public bool Validate(in IStateContext context);
+        public void Start(in IStateContext context);
+        public StaticBehaviorReturnType Update(in IStateContext context);
         public void End(AIController ownerController, StaticBehaviorReturnType state);
     }
 

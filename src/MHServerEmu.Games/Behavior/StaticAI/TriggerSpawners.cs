@@ -13,17 +13,17 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             throw new NotImplementedException();
         }
 
-        public void Start(IStateContext context)
+        public void Start(in IStateContext context)
         {
             throw new NotImplementedException();
         }
 
-        public StaticBehaviorReturnType Update(IStateContext context)
+        public StaticBehaviorReturnType Update(in IStateContext context)
         {
             throw new NotImplementedException();
         }
 
-        public bool Validate(IStateContext context)
+        public bool Validate(in IStateContext context)
         {
             throw new NotImplementedException();
         }

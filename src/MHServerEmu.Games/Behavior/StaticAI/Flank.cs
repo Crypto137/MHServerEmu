@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             locomotor.Stop();
         }
 
-        public void Start(IStateContext context)
+        public void Start(in IStateContext context)
         {
             if (context == null) return;
             if (context is not FlankContext flankContext) return;
@@ -58,7 +58,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFlankTimeout);
         }
 
-        public StaticBehaviorReturnType Update(IStateContext context)
+        public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var returnType = StaticBehaviorReturnType.Failed;
             if (context == null) return returnType;
@@ -158,7 +158,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return StaticBehaviorReturnType.Running;
         }
 
-        private static FlankOffsetResult GenerateInitialFlankTargetOffset(FlankContext flankContext, out Vector3 targetOffset, Locomotor locomotor, Vector3 position, float radius,
+        private static FlankOffsetResult GenerateInitialFlankTargetOffset(in FlankContext flankContext, out Vector3 targetOffset, Locomotor locomotor, Vector3 position, float radius,
             Vector3 targetPosition, float targetRadius, bool usePerp)
         {   
             targetOffset = Vector3.Zero;   
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             };
         }
 
-        public bool Validate(IStateContext context)
+        public bool Validate(in IStateContext context)
         {
             if (context == null) return false;
             if (context is not FlankContext flankContext) return false;

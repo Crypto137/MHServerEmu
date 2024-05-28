@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             locomotor.Stop();
         }
 
-        public void Start(IStateContext context)
+        public void Start(in IStateContext context)
         {
             if (context == null) return;
             AIController ownerController = context.OwnerController;
@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             locomotor.Stop();
         }
 
-        public StaticBehaviorReturnType Update(IStateContext context)
+        public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var failResult = StaticBehaviorReturnType.Failed;
             if (context == null) return failResult;
@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return StaticBehaviorReturnType.Running;
         }
 
-        private static bool FleeTowardsAngle(Agent owner, FleeContext fleeContext, Vector3 direction, Vector3 targetPosition, float distance)
+        private static bool FleeTowardsAngle(Agent owner, in FleeContext fleeContext, Vector3 direction, Vector3 targetPosition, float distance)
         {
             var locomotor = owner.Locomotor;
             if (locomotor == null) return false;
@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return false;
         }
 
-        private static void GenerateValidFleeAnglePaths(List<FleePath> pathResults, Agent owner, Vector3 direction, float distance, FleeContext fleeContext)
+        private static void GenerateValidFleeAnglePaths(List<FleePath> pathResults, Agent owner, Vector3 direction, float distance, in FleeContext fleeContext)
         {
             var region = owner.Region;
             if (region == null) return;
@@ -195,7 +195,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             }
         }
 
-        private static bool FleeTowardAllies(Agent owner, FleeContext fleeContext)
+        private static bool FleeTowardAllies(Agent owner, in FleeContext fleeContext)
         {
             var region = owner.Region;
             if (region == null) return false;
@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return false;
         }
 
-        public bool Validate(IStateContext context)
+        public bool Validate(in IStateContext context)
         {
             if (context == null) return false;
             AIController ownerController = context.OwnerController;

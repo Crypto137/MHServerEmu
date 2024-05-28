@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                     agent.Locomotor?.Stop();
         }
 
-        public StaticBehaviorReturnType HandleContext(IAIState state, ref IStateContext stateContext, ProceduralContextPrototype proceduralContext)
+        public StaticBehaviorReturnType HandleContext(IAIState state, in IStateContext stateContext, ProceduralContextPrototype proceduralContext)
         {
             if (state == null || stateContext == null || _curState < 0 || _curState >= MaxConcurrentStates)
                 return StaticBehaviorReturnType.Failed;
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             StaticBehaviorReturnType result;
             if (_states[_curState].State == state)
                 result = state.Update(stateContext);
-            else if (ValidateState(state, ref stateContext))
+            else if (ValidateState(state, stateContext))
                 result = SwitchProceduralState(state, stateContext, StaticBehaviorReturnType.Interrupted, proceduralContext);
             else
                 return StaticBehaviorReturnType.Failed;
@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             return result;
         }
 
-        public void StartState(IAIState state, ref IStateContext stateContext, ProceduralContextPrototype proceduralContext)
+        public void StartState(IAIState state, in IStateContext stateContext, ProceduralContextPrototype proceduralContext)
         {
             if ( _curState < 0 || _curState >= MaxConcurrentStates) return;
 
@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             proceduralContext?.OnStart(_owningController, _proceduralPtr.Profile);
         }
 
-        public  StaticBehaviorReturnType SwitchProceduralState(IAIState state, IStateContext stateContext, StaticBehaviorReturnType currentBehaviorState, ProceduralContextPrototype proceduralContext = null)
+        public  StaticBehaviorReturnType SwitchProceduralState(IAIState state, in IStateContext stateContext, StaticBehaviorReturnType currentBehaviorState, ProceduralContextPrototype proceduralContext = null)
         {
             /* pointless check
             AIController ownerController = stateContext.OwnerController;
@@ -165,7 +165,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                         $"OwnerAgent=[{ownerAgent}]");                 
                 }*/
 
-                StartState(state, ref stateContext, proceduralContext);
+                StartState(state, stateContext, proceduralContext);
                 return state.Update(stateContext);
             }
 
@@ -182,13 +182,13 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             }
         }
 
-        public bool ValidateContext(IAIState state, ref IStateContext stateContext)
+        public bool ValidateContext(IAIState state, in IStateContext stateContext)
         {
             if (state == null || stateContext == null ) return false;
-            return ValidateState(state, ref stateContext);
+            return ValidateState(state, stateContext);
         }
 
-        private bool ValidateState(IAIState state, ref IStateContext stateContext)
+        private bool ValidateState(IAIState state, in IStateContext stateContext)
         {
             if (_owningController.IsOwnerValid()) 
                 return state.Validate(stateContext);

@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public void End(AIController ownerController, StaticBehaviorReturnType state) { }
 
-        public void Start(IStateContext context)
+        public void Start(in IStateContext context)
         {
             if (context is not DelayContext delayContext) return;
             AIController ownerController = context.OwnerController;
@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             blackboard.PropertyCollection[PropertyEnum.AIDelayCompletionTime] = (long)game.GetCurrentTime().TotalMilliseconds + delayMS;
         }
 
-        public StaticBehaviorReturnType Update(IStateContext context)
+        public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var returnType = StaticBehaviorReturnType.Failed;
             if (context == null) return returnType;
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 return StaticBehaviorReturnType.Completed;
         }
 
-        public bool Validate(IStateContext context)
+        public bool Validate(in IStateContext context)
         {
             return true;
         }

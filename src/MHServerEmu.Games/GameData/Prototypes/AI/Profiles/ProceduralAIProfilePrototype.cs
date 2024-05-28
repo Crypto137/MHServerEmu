@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             where TContextProto : Prototype
         {
             (IAIState instance, IStateContext context) = IStateContext.Create(ownerController, contextProto);
-            return proceduralAI.HandleContext(instance, ref context, proceduralContext);
+            return proceduralAI.HandleContext(instance, context, proceduralContext);
         }
 
         public static bool HandleMovementContext<TContextProto>(ProceduralAI proceduralAI, AIController ownerController, 
@@ -41,8 +41,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return false;
             }
             (IAIState instance, IStateContext context) = IStateContext.Create(ownerController, contextProto);
-            movementResult = proceduralAI.HandleContext(instance, ref context, proceduralContext);
-            if (ResetTargetAndStateIfPathFails(proceduralAI, ownerController, locomotor, ref context, checkPower))
+            movementResult = proceduralAI.HandleContext(instance, context, proceduralContext);
+            if (ResetTargetAndStateIfPathFails(proceduralAI, ownerController, locomotor, context, checkPower))
                 return false;
             return true;
         }
@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         private static bool ResetTargetAndStateIfPathFails(ProceduralAI proceduralAI, AIController ownerController, Locomotor locomotor, 
-            ref IStateContext context, bool checkPower)
+            in IStateContext context, bool checkPower)
         {
             Agent owner = ownerController.Owner;
             if (owner == null) return false;
@@ -79,7 +79,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static bool ValidateContext(ProceduralAI proceduralAI, AIController ownerController, UsePowerContextPrototype contextProto)
         {
             IStateContext context = new UsePowerContext(ownerController, contextProto);
-            return proceduralAI.ValidateContext(UsePower.Instance, ref context);
+            return proceduralAI.ValidateContext(UsePower.Instance, context);
         }
 
         protected static bool ValidateUsePowerContext(AIController ownerController, ProceduralAI proceduralAI, UsePowerContextPrototype powerContext)
