@@ -170,8 +170,6 @@ namespace MHServerEmu.Games.Events
                 ballSettings.Properties = properties;
 
                 bowlingBall = _game.EntityManager.CreateEntity(ballSettings);
-
-                bowlingBall.BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc;
                 bowlingBall.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
                 playerConnection.SendMessage(bowlingBall.ToNetMessageEntityCreate());

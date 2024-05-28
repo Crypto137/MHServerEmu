@@ -109,10 +109,6 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
 
-            BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
-            BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.LocomotionState = new();
-
             InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
             _avatarProperties.ReplicationId = Game.CurrentRepId;

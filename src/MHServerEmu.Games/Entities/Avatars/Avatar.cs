@@ -47,9 +47,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.Initialize(settings);
 
-            BaseData.LocomotionState = new();
-            BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasInvLoc | EntityCreateMessageFlags.HasAvatarWorldInstanceId;
-
             InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
             return true;

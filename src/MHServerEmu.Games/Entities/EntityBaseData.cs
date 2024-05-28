@@ -39,6 +39,8 @@ namespace MHServerEmu.Games.Entities
         // This used to be a regular protobuf message, but it was converted to archive in 1.25.
         // This data is deserialized into EntitySettings in GameConnection::handleEntityCreateMessage().
 
+        // TODO: Convert this to a protobuf-style builder or remove it entirely.
+
         private ulong _entityId;
         private PrototypeId _entityPrototypeRef;
         private EntityCreateMessageFlags _fieldFlags;
@@ -48,7 +50,7 @@ namespace MHServerEmu.Games.Entities
         private ulong _dbId;
         private Vector3 _position = Vector3.Zero;
         private Orientation _orientation = Orientation.Zero;
-        private LocomotionState _locomotionState;
+        private LocomotionState _locomotionState = new();
         private float _boundsScaleOverride;
         private ulong _sourceEntityId;
         private Vector3 _sourcePosition = Vector3.Zero;
