@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -257,9 +258,68 @@ namespace MHServerEmu.Games.Behavior
                 collection[PropertyEnum.AILeaderID] = 0;
         }
 
-        internal void NotifyAlliesOnTargetAcquired()
+        public bool ShouldSenseEntitiesOfPoolType(SelectEntityPoolType poolType)
         {
-            throw new NotImplementedException();
+            if (_pAIController == null) return false;
+            Game game = _pAIController.Game;
+            if (game == null) return false;
+            BehaviorBlackboard blackboard = _pAIController.Blackboard;
+            long nextSenseTime = -1;
+            switch (poolType)
+            {
+                case SelectEntityPoolType.PotentialAlliesOfAgent:
+                    nextSenseTime = blackboard.PropertyCollection[PropertyEnum.AINextAllySense];
+                    break;
+
+                case SelectEntityPoolType.PotentialEnemiesOfAgent:
+                    nextSenseTime = blackboard.PropertyCollection[PropertyEnum.AINextHostileSense];
+                    break;
+            }
+            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            if (nextSenseTime != -1 && currentTime > nextSenseTime)
+                return true;
+
+            return false;
+        }
+
+        public void SensePotentialAllyTargets(in SelectEntity.SelectEntityContext selectionContext, ref WorldEntity bestTargetSoFar, ref float bestValue, CombatTargetFlags flags)
+        {
+            if (_pAIController == null) return;
+            Agent agent = _pAIController.Owner;
+            if (agent == null) return;
+            Game game = _pAIController.Game;
+            if (game == null) return;
+            BehaviorBlackboard blackboard = _pAIController.Blackboard;
+
+            blackboard.PropertyCollection[PropertyEnum.AINextAllySense] = (long)game.RealGameTime.TotalMilliseconds + 1000;
+            PotentialAllyTargetIds.Clear();
+            float aggroRange = _pAIController.AggroRangeAlly;
+            Combat.GetValidTargetsInSphere(agent, aggroRange, PotentialAllyTargetIds, CombatTargetType.Ally, selectionContext, ref bestTargetSoFar, ref bestValue, flags);
+        }
+
+        public void SensePotentialHostileTargets(in SelectEntity.SelectEntityContext selectionContext, ref WorldEntity bestTargetSoFar, ref float bestValue, CombatTargetFlags flags)
+        {
+            if (_pAIController == null) return;
+            Agent agent = _pAIController.Owner;
+            if (agent == null) return;
+            Game game = _pAIController.Game;
+            if (game == null) return;
+            BehaviorBlackboard blackboard = _pAIController.Blackboard;
+
+            blackboard.PropertyCollection[PropertyEnum.AINextHostileSense] = (long)game.RealGameTime.TotalMilliseconds + 1000;
+            PotentialHostileTargetIds.Clear();
+            // TODO Get Hostile Targets
+            float aggroRange = _pAIController.AggroRangeHostile;
+            Combat.GetValidTargetsInSphere(agent, aggroRange, PotentialHostileTargetIds, CombatTargetType.Hostile, selectionContext, ref bestTargetSoFar, ref bestValue, flags);
+            // PropertyEnum.AINumHostileTargetsNearby
+            /* TriggerEntityActionEvent
+            EntitySelectorActionEventType.OnAllyDetectedEnemy
+            EntitySelectorActionEventType.OnAllyDetectedPlayer
+            EntitySelectorActionEventType.OnAllyDetectedNonPlayer
+            EntitySelectorActionEventType.OnEnemyProximity
+            EntitySelectorActionEventType.OnPlayerProximity
+            */
+            // PropertyEnum.AIAggroAnnouncement
         }
     }
 

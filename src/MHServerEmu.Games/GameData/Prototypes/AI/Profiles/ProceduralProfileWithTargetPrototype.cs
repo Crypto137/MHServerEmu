@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             WorldEntity currentTarget = target;
             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, selectTarget);
-            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext, flags);
+            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext, flags);
             if (selectedEntity == null)
             {
                 if (currentTarget != null && Combat.ValidTarget(agent.Game, agent, currentTarget, targetType, true)) return true;
@@ -281,7 +281,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (target == null || target.IsInWorld == false)
             {
                 var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null && selectedEntity.IsInWorld)
                 {
                     SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
@@ -386,12 +386,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
 
                 var selectionContext = new SelectEntity.SelectEntityContext(ownerController, targetProfile.SelectTarget);
-                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null && proceduralAI.GetState(0) != UsePower.Instance)
                 {
                     blackboard.PropertyCollection[PropertyEnum.AIDefaultActiveOverrideStateVal] = (int)State.WanderInPlace;
                     SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
-                    senses.NotifyAlliesOnTargetAcquired();
+                    senses.NotifyAlliesOnTargetAquired();
                     proceduralAI.ClearOverrideBehavior(OverrideType.Full);
                     return;
                 }
@@ -550,7 +550,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (currentTime > (powerStartTime + PowerChangeTargetIntervalMS * changeTargetCount))
                     {
                         var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-                        target = SelectEntity.DoSelectEntity(ref selectionContext);
+                        target = SelectEntity.DoSelectEntity(selectionContext);
                         if (target != null)
                         {
                             if (SelectEntity.RegisterSelectedEntity(ownerController, target, selectionContext.SelectionType) == false) return;
@@ -969,7 +969,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private WorldEntity TrySelectNewTarget(AIController ownerController, BehaviorBlackboard blackboard, long currentTime)
         {
             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-            var selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+            var selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
             if (selectedEntity == null || selectedEntity.Id == blackboard.PropertyCollection[PropertyEnum.AILastAttackerID])
             {
                 long seekTime = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2];

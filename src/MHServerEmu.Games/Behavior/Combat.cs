@@ -1,12 +1,13 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Behavior
 {
@@ -188,6 +189,30 @@ namespace MHServerEmu.Games.Behavior
                 }
             }
             return closestTargetId;
+        }
+
+        public static bool GetValidTargetsInSphere(Agent aggressor, float aggroRange, List<ulong> targets, CombatTargetType targetType, 
+            in SelectEntity.SelectEntityContext selectionContext, ref WorldEntity bestTargetSoFar, ref float bestValue, CombatTargetFlags flags)
+        {
+            if (aggressor == null || aggroRange <= 0.0f) return false;
+            Region region = aggressor.Region;
+            if (region == null) return false;
+            Game game = aggressor.Game;
+            if (game == null) return false;
+
+            Sphere volume = new (aggressor.RegionLocation.Position, aggroRange);
+            foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(volume, new (EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (worldEntity == null) continue;
+                if (ValidTarget(game, aggressor, worldEntity, targetType, false, flags, null, aggroRange))
+                {
+                    targets.Add(worldEntity.Id);  
+                    if (SelectEntity.EntityMatchesSelectionCriteria(selectionContext, worldEntity, ref bestTargetSoFar, ref bestValue))
+                        break;
+                }
+            }
+
+            return targets.Count > 0;
         }
     }
 

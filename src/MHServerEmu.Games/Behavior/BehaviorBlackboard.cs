@@ -16,6 +16,7 @@ namespace MHServerEmu.Games.Behavior
         public Vector3 UsePowerTargetPos { get; set; }
         public Queue<CustomPowerQueueEntry> CustomPowerQueue { get; internal set; }
         public Vector3 LastFlankTargetEntityPos { get; set; }
+        public Dictionary<ulong, long> DamageMap { get; set; }
 
         public BehaviorBlackboard(Agent owner)
         {

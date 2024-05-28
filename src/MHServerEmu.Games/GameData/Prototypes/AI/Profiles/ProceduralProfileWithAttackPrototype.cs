@@ -249,7 +249,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (powerContext.TargetSwitch != null)
             {
                 var selectionContext = new SelectEntity.SelectEntityContext(ownerController, powerContext.TargetSwitch.SelectTarget);
-                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity == null)
                 {
                     if (powerContext.TargetSwitch.UsePowerOnCurTargetIfSwitchFails) return true;
@@ -642,7 +642,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (RetargetPerShot)
                         {
                             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                             if (selectedEntity != null && selectedEntity != agent)
                                 SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                         }
@@ -745,7 +745,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (RetargetPerShot)
                         {
                             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                             if (selectedEntity != null && selectedEntity != agent)
                                 SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                         }
@@ -875,7 +875,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (RetargetPerShot)
                         {
                             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                             if (selectedEntity != null && selectedEntity != agent)
                                 SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
                         }
@@ -1556,19 +1556,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Combat.ValidTarget(game, agent, target, CombatTargetType.Hostile, true, flags) == false)
             {
                 var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
-                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext, flags);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext, flags);
                 if (selectedEntity == null)
                 {
                     var selection2Context = new SelectEntity.SelectEntityContext(ownerController, SelectTarget2);
-                    selectedEntity = SelectEntity.DoSelectEntity(ref selection2Context, flags);
+                    selectedEntity = SelectEntity.DoSelectEntity(selection2Context, flags);
                     if (selectedEntity == null)
                     {
                         var selection3Context = new SelectEntity.SelectEntityContext(ownerController, SelectTarget3);
-                        selectedEntity = SelectEntity.DoSelectEntity(ref selection3Context, flags);
+                        selectedEntity = SelectEntity.DoSelectEntity(selection3Context, flags);
                         if (selectedEntity == null)
                         {
                             var selection4Context = new SelectEntity.SelectEntityContext(ownerController, SelectTarget4);
-                            selectedEntity = SelectEntity.DoSelectEntity(ref selection4Context, flags);
+                            selectedEntity = SelectEntity.DoSelectEntity(selection4Context, flags);
                         }
                     }
                 }
@@ -1681,7 +1681,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (collection[PropertyEnum.AILostWeapon])
                     {
                         var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectWeaponAsTarget);
-                        WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                        WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                         if (selectedEntity != null && SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType))
                             collection[PropertyEnum.AICustomStateVal1] = (int)State.Pickup;
                         else

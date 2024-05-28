@@ -677,7 +677,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectPortalToExitFrom);
                 selectionContext.StaticEntities = true;
-                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                 if (selectedEntity != null)
                     SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType);
             }

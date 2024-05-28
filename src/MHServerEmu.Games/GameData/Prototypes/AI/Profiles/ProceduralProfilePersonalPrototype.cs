@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (currentTime > powerStartTime + SpecialPowerChangeTgtIntervalMS * changeTargetCount)
                         {
                             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SpecialPowerSelectTarget);
-                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                             if (selectedEntity == null || SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType) == false)
                                 return;
                             blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = changeTargetCount + 1;
@@ -1029,7 +1029,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (proceduralAI.GetState(0) != UsePower.Instance)
                         {
                             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTeleportTarget);
-                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext, CombatTargetFlags.IgnoreLOS);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext, CombatTargetFlags.IgnoreLOS);
                             if (selectedEntity == null)
                             {
                                 ownerController.ResetCurrentTargetState();
@@ -1291,7 +1291,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     {
                         var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SequencePowerSelectTarget);
                         selectionType = selectionContext.SelectionType;
-                        selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                        selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                         break;
                     }
 
@@ -1299,7 +1299,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectTarget);
                 selectionType = selectionContext.SelectionType;
-                selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
             }
 
             if (selectedEntity == null || selectedEntity.IsDead) return false;
@@ -1426,7 +1426,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (currentTime > powerStartTime + SpecialPowerChangeTgtIntervalMS * changeTargetCount)
                         {
                             var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SpecialSelectTarget);
-                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                            WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                             if (selectedEntity == null || SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType) == false)
                                 return;
                             blackboard.PropertyCollection[PropertyEnum.AICustomStateVal3] = changeTargetCount + 1;
@@ -1866,7 +1866,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if ((State)stateVal == State.ComboPower)
                 {
                     var selectionContext = new SelectEntity.SelectEntityContext(ownerController, SelectEntityForTumbleCombo);
-                    WorldEntity selectedEntity = SelectEntity.DoSelectEntity(ref selectionContext);
+                    WorldEntity selectedEntity = SelectEntity.DoSelectEntity(selectionContext);
                     if (selectedEntity != null)
                     {
                         if (SelectEntity.RegisterSelectedEntity(ownerController, selectedEntity, selectionContext.SelectionType) == false)
