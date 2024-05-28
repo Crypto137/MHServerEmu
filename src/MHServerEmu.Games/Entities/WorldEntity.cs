@@ -816,6 +816,11 @@ namespace MHServerEmu.Games.Entities
         {
             throw new NotImplementedException();
         }
+
+        internal RankPrototype GetRankPrototype()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum PowerMovementPreventionFlags

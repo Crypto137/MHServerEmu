@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                             waypoints.Add(new Waypoint(targetEntityPos + targetOffset, NaviSide.Point, 0f));
 
                         if (flankContext.StopAtFlankingWaypoint == false)
-                            waypoints.Add(new Waypoint(targetEntityPos + Vector3.Normalize(targetOffset) * (agentRadius + targetRadius), NaviSide.Point, 0f));
+                            waypoints.Add(new Waypoint(targetEntityPos + Vector3.SafeNormalize(targetOffset) * (agentRadius + targetRadius), NaviSide.Point, 0f));
 
                         if (waypoints[^1].Side != NaviSide.Point || waypoints[^1].Radius != 0f)
                         {
@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (Vector3.IsNearZero2D(targetDist))
                 targetDist = Vector3.RandomUnitVector2D(random);
 
-            targetDist = Vector3.SafeNormalize2D(targetDist, Vector3.XAxis);
+            targetDist = Vector3.SafeNormalize2D(targetDist);
             float flankingAngle = flankContext.ToTargetFlankingAngle;
 
             if (flankContext.RandomizeFlankingAngle)

@@ -709,7 +709,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                             Vector3 currentDirection = _owner.Forward;
                             Vector3 currentVelocity = currentDirection * GetCurrentSpeed();
                             Vector3 nextVelocity = currentVelocity + (Vector3.Up * gravitatedContext.Gravity);
-                            Vector3 nextDirection = Vector3.Normalize(nextVelocity);
+                            Vector3 nextDirection = Vector3.SafeNormalize(nextVelocity);
                             Vector3 nextPosition = currentPosition + nextVelocity * timeSeconds;
                             Vector3 floorPosition = RegionLocation.ProjectToFloor(_owner.Region, _owner.Cell, nextPosition);
 
@@ -724,7 +724,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                     Random random = ownerAsMissile.Random;
                                     nextDirection = Vector3.AxisAngleRotate(nextDirection, Vector3.ZAxis, MathHelper.ToRadians(random.Next(-randomDegree, randomDegree)));
                                 }
-                                Vector3 axisVector = Vector3.Normalize(Vector3.Cross(Vector3.Up, nextDirection));
+                                Vector3 axisVector = Vector3.SafeNormalize(Vector3.Cross(Vector3.Up, nextDirection));
                                 Vector3 normalDirection = Vector3.AxisAngleRotate(Vector3.Up, axisVector, MathHelper.ToRadians(90.0f));
                                 float angle = MathF.Acos(Vector3.Dot(normalDirection, nextDirection));
                                 newOrientation = Orientation.FromDeltaVector(Vector3.AxisAngleRotate(nextDirection, -axisVector, 2 * angle));

@@ -345,7 +345,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     float distanceSq = Vector3.DistanceSquared2D(goalNode.Vertex, fromPoint);
                     float moveDistanceSq = moveDistance * moveDistance;
-                    moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                    moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint);
                     if (distanceSq < moveDistanceSq)
                     {
                         movePosition = goalNode.Vertex;
@@ -361,17 +361,17 @@ namespace MHServerEmu.Games.Navi
                     {
                         moveDirection = goalNode.VertexSide == NaviSide.Left ? tangent.End : tangent.Start;
                         if (!Vector3.IsFinite(moveDirection))
-                            moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                            moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint);
                     }
                     else
-                        moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                        moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint);
                     movePosition = fromPoint + moveDirection * moveDistance;
                 }
             }
             else
             {
                 movePosition = GetFinalPosition();
-                moveDirection = Vector3.SafeNormalize2D(GetFinalPosition() - fromPoint, Vector3.XAxis);
+                moveDirection = Vector3.SafeNormalize2D(GetFinalPosition() - fromPoint);
             }
 
             if (!Vector3.IsFinite(movePosition))

@@ -264,7 +264,7 @@ namespace MHServerEmu.Games.Navi
                         float cellWidth = cellBounds.Width;
                         float cellLength = cellBounds.Length;
 
-                        Vector3 rayDirection = Vector3.SafeNormalize2D(ray.Direction, Vector3.XAxis);
+                        Vector3 rayDirection = Vector3.SafeNormalize2D(ray.Direction);
                         Vector3 cellPoint = new((float)x / mapX * cellWidth, (float)y / mapY * cellLength, 0.0f);
                         Vector3 cellX = new (cellWidth / mapX, 0.0f, 0.0f);
                         Vector3 cellY = new (0.0f, cellLength / mapY, 0.0f);
@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.Navi
             Aabb sweepBound = new(Vector3.MinPerElem(line.Start, line.End), Vector3.MaxPerElem(line.Start, line.End));
             Cylinder2 cylinder = new (line.Start, float.MaxValue, _radius);
             Vector3 velocity = line.Direction.To2D();
-            Vector3 direction = Vector3.SafeNormalize2D(velocity, Vector3.XAxis);
+            Vector3 direction = Vector3.SafeNormalize2D(velocity);
 
             List<HitCellInfo> hitCells = new();
             foreach (Cell cell in _region.IterateCellsInVolume(sweepBound))
@@ -420,11 +420,11 @@ namespace MHServerEmu.Games.Navi
         {
             if (cell == null) return SweepResult.Failed;
 
-            Vector3 lineEnd = line.End + Vector3.SafeNormalize2D(line.Direction, Vector3.XAxis) * _radius;
+            Vector3 lineEnd = line.End + Vector3.SafeNormalize2D(line.Direction) * _radius;
 
             Vector3 direction = (lineEnd - line.Start).To2D();
             float length = Vector3.Length2D(direction);
-            direction = Vector3.SafeNormalize2D(direction, Vector3.XAxis);
+            direction = Vector3.SafeNormalize2D(direction);
 
             Vector3 perpDir = Vector3.Perp2D(direction);
 
