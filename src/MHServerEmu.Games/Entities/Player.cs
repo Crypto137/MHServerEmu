@@ -109,12 +109,7 @@ namespace MHServerEmu.Games.Entities
         {
             base.Initialize(settings);
 
-            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.FieldFlags = EntityCreateMessageFlags.HasNonProximityInterest | EntityCreateMessageFlags.HasDbId;
-            BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-            BaseData.LocomotionState = new();
-
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
             _avatarProperties.ReplicationId = Game.CurrentRepId;
             _shardId = 3;
@@ -323,7 +318,7 @@ namespace MHServerEmu.Games.Entities
 
             foreach (Avatar avatar in IterateAvatars())
             {
-                DBAvatar dbAvatar = account.GetAvatar((long)avatar.BaseData.EntityPrototypeRef);
+                DBAvatar dbAvatar = account.GetAvatar((long)avatar.PrototypeDataRef);
                 dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
 
                 // Encode key mapping
@@ -407,7 +402,7 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public IEnumerable<PrototypeId> GetStashInventoryProtoRefs(bool getLocked, bool getUnlocked)
         {
-            var playerProto = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.EntityPrototypeRef);
+            var playerProto = Prototype as PlayerPrototype;
             if (playerProto == null) yield break;
             if (playerProto.StashInventories == null) yield break;
 

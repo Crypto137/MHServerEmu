@@ -234,6 +234,12 @@ namespace MHServerEmu.Games.Network
             // Update Entity
             foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, new()))
             {
+                if (worldEntity.RegionLocation.Cell == null)
+                {
+                    Logger.Warn($"UpdateEntity(): worldEntity.RegionLocation.Cell == null, entity: {worldEntity}");
+                    continue;
+                }
+
                 if (_loadedCells.TryGetValue(worldEntity.RegionLocation.Cell.Id, out var status))
                     if (status.Loaded == false) continue;
 

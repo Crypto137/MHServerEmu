@@ -61,13 +61,13 @@ namespace MHServerEmu.Games.Entities
                             if (LockedTargets.Contains((InvTarget)teleport.DestinationList[0].TargetRef) == false) continue;
                             if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
-                            entity.BaseData.EntityPrototypeRef = visibleParent;
+                            entity.TEMP_ReplacePrototype(visibleParent);
                             continue;
                         }
                         // Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                     }
                 }
-                else if (Blockers.Contains((BlockerEntity)entity.BaseData.EntityPrototypeRef))
+                else if (Blockers.Contains((BlockerEntity)entity.PrototypeDataRef))
                 {
                     blockers.Add(entity);
                 }

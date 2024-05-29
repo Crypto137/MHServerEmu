@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.Entities
             SpawnSpec = settings.SpawnSpec;
 
             // Old
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
+            InterestPolicies = AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
             int health = EntityHelper.GetRankHealth(proto);
@@ -273,8 +273,12 @@ namespace MHServerEmu.Games.Entities
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
 
             RegionLocation.Region = region;
-            ChangeRegionPosition(position, orientation);
-            OnEnteredWorld(settings);
+            
+            if (ChangeRegionPosition(position, orientation))
+            {
+                // TODO: Everything else
+                OnEnteredWorld(settings);
+            }
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
@@ -357,7 +361,13 @@ namespace MHServerEmu.Games.Entities
 
             if (position != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
             {
-                RegionLocation.Position = position;
+                var result = RegionLocation.SetPosition(position);
+
+                if (result != RegionLocation.SetPositionResult.Success)     // onSetPositionFailure()
+                    return Logger.WarnReturn(false, string.Format(
+                        "ChangeRegionPosition(): Failed to set entity new position (Moved out of world)\n\tEntity: {0}\n\tResult: {1}\n\tPrev Loc: {2}\n\tNew Pos: {3}",
+                        this, result, RegionLocation, position));
+
                 if (Bounds.Geometry != GeometryType.None)
                     Bounds.Center = position;
 

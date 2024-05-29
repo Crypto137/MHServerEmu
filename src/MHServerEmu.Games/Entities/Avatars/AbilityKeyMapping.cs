@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public void SlotDefaultAbilities(Avatar avatar)
         {
-            AvatarPrototype avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatar.BaseData.EntityPrototypeRef);
+            AvatarPrototype avatarProto = avatar.AvatarPrototype;
 
             foreach (PowerProgressionEntryPrototype powerProgEntry in avatarProto.GetPowersUnlockedAtLevel(avatar.CharacterLevel, true))
             {

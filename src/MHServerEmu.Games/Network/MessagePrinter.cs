@@ -4,14 +4,17 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
 
 namespace MHServerEmu.Games.Network
@@ -59,30 +62,136 @@ namespace MHServerEmu.Games.Network
 
             StringBuilder sb = new();
 
-            // Parse base data
-            EntityBaseData baseData = new();
+            // Parse base data (see GameConnection::handleEntityCreateMessage() for reference)
+            ulong entityId = 0;
+            PrototypeId entityPrototypeRef = PrototypeId.Invalid;
+
             using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.BaseData))
             {
-                baseData.ReplicationPolicy = archive.GetReplicationPolicyEnum();
-                baseData.Serialize(archive);
+                Serializer.Transfer(archive, ref entityId);
+                sb.AppendLine($"{nameof(entityId)}: {entityId}");
+
+                Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref entityPrototypeRef);
+                sb.AppendLine($"{nameof(entityPrototypeRef)}: {GameDatabase.GetPrototypeName(entityPrototypeRef)}");
+
+                uint fieldFlagsRaw = 0;
+                Serializer.Transfer(archive, ref fieldFlagsRaw);
+                var fieldFlags = (EntityCreateMessageFlags)fieldFlagsRaw;
+                sb.AppendLine($"{nameof(fieldFlags)}: {fieldFlags}");
+
+                uint locoFieldFlagsRaw = 0;
+                Serializer.Transfer(archive, ref locoFieldFlagsRaw);
+                var locoFieldFlags = (LocomotionMessageFlags)locoFieldFlagsRaw;
+                sb.AppendLine($"{nameof(locoFieldFlags)}: {locoFieldFlags}");
+
+                AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest))
+                {
+                    uint interestPoliciesRaw = 0;
+                    Serializer.Transfer(archive, ref interestPoliciesRaw);
+                    interestPolicies = (AOINetworkPolicyValues)interestPoliciesRaw;
+                }
+                sb.AppendLine($"{nameof(interestPolicies)}: {interestPolicies}");
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
+                {
+                    uint avatarWorldInstanceId = 0;
+                    Serializer.Transfer(archive, ref avatarWorldInstanceId);
+                    sb.AppendLine($"{nameof(avatarWorldInstanceId)}: {avatarWorldInstanceId}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
+                {
+                    ulong dbId = 0;
+                    Serializer.Transfer(archive, ref dbId);
+                    sb.AppendLine($"{nameof(dbId)}: 0x{dbId:X}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
+                {
+                    Vector3 position = Vector3.Zero;
+                    Serializer.Transfer(archive, ref position);
+                    sb.AppendLine($"{nameof(position)}: {position}");
+
+                    bool yawOnly = locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+                    Orientation orientation = Orientation.Zero;
+                    Serializer.TransferOrientationFixed(archive, ref orientation, yawOnly, 6);
+                    sb.AppendLine($"{nameof(orientation)}: {orientation}");
+                }
+
+                if (locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+                {
+                    LocomotionState locomotionState = new();
+                    LocomotionState.SerializeFrom(archive, locomotionState, locoFieldFlags);
+                    sb.AppendLine($"{nameof(locomotionState)}: {locomotionState}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
+                {
+                    float boundsScaleOverride = 0f;
+                    Serializer.TransferFloatFixed(archive, ref boundsScaleOverride, 8);
+                    sb.AppendLine($"{nameof(boundsScaleOverride)}: {boundsScaleOverride}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
+                {
+                    ulong sourceEntityId = 0;
+                    Serializer.Transfer(archive, ref sourceEntityId);
+                    sb.AppendLine($"{nameof(sourceEntityId)}: {sourceEntityId}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
+                {
+                    Vector3 sourcePosition = Vector3.Zero;
+                    Serializer.Transfer(archive, ref sourcePosition);
+                    sb.AppendLine($"{nameof(sourcePosition)}: {sourcePosition}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
+                {
+                    PrototypeId activePowerPrototypeRef = PrototypeId.Invalid;
+                    Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref activePowerPrototypeRef);
+                    sb.AppendLine($"{nameof(activePowerPrototypeRef)}: {GameDatabase.GetPrototypeName(activePowerPrototypeRef)}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
+                {
+                    InventoryLocation invLoc = new();
+                    InventoryLocation.SerializeFrom(archive, invLoc);
+                    sb.AppendLine($"{nameof(invLoc)}: {invLoc}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
+                {
+                    InventoryLocation invLocPrev = new();
+                    InventoryLocation.SerializeFrom(archive, invLocPrev);
+                    sb.AppendLine($"{nameof(invLocPrev)}: {invLocPrev}");
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
+                {
+                    List<ulong> attachedEntityList = new();
+                    Serializer.Transfer(archive, ref attachedEntityList);
+                    for (int i = 0; i < attachedEntityList.Count; i++)
+                        sb.AppendLine($"{nameof(attachedEntityList)}[{i}]: {attachedEntityList[i]}");
+                }
             }
 
-            sb.AppendLine($"BaseData: {baseData}");
-
             // Get blueprint for this entity
-            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.EntityPrototypeRef);
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(entityPrototypeRef);
             sb.AppendLine($"Blueprint: {GameDatabase.GetBlueprintName(blueprint.Id)} (bound to {blueprint.RuntimeBindingClassType.Name})");
 
             // Deserialize archive data
             using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData))
             {
-                Entity entity = DummyGame.AllocateEntity(baseData.EntityPrototypeRef);
+                Entity entity = DummyGame.AllocateEntity(entityPrototypeRef);
                 if (entity is Player)   // Player entity needs to be initialized to have a community to deserialize into
-                    entity.Initialize(new() { EntityRef = baseData.EntityPrototypeRef, Id = baseData.EntityId });
+                    entity.Initialize(new() { EntityRef = entityPrototypeRef, Id = entityId });
+                else
+                    entity.TEMP_ReplacePrototype(entityPrototypeRef);
 
-                entity.BaseData = baseData;
                 entity.Serialize(archive);
-                entity.ReplicationPolicy = archive.GetReplicationPolicyEnum();
+                entity.InterestPolicies = archive.GetReplicationPolicyEnum();
                 sb.Append($"ArchiveData: {entity.ToStringVerbose()}");
             }
 

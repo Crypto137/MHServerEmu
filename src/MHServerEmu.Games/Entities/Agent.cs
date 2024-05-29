@@ -73,9 +73,6 @@ namespace MHServerEmu.Games.Entities
             // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
 
-            // Agents (team-ups and players) need an invloc to be recognized as belonging to the player
-            BaseData.FieldFlags |= EntityCreateMessageFlags.HasInvLoc;
-
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
 
@@ -204,7 +201,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool AppendOnStartActions(PrototypeId targetRef)
         {
-            if (GameDatabase.InteractionManager.GetStartAction(BaseData.EntityPrototypeRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
+            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
                 return AppendStartPower(action.PowerPrototype);
             return false;
         }

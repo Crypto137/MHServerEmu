@@ -227,7 +227,7 @@ namespace MHServerEmu.Games.Network
 
             // Load local player data
             SendMessage(NetMessageLocalPlayer.CreateBuilder()
-                .SetLocalPlayerEntityId(Player.BaseData.EntityId)
+                .SetLocalPlayerEntityId(Player.Id)
                 .SetGameOptions(Game.GameOptions)
                 .Build());
 
@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.Network
                     .SetOrientation(targetRot.ToNetStructPoint3())
                     .SetCellId(cellId)
                     .SetAreaId(areaId)
-                    .SetEntityPrototypeId((ulong)Player.CurrentAvatar.BaseData.EntityPrototypeRef)
+                    .SetEntityPrototypeId((ulong)Player.CurrentAvatar.PrototypeDataRef)
                     .Build());
 
                 LastPosition = targetPos;

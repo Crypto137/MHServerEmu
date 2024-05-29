@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
+            InterestPolicies = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
             if (destination != null)
@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Entities
                 destination = _destinationList[0];
             }
             destination.EntityId = transition.Id;
-            destination.EntityRef = transition.BaseData.EntityPrototypeRef;
+            destination.EntityRef = transition.PrototypeDataRef;
             destination.Type = TransitionPrototype.Type;
         }
 
