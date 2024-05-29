@@ -257,6 +257,16 @@ namespace MHServerEmu.Core.VectorMath
             return u * (Dot(u, v) / Dot(u, u)) + p0;
         }
 
+        public static Vector3 Truncate(Vector3 v, float maxLength)
+        {
+            Vector3 truncatedVector = new(v);
+            float length = Length(truncatedVector);
+            if (length > maxLength)
+                truncatedVector = (truncatedVector / length) * maxLength;
+
+            return truncatedVector;
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }

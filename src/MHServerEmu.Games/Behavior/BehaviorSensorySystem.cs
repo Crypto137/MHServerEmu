@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Behavior
             }
         }
 
-        private List<WorldEntity> GetPopulationGroup()
+        public List<WorldEntity> GetPopulationGroup()
         {
             List<WorldEntity> populationGroup = new ();
             if (_pAIController != null)
