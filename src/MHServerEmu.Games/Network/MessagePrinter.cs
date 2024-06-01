@@ -313,6 +313,37 @@ namespace MHServerEmu.Games.Network
             }
         }
 
+        [PrintMethod(typeof(NetMessagePowerCollectionAssignPower))]
+        private static string PrintNetMessagePowerCollectionAssignPower(IMessage message)
+        {
+            var assignPower = (NetMessagePowerCollectionAssignPower)message;
+
+            return string.Format("({0}) {1} (powerRank={2}, characterLevel={3}, combatLevel={4}, itemLevel={5}, itemVariation={6}f)",
+                assignPower.EntityId, GameDatabase.GetPrototypeName((PrototypeId)assignPower.PowerProtoId), assignPower.PowerRank, assignPower.CharacterLevel,
+                assignPower.CombatLevel, assignPower.ItemLevel, assignPower.ItemVariation);
+        }
+
+        [PrintMethod(typeof(NetMessageAssignPowerCollection))]
+        private static string PrintNetMessageAssignPowerCollection(IMessage message)
+        {
+            var assignPowerCollection = (NetMessageAssignPowerCollection)message;
+
+            StringBuilder sb = new();
+
+            foreach (NetMessagePowerCollectionAssignPower assignPower in assignPowerCollection.PowerList)
+                sb.AppendLine(PrintNetMessagePowerCollectionAssignPower(assignPower));
+
+            return sb.ToString();
+        }
+
+
+        [PrintMethod(typeof(NetMessagePowerCollectionUnassignPower))]
+        private static string PrintNetMessagePowerCollectionUnassignPower(IMessage message)
+        {
+            var unassignPower = (NetMessagePowerCollectionUnassignPower)message;
+            return $"({unassignPower.EntityId}) {GameDatabase.GetPrototypeName((PrototypeId)unassignPower.PowerProtoId)}";
+        }
+
         #endregion
 
         [AttributeUsage(AttributeTargets.Method)]
