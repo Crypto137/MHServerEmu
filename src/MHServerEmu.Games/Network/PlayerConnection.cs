@@ -276,9 +276,8 @@ namespace MHServerEmu.Games.Network
             foreach (IMessage message in AOI.Messages)
                 SendMessage(message);
 
-            // Load power collection
-            foreach (IMessage message in PowerLoader.LoadAvatarPowerCollection(this))
-                SendMessage(message);
+            // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
+            Player.CurrentAvatar.AssignHardcodedPowers();
 
             Player.DequeueLoadingScreen();
 
@@ -668,9 +667,8 @@ namespace MHServerEmu.Games.Network
                 .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
                 .Build());
 
-            // Power collection needs to be loaded after the avatar enters world
-            foreach (IMessage powerMsg in PowerLoader.LoadAvatarPowerCollection(this))
-                SendMessage(powerMsg);
+            // Power collection needs to be assigned after the avatar enters world
+            Player.CurrentAvatar.AssignHardcodedPowers();
 
             // Activate the swap in power for the avatar to become playable
             ActivatePowerArchive activatePower = new();
