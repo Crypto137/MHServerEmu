@@ -282,9 +282,8 @@ namespace MHServerEmu.Games.Network
 
             Player.DequeueLoadingScreen();
 
-            // Load KismetSeq for Region
-            foreach (IMessage message in Player.OnLoadAndPlayKismetSeq(this))
-                SendMessage(message);
+            // Play Kismet sequence intro for the region if there is one defined
+            Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
 
             IsLoading = false;
         }
@@ -387,7 +386,7 @@ namespace MHServerEmu.Games.Network
         {
             var playKismetSeqDone = message.As<NetMessagePlayKismetSeqDone>();
             if (playKismetSeqDone == null) return Logger.WarnReturn(false, $"OnNetMessagePlayKismetSeqDone(): Failed to retrieve message");
-            Player.OnPlayKismetSeqDone(this, (PrototypeId)playKismetSeqDone.KismetSeqPrototypeId);
+            Player.OnPlayKismetSeqDone((PrototypeId)playKismetSeqDone.KismetSeqPrototypeId);
             return true;
         }
 

@@ -21,5 +21,6 @@
         SEQMonitorsOnSwitch01 = 10049226102883358615,
 
         Times01CaptainAmericaLanding = 4747023203178650586,
+        BlackCatEntrance = 8978136788563137928,
     }
 }
