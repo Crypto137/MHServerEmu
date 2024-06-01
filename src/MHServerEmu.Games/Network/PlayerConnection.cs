@@ -118,6 +118,7 @@ namespace MHServerEmu.Games.Network
             playerSettings.DbGuid = _dbAccount.Id;
             playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
             playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+            playerSettings.PlayerConnection = this;
 
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
             Player.LoadFromDBAccount(_dbAccount);
@@ -251,9 +252,7 @@ namespace MHServerEmu.Games.Network
                 .SetClearingAllInterest(false)
                 .Build());
 
-            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)RegionDataRef)
-                .Build());
+            Player.QueueLoadingScreen(RegionDataRef);
 
             // Run region generation as a task
             Task.Run(() => Game.GetRegionAsync(this));
@@ -281,8 +280,7 @@ namespace MHServerEmu.Games.Network
             foreach (IMessage message in PowerLoader.LoadAvatarPowerCollection(this))
                 SendMessage(message);
 
-            // Dequeue loading screen
-            SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
+            Player.DequeueLoadingScreen();
 
             // Load KismetSeq for Region
             foreach (IMessage message in Player.OnLoadAndPlayKismetSeq(this))

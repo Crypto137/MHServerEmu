@@ -91,6 +91,9 @@ namespace MHServerEmu.Games.Entities
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
         public bool IsOnLoadingScreen { get; set; }
 
+        // Network
+        public PlayerConnection PlayerConnection { get; private set; }
+
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
 
@@ -108,6 +111,8 @@ namespace MHServerEmu.Games.Entities
         public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
+            PlayerConnection = settings.PlayerConnection;
 
             InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
@@ -623,6 +628,25 @@ namespace MHServerEmu.Games.Entities
                 foreach (var entry in inventory)
                     yield return Game.EntityManager.GetEntity<Avatar>(entry.Id);
             }
+        }
+
+        #endregion
+
+
+        #region Messages
+
+        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
+
+        public void QueueLoadingScreen(PrototypeId regionPrototypeRef)
+        {
+            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
+                .SetRegionPrototypeId((ulong)regionPrototypeRef)
+                .Build());
+        }
+
+        public void DequeueLoadingScreen()
+        {
+            SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
         }
 
         #endregion
