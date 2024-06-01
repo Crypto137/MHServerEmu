@@ -4,6 +4,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -59,7 +60,9 @@ namespace MHServerEmu.Games.Entities
         public SpawnSpec SpawnSpec { get; set; }
         public float LocomotorHeightOverride { get; set; }
 
-        public ItemSpec ItemSpec { get; set; }
+        // Class-specific
+        public PlayerConnection PlayerConnection { get; set; }      // For Player
+        public ItemSpec ItemSpec { get; set; }                      // For Item
         public TimeSpan Lifespan { get; set; }
     }
 

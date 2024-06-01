@@ -118,6 +118,7 @@ namespace MHServerEmu.Games.Network
             playerSettings.DbGuid = _dbAccount.Id;
             playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
             playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+            playerSettings.PlayerConnection = this;
 
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
             Player.LoadFromDBAccount(_dbAccount);
@@ -251,9 +252,7 @@ namespace MHServerEmu.Games.Network
                 .SetClearingAllInterest(false)
                 .Build());
 
-            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)RegionDataRef)
-                .Build());
+            Player.QueueLoadingScreen(RegionDataRef);
 
             // Run region generation as a task
             Task.Run(() => Game.GetRegionAsync(this));
@@ -277,16 +276,13 @@ namespace MHServerEmu.Games.Network
             foreach (IMessage message in AOI.Messages)
                 SendMessage(message);
 
-            // Load power collection
-            foreach (IMessage message in PowerLoader.LoadAvatarPowerCollection(this))
-                SendMessage(message);
+            // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
+            Player.CurrentAvatar.AssignHardcodedPowers();
 
-            // Dequeue loading screen
-            SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
+            Player.DequeueLoadingScreen();
 
-            // Load KismetSeq for Region
-            foreach (IMessage message in Player.OnLoadAndPlayKismetSeq(this))
-                SendMessage(message);
+            // Play Kismet sequence intro for the region if there is one defined
+            Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
 
             IsLoading = false;
         }
@@ -389,7 +385,7 @@ namespace MHServerEmu.Games.Network
         {
             var playKismetSeqDone = message.As<NetMessagePlayKismetSeqDone>();
             if (playKismetSeqDone == null) return Logger.WarnReturn(false, $"OnNetMessagePlayKismetSeqDone(): Failed to retrieve message");
-            Player.OnPlayKismetSeqDone(this, (PrototypeId)playKismetSeqDone.KismetSeqPrototypeId);
+            Player.OnPlayKismetSeqDone((PrototypeId)playKismetSeqDone.KismetSeqPrototypeId);
             return true;
         }
 
@@ -671,9 +667,8 @@ namespace MHServerEmu.Games.Network
                 .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
                 .Build());
 
-            // Power collection needs to be loaded after the avatar enters world
-            foreach (IMessage powerMsg in PowerLoader.LoadAvatarPowerCollection(this))
-                SendMessage(powerMsg);
+            // Power collection needs to be assigned after the avatar enters world
+            Player.CurrentAvatar.AssignHardcodedPowers();
 
             // Activate the swap in power for the avatar to become playable
             ActivatePowerArchive activatePower = new();

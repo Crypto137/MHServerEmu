@@ -91,6 +91,9 @@ namespace MHServerEmu.Games.Entities
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
         public bool IsOnLoadingScreen { get; set; }
 
+        // Network
+        public PlayerConnection PlayerConnection { get; private set; }
+
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
 
@@ -110,6 +113,8 @@ namespace MHServerEmu.Games.Entities
         public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
+
+            PlayerConnection = settings.PlayerConnection;
 
             InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
@@ -629,45 +634,67 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+
+        #region Messages
+
+        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
+
+        public void QueueLoadingScreen(PrototypeId regionPrototypeRef)
+        {
+            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
+                .SetRegionPrototypeId((ulong)regionPrototypeRef)
+                .Build());
+        }
+
+        public void DequeueLoadingScreen()
+        {
+            SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
+        }
+
+        #endregion
+
         public override void OnDeallocate()
         {
             Game.EntityManager.RemovePlayer(this);
             base.OnDeallocate();
         }
 
-        public List<IMessage> OnLoadAndPlayKismetSeq(PlayerConnection playerConnection)
+        public void TryPlayKismetSeqIntroForRegion(PrototypeId regionPrototypeId)
         {
-            List<IMessage> messageList = new();
+            // TODO/REMOVEME: Remove this when we have working Kismet sequence triggers
+            if (PlayerConnection.RegionDataRef == PrototypeId.Invalid) return;
 
-            if (playerConnection.RegionDataRef != PrototypeId.Invalid)
+            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)regionPrototypeId switch
             {
-                KismetSeqPrototypeId kismetSeqRef = 0;
-                RegionPrototypeId regionPrototypeId = (RegionPrototypeId)playerConnection.RegionDataRef;
-                if (regionPrototypeId == RegionPrototypeId.NPERaftRegion) kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart;
-                if (regionPrototypeId == RegionPrototypeId.TimesSquareTutorialRegion) kismetSeqRef = KismetSeqPrototypeId.Times01CaptainAmericaLanding;
-                if (kismetSeqRef != 0)
-                    messageList.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-            }
+                RegionPrototypeId.NPERaftRegion             => KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart,
+                RegionPrototypeId.TimesSquareTutorialRegion => KismetSeqPrototypeId.Times01CaptainAmericaLanding,
+                RegionPrototypeId.TutorialBankRegion        => KismetSeqPrototypeId.BlackCatEntrance,
+                _ => 0
+            };
 
-            return messageList;
+            if (kismetSeqRef != 0) PlayKismetSeq((PrototypeId)kismetSeqRef);
         }
 
-        public void OnPlayKismetSeqDone(PlayerConnection playerConnection, PrototypeId kismetSeqPrototypeId)
+        public void PlayKismetSeq(PrototypeId kismetSeqRef)
         {
-            List<IMessage> messages = new();
+            SendMessage(NetMessagePlayKismetSeq.CreateBuilder()
+                .SetKismetSeqPrototypeId((ulong)kismetSeqRef)
+                .Build());
+        }
+
+        public void OnPlayKismetSeqDone(PrototypeId kismetSeqPrototypeId)
+        {
             if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
 
             if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
             {
                 // TODO trigger by hotspot
                 KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
-                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+                SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+
                 kismetSeqRef = KismetSeqPrototypeId.RaftNPEJuggernautEscape;
-                messages.Add(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
+                SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
             }
-            if (messages.Count > 0)
-                foreach (var message in messages)
-                    playerConnection.PostMessage(message);
         }
 
         public override string ToString()
