@@ -4,6 +4,7 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -297,6 +298,30 @@ namespace MHServerEmu.Games.Entities
         }
 
         internal PowerUseResult CanActivatePower(Power power, ulong targetId, Vector3 targetPosition, ulong flags = 0, ulong itemSourceId = 0)
+        {
+            throw new NotImplementedException();
+        }
+
+        public InteractionResult StartInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, bool inRange, InteractionMethod method)
+        {
+            if (interacteeDesc.IsValid == false) return InteractionResult.Failure;
+            return PreAttemptInteractionWith(interacteeDesc, flags, method);
+            // switch result for client only
+        }
+
+        private InteractionResult PreAttemptInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, InteractionMethod method)
+        {
+            var interactee = interacteeDesc.GetEntity<WorldEntity>(Game);
+            if (interactee != null)
+            {
+                // UpdateServerAvatarState client only
+                return interactee.AttemptInteractionBy(new EntityDesc(this), flags, method);
+            }
+            // IsRemoteValid client only
+            return InteractionResult.Failure;
+        }
+
+        internal bool StartThrowing(ulong entityId)
         {
             throw new NotImplementedException();
         }
