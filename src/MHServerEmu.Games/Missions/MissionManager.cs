@@ -295,7 +295,27 @@ namespace MHServerEmu.Games.Missions
                 return null;
         }
 
-        internal void AttachDialogDataFromMission(DialogDataCollection dialogDataCollection, Mission mission, DialogStyle dialogStyle, LocaleStringId text, VOCategory missionInProgress, ulong id1, PrototypeId invalid, ulong id2, byte objectiveIndex, int v1, bool v2, bool v3, bool v4, LocaleStringId blank)
+        public void AttachDialogDataFromMission(DialogDataCollection collection, Mission mission, DialogStyle dialogStyle, 
+            LocaleStringId dialogText, VOCategory voCategory, ulong interactorId, PrototypeId cinematic, ulong interactEntityId, 
+            sbyte objectiveIndex, sbyte conditionIndex, bool isTurnInNPC, bool showRewards, bool showGiveItems, 
+            LocaleStringId dialogTextWhenInventoryFull)
+        {
+            // client only, fill MissionDialogData
+            // collection.Add(missionDialogData);
+        }
+
+        static int UpperBoundsOffset = int.MaxValue;
+        public static int MissionLevelUpperBoundsOffset()
+        {
+            if (UpperBoundsOffset == int.MaxValue)
+            {
+                var missionGlobalsProto = GameDatabase.MissionGlobalsPrototype;
+                UpperBoundsOffset = missionGlobalsProto != null ? missionGlobalsProto.MissionLevelUpperBoundsOffset : 0;
+            }
+            return UpperBoundsOffset;
+        }
+
+        internal static bool MatchItemsToRemove(Player player, MissionItemRequiredEntryPrototype[] requiredItems)
         {
             throw new NotImplementedException();
         }

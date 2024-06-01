@@ -887,7 +887,7 @@ namespace MHServerEmu.Games.Dialog
                 else if (baseMissionOption is MissionDialogOption dialogOption)
                 {
                     if (dialogOption.IsActiveForMissionAndEntity(mission, interactee))
-                        missionResult = ParseMissionDialogTextPrototype(mission, interactor, interactee, dialogOption.Proto, 255, ref outInteractData);
+                        missionResult = ParseMissionDialogTextPrototype(mission, interactor, interactee, dialogOption.Proto, -1, ref outInteractData);
                 }
                 else if (baseMissionOption is MissionAppearanceOption appearanceOption)
                 {
@@ -1001,7 +1001,7 @@ namespace MHServerEmu.Games.Dialog
             return missionResult;
         }
 
-        private static InteractionMethod ParseMissionDialogTextPrototype(Mission mission, WorldEntity interactor, WorldEntity interactEntity, MissionDialogTextPrototype prototype, byte objectiveIndex, ref InteractData outInteractData)        
+        private static InteractionMethod ParseMissionDialogTextPrototype(Mission mission, WorldEntity interactor, WorldEntity interactEntity, MissionDialogTextPrototype prototype, sbyte objectiveIndex, ref InteractData outInteractData)        
         {
             var missionResult = InteractionMethod.None;
             if (mission == null || interactor == null || interactEntity == null || prototype == null)
@@ -1032,11 +1032,72 @@ namespace MHServerEmu.Games.Dialog
             return missionResult;
         }
 
-        private InteractionMethod ParseMissionConditionEntityInteractPrototype(MissionConditionEntityInteractOption interactOption, Mission mission, HUDEntityOverheadIcon indicatorType, Player interactingPlayer, WorldEntity interactor, WorldEntity interactee, ref InteractData outInteractData, BaseMissionOption completeOption)
+        private static InteractionMethod ParseMissionConditionEntityInteractPrototype(MissionConditionEntityInteractOption option, Mission mission, 
+            HUDEntityOverheadIcon indicatorType, Player player, WorldEntity interactor, WorldEntity interactEntity, 
+            ref InteractData outInteractData, BaseMissionOption completeOption)
         {
-            // TODO for missions
-            throw new NotImplementedException();
+            var missionResult = InteractionMethod.None;
+            if (option.Proto is not MissionConditionEntityInteractPrototype interactProto) return missionResult;
+            var missionProto = mission.Prototype;
+            if (missionProto == null) return missionResult;
+
+            int avatarCharacterLevel = player.GetPrimaryAvatarCharacterLevel();
+            if (missionProto.Level - avatarCharacterLevel >= MissionManager.MissionLevelUpperBoundsOffset())
+            {
+                if (indicatorType == HUDEntityOverheadIcon.MissionBestower)
+                    TrySetIndicatorTypeAndMapOverrideWithPriority(interactEntity, ref outInteractData.IndicatorType, 
+                        ref outInteractData.MapIconOverrideRef, HUDEntityOverheadIcon.MissionBestowerDisabled);
+                return missionResult;
+            }
+
+            if (interactProto.RequiredItems.HasValue() && MissionManager.MatchItemsToRemove(player, interactProto.RequiredItems) == false)
+                return missionResult;
+
+            if (interactProto.DialogText != LocaleStringId.Blank || interactProto.DialogTextList.HasValue())
+                missionResult |= InteractionMethod.Converse;
+            else
+                missionResult |= InteractionMethod.Use;
+
+            TrySetIndicatorTypeAndMapOverrideWithPriority(interactEntity, ref outInteractData.IndicatorType, ref outInteractData.MapIconOverrideRef, indicatorType);
+            option.SetInteractDataObjectiveFlags(player, ref outInteractData, mission, completeOption);
+
+            if (outInteractData.DialogDataCollection != null)
+            {
+                LocaleStringId textDialog = DialogData.PickDialog(player.Game, interactProto);
+                DialogStyle dialogStyle = interactProto.DialogStyle;
+                if (dialogStyle == DialogStyle.None)
+                    dialogStyle = ((WorldEntityPrototype)interactEntity.Prototype).DialogStyle;
+
+                bool showRewards = interactProto.ShowRewards;
+                bool showGiveItems = interactProto.GiveItems.HasValue() || interactProto.IsTurnInNPC;
+                var objectiveIndex = option.ObjectiveIndex;
+                sbyte conditionIndex = (sbyte)interactProto.Index;
+
+                if (option.HasObjective() == false && mission.State != MissionState.Active)
+                    if (missionProto.Rewards.HasValue())
+                        showRewards = true;
+
+                var voCategory = interactProto.VoiceoverCategory;
+                if (voCategory == VOCategory.Invalid) 
+                {
+                    voCategory = VOCategory.MissionBestow;
+                    if (mission.State == MissionState.Active) 
+                    {
+                        voCategory = VOCategory.MissionInProgress;
+                        if (interactProto.IsTurnInNPC)
+                            voCategory = VOCategory.MissionCompleted;
+                    }                   
+                }
+
+                mission.MissionManager.AttachDialogDataFromMission( outInteractData.DialogDataCollection,
+                    mission, dialogStyle, textDialog, voCategory, interactor.Id, interactProto.Cinematic,
+                    interactEntity.Id, objectiveIndex, conditionIndex, interactProto.IsTurnInNPC,
+                    showRewards, showGiveItems, interactProto.DialogTextWhenInventoryFull);
+            }
+
+            return missionResult;
         }
+
 
         private static bool CheckOptionFilters(WorldEntity interactee, WorldEntity interactor, InteractionOption option)
         {
@@ -1171,9 +1232,9 @@ namespace MHServerEmu.Games.Dialog
         public HUDEntityOverheadIcon? IndicatorType;
         public PlayerHUDEnum PlayerHUDFlags;
         public LocaleStringId FailureReasonText;
-        public HashSet<EntityObjectiveInfo> MissionObjectives = new();
-        public DialogDataCollection DialogDataCollection = new();
         public EntityAppearanceEnum? AppearanceEnum;
+        public HashSet<EntityObjectiveInfo> MissionObjectives { get; set; } // client only
+        public DialogDataCollection DialogDataCollection { get; set; } // client only
     }
 
     public class InteractionData

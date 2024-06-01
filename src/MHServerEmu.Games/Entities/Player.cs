@@ -734,5 +734,10 @@ namespace MHServerEmu.Games.Entities
         {
             throw new NotImplementedException();
         }
+
+        internal int GetPrimaryAvatarCharacterLevel()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
