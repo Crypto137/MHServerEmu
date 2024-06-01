@@ -3,9 +3,20 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.Dialog
 {
+    public struct EntityObjectiveInfo
+    {
+        public PrototypeId MissionRef;
+        public MissionStateFlags MissionState;
+        public MissionObjectiveStateFlags ObjectiveState;
+        public sbyte ObjectiveIndex;
+        public BaseMissionOption MissionOption;
+        public PlayerHUDEnum Flags;
+    }
+
     public class BaseMissionOption : InteractionOption
     {
         public MissionPrototype MissionProto { get; private set; }
@@ -36,6 +47,37 @@ namespace MHServerEmu.Games.Dialog
             OptionType = optionType;
 
             EntityFilterWrapper.FilterContextMissionRef = missionProto.DataRef;
+        }
+
+        public Mission GetMission(Player player)
+        {
+            MissionManager missionManger = MissionManager.FindMissionManagerForMission(player, player.GetRegion(), MissionProto.DataRef);
+            return missionManger?.FindMissionByDataRef(MissionProto.DataRef);
+        }
+
+        internal MissionObjective GetObjective(Mission mission)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool HasObjective()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsActiveForMissionAndEntity(Mission mission, WorldEntity interactee)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void SetInteractDataObjectiveFlags(Player interactingPlayer, ref InteractData outInteractData, Mission mission, BaseMissionOption completeOption)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool ObjectiveFlagsAllowed()
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -87,6 +129,7 @@ namespace MHServerEmu.Games.Dialog
     public class MissionConditionMissionCompleteOption : BaseMissionConditionOption
     {
         private readonly SortedSet<PrototypeId> _missionRefs = new();
+        public SortedSet<PrototypeId> CompleteMissionRefs { get => _missionRefs; }
 
         public override void InitializeForMission(MissionPrototype missionProto, MissionStateFlags state, sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, MissionOptionTypeFlags optionType)
         {

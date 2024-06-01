@@ -6,6 +6,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -38,6 +39,7 @@ namespace MHServerEmu.Games.Missions
         public TimeSpan TimeExpireCurrentState { get => _timeExpireCurrentState; }
         public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Clock.GameTime; }
         public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
+        public MissionPrototype Prototype { get; }
         public int UnkRandom { get => _unkRandom; }
         public SortedSet<ulong> Participants { get => _participants; }
         public bool IsSuspended { get => _isSuspended; }
@@ -50,6 +52,7 @@ namespace MHServerEmu.Games.Missions
             MissionManager = missionManager;
             Game = MissionManager.Game;
             _prototypeDataRef = missionRef;
+            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
         }
 
         public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeDataRef,
@@ -58,6 +61,7 @@ namespace MHServerEmu.Games.Missions
             _state = state;
             _timeExpireCurrentState = timeExpireCurrentState;
             _prototypeDataRef = prototypeDataRef;
+            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
             _unkRandom = unkRandom;
 
             foreach (MissionObjective objective in objectives)
@@ -72,6 +76,7 @@ namespace MHServerEmu.Games.Missions
             _state = MissionState.Active;
             _timeExpireCurrentState = TimeSpan.Zero;
             _prototypeDataRef = prototypeDataRef;
+            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
             _unkRandom = unkRandom;
 
             _objectiveDict.Add(0, new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0));
@@ -187,6 +192,12 @@ namespace MHServerEmu.Games.Missions
         public bool HasParticipant(Player player)
         {
             return Participants.Contains(player.Id);
+        }
+
+        public bool ShouldShowInteractIndicators()
+        {
+            if (Prototype == null) return false;
+            return Prototype.ShowInteractIndicators;
         }
     }
 }

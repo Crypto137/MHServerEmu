@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Dialog;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -262,7 +263,7 @@ namespace MHServerEmu.Games.Missions
             return missionManager.FindMissionByDataRef(missionRef);
         }
 
-        private static MissionManager FindMissionManagerForMission(Player player, Region region, PrototypeId missionRef)
+        public static MissionManager FindMissionManagerForMission(Player player, Region region, PrototypeId missionRef)
         {
             return FindMissionManagerForMission(player, region, missionRef.As<MissionPrototype>());
         }
@@ -286,12 +287,17 @@ namespace MHServerEmu.Games.Missions
             return null;
         }
 
-        private Mission FindMissionByDataRef(PrototypeId missionRef)
+        public Mission FindMissionByDataRef(PrototypeId missionRef)
         {
             if (_missionDict.TryGetValue(missionRef, out var mission))
                 return mission;
             else
                 return null;
+        }
+
+        internal void AttachDialogDataFromMission(DialogDataCollection dialogDataCollection, Mission mission, DialogStyle dialogStyle, LocaleStringId text, VOCategory missionInProgress, ulong id1, PrototypeId invalid, ulong id2, byte objectiveIndex, int v1, bool v2, bool v3, bool v4, LocaleStringId blank)
+        {
+            throw new NotImplementedException();
         }
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
