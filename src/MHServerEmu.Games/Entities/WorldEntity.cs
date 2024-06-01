@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
@@ -58,6 +59,7 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsSummonedPet { get => false; }
         public bool IsInWorld { get => RegionLocation.IsValid(); }
         public bool IsAliveInWorld { get => IsInWorld && !IsDead; }
+        public bool IsVendor { get => Properties[PropertyEnum.VendorType] != PrototypeId.Invalid; }
         public EntityPhysics Physics { get; private set; }
         public bool HasNavigationInfluence { get; private set; }
         public NavigationInfluence NaviInfluence { get; private set; }
@@ -747,6 +749,8 @@ namespace MHServerEmu.Games.Entities
         public float BonusMovementSpeed => Locomotor?.GetBonusMovementSpeed(false) ?? 0.0f;
         public Power ActivePower { get => GetActivePower(); }
         public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
+        public bool DefaultRuntimeVisibility { get => WorldEntityPrototype != null && WorldEntityPrototype.VisibleByDefault; }
+        public virtual int Throwability { get => 0; }
 
         private Power GetActivePower()
         {
@@ -830,6 +834,57 @@ namespace MHServerEmu.Games.Entities
         internal RankPrototype GetRankPrototype()
         {
             throw new NotImplementedException();
+        }
+
+        internal bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual InteractionResult AttemptInteractionBy(EntityDesc interactorDesc, InteractionFlags flags, InteractionMethod method)
+        {
+            var interactor = interactorDesc.GetEntity<Agent>(Game);
+            if (interactor == null || interactor.IsInWorld == false) return InteractionResult.Failure;
+            InteractData data = null;
+            InteractionMethod iteractionStatus = InteractionManager.CallGetInteractionStatus(new EntityDesc(this), interactor, InteractionOptimizationFlags.None, flags, ref data);
+            iteractionStatus &= method;
+
+            switch (iteractionStatus)
+            {
+                case InteractionMethod.None:
+                    return InteractionResult.Failure;
+
+                // case InteractionMethod.Attack: // client only
+                //    if (interactor.StartDefaultAttack(flags.HaveFlag(InteractionFlags.StopMove) == false))
+                //        return InteractionResult.Success;
+                //    else
+                //        return InteractionResult.AttackFail; 
+
+                case InteractionMethod.Throw: // server
+
+                    if (interactor.InInteractRange(this, InteractionMethod.Throw) == false)
+                        return InteractionResult.OutOfRange;
+                    if (interactor.IsExecutingPower)
+                        return InteractionResult.ExecutingPower;
+                    if (interactor.StartThrowing(Id))
+                        return InteractionResult.Success;
+
+                    break;
+
+                // case InteractionMethod.Converse: // client only
+                // case InteractionMethod.Use:
+                //    return PostAttemptInteractionBy(interactor, iteractionStatus) 
+            }
+
+            return InteractionResult.Failure;
+        }
+
+        public bool IsThrowableBy(WorldEntity thrower)
+        {
+            if (IsDead || Properties[PropertyEnum.ThrowablePower] == PrototypeId.Invalid) return false;
+            if (thrower != null)
+                if (thrower.Throwability < Properties[PropertyEnum.Throwability]) return false;
+            return true;
         }
     }
 
