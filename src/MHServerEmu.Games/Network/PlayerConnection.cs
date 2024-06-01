@@ -329,6 +329,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;
+                case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;
@@ -733,6 +734,15 @@ namespace MHServerEmu.Games.Network
             PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
+            return true;
+        }
+
+        private bool OnReturnToHub(MailboxMessage message)
+        {
+            var returnToHub = message.As<NetMessageReturnToHub>();
+            if (returnToHub == null) return Logger.WarnReturn(false, $"OnReturnToHub(): Failed to retrieve message");
+
+            Game.MovePlayerToRegion(this, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
             return true;
         }
 

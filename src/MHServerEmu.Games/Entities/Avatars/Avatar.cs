@@ -199,8 +199,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Gather all the powers we need to unlock
             List<PrototypeId> powersToUnlockList = new();
 
-            // Swap in power needed for the avatar to become playable after swapping
+            // Add game function powers
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower);
             powersToUnlockList.Add(GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.ReturnToHubPower);
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.ReturnToFieldPower);
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.TeleportToPartyMemberPower);
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.TeamUpSummonPower);
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.PetTechVacuumPower);
+            powersToUnlockList.Add(avatarPrototype.ResurrectOtherEntityPower);
+            powersToUnlockList.Add(avatarPrototype.StatsPower);
+            powersToUnlockList.Add(GameDatabase.GlobalsPrototype.AvatarHealPower);
 
             // Progression table powers
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
