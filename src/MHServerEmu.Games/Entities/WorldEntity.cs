@@ -752,9 +752,23 @@ namespace MHServerEmu.Games.Entities
         public bool DefaultRuntimeVisibility { get => WorldEntityPrototype != null && WorldEntityPrototype.VisibleByDefault; }
         public virtual int Throwability { get => 0; }
 
+        private PathFlags GetPathFlags()
+        {
+            if (Locomotor != null) return Locomotor.PathFlags;
+            if (WorldEntityPrototype == null) return PathFlags.None;
+            return Locomotor.GetPathFlags(WorldEntityPrototype.NaviMethod);
+        }
+
         private Power GetActivePower()
         {
             throw new NotImplementedException();
+        }
+
+        public bool CanPowerTeleportToPosition(Vector3 position)
+        {
+            if (Region == null) return false;
+            
+            return Region.NaviMesh.Contains(position, Bounds.GetRadius(), new DefaultContainsPathFlagsCheck(GetPathFlags()));
         }
 
         public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
