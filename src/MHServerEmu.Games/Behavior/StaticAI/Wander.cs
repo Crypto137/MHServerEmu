@@ -115,7 +115,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 if (isWalking)
                     locomotionOptions.Flags |= LocomotionFlags.IsWalking;
 
-                if (!locomotor.PathTo(wanderTo, locomotionOptions)) return failResult;
+                if (locomotor.PathTo(wanderTo, locomotionOptions) == false) return failResult;
             }
 
             return StaticBehaviorReturnType.Running;
@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Agent agent = ownerController.Owner;
             if (agent == null) return false;
 
-            if (!agent.CanMove) return false;
+            if (agent.CanMove == false) return false;
 
             return true;
         }
