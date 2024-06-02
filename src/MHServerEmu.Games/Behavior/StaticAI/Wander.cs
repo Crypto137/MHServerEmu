@@ -67,9 +67,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
             Locomotor locomotor = agent.Locomotor;
-            if (locomotor == null) return failResult;
-
-            if (locomotor.IsStuck) return failResult;
+            if (locomotor == null || locomotor.IsStuck) return failResult;
 
             if (locomotor.HasPath)
             {
@@ -125,13 +123,13 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public bool Validate(in IStateContext context)
         {
-            if(context == null) return false;
+            if (context == null) return false;
             AIController ownerController = context.OwnerController;
-            if(ownerController == null) return false;
+            if (ownerController == null) return false;
             Agent agent = ownerController.Owner;
-            if(agent == null) return false;
+            if (agent == null) return false;
 
-            if(!agent.CanMove) return false;
+            if (!agent.CanMove) return false;
 
             return true;
         }
