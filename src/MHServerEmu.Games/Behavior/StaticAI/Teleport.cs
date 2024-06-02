@@ -21,8 +21,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         {
             var failResult = StaticBehaviorReturnType.Failed;
 
-            if (context == null) return failResult;
-
             if (context is not TeleportContext teleportContext) return failResult;
 
             AIController ownerController = teleportContext.OwnerController;
@@ -58,7 +56,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
                 if (agent.CanPowerTeleportToPosition(assistedPosition) == false) return failResult;
 
-                if (teleportContext.OwnerController.ActivePowerRef != GameData.PrototypeId.Invalid)
+                if (teleportContext.OwnerController.ActivePowerRef != PrototypeId.Invalid)
                     ownerController.AttemptActivatePower(teleportContext.PrototypeId, agent.Id, agent.RegionLocation.Position);
 
                 if (agent.ChangeRegionPosition(assistedPosition, assitedOrientation, ChangePositionFlags.Teleport) == false)

@@ -764,7 +764,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public bool CanPowerTeleportToPosition(Vector3 position)
+        public virtual bool CanPowerTeleportToPosition(Vector3 position)
         {
             if (Region == null) return false;
             
