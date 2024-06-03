@@ -545,7 +545,7 @@ namespace MHServerEmu.Games.Network
 
                 if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
 
-                if (AOI.CheckTargetCell(target))
+                if (AOI.IsTargetCellLoaded(target) == false)
                 {
                     teleport.TeleportClient(this);
                     return true;
@@ -797,7 +797,7 @@ namespace MHServerEmu.Games.Network
             var changeCameraSettings = message.As<NetMessageChangeCameraSettings>();
             if (changeCameraSettings == null) return Logger.WarnReturn(false, $"OnChangeCameraSettings(): Failed to retrieve message");
 
-            AOI.InitPlayerView((PrototypeId)changeCameraSettings.CameraSettings);
+            AOI.InitializePlayerView((PrototypeId)changeCameraSettings.CameraSettings);
             return true;
         }
 

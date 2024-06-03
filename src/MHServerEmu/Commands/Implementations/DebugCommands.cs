@@ -136,7 +136,7 @@ namespace MHServerEmu.Commands.Implementations
                 string name = worldEntity.PrototypeName;
                 ulong entityId = worldEntity.Id;
                 string status = string.Empty;
-                if (playerConnection.AOI.IsEntityLoaded(entityId) == false) status += "[H]";
+                if (playerConnection.AOI.InterestedInEntity(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
                 if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
                 entities.Add($"[E][{entityId}] {name} {status}");
