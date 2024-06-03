@@ -18,16 +18,15 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public void Start(in IStateContext context)
         {
-            if (context == null) return;
+            if (context is not UseAffixPowerContext) return;
             AIController ownerController = context.OwnerController;
-
             if (ownerController == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
             PrototypeId randomAffixRef = blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate];
             if (randomAffixRef == PrototypeId.Invalid) return;
 
-            UsePowerContext usePowerContext = new UsePowerContext
+            var usePowerContext = new UsePowerContext()
             {
                 OwnerController = ownerController,
                 Power = randomAffixRef
@@ -39,17 +38,15 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var failResult = StaticBehaviorReturnType.Failed;
-            if (context == null) return failResult;
-
+            if (context is not UseAffixPowerContext) return failResult;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return failResult;
-
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
             PrototypeId randomAffixRef = blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate];
             if (randomAffixRef == PrototypeId.Invalid) return failResult;
 
-            UsePowerContext usePowerContext = new UsePowerContext
+            var usePowerContext = new UsePowerContext()
             {
                 OwnerController = ownerController,
                 Power = randomAffixRef
@@ -60,14 +57,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public bool Validate(in IStateContext context)
         {
-            if (context == null) return false;
-
+            if (context is not UseAffixPowerContext) return false;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return false;
-
             Agent agent = ownerController.Owner;
             if (agent == null) return false;
-
             Game game = agent.Game;
             if (game == null) return false;
 
@@ -75,8 +69,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             foreach (var kvp in agent.Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
             {
-                if (kvp.Value == false)
-                    continue;
+                if (kvp.Value == false) continue;
 
                 Property.FromParam(kvp.Key, 0, out PrototypeId enemyBoostRef);
                 if (enemyBoostRef == PrototypeId.Invalid) return false;
@@ -91,7 +84,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             while (randomAffixPower.Empty() == false)
             {
                 randomAffixPower.PickRemove(out PrototypeId randomAffixRef);
-
                 if (randomAffixRef == PrototypeId.Invalid) return false;
 
                 UsePowerContext usePowerContext = new()
