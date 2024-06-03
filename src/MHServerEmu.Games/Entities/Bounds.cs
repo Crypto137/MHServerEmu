@@ -97,6 +97,7 @@ namespace MHServerEmu.Games.Entities
         public float Radius { get => GetRadius(); set => SetRadius(value); }
         public float HalfHeight { get => GetHalfHeight(); }
         public BoundsFlags Flags { get; private set; }
+        public float EyeHeight { get => HalfHeight * 0.8333f; }
 
         private BoundData _params = new();
         private Orientation _orientation;

@@ -20,6 +20,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public Event FollowEntityGiveUpEvent { get; private set; }
         public Event FollowEntityMissileReturnEvent { get; private set; }
 
+        public const float ReachedPathPointEpsilon = 2.0f;
         public const float MovementSweepPadding = 0.5f;
         public const float GiveUpGoalDistance = 16.0f;
 
@@ -62,7 +63,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool IsStuck { get => HasPath && !IsPathComplete() && !IsEnabled; }
         public NaviPathResult LastGeneratedPathResult { get => _generatedPath.PathResult; }
         public static LocomotionOptions DefaultFollowEntityLocomotionOptions => new(TimeSpan.FromSeconds(1.0), 0, 0.0f, 0.0f, 0, 0);
-
         private bool _hasOrientationSyncState;
         private TimeSpan _syncStateTime;
         private Orientation _syncOrientation;
@@ -487,7 +487,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     if (followEntity != null)
                     {
                         float distanceSq = Vector3.DistanceSquared2D(_owner.RegionLocation.Position, followEntity.RegionLocation.Position);
-                        return distanceSq <= MathHelper.Square(LocomotionState.FollowEntityRangeEnd + 2.0f);
+                        return distanceSq <= MathHelper.Square(LocomotionState.FollowEntityRangeEnd + ReachedPathPointEpsilon);
                     }
                     else
                         return true;

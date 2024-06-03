@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
@@ -17,7 +18,8 @@ namespace MHServerEmu.Games.Behavior
         public Queue<CustomPowerQueueEntry> CustomPowerQueue { get; internal set; }
         public Vector3 LastFlankTargetEntityPos { get; set; }
         public Vector3 LastFlockPosition { get; set; }
-        public Dictionary<ulong, long> DamageMap { get; set; }
+        public Vector3 MoveToCurrentPathNodePos { get; set; }
+        public Dictionary<ulong, long> DamageMap { get; set; }       
 
         public BehaviorBlackboard(Agent owner)
         {
@@ -50,6 +52,16 @@ namespace MHServerEmu.Games.Behavior
                 PropertyCollection.FlattenCopyFrom(profile.Properties, false);
             if (collection != null)
                 PropertyCollection.FlattenCopyFrom(collection, false);
+        }
+
+        private GeneratedPath _cachedGenPath;
+        public GeneratedPath CachedPath
+        {
+            get
+            {
+                _cachedGenPath ??= new ();
+                return _cachedGenPath;
+            }
         }
 
         private Dictionary<Type, ProceduralProfileRuntimeData> _proceduralProfileData = new ();

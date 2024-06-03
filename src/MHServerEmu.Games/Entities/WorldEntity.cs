@@ -262,9 +262,37 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public bool LineOfSightTo(WorldEntity other, float radius = 0.0f, float padding = 0.0f, float height = 0.0f)
+        internal NaviPathResult CheckCanPathTo(Vector3 toPosition, PathFlags checkFlags)
         {
             throw new NotImplementedException();
+        }
+
+        public bool LineOfSightTo(WorldEntity other, float radius = 0.0f, float padding = 0.0f, float height = 0.0f)
+        {
+            if (other == null) return false;
+            if (this == other) return true;
+            if (other.IsInWorld == false) return false;
+            Region region = Region;
+            if (region == null) return false;
+
+            Vector3 startPosition = GetEyesPosition();
+            return region.LineOfSightTo(startPosition, this, other.RegionLocation.Position, other.Id, radius, padding, height);
+        }
+
+        public bool LineOfSightTo(Vector3 targetPosition, float radius = 0.0f, float padding = 0.0f, float height = 0.0f, PathFlags pathFlags = PathFlags.Sight)
+        {
+            Region region = Region;
+            if (region == null) return false;
+            Vector3 startPosition = GetEyesPosition();
+            return region.LineOfSightTo(startPosition, this, targetPosition, InvalidId, radius, padding, height, pathFlags);
+        }
+
+        private Vector3 GetEyesPosition()
+        {
+            Vector3 retPos = new(RegionLocation.Position);
+            Bounds bounds = Bounds;
+            retPos.Z += bounds.EyeHeight;
+            return retPos;
         }
 
         public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)

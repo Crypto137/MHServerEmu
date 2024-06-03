@@ -946,6 +946,27 @@ namespace MHServerEmu.Games.Regions
         {
             throw new NotImplementedException();
         }
+
+        internal bool LineOfSightTo(Vector3 startPosition, WorldEntity worldEntity, Vector3 targetPosition, ulong invalidId,
+            float radius = 0.0f, float padding = 0.0f, float height = 0.0f, PathFlags pathFlags = PathFlags.Sight)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags, 
+            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null, 
+            EntityCheckPredicate checkPredicate = null, int maxChecks = 400)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class RandomPositionPredicate
+    {
+    }
+
+    public class EntityCheckPredicate
+    {
     }
 
     public class DividedStartLocation

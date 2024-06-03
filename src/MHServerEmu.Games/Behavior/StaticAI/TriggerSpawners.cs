@@ -11,7 +11,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         private TriggerSpawners() { }
 
         public void End(AIController ownerController, StaticBehaviorReturnType state) { }
-
         public void Start(in IStateContext context) { }
 
         public StaticBehaviorReturnType Update(in IStateContext context)
@@ -22,8 +21,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (ownerController == null) return returnType;
             Agent agent = ownerController.Owner;
             if (agent == null) return returnType;
-            Game game = agent.Game;
-            if (game == null) return returnType;
             var region = agent.Region;
             if (region == null) return returnType;
             var cell = agent.Cell;
@@ -86,5 +83,4 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             SearchWholeRegion = proto.SearchWholeRegion;
         }
     }
-
 }
