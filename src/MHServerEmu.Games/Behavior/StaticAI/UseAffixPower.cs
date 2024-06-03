@@ -24,13 +24,13 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (ownerController == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
-            PrototypeId powerId = blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate];
-            if (powerId == PrototypeId.Invalid) return;
+            PrototypeId randomAffixRef = blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate];
+            if (randomAffixRef == PrototypeId.Invalid) return;
 
             UsePowerContext usePowerContext = new UsePowerContext
             {
                 OwnerController = ownerController,
-                Power = powerId
+                Power = randomAffixRef
             };
 
             UsePower.Instance.Start(usePowerContext);
@@ -46,13 +46,13 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
-            PrototypeId powerId = blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate];
-            if (powerId == PrototypeId.Invalid) return failResult;
+            PrototypeId randomAffixRef = blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate];
+            if (randomAffixRef == PrototypeId.Invalid) return failResult;
 
             UsePowerContext usePowerContext = new UsePowerContext
             {
                 OwnerController = ownerController,
-                Power = powerId
+                Power = randomAffixRef
             };
 
             return UsePower.Instance.Update(usePowerContext);
@@ -78,34 +78,34 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 if (kvp.Value == false)
                     continue;
 
-                Property.FromParam(kvp.Key, 0, out PrototypeId enemyBoost);
-                if (enemyBoost == PrototypeId.Invalid) return false;
+                Property.FromParam(kvp.Key, 0, out PrototypeId enemyBoostRef);
+                if (enemyBoostRef == PrototypeId.Invalid) return false;
 
-                EnemyBoostPrototype prototype = GameDatabase.GetPrototype<EnemyBoostPrototype>(enemyBoost);
-                if (prototype == null) return false;
+                EnemyBoostPrototype enemyBoostProto = GameDatabase.GetPrototype<EnemyBoostPrototype>(enemyBoostRef);
+                if (enemyBoostProto == null) return false;
 
-                if (prototype.ActivePower != PrototypeId.Invalid)
-                    randomAffixPower.Add(prototype.ActivePower);
+                if (enemyBoostProto.ActivePower != PrototypeId.Invalid)
+                    randomAffixPower.Add(enemyBoostProto.ActivePower);
             }
 
             while (randomAffixPower.Empty() == false)
             {
-                randomAffixPower.PickRemove(out PrototypeId randomAffix);
+                randomAffixPower.PickRemove(out PrototypeId randomAffixRef);
 
-                if (randomAffix == PrototypeId.Invalid) return false;
+                if (randomAffixRef == PrototypeId.Invalid) return false;
 
                 UsePowerContext usePowerContext = new()
                 {
                     OwnerController = ownerController,
-                    Power = randomAffix
+                    Power = randomAffixRef
                 };
 
                 if (UsePower.Instance.Validate(usePowerContext))
                 {
                     BehaviorBlackboard blackboard = ownerController.Blackboard;
-                    blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate] = randomAffix;
+                    blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate] = randomAffixRef;
 
-                    if ((long)game.GetCurrentTime().TotalMilliseconds >= blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime, randomAffix])
+                    if ((long)game.GetCurrentTime().TotalMilliseconds >= blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime, randomAffixRef])
                         return true;
                 }
             }
