@@ -272,9 +272,7 @@ namespace MHServerEmu.Games.Network
                 .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
                 .Build());
 
-            AOI.Update(entrancePosition);
-            foreach (IMessage message in AOI.Messages)
-                SendMessage(message);
+            AOI.Update(entrancePosition, true);
 
             // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
             Player.CurrentAvatar.AssignHardcodedPowers();
@@ -407,15 +405,12 @@ namespace MHServerEmu.Games.Network
             LastPosition = avatarState.Position;
             LastOrientation = avatarState.Orientation;
             AOI.Region.Visited();
+
             // AOI
-            if (IsLoading == false && AOI.ShouldUpdate(avatarState.Position))
+            if (IsLoading == false)
             {
-                if (AOI.Update(avatarState.Position))
-                {
-                    //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
-                    foreach (IMessage aoiMessage in AOI.Messages)
-                        SendMessage(aoiMessage);
-                }
+                //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
+                AOI.Update(avatarState.Position);
             }
             
             Avatar currentAvatar = Player.CurrentAvatar;
@@ -550,7 +545,7 @@ namespace MHServerEmu.Games.Network
 
                 if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
 
-                if (AOI.CheckTargeCell(target))
+                if (AOI.CheckTargetCell(target))
                 {
                     teleport.TeleportClient(this);
                     return true;

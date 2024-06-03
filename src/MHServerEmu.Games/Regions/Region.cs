@@ -772,12 +772,7 @@ namespace MHServerEmu.Games.Regions
                     playerConnection.StartPosition = StartArea.Cells.First().Value.RegionBounds.Center;
                     playerConnection.StartOrientation = Orientation.Zero;
                 }
-
-                playerConnection.AOI.Reset(this);
-                playerConnection.AOI.Update(playerConnection.StartPosition, true);
-                messageList.AddRange(playerConnection.AOI.Messages);
             }
-
 
             return messageList;
         }

@@ -17,44 +17,30 @@ namespace MHServerEmu.Games.Network
 {
     public class AreaOfInterest
     {
-        public class LoadStatus
-        {
-            public ulong Frame;
-            public bool Loaded;
-            public bool InterestToPlayer;
-
-            public LoadStatus(ulong frame, bool loaded, bool interestToPlayer)
-            {
-                Frame = frame;
-                Loaded = loaded;
-                InterestToPlayer = interestToPlayer;
-            }
-        }
+        private const float UpdateDistance = 256f;
+        private const float ViewExpansionDistance = 600.0f;
+        private const float InvisibleExpansionDistance = 1200.0f;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private PlayerConnection _playerConnection;
         private Game _game;
-        private Dictionary<ulong, LoadStatus> _loadedEntities;
-        private Dictionary<uint, LoadStatus> _loadedCells;
-        private Dictionary<uint, LoadStatus> _loadedAreas;
+
+        private readonly Dictionary<ulong, LoadStatus> _loadedEntities = new();
+        private readonly Dictionary<uint, LoadStatus> _loadedCells = new();
+        private readonly Dictionary<uint, LoadStatus> _loadedAreas = new();
 
         public Region Region { get; private set; }
         public int CellsInRegion { get; set; }
         public int LoadedCellCount { get; set; } = 0;
-        public List<IMessage> Messages { get; private set; }
         public int LoadedEntitiesCount { get => _loadedEntities.Count; }
         public float AOIVolume { get => _AOIVolume; set => SetAOIVolume(value); }
 
-        private ulong _currentFrame;
-        private Vector3 _lastUpdateCenter;
+        private ulong _currentFrame = 0;
+        private Vector3 _lastUpdatePosition = new();
 
         private float _viewOffset = 600.0f;
         private float _AOIVolume = 3200.0f;
-
-        private const float UpdateDistance = 200.0f;
-        private const float ViewExpansionDistance = 600.0f;
-        private const float InvisibleExpansionDistance = 1200.0f;
 
         private Aabb2 _cameraView;
         private Aabb2 _entitiesVolume;
@@ -62,26 +48,12 @@ namespace MHServerEmu.Games.Network
         private Aabb2 _invisibileVolume;
         private PrototypeId _lastCameraSetting;
 
-        public AreaOfInterest(PlayerConnection connection, int AOIVolume = 3200)
+        public AreaOfInterest(PlayerConnection playerConnection, int AOIVolume = 3200)
         {
-            _playerConnection = connection;
-            _game = connection.Game;
-            Messages = new();
-            _loadedEntities = new();
-            _loadedCells = new();
-            _loadedAreas = new();
-            LoadedCellCount = 0;
-            _lastUpdateCenter = new();
-            _currentFrame = 0;
+            _playerConnection = playerConnection;
+            _game = playerConnection.Game;
 
             SetAOIVolume(AOIVolume >= 1600 && AOIVolume <= 5000 ? AOIVolume : 3200);
-        }
-
-        private void CalcVolumes(Vector3 playerPosition)
-        {
-            _entitiesVolume = _cameraView.Translate(playerPosition);
-            _visibileVolume = _entitiesVolume.Expand(ViewExpansionDistance);
-            _invisibileVolume = _entitiesVolume.Expand(InvisibleExpansionDistance);
         }
 
         public void InitPlayerView(PrototypeId cameraSettingPrototype)
@@ -110,7 +82,6 @@ namespace MHServerEmu.Games.Network
 
         public void Reset(Region region)
         {
-            Messages.Clear();
             _loadedAreas.Clear();
             _loadedCells.Clear();
             _loadedEntities.Clear();
@@ -121,12 +92,91 @@ namespace MHServerEmu.Games.Network
             _lastCameraSetting = 0;
         }
 
+        public void Update(Vector3 position, bool forceUpdate = false, bool isStart = false)
+        {
+            _currentFrame++;
+
+            if (forceUpdate == false && Vector3.Distance2D(_lastUpdatePosition, position) < UpdateDistance)
+                return;
+
+            CalcVolumes(position);
+
+            if (isStart)
+            {
+                Area startArea = Region.GetAreaAtPosition(position);
+                AddArea(startArea, true);
+            }
+            else
+            {
+                UpdateEntities();
+            }               
+
+            // update Areas
+            UpdateAreas();
+
+            // update Cells
+            if (UpdateCells())
+            {
+                SendMessage(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
+
+                // Mini map
+                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+                {
+                    LowResMap lowResMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
+                    Serializer.Transfer(archive, ref lowResMap);
+
+                    SendMessage(NetMessageUpdateMiniMap.CreateBuilder()
+                        .SetArchiveData(archive.ToByteString())
+                        .Build());
+                }
+            }
+
+            _lastUpdatePosition.Set(position);
+        }
+
         public static bool GetEntityInterest(WorldEntity worldEntity)
         {
             // TODO write all Player interests for entity
             if (worldEntity.TrackAfterDiscovery) return true;
             if (worldEntity.IsAlive() == false) return true;
             return false;
+        }
+
+        public void OnCellLoaded(uint cellId)
+        {
+            LoadedCellCount++;
+            if (_loadedCells.TryGetValue(cellId, out var cell)) cell.Loaded = true;
+        }
+
+        public bool CheckTargetCell(Transition target)
+        {
+            if (_loadedCells.TryGetValue(target.RegionLocation.Cell.Id, out var cell))
+                return cell.Loaded == false;
+
+            return true;
+        }
+
+        public void ForceCellLoad()
+        {
+            foreach (var cell in _loadedCells)
+                cell.Value.Loaded = true;
+        }
+
+        public bool IsEntityLoaded(ulong entityId)
+        {
+            return _loadedEntities.ContainsKey(entityId);
+        }
+
+        private void SendMessage(IMessage message)
+        {
+            _playerConnection.SendMessage(message);
+        }
+
+        private void CalcVolumes(Vector3 playerPosition)
+        {
+            _entitiesVolume = _cameraView.Translate(playerPosition);
+            _visibileVolume = _entitiesVolume.Expand(ViewExpansionDistance);
+            _invisibileVolume = _entitiesVolume.Expand(InvisibleExpansionDistance);
         }
 
         private void UpdateAreas()
@@ -151,12 +201,12 @@ namespace MHServerEmu.Games.Network
         private void AddArea(Area area, bool isStartArea)
         {
             _loadedAreas.Add(area.Id, new(_currentFrame, true, true));
-            Messages.Add(area.MessageAddArea(isStartArea));
+            SendMessage(area.MessageAddArea(isStartArea));
         }
 
         private void RemoveArea(Area area)
         {
-            Messages.Add(NetMessageRemoveArea.CreateBuilder()
+            SendMessage(NetMessageRemoveArea.CreateBuilder()
                 .SetAreaId(area.Id)
                 .Build());
             _loadedAreas.Remove(area.Id);
@@ -164,7 +214,7 @@ namespace MHServerEmu.Games.Network
 
         private void AddCell(Cell cell)
         {
-            Messages.Add(cell.MessageCellCreate());
+            SendMessage(cell.MessageCellCreate());
             _loadedCells.Add(cell.Id, new(_currentFrame, false, false));
         }
 
@@ -173,7 +223,7 @@ namespace MHServerEmu.Games.Network
             var areaId = cell.Area.Id;
             if (_loadedAreas.ContainsKey(areaId))
             {
-                Messages.Add(NetMessageCellDestroy.CreateBuilder()
+                SendMessage(NetMessageCellDestroy.CreateBuilder()
                     .SetAreaId(areaId)
                     .SetCellId(cell.Id)
                     .Build());
@@ -226,7 +276,7 @@ namespace MHServerEmu.Games.Network
             return environmentUpdate;
         }
 
-        private void UpdateEntity()
+        private void UpdateEntities()
         {
             Region region = Region;
             List<WorldEntity> newEntities = new();
@@ -258,90 +308,20 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            // Add new Entity
+            // Add new Entity       // TODO AddEntity 
             if (newEntities.Count > 0)
-                Messages.AddRange(newEntities.Select(entity => entity.ToNetMessageEntityCreate())); // TODO AddEntity            
-
-            // Delete Entity
-            List<ulong> toDelete = new();
-            foreach (var entity in _loadedEntities)
             {
-                if (entity.Value.Frame < _currentFrame && entity.Value.InterestToPlayer == false)
-                {
-                    Messages.Add(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Key).Build());
-                    toDelete.Add(entity.Key);
-                }
-            }
-            foreach (var deleteId in toDelete)
-                _loadedEntities.Remove(deleteId); // TODO RemoveEntity           
-        }
+                foreach (Entity entity in newEntities)
+                    SendMessage(entity.ToNetMessageEntityCreate());
+            }    
 
-        public bool ShouldUpdate(Vector3 position)
-        {
-            return Vector3.DistanceSquared2D(_lastUpdateCenter, position) > UpdateDistance;
-        }
-
-        public void OnCellLoaded(uint cellId)
-        {
-            LoadedCellCount++;
-            if (_loadedCells.TryGetValue(cellId, out var cell)) cell.Loaded = true;
-        }
-
-        public bool CheckTargeCell(Transition target)
-        {
-            if (_loadedCells.TryGetValue(target.RegionLocation.Cell.Id, out var cell))
-                return cell.Loaded == false;
-            return true;
-        }
-
-        public void ForceCellLoad()
-        {
-            foreach (var cell in _loadedCells)
-                cell.Value.Loaded = true;
-        }
-
-        public bool Update(Vector3 newPosition, bool isStart = false)
-        {
-            Messages.Clear();
-            CalcVolumes(newPosition);
-            if (isStart)
+            // Delete entities
+            foreach (var kvp in _loadedEntities.Where(kvp => kvp.Value.Frame < _currentFrame && kvp.Value.InterestToPlayer == false))
             {
-                Area startArea = Region.GetAreaAtPosition(newPosition);
-                AddArea(startArea, true);
-            }
-
-            _currentFrame++;
-            // update Entities
-            if (isStart == false) UpdateEntity();
-
-            // update Areas
-            UpdateAreas();
-
-            // update Cells
-            if (UpdateCells())
-            {
-                Messages.Add(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
-
-                // Mini map
-                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
-                {
-                    LowResMap lowResMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
-                    Serializer.Transfer(archive, ref lowResMap);
-
-                    Messages.Add(NetMessageUpdateMiniMap.CreateBuilder()
-                        .SetArchiveData(archive.ToByteString())
-                        .Build());
-                }
-            }
-
-            bool update = Messages.Count > 0;
-            if (update) _lastUpdateCenter.Set(newPosition);
-            return update;
-        }
-
-        public bool EntityLoaded(ulong entityId)
-        {
-            return _loadedEntities.ContainsKey(entityId);
+                // TODO RemoveEntity
+                _loadedEntities.Remove(kvp.Key);
+                SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(kvp.Key).Build());
+            }                         
         }
 
         private void SetAOIVolume(float volume)
@@ -349,6 +329,20 @@ namespace MHServerEmu.Games.Network
             _AOIVolume = volume;
             _viewOffset = _AOIVolume / 8; // 3200 / 8 = 400
             InitPlayerView(_lastCameraSetting);
+        }
+
+        private class LoadStatus
+        {
+            public ulong Frame { get; set; }
+            public bool Loaded { get; set; }
+            public bool InterestToPlayer { get; set; }
+
+            public LoadStatus(ulong frame, bool loaded, bool interestToPlayer)
+            {
+                Frame = frame;
+                Loaded = loaded;
+                InterestToPlayer = interestToPlayer;
+            }
         }
     }
 }
