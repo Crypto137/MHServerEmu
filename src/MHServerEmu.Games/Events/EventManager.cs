@@ -260,7 +260,7 @@ namespace MHServerEmu.Games.Events
         {
             Logger.Warn($"Forсed loading");
             playerConnection.AOI.LoadedCellCount = loadedCellCount;
-            playerConnection.FinishLoading();
+            playerConnection.EnterGameWorld();
         }
 
         private void OnEmoteDance(PlayerConnection playerConnection, AvatarPrototypeId avatar)

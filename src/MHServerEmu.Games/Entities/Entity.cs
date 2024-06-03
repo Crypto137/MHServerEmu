@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public virtual void EnterGame(EntitySettings settings)
+        public virtual void EnterGame(EntitySettings settings = null)
         {
             if (IsInGame == false) SetStatus(EntityStatus.InGame, true);
             // TODO InventoryIterator

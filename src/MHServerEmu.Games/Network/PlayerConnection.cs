@@ -214,8 +214,10 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
         
-        public void BeginLoading()
+        public void EnterGame()
         {
+            Player.EnterGame();
+
             SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
                 .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
                 .SetCurrentservergameid(Game.Id)
@@ -262,7 +264,7 @@ namespace MHServerEmu.Games.Network
             Player.IsOnLoadingScreen = true;
         }
 
-        public void FinishLoading()
+        public void EnterGameWorld()
         {
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
@@ -287,6 +289,7 @@ namespace MHServerEmu.Games.Network
 
         public void ExitGame()
         {
+            Player.ExitGame();
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
             SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
         }
@@ -452,7 +455,7 @@ namespace MHServerEmu.Games.Network
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
                 {
-                    FinishLoading();
+                    EnterGameWorld();
                 }
                 else
                 {
