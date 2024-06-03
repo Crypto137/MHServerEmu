@@ -1,16 +1,33 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
     public class UsePower : IAIState
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public static UsePower Instance { get; } = new();
         private UsePower() { }
 
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
-            throw new NotImplementedException();
+            Agent ownerAgent = ownerController.Owner;
+            if (ownerAgent != null) return;
+
+            if (state == StaticBehaviorReturnType.Interrupted && ownerAgent.IsExecutingPower)
+            {
+                Power activatePower = ownerAgent.ActivePower;
+                if (activatePower != null) return;
+
+                if (activatePower.EndPower(EndFlag.ExplicitCancel | EndFlag.Interrupting) == false)
+                    Logger.Warn($"{ownerAgent}: is trying to end {activatePower} but something went wrong");
+            }
+
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            blackboard.PropertyCollection.RemovePropertyRange(Properties.PropertyEnum.AIPowerStarted);
         }
 
         public void Start(in IStateContext context)
@@ -20,7 +37,25 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
-            throw new NotImplementedException();
+            var failResult = StaticBehaviorReturnType.Failed;
+            if (context is not UsePowerContext powerContext) return failResult;
+
+            AIController ownerController = context.OwnerController;
+            if (ownerController == null) return failResult;
+
+            Agent ownerAgent = ownerController.Owner;
+            if (ownerAgent == null) return failResult;
+
+            if (ownerAgent.IsExecutingPower == false)
+            {
+                BehaviorBlackboard blackboard = ownerController.Blackboard;
+                if (blackboard.PropertyCollection.HasProperty(Properties.PropertyEnum.AIPowerStarted))
+                    return StaticBehaviorReturnType.Completed;
+                else
+                    return StaticBehaviorReturnType.Failed;
+            }
+
+            return StaticBehaviorReturnType.Running;
         }
 
         public bool Validate(in IStateContext context)
