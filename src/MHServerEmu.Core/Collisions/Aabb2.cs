@@ -108,6 +108,14 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
+        public bool IntersectsXY(Vector3 point)
+        {
+            if (Max.X < point.X || Min.X > point.X ||
+                Max.Y < point.Y || Min.Y > point.Y)
+                return false;
+            return true;
+        }
+
         public Vector2 Center { get => new((Min.X + Max.X) * 0.5f, (Min.Y + Max.Y) * 0.5f); }
         public float Width { get => Max.X - Min.X; }
         public float Length { get => Max.Y - Min.Y; }
