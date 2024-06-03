@@ -35,7 +35,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public void Start(in IStateContext context)
         {
-            if (context == null) return;
             if (context is not FlankContext flankContext) return;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return;

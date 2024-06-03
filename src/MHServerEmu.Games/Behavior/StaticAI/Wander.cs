@@ -34,15 +34,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public void Start(in IStateContext context)
         {
-            if (context == null) return;
             if (context is not WanderContext wanderContext) return;
-
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return;
-
             Agent agent = ownerController.Owner;
             if (agent == null) return;
-
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
 
@@ -52,7 +48,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var failResult = StaticBehaviorReturnType.Failed;
-            if (context == null) return failResult;
             if (context is not WanderContext wanderContext) return failResult;
 
             AIController ownerController = context.OwnerController;
@@ -78,10 +73,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 if (game == null) return failResult;
 
                 GRandom random = game.Random;
-
                 float wanderRange = wanderContext.RangeMin + (random.NextFloat() * (wanderContext.RangeMax - wanderContext.RangeMin));
 
-                Vector3 wanderFrom = Vector3.Zero;
+                Vector3 wanderFrom;
                 switch (wanderContext.FromPoint)
                 {
                     case WanderBasePointType.SpawnPoint:
@@ -123,7 +117,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public bool Validate(in IStateContext context)
         {
-            if (context == null) return false;
+            if (context is not WanderContext) return false;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return false;
             Agent agent = ownerController.Owner;

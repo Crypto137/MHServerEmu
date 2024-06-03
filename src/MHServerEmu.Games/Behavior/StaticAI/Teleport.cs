@@ -20,12 +20,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var failResult = StaticBehaviorReturnType.Failed;
-
             if (context is not TeleportContext teleportContext) return failResult;
-
             AIController ownerController = teleportContext.OwnerController;
             if (ownerController == null) return failResult;
-
             Agent agent = ownerController.Owner;
             if (agent == null) return failResult;
             Region region = agent.Region;

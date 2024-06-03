@@ -24,7 +24,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
             StaticBehaviorReturnType failResult = StaticBehaviorReturnType.Failed;
-            if (context == null) return failResult;
             if (context is not InteractContext interactContext) return failResult;
             AIController ownerController = interactContext.OwnerController;
             if (ownerController == null) return failResult;
@@ -68,7 +67,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public bool Validate(in IStateContext context)
         {
-            if (context == null) return false;
             if (context is not InteractContext interactContext) return false;
             AIController ownerController = interactContext.OwnerController;
             if (ownerController == null) return false;

@@ -15,7 +15,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var returnType = StaticBehaviorReturnType.Failed;
-            if (context == null) return returnType;
             if (context is not DespawnContext despawnContext) return returnType;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return returnType;

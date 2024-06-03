@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public void Start(in IStateContext context)
         {
-            if (context == null) return;
+            if (context is not FleeContext) return;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
@@ -55,7 +55,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public StaticBehaviorReturnType Update(in IStateContext context)
         {
             var failResult = StaticBehaviorReturnType.Failed;
-            if (context == null) return failResult;
             if (context is not FleeContext fleeContext) return failResult;
             var ownerController = context.OwnerController;
             if (ownerController == null) return failResult;
@@ -254,7 +253,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public bool Validate(in IStateContext context)
         {
-            if (context == null) return false;
+            if (context is not FleeContext) return false;
             AIController ownerController = context.OwnerController;
             if (ownerController == null) return false;
             Agent agent = ownerController.Owner;
