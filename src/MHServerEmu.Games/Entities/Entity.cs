@@ -132,6 +132,7 @@ namespace MHServerEmu.Games.Entities
         public DateTime DeathTime { get; private set; }
         public EntityPrototype Prototype { get; private set; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
+        public AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
         public PrototypeId PrototypeDataRef { get; private set; }
 
         public InventoryCollection InventoryCollection { get; } = new();
@@ -197,6 +198,7 @@ namespace MHServerEmu.Games.Entities
         public int MaxStackSize { get => Properties[PropertyEnum.InventoryStackSizeMax]; }
         public bool IsRootOwner { get => OwnerId == 0; }
         public bool IsInGame { get => TestStatus(EntityStatus.InGame); }
+        public bool IsDestroyed { get => TestStatus(EntityStatus.Destroyed); }
 
         #endregion
 
@@ -492,11 +494,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool IsDestroyed()
-        {
-            return Status.HasFlag(EntityStatus.Destroyed);
-        }
-
         public bool IsAlive()
         {
             if (IsDead == false) return true;
@@ -601,6 +598,28 @@ namespace MHServerEmu.Games.Entities
         {
             if (this is T typedOwner) return typedOwner;
             return GetOwnerOfType<T>();
+        }
+
+        public bool IsOwnedBy(ulong entityId)
+        {
+            Entity potentialOwner = this;
+
+            while (potentialOwner != null)
+            {
+                if (potentialOwner.Id == entityId)
+                    return true;
+
+                potentialOwner = potentialOwner.GetOwner();
+            }
+
+            return false;
+        }
+
+        public bool Owns(ulong entityId)
+        {
+            Entity entity = Game.EntityManager.GetEntity<Entity>(entityId);
+            if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
+            return entity.IsOwnedBy(Id);
         }
 
         public Entity GetRootOwner()

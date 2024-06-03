@@ -366,7 +366,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 ThrowableCancelPower = null;
             }
 
-            if (_owner.IsDestroyed() == false)
+            if (_owner.IsDestroyed == false)
             {
                 // TODO: _owner.OnPowerUnAssigned()
             }

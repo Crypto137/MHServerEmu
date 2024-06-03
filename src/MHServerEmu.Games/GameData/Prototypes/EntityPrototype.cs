@@ -203,18 +203,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
 
         [DoNotCopy]
-        public AOINetworkPolicyValues ReplicateNetwork { get; protected set; }
+        public AOINetworkPolicyValues RepNetwork { get; protected set; } = AOINetworkPolicyValues.AOIChannelNone;
 
         public override void PostProcess()
         {
             base.PostProcess();
 
-            ReplicateNetwork = AOINetworkPolicyValues.AOIChannelNone;
-            if (ReplicateToProximity)   ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelProximity;
-            if (ReplicateToParty)       ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelParty;
-            if (ReplicateToOwner)       ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelOwner;
-            if (ReplicateToDiscovered)  ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelDiscovery;
-            if (ReplicateToTrader)      ReplicateNetwork |= AOINetworkPolicyValues.AOIChannelTrader;
+            // Reconstruct AOI network policy (same thing as PropertyInfoPrototype::PostProcess())
+            if (ReplicateToProximity)
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelProximity;
+
+            if (ReplicateToParty)
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelParty;
+
+            if (ReplicateToOwner)
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelOwner;
+
+            if (ReplicateToDiscovered)
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelDiscovery;
+
+            if (ReplicateToTrader)
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelTrader;
         }
     }
 

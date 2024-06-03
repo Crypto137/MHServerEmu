@@ -203,7 +203,7 @@ namespace MHServerEmu.Games.Entities
                     return false;
                 }
 
-                if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.ClientOnly) && entity.IsDestroyed())
+                if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.ClientOnly) && entity.IsDestroyed)
                     return true;
             }
 

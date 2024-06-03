@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Entities
             if (Game == null) return;
 
             ExitWorld();
-            if (IsDestroyed() == false)
+            if (IsDestroyed == false)
             {
                 // CancelExitWorldEvent();
                 // CancelKillEvent();
