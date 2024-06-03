@@ -200,40 +200,6 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        private void AddArea(Area area, bool isStartArea)
-        {
-            _loadedAreas.Add(area.Id, new(_currentFrame, true, true));
-            SendMessage(area.MessageAddArea(isStartArea));
-        }
-
-        private void RemoveArea(Area area)
-        {
-            SendMessage(NetMessageRemoveArea.CreateBuilder()
-                .SetAreaId(area.Id)
-                .Build());
-            _loadedAreas.Remove(area.Id);
-        }
-
-        private void AddCell(Cell cell)
-        {
-            SendMessage(cell.MessageCellCreate());
-            _loadedCells.Add(cell.Id, new(_currentFrame, false, false));
-        }
-
-        private void RemoveCell(Cell cell)
-        {
-            var areaId = cell.Area.Id;
-            if (_loadedAreas.ContainsKey(areaId))
-            {
-                SendMessage(NetMessageCellDestroy.CreateBuilder()
-                    .SetAreaId(areaId)
-                    .SetCellId(cell.Id)
-                    .Build());
-            }
-            _loadedCells.Remove(cell.Id);
-            LoadedCellCount--;
-        }
-
         private bool UpdateCells()
         {
             Region region = Region;
@@ -310,20 +276,59 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            // Add new Entity       // TODO AddEntity 
-            if (newEntities.Count > 0)
-            {
-                foreach (Entity entity in newEntities)
-                    SendMessage(entity.ToNetMessageEntityCreate());
-            }    
-
-            // Delete entities
+            // Delete entities we are no longer interested in
             foreach (var kvp in _loadedEntities.Where(kvp => kvp.Value.Frame < _currentFrame && kvp.Value.InterestToPlayer == false))
+                RemoveEntity(kvp.Key);      // TODO: Pass a reference to the entity we are removing instead
+
+            // Add new entities
+            foreach (Entity entity in newEntities)
+                AddEntity(entity);
+        }
+
+        private void AddArea(Area area, bool isStartArea)
+        {
+            _loadedAreas.Add(area.Id, new(_currentFrame, true, true));
+            SendMessage(area.MessageAddArea(isStartArea));
+        }
+
+        private void RemoveArea(Area area)
+        {
+            SendMessage(NetMessageRemoveArea.CreateBuilder()
+                .SetAreaId(area.Id)
+                .Build());
+            _loadedAreas.Remove(area.Id);
+        }
+
+        private void AddCell(Cell cell)
+        {
+            SendMessage(cell.MessageCellCreate());
+            _loadedCells.Add(cell.Id, new(_currentFrame, false, false));
+        }
+
+        private void RemoveCell(Cell cell)
+        {
+            var areaId = cell.Area.Id;
+            if (_loadedAreas.ContainsKey(areaId))
             {
-                // TODO RemoveEntity
-                _loadedEntities.Remove(kvp.Key);
-                SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(kvp.Key).Build());
-            }                         
+                SendMessage(NetMessageCellDestroy.CreateBuilder()
+                    .SetAreaId(areaId)
+                    .SetCellId(cell.Id)
+                    .Build());
+            }
+            _loadedCells.Remove(cell.Id);
+            LoadedCellCount--;
+        }
+
+        private void AddEntity(Entity entity)
+        {
+            SendMessage(entity.ToNetMessageEntityCreate());
+        }
+
+        private void RemoveEntity(ulong entityId)
+        {
+            // TODO: Pass a reference to the entity we are removing instead
+            _loadedEntities.Remove(entityId);
+            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entityId).Build());
         }
 
         private void SetAOIVolume(float volume)
