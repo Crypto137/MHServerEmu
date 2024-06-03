@@ -214,8 +214,10 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
         
-        public void BeginLoading()
+        public void EnterGame()
         {
+            Player.EnterGame();
+
             SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
                 .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
                 .SetCurrentservergameid(Game.Id)
@@ -262,7 +264,7 @@ namespace MHServerEmu.Games.Network
             Player.IsOnLoadingScreen = true;
         }
 
-        public void FinishLoading()
+        public void EnterGameWorld()
         {
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
@@ -272,9 +274,7 @@ namespace MHServerEmu.Games.Network
                 .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
                 .Build());
 
-            AOI.Update(entrancePosition);
-            foreach (IMessage message in AOI.Messages)
-                SendMessage(message);
+            AOI.Update(entrancePosition, true);
 
             // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
             Player.CurrentAvatar.AssignHardcodedPowers();
@@ -289,6 +289,7 @@ namespace MHServerEmu.Games.Network
 
         public void ExitGame()
         {
+            Player.ExitGame();
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
             SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
         }
@@ -329,6 +330,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;
+                case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;
@@ -406,15 +408,12 @@ namespace MHServerEmu.Games.Network
             LastPosition = avatarState.Position;
             LastOrientation = avatarState.Orientation;
             AOI.Region.Visited();
+
             // AOI
-            if (IsLoading == false && AOI.ShouldUpdate(avatarState.Position))
+            if (IsLoading == false)
             {
-                if (AOI.Update(avatarState.Position))
-                {
-                    //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
-                    foreach (IMessage aoiMessage in AOI.Messages)
-                        SendMessage(aoiMessage);
-                }
+                //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
+                AOI.Update(avatarState.Position);
             }
             
             Avatar currentAvatar = Player.CurrentAvatar;
@@ -456,7 +455,7 @@ namespace MHServerEmu.Games.Network
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
                 {
-                    FinishLoading();
+                    EnterGameWorld();
                 }
                 else
                 {
@@ -549,7 +548,7 @@ namespace MHServerEmu.Games.Network
 
                 if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
 
-                if (AOI.CheckTargeCell(target))
+                if (AOI.IsTargetCellLoaded(target) == false)
                 {
                     teleport.TeleportClient(this);
                     return true;
@@ -736,6 +735,15 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnReturnToHub(MailboxMessage message)
+        {
+            var returnToHub = message.As<NetMessageReturnToHub>();
+            if (returnToHub == null) return Logger.WarnReturn(false, $"OnReturnToHub(): Failed to retrieve message");
+
+            Game.MovePlayerToRegion(this, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
+            return true;
+        }
+
         private bool OnGracefulDisconnect(MailboxMessage message)
         {
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
@@ -792,7 +800,7 @@ namespace MHServerEmu.Games.Network
             var changeCameraSettings = message.As<NetMessageChangeCameraSettings>();
             if (changeCameraSettings == null) return Logger.WarnReturn(false, $"OnChangeCameraSettings(): Failed to retrieve message");
 
-            AOI.InitPlayerView((PrototypeId)changeCameraSettings.CameraSettings);
+            AOI.InitializePlayerView((PrototypeId)changeCameraSettings.CameraSettings);
             return true;
         }
 

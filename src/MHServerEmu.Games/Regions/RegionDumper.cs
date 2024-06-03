@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -14,11 +15,11 @@ namespace MHServerEmu.Games.Regions
 
             foreach (var areaKvp in region.Areas)
             {
-                AreaDump areaDump = new();
+                AreaDump areaDump = new(areaKvp.Value.PrototypeDataRef, areaKvp.Value.Origin);
                 regionDump.Add(areaKvp.Key, areaDump);
 
                 foreach (var cellKvp in areaKvp.Value.Cells)
-                    areaDump.Add(cellKvp.Key, new(cellKvp.Value.CellProto.ToString(), new(cellKvp.Value.AreaPosition)));
+                    areaDump.Cells.Add(cellKvp.Key, new(cellKvp.Value.CellProto.ToString(), new(cellKvp.Value.AreaPosition)));
             }
 
             FileHelper.SerializeJson(Path.Combine(FileHelper.ServerRoot, "RegionDumps", $"{region.PrototypeName}_{region.RandomSeed}.json"),
@@ -26,7 +27,19 @@ namespace MHServerEmu.Games.Regions
         }
 
         private class RegionDump : Dictionary<uint, AreaDump> { }
-        private class AreaDump : Dictionary<uint, CellDump> { }
+
+        private class AreaDump
+        {
+            public ulong PrototypeDataRef { get; set; }
+            public Vector3 Origin { get; set; }
+            public SortedDictionary<uint, CellDump> Cells { get; set; } = new();
+
+            public AreaDump(PrototypeId areaProtoRef, Vector3 origin)
+            {
+                PrototypeDataRef = (ulong)areaProtoRef;
+                Origin = origin;
+            }
+        }
 
         private class CellDump
         {

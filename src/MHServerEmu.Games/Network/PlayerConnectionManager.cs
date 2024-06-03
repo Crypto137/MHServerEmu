@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Network
             while (_pendingPlayerConnectionQueue.Count > 0)
             {
                 PlayerConnection playerConnection = _pendingPlayerConnectionQueue.Dequeue();
-                playerConnection.BeginLoading();
+                playerConnection.EnterGame();
             }
         }
 
