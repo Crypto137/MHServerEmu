@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Network
 {
     public class AreaOfInterest
     {
-        private const float UpdateDistance = 256f;
+        private const float UpdateDistanceSquared = 256f * 256f;
         private const float ViewExpansionDistance = 600.0f;
         private const float InvisibleExpansionDistance = 1200.0f;
 
@@ -96,7 +96,9 @@ namespace MHServerEmu.Games.Network
         {
             _currentFrame++;
 
-            if (forceUpdate == false && Vector3.Distance2D(_lastUpdatePosition, position) < UpdateDistance)
+            // Unless forceUpdate is set, we update only when we move far enough from the last update position.
+            // NOTE: We use DistanceSquared2D() instead of Distance2D() to avoid calculating the square root of distance and speed this check up.
+            if (forceUpdate == false && Vector3.DistanceSquared2D(_lastUpdatePosition, position) < UpdateDistanceSquared)
                 return;
 
             CalcVolumes(position);
