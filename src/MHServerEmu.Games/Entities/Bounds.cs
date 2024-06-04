@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Entities
             Flags = flags;
         }
 
-        public void InitializeSphere(float radius, BoundsCollisionType collisionType, BoundsFlags flags)
+        public void InitializeSphere(float radius, BoundsCollisionType collisionType, BoundsFlags flags = BoundsFlags.None)
         {
             Geometry = GeometryType.Sphere;
             _params.SphereRadius = radius;

@@ -267,6 +267,23 @@ namespace MHServerEmu.Core.VectorMath
             return truncatedVector;
         }
 
+        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 resultNormal, out float resultLength, Vector3 zero = null)
+        {
+            Vector3 vector = v.To2D();
+            if (IsNearZero(vector))
+            {
+                if (zero == null) zero = XAxis;
+                resultNormal = new(zero);
+                resultLength = 0f;
+            }
+            else            
+            {
+                float length = Length(vector);
+                resultNormal = vector / length;
+                resultLength = length;
+            }
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }

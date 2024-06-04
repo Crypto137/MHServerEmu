@@ -128,9 +128,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     for (int j = targetSummoned; j < SpecialPowerNumSummons; ++j)
                     {
                         Bounds bounds = new(agent.Bounds)
-                        {
-                            Center = agent.RegionLocation.ProjectToFloor()
-                        };
+                        { Center = agent.RegionLocation.ProjectToFloor() };
                         region.ChooseRandomPositionNearPoint(
                             bounds,
                             Region.GetPathFlagsForEntity(agent.WorldEntityPrototype),
@@ -2614,9 +2612,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     for (int j = targetSummoned; j < SpecialPowerNumSummons; ++j)
                     {
                         Bounds bounds = new(agent.Bounds)
-                        {
-                            Center = agent.RegionLocation.ProjectToFloor()
-                        };
+                        { Center = agent.RegionLocation.ProjectToFloor() };
                         region.ChooseRandomPositionNearPoint(
                             bounds,
                             Region.GetPathFlagsForEntity(agent.WorldEntityPrototype),

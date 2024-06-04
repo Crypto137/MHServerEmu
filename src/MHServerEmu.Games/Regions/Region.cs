@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
@@ -43,6 +44,7 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateLog;
     }
 
+    [Flags]
     public enum PositionCheckFlags
     {
         None = 0,
@@ -936,32 +938,317 @@ namespace MHServerEmu.Games.Regions
             return entityProto != null ? Locomotor.GetPathFlags(entityProto.NaviMethod) : PathFlags.None;
         }
 
-        internal bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags checkFlags, BlockingCheckFlags blockingFlags, 
-            float minRadius, float maxRadius, out Vector3 outPosition)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal bool LineOfSightTo(Vector3 startPosition, WorldEntity worldEntity, Vector3 targetPosition, ulong invalidId,
+        public bool LineOfSightTo(Vector3 startPosition, WorldEntity owner, Vector3 targetPosition, ulong targetEntityId,
             float radius = 0.0f, float padding = 0.0f, float height = 0.0f, PathFlags pathFlags = PathFlags.Sight)
         {
-            throw new NotImplementedException();
+            float maxHeight = Math.Max(startPosition.Z, targetPosition.Z);
+            maxHeight += height;
+            Vector3 resultPosition = Vector3.Zero;
+            Vector3 resultNormal = null;
+            var sweepResult = NaviMesh.Sweep(startPosition, targetPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
+                padding, HeightSweepType.Constraint, (int)maxHeight, short.MinValue, owner);
+            if (sweepResult == SweepResult.Success)
+                return SweepToFirstHitEntity(startPosition, targetPosition, owner, targetEntityId, true, 0.0f, out _) == null; 
+            return false;
         }
 
-        internal bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags, 
-            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null, 
-            EntityCheckPredicate checkPredicate = null, int maxChecks = 400)
+        private WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner, 
+            ulong targetEntityId, bool blocksLOS, float radiusOverride, out Vector3 resultHitPosition)
         {
-            throw new NotImplementedException();
+            Bounds sweepBounds = new ();
+
+            if (owner != null)
+                sweepBounds = new(owner.Bounds);
+
+            if (blocksLOS || owner == null)
+                sweepBounds.InitializeSphere(1.0f, sweepBounds.CollisionType);
+
+            if (radiusOverride > 0.0f)
+                sweepBounds.Radius = radiusOverride;
+
+            sweepBounds.Center = startPosition;
+            Vector3 sweepVector = targetPosition - startPosition;
+
+            bool CanBlockFunc(WorldEntity otherEntity) => CanBlockEntitySweep(otherEntity, owner, targetEntityId, blocksLOS);
+            return SweepToFirstHitEntity(sweepBounds, sweepVector, out resultHitPosition, CanBlockFunc);
+        }
+
+        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, out Vector3 resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
+        {
+            Vector3 sweepStart = sweepBounds.Center;
+            Vector3 sweepEnd = sweepStart + sweepVelocity;
+            float sweepRadius = sweepBounds.Radius;
+            Aabb sweepBox = new Aabb(sweepStart, sweepRadius) + new Aabb(sweepEnd, sweepRadius);
+
+            resultHitPosition = null;
+            var sweepVector2D = sweepVelocity.To2D();
+            if (Vector3.IsNearZero(sweepVector2D)) return null;
+            Vector3.SafeNormalAndLength2D(sweepVector2D, out Vector3 sweepNormal2D, out float sweepLength);
+
+            float minTime = 1.0f;
+            float minDot = -1f;
+            WorldEntity hitEntity = null;
+            var spContext = new EntityRegionSPContext(EntityRegionSPContextFlags.All);
+            foreach (var otherEntity in IterateEntitiesInVolume(sweepBox, spContext))
+                if (canBlockFunc(otherEntity))
+                {
+                    float resultTime = 1.0f;
+                    Vector3 resultNormal = null;
+                    if (sweepBounds.Sweep(otherEntity.Bounds, Vector3.Zero, sweepVelocity, ref resultTime, ref resultNormal))
+                    {
+                        if (hitEntity != null)
+                        {
+                            float epsilon = 0.25f / sweepLength;
+                            if (Segment.EpsilonTest(resultTime, minTime, epsilon))
+                            {
+                                float dot = Vector3.Dot(sweepNormal2D, Vector3.Normalize2D(otherEntity.RegionLocation.Position - sweepStart));
+                                if (dot > minDot)
+                                {
+                                    hitEntity = otherEntity;
+                                    minTime = resultTime;
+                                    minDot = dot;
+                                    resultHitPosition = sweepStart + sweepVelocity * minTime;
+                                }
+                            }
+                        }
+
+                        if (resultTime < minTime)
+                        {
+                            float dot = Vector3.Dot(sweepNormal2D, Vector3.Normalize2D(otherEntity.RegionLocation.Position - sweepStart));
+                            hitEntity = otherEntity;
+                            minTime = resultTime;
+                            minDot = dot;
+                            resultHitPosition = sweepStart + sweepVelocity * minTime;
+                        }
+                    }
+                }
+
+            return hitEntity;
+        }
+
+        private static bool CanBlockEntitySweep(WorldEntity testEntity, WorldEntity owner, ulong targetEntityId, bool blocksLOS)
+        {
+            if (testEntity == null) return false;
+
+            if (owner != null)
+            {
+                if (testEntity.Id == owner.Id) return false;
+                if (blocksLOS == false && owner.CanBeBlockedBy(testEntity)) return true;
+            }
+
+            if (targetEntityId != Entity.InvalidId && testEntity.Id == targetEntityId) return false;
+
+            if (blocksLOS)
+            {
+                var proto = testEntity.WorldEntityPrototype;
+                if (proto == null) return false;
+                if (proto.Bounds.BlocksLineOfSight) return true;
+            }
+
+            return false;
+        }
+
+        public bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags, 
+            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null, 
+            EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
+        {
+            if (IsLocationClear(bounds, pathFlags, posFlags, blockFlags)
+                && (positionPredicate == null || positionPredicate.Test(bounds.Center)))
+            {
+                resultPosition = bounds.Center;
+                return true;
+            }
+            else
+                return ChooseRandomPositionNearPoint(bounds, pathFlags, posFlags, blockFlags, 0, maxDistance, out resultPosition, 
+                    positionPredicate, checkPredicate, maxPositionTests);
+           
+        }
+
+        public bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
+            float minDistanceFromPoint, float maxDistanceFromPoint, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null,
+            EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400, HeightSweepType heightSweep = HeightSweepType.None,
+            int maxSweepHeight = 0)
+        {
+            resultPosition = Vector3.Zero;
+            if (maxDistanceFromPoint < minDistanceFromPoint) return false;
+
+            if (posFlags.HasFlag(PositionCheckFlags.CheckCanPathTo) && posFlags.HasFlag(PositionCheckFlags.CheckCanSweepTo))
+            {
+                Logger.Warn("Do not use CheckCanSweepTo with CheckCanPathTo, it is a worthless CheckPath after the CheckSweep passes. " +
+                            "If the CheckSweep fails, the point is dropped and CheckPath never happens. " +
+                            "If you must CheckPath, you want EXCLUSIVELY CheckCanPathTo.");
+                return false;
+            }
+
+            if (maxPositionTests <= 0)
+            {
+                Logger.Warn("maxPositionTests must be greater than zero or you will not test any positions!");
+                return false;
+            }
+
+            Vector3 point = bounds.Center;
+            resultPosition.Z = point.Z;
+            var random = Game.Random;
+
+            List<WorldEntity> entitiesInRadius = new ();
+            if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CheckCanPathToEntities))
+            {
+                entitiesInRadius.Capacity = 256;
+                GetEntitiesInVolume(entitiesInRadius, new Sphere(point, maxDistanceFromPoint), new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition));
+
+                if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) && checkPredicate != null)
+                    for (int i = entitiesInRadius.Count - 1; i >= 0; i--)
+                        if (checkPredicate.Test(entitiesInRadius[i]) == false)
+                            entitiesInRadius.RemoveAt(i);
+            }
+
+            Bounds checkBounds = new(bounds);
+            if (blockFlags.HasFlag(BlockingCheckFlags.CheckSpawns))
+                checkBounds.CollisionType = BoundsCollisionType.Blocking;
+
+            float minDistanceSq = minDistanceFromPoint * minDistanceFromPoint;
+            float maxDistanceSq = maxDistanceFromPoint * maxDistanceFromPoint;
+
+            bool foundBlockedEntity = false;
+            Vector3 blockedPosition = Vector3.Zero;
+
+            List<WorldEntity> influenceEntities = new ();
+
+            if (posFlags.HasFlag(PositionCheckFlags.CheckCanPathToEntities))
+                foreach (WorldEntity entity in entitiesInRadius)
+                    if (entity.HasNavigationInfluence)
+                    {
+                        entity.DisableNavigationInfluence();
+                        influenceEntities.Add(entity);
+                    }
+
+            PathFlags checkPathFlags = pathFlags;
+            if (blockFlags.HasFlag(BlockingCheckFlags.CheckLanding))
+                checkPathFlags = PathFlags.Walk;
+
+            float angle = 0f;
+            float checkRadius = Math.Max(bounds.Radius, 5.0f);
+            checkRadius = Math.Max(checkRadius, minDistanceFromPoint);
+            float circumference = checkRadius / 1.5f;
+
+            int tries = maxPositionTests; // 400!
+            while (tries-- > 0)
+            {
+                Vector3 offset = Vector3.Zero;
+                if (posFlags.HasFlag(PositionCheckFlags.CheckInRadius))
+                {
+                    offset.X = checkRadius;
+                    offset = Vector3.AxisAngleRotate(offset, Vector3.ZAxis, angle);
+                    angle += circumference / checkRadius;
+                    if (angle >= MathHelper.TwoPi)
+                    {
+                        checkRadius += Math.Max(bounds.Radius, 5.0f);
+                        angle = 0f;
+                        if (checkRadius > maxDistanceFromPoint) break;
+                    }
+                }
+                else
+                {
+                    offset.X = random.NextFloat(-maxDistanceFromPoint, maxDistanceFromPoint);
+                    offset.Y = random.NextFloat(-maxDistanceFromPoint, maxDistanceFromPoint);
+                    float lengthSq = Vector3.LengthSquared(offset);
+                    if (lengthSq < minDistanceSq || lengthSq > maxDistanceSq)
+                        continue;
+                }
+
+                resultPosition.X = point.X + offset.X;
+                resultPosition.Y = point.Y + offset.Y;
+                checkBounds.Center = resultPosition;
+
+                var naviMesh = NaviMesh;
+                if (naviMesh.Contains(checkBounds.Center, checkBounds.Radius, new DefaultContainsPathFlagsCheck(checkPathFlags)))
+                {
+                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanSweepTo) || posFlags.HasFlag(PositionCheckFlags.CheckCanSweepRadius))
+                    {
+                        Vector3 resultSweepPosition = new();
+                        Vector3 resultNorm = null;
+                        float radius = posFlags.HasFlag(PositionCheckFlags.CheckCanSweepRadius) ? 0f : bounds.Radius;
+                        SweepResult sweepResult = naviMesh.Sweep(point, resultPosition, radius, pathFlags, 
+                            ref resultSweepPosition, ref resultNorm, 0f, heightSweep, maxSweepHeight);
+                        if (sweepResult != SweepResult.Success) continue;
+                    }
+
+                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanPathTo) || posFlags.HasFlag(PositionCheckFlags.CheckCanPathToEntities))
+                        if (NaviPath.CheckCanPathTo(naviMesh, bounds.Center, resultPosition, bounds.Radius, pathFlags) != NaviPathResult.Success)
+                            continue;
+
+                    if (positionPredicate != null && positionPredicate.Test(resultPosition) == false)
+                        continue;
+
+                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity))
+                        if (IsLocationClearOfEntities(checkBounds, entitiesInRadius, blockFlags) == false)
+                        {
+                            if (posFlags.HasFlag(PositionCheckFlags.CheckClearOfEntity) && foundBlockedEntity == false)
+                            {
+                                foundBlockedEntity = true;
+                                blockedPosition = checkBounds.Center;
+                            }
+                            continue;
+                        }
+
+                    return true;
+                }
+            }
+
+            foreach (WorldEntity entity in influenceEntities)
+                entity.EnableNavigationInfluence();
+
+            if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) && posFlags.HasFlag(PositionCheckFlags.CheckClearOfEntity) && foundBlockedEntity)
+            {
+                resultPosition = blockedPosition;
+                return true;
+            }
+
+            resultPosition = point;
+            return false;
+        }
+
+        public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
+        {
+            EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
+        }
+
+        private static bool IsLocationClearOfEntities(Bounds bounds, List<WorldEntity> entities, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
+        {
+            foreach (var entity in entities)
+                if (IsBoundsBlockedByEntity(bounds, entity, blockFlags))
+                    return false;
+            return true;
+        }
+
+        public bool IsLocationClear(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
+        {
+            if (NaviMesh.Contains(bounds.Center, bounds.Radius, new DefaultContainsPathFlagsCheck(pathFlags)) == false)
+                return false;
+
+            if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedAvatar))
+            {
+                var volume = new Sphere(bounds.Center, bounds.Radius);
+                foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new ( EntityRegionSPContextFlags.ActivePartition)))
+                {
+                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedAvatar) && entity is not Avatar) continue;
+                    if (IsBoundsBlockedByEntity(bounds, entity, blockFlags)) 
+                        return false;
+                }
+            }
+
+            return true;
         }
     }
 
     public class RandomPositionPredicate
     {
+        public virtual bool Test(Vector3 center) => false;
     }
 
     public class EntityCheckPredicate
     {
+        public virtual bool Test(WorldEntity worldEntity) => false;
     }
 
     public class DividedStartLocation

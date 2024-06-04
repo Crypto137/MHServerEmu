@@ -11,7 +11,8 @@ namespace MHServerEmu.Games.Generators
     {
         ActivePartition = 1 << 0,
         StaticPartition = 1 << 1,
-        PlayersPartition = 1 << 2
+        PlayersPartition = 1 << 2,
+        All = ActivePartition | StaticPartition | PlayersPartition
     }
 
     public class EntityRegionSPContext
@@ -233,6 +234,12 @@ namespace MHServerEmu.Games.Generators
             {
                 iterator.Clear();
             }
+        }
+
+        public void GetElementsInVolume<B>(List<WorldEntity> elements, B volume, EntityRegionSPContext context) where B : IBounds
+        {
+            foreach (var element in IterateElementsInVolume(volume, context))
+                elements.Add(element);
         }
 
         public class RegionAvatarIterator : IEnumerator<Avatar>

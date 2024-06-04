@@ -36,6 +36,17 @@ namespace MHServerEmu.Core.Collisions
             Max = new(center.X + halfWidth, center.Y + halfLength, center.Z + halfHeight);
         }
 
+        public Aabb(Vector3 center, float size)
+        {
+            float halfSize = size / 2.0f;
+            Min.X = center.X - halfSize;
+            Min.Y = center.Y - halfSize;
+            Min.Z = center.Z - halfSize;
+            Max.X = center.X + halfSize;
+            Max.Y = center.Y + halfSize;
+            Max.Z = center.Z + halfSize;
+        }
+
         public static Aabb InvertedLimit => new(
                 new Vector3(float.MaxValue, float.MaxValue, float.MaxValue),
                 new Vector3(float.MinValue, float.MinValue, float.MinValue)
