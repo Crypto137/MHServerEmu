@@ -52,7 +52,10 @@ namespace MHExecutableAnalyzer
                 _sourceFilePathList[i] = _sourceFilePathList[i].Replace('/', '\\');
 
             // Remove duplicates
-            _sourceFilePathList = _sourceFilePathList.Distinct().ToList();
+            _sourceFilePathList = _sourceFilePathList.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+            // Invalid file paths (in case our signature caught random junk)
+            _sourceFilePathList.RemoveAll(filePath => filePath.Contains("MarvelGame", StringComparison.OrdinalIgnoreCase) == false);
 
             Console.WriteLine($"Found {_sourceFilePathList.Count} unique file paths");
         }
@@ -61,6 +64,30 @@ namespace MHExecutableAnalyzer
         {
             Console.WriteLine($"Saving file path list to {path}...");
             File.WriteAllLines(path, _sourceFilePathList);
+        }
+
+        public void RecreateFileStructure(string outputDirectoryPath)
+        {
+            foreach (string sourceFilePath in _sourceFilePathList)
+            {
+                int startIndex = sourceFilePath.IndexOf("MarvelGame", StringComparison.OrdinalIgnoreCase);
+                string outputFilePath = Path.Combine(outputDirectoryPath, sourceFilePath[startIndex..]);
+                outputFilePath = outputFilePath.Split('?')[0];  // Some source file paths contain additional info after a ? sign
+                string outputFilePathDirectory = Path.GetDirectoryName(outputFilePath);
+
+                if (Directory.Exists(outputFilePathDirectory) == false)
+                    Directory.CreateDirectory(outputFilePathDirectory);
+
+                // Create an empty file for the path
+                try
+                {
+                    File.WriteAllText(outputFilePath, string.Empty);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"{e.Message} ({outputFilePath})");
+                }
+            }
         }
     }
 }
