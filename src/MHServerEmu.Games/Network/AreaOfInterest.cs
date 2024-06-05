@@ -27,9 +27,9 @@ namespace MHServerEmu.Games.Network
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<uint, InterestStatus> _trackedAreas = new();
-        private readonly Dictionary<uint, InterestStatus> _trackedCells = new();
-        private readonly Dictionary<ulong, InterestStatus> _trackedEntities = new();
+        private readonly Dictionary<uint, AreaInterestStatus> _trackedAreas = new();
+        private readonly Dictionary<uint, CellInterestStatus> _trackedCells = new();
+        private readonly Dictionary<ulong, EntityInterestStatus> _trackedEntities = new();
 
         private PlayerConnection _playerConnection;
         private Game _game;
@@ -150,10 +150,10 @@ namespace MHServerEmu.Games.Network
 
         public bool InterestedInCell(uint cellId)
         {
-            if (_trackedCells.TryGetValue(cellId, out InterestStatus cellInterest) == false)
+            if (_trackedCells.TryGetValue(cellId, out CellInterestStatus cellInterest) == false)
                 return false;
 
-            return cellInterest.Loaded;
+            return cellInterest.IsLoaded;
         }
 
         public bool InterestedInEntity(ulong entityId)
@@ -162,17 +162,20 @@ namespace MHServerEmu.Games.Network
             return _trackedEntities.ContainsKey(entityId);
         }
 
-        public void OnCellLoaded(uint cellId)
+        public bool OnCellLoaded(uint cellId)
         {
+            if (_trackedCells.TryGetValue(cellId, out CellInterestStatus cell) == false)
+                Logger.WarnReturn(false, $"OnCellLoaded(): Loaded cell id {cell} is not being tracked!");
+
             LoadedCellCount++;
-            if (_trackedCells.TryGetValue(cellId, out var cell))
-                cell.Loaded = true;
+            _trackedCells[cellId] = new(_currentFrame, true);
+            return true;
         }
 
         public void ForceCellLoad()
         {
-            foreach (var cell in _trackedCells)
-                cell.Value.Loaded = true;
+            foreach (var kvp in _trackedCells.Where(kvp => kvp.Value.IsLoaded == false))
+                _trackedCells[kvp.Key] = new(_currentFrame, true);
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -261,26 +264,20 @@ namespace MHServerEmu.Games.Network
                     continue;
                 }
 
-                if (_trackedCells.TryGetValue(worldEntity.RegionLocation.Cell.Id, out var status))
-                    if (status.Loaded == false) continue;
+                // TODO: Remove this when we start using GetNewInterestPolicies() that does this check 
+                if (InterestedInCell(worldEntity.RegionLocation.Cell.Id) == false)
+                    continue;
 
-                bool interest = GetEntityInterest(worldEntity);
-                if (_trackedEntities.TryGetValue(worldEntity.Id, out var entityStatus))
-                {
-                    entityStatus.Frame = _currentFrame;
-                    entityStatus.InterestToPlayer = interest;
-                }
-                else
-                {
-                    _trackedEntities.Add(worldEntity.Id, new(_currentFrame, true, interest));
-                    if (worldEntity.IsAlive())
-                        newEntities.Add(worldEntity);
-                    // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
-                }
+                if (_trackedEntities.ContainsKey(worldEntity.Id) == false && worldEntity.IsAlive())
+                    newEntities.Add(worldEntity);
+
+                _trackedEntities[worldEntity.Id] = new(_currentFrame, GetEntityInterest(worldEntity));
+
+                // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
             }
 
             // Delete entities we are no longer interested in
-            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.Frame < _currentFrame && kvp.Value.InterestToPlayer == false))
+            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.LastUpdateFrame < _currentFrame && kvp.Value.HasInterest == false))
                 RemoveEntity(kvp.Key);      // TODO: Pass a reference to the entity we are removing instead
 
             // Add new entities
@@ -290,7 +287,7 @@ namespace MHServerEmu.Games.Network
 
         private void AddArea(Area area, bool isStartArea)
         {
-            _trackedAreas.Add(area.Id, new(_currentFrame, true, true));
+            _trackedAreas.Add(area.Id, new(_currentFrame));
             SendMessage(area.MessageAddArea(isStartArea));
         }
 
@@ -305,7 +302,7 @@ namespace MHServerEmu.Games.Network
         private void AddCell(Cell cell)
         {
             SendMessage(cell.MessageCellCreate());
-            _trackedCells.Add(cell.Id, new(_currentFrame, false, false));
+            _trackedCells.Add(cell.Id, new(_currentFrame, false));
         }
 
         private void RemoveCell(Cell cell)
@@ -339,7 +336,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         private AOINetworkPolicyValues GetCurrentInterestPolicies(Entity entity)
         {
-            if (_trackedEntities.TryGetValue(entity.Id, out InterestStatus interestStatus) == false)
+            if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus) == false)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
             return interestStatus.InterestPolicies;
@@ -405,20 +402,41 @@ namespace MHServerEmu.Games.Network
             _playerConnection.SendMessage(message);
         }
 
-        private class InterestStatus
+        private readonly struct AreaInterestStatus
         {
-            public ulong Frame { get; set; }
-            public bool Loaded { get; set; }
-            public bool InterestToPlayer { get; set; }
+            public readonly ulong LastUpdateFrame;
 
-            // TODO: Replace InterestToPlayer with InterestPolicies
-            public AOINetworkPolicyValues InterestPolicies { get; set; } = AOINetworkPolicyValues.AOIChannelNone;
-
-            public InterestStatus(ulong frame, bool loaded, bool interestToPlayer)
+            public AreaInterestStatus(ulong frame)
             {
-                Frame = frame;
-                Loaded = loaded;
-                InterestToPlayer = interestToPlayer;
+                LastUpdateFrame = frame;
+            }
+        }
+
+        private readonly struct CellInterestStatus
+        {
+            public readonly ulong LastUpdateFrame;
+            public readonly bool IsLoaded;
+
+            public CellInterestStatus(ulong frame, bool isLoaded)
+            {
+                LastUpdateFrame = frame;
+                IsLoaded = isLoaded;
+            }
+        }
+
+        private readonly struct EntityInterestStatus
+        {
+            public readonly ulong LastUpdateFrame;
+            public readonly bool HasInterest;
+
+            // TODO: Replace HasInterest with InterestPolicies
+            public readonly AOINetworkPolicyValues InterestPolicies;
+
+            public EntityInterestStatus(ulong frame, bool hasInterest)
+            {
+                LastUpdateFrame = frame;
+                HasInterest = hasInterest;
+                InterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
             }
         }
     }
