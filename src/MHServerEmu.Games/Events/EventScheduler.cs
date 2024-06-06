@@ -32,9 +32,17 @@ namespace MHServerEmu.Games.Events
             ScheduleEvent(eventPointer, timeOffset, null);
         }
 
-        public void RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
+        public bool RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
         {
-            throw new NotImplementedException();
+            if (eventPointer.IsValid == false)
+                return Logger.WarnReturn(false, $"RescheduleEvent<{typeof(T).Name}>: eventPointer.IsValid == false");
+
+            if (_cancellingAllEvents)
+                CancelEvent((T)eventPointer);
+            else
+                RescheduleEvent((T)eventPointer, timeOffset);
+
+            return true;
         }
 
         public void CancelEvent<T>(EventPointer<T> eventPointer) where T: ScheduledEvent
@@ -48,10 +56,18 @@ namespace MHServerEmu.Games.Events
 
             lock (_scheduledEvents)
             {
-                foreach (ScheduledEvent @event in _scheduledEvents)
-                    CancelEvent(@event);
-            }
+                // TODO: Remove this when we have proper data structures to store scheduled events in
+                Stack<ScheduledEvent> eventStack = new();
 
+                foreach (ScheduledEvent @event in _scheduledEvents)
+                    eventStack.Push(@event);
+
+                while (eventStack.Count > 0)
+                {
+                    ScheduledEvent @event = eventStack.Pop();
+                    CancelEvent(@event);
+                }
+            }
 
             _cancellingAllEvents = false;
         }
@@ -103,6 +119,18 @@ namespace MHServerEmu.Games.Events
             lock (_scheduledEvents) _scheduledEvents.Remove(@event);
             @event.InvalidatePointers();
             @event.OnCancelled();
+        }
+
+        private void RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)
+        {
+            // TODO: Do the actual rescheduling
+            if (timeOffset < TimeSpan.Zero)
+            {
+                Logger.Warn($"RescheduleEvent(): timeOffset < TimeSpan.Zero");
+                timeOffset = TimeSpan.Zero;
+            }
+
+            @event.FireTime = _currentTime + timeOffset;
         }
     }
 }

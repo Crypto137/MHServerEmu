@@ -44,6 +44,6 @@ namespace MHServerEmu.Games.Events
             return _event.Equals(other._event);
         }
 
-        public static implicit operator T(EventPointer<T> pointer) => pointer._event;
+        public static explicit operator T(EventPointer<T> pointer) => pointer._event;
     }
 }
