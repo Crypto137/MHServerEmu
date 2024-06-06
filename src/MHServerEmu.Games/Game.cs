@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -52,7 +53,6 @@ namespace MHServerEmu.Games
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
         public EventScheduler GameEventScheduler { get; }
-        public EventManager EventManager { get; }   // TODO: Remove this
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
@@ -77,7 +77,6 @@ namespace MHServerEmu.Games
             AdminCommandManager = new(this);
             NetworkManager = new(this);
             GameEventScheduler = new();
-            EventManager = new(this);
             RegionManager = new();
             EntityManager = new(this);
 
@@ -172,8 +171,17 @@ namespace MHServerEmu.Games
         public void GetRegionAsync(PlayerConnection playerConnection)
         {
             Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
-            if (region != null) EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
-            else EventManager.AddEvent(playerConnection, EventEnum.ErrorInRegion, 0, playerConnection.RegionDataRef);
+            if (region == null)
+            {
+                EventPointer<OLD_ErrorInRegionEvent> errorEventPointer = new();
+                GameEventScheduler.ScheduleEvent(errorEventPointer, TimeSpan.Zero);
+                errorEventPointer.Get().Initialize(playerConnection, playerConnection.RegionDataRef);
+                return;
+            }
+
+            EventPointer<OLD_GetRegionEvent> eventPointer = new();
+            GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+            eventPointer.Get().Initialize(playerConnection, region);
         }
 
         public Entity AllocateEntity(PrototypeId entityRef)
@@ -297,7 +305,6 @@ namespace MHServerEmu.Games
         private void DoFixedTimeUpdate()
         {
             GameEventScheduler.TriggerEvents();
-            EventManager.Update();
 
             // Re-enable locomotion and physics when we get rid of multithreading issues
             //EntityManager.LocomoteEntities();

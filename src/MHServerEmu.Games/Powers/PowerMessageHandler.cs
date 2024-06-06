@@ -54,25 +54,25 @@ namespace MHServerEmu.Games.Powers
 
         private void HandleTravelPower(PlayerConnection playerConnection, PrototypeId powerId)
         {
-            uint delta = 65; // TODO: Sync server-client
+            int delta = 65; // TODO: Sync server-client
+            int timeOffsetMS;
+
             switch (powerId)
             {   // Power.AnimationContactTimePercent
-                case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
-                case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
-                case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
-                case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
-                case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
-                case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
-                case (PrototypeId)PowerPrototypes.Travel.BladeRide:
-                    _game.EventManager.AddEvent(playerConnection, EventEnum.StartTravel, 100 - delta, powerId);
-                    break;
                 case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
-                    _game.EventManager.AddEvent(playerConnection, EventEnum.StartTravel, 210 - delta, powerId);
+                    timeOffsetMS = 210 - delta;
                     break;
                 case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
-                    _game.EventManager.AddEvent(playerConnection, EventEnum.StartTravel, 235 - delta, powerId);
+                    timeOffsetMS = 235 - delta;
+                    break;
+                default:
+                    timeOffsetMS = 100 - delta;
                     break;
             }
+
+            EventPointer<OLD_StartTravelEvent> eventPointer = new();
+            _game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromMilliseconds(timeOffsetMS));
+            eventPointer.Get().Initialize(playerConnection, powerId);
         }
 
         #region Message Handling
@@ -98,25 +98,36 @@ namespace MHServerEmu.Games.Powers
                 Logger.Trace($"AddEvent EndThrowing for {GameDatabase.GetPrototypeName(powerPrototypeId)}");
                 var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
 
-                EventPointer<LEGACY_EndThrowingEvent> endThrowingPointer = new();
+                EventPointer<OLD_EndThrowingEvent> endThrowingPointer = new();
                 _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, TimeSpan.FromMilliseconds(power.AnimationTimeMS));
-                LEGACY_EndThrowingEvent endThrowingEvent = endThrowingPointer;
-                endThrowingEvent.PlayerConnection = playerConnection;
-                endThrowingEvent.PowerId = (PrototypeId)tryActivatePower.PowerPrototypeId;
+                endThrowingPointer.Get().Initialize(playerConnection, (PrototypeId)tryActivatePower.PowerPrototypeId);
 
                 return true;
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
                 if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.DiamondFormActivatePower))
-                    _game.EventManager.AddEvent(playerConnection, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
+                {
+                    EventPointer<OLD_DiamondFormActivateEvent> activateEventPointer = new();
+                    _game.GameEventScheduler.ScheduleEvent(activateEventPointer, TimeSpan.Zero);
+                    activateEventPointer.Get().PlayerConnection = playerConnection;
+                }
                 else if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.Mental))
-                    _game.EventManager.AddEvent(playerConnection, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
+                {
+                    EventPointer<OLD_DiamondFormDeactivateEvent> deactivateEventPointer = new();
+                    _game.GameEventScheduler.ScheduleEvent(deactivateEventPointer, TimeSpan.Zero);
+                    deactivateEventPointer.Get().PlayerConnection = playerConnection;
+                }
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
             {
-                _game.EventManager.AddEvent(playerConnection, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
-                _game.EventManager.AddEvent(playerConnection, EventEnum.EndMagikUltimate, 20000, 0u);
+                EventPointer<OLD_StartMagikUltimate> startEventPointer = new();
+                _game.GameEventScheduler.ScheduleEvent(startEventPointer, TimeSpan.Zero);
+                startEventPointer.Get().Initialize(playerConnection, tryActivatePower.TargetPosition);
+
+                EventPointer<OLD_EndMagikUltimateEvent> endEventPointer = new();
+                _game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
+                endEventPointer.Get().PlayerConnection = playerConnection;
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
             {
@@ -226,7 +237,11 @@ namespace MHServerEmu.Games.Powers
             Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("TravelPower/"))
-                _game.EventManager.AddEvent(playerConnection, EventEnum.EndTravel, 0, tryCancelPower.PowerPrototypeId);
+            {
+                EventPointer<OLD_EndTravelEvent> eventPointer = new();
+                _game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+                eventPointer.Get().Initialize(playerConnection, (PrototypeId)tryCancelPower.PowerPrototypeId);
+            }
 
             return true;
         }

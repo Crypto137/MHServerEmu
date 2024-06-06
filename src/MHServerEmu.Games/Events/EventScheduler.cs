@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Events
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        // TODO: Fix multithreading issues with region generation and remove locks
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
         private TimeSpan _currentTime;
@@ -38,15 +39,19 @@ namespace MHServerEmu.Games.Events
 
         public void CancelEvent<T>(EventPointer<T> eventPointer) where T: ScheduledEvent
         {
-            CancelEvent(eventPointer);
+            CancelEvent((T)eventPointer);
         }
 
         public void CancelAllEvents()
         {
             _cancellingAllEvents = true;
 
-            foreach (ScheduledEvent @event in _scheduledEvents)
-                CancelEvent(@event);
+            lock (_scheduledEvents)
+            {
+                foreach (ScheduledEvent @event in _scheduledEvents)
+                    CancelEvent(@event);
+            }
+
 
             _cancellingAllEvents = false;
         }
@@ -57,15 +62,18 @@ namespace MHServerEmu.Games.Events
 
             int numEvents = 0;
 
-            foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= _currentTime))
+            lock (_scheduledEvents)
             {
-                _scheduledEvents.Remove(@event);
-                @event.InvalidatePointers();
-                @event.OnTriggered();
-                numEvents++;
+                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= _currentTime))
+                {
+                    _scheduledEvents.Remove(@event);
+                    @event.InvalidatePointers();
+                    @event.OnTriggered();
+                    numEvents++;
+                }
             }
 
-            if (numEvents > 0) Logger.Debug($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
+            if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
@@ -86,13 +94,13 @@ namespace MHServerEmu.Games.Events
 
         private void ScheduleEvent(ScheduledEvent @event)
         {
-            // Just add it to a HashSet for now
-            _scheduledEvents.Add(@event);
+            // Just add it to the event collection for now
+            lock (_scheduledEvents) _scheduledEvents.Add(@event);
         }
 
         private void CancelEvent(ScheduledEvent @event)
         {
-            _scheduledEvents.Remove(@event);
+            lock (_scheduledEvents) _scheduledEvents.Remove(@event);
             @event.InvalidatePointers();
             @event.OnCancelled();
         }

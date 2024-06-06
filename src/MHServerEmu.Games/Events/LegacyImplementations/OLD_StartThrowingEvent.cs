@@ -10,29 +10,35 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Events.LegacyImplementations
 {
-    public class LEGACY_StartThrowingEvent : ScheduledEvent
+    public class OLD_StartThrowingEvent : ScheduledEvent
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public PlayerConnection PlayerConnection { get; set; }
-        public ulong TargetId { get; set; }
+        private PlayerConnection _playerConnection;
+        private ulong _targetId;
+        
+        public void Initialize(PlayerConnection playerConnection, ulong targetId)
+        {
+            _playerConnection = playerConnection;
+            _targetId = targetId;
+        }
 
-        public override void OnTriggered()
+        public override bool OnTriggered()
         {
             Logger.Trace($"Event StartThrowing");
 
-            Avatar avatar = PlayerConnection.Player.CurrentAvatar;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
 
-            PlayerConnection.ThrowableEntity = PlayerConnection.Game.EntityManager.GetEntity<Entity>(TargetId);
-            if (PlayerConnection.ThrowableEntity == null) return;
+            _playerConnection.ThrowableEntity = _playerConnection.Game.EntityManager.GetEntity<Entity>(_targetId);
+            if (_playerConnection.ThrowableEntity == null) return false;
 
-            Logger.Trace($"{GameDatabase.GetPrototypeName(PlayerConnection.ThrowableEntity.PrototypeDataRef)}");
+            Logger.Trace($"{GameDatabase.GetPrototypeName(_playerConnection.ThrowableEntity.PrototypeDataRef)}");
 
-            var throwableProto = PlayerConnection.ThrowableEntity.Prototype as WorldEntityPrototype;
-            if (throwableProto == null) return;
+            var throwableProto = _playerConnection.ThrowableEntity.Prototype as WorldEntityPrototype;
+            if (throwableProto == null) return false;
 
             // Set throwable properties on the avatar
-            avatar.Properties[PropertyEnum.ThrowableOriginatorEntity] = TargetId;
+            avatar.Properties[PropertyEnum.ThrowableOriginatorEntity] = _targetId;
             avatar.Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableProto.UnrealClass;
 
             // Assign throwable and throwable can powers to the avatar's power collection
@@ -44,11 +50,11 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             avatar.AssignPower(throwableCancelPowerRef, indexProps);
 
             // Notify the client
-            PlayerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity, TargetId));
+            _playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity, _targetId));
 
-            PlayerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef, throwableProto.UnrealClass));
+            _playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef, throwableProto.UnrealClass));
 
-            PlayerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
+            _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
                 .SetPowerProtoId((ulong)throwableCancelPowerRef)
                 .SetPowerRank(indexProps.PowerRank)
@@ -58,7 +64,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                 .SetItemVariation(indexProps.ItemVariation)
                 .Build());
 
-            PlayerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
+            _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
                 .SetPowerProtoId((ulong)throwablePowerRef)
                 .SetPowerRank(indexProps.PowerRank)
@@ -68,11 +74,11 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                 .SetItemVariation(indexProps.ItemVariation)
                 .Build());
 
-            PlayerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
-                .SetIdEntity(TargetId)
+            _playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
+                .SetIdEntity(_targetId)
                 .Build());
-        }
 
-        public override void OnCancelled() { }
+            return true;
+        }
     }
 }

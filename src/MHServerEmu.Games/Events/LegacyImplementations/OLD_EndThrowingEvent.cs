@@ -8,18 +8,24 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Events.LegacyImplementations
 {
-    public class LEGACY_EndThrowingEvent : ScheduledEvent
+    public class OLD_EndThrowingEvent : ScheduledEvent
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public PlayerConnection PlayerConnection { get; set; }
-        public PrototypeId PowerId { get; set; }
+        private PlayerConnection _playerConnection;
+        private PrototypeId _powerId;
 
-        public override void OnTriggered()
+        public void Initialize(PlayerConnection playerConnection, PrototypeId powerId)
+        {
+            _playerConnection = playerConnection;
+            _powerId = powerId;
+        }
+
+        public override bool OnTriggered()
         {
             Logger.Trace("Event EndThrowing");
 
-            Avatar avatar = PlayerConnection.Player.CurrentAvatar;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
 
             // Remove throwable properties
             avatar.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
@@ -32,34 +38,34 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             avatar.UnassignPower(throwablePower.PrototypeDataRef);
             avatar.UnassignPower(throwableCancelPower.PrototypeDataRef);
 
-            if (GameDatabase.GetPrototypeName(PowerId).Contains("CancelPower"))
+            if (GameDatabase.GetPrototypeName(_powerId).Contains("CancelPower"))
             {
-                if (PlayerConnection.ThrowableEntity != null)
-                    PlayerConnection.SendMessage(PlayerConnection.ThrowableEntity.ToNetMessageEntityCreate());
+                if (_playerConnection.ThrowableEntity != null)
+                    _playerConnection.SendMessage(_playerConnection.ThrowableEntity.ToNetMessageEntityCreate());
                 Logger.Trace("Event RestoreThrowable");
             }
             else
             {
-                PlayerConnection.ThrowableEntity?.Kill();
+                _playerConnection.ThrowableEntity?.Kill();
             }
 
-            PlayerConnection.ThrowableEntity = null;
+            _playerConnection.ThrowableEntity = null;
 
             // Notify the client
-            PlayerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity));
-            PlayerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef));
+            _playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity));
+            _playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef));
 
-            PlayerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+            _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
                 .SetPowerProtoId((ulong)throwablePower.PrototypeDataRef)
                 .Build());
 
-            PlayerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+            _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
                 .SetPowerProtoId((ulong)throwableCancelPower.PrototypeDataRef)
                 .Build());
-        }
 
-        public override void OnCancelled() { }
+            return true;
+        }
     }
 }

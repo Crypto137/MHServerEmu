@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Events
+﻿using MHServerEmu.Core.Logging;
+
+namespace MHServerEmu.Games.Events
 {
     public interface IEventPointer
     {
@@ -18,15 +20,15 @@
 
         public void Set(ScheduledEvent value)
         {
-            if (value is not T typedEvent) return;
-            Set(typedEvent);
+            if (value != null && value is not T) return;
+            Set((T)value);
         }
 
         public void Set(T value)
         {
             _event?.Unlink(this);   // Unlink an existing event if valid
             _event = value;         // Assign the new event reference
-            _event.Link(this);      // Link the new reference to this pointer
+            _event?.Link(this);      // Link the new reference to this pointer
         }
 
         public override string ToString() => _event.ToString();

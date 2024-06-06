@@ -29,7 +29,7 @@
             return $"{nameof(FireTime)}: {FireTime.TotalMilliseconds} ms";
         }
 
-        public abstract void OnTriggered();
-        public abstract void OnCancelled();
+        public abstract bool OnTriggered();
+        public virtual bool OnCancelled() { return true; }
     }
 }
