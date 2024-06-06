@@ -5,7 +5,6 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Properties;
-using static MHServerEmu.Games.Behavior.StaticAI.SelectEntity;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Generators;
@@ -42,12 +41,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public void Start(in IStateContext context)
         {
-            if (context == null) return;
             if (context is not UsePowerContext powerContext) return;
-
             AIController aiController = context.OwnerController;
             if (aiController == null) return;
-
             Agent agent = aiController.Owner;
             if (agent == null) return;
 
@@ -80,7 +76,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (powerContext.ChooseRandomTargetPosition)
             {
                 if (blackboard.UsePowerTargetPos == Vector3.Zero)
-                    Logger.Warn($"StaticAI_UsePower Start() with random target position of (0,0,0). Power=[{GameDatabase.GetPrototypeName(powerContext.Power)}] TargetId=[{blackboard.PropertyCollection[PropertyEnum.AIUsePowerTargetID]}] OwnerAgent=[{agent}]");
+                    Logger.Warn($"StaticAI.UsePower Start() with random target position of (0,0,0). Power=[{GameDatabase.GetPrototypeName(powerContext.Power)}] TargetId=[{blackboard.PropertyCollection[PropertyEnum.AIUsePowerTargetID]}] OwnerAgent=[{agent}]");
             }
 
             bool isPowerActivated = aiController.AttemptActivatePower(powerContext.Power, blackboard.PropertyCollection[PropertyEnum.AIUsePowerTargetID], blackboard.UsePowerTargetPos);
@@ -94,10 +90,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         {
             var failResult = StaticBehaviorReturnType.Failed;
             if (context is not UsePowerContext) return failResult;
-
             AIController controller = context.OwnerController;
             if (controller == null) return failResult;
-
             Agent agent = controller.Owner;
             if (agent == null) return failResult;
 
@@ -115,24 +109,20 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         public bool Validate(in IStateContext context)
         {
-            return (ValidateInternal(context) == PowerUseResult.Success);
+            return ValidateInternal(context) == PowerUseResult.Success;
         }
 
-        private PowerUseResult ValidateInternal(IStateContext context)
+        private static PowerUseResult ValidateInternal(in IStateContext context)
         {
             var genericErrorResult = PowerUseResult.GenericError;
             if (context is not UsePowerContext powerContext) return genericErrorResult;
             PrototypeId powerRef = powerContext.Power;
-
             AIController controller = context.OwnerController;
             if (controller == null) return genericErrorResult;
-
             Agent agent = controller.Owner;
             if (agent == null) return genericErrorResult;
-
             Game game = agent.Game;
             if (game == null) return genericErrorResult;
-
             Region region = agent.Region;
             if (region == null) return genericErrorResult;
 
@@ -185,8 +175,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
                 if (powerContext.SecondaryTargetSelection != null)
                 {
-                    SelectEntityContext selectionContext = new(controller, powerContext.SecondaryTargetSelection);
-                    WorldEntity secondaryTarget = DoSelectEntity(selectionContext);
+                    var selectionContext = new SelectEntity.SelectEntityContext(controller, powerContext.SecondaryTargetSelection);
+                    WorldEntity secondaryTarget = SelectEntity.DoSelectEntity(selectionContext);
                     if (secondaryTarget != null)
                     {
                         if (secondaryTarget.Id == targetIdForPower)
@@ -248,22 +238,16 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Vector3 targetPositionForPower;
 
             if (powerContext.ForceInvalidTargetActivation && Vector3.IsNearZero(blackboard.UsePowerTargetPos) == false)
-            {
                 targetPositionForPower = blackboard.UsePowerTargetPos;
-            }
             else
             {
                 if ((power.TargetsAOE() || power.NeedsTarget() == false)
                     && targetingShape != TargetingShapeType.SkillShot
                     && targetingShape != TargetingShapeType.SkillShotAlongGround
                     && targetingShape != TargetingShapeType.Self)
-                {
                     targetPositionForPower = targetRegionLocation.ProjectToFloor();
-                }
                 else
-                {
                     targetPositionForPower = targetRegionLocation.Position;
-                }
 
                 if (powerContext.ForceInvalidTargetActivation && targetingShape != TargetingShapeType.Self)
                     targetPositionForPower += agent.Forward;
@@ -277,9 +261,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                         Logger.Warn($"StaticAI_UsePower getRandomTargetPosition succeeded with a result of (0,0,0). UsePowerTargetPos=[{blackboard.UsePowerTargetPos}] Power=[{GameDatabase.GetPrototypeName(powerRef)}] OwnerAgent=[{(agent != null ? agent : "NULL")}] TargetIdForPower=[{targetIdForPower}] TargetEntity=[{(targetWorldEntity != null ? targetWorldEntity : "NULL")}]");
                 }
                 else if (GetLinearTargetPosition(agent, targetWorldEntity, powerContext, ref targetPositionForPower) == false)
-                {
                     return PowerUseResult.OutOfPosition;
-                }
             }
 
             if (targetingShape != TargetingShapeType.Self
@@ -294,9 +276,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 PositionCheckFlags positionCheckFlags = PositionCheckFlags.CheckCanBlockedEntity | PositionCheckFlags.CheckCanSweepTo;
                 if (region.IsLocationClear(targetPositionBounds, agent.GetPathFlags(), positionCheckFlags) == false
                     || agent.CheckCanPathTo(targetPositionForPower) != NaviPathResult.Success)
-                {
                     return PowerUseResult.OutOfPosition;
-                }
             }
 
             Power movementPower = agent.GetPower(PowerPrototype.RecursiveGetPowerRefOfPowerTypeInCombo<MovementPowerPrototype>(powerRef));
@@ -366,7 +346,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return PowerUseResult.Success;
         }
 
-        private bool CheckLineOfSightForPower(Agent agent, Power power, WorldEntity target, Vector3 targetPosition)
+        private static bool CheckLineOfSightForPower(Agent agent, Power power, WorldEntity target, Vector3 targetPosition)
         {
             PowerPrototype powerProto = power.Prototype;
             if (powerProto == null) return false;
@@ -397,7 +377,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return agent.LineOfSightTo(position, radius, padding);
         }
 
-        private bool CheckAgentOrientation(Agent agent, Vector3 targetPosition, float orientationThreshold)
+        private static bool CheckAgentOrientation(Agent agent, Vector3 targetPosition, float orientationThreshold)
         {
             Vector3 targetDirection2d = new(targetPosition - agent.RegionLocation.Position);
             targetDirection2d.Z = 0f;
@@ -423,7 +403,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return true;
         }
 
-        private bool GetRandomTargetPosition(Agent agent, WorldEntity targetWorldEntity, UsePowerContext powerContext, ref Vector3 targetPosition)
+        private static bool GetRandomTargetPosition(Agent agent, WorldEntity targetWorldEntity, in UsePowerContext powerContext, ref Vector3 targetPosition)
         {
             WorldEntity worldEntity;
             if (powerContext.ForceInvalidTargetActivation && targetWorldEntity == null)
@@ -439,56 +419,53 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             }
 
             Region region = agent.Region;
-            if (region == null)
-                return false;
+            if (region == null) return false;
 
             Bounds bounds = agent.Bounds;
             bounds.Center = worldEntity.RegionLocation.Position;
 
-            float minRadius = powerContext.TargetOffset;
-            float maxRadius = minRadius + powerContext.OffsetVarianceMagnitude;
+            float minTargetDistance = powerContext.TargetOffset;
+            float maxTargetDistance = minTargetDistance + powerContext.OffsetVarianceMagnitude;
             float minDistance = powerContext.MinDistanceFromOwner;
 
             DistanceRangePredicate distanceRangePredicat = new(agent.RegionLocation.Position, minDistance, DistanceRangePredicate.Unbound);
             return region.ChooseRandomPositionNearPoint(bounds, Region.GetPathFlagsForEntity(worldEntity.WorldEntityPrototype),
                 (PositionCheckFlags.CheckCanBlockedEntity | PositionCheckFlags.CheckCanSweepTo), BlockingCheckFlags.None,
-                minRadius, maxRadius, out targetPosition, distanceRangePredicat);
+                minTargetDistance, maxTargetDistance, out targetPosition, distanceRangePredicat);
         }
 
-        private bool GetLinearTargetPosition(Agent agent, WorldEntity targetEntity, UsePowerContext powerContext, ref Vector3 targetPosition)
+        private static bool GetLinearTargetPosition(Agent agent, WorldEntity targetEntity, in UsePowerContext powerContext, ref Vector3 targetPosition)
         {
             Game game = agent.Game;
             if (game == null) return false;
-
+            GRandom random = game.Random;
             Vector3 position = agent.RegionLocation.Position;
 
             if (Segment.IsNearZero(powerContext.TargetOffset) == false)
             {
                 Logger.Warn($"An ActionUsePower has non-zero values for both TargetOffset and OwnerOffset. Ignoring OwnerOffset.\nAgent: {agent}");
-
-                GRandom rnd = game.Random;
-                float targetOffsetPlusVariance = powerContext.TargetOffset + (rnd.NextFloat() * powerContext.OffsetVarianceMagnitude);
+               
+                float targetOffsetPlusVariance = powerContext.TargetOffset + (random.NextFloat() * powerContext.OffsetVarianceMagnitude);
 
                 if (targetEntity != null && targetEntity != agent)
                 {
-                    Vector3 vecAgentToTarget2D = Vector3.Flatten(targetPosition - agent.RegionLocation.Position, Axis.Z);
-                    if (Vector3.IsNearZero(vecAgentToTarget2D) == false)
-                        targetPosition += Vector3.Normalize(vecAgentToTarget2D) * targetOffsetPlusVariance;
+                    Vector3 toTarget2D = Vector3.Flatten(targetPosition - agent.RegionLocation.Position, Axis.Z);
+                    if (Vector3.IsNearZero(toTarget2D) == false)
+                        targetPosition += Vector3.Normalize(toTarget2D) * targetOffsetPlusVariance;
                 }
                 else
                     targetPosition += (agent.Forward * targetOffsetPlusVariance);
             }
             else if (Segment.IsNearZero(powerContext.OwnerOffset) == false)
-            {
-                GRandom rnd = game.Random;
-                float offsetVariance = powerContext.OwnerOffset + (rnd.NextFloat() * powerContext.OffsetVarianceMagnitude);
+            {                
+                float offsetVariance = powerContext.OwnerOffset + (random.NextFloat() * powerContext.OffsetVarianceMagnitude);
                 targetPosition = position + agent.Forward * (agent.Bounds.Radius + offsetVariance);
             }
 
             return true;
         }
 
-        private bool ApplyAngleOffsetToTargetPosition(Agent agent, UsePowerContext powerContext, ref Vector3 targetPosition)
+        private static bool ApplyAngleOffsetToTargetPosition(Agent agent, in UsePowerContext powerContext, ref Vector3 targetPosition)
         {
             if (Segment.IsNearZero(powerContext.TargetAngleOffset) == false)
             {
@@ -508,10 +485,50 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
     public class DistanceRangePredicate : RandomPositionPredicate
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public const float Unbound = -1.0f;
-        public DistanceRangePredicate(Vector3 referencePosition, float minDistance, float maxDistance)
-        {
 
+        private readonly Vector3 _position;
+        private readonly float _minDistanceSq;
+        private readonly float _maxDistanceSq;
+
+        public DistanceRangePredicate(Vector3 position, float minDistance, float maxDistance)
+        {
+            _position = position;
+
+            if (minDistance != Unbound && maxDistance != Unbound && minDistance > maxDistance)
+            {
+                Logger.Warn($"DistanceRangePredicate min distance of {minDistance} is greater than max distance of {maxDistance}! Swapping for now, but this should be fixed.");
+                (maxDistance, minDistance) = (minDistance, maxDistance);
+            }
+
+            if (minDistance == Unbound || minDistance < 0.0f)
+            {
+                if (minDistance < 0.0f)
+                    Logger.Warn($"DistanceRangePredicate min distance must be either unbound or >= 0! Current value is {minDistance}. Forcing min to unbound.");
+                _minDistanceSq = Unbound;
+            }
+            else
+                _minDistanceSq = minDistance * minDistance;
+
+            if (maxDistance == Unbound || maxDistance <= 0.0f)
+            {
+                if (maxDistance <= 0.0f)
+                    Logger.Warn($"DistanceRangePredicate max distance must be either unbound or > 0! Current value is {maxDistance}. Forcing max to unbound.");
+                _maxDistanceSq = Unbound;
+            }
+            else
+                _maxDistanceSq = maxDistance * maxDistance;
+
+            if (minDistance == Unbound && maxDistance == Unbound)
+                Logger.Warn("DisplacementRangePredicate's min and max values are both unbound; it's useless!");
+        }
+
+        public override bool Test(Vector3 testPosition)
+        {
+            float distanceSq = Vector3.DistanceSquared(testPosition, _position);
+            return (_minDistanceSq == Unbound || distanceSq >= _minDistanceSq)
+                && (_maxDistanceSq == Unbound || distanceSq <= _maxDistanceSq);
         }
     }
 
@@ -594,5 +611,4 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         FullscreenMovie = 24,
         ForceFailed = 25,
     }
-
 }
