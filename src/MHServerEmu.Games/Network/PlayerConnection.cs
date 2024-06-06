@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -38,6 +39,9 @@ namespace MHServerEmu.Games.Network
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
         private readonly PowerMessageHandler _powerMessageHandler;
+
+        private EventPointer<OLD_FinishCellLoadingEvent> _finishCellLoadingEvent = new();
+        private EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
         public Game Game { get; }
 
@@ -452,7 +456,9 @@ namespace MHServerEmu.Games.Network
 
             if (IsLoading)
             {
-                Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
+                if (_finishCellLoadingEvent.IsValid)
+                    Game.GameEventScheduler.CancelEvent(_finishCellLoadingEvent);
+
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
                 {
                     EnterGameWorld();
@@ -460,7 +466,8 @@ namespace MHServerEmu.Games.Network
                 else
                 {
                     // set timer 5 seconds for wait client answer
-                    Game.EventManager.AddEvent(this, EventEnum.FinishCellLoading, 5000, AOI.CellsInRegion);
+                    Game.GameEventScheduler.ScheduleEvent(_finishCellLoadingEvent, TimeSpan.FromSeconds(5));
+                    _finishCellLoadingEvent.Get().Initialize(this, AOI.CellsInRegion);
                     AOI.ForceCellLoad();
                 }
             }
@@ -497,10 +504,14 @@ namespace MHServerEmu.Games.Network
             var interactableObject = Game.EntityManager.GetEntity<Entity>(performPreInteractPower.IdTarget);
             if (interactableObject == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to get entity {performPreInteractPower.IdTarget}");
 
-            if (Game.EventManager.HasEvent(this, EventEnum.PreInteractPowerEnd) == false)
+            if (_preInteractPowerEndEvent.IsValid == false)
             {
-                Game.EventManager.AddEvent(this, EventEnum.PreInteractPower, 0, interactableObject);
-                Game.EventManager.AddEvent(this, EventEnum.PreInteractPowerEnd, 1000, interactableObject); // ChargingTimeMS    
+                EventPointer<OLD_PreInteractPowerEvent> preInteractPowerEventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(preInteractPowerEventPointer, TimeSpan.Zero);
+                preInteractPowerEventPointer.Get().Initialize(this, interactableObject);
+
+                Game.GameEventScheduler.ScheduleEvent(_preInteractPowerEndEvent, TimeSpan.FromMilliseconds(1000));  // ChargingTimeMS
+                _preInteractPowerEndEvent.Get().Initialize(this, interactableObject);
             }
 
             return true;
@@ -580,7 +591,11 @@ namespace MHServerEmu.Games.Network
                 LastPosition = targetPos;
             }
             else
-                Game.EventManager.AddEvent(this, EventEnum.UseInteractableObject, 0, interactableObject);
+            {
+                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+                eventPointer.Get().Initialize(this, interactableObject);
+            }
 
             return true;
         }
@@ -611,7 +626,10 @@ namespace MHServerEmu.Games.Network
             int avatarIndex = throwInteraction.AvatarIndex;
             Logger.Trace($"Received ThrowInteraction message Avatar[{avatarIndex}] Target[{idTarget}]");
 
-            Game.EventManager.AddEvent(this, EventEnum.StartThrowing, 0, idTarget);
+            EventPointer<OLD_StartThrowingEvent> throwEventPointer = new();
+            Game.GameEventScheduler.ScheduleEvent(throwEventPointer, TimeSpan.Zero);
+            throwEventPointer.Get().Initialize(this, idTarget);
+
             return true;
         }
 
