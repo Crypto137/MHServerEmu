@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Behavior
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private EventGroup _pendingEvents = new();
-        private AIThinkEvent _thinkEvent = new();
+        private EventPointer<AIThinkEvent> _thinkEvent = new();
         public Agent Owner { get; private set; }
         public Game Game { get; private set; }
         public ProceduralAI.ProceduralAI Brain { get; private set; }
@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.Behavior
                 if (activePower == null || activePower.IsChannelingPower == false) return;
             }
 
-            GameEventScheduler eventScheduler = Game.GameEventScheduler;
+            EventScheduler eventScheduler = Game.GameEventScheduler;
             if (eventScheduler == null) return;
             TimeSpan fixedTimeOffset = timeOffset;
 
@@ -169,12 +169,12 @@ namespace MHServerEmu.Games.Behavior
                 fixedTimeOffset += TimeSpan.FromMilliseconds(Game.Random.Next(0, thinkVariance));
             }
 
-            if (_thinkEvent.IsValid() && Game.GetCurrentTime() + timeOffset < _thinkEvent.FireTime)
+            if (_thinkEvent.IsValid && Game.GetCurrentTime() + timeOffset < _thinkEvent.Get().FireTime)
             {
                 if (HasNotExceededMaxThinksPerFrame(timeOffset))
                     eventScheduler.RescheduleEvent(_thinkEvent, fixedTimeOffset);
             }
-            else if (!_thinkEvent.IsValid())
+            else if (_thinkEvent.IsValid == false)
             {
                 TimeSpan nextThinkTimeOffset = fixedTimeOffset;
 
@@ -191,14 +191,14 @@ namespace MHServerEmu.Games.Behavior
                 }
 
                 eventScheduler.ScheduleEvent(_thinkEvent, nextThinkTimeOffset, _pendingEvents);
-                _thinkEvent.OwnerController = this;
+                _thinkEvent.Get().OwnerController = this;
             }
         }
 
         public void ClearScheduledThinkEvent()
         {
             if (Game == null) return;            
-            GameEventScheduler eventScheduler = Game.GameEventScheduler;
+            EventScheduler eventScheduler = Game.GameEventScheduler;
             if (eventScheduler == null) return;
             eventScheduler.CancelEvent(_thinkEvent);
         }

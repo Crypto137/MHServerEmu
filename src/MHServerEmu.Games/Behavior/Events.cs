@@ -7,9 +7,10 @@ namespace MHServerEmu.Games.Behavior
     {
         public AIController OwnerController;
 
-        public override void OnTriggered()
+        public override bool OnTriggered()
         {
             OwnerController?.Think();
+            return true;
         }
     }
 
