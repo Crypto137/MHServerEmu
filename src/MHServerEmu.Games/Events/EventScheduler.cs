@@ -56,10 +56,18 @@ namespace MHServerEmu.Games.Events
 
             lock (_scheduledEvents)
             {
-                foreach (ScheduledEvent @event in _scheduledEvents)
-                    CancelEvent(@event);
-            }
+                // TODO: Remove this when we have proper data structures to store scheduled events in
+                Stack<ScheduledEvent> eventStack = new();
 
+                foreach (ScheduledEvent @event in _scheduledEvents)
+                    eventStack.Push(@event);
+
+                while (eventStack.Count > 0)
+                {
+                    ScheduledEvent @event = eventStack.Pop();
+                    CancelEvent(@event);
+                }
+            }
 
             _cancellingAllEvents = false;
         }
