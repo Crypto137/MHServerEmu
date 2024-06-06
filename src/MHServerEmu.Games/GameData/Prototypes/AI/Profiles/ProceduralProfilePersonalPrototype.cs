@@ -4502,7 +4502,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         spawnersToDestroy.Add(spawnerTarget);
 
                 foreach (var spawner in spawnersToDestroy)
-                    if (spawner != null && spawner.IsDestroyed() == false && spawner.TestStatus(EntityStatus.PendingDestroy) == false)
+                    if (spawner != null && spawner.IsDestroyed == false && spawner.TestStatus(EntityStatus.PendingDestroy) == false)
                         spawner.Destroy();
 
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;

@@ -220,9 +220,10 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var region = ownerAgent.Region;
             if (region == null) return false;
 
-            var spatialPartitionContext = new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition);
+            var spFlags = EntityRegionSPContextFlags.ActivePartition;
             if (selectionContext.StaticEntities)
-                spatialPartitionContext.Flags |= EntityRegionSPContextFlags.StaticPartition;
+                spFlags |= EntityRegionSPContextFlags.StaticPartition;
+            var spatialPartitionContext = new EntityRegionSPContext(spFlags);
 
             if (selectionContext.SelectionMethod == SelectEntityMethodType.RandomEntity)
             {

@@ -141,7 +141,7 @@ namespace MHServerEmu.Games.Generators.Population
                 if (entity != null)
                 {
                     if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled) 
-                        && (entity.IsDead || entity.IsDestroyed() || entity.IsControlledEntity))
+                        && (entity.IsDead || entity.IsDestroyed || entity.IsControlledEntity))
                         continue;
 
                     if (EntityQueryAllianceCheck(filterFlag, entity, allianceProto))

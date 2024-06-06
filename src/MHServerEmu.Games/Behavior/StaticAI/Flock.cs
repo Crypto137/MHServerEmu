@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 blackboard.PropertyCollection[PropertyEnum.AILeaderID] = leaderId;
 
             WorldEntity leader = game.EntityManager.GetEntity<WorldEntity>(leaderId);
-            if (leader == null || leader.IsDead || leader.IsDestroyed() || leader.IsControlledEntity)
+            if (leader == null || leader.IsDead || leader.IsDestroyed || leader.IsControlledEntity)
             {
                 blackboard.PropertyCollection[PropertyEnum.AILeaderID] = Entity.InvalidId;
                 return false;
