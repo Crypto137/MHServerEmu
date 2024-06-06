@@ -323,9 +323,10 @@ namespace MHServerEmu.Games.Behavior
             Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
         }
 
-        internal bool AttemptActivatePower(PrototypeId powerRef, ulong enitityId, Vector3 position)
-        {
-            throw new NotImplementedException();
+        public bool AttemptActivatePower(PrototypeId powerRef, ulong targetEntityId, Vector3 position)
+        {            
+            var activateSettings = new PowerActivationSettings(targetEntityId, position, Owner.RegionLocation.Position);
+            return Owner.ActivatePower(powerRef, activateSettings) == PowerUseResult.Success;
         }
 
         public void OnAILeaderDeath()

@@ -581,34 +581,4 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             DifficultyTierRestrictions = proto.DifficultyTierRestrictions;
         }
     }
-
-    public enum PowerUseResult
-    {
-        Success = 0,
-        Cooldown = 1,
-        RestrictiveCondition = 2,
-        BadTarget = 3,
-        AbilityMissing = 4,
-        TargetIsMissing = 5,
-        InsufficientCharges = 6,
-        InsufficientEndurance = 7,
-        InsufficientSecondaryResource = 8,
-        PowerInProgress = 9,
-        OutOfPosition = 10,
-        SummonSimultaneousLimit = 11,
-        SummonLifetimeLimit = 12,
-        WeaponMissing = 13,
-        RegionRestricted = 14,
-        NoFlyingUse = 15,
-        ExtraActivationFailed = 16,
-        GenericError = 17,
-        OwnerNotSimulated = 18,
-        OwnerDead = 19,
-        ItemUseRestricted = 20,
-        MinimumReactivateTime = 21,
-        DisabledByLiveTuning = 22,
-        NotAllowedByTransformMode = 23,
-        FullscreenMovie = 24,
-        ForceFailed = 25,
-    }
 }

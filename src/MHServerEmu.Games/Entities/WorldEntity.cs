@@ -67,7 +67,8 @@ namespace MHServerEmu.Games.Entities
         public virtual bool CanBeRepulsed { get => Locomotor != null && Locomotor.IsMoving && !IsExecutingPower; }
         public virtual bool CanRepulseOthers { get => true; }
         public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
-        public PrototypeId ActivePowerRef { get; private set; }
+        public PrototypeId ActivePowerRef { get; set; }
+        public Power ActivePower { get => GetActivePower(); }
 
         public WorldEntity(Game game) : base(game)
         {
@@ -783,7 +784,6 @@ namespace MHServerEmu.Games.Entities
         public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
         public float MovementSpeedOverride { get => Properties[PropertyEnum.MovementSpeedOverride]; } // PropertyTemp[PropertyEnum.MovementSpeedOverride]
         public float BonusMovementSpeed => Locomotor?.GetBonusMovementSpeed(false) ?? 0.0f;
-        public Power ActivePower { get => GetActivePower(); }
         public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
         public bool DefaultRuntimeVisibility { get => WorldEntityPrototype != null && WorldEntityPrototype.VisibleByDefault; }
         public virtual int Throwability { get => 0; }
@@ -797,7 +797,25 @@ namespace MHServerEmu.Games.Entities
 
         private Power GetActivePower()
         {
-            throw new NotImplementedException();
+            if (ActivePowerRef != PrototypeId.Invalid)
+                return PowerCollection?.GetPower(ActivePowerRef);
+            return null;
+        }
+
+        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, in PowerActivationSettings powerSettings)
+        {
+            Power power = GetPower(powerRef);
+            if (power == null)
+            {
+                Logger.Warn($"Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {ToString()}");
+                return PowerUseResult.AbilityMissing;
+            }
+            return ActivatePower(power, powerSettings);
+        }
+
+        public virtual PowerUseResult ActivatePower(Power power, in PowerActivationSettings powerSettings)
+        {
+            return power.Activate(powerSettings);
         }
 
         public virtual bool CanPowerTeleportToPosition(Vector3 position)

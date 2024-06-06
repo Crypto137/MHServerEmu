@@ -171,6 +171,16 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal PowerUseResult Activate(PowerActivationSettings powerSettings)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsExclusiveActivation()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Flags]
@@ -194,5 +204,49 @@ namespace MHServerEmu.Games.Powers
     {
         Activation,
         Application
+    }
+
+    public enum PowerUseResult
+    {
+        Success = 0,
+        Cooldown = 1,
+        RestrictiveCondition = 2,
+        BadTarget = 3,
+        AbilityMissing = 4,
+        TargetIsMissing = 5,
+        InsufficientCharges = 6,
+        InsufficientEndurance = 7,
+        InsufficientSecondaryResource = 8,
+        PowerInProgress = 9,
+        OutOfPosition = 10,
+        SummonSimultaneousLimit = 11,
+        SummonLifetimeLimit = 12,
+        WeaponMissing = 13,
+        RegionRestricted = 14,
+        NoFlyingUse = 15,
+        ExtraActivationFailed = 16,
+        GenericError = 17,
+        OwnerNotSimulated = 18,
+        OwnerDead = 19,
+        ItemUseRestricted = 20,
+        MinimumReactivateTime = 21,
+        DisabledByLiveTuning = 22,
+        NotAllowedByTransformMode = 23,
+        FullscreenMovie = 24,
+        ForceFailed = 25,
+    }
+
+    public struct PowerActivationSettings
+    {
+        public ulong TargetEntityId;
+        public Vector3 UserPosition;
+        public Vector3 TargetPosition;
+
+        public PowerActivationSettings(ulong targetEntityId, Vector3 userPosition, Vector3 targetPosition)
+        {
+            TargetEntityId = targetEntityId;
+            UserPosition = userPosition;
+            TargetPosition = targetPosition;
+        }
     }
 }

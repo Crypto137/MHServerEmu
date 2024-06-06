@@ -3,7 +3,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
-using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -324,6 +323,25 @@ namespace MHServerEmu.Games.Entities
         internal bool StartThrowing(ulong entityId)
         {
             throw new NotImplementedException();
+        }
+
+        public override PowerUseResult ActivatePower(Power power, in PowerActivationSettings powerSettings)
+        {
+            var result = base.ActivatePower(power, powerSettings);
+            if (result != PowerUseResult.Success && result != PowerUseResult.ExtraActivationFailed)
+            {
+                Logger.Warn($"Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
+                ActivePowerRef = PrototypeId.Invalid;
+            }
+            else if (power.IsExclusiveActivation())
+            {
+                if (IsInWorld)
+                    ActivePowerRef = power.PrototypeDataRef;
+                else
+                    Logger.Warn($"Trying to set the active power for an Agent that is not in the world. " +
+                        $"Check to see if there's *anything* that can happen in the course of executing the power that can take them out of the world.\n Agent: {this}");
+            }
+            return result;
         }
     }
 
