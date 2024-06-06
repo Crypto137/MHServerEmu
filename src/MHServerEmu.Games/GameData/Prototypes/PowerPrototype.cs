@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.Inventories;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
@@ -378,6 +379,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsTravelPower { get; protected set; }
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
+
+        public static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static PrototypeId RecursiveGetPowerRefOfPowerTypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
+        {
+            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "RecursiveGetPowerRefOfPowerTypeInCombo(): power == null");
+
+            if (powerProto is T)
+                return powerRef;
+
+            // for loop here
+
+            return PrototypeId.Invalid;
+        }
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }

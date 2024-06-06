@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Powers
         public PrototypeId PrototypeDataRef { get; }
         public PowerPrototype Prototype { get; }
         public WorldEntity Owner { get; private set; }
+        public bool RequiresLineOfSight { get; private set; }
 
         public PowerCategoryType PowerCategory { get => Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None; }
 
@@ -73,7 +74,7 @@ namespace MHServerEmu.Games.Powers
             {
                 // TODO
             }
-            
+
             if (prototype.EvalPowerSynergies != null)
             {
                 // TODO
@@ -93,6 +94,11 @@ namespace MHServerEmu.Games.Powers
         public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto) => powerProto.PowerCategory;
         public static bool IsComboEffect(PowerPrototype powerProto) => GetPowerCategory(powerProto) == PowerCategoryType.ComboEffect;
         public static bool IsUltimatePower(PowerPrototype powerProto) => powerProto.IsUltimate;
+
+        public static TargetingShapeType GetTargetingShape(PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
 
         internal TimeSpan GetCooldownTimeRemaining()
         {
@@ -123,6 +129,48 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal TargetingShapeType GetTargetingShape()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool TargetsAOE()
+        { 
+            throw new NotImplementedException(); 
+        }
+
+        internal bool TargetsAOE(PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,
+            int beamSweepCount, TimeSpan beamSweepTime, PowerPrototype powerProto, PropertyCollection properties)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetApplicationRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        static internal bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 powerUserPosition,
+            AlliancePrototype userAllianceProto, bool needsLineOfSight)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool NeedsTarget() 
+        {
+            throw new NotImplementedException(); 
+        }
+
+        internal PowerPositionSweepResult PowerPositionSweep(RegionLocation startLocation, Vector3 targetPosition, ulong targetEntityId, Vector3 resultPosition, bool forceDoNotPassTarget = false, float maxRangeOverride = 0f)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Flags]
@@ -133,6 +181,14 @@ namespace MHServerEmu.Games.Powers
         Interrupting = 1 << 3,
         Force = 1 << 8,
     }
+
+    public enum PowerPositionSweepResult
+    {
+        Error,
+        Success,
+        TargetPositionInvalid,
+        Clipped,
+    };
 
     public enum RangeCheckType
     {

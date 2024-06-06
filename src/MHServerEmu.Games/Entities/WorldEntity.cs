@@ -262,6 +262,11 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        internal NaviPathResult CheckCanPathTo(Vector3 toPosition)
+        {
+            return CheckCanPathTo(toPosition, GetPathFlags());
+        }
+
         internal NaviPathResult CheckCanPathTo(Vector3 toPosition, PathFlags checkFlags)
         {
             throw new NotImplementedException();
@@ -780,7 +785,7 @@ namespace MHServerEmu.Games.Entities
         public bool DefaultRuntimeVisibility { get => WorldEntityPrototype != null && WorldEntityPrototype.VisibleByDefault; }
         public virtual int Throwability { get => 0; }
 
-        private PathFlags GetPathFlags()
+        public PathFlags GetPathFlags()
         {
             if (Locomotor != null) return Locomotor.PathFlags;
             if (WorldEntityPrototype == null) return PathFlags.None;

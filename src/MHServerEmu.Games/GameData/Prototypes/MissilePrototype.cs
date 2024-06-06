@@ -95,6 +95,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MissileUsesActualTargetPos { get; protected set; }
         public bool MissileSelectRandomContext { get; protected set; }
         public EvalPrototype EvalSelectMissileContextIndex { get; protected set; }
+        public float MaximumMissileBoundsSphereRadius { get; protected set; }
     }
 
     public class PublicEventTeamPrototype : Prototype
