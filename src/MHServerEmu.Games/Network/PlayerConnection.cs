@@ -548,7 +548,7 @@ namespace MHServerEmu.Games.Network
 
                 if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
 
-                if (AOI.IsTargetCellLoaded(target) == false)
+                if (AOI.InterestedInCell(target.RegionLocation.Cell.Id) == false)
                 {
                     teleport.TeleportClient(this);
                     return true;

@@ -27,9 +27,9 @@ namespace MHServerEmu.Games.Network
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<uint, InterestStatus> _trackedAreas = new();
-        private readonly Dictionary<uint, InterestStatus> _trackedCells = new();
-        private readonly Dictionary<ulong, InterestStatus> _trackedEntities = new();
+        private readonly Dictionary<uint, AreaInterestStatus> _trackedAreas = new();
+        private readonly Dictionary<uint, CellInterestStatus> _trackedCells = new();
+        private readonly Dictionary<ulong, EntityInterestStatus> _trackedEntities = new();
 
         private PlayerConnection _playerConnection;
         private Game _game;
@@ -42,8 +42,8 @@ namespace MHServerEmu.Games.Network
 
         private Aabb2 _cameraView;
         private Aabb2 _entitiesVolume;
-        private Aabb2 _visibileVolume;
-        private Aabb2 _invisibileVolume;
+        private Aabb2 _visibleVolume;
+        private Aabb2 _invisibleVolume;
         private PrototypeId _lastCameraSetting;
 
         public Region Region { get; private set; }
@@ -150,37 +150,37 @@ namespace MHServerEmu.Games.Network
 
         public bool InterestedInCell(uint cellId)
         {
-            return _trackedCells.ContainsKey(cellId);
+            if (_trackedCells.TryGetValue(cellId, out CellInterestStatus cellInterest) == false)
+                return false;
+
+            return cellInterest.IsLoaded;
         }
 
         public bool InterestedInEntity(ulong entityId)
         {
+            // TODO: Filter by channel
             return _trackedEntities.ContainsKey(entityId);
         }
 
-        public void OnCellLoaded(uint cellId)
+        public bool OnCellLoaded(uint cellId)
         {
+            if (_trackedCells.TryGetValue(cellId, out CellInterestStatus cell) == false)
+                Logger.WarnReturn(false, $"OnCellLoaded(): Loaded cell id {cell} is not being tracked!");
+
             LoadedCellCount++;
-            if (_trackedCells.TryGetValue(cellId, out var cell))
-                cell.Loaded = true;
-        }
-
-        public bool IsTargetCellLoaded(Transition target)
-        {
-            if (_trackedCells.TryGetValue(target.RegionLocation.Cell.Id, out InterestStatus cellInterest))
-                return cellInterest.Loaded;
-
-            return false;
+            _trackedCells[cellId] = new(_currentFrame, true);
+            return true;
         }
 
         public void ForceCellLoad()
         {
-            foreach (var cell in _trackedCells)
-                cell.Value.Loaded = true;
+            foreach (var kvp in _trackedCells.Where(kvp => kvp.Value.IsLoaded == false))
+                _trackedCells[kvp.Key] = new(_currentFrame, true);
         }
 
-        public static bool GetEntityInterest(WorldEntity worldEntity)
+        public static bool IsDiscoverable(WorldEntity worldEntity)
         {
+            // REMOVEME: Use GetCurrentInterestPolicies() and GetNewInterestPolicies() instead
             // TODO write all Player interests for entity
             if (worldEntity.TrackAfterDiscovery) return true;
             if (worldEntity.IsAlive() == false) return true;
@@ -195,12 +195,12 @@ namespace MHServerEmu.Games.Network
             {
                 if (_trackedAreas.ContainsKey(area.Id))
                 {
-                    if (area.RegionBounds.Intersects(_invisibileVolume) == false)
+                    if (area.RegionBounds.Intersects(_invisibleVolume) == false)
                         RemoveArea(area);
                 }
                 else
                 {
-                    if (area.RegionBounds.Intersects(_visibileVolume))
+                    if (area.RegionBounds.Intersects(_visibleVolume))
                         AddArea(area, false);
                 }
             }
@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.Network
             {
                 Cell cell = manager.GetCell(cellStatus.Key);
                 if (cell == null) continue;
-                if (cell.RegionBounds.Intersects(_invisibileVolume) == false)
+                if (cell.RegionBounds.Intersects(_invisibleVolume) == false)
                     invisibleCells.Push(cell);
             }
 
@@ -233,12 +233,12 @@ namespace MHServerEmu.Games.Network
             }
 
             // Add new cells
-            foreach (Cell cell in region.IterateCellsInVolume(_visibileVolume))
+            foreach (Cell cell in region.IterateCellsInVolume(_visibleVolume))
             {
                 if (_trackedAreas.ContainsKey(cell.Area.Id) == false) continue;
                 if (_trackedCells.ContainsKey(cell.Id)) continue;
 
-                if (cell.RegionBounds.Intersects(_visibileVolume))
+                if (cell.RegionBounds.Intersects(_visibleVolume))
                 {
                     AddCell(cell);
                     // EnvironmentUpdate
@@ -264,26 +264,22 @@ namespace MHServerEmu.Games.Network
                     continue;
                 }
 
-                if (_trackedCells.TryGetValue(worldEntity.RegionLocation.Cell.Id, out var status))
-                    if (status.Loaded == false) continue;
+                // TODO: Remove this when we start using GetNewInterestPolicies() that does this check 
+                if (InterestedInCell(worldEntity.RegionLocation.Cell.Id) == false)
+                    continue;
 
-                bool interest = GetEntityInterest(worldEntity);
-                if (_trackedEntities.TryGetValue(worldEntity.Id, out var entityStatus))
-                {
-                    entityStatus.Frame = _currentFrame;
-                    entityStatus.InterestToPlayer = interest;
-                }
-                else
-                {
-                    _trackedEntities.Add(worldEntity.Id, new(_currentFrame, true, interest));
-                    if (worldEntity.IsAlive())
-                        newEntities.Add(worldEntity);
-                    // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
-                }
+                if (_trackedEntities.ContainsKey(worldEntity.Id) == false && worldEntity.IsAlive())
+                    newEntities.Add(worldEntity);
+
+                // TODO: Use GetNewInterestPolicies() instead
+                AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
+                if (IsDiscoverable(worldEntity)) interestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
+                _trackedEntities[worldEntity.Id] = new(_currentFrame, interestPolicies);
             }
 
             // Delete entities we are no longer interested in
-            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.Frame < _currentFrame && kvp.Value.InterestToPlayer == false))
+            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.LastUpdateFrame < _currentFrame
+            && kvp.Value.InterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery) == false))
                 RemoveEntity(kvp.Key);      // TODO: Pass a reference to the entity we are removing instead
 
             // Add new entities
@@ -293,7 +289,7 @@ namespace MHServerEmu.Games.Network
 
         private void AddArea(Area area, bool isStartArea)
         {
-            _trackedAreas.Add(area.Id, new(_currentFrame, true, true));
+            _trackedAreas.Add(area.Id, new(_currentFrame));
             SendMessage(area.MessageAddArea(isStartArea));
         }
 
@@ -308,7 +304,7 @@ namespace MHServerEmu.Games.Network
         private void AddCell(Cell cell)
         {
             SendMessage(cell.MessageCellCreate());
-            _trackedCells.Add(cell.Id, new(_currentFrame, false, false));
+            _trackedCells.Add(cell.Id, new(_currentFrame, false));
         }
 
         private void RemoveCell(Cell cell)
@@ -337,11 +333,63 @@ namespace MHServerEmu.Games.Network
             SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entityId).Build());
         }
 
+        /// <summary>
+        /// Returns the current <see cref="AOINetworkPolicyValues"/> for the provided <see cref="Entity"/>.
+        /// </summary>
+        private AOINetworkPolicyValues GetCurrentInterestPolicies(Entity entity)
+        {
+            if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus) == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            return interestStatus.InterestPolicies;
+        }
+
+        /// <summary>
+        /// Builds new <see cref="AOINetworkPolicyValues"/> for the provided <see cref="Entity"/>.
+        /// </summary>
+        private AOINetworkPolicyValues GetNewInterestPolicies(Entity entity)
+        {
+            if (entity == null) return Logger.WarnReturn(AOINetworkPolicyValues.AOIChannelNone, "GetNewInterestPolicies(): entity == null");
+
+            Player player = _playerConnection.Player;
+
+            // Destroyed and not in game entities cannot have interest
+            if (entity.IsDestroyed || entity.IsInGame == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            // Players who are not in game cannot be interested in entities
+            if (player.IsInGame == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            //      Add more filters here
+
+            AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
+
+            if (entity is WorldEntity worldEntity)
+            {
+                // Validate that the entity's location is valid on the client before including it in the proximity channel
+                if (worldEntity.IsInWorld && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
+            }
+
+            // Ownership
+            if (entity.IsOwnedBy(player.Id))
+                newInterestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
+
+            // TODO: Discovery, Party, Trade
+
+            // Filter out results that don't match channels specified in the entity prototype
+            if ((newInterestPolicies & entity.CompatibleReplicationChannels) == AOINetworkPolicyValues.AOIChannelNone)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            return newInterestPolicies;
+        }
+
         private void CalcVolumes(Vector3 playerPosition)
         {
             _entitiesVolume = _cameraView.Translate(playerPosition);
-            _visibileVolume = _entitiesVolume.Expand(ViewExpansionDistance);
-            _invisibileVolume = _entitiesVolume.Expand(InvisibleExpansionDistance);
+            _visibleVolume = _entitiesVolume.Expand(ViewExpansionDistance);
+            _invisibleVolume = _entitiesVolume.Expand(InvisibleExpansionDistance);
         }
 
         private void SetAOIVolume(float volume)
@@ -356,17 +404,37 @@ namespace MHServerEmu.Games.Network
             _playerConnection.SendMessage(message);
         }
 
-        private class InterestStatus
+        private readonly struct AreaInterestStatus
         {
-            public ulong Frame { get; set; }
-            public bool Loaded { get; set; }
-            public bool InterestToPlayer { get; set; }
+            public readonly ulong LastUpdateFrame;
 
-            public InterestStatus(ulong frame, bool loaded, bool interestToPlayer)
+            public AreaInterestStatus(ulong frame)
             {
-                Frame = frame;
-                Loaded = loaded;
-                InterestToPlayer = interestToPlayer;
+                LastUpdateFrame = frame;
+            }
+        }
+
+        private readonly struct CellInterestStatus
+        {
+            public readonly ulong LastUpdateFrame;
+            public readonly bool IsLoaded;
+
+            public CellInterestStatus(ulong frame, bool isLoaded)
+            {
+                LastUpdateFrame = frame;
+                IsLoaded = isLoaded;
+            }
+        }
+
+        private readonly struct EntityInterestStatus
+        {
+            public readonly ulong LastUpdateFrame;
+            public readonly AOINetworkPolicyValues InterestPolicies;
+
+            public EntityInterestStatus(ulong frame, AOINetworkPolicyValues interestPolicies)
+            {
+                LastUpdateFrame = frame;
+                InterestPolicies = interestPolicies;
             }
         }
     }

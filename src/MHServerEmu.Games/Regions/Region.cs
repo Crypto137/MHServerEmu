@@ -619,7 +619,7 @@ namespace MHServerEmu.Games.Regions
                     {
                         if (worldEntity.GetRootOwner() is not Player)
                         {
-                            if (worldEntity.IsDestroyed() == false)
+                            if (worldEntity.IsDestroyed == false)
                             {
                                 worldEntity.Destroy();
                                 //found = true;

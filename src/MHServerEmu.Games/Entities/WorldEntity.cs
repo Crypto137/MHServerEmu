@@ -186,7 +186,7 @@ namespace MHServerEmu.Games.Entities
             if (Game == null) return;
 
             ExitWorld();
-            if (IsDestroyed() == false)
+            if (IsDestroyed == false)
             {
                 // CancelExitWorldEvent();
                 // CancelKillEvent();
@@ -596,20 +596,23 @@ namespace MHServerEmu.Games.Entities
 
         public EntityRegionSPContext GetEntityRegionSPContext()
         {
-            EntityRegionSPContext context = new(EntityRegionSPContextFlags.ActivePartition);
+            EntityRegionSPContextFlags flags = EntityRegionSPContextFlags.ActivePartition;
+            ulong playerRestrictedGuid = 0;
+
             WorldEntityPrototype entityProto = WorldEntityPrototype;
-            if (entityProto == null) return context;
+            if (entityProto == null) return new(flags);
 
             if (entityProto.CanCollideWithPowerUserItems)
             {
                 Avatar avatar = GetMostResponsiblePowerUser<Avatar>();
                 if (avatar != null)
-                    context.PlayerRestrictedGuid = avatar.OwnerPlayerDbId;
+                    playerRestrictedGuid = avatar.OwnerPlayerDbId;
             }
 
             if (!(IsNeverAffectedByPowers || (IsHotspot && !IsCollidableHotspot && !IsReflectingHotspot)))
-                context.Flags |= EntityRegionSPContextFlags.StaticPartition;
-            return context;
+                flags |= EntityRegionSPContextFlags.StaticPartition;
+
+            return new(flags, playerRestrictedGuid);
         }
 
         public T GetMostResponsiblePowerUser<T>(bool skipPet = false) where T : WorldEntity

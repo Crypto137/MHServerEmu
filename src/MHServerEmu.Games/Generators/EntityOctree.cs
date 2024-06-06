@@ -15,14 +15,21 @@ namespace MHServerEmu.Games.Generators
         All = ActivePartition | StaticPartition | PlayersPartition
     }
 
-    public class EntityRegionSPContext
+    public readonly struct EntityRegionSPContext
     {
-        public EntityRegionSPContextFlags Flags;
-        public ulong PlayerRestrictedGuid;
+        public readonly EntityRegionSPContextFlags Flags;
+        public readonly ulong PlayerRestrictedGuid;
 
-        public EntityRegionSPContext(EntityRegionSPContextFlags flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition)
+        public EntityRegionSPContext()
+        {
+            Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition;
+            PlayerRestrictedGuid = 0;
+        }
+
+        public EntityRegionSPContext(EntityRegionSPContextFlags flags, ulong playerRestrictedGuid = 0)
         {
             Flags = flags;
+            PlayerRestrictedGuid = playerRestrictedGuid;
         }
     }
 
