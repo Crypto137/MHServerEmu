@@ -178,7 +178,7 @@ namespace MHServerEmu.Games.Network
                 _trackedCells[kvp.Key] = new(_currentFrame, true);
         }
 
-        public static bool GetEntityInterest(WorldEntity worldEntity)
+        public static bool IsDiscoverable(WorldEntity worldEntity)
         {
             // REMOVEME: Use GetCurrentInterestPolicies() and GetNewInterestPolicies() instead
             // TODO write all Player interests for entity
@@ -271,13 +271,15 @@ namespace MHServerEmu.Games.Network
                 if (_trackedEntities.ContainsKey(worldEntity.Id) == false && worldEntity.IsAlive())
                     newEntities.Add(worldEntity);
 
-                _trackedEntities[worldEntity.Id] = new(_currentFrame, GetEntityInterest(worldEntity));
-
-                // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
+                // TODO: Use GetNewInterestPolicies() instead
+                AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
+                if (IsDiscoverable(worldEntity)) interestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
+                _trackedEntities[worldEntity.Id] = new(_currentFrame, interestPolicies);
             }
 
             // Delete entities we are no longer interested in
-            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.LastUpdateFrame < _currentFrame && kvp.Value.HasInterest == false))
+            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.LastUpdateFrame < _currentFrame
+            && kvp.Value.InterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery) == false))
                 RemoveEntity(kvp.Key);      // TODO: Pass a reference to the entity we are removing instead
 
             // Add new entities
@@ -427,16 +429,12 @@ namespace MHServerEmu.Games.Network
         private readonly struct EntityInterestStatus
         {
             public readonly ulong LastUpdateFrame;
-            public readonly bool HasInterest;
-
-            // TODO: Replace HasInterest with InterestPolicies
             public readonly AOINetworkPolicyValues InterestPolicies;
 
-            public EntityInterestStatus(ulong frame, bool hasInterest)
+            public EntityInterestStatus(ulong frame, AOINetworkPolicyValues interestPolicies)
             {
                 LastUpdateFrame = frame;
-                HasInterest = hasInterest;
-                InterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
+                InterestPolicies = interestPolicies;
             }
         }
     }
