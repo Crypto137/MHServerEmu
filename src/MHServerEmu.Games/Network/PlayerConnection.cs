@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -611,7 +612,12 @@ namespace MHServerEmu.Games.Network
             int avatarIndex = throwInteraction.AvatarIndex;
             Logger.Trace($"Received ThrowInteraction message Avatar[{avatarIndex}] Target[{idTarget}]");
 
-            Game.EventManager.AddEvent(this, EventEnum.StartThrowing, 0, idTarget);
+            EventPointer<LEGACY_StartThrowingEvent> throwEventPointer = new();
+            Game.GameEventScheduler.ScheduleEvent(throwEventPointer, TimeSpan.Zero);
+            LEGACY_StartThrowingEvent throwEvent = throwEventPointer.Get();
+            throwEvent.PlayerConnection = this;
+            throwEvent.TargetId = idTarget;
+
             return true;
         }
 

@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Events.LegacyImplementations;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -96,7 +97,13 @@ namespace MHServerEmu.Games.Powers
             {
                 Logger.Trace($"AddEvent EndThrowing for {GameDatabase.GetPrototypeName(powerPrototypeId)}");
                 var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
-                _game.EventManager.AddEvent(playerConnection, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
+
+                EventPointer<LEGACY_EndThrowingEvent> endThrowingPointer = new();
+                _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, TimeSpan.FromMilliseconds(power.AnimationTimeMS));
+                LEGACY_EndThrowingEvent endThrowingEvent = endThrowingPointer;
+                endThrowingEvent.PlayerConnection = playerConnection;
+                endThrowingEvent.PowerId = (PrototypeId)tryActivatePower.PowerPrototypeId;
+
                 return true;
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))

@@ -51,7 +51,8 @@ namespace MHServerEmu.Games
         public ulong Id { get; }
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
-        public EventManager EventManager { get; }
+        public EventScheduler GameEventScheduler { get; }
+        public EventManager EventManager { get; }   // TODO: Remove this
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
@@ -75,6 +76,7 @@ namespace MHServerEmu.Games
 
             AdminCommandManager = new(this);
             NetworkManager = new(this);
+            GameEventScheduler = new();
             EventManager = new(this);
             RegionManager = new();
             EntityManager = new(this);
@@ -294,6 +296,7 @@ namespace MHServerEmu.Games
 
         private void DoFixedTimeUpdate()
         {
+            GameEventScheduler.TriggerEvents();
             EventManager.Update();
 
             // Re-enable locomotion and physics when we get rid of multithreading issues
