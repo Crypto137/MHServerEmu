@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -52,10 +51,6 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Vector3 assistedPosition = assistedEntity.RegionLocation.Position;
 
                 if (agent.CanPowerTeleportToPosition(assistedPosition) == false) return failResult;
-
-                if (teleportContext.OwnerController.ActivePowerRef != PrototypeId.Invalid)
-                    ownerController.AttemptActivatePower(teleportContext.PrototypeId, agent.Id, agent.RegionLocation.Position);
-
                 if (agent.ChangeRegionPosition(assistedPosition, assitedOrientation, ChangePositionFlags.Teleport) == false)
                     return Logger.WarnReturn(failResult, $"[{agent}] tried to teleport to assisted entity position but was unsuccessful at position {assistedPosition} with region id {agent.Region.Id}.");
             }
@@ -70,13 +65,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
     {
         public AIController OwnerController { get; set; }
         public TeleportType TeleportType;
-        public PrototypeId PrototypeId;
 
         public TeleportContext(AIController ownerController, TeleportContextPrototype proto)
         {
             OwnerController = ownerController;
             TeleportType = proto.TeleportType;
-            PrototypeId = proto.DataRef;
         }
     }
 
