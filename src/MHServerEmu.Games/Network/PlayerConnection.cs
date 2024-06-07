@@ -679,7 +679,7 @@ namespace MHServerEmu.Games.Network
             // Recreate the avatar we just switched to
             SendMessage(Player.CurrentAvatar.ToNetMessageEntityCreate());
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new(Player.CurrentAvatar.Id, LastPosition, LastOrientation.Yaw, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new(Player.CurrentAvatar.Id, LastPosition, LastOrientation.Yaw, 350f, true);
             SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
                 .Build());
@@ -688,20 +688,9 @@ namespace MHServerEmu.Games.Network
             Player.CurrentAvatar.AssignHardcodedPowers();
 
             // Activate the swap in power for the avatar to become playable
-            ActivatePowerArchive activatePower = new();
-            activatePower.Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
-                ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
-                ActivatePowerMessageFlags.HasPowerRandomSeed;
-
-            activatePower.PowerPrototypeRef = GameDatabase.GlobalsPrototype.AvatarSwapInPower;
-            activatePower.UserEntityId = Player.CurrentAvatar.Id;
-            activatePower.TargetPosition = LastPosition;
-            activatePower.FXRandomSeed = 100;
-            activatePower.PowerRandomSeed = 100;
-
-            SendMessage(NetMessageActivatePower.CreateBuilder()
-                .SetArchiveData(activatePower.ToByteString())
-                .Build());
+            EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
+            Game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.FromMilliseconds(700));
+            activatePowerEventPointer.Get().Initialize(this, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
 
             return true;
         }

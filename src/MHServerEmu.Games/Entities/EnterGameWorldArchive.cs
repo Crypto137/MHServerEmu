@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive() { }
 
-        public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation, float moveSpeed)
+        public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation, float moveSpeed, bool isClientEntityHidden = false)
         {
             _entityId = entityId;
             _locoFieldFlags = LocomotionMessageFlags.UpdatePathNodes | LocomotionMessageFlags.HasMoveSpeed;
@@ -56,6 +56,9 @@ namespace MHServerEmu.Games.Entities
             _orientation = new(orientation, 0f, 0f);
             _locomotionState = new() { BaseMoveSpeed = moveSpeed };
             _avatarWorldInstanceId = 1;
+
+            if (isClientEntityHidden)
+                _extraFieldFlags |= EnterGameWorldMessageFlags.IsClientEntityHidden;
         }
 
         public bool Serialize(Archive archive)
