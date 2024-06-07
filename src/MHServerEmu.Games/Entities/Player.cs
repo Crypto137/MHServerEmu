@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
@@ -765,6 +766,28 @@ namespace MHServerEmu.Games.Entities
         internal int GetPrimaryAvatarCharacterLevel()
         {
             throw new NotImplementedException();
+        }
+
+        public Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region) // Test funciton
+        {
+            int level = 60;            
+            // var inventory = player.GetInventory(InventoryConvenienceLabel.PetItem); 
+            var settings = new EntitySettings
+            {
+                EntityRef = prototypeId, 
+                Position = position,
+                RegionId = region.Id,                
+                Properties = new PropertyCollection
+                {
+                    [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
+                    [PropertyEnum.CharacterLevel] = level,
+                    [PropertyEnum.CombatLevel] = level,
+                    [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
+                }
+              //  InventoryLocation = new(player.Id, inventory.PrototypeDataRef)
+            };
+            var pet = (Agent)Game.EntityManager.CreateEntity(settings);
+            return pet;
         }
     }
 }

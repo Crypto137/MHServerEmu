@@ -203,6 +203,19 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
+        [Command("pet", "Create pet for test AI.", AccountUserLevel.User)]
+        public string Pet(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            var player = playerConnection.Player;
+            var position = playerConnection.LastPosition;
+            var region = playerConnection.AOI.Region;
+            Agent pet = player.CreatePet((PrototypeId)16300889242928224944, position, region); // Pet001OldLace = 16300889242928224944
+            return $"Pet {pet.PrototypeName} Created";
+        }
+
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]
         public string ScheduleTestEvent(string[] @params, FrontendClient client)
         {
