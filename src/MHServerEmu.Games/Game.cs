@@ -56,6 +56,8 @@ namespace MHServerEmu.Games
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
+        
+        public TimeSpan CurrentTime { get => GameEventScheduler != null ? GameEventScheduler.CurrentTime : Clock.GameTime; }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
@@ -76,7 +78,7 @@ namespace MHServerEmu.Games
 
             AdminCommandManager = new(this);
             NetworkManager = new(this);
-            GameEventScheduler = new();
+            GameEventScheduler = new(Clock.GameTime, FixedTimeBetweenUpdates);
             RegionManager = new();
             EntityManager = new(this);
 
@@ -236,12 +238,6 @@ namespace MHServerEmu.Games
 
         public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
         public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
-
-        public TimeSpan GetCurrentTime()
-        {
-            // TODO check EventScheduler
-            return Clock.GameTime;
-        }
 
         private void Update()
         {

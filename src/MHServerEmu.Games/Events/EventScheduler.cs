@@ -10,12 +10,13 @@ namespace MHServerEmu.Games.Events
         // TODO: Fix multithreading issues with region generation and remove locks
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
-        private TimeSpan _currentTime;
         private bool _cancellingAllEvents = false;
 
-        public EventScheduler()
+        public TimeSpan CurrentTime { get; private set; }
+
+        public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numBuckets = 256)
         {
-            _currentTime = Clock.GameTime;
+            CurrentTime = currentTime;
         }
 
         public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup) where T: ScheduledEvent, new()
@@ -74,13 +75,13 @@ namespace MHServerEmu.Games.Events
 
         public void TriggerEvents()
         {
-            _currentTime = Clock.GameTime;
+            CurrentTime = Clock.GameTime;
 
             int numEvents = 0;
 
             lock (_scheduledEvents)
             {
-                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= _currentTime))
+                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime))
                 {
                     _scheduledEvents.Remove(@event);
                     @event.InvalidatePointers();
@@ -102,7 +103,7 @@ namespace MHServerEmu.Games.Events
                 timeOffset = TimeSpan.Zero;
             }
 
-            @event.FireTime = _currentTime + timeOffset;
+            @event.FireTime = CurrentTime + timeOffset;
             ScheduleEvent(@event);
 
             return @event;
@@ -130,7 +131,7 @@ namespace MHServerEmu.Games.Events
                 timeOffset = TimeSpan.Zero;
             }
 
-            @event.FireTime = _currentTime + timeOffset;
+            @event.FireTime = CurrentTime + timeOffset;
         }
     }
 }
