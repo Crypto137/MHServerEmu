@@ -13,9 +13,8 @@
         /// </summary>
         public FixedQuantumGameTime(TimeSpan quantumSize)
         {
-            _quantumSize = quantumSize;
-            long numTimeQuantums = Clock.CalcNumTimeQuantums(Clock.GameTime, _quantumSize);
-            _quantumGameTime = _quantumSize * numTimeQuantums;
+            _quantumGameTime = Clock.GameTime;
+            SetQuantumSize(quantumSize);
         }
 
         /// <summary>
@@ -24,6 +23,8 @@
         public void SetQuantumSize(TimeSpan quantumSize)
         {
             _quantumSize = quantumSize;
+            long numTimeQuantums = Clock.CalcNumTimeQuantums(_quantumGameTime, _quantumSize);
+            _quantumGameTime = _quantumSize * numTimeQuantums;
         }
 
         /// <summary>
@@ -55,7 +56,7 @@
             return _quantumGameTime.CompareTo(other);
         }
 
-        public override string ToString() => ((long)_quantumGameTime.TotalMilliseconds).ToString();
+        public override string ToString() => (_quantumGameTime.Ticks / 10).ToString();
         public static explicit operator TimeSpan(FixedQuantumGameTime fixedQuantumGameTime) => fixedQuantumGameTime._quantumGameTime;
     }
 }
