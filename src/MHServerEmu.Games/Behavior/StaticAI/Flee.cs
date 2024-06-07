@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
 
-            blackboard.PropertyCollection[PropertyEnum.AIFleeStartTime] = (ulong)game.GetCurrentTime().TotalMilliseconds;
+            blackboard.PropertyCollection[PropertyEnum.AIFleeStartTime] = (ulong)game.CurrentTime.TotalMilliseconds;
             locomotor.Stop();
         }
 
@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (locomotor.HasPath)
             {
-                var fleeTime = game.GetCurrentTime() - TimeSpan.FromMilliseconds(blackboard.PropertyCollection[PropertyEnum.AIFleeStartTime]);
+                var fleeTime = game.CurrentTime - TimeSpan.FromMilliseconds(blackboard.PropertyCollection[PropertyEnum.AIFleeStartTime]);
                 if (fleeTime >= fleeContext.FleeTime || locomotor.IsPathComplete())
                     return StaticBehaviorReturnType.Completed;
             }

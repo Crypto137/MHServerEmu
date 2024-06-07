@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Behavior
                 fixedTimeOffset += TimeSpan.FromMilliseconds(Game.Random.Next(0, thinkVariance));
             }
 
-            if (_thinkEvent.IsValid && Game.GetCurrentTime() + timeOffset < _thinkEvent.Get().FireTime)
+            if (_thinkEvent.IsValid && Game.CurrentTime + timeOffset < _thinkEvent.Get().FireTime)
             {
                 if (HasNotExceededMaxThinksPerFrame(timeOffset))
                     eventScheduler.RescheduleEvent(_thinkEvent, fixedTimeOffset);
@@ -193,7 +193,7 @@ namespace MHServerEmu.Games.Behavior
                     nextThinkTimeOffset = TimeSpan.FromMilliseconds(Math.Max(100, (int)nextThinkTimeOffset.TotalMilliseconds));
 
                 if (nextThinkTimeOffset != TimeSpan.Zero)
-                    nextThinkTimeOffset += Clock.Max(Game.RealGameTime - Game.GetCurrentTime(), TimeSpan.Zero);
+                    nextThinkTimeOffset += Clock.Max(Game.RealGameTime - Game.CurrentTime, TimeSpan.Zero);
 
                 if (nextThinkTimeOffset < TimeSpan.Zero)
                 {

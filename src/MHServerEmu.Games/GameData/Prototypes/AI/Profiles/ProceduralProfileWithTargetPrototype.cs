@@ -459,7 +459,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = agent.Game;
             var blackboard = agent.AIController?.Blackboard;
             if (game == null || blackboard == null) return;
-            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = game.GetCurrentTime();
+            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
 
             InitPower(agent, EffectPower);
         }
@@ -478,7 +478,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 TimeSpan shrinkageTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
                     + TimeSpan.FromSeconds(ShrinkageDelayMS) 
                     + TimeSpan.FromSeconds(ShrinkageDurationMS);
-                if (game.GetCurrentTime() > shrinkageTime)
+                if (game.CurrentTime > shrinkageTime)
                 {
                     agent.Destroy(); // or Kill
                     return;
@@ -531,7 +531,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (Power == null || Power.Power == PrototypeId.Invalid) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
@@ -585,7 +585,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
@@ -870,7 +870,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             var summoner = agent.GetMostResponsiblePowerUser<Avatar>();
             if (summoner == null)
@@ -1004,7 +1004,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 var game = ownerController.Game;
                 if (game == null) return;
 
-                long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+                long currentTime = (long)game.CurrentTime.TotalMilliseconds;
                 blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = attacker.Id;
                 blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2] = currentTime;
                 TrySelectNewTarget(ownerController, blackboard, currentTime);

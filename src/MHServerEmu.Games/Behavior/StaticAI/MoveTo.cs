@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (locomotor.LastGeneratedPathResult == NaviPathResult.IncompletedPath)
             {
                 blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathETA] = (long)locomotor.GetCurrentETA().TotalMilliseconds;
-                blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathTime] = (long)game.GetCurrentTime().TotalMilliseconds;
+                blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathTime] = (long)game.CurrentTime.TotalMilliseconds;
             }
         }
 
@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     var lastPathResult = locomotor.LastGeneratedPathResult;
                     if (lastPathResult == NaviPathResult.IncompletedPath)
                     {
-                        long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+                        long currentTime = (long)game.CurrentTime.TotalMilliseconds;
                         if (currentTime >= (blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathTime] + 500))
                         {
                             blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathTime] = currentTime;

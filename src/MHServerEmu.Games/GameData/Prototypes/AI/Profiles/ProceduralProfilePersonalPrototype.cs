@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -200,7 +200,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -387,7 +387,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -480,7 +480,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
            
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
@@ -548,7 +548,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -639,7 +639,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -794,7 +794,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -859,7 +859,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -965,7 +965,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             WorldEntity target = ownerController.TargetEntity;
             if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Ally) == false) return;
@@ -1006,7 +1006,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1123,7 +1123,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
@@ -1217,7 +1217,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1331,7 +1331,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1392,7 +1392,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1552,7 +1552,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1635,7 +1635,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1701,7 +1701,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1758,7 +1758,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1809,7 +1809,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -1921,7 +1921,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2037,7 +2037,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2093,7 +2093,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2188,7 +2188,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
             if (agent.IsDormant) return;
@@ -2283,7 +2283,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 Game game = ownerController.Game;
                 if (game == null) return;
-                long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+                long currentTime = (long)game.CurrentTime.TotalMilliseconds;
                 blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
                 ownerController.ResetCurrentTargetState();
             }
@@ -2342,7 +2342,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2385,7 +2385,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (aggroedEvent.AggroEntity is not Agent aggroAgent) return;
             if (aggroAgent.PrototypeDataRef == HellfireProtoRef)
                 if (agent.Properties.HasProperty(PropertyEnum.EnrageStartTime) == false)
-                    agent.Properties[PropertyEnum.EnrageStartTime] = game.GetCurrentTime() + TimeSpan.FromMinutes(EnrageTimerInMinutes);
+                    agent.Properties[PropertyEnum.EnrageStartTime] = game.CurrentTime + TimeSpan.FromMinutes(EnrageTimerInMinutes);
         }
     }
 
@@ -2403,7 +2403,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2456,7 +2456,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             HandleEnrage(ownerController);
 
@@ -2541,7 +2541,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2635,7 +2635,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (aggroedEvent.AggroEntity is not Agent aggroAgent) return;
             if (aggroAgent.PrototypeDataRef == BrimstoneProtoRef)
                 if (agent.Properties.HasProperty(PropertyEnum.EnrageStartTime) == false)
-                    agent.Properties[PropertyEnum.EnrageStartTime] = game.GetCurrentTime() + TimeSpan.FromMinutes(EnrageTimerInMinutes);
+                    agent.Properties[PropertyEnum.EnrageStartTime] = game.CurrentTime + TimeSpan.FromMinutes(EnrageTimerInMinutes);
         }
     }
 
@@ -2659,7 +2659,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -2766,7 +2766,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (ownerController == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             Region region = agent.Region;
             if (region == null) return;
@@ -2784,7 +2784,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             HandleEnrage(ownerController);
 
@@ -2935,7 +2935,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (agent.IsDormant) return;
 
@@ -3049,7 +3049,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (agent.IsDormant) return;
 
@@ -3121,7 +3121,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -3229,7 +3229,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (agent.IsDormant) return;
             
@@ -3489,7 +3489,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (agent.IsDormant) return;
 
@@ -3685,7 +3685,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return powerResult;
             var proceduralAI = ownerController.Brain;
             if (proceduralAI == null) return powerResult;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             ownerController.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = targetId;
             powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, symboitePower.PowerContext, symboitePower);
@@ -3850,7 +3850,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             HandleEnrage(ownerController);
 
@@ -4183,7 +4183,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (ownerController.TargetEntity == null)
                 SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
@@ -4321,7 +4321,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             AIController ownerController = agent.AIController;
             if (ownerController == null) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
-            long currentTime = (long)ownerController.Game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)ownerController.Game.CurrentTime.TotalMilliseconds;
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal2] = currentTime + 3000;
 
             Region region = agent.Region;
@@ -4345,7 +4345,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             var blackboard = ownerController.Blackboard;
             State state = (State)(int)blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
@@ -4557,7 +4557,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = agent.Game;
             var blackboard = agent.AIController?.Blackboard;
             if (game == null || blackboard == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long summonCooldown = currentTime + game.Random.Next(SummonHydraMinCooldownMS, SummonHydraMaxCooldownMS);
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = summonCooldown;
         }
@@ -4577,7 +4577,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -4682,7 +4682,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = ownerController.Game;
             if (game == null) return;
             GRandom random = game.Random;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long summonCooldown = currentTime + random.Next(SummonHydraMinCooldownMS, SummonHydraMaxCooldownMS);
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = summonCooldown;
 
@@ -4714,7 +4714,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -4793,7 +4793,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -4886,7 +4886,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             
             if (ownerController.TargetEntity == null)
                 SelectEntity.RegisterSelectedEntity(ownerController, agent, SelectEntityType.SelectTarget);
@@ -4975,7 +4975,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
 
@@ -5338,7 +5338,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -5496,7 +5496,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
 
@@ -5558,7 +5558,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (agent == null) return;
             Game game = agent.Game;
             if (game == null) return;
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             if (HandleOverrideBehavior(ownerController)) return;
             if (agent.IsDormant) return;

@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.Behavior
             Game game = _pAIController.Game;
             if (game == null)  return false;
 
-            if (game.GetCurrentTime().TotalMilliseconds > blackboard.PropertyCollection[PropertyEnum.AINextSensoryUpdate])
+            if (game.CurrentTime.TotalMilliseconds > blackboard.PropertyCollection[PropertyEnum.AINextSensoryUpdate])
             {
                 blackboard.PropertyCollection[PropertyEnum.AINextSensoryUpdate] = (long)game.RealGameTime.TotalMilliseconds + 1000;
                 return true;
@@ -275,7 +275,7 @@ namespace MHServerEmu.Games.Behavior
                     nextSenseTime = blackboard.PropertyCollection[PropertyEnum.AINextHostileSense];
                     break;
             }
-            long currentTime = (long)game.GetCurrentTime().TotalMilliseconds;
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             if (nextSenseTime != -1 && currentTime > nextSenseTime)
                 return true;
 

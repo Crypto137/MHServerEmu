@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Behavior
             {
                 PropertyCollection[PropertyEnum.AIAlwaysAggroed] = true;
                 PropertyCollection[PropertyEnum.AIAggroState] = true;
-                PropertyCollection[PropertyEnum.AIAggroTime] = (long)_owner.Game.GetCurrentTime().TotalMilliseconds;
+                PropertyCollection[PropertyEnum.AIAggroTime] = (long)_owner.Game.CurrentTime.TotalMilliseconds;
             }
 
             if (profile.Properties != null)

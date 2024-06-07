@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             blackboard.LastFlankTargetEntityPos = Vector3.Zero;
 
             if (flankContext.TimeoutMS > 0)
-                blackboard.PropertyCollection[PropertyEnum.AIFlankTimeout] = (long)game.GetCurrentTime().TotalMilliseconds + flankContext.TimeoutMS;
+                blackboard.PropertyCollection[PropertyEnum.AIFlankTimeout] = (long)game.CurrentTime.TotalMilliseconds + flankContext.TimeoutMS;
             else
                 blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFlankTimeout);
         }
@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Game game = agent.Game;
             if (game == null) return returnType;
 
-            TimeSpan currentTime = game.GetCurrentTime();
+            TimeSpan currentTime = game.CurrentTime;
 
             if (blackboard.PropertyCollection.HasProperty(PropertyEnum.AIFlankTimeout)
                 && currentTime >= TimeSpan.FromMilliseconds(blackboard.PropertyCollection[PropertyEnum.AIFlankTimeout]))

@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (game == null) return;
 
             long delayMS = game.Random.Next(delayContext.MinDelayMS, delayContext.MaxDelayMS);
-            blackboard.PropertyCollection[PropertyEnum.AIDelayCompletionTime] = (long)game.GetCurrentTime().TotalMilliseconds + delayMS;
+            blackboard.PropertyCollection[PropertyEnum.AIDelayCompletionTime] = (long)game.CurrentTime.TotalMilliseconds + delayMS;
         }
 
         public StaticBehaviorReturnType Update(in IStateContext context)
@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (target != null && target.IsInWorld && agent.CanRotate)
                 agent.OrientToward(target.RegionLocation.Position);
 
-            if ((long)game.GetCurrentTime().TotalMilliseconds < blackboard.PropertyCollection[PropertyEnum.AIDelayCompletionTime])
+            if ((long)game.CurrentTime.TotalMilliseconds < blackboard.PropertyCollection[PropertyEnum.AIDelayCompletionTime])
                 return StaticBehaviorReturnType.Running;
             else
                 return StaticBehaviorReturnType.Completed;

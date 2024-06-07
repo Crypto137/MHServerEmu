@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     BehaviorBlackboard blackboard = ownerController.Blackboard;
                     blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate] = randomAffixRef;
 
-                    if ((long)game.GetCurrentTime().TotalMilliseconds >= blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime, randomAffixRef])
+                    if ((long)game.CurrentTime.TotalMilliseconds >= blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime, randomAffixRef])
                         return true;
                 }
             }
