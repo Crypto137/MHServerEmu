@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             bool isPowerActivated = aiController.AttemptActivatePower(powerContext.Power, blackboard.PropertyCollection[PropertyEnum.AIUsePowerTargetID], blackboard.UsePowerTargetPos);
 
-            blackboard.PropertyCollection[new PropertyId(PropertyEnum.AIPowerStarted, powerContext.Power)] = isPowerActivated;
+            blackboard.PropertyCollection[PropertyEnum.AIPowerStarted, powerContext.Power] = isPowerActivated;
             blackboard.PropertyCollection[PropertyEnum.AILastPowerActivated] = powerContext.Power;
             blackboard.UsePowerTargetPos = Vector3.Zero;
         }
