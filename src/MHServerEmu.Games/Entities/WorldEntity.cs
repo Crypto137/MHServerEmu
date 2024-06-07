@@ -957,7 +957,6 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnDramaticEntranceEnd()  { }
     }
-    }
 
     public enum PowerMovementPreventionFlags
     {

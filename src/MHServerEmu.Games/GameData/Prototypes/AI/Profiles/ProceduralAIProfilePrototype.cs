@@ -167,10 +167,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnOwnerTargetSwitch(AIController ownerController, ulong oldTarget, ulong newTarget) { }
         public virtual void OnOwnerOverlapBegin(AIController ownerController, WorldEntity attacker) { }
         public virtual void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt) { }
-        public virtual void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent) { }
-        public virtual void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent) { }
-        public virtual void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent) { }
-        public virtual void OnEntityAggroedEvent(AIController ownerController, EntityAggroedGameEvent aggroedEvent) { }
+        public virtual void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent) { }
+        public virtual void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent) { }
+        public virtual void OnPlayerInteractEvent(AIController ownerController, in PlayerInteractGameEvent interactEvent) { }
+        public virtual void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent) { }
         public virtual void OnMissileReturnEvent(AIController ownerController) { }
     }
 
@@ -1439,7 +1439,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return spikeTargets;
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;
@@ -1483,7 +1483,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.AddPowersToPicker(powerPicker, RevengePower);
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender?.PrototypeDataRef == RevengeSupport)
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
@@ -1515,7 +1515,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.AddPowersToPicker(powerPicker, RevengePower);
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender?.PrototypeDataRef == RevengeSupport)
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;

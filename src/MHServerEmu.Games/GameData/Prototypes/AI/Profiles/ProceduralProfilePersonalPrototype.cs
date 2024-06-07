@@ -2376,7 +2376,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ownerController.AddPowersToPicker(powerPicker, MeleePower);
         }
 
-        public override void OnEntityAggroedEvent(AIController ownerController, EntityAggroedGameEvent aggroedEvent)
+        public override void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent)
         {
             Agent agent = ownerController.Owner;
             if (agent == null) return;
@@ -2474,7 +2474,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;
@@ -2626,7 +2626,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnEntityAggroedEvent(AIController ownerController, EntityAggroedGameEvent aggroedEvent)
+        public override void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent)
         {
             Agent agent = ownerController.Owner;
             if (agent == null) return;
@@ -2851,7 +2851,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender == null) return;
             var agent = ownerController.Owner;
@@ -3083,7 +3083,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender == null) return;
             var agent = ownerController.Owner;
@@ -3585,7 +3585,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.MoveToTarget;
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;
@@ -3727,7 +3727,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return targetId;
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender == null) return;
             var agent = ownerController.Owner;
@@ -4237,7 +4237,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;
@@ -4258,7 +4258,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender == null) return;
             var agent = ownerController.Owner;
@@ -4285,7 +4285,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent)
+        public override void OnPlayerInteractEvent(AIController ownerController, in PlayerInteractGameEvent interactEvent)
         {
             Agent agent = ownerController.Owner;
             if (agent == null || interactEvent.InteractableObject is not Agent interactableAgent) return;
@@ -4439,7 +4439,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;
@@ -4509,7 +4509,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;
@@ -4652,7 +4652,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.AddPowersToPicker(powerPicker, TeleportPower);
         }
 
-        public override void OnEntityDeadEvent(AIController ownerController, EntityDeadGameEvent deadEvent)
+        public override void OnEntityDeadEvent(AIController ownerController, in EntityDeadGameEvent deadEvent)
         {
             if (deadEvent.Defender == null) return;
             Agent agent = ownerController.Owner;
@@ -4906,7 +4906,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent)
+        public override void OnPlayerInteractEvent(AIController ownerController, in PlayerInteractGameEvent interactEvent)
         {
             Agent agent = ownerController.Owner;
             if (agent == null || interactEvent.InteractableObject is not Agent interactableAgent) return;
@@ -5167,7 +5167,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Default;
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             var broadcaster = broadcastEvent.Broadcaster;
             if (broadcaster == null) return;
@@ -5254,7 +5254,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnPlayerInteractEvent(AIController ownerController, PlayerInteractGameEvent interactEvent)
+        public override void OnPlayerInteractEvent(AIController ownerController, in PlayerInteractGameEvent interactEvent)
         {
             Agent agent = ownerController.Owner;
             if (agent == null || interactEvent.InteractableObject is not Agent interactableAgent) return;
@@ -5273,7 +5273,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             Agent agent = ownerController.Owner;
             if (agent == null) return;
@@ -5456,7 +5456,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, AIBroadcastBlackboardGameEvent broadcastEvent)
+        public override void OnAIBroadcastBlackboardEvent(AIController ownerController, in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             if (broadcastEvent.Broadcaster == null) return;
             var agent = ownerController.Owner;

@@ -301,22 +301,22 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             _proceduralPtr.Profile?.OnOwnerOverlapBegin(_owningController, attacker);
         }
 
-        public void OnEntityDeadEvent(EntityDeadGameEvent deadEvent)
+        public void OnEntityDeadEvent(in EntityDeadGameEvent deadEvent)
         {
             _proceduralPtr.Profile?.OnEntityDeadEvent(_owningController, deadEvent);
         }
 
-        public void OnAIBroadcastBlackboardEvent(AIBroadcastBlackboardGameEvent broadcastEvent)
+        public void OnAIBroadcastBlackboardEvent(in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             _proceduralPtr.Profile?.OnAIBroadcastBlackboardEvent(_owningController, broadcastEvent);
         }
 
-        public void OnPlayerInteractEvent(PlayerInteractGameEvent broadcastEvent)
+        public void OnPlayerInteractEvent(in PlayerInteractGameEvent broadcastEvent)
         {
             _proceduralPtr.Profile?.OnPlayerInteractEvent(_owningController, broadcastEvent);
         }
 
-        public void OnEntityAggroedEvent(EntityAggroedGameEvent broadcastEvent)
+        public void OnEntityAggroedEvent(in EntityAggroedGameEvent broadcastEvent)
         {
             _proceduralPtr.Profile?.OnEntityAggroedEvent(_owningController, broadcastEvent);
         }

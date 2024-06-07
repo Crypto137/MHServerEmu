@@ -14,12 +14,12 @@ namespace MHServerEmu.Games.Behavior
         }
     }
 
-    public class EntityDeadGameEvent
+    public struct EntityDeadGameEvent
     {
         public WorldEntity Defender;
     }
 
-    public class AIBroadcastBlackboardGameEvent
+    public struct AIBroadcastBlackboardGameEvent
     {
         public WorldEntity Broadcaster;
         public BehaviorBlackboard Blackboard;
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Behavior
         }
     }
 
-    public class PlayerInteractGameEvent
+    public struct PlayerInteractGameEvent
     {
         public Player Player;
         public WorldEntity InteractableObject;
@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Behavior
         }
     }
 
-    public class EntityAggroedGameEvent
+    public struct EntityAggroedGameEvent
     {
         public WorldEntity AggroEntity;
     }
