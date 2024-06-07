@@ -909,6 +909,11 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        internal virtual PowerUseResult CanTriggerPower(PowerPrototype powerPrototype, Power power, PowerActivationSettingsFlags flags)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual InteractionResult AttemptInteractionBy(EntityDesc interactorDesc, InteractionFlags flags, InteractionMethod method)
         {
             var interactor = interactorDesc.GetEntity<Agent>(Game);

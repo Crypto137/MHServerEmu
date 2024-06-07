@@ -417,6 +417,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return (keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto));
         }
+
+        public TargetingStylePrototype GetTargetingStyle()
+        {
+            return TargetingStyle.As<TargetingStylePrototype>();
+        }
     }
 
     public class MovementPowerPrototype : PowerPrototype

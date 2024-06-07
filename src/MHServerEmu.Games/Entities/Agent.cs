@@ -336,7 +336,7 @@ namespace MHServerEmu.Games.Entities
             if (power.RequiresLineOfSight)
             {
                 ulong targetId = (target != null ? target.Id : InvalidId);
-                if (power.PowerLOSCheck(RegionLocation, position, targetId, out Vector3 resultPos, power.LOSCheckAlongGround) == false)
+                if (power.PowerLOSCheck(RegionLocation, position, targetId, out _, power.LOSCheckAlongGround) == false)
                     return IsInPositionForPowerResult.NoPowerLOS;
             }
 
@@ -359,26 +359,115 @@ namespace MHServerEmu.Games.Entities
                 if (summonContext.IgnoreBlockingOnSpawn == false && summonedProto.Bounds.CollisionType == BoundsCollisionType.Blocking)
                 {
                     if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.CheckCanBlockedEntity) == false)
-                        return IsInPositionForPowerResult.NotClearLocation;
+                        return IsInPositionForPowerResult.BadTargetPosition;
                 }
                 else if (pathFlags != 0)
                 {
                     if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.None) == false)
-                        return IsInPositionForPowerResult.NotClearLocation;
+                        return IsInPositionForPowerResult.BadTargetPosition;
                 }
             }
 
             return IsInPositionForPowerResult.Success;
         }
 
-        private bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
+        private static bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
         {
-            throw new NotImplementedException();
+            if (target != null && power.AlwaysTargetsMousePosition)
+            {
+                if (target.IsInWorld == false) return false;
+                return power.IsInRange(target, RangeCheckType.Activation);
+            }
+            else if (power.IsMelee)
+                return true;
+
+            return power.IsInRange(position, RangeCheckType.Activation);
         }
 
-        internal PowerUseResult CanActivatePower(Power power, ulong targetId, Vector3 targetPosition, ulong flags = 0, ulong itemSourceId = 0)
+        public virtual PowerUseResult CanActivatePower(Power power, ulong targetId, Vector3 targetPosition, 
+            PowerActivationSettingsFlags flags = PowerActivationSettingsFlags.None, ulong itemSourceId = 0)
         {
-            throw new NotImplementedException();
+            var powerRef = power.PrototypeDataRef;
+            var powerProto = power.Prototype;
+            if (powerProto == null)
+            {
+                Logger.Warn($"Unable to get the prototype for a power! Power: [{power}]");
+                return PowerUseResult.AbilityMissing;
+            }
+
+            var targetingProto = powerProto.GetTargetingStyle();
+            if (targetingProto == null)
+            {
+                Logger.Warn($"Unable to get the targeting prototype for a power! Power: [{power}]");
+                return PowerUseResult.GenericError;
+            }
+
+            if (IsSimulated == false) return PowerUseResult.OwnerNotSimulated;
+            if (GetPower(powerRef) == null) return PowerUseResult.AbilityMissing;
+
+            if (targetingProto.TargetingShape == TargetingShapeType.Self)
+                targetId = Id;
+            else
+                if (IsInWorld == false) return PowerUseResult.RestrictiveCondition;
+
+            var triggerResult = CanTriggerPower(powerProto, power, flags);
+            if (triggerResult != PowerUseResult.Success)
+                return triggerResult;
+
+            if (power.IsExclusiveActivation)
+            {
+                if (IsExecutingPower)
+                {
+                    var activePower = GetPower(ActivePowerRef);
+                    if (activePower == null)
+                    {
+                        Logger.Warn($"Agent has m_activePowerRef set, but is missing the power in its power collection! Power: [{GameDatabase.GetPrototypeName(ActivePowerRef)}] Agent: [{this}]");
+                        return PowerUseResult.PowerInProgress;
+                    }
+
+                    if (activePower.IsTravelPower)
+                    {
+                        if (activePower.IsEnding == false)
+                            activePower.EndPower(EndFlag.ExplicitCancel | EndFlag.Interrupting);
+                    }
+                    else
+                        return PowerUseResult.PowerInProgress;
+                }
+
+                if (Game == null) return PowerUseResult.GenericError;
+                var activateTime = Game.CurrentTime - power.LastActivateGameTime;
+                var animationTime = power.AnimationTime;
+                if (activateTime < animationTime)
+                    return PowerUseResult.MinimumReactivateTime;
+            }
+
+            WorldEntity target = null;
+            if (targetId != InvalidId)
+                target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+            if (power.IsItemPower)
+            {
+                if (itemSourceId == InvalidId)
+                {
+                    Logger.Warn($"Power is an ItemPower but no itemSourceId specified - {power}");
+                    return PowerUseResult.ItemUseRestricted;
+                }
+
+                var item = Game.EntityManager.GetEntity<Item>(itemSourceId);
+                if (item == null) return PowerUseResult.ItemUseRestricted;
+
+                var powerUse = flags.HasFlag(PowerActivationSettingsFlags.Flag7) == false;
+                if (powerRef == item.OnUsePower && item.CanUse(this, powerUse) == false)
+                    return PowerUseResult.ItemUseRestricted;
+            }
+
+            var result = IsInPositionForPower(power, target, targetPosition);
+            if (result == IsInPositionForPowerResult.OutOfRange || result == IsInPositionForPowerResult.NoPowerLOS)
+                return PowerUseResult.OutOfPosition;
+            else if (result == IsInPositionForPowerResult.BadTargetPosition)
+                return PowerUseResult.BadTarget;
+
+            return power.CanActivate(target, targetPosition, flags);
         }
 
         public InteractionResult StartInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, bool inRange, InteractionMethod method)
@@ -413,7 +502,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
                 ActivePowerRef = PrototypeId.Invalid;
             }
-            else if (power.IsExclusiveActivation())
+            else if (power.IsExclusiveActivation)
             {
                 if (IsInWorld)
                     ActivePowerRef = power.PrototypeDataRef;
@@ -429,7 +518,7 @@ namespace MHServerEmu.Games.Entities
     {
         Error,
         Success,
-        NotClearLocation,
+        BadTargetPosition,
         OutOfRange,
         NoPowerLOS
     }

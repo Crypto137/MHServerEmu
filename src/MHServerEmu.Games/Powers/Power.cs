@@ -30,6 +30,8 @@ namespace MHServerEmu.Games.Powers
         public bool IsOnExtraActivation { get; internal set; }
         public bool IsOwnerCenteredAOE { get; internal set; }
         public bool LOSCheckAlongGround { get; internal set; }
+        public bool AlwaysTargetsMousePosition { get; internal set; }
+        public bool IsMelee { get; internal set; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {
@@ -114,6 +116,11 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
+        internal bool IsInRange(Vector3 position, RangeCheckType activation)
+        {
+            throw new NotImplementedException();
+        }
+
         internal bool EndPower(EndFlag endFlag)
         {
             throw new NotImplementedException();
@@ -181,12 +188,18 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        internal bool IsExclusiveActivation()
+        internal bool IsExclusiveActivation { get; }
+        public bool IsEnding { get; internal set; }
+        public TimeSpan LastActivateGameTime { get; internal set; }
+        public TimeSpan AnimationTime { get; internal set; }
+        public bool IsItemPower { get; internal set; }
+
+        internal bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
         {
             throw new NotImplementedException();
         }
 
-        internal bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
+        internal PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
         {
             throw new NotImplementedException();
         }
@@ -243,6 +256,13 @@ namespace MHServerEmu.Games.Powers
         NotAllowedByTransformMode = 23,
         FullscreenMovie = 24,
         ForceFailed = 25,
+    }
+
+    [Flags]
+    public enum PowerActivationSettingsFlags
+    {
+        None = 0,
+        Flag7 = 1 << 7,
     }
 
     public struct PowerActivationSettings
