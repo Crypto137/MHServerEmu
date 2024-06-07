@@ -142,6 +142,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         protected static void InitPower(Agent agent, ProceduralUsePowerContextPrototype proceduralPower)
         {
             InitPower(agent, proceduralPower?.PowerContext);
+            if (proceduralPower?.PowerContext != null && proceduralPower.InitialCooldownMaxMS > 0)
+            {
+                var ownerController = agent.AIController;
+                if (ownerController == null) return;
+                var game = agent.Game;
+                if (game == null) return;
+                int cooldown = game.Random.Next(proceduralPower.InitialCooldownMinMS, proceduralPower.InitialCooldownMaxMS);
+                ownerController.Blackboard.PropertyCollection[PropertyEnum.AIInitialCooldownMSForPower, proceduralPower.PowerContext.Power] = cooldown;
+            }
         }
 
         protected static void InitPower(Agent agent, UsePowerContextPrototype powerContext)
