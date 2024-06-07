@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -15,6 +14,7 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -43,7 +43,6 @@ namespace MHServerEmu.Games.Entities
 
                 return false;
             }
-
         }
 
         public override bool CanRotate
@@ -61,7 +60,16 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool HasPowerPreventionStatus { get; internal set; }
+        public bool HasPowerPreventionStatus
+            => IsInKnockback 
+            || IsInKnockdown 
+            || IsInKnockup 
+            || IsStunned 
+            || IsMesmerized 
+            || NPCAmbientLock 
+            || IsInPowerLock;
+
+        public AssetId OriginalWorldAsset { get; private set; }
 
         public Agent(Game game) : base(game) { }
 
@@ -298,7 +306,72 @@ namespace MHServerEmu.Games.Entities
             return base.InitInventories(populateInventories);
         }
 
-        internal IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
+        public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
+        {
+            var targetingProto = power.TargetingStylePrototype;
+            if (targetingProto == null) return IsInPositionForPowerResult.Error;
+
+            if (targetingProto.TargetingShape == TargetingShapeType.Self)
+                return IsInPositionForPowerResult.Success;
+
+            if (power.IsOnExtraActivation)
+                return IsInPositionForPowerResult.Success;
+
+            if (power.IsOwnerCenteredAOE && (targetingProto.MovesToRangeOfPrimaryTarget == false || target == null))
+                return IsInPositionForPowerResult.Success;
+            
+            Vector3 position = targetPosition;
+            if (target != null && target.IsInWorld)
+                if (power.Prototype is MissilePowerPrototype)
+                {
+                    float padding = target.Bounds.Radius - 1.0f;
+                    Vector3 targetPos = target.RegionLocation.Position;
+                    Vector3 targetDir = Vector3.SafeNormalize2D(RegionLocation.Position - targetPos);
+                    position = targetPos + targetDir * padding;
+                }
+
+            if (IsInRangeToActivatePower(power, target, position) == false)
+                return IsInPositionForPowerResult.OutOfRange;
+
+            if (power.RequiresLineOfSight)
+            {
+                ulong targetId = (target != null ? target.Id : InvalidId);
+                if (power.PowerLOSCheck(RegionLocation, position, targetId, out Vector3 resultPos, power.LOSCheckAlongGround) == false)
+                    return IsInPositionForPowerResult.NoPowerLOS;
+            }
+
+            if (power.Prototype is SummonPowerPrototype summonPowerProto)
+            {
+                var summonedProto = summonPowerProto.GetSummonEntity(0, OriginalWorldAsset);
+                if (summonedProto == null) return IsInPositionForPowerResult.Error;
+
+                var summonContext = summonPowerProto.GetSummonEntityContext(0);
+                if (summonContext == null) return IsInPositionForPowerResult.Error;
+
+                var bounds = new Bounds(summonedProto.Bounds, position);
+                
+                var pathFlags = Region.GetPathFlagsForEntity(summonedProto);
+                if (summonContext.PathFilterOverride != LocomotorMethod.None)
+                    pathFlags = Locomotor.GetPathFlags(summonContext.PathFilterOverride);
+                
+                var region = Region;
+                if (region == null) return IsInPositionForPowerResult.Error;
+                if (summonContext.IgnoreBlockingOnSpawn == false && summonedProto.Bounds.CollisionType == BoundsCollisionType.Blocking)
+                {
+                    if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.CheckCanBlockedEntity) == false)
+                        return IsInPositionForPowerResult.NotClearLocation;
+                }
+                else if (pathFlags != 0)
+                {
+                    if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.None) == false)
+                        return IsInPositionForPowerResult.NotClearLocation;
+                }
+            }
+
+            return IsInPositionForPowerResult.Success;
+        }
+
+        private bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
         {
             throw new NotImplementedException();
         }

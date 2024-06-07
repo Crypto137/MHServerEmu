@@ -123,6 +123,12 @@ namespace MHServerEmu.Games.Entities
             Flags = bounds.Flags;
         }
 
+        public Bounds(BoundsPrototype boundsProto, Vector3 position)
+        {
+            InitializeFromPrototype(boundsProto); 
+            Center = position;
+        }
+
         public void InitializeFromPrototype(BoundsPrototype boundsProto)
         {
             if (boundsProto == null)

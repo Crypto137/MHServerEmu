@@ -26,6 +26,10 @@ namespace MHServerEmu.Games.Powers
         public PropertyCollection Properties { get; } = new();
         public bool IsTravelPower { get => Prototype != null && Prototype.IsTravelPower; }
         public bool IsChannelingPower { get; internal set; }
+        public TargetingStylePrototype TargetingStylePrototype { get; internal set; }
+        public bool IsOnExtraActivation { get; internal set; }
+        public bool IsOwnerCenteredAOE { get; internal set; }
+        public bool LOSCheckAlongGround { get; internal set; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {
@@ -178,6 +182,11 @@ namespace MHServerEmu.Games.Powers
         }
 
         internal bool IsExclusiveActivation()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
         {
             throw new NotImplementedException();
         }
