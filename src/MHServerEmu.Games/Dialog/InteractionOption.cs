@@ -11,14 +11,14 @@ namespace MHServerEmu.Games.Dialog
         public static readonly Logger Logger = LogManager.CreateLogger();
         public int Priority { get; protected set; }
         public InteractionMethod MethodEnum { get; protected set; }
-        public HUDEntityOverheadIcon IndicatorType { get; internal set; }
+        public HUDEntityOverheadIcon IndicatorType { get; protected set; }
         public MissionOptionTypeFlags OptionType { get; protected set; }
         public EntityFilterWrapper EntityFilterWrapper { get; protected set; }
         public EntityTrackingFlag EntityTrackingFlags { get; protected set; }
         public InteractionOptimizationFlags OptimizationFlags { get; set; }
-        public PrototypeId RegionFilterRef { get; internal set; }
-        public PrototypeId AreaFilterRef { get; internal set; }
-        public PrototypeId MissionFilterRef { get; internal set; }
+        public PrototypeId RegionFilterRef { get; protected set; }
+        public PrototypeId AreaFilterRef { get; protected set; }
+        public PrototypeId MissionFilterRef { get; protected set; }
         public LocaleStringId FailureReasonText { get; private set; }
 
         public InteractionOption()

@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Behavior
         public Vector3 SpawnPoint { get; set; }
         public Vector3 SpawnOffset { get; set; }
         public Vector3 UsePowerTargetPos { get; set; }
-        public Queue<CustomPowerQueueEntry> CustomPowerQueue { get; internal set; }
+        public Queue<CustomPowerQueueEntry> CustomPowerQueue { get; set; }
         public Vector3 LastFlankTargetEntityPos { get; set; }
         public Vector3 LastFlockPosition { get; set; }
         public Vector3 MoveToCurrentPathNodePos { get; set; }
@@ -54,6 +54,12 @@ namespace MHServerEmu.Games.Behavior
                 PropertyCollection.FlattenCopyFrom(collection, false);
         }
 
+        public void AddCustomPower(PrototypeId powerRef, Vector3 targetPos, ulong targetId)
+        {
+            CustomPowerQueue ??= new Queue<CustomPowerQueueEntry>();
+            CustomPowerQueue.Enqueue(new (powerRef, targetPos, targetId ));
+        }
+
         private GeneratedPath _cachedGenPath;
         public GeneratedPath CachedPath
         {
@@ -85,5 +91,12 @@ namespace MHServerEmu.Games.Behavior
         public PrototypeId PowerRef;
         public Vector3 TargetPos;
         public ulong TargetId;
+
+        public CustomPowerQueueEntry(PrototypeId powerRef, Vector3 targetPos, ulong targetId)
+        {
+            PowerRef = powerRef;
+            TargetPos = targetPos;
+            TargetId = targetId;
+        }
     }
 }

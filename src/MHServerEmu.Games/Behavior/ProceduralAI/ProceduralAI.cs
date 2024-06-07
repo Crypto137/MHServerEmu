@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
 
         private ProfilePtr _fullOverridePtr;
         public ProceduralAIProfilePrototype FullOverrideBehavior { get => _fullOverridePtr.Profile; }
-        public StaticBehaviorReturnType LastPowerResult { get; internal set; }
+        public StaticBehaviorReturnType LastPowerResult { get; set; }
 
         public ProceduralAI(Game game, AIController owningController)
         {

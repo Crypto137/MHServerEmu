@@ -837,7 +837,7 @@ namespace MHServerEmu.Games.Entities
             return _entityListNodes.GetInvasiveListNode(listId);
         }
 
-        internal TimeSpan GetRemainingLifespan()
+        public TimeSpan GetRemainingLifespan()
         {
             if (ScheduledLifespanEvent.IsValid == false)  return TimeSpan.Zero;
             if (Game == null) return TimeSpan.Zero;

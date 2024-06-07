@@ -81,8 +81,8 @@ namespace MHServerEmu.Games.Dialog
             DialogDataType = DialogDataType.MTXStore;
         }
 
-        public string StoreName { get; internal set; }
-        public int StoreId { get; internal set; }
+        public string StoreName { get; set; }
+        public int StoreId { get; set; }
     }
 
     public class StashDialogData : DialogData
@@ -100,10 +100,10 @@ namespace MHServerEmu.Games.Dialog
             DialogDataType = DialogDataType.Vendor;
         }
 
-        public bool AllowActionDonate { get; internal set; }
-        public bool AllowActionRefresh { get; internal set; }
-        public bool IsCrafter { get; internal set; }
-        public bool IsRaidVendor { get; internal set; }
-        public bool IsGlobalEvent { get; internal set; }
+        public bool AllowActionDonate { get; set; }
+        public bool AllowActionRefresh { get; set; }
+        public bool IsCrafter { get; set; }
+        public bool IsRaidVendor { get; set; }
+        public bool IsGlobalEvent { get; set; }
     }
 }
