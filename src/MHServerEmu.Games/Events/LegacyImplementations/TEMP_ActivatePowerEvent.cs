@@ -26,16 +26,18 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             Logger.Trace($"Activating {GameDatabase.GetPrototypeName(_powerProtoRef)} for {avatar}");
 
-            ActivatePowerArchive activatePower = new();
-            activatePower.Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
+            ActivatePowerArchive activatePower = new()
+            {
+                Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
                 ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
-                ActivatePowerMessageFlags.HasPowerRandomSeed;
+                ActivatePowerMessageFlags.HasPowerRandomSeed,
 
-            activatePower.PowerPrototypeRef = _powerProtoRef;
-            activatePower.UserEntityId = avatar.Id;
-            activatePower.TargetPosition = _playerConnection.LastPosition;
-            activatePower.FXRandomSeed = 100;
-            activatePower.PowerRandomSeed = 100;
+                PowerPrototypeRef = _powerProtoRef,
+                UserEntityId = avatar.Id,
+                TargetPosition = _playerConnection.LastPosition,
+                FXRandomSeed = (uint)_playerConnection.Game.Random.Next(),
+                PowerRandomSeed = (uint)_playerConnection.Game.Random.Next()
+            };
 
             _playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
                 .SetArchiveData(activatePower.ToByteString())
