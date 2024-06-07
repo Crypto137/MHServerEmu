@@ -279,6 +279,12 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        public override void OnDramaticEntranceEnd()
+        {
+            base.OnDramaticEntranceEnd();
+            AIController?.OnAIDramaticEntranceEnd();
+        }
+
         public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
         {
             // TODO

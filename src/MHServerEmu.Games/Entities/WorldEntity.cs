@@ -954,6 +954,9 @@ namespace MHServerEmu.Games.Entities
                 if (thrower.Throwability < Properties[PropertyEnum.Throwability]) return false;
             return true;
         }
+
+        public virtual void OnDramaticEntranceEnd()  { }
+    }
     }
 
     public enum PowerMovementPreventionFlags

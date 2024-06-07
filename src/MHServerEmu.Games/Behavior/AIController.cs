@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Behavior
         public BehaviorSensorySystem Senses { get; private set; }
         public BehaviorBlackboard Blackboard { get; private set; }   
         public bool IsEnabled { get; private set; }
-        public PrototypeId ActivePowerRef { get; internal set; }
+        public PrototypeId ActivePowerRef => GetActivePowerRef();
         public WorldEntity TargetEntity => Senses.GetCurrentTarget();
         public WorldEntity InteractEntity => GetInteractEntityHelper();
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.Behavior
         {
             if (Game == null) return null;
             ulong assistedEntityId = Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID];
-            if (assistedEntityId == 0) return null;
+            if (assistedEntityId == Entity.InvalidId) return null;
 
             Entity entity = Game.EntityManager.GetEntity<Entity>(assistedEntityId);
             if (entity == null) return null;
@@ -110,6 +110,17 @@ namespace MHServerEmu.Games.Behavior
                 return null;
             }
             return assistedEntity;
+        }
+
+        private PrototypeId GetActivePowerRef()
+        {
+            PrototypeId activePowerRef = PrototypeId.Invalid;
+            foreach (var kvp in Blackboard.PropertyCollection.IteratePropertyRange(PropertyEnum.AIPowerStarted))
+            {
+                Property.FromParam(kvp.Key, 0, out activePowerRef);
+                break;
+            }
+            return activePowerRef;
         }
 
         public float AggroRangeAlly 
@@ -304,7 +315,14 @@ namespace MHServerEmu.Games.Behavior
                 Brain.ThinkCountPerFrame = 0;
             }
 
-            // TODO update think event
+            if (Owner.TestStatus(EntityStatus.PendingDestroy) == false 
+                && Owner.TestStatus(EntityStatus.Destroyed) == false)
+            {
+                float thinkTime = 500; // slow think 
+                if (TargetEntity != null || AssistedEntity != null)
+                    thinkTime = 100; // fast think
+                ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(thinkTime) * Game.Random.NextFloat(0.9f, 1.1f));
+            }
 
             Brain?.Think();
         }
@@ -390,6 +408,18 @@ namespace MHServerEmu.Games.Behavior
                 region.PlayerInteractEvent.AddActionBack(PlayerInteractEvent);
             else
                 region.PlayerInteractEvent.RemoveAction(PlayerInteractEvent);
+        }
+
+        public void OnAIDramaticEntranceEnd()
+        {
+            if (Owner == null) return;
+            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(0), false, false);
+            Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
+        }
+
+        public override string ToString()
+        {
+            return $"AIController: {Owner}";
         }
     }
 }
