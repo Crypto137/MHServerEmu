@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PrototypeId EntityRef { get; set; }
         public WorldEntity ActiveEntity { get; set; }
         public PropertyCollection Properties { get; set; }
-        public Transform3 Transform { get; set; }
+        public Transform3 Transform { get; set; } = Transform3.Identity();
         public bool? SnapToFloor { get; set; }
         public EntitySelectorPrototype EntitySelectorProto { get; set; }
         public PrototypeId MissionRef { get; set; }

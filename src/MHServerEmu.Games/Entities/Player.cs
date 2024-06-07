@@ -776,6 +776,7 @@ namespace MHServerEmu.Games.Entities
             {
                 EntityRef = prototypeId, 
                 Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
                 RegionId = region.Id,                
                 Properties = new PropertyCollection
                 {

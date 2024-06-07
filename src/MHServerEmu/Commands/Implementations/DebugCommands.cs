@@ -213,6 +213,7 @@ namespace MHServerEmu.Commands.Implementations
             var position = playerConnection.LastPosition;
             var region = playerConnection.AOI.Region;
             Agent pet = player.CreatePet((PrototypeId)16300889242928224944, position, region); // Pet001OldLace = 16300889242928224944
+            playerConnection.AOI.Update(playerConnection.LastPosition, true);
             return $"Pet {pet.PrototypeName} Created";
         }
 
