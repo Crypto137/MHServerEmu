@@ -13,6 +13,8 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -202,6 +204,12 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        public TimeSpan TotalLifespan { get; private set; }
+
+        private EventGroup _pendingEvents = new();
+
+        public EventPointer<ScheduledLifespanEvent> ScheduledLifespanEvent = new();
+
         public Entity(Game game)
         {
             Game = game;
@@ -264,6 +272,9 @@ namespace MHServerEmu.Games.Entities
 
             InventoryCollection.Initialize(this);
             InitInventories(settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.PopulateInventories));
+
+            TotalLifespan = settings.Lifespan;
+            InitLifespan(settings.Lifespan);
 
             return true;
         }
@@ -828,9 +839,64 @@ namespace MHServerEmu.Games.Entities
 
         internal TimeSpan GetRemainingLifespan()
         {
-            throw new NotImplementedException();
+            if (ScheduledLifespanEvent.IsValid == false)  return TimeSpan.Zero;
+            if (Game == null) return TimeSpan.Zero;
+            return ScheduledLifespanEvent.Get().FireTime - Game.CurrentTime;
+        }
+
+        public void InitLifespan(TimeSpan overrideLifespan)
+        {
+            if (Prototype == null) return;
+            if (overrideLifespan > TimeSpan.Zero)
+                ResetLifespan(overrideLifespan);
+            else if (Prototype.LifespanMS > 0)
+                ResetLifespan(TimeSpan.FromMilliseconds(Prototype.LifespanMS));
+        }
+
+        public void ResetLifespan(TimeSpan lifespan)
+        {
+            if (ScheduledLifespanEvent.IsValid)
+            {
+                var scheduler = Game?.GameEventScheduler;
+                if (scheduler == null) return;
+                scheduler.RescheduleEvent(ScheduledLifespanEvent, lifespan);
+            }
+            else
+                ScheduleEntityEvent(ScheduledLifespanEvent, lifespan);
+
+            TotalLifespan = lifespan;
+        }
+
+        public void ScheduleEntityEvent<T>(EventPointer<T> eventPointer, TimeSpan lifespan) 
+            where T : ScheduledEvent, IEventTarget, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, lifespan, _pendingEvents);
+            eventPointer.Get().EventTarget = this;
+        }
+
+        public void OnLifespanExpired()
+        {
+            Destroy();
         }
 
         #endregion
+    }
+
+    public class ScheduledLifespanEvent : TargetedScheduledEvent<Entity> , IEventTarget 
+    {
+        public Entity EventTarget { get => _eventTarget; set => _eventTarget = value; }
+        public override bool OnTriggered()
+        {
+            if (_eventTarget == null) return false;
+            _eventTarget.OnLifespanExpired();
+            return true;
+        }
+    }
+
+    public interface IEventTarget
+    {
+        Entity EventTarget { get; set; }
     }
 }
