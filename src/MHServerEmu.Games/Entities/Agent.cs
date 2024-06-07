@@ -5,6 +5,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;

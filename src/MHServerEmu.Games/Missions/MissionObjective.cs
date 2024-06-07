@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 

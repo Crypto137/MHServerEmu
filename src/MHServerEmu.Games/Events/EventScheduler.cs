@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System;
 
 namespace MHServerEmu.Games.Events
 {
@@ -10,12 +9,13 @@ namespace MHServerEmu.Games.Events
         // TODO: Fix multithreading issues with region generation and remove locks
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
-        private TimeSpan _currentTime;
         private bool _cancellingAllEvents = false;
 
-        public EventScheduler()
+        public TimeSpan CurrentTime { get; private set; }
+
+        public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numBuckets = 256)
         {
-            _currentTime = Clock.GameTime;
+            CurrentTime = currentTime;
         }
 
         public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup) where T: ScheduledEvent, new()
@@ -72,15 +72,17 @@ namespace MHServerEmu.Games.Events
             _cancellingAllEvents = false;
         }
 
-        public void TriggerEvents()
+        public void TriggerEvents(TimeSpan currentGameTime)
         {
-            _currentTime = Clock.GameTime;
+            if (CurrentTime > currentGameTime) return;      // No time travel backwards in time
+
+            // TODO: Advance CurrentTime as we trigger events
 
             int numEvents = 0;
 
             lock (_scheduledEvents)
             {
-                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= _currentTime))
+                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime))
                 {
                     _scheduledEvents.Remove(@event);
                     @event.InvalidatePointers();
@@ -90,6 +92,8 @@ namespace MHServerEmu.Games.Events
             }
 
             if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
+
+            CurrentTime = currentGameTime;
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
@@ -102,7 +106,7 @@ namespace MHServerEmu.Games.Events
                 timeOffset = TimeSpan.Zero;
             }
 
-            @event.FireTime = _currentTime + timeOffset;
+            @event.FireTime = CurrentTime + timeOffset;
             ScheduleEvent(@event);
 
             return @event;
@@ -130,7 +134,7 @@ namespace MHServerEmu.Games.Events
                 timeOffset = TimeSpan.Zero;
             }
 
-            @event.FireTime = _currentTime + timeOffset;
+            @event.FireTime = CurrentTime + timeOffset;
         }
     }
 }

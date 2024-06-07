@@ -3,10 +3,11 @@ using System.Globalization;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -31,15 +32,14 @@ namespace MHServerEmu.Games
 
         private const int TargetFrameRate = 20;
         public static readonly TimeSpan StartTime = TimeSpan.FromMilliseconds(1);
-        public readonly TimeSpan FixedTimeBetweenUpdates = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
         public readonly NetStructGameOptions GameOptions;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Stopwatch _gameTimer = new();
-        private TimeSpan _accumulatedFixedTimeUpdateTime;   // How much has passed since the last fixed time update
-        private TimeSpan _lastFixedTimeUpdateStartTime;     // When was the last time we tried to do a fixed time update
-        private TimeSpan _lastFixedTimeUpdateProcessTime;   // How long the last fixed time took
+        private FixedQuantumGameTime _realGameTime = new(TimeSpan.FromMilliseconds(1));
+        private TimeSpan _currentGameTime = TimeSpan.FromMilliseconds(1);   // Current time in the game simulation
+        private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
         private int _frameCount;
 
         private bool _isRunning;
@@ -52,10 +52,15 @@ namespace MHServerEmu.Games
         public ulong Id { get; }
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
-        public EventScheduler GameEventScheduler { get; }
+        public EventScheduler GameEventScheduler { get; private set; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
+
+        public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
+        public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }
+        public TimeSpan CurrentTime { get => GameEventScheduler != null ? GameEventScheduler.CurrentTime : _currentGameTime; }
+        public ulong NumQuantumFixedTimeUpdates { get => (ulong)CurrentTime.CalcNumTimeQuantums(FixedTimeBetweenUpdates); }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
@@ -78,7 +83,6 @@ namespace MHServerEmu.Games
 
             AdminCommandManager = new(this);
             NetworkManager = new(this);
-            GameEventScheduler = new();
             RegionManager = new();
             EntityManager = new(this);
 
@@ -90,6 +94,12 @@ namespace MHServerEmu.Games
         public bool Initialize()
         {
             bool success = true;
+
+            _realGameTime.SetQuantumSize(FixedTimeBetweenUpdates);
+            _realGameTime.UpdateToNow();
+            _currentGameTime = RealGameTime;
+
+            GameEventScheduler = new(RealGameTime, FixedTimeBetweenUpdates);
 
             success &= RegionManager.Initialize(this);
             success &= EntityManager.Initialize();
@@ -239,12 +249,6 @@ namespace MHServerEmu.Games
         public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
         public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
 
-        public TimeSpan GetCurrentTime()
-        {
-            // TODO check EventScheduler
-            return Clock.GameTime;
-        }
-
         private void Update()
         {
             Current = this;
@@ -267,46 +271,49 @@ namespace MHServerEmu.Games
         private void UpdateFixedTime()
         {
             // First we make sure enough time has passed to do another fixed time update
-            TimeSpan currentTime = _gameTimer.Elapsed;
-            _accumulatedFixedTimeUpdateTime += currentTime - _lastFixedTimeUpdateStartTime;
-            _lastFixedTimeUpdateStartTime = currentTime;
+            _realGameTime.UpdateToNow();
 
-            if (_accumulatedFixedTimeUpdateTime < FixedTimeBetweenUpdates)
+            if (_currentGameTime + FixedTimeBetweenUpdates > RealGameTime)
             {
                 // Thread.Sleep() can sleep for longer than specified, so rather than sleeping
                 // for the entire time window between fixed updates, we do it in 1 ms intervals.
-                // For reference see MonoGame implementation here:
-                // https://github.com/MonoGame/MonoGame/blob/develop/MonoGame.Framework/Game.cs#L518
-                if ((FixedTimeBetweenUpdates - _accumulatedFixedTimeUpdateTime).TotalMilliseconds >= 2.0)
-                    Thread.Sleep(1);
+                Thread.Sleep(1);
                 return;
             }
 
             int timesUpdated = 0;
 
-            while (_accumulatedFixedTimeUpdateTime >= FixedTimeBetweenUpdates)
+            TimeSpan updateStartTime = _gameTimer.Elapsed;
+            while (_currentGameTime + FixedTimeBetweenUpdates <= RealGameTime)
             {
-                _accumulatedFixedTimeUpdateTime -= FixedTimeBetweenUpdates;
+                _currentGameTime += FixedTimeBetweenUpdates;
 
-                TimeSpan fixedUpdateStartTime = _gameTimer.Elapsed;
+                TimeSpan stepStartTime = _gameTimer.Elapsed;
 
                 DoFixedTimeUpdate();
                 _frameCount++;
                 timesUpdated++;
 
-                _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - fixedUpdateStartTime;
+                _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - stepStartTime;
 
                 if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
                     Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+
+                // Bail out if we have fallen behind more exceeded frame budget
+                if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
+                    break;
             }
 
+            // Skip time if we have fallen behind
+            _currentGameTime = RealGameTime;
+
             if (timesUpdated > 1)
-                Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single update to catch up");
+                Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
         }
 
         private void DoFixedTimeUpdate()
         {
-            GameEventScheduler.TriggerEvents();
+            GameEventScheduler.TriggerEvents(_currentGameTime);
 
             // Re-enable locomotion and physics when we get rid of multithreading issues
             //EntityManager.LocomoteEntities();

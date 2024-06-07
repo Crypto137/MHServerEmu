@@ -6,7 +6,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Locales;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Games.Achievements
 {

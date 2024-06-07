@@ -9,6 +9,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
@@ -83,10 +84,9 @@ namespace MHServerEmu.Commands.Implementations
                 case AvatarPrototypeId.Storm:
                 case AvatarPrototypeId.Thing:
                 case AvatarPrototypeId.Thor:
-                    EventPointer<OLD_EmoteDanceEvent> eventPointer = new();
-                    game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                    eventPointer.Get().PlayerConnection = playerConnection;
-
+                    EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
+                    game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
+                    activatePowerEventPointer.Get().Initialize(playerConnection, (PrototypeId)PowerPrototypes.Emotes.EmoteDance);
                     return $"{avatar} begins to dance";
                 default:
                     return $"{avatar} doesn't want to dance";

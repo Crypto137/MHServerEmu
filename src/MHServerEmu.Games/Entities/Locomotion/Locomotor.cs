@@ -1115,7 +1115,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             var game = _owner?.Game;
             if (game == null) return new();
-            return game.GetCurrentTime();
+            return game.CurrentTime;
         }
 
         public void LookAt(Vector3 position)

@@ -4,7 +4,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;

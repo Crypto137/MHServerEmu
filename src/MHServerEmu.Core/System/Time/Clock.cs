@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MHServerEmu.Core.System
+namespace MHServerEmu.Core.System.Time
 {
     /// <summary>
     /// Provides Gazillion time functionality.
@@ -42,6 +42,14 @@ namespace MHServerEmu.Core.System
         /// Returns a <see cref="TimeSpan"/> representing the current game time (epoch Sep 22 2012 09:31:18 GMT+0000).
         /// </summary>
         public static TimeSpan GameTime { get => UtcNowPrecise - GameTimeEpoch; }
+
+        /// <summary>
+        /// Returns the number of steps in a <see cref="TimeSpan"/> given the provided step size.
+        /// </summary>
+        public static long CalcNumTimeQuantums(TimeSpan time, TimeSpan quantumSize)
+        {
+            return time.Ticks / quantumSize.Ticks;
+        }
 
         #region Conversion
 
