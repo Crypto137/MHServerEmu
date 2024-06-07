@@ -23,8 +23,7 @@ namespace MHServerEmu.Games.Events.Templates
         public override bool OnTriggered()
         {
             if (_eventTarget == null) return Logger.WarnReturn(false, "OnTriggered(): _eventTarget == null");
-            CallbackDelegate callback = GetCallback();
-            callback(_eventTarget, _param1, _param2);
+            GetCallback().Invoke(_eventTarget, _param1, _param2);
             return true;
         }
     }
