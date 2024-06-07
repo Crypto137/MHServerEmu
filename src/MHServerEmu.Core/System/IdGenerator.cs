@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.System
+﻿using MHServerEmu.Core.System.Time;
+
+namespace MHServerEmu.Core.System
 {
     public enum IdType
     {

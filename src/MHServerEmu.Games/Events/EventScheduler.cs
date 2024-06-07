@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System;
 
 namespace MHServerEmu.Games.Events
 {
@@ -73,9 +72,11 @@ namespace MHServerEmu.Games.Events
             _cancellingAllEvents = false;
         }
 
-        public void TriggerEvents()
+        public void TriggerEvents(TimeSpan currentGameTime)
         {
-            CurrentTime = Clock.GameTime;
+            if (CurrentTime > currentGameTime) return;      // No time travel backwards in time
+
+            // TODO: Advance CurrentTime as we trigger events
 
             int numEvents = 0;
 
@@ -91,6 +92,8 @@ namespace MHServerEmu.Games.Events
             }
 
             if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
+
+            CurrentTime = currentGameTime;
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
