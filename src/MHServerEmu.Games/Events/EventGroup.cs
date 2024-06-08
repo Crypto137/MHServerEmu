@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Events
     /// </summary>
     public class EventGroup : IEnumerable<ScheduledEvent>
     {
-        private readonly LinkedList<ScheduledEvent> _eventList;
+        private readonly LinkedList<ScheduledEvent> _eventList = new();
 
         public ScheduledEvent Front { get => _eventList.First?.Value; }
         public bool IsEmpty { get => _eventList.First == null; }
