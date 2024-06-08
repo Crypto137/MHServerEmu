@@ -82,8 +82,11 @@ namespace MHServerEmu.Games.Events
 
             lock (_scheduledEvents)
             {
-                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime))
+                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime).OrderBy(@event => @event.FireTime);
+
+                foreach (ScheduledEvent @event in frameEvents)
                 {
+                    CurrentTime = @event.FireTime;
                     _scheduledEvents.Remove(@event);
                     @event.InvalidatePointers();
                     @event.OnTriggered();
