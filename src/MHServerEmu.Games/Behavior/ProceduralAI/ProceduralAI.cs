@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -67,7 +69,9 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 ulong masterAvatarDbGuid = agent.Properties[PropertyEnum.AIMasterAvatarDbGuid];
                 if (masterAvatarDbGuid != 0)
                 {
-                    // TODO Set PropertyEnum.AIAssistedEntityID = DBAvatarId
+                    var avatar = _game.EntityManager.GetEntityByDbGuid<Player>(masterAvatarDbGuid); // TODO AvatarDB
+                    if (avatar != null)
+                        _owningController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
                 }
             }
 

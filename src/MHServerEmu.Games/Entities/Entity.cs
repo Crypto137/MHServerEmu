@@ -480,7 +480,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsSimulated != simulated)
             {
-                if (simulated == false || (this is WorldEntity worldEntity && worldEntity.IsInWorld))
+                if (simulated == true &&  (this is not WorldEntity worldEntity || worldEntity.IsInWorld == false))
                     Logger.Debug($"SetSimulated(): An entity must be in the world to be simulated {ToString()}");
                 ModifyCollectionMembership(EntityCollection.Simulated, simulated);
                 return simulated ? SimulateResult.Set : SimulateResult.Clear;
@@ -540,6 +540,7 @@ namespace MHServerEmu.Games.Entities
             if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
             if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
             if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
+            if (Properties.HasProperty(PropertyEnum.AIMasterAvatar)) _flags |= EntityFlags.AIMasterAvatar;
         }
 
         public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)

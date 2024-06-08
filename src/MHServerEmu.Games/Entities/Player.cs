@@ -777,9 +777,12 @@ namespace MHServerEmu.Games.Entities
                 EntityRef = prototypeId, 
                 Position = position,
                 Orientation = new(3.14f, 0.0f, 0.0f),
-                RegionId = region.Id,                
+                RegionId = region.Id,
+                OptionFlags = EntitySettingsOptionFlags.EnterGame,
                 Properties = new PropertyCollection
                 {
+                    [PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId,
+                    [PropertyEnum.AIMasterAvatar] = true,
                     [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
                     [PropertyEnum.CharacterLevel] = level,
                     [PropertyEnum.CombatLevel] = level,
