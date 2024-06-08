@@ -778,7 +778,7 @@ namespace MHServerEmu.Games.Entities
                 Position = position,
                 Orientation = new(3.14f, 0.0f, 0.0f),
                 RegionId = region.Id,
-                OptionFlags = EntitySettingsOptionFlags.EnterGame,
+               // OptionFlags = EntitySettingsOptionFlags.EnterGame,
                 Properties = new PropertyCollection
                 {
                     [PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId,
