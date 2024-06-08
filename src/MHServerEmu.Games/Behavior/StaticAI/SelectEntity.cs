@@ -481,7 +481,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         private static bool HasAlliancePriority(in SelectEntityContext selectionContext, WorldEntity entity)
         {
-            return entity.GetAlliance() == selectionContext.AlliancePriority;
+            return entity.Alliance.DataRef == selectionContext.AlliancePriority;
         }
 
         private static bool ShouldDoAlliancePriorityCheck(in SelectEntityContext selectionContext, WorldEntity bestTargetSoFar)

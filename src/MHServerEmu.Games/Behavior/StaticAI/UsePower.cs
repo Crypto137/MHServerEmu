@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                             }
 
                             if (Power.ValidateAOETarget(target, powerProto, agent, agent.RegionLocation.Position,
-                                agent.AllianceProto, targetingReachProto.RequiresLineOfSight))
+                                agent.Alliance, targetingReachProto.RequiresLineOfSight))
                             {
                                 targetIdForPower = target.Id;
                                 break;

@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
@@ -25,6 +26,7 @@ namespace MHServerEmu.Games.Entities
         private SortedDictionary<ulong, Condition> _currentConditionDict = new();   // m_currentConditions
 
         public int Count { get => _currentConditionDict.Count; }    // Temp property for compatibility with our existing hacks
+        public KeywordsMask ConditionKeywordsMask { get; internal set; }
 
         public ConditionCollection(WorldEntity owner)
         {

@@ -193,6 +193,12 @@ namespace MHServerEmu.Games.Powers
         public TimeSpan LastActivateGameTime { get; internal set; }
         public TimeSpan AnimationTime { get; internal set; }
         public bool IsItemPower { get; internal set; }
+        public bool IsPartOfAMovementPower { get; internal set; }
+        public bool PreventsNewMovementWhileActive { get; internal set; }
+        public bool IsNonCancellableChannelPower { get; internal set; }
+        public bool IsCancelledOnMove { get; internal set; }
+        public bool DisableOrientationWhileActive { get; internal set; }
+        public bool ShouldOrientToTarget { get; internal set; }
 
         internal bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
         {
@@ -200,6 +206,26 @@ namespace MHServerEmu.Games.Powers
         }
 
         internal PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static bool IsMovementPower(PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
         {
             throw new NotImplementedException();
         }

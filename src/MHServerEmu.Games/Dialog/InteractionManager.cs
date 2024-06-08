@@ -1041,7 +1041,7 @@ namespace MHServerEmu.Games.Dialog
             var missionProto = mission.Prototype;
             if (missionProto == null) return missionResult;
 
-            int avatarCharacterLevel = player.GetPrimaryAvatarCharacterLevel();
+            int avatarCharacterLevel = player.CurrentAvatarCharacterLevel;
             if (missionProto.Level - avatarCharacterLevel >= MissionManager.MissionLevelUpperBoundsOffset())
             {
                 if (indicatorType == HUDEntityOverheadIcon.MissionBestower)
