@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Events
 {
@@ -7,6 +8,7 @@ namespace MHServerEmu.Games.Events
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // TODO: Fix multithreading issues with region generation and remove locks
+        // TODO: Implement frame buckets
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
         private bool _cancellingAllEvents = false;
@@ -18,18 +20,17 @@ namespace MHServerEmu.Games.Events
             CurrentTime = currentTime;
         }
 
-        public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup) where T: ScheduledEvent, new()
+        public bool ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup = null) where T: ScheduledEvent, new()
         {
-            if (_cancellingAllEvents) return;
+            if (eventPointer.IsValid) return Logger.WarnReturn(false, $"ScheduleEvent<{typeof(T).Name}>(): eventPointer.IsValid");
+
+            if (_cancellingAllEvents) return false;
 
             T @event = ConstructAndScheduleEvent<T>(timeOffset);
-            // todo: add to event group
+            eventGroup?.Add(@event);
             eventPointer.Set(@event);
-        }
 
-        public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T : ScheduledEvent, new()
-        {
-            ScheduleEvent(eventPointer, timeOffset, null);
+            return true;
         }
 
         public bool RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
@@ -72,11 +73,15 @@ namespace MHServerEmu.Games.Events
             _cancellingAllEvents = false;
         }
 
+        public void CancelAllEvents(EventGroup eventGroup)
+        {
+            while (eventGroup.IsEmpty == false)
+                CancelEvent(eventGroup.Front);
+        }
+
         public void TriggerEvents(TimeSpan currentGameTime)
         {
-            if (CurrentTime > currentGameTime) return;      // No time travel backwards in time
-
-            // TODO: Advance CurrentTime as we trigger events
+            if (CurrentTime > currentGameTime) return;      // No time travel backwards in time here
 
             int numEvents = 0;
 
@@ -88,6 +93,7 @@ namespace MHServerEmu.Games.Events
                 {
                     CurrentTime = @event.FireTime;
                     _scheduledEvents.Remove(@event);
+                    @event.EventGroupNode?.Remove();
                     @event.InvalidatePointers();
                     @event.OnTriggered();
                     numEvents++;
@@ -123,9 +129,13 @@ namespace MHServerEmu.Games.Events
 
         private void CancelEvent(ScheduledEvent @event)
         {
-            lock (_scheduledEvents) _scheduledEvents.Remove(@event);
-            @event.InvalidatePointers();
-            @event.OnCancelled();
+            lock (_scheduledEvents)
+            {
+                _scheduledEvents.Remove(@event);
+                @event.EventGroupNode?.Remove();
+                @event.InvalidatePointers();
+                @event.OnCancelled();
+            }
         }
 
         private void RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)
