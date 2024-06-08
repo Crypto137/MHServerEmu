@@ -258,19 +258,59 @@ namespace MHServerEmu.Games.Entities
             return GameDatabase.GetPrototype<AlliancePrototype>(GetAlliance());
         }
 
-        internal bool IsHostileTo(WorldEntity target, AlliancePrototype allianceProto = null)
+        public bool IsHostileTo(WorldEntity other, AlliancePrototype allianceOverrideProto = null)
         {
-            throw new NotImplementedException();
+            if (other == null) return false;
+
+            if (this is not Avatar && IsMissionCrossEncounterHostilityOk == false)
+            {
+                bool isPlayer = false;
+                if (HasPowerUserOverride)
+                {
+                    var userId = Properties[PropertyEnum.PowerUserOverrideID];
+                    if (userId != InvalidId)
+                    {
+                        var user = Game.EntityManager.GetEntity<Entity>(userId);
+                        if (user?.GetOwnerOfType<Player>() != null)
+                            isPlayer = true;
+                    }
+                }
+
+                if (isPlayer == false 
+                    && IgnoreMissionOwnerForTargeting == false
+                    && HasMissionPrototype && other.HasMissionPrototype 
+                    && (PrototypeId)Properties[PropertyEnum.MissionPrototype] != (PrototypeId)other.Properties[PropertyEnum.MissionPrototype])
+                    return false;
+            }
+
+            return IsHostileTo(other.AllianceProto, allianceOverrideProto);
         }
 
-        internal NaviPathResult CheckCanPathTo(Vector3 toPosition)
+        public NaviPathResult CheckCanPathTo(Vector3 toPosition)
         {
             return CheckCanPathTo(toPosition, GetPathFlags());
         }
 
-        internal NaviPathResult CheckCanPathTo(Vector3 toPosition, PathFlags checkFlags)
+        public NaviPathResult CheckCanPathTo(Vector3 toPosition, PathFlags pathFlags)
         {
-            throw new NotImplementedException();
+            var region = Region;
+            if (IsInWorld == false || region == null)
+            {
+                Logger.Warn($"Entity not InWorld when trying to check for a path! Entity: {ToString()}");
+                return NaviPathResult.Failed;
+            }
+
+            bool hasNaviInfluence = false;
+            if (HasNavigationInfluence)
+            {
+                DisableNavigationInfluence();
+                hasNaviInfluence = HasNavigationInfluence;
+            }
+
+            var result = NaviPath.CheckCanPathTo(region.NaviMesh, RegionLocation.Position, toPosition, Bounds.Radius, pathFlags);
+            if (hasNaviInfluence) EnableNavigationInfluence();
+
+            return result;
         }
 
         public bool LineOfSightTo(WorldEntity other, float radius = 0.0f, float padding = 0.0f, float height = 0.0f)
