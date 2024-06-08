@@ -340,13 +340,7 @@ namespace MHServerEmu.Games.Entities.Physics
                         if (bounds.Sweep(otherBounds, Vector3.Zero, velocity, ref time, ref normal) == false) continue;
 
                         velocity *= time;
-                        EntityCollision entityCollision = new ()
-                        {
-                            OtherEntity = otherEntity,
-                            Time = time,
-                            Position = location.Position + velocity,
-                            Normal = normal
-                        };
+                        EntityCollision entityCollision = new (otherEntity, time, location.Position + velocity, normal);
                         entityCollisionList.Add(entityCollision);
 
                         if (entity.CanBeBlockedBy(otherEntity))
@@ -434,18 +428,12 @@ namespace MHServerEmu.Games.Entities.Physics
 
             foreach (var otherEntity in collisions)
             {
-                EntityCollision entityCollision = new ()
-                {
-                    OtherEntity = otherEntity,
-                    Time = 0.0f,
-                    Position = position,
-                    Normal = Vector3.ZAxis
-                };
+                EntityCollision entityCollision = new (otherEntity, 0.0f, position, Vector3.ZAxis);
                 HandlePossibleEntityCollision(entity, entityCollision, applyRepulsionForces, true);
             }
         }
 
-        private void HandlePossibleEntityCollision(WorldEntity entity, EntityCollision entityCollision, bool applyRepulsionForces, bool boundsCheck)
+        private void HandlePossibleEntityCollision(WorldEntity entity, in EntityCollision entityCollision, bool applyRepulsionForces, bool boundsCheck)
         {
             if (entity == null || entityCollision.OtherEntity == null) return;
 
@@ -690,17 +678,19 @@ namespace MHServerEmu.Games.Entities.Physics
         }
     }
 
-    public class EntityCollision
+    public struct EntityCollision : IComparable<EntityCollision>
     {
-        public WorldEntity OtherEntity { get; internal set; }
-        public float Time { get; internal set; }
-        public Vector3 Position { get; internal set; }
-        public Vector3 Normal { get; internal set; }
+        public WorldEntity OtherEntity;
+        public float Time;
+        public Vector3 Position;
+        public Vector3 Normal;
 
         public EntityCollision()
         {
             OtherEntity = null;
             Time = 1.0f;
+            Position = Vector3.Zero;
+            Normal = Vector3.Zero;
         }
 
         public EntityCollision(WorldEntity otherEntity, float time, Vector3 position, Vector3 normal)
@@ -711,7 +701,7 @@ namespace MHServerEmu.Games.Entities.Physics
             Normal = normal;
         }
 
-        public int CompareTo(EntityCollision other)
+        public readonly int CompareTo(EntityCollision other)
         {
             return Time.CompareTo(other.Time);
         }
