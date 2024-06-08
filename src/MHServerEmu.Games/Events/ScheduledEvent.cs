@@ -4,6 +4,7 @@
     {
         private readonly HashSet<IEventPointer> _pointers = new();
 
+        public LinkedListNode<ScheduledEvent> EventGroupNode { get; set; }
         public TimeSpan FireTime { get; set; }
 
         public bool Link(IEventPointer pointer)
