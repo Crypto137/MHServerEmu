@@ -203,6 +203,21 @@ namespace MHServerEmu.Games.Powers
         {
             throw new NotImplementedException();
         }
+
+        internal static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static bool IsMovementPower(PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Flags]

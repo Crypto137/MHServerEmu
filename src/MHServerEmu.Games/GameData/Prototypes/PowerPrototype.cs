@@ -397,6 +397,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
+
+        public virtual bool IsHighFlyingPower() => false;
+
         public override bool ApprovedForUse()
         {
             return GameDatabase.DesignStateOk(DesignState);
@@ -446,6 +449,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IgnoreTeleportBlockers { get; protected set; }
         public bool HighFlying { get; protected set; }
         public TeleportMethodType TeleportMethod { get; protected set; }
+
+        public override bool IsHighFlyingPower() => HighFlying;
     }
 
     public class SpecializationPowerPrototype : PowerPrototype

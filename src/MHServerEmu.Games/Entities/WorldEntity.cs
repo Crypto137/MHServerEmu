@@ -823,6 +823,9 @@ namespace MHServerEmu.Games.Entities
         public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
         public bool DefaultRuntimeVisibility { get => WorldEntityPrototype != null && WorldEntityPrototype.VisibleByDefault; }
         public virtual int Throwability { get => 0; }
+        public virtual int InteractRange { get => GameDatabase.GlobalsPrototype?.InteractRange ?? 0; }
+        public int InteractFallbackRange { get => GameDatabase.GlobalsPrototype?.InteractFallbackRange ?? 0; }
+        public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
 
         public PathFlags GetPathFlags()
         {
@@ -957,19 +960,109 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        internal RankPrototype GetRankPrototype()
+        public RankPrototype GetRankPrototype()
         {
-            throw new NotImplementedException();
+            var rankRef = Properties[PropertyEnum.Rank];
+            if (rankRef != PrototypeId.Invalid)
+            {
+                var rankProto = GameDatabase.GetPrototype<RankPrototype>(rankRef);
+                if (rankProto == null) return null;
+                return rankProto;
+            }
+            else
+            {
+                var worldEntityProto = WorldEntityPrototype;
+                if (worldEntityProto == null) return null;
+                return GameDatabase.GetPrototype<RankPrototype>(worldEntityProto.Rank);
+            }
         }
 
-        internal bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
+        public virtual bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
         {
-            throw new NotImplementedException();
+            if (IsSingleInteraction(interaction) == false && interaction.HasFlag(InteractionMethod.Throw)) return false;
+
+            if (IsInWorld == false || interactee.IsInWorld == false) return false;
+
+            float checkRange;
+            float interactRange = InteractRange;
+
+            if (interaction == InteractionMethod.Throw)
+                if (Prototype is AgentPrototype agentProto) interactRange = agentProto.InteractRangeThrow;
+
+            var worldEntityProto = WorldEntityPrototype;
+            if (worldEntityProto == null) return false;
+
+            var interacteeWorldEntityProto = interactee.WorldEntityPrototype;
+            if (interacteeWorldEntityProto == null) return false;
+
+            if (interacteeWorldEntityProto.InteractIgnoreBoundsForDistance == false)
+                checkRange = Bounds.Radius + interactee.Bounds.Radius + interactRange + worldEntityProto.InteractRangeBonus + interacteeWorldEntityProto.InteractRangeBonus;
+            else
+                checkRange = interactRange;
+
+            if (checkRange <= 0f) return false;
+
+            if (interactFallbackRange)
+                checkRange += InteractFallbackRange;
+
+            float checkRangeSq = checkRange * checkRange;
+            float rangeSq = Vector3.DistanceSquared(interactee.RegionLocation.Position, RegionLocation.Position);
+
+            return rangeSq <= checkRangeSq;
         }
 
-        internal virtual PowerUseResult CanTriggerPower(PowerPrototype powerPrototype, Power power, PowerActivationSettingsFlags flags)
+        public static bool IsSingleInteraction(InteractionMethod interaction)
         {
-            throw new NotImplementedException();
+            return interaction != InteractionMethod.None; // IO::BitfieldHasSingleBitSet
+        }
+
+        public virtual PowerUseResult CanTriggerPower(PowerPrototype powerProto, Power power, PowerActivationSettingsFlags flags)
+        {
+            if (power == null && powerProto.Properties == null) return PowerUseResult.GenericError;
+            if (power != null && power.Prototype != powerProto) return PowerUseResult.GenericError;
+
+            var powerProperties = power != null ? power.Properties : powerProto.Properties;
+
+            var region = Region;
+            if (region == null) return PowerUseResult.GenericError;
+            if (Power.CanBeUsedInRegion(powerProto, powerProperties, region) == false)
+                return PowerUseResult.RegionRestricted;
+
+            if (Power.IsMovementPower(powerProto) 
+                && (IsSystemImmobilized || (IsImmobilized && powerProperties[PropertyEnum.NegStatusUsable] == false)))
+                return PowerUseResult.RestrictiveCondition;
+
+            if (powerProperties[PropertyEnum.PowerUsesReturningWeapon] && IsWeaponMissing)
+                return PowerUseResult.WeaponMissing;
+
+            var targetingShape = Power.GetTargetingShape(powerProto);
+            if (targetingShape == TargetingShapeType.Self)
+            {
+                if (Power.IsValidTarget(powerProto, this, Alliance, this) == false)
+                    return PowerUseResult.BadTarget;
+            }
+            else if (targetingShape == TargetingShapeType.TeamUp)
+            {
+                if (this is not Avatar avatar) 
+                    return PowerUseResult.GenericError;
+                var teamUpAgent = avatar.CurrentTeamUpAgent;
+                if (teamUpAgent == null)
+                    return PowerUseResult.TargetIsMissing;
+                if (Power.IsValidTarget(powerProto, this, Alliance, teamUpAgent) == false)
+                    return PowerUseResult.BadTarget;
+            }
+
+            if (powerProto.IsHighFlyingPower())
+            {
+                var naviMesh = region.NaviMesh;
+                var pathFlags = GetPathFlags();
+                pathFlags |= PathFlags.Fly;
+                pathFlags &= ~PathFlags.Walk;
+                if (naviMesh.Contains(RegionLocation.Position, Bounds.Radius, new DefaultContainsPathFlagsCheck(pathFlags)) == false)
+                    return PowerUseResult.RegionRestricted;
+            }
+
+            return PowerUseResult.Success;
         }
 
         public virtual InteractionResult AttemptInteractionBy(EntityDesc interactorDesc, InteractionFlags flags, InteractionMethod method)
