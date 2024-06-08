@@ -103,7 +103,9 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
         public static bool IsPlayerTradeEnabled { get; internal set; }
-        public WorldEntity PrimaryAvatar { get; internal set; }
+        public Avatar PrimaryAvatar { get; private set; }
+        public Avatar SecondaryAvatar { get; private set; }
+        public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
 
         public Player(Game game) : base(game)
         {
@@ -758,14 +760,13 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        internal bool IsTargetable(AlliancePrototype allianceProto)
+        public bool IsTargetable(AlliancePrototype allianceProto)
         {
-            throw new NotImplementedException();
-        }
-
-        internal int GetPrimaryAvatarCharacterLevel()
-        {
-            throw new NotImplementedException();
+            Avatar avatar = PrimaryAvatar ?? SecondaryAvatar;
+            if (avatar != null && allianceProto != null && allianceProto.IsFriendlyTo(avatar.AllianceProto)) return true;
+            if (IsFullscreenMoviePlaying || IsOnLoadingScreen) return false;
+            if (Properties[PropertyEnum.GracePeriod]) return false;
+            return true;
         }
 
         public Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region) // Test funciton
