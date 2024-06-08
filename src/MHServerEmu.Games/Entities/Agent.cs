@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Entities
                 if ( IsInKnockback || IsInKnockdown || IsInKnockup 
                     || IsImmobilized || IsImmobilizedByHitReact || IsSystemImmobilized 
                     || IsStunned || IsMesmerized ||
-                    (ownerPlayer != null && ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)
+                    (ownerPlayer != null && (ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen))
                     || NPCAmbientLock)
                     return false;
                 return true;
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Entities
             {
                 Player ownerPlayer = GetOwnerOfType<Player>();
                 if (base.CanMove == false || HasMovementPreventionStatus || IsSystemImmobilized 
-                    || (ownerPlayer!= null && ownerPlayer.IsFullscreenMoviePlaying))
+                    || (ownerPlayer != null && (ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)))
                     return false;
                 
                 Power power = GetThrowablePower();
