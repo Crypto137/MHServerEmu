@@ -10,13 +10,18 @@ namespace MHServerEmu.Games.Events
         // TODO: Implement frame buckets
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
+        private TimeSpan _quantumSize;
+        private long _currentFrame;
         private bool _cancellingAllEvents = false;
 
         public TimeSpan CurrentTime { get; private set; }
 
-        public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numBuckets = 256)
+        public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numWindowBuckets = 256)
         {
             CurrentTime = currentTime;
+            _quantumSize = quantumSize;
+
+            _currentFrame = currentTime.CalcNumTimeQuantums(quantumSize);
         }
 
         public bool ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup = null) where T: ScheduledEvent, new()
@@ -75,27 +80,49 @@ namespace MHServerEmu.Games.Events
                 CancelEvent(eventGroup.Front);
         }
 
-        public void TriggerEvents(TimeSpan currentGameTime)
+        public void TriggerEvents(TimeSpan updateEndTime)
         {
-            if (CurrentTime > currentGameTime) return;      // No time travel backwards in time here
+            if (CurrentTime > updateEndTime) return;      // No time travel outside of frame
 
             int numEvents = 0;
 
-            var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime).OrderBy(@event => @event.FireTime);
+            long startFrame = CurrentTime.CalcNumTimeQuantums(_quantumSize);
+            long endFrame = updateEndTime.CalcNumTimeQuantums(_quantumSize);
 
-            foreach (ScheduledEvent @event in frameEvents)
+            // Process all frames that are within our time window
+            for (long i = startFrame; i <= endFrame; i++)
             {
-                CurrentTime = @event.FireTime;
-                _scheduledEvents.Remove(@event);
-                @event.EventGroupNode?.Remove();
-                @event.InvalidatePointers();
-                @event.OnTriggered();
-                numEvents++;
+                _currentFrame = i;
+
+                // TODO: Replace linq with buckets
+                TimeSpan frameEndTime = (_currentFrame + 1) * _quantumSize;
+
+                // Process events for this frame
+                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
+                while (frameEvents.Any())
+                {
+                    foreach (ScheduledEvent @event in frameEvents)
+                    {
+                        // It seems in the client time can roll back within the same frame, is this correct?
+                        if (CurrentTime > @event.FireTime)
+                            Logger.Debug($"TriggerEvents(): Time rollback (-{(CurrentTime - @event.FireTime).TotalMilliseconds} ms)");
+
+                        CurrentTime = @event.FireTime;
+                        _scheduledEvents.Remove(@event);
+                        @event.EventGroupNode?.Remove();
+                        @event.InvalidatePointers();
+                        @event.OnTriggered();
+                        numEvents++;
+                    }
+
+                    // See if any more events got scheduled for this frame
+                    frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
+                }
             }
 
-            if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
+            if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
 
-            CurrentTime = currentGameTime;
+            CurrentTime = updateEndTime;
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
