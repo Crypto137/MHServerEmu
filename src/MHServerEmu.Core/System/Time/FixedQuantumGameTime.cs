@@ -37,26 +37,9 @@
             _quantumGameTime += _quantumSize * numTimeQuantums;
         }
 
-        /// <summary>
-        /// Advances <see cref="FixedQuantumGameTime"/> one time step forward if it is behind. Returns <see langword="true"/> if time advanced.
-        /// </summary>
-        public bool UpdateNow()
-        {
-            TimeSpan gameTime = Clock.GameTime;
-
-            long numSteps = Clock.CalcNumTimeQuantums(gameTime - _quantumGameTime, _quantumSize);
-            if (numSteps == 0) return false;
-
-            _quantumGameTime += _quantumSize;
-            return true;
-        }
-
-        public int CompareTo(TimeSpan other)
-        {
-            return _quantumGameTime.CompareTo(other);
-        }
-
+        // Output to string as microseconds because in the client this class is microsecond-based.
         public override string ToString() => (_quantumGameTime.Ticks / 10).ToString();
+
         public static explicit operator TimeSpan(FixedQuantumGameTime fixedQuantumGameTime) => fixedQuantumGameTime._quantumGameTime;
     }
 }

@@ -211,11 +211,13 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             var player = playerConnection.Player;
             var position = playerConnection.LastPosition;
+            var orientation = playerConnection.LastOrientation;
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
-            avatar.RegionLocation.Region = region; // Temporary fix for IsInWorld check
-            avatar.RegionLocation.SetPosition(position);
+            avatar.EnterWorld(region, position, orientation);
             Agent pet = player.CreatePet((PrototypeId)16300889242928224944, position, region); // Pet001OldLace = 16300889242928224944
+            pet.EnterWorld(region, position, orientation);
+            pet.EnterGame();
             pet.SetSimulated(true);
             // pet.Think();
             playerConnection.AOI.Update(playerConnection.LastPosition, true);

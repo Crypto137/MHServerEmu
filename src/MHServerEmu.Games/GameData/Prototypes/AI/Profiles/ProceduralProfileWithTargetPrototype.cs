@@ -775,6 +775,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             WorldEntity master = ownerController.AssistedEntity;
             if (master != null && master.IsInWorld)
             {
+                ProceduralAI.Logger.Debug($"agent {agent.RegionLocation.Position} master {master.RegionLocation.Position}");
                 float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
                 if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
                     HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);

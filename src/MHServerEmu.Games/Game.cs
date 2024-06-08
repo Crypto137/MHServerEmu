@@ -14,7 +14,6 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -181,17 +180,7 @@ namespace MHServerEmu.Games
         public void GetRegionAsync(PlayerConnection playerConnection)
         {
             Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
-            if (region == null)
-            {
-                EventPointer<OLD_ErrorInRegionEvent> errorEventPointer = new();
-                GameEventScheduler.ScheduleEvent(errorEventPointer, TimeSpan.Zero);
-                errorEventPointer.Get().Initialize(playerConnection, playerConnection.RegionDataRef);
-                return;
-            }
-
-            EventPointer<OLD_GetRegionEvent> eventPointer = new();
-            GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-            eventPointer.Get().Initialize(playerConnection, region);
+            RegionManager.AsyncFinishRegionGeneration(region, playerConnection);
         }
 
         public Entity AllocateEntity(PrototypeId entityRef)

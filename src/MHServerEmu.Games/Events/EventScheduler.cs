@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Events
 {
@@ -6,30 +7,34 @@ namespace MHServerEmu.Games.Events
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // TODO: Fix multithreading issues with region generation and remove locks
+        // TODO: Implement frame buckets
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
+        private TimeSpan _quantumSize;
+        private long _currentFrame;
         private bool _cancellingAllEvents = false;
 
         public TimeSpan CurrentTime { get; private set; }
 
-        public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numBuckets = 256)
+        public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numWindowBuckets = 256)
         {
             CurrentTime = currentTime;
+            _quantumSize = quantumSize;
+
+            _currentFrame = currentTime.CalcNumTimeQuantums(quantumSize);
         }
 
-        public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup) where T: ScheduledEvent, new()
+        public bool ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup = null) where T: ScheduledEvent, new()
         {
-            if (_cancellingAllEvents) return;
+            if (eventPointer.IsValid) return Logger.WarnReturn(false, $"ScheduleEvent<{typeof(T).Name}>(): eventPointer.IsValid");
+
+            if (_cancellingAllEvents) return false;
 
             T @event = ConstructAndScheduleEvent<T>(timeOffset);
-            // todo: add to event group
+            eventGroup?.Add(@event);
             eventPointer.Set(@event);
-        }
 
-        public void ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T : ScheduledEvent, new()
-        {
-            ScheduleEvent(eventPointer, timeOffset, null);
+            return true;
         }
 
         public bool RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
@@ -54,46 +59,70 @@ namespace MHServerEmu.Games.Events
         {
             _cancellingAllEvents = true;
 
-            lock (_scheduledEvents)
+            // TODO: Remove this when we have proper data structures to store scheduled events in
+            Stack<ScheduledEvent> eventStack = new();
+
+            foreach (ScheduledEvent @event in _scheduledEvents)
+                eventStack.Push(@event);
+
+            while (eventStack.Count > 0)
             {
-                // TODO: Remove this when we have proper data structures to store scheduled events in
-                Stack<ScheduledEvent> eventStack = new();
-
-                foreach (ScheduledEvent @event in _scheduledEvents)
-                    eventStack.Push(@event);
-
-                while (eventStack.Count > 0)
-                {
-                    ScheduledEvent @event = eventStack.Pop();
-                    CancelEvent(@event);
-                }
+                ScheduledEvent @event = eventStack.Pop();
+                CancelEvent(@event);
             }
 
             _cancellingAllEvents = false;
         }
 
-        public void TriggerEvents(TimeSpan currentGameTime)
+        public void CancelAllEvents(EventGroup eventGroup)
         {
-            if (CurrentTime > currentGameTime) return;      // No time travel backwards in time
+            while (eventGroup.IsEmpty == false)
+                CancelEvent(eventGroup.Front);
+        }
 
-            // TODO: Advance CurrentTime as we trigger events
+        public void TriggerEvents(TimeSpan updateEndTime)
+        {
+            if (CurrentTime > updateEndTime) return;      // No time travel outside of frame
 
             int numEvents = 0;
 
-            lock (_scheduledEvents)
+            long startFrame = CurrentTime.CalcNumTimeQuantums(_quantumSize);
+            long endFrame = updateEndTime.CalcNumTimeQuantums(_quantumSize);
+
+            // Process all frames that are within our time window
+            for (long i = startFrame; i <= endFrame; i++)
             {
-                foreach (ScheduledEvent @event in _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime))
+                _currentFrame = i;
+
+                // TODO: Replace linq with buckets
+                TimeSpan frameEndTime = (_currentFrame + 1) * _quantumSize;
+
+                // Process events for this frame
+                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
+                while (frameEvents.Any())
                 {
-                    _scheduledEvents.Remove(@event);
-                    @event.InvalidatePointers();
-                    @event.OnTriggered();
-                    numEvents++;
+                    foreach (ScheduledEvent @event in frameEvents)
+                    {
+                        // It seems in the client time can roll back within the same frame, is this correct?
+                        if (CurrentTime > @event.FireTime)
+                            Logger.Debug($"TriggerEvents(): Time rollback (-{(CurrentTime - @event.FireTime).TotalMilliseconds} ms)");
+
+                        CurrentTime = @event.FireTime;
+                        _scheduledEvents.Remove(@event);
+                        @event.EventGroupNode?.Remove();
+                        @event.InvalidatePointers();
+                        @event.OnTriggered();
+                        numEvents++;
+                    }
+
+                    // See if any more events got scheduled for this frame
+                    frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
                 }
             }
 
-            if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
+            if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
 
-            CurrentTime = currentGameTime;
+            CurrentTime = updateEndTime;
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
@@ -115,12 +144,14 @@ namespace MHServerEmu.Games.Events
         private void ScheduleEvent(ScheduledEvent @event)
         {
             // Just add it to the event collection for now
-            lock (_scheduledEvents) _scheduledEvents.Add(@event);
+            // TODO: Frame buckets
+            _scheduledEvents.Add(@event);
         }
 
         private void CancelEvent(ScheduledEvent @event)
         {
-            lock (_scheduledEvents) _scheduledEvents.Remove(@event);
+            _scheduledEvents.Remove(@event);
+            @event.EventGroupNode?.Remove();
             @event.InvalidatePointers();
             @event.OnCancelled();
         }
