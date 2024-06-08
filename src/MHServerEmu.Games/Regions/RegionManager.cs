@@ -4,8 +4,11 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.UI.Widgets;
 
@@ -21,6 +24,7 @@ namespace MHServerEmu.Games.Regions
 
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
+        private ConcurrentQueue<(Region, PlayerConnection)> _generationQueue = new();
         private ConcurrentQueue<Region> _shutdownQueue = new();
 
         public static void ClearRegionDict() => _regionDict?.Clear();
@@ -145,8 +149,34 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
+        public void AsyncFinishRegionGeneration(Region region, PlayerConnection playerConnection)
+        {
+            // Temp method until we make async region generation better
+            _generationQueue.Enqueue((region, playerConnection));
+        }
+
         public void ProcessPendingRegions()
         {
+            // Process regions that finished generating asynchronously
+            while (_generationQueue.TryDequeue(out var pending))
+            {
+                Region region = pending.Item1;
+                PlayerConnection playerConnection = pending.Item2;
+
+                if (region == null)
+                {
+                    EventPointer<OLD_ErrorInRegionEvent> errorEventPointer = new();
+                    Game.GameEventScheduler.ScheduleEvent(errorEventPointer, TimeSpan.Zero);
+                    errorEventPointer.Get().Initialize(playerConnection, playerConnection.RegionDataRef);
+                    continue;
+                }
+
+                EventPointer<OLD_GetRegionEvent> eventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+                eventPointer.Get().Initialize(playerConnection, region);
+            }
+
+            // Process regions that need to be shut down
             while (_shutdownQueue.TryDequeue(out Region region))
             {
                 TimeSpan lifetime = DateTime.Now - region.CreatedTime;

@@ -7,7 +7,6 @@ namespace MHServerEmu.Games.Events
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // TODO: Fix multithreading issues with region generation and remove locks
         // TODO: Implement frame buckets
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
@@ -55,19 +54,16 @@ namespace MHServerEmu.Games.Events
         {
             _cancellingAllEvents = true;
 
-            lock (_scheduledEvents)
+            // TODO: Remove this when we have proper data structures to store scheduled events in
+            Stack<ScheduledEvent> eventStack = new();
+
+            foreach (ScheduledEvent @event in _scheduledEvents)
+                eventStack.Push(@event);
+
+            while (eventStack.Count > 0)
             {
-                // TODO: Remove this when we have proper data structures to store scheduled events in
-                Stack<ScheduledEvent> eventStack = new();
-
-                foreach (ScheduledEvent @event in _scheduledEvents)
-                    eventStack.Push(@event);
-
-                while (eventStack.Count > 0)
-                {
-                    ScheduledEvent @event = eventStack.Pop();
-                    CancelEvent(@event);
-                }
+                ScheduledEvent @event = eventStack.Pop();
+                CancelEvent(@event);
             }
 
             _cancellingAllEvents = false;
@@ -85,19 +81,16 @@ namespace MHServerEmu.Games.Events
 
             int numEvents = 0;
 
-            lock (_scheduledEvents)
-            {
-                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime).OrderBy(@event => @event.FireTime);
+            var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= CurrentTime).OrderBy(@event => @event.FireTime);
 
-                foreach (ScheduledEvent @event in frameEvents)
-                {
-                    CurrentTime = @event.FireTime;
-                    _scheduledEvents.Remove(@event);
-                    @event.EventGroupNode?.Remove();
-                    @event.InvalidatePointers();
-                    @event.OnTriggered();
-                    numEvents++;
-                }
+            foreach (ScheduledEvent @event in frameEvents)
+            {
+                CurrentTime = @event.FireTime;
+                _scheduledEvents.Remove(@event);
+                @event.EventGroupNode?.Remove();
+                @event.InvalidatePointers();
+                @event.OnTriggered();
+                numEvents++;
             }
 
             if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) ({_scheduledEvents.Count} more scheduled)");
@@ -124,18 +117,16 @@ namespace MHServerEmu.Games.Events
         private void ScheduleEvent(ScheduledEvent @event)
         {
             // Just add it to the event collection for now
-            lock (_scheduledEvents) _scheduledEvents.Add(@event);
+            // TODO: Frame buckets
+            _scheduledEvents.Add(@event);
         }
 
         private void CancelEvent(ScheduledEvent @event)
         {
-            lock (_scheduledEvents)
-            {
-                _scheduledEvents.Remove(@event);
-                @event.EventGroupNode?.Remove();
-                @event.InvalidatePointers();
-                @event.OnCancelled();
-            }
+            _scheduledEvents.Remove(@event);
+            @event.EventGroupNode?.Remove();
+            @event.InvalidatePointers();
+            @event.OnCancelled();
         }
 
         private void RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)
