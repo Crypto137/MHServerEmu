@@ -890,29 +890,80 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
 
-        internal bool ActivePowerPreventsMovement(PowerMovementPreventionFlags sync)
+        public bool ActivePowerPreventsMovement(PowerMovementPreventionFlags movementPreventionFlag)
         {
-            throw new NotImplementedException();
+            if (IsExecutingPower == false) return false;
+
+            var activePower = ActivePower;
+            if (activePower == null) return false;
+
+            if (activePower.IsPartOfAMovementPower)
+                return movementPreventionFlag == PowerMovementPreventionFlags.NonForced;
+
+            if (movementPreventionFlag == PowerMovementPreventionFlags.NonForced && activePower.PreventsNewMovementWhileActive)
+            {
+                if (activePower.IsChannelingPower == false) return true;
+                else if (activePower.IsNonCancellableChannelPower) return true;
+            }
+
+            if (movementPreventionFlag == PowerMovementPreventionFlags.Sync)
+                if (activePower.IsChannelingPower == false || activePower.IsCancelledOnMove)
+                    return true;
+
+            if (activePower.TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd))
+                return true;
+
+            return false;
         }
 
-        internal bool ActivePowerDisablesOrientation()
+        public bool ActivePowerDisablesOrientation()
         {
-            throw new NotImplementedException();
+            if (IsExecutingPower == false) return false;
+            var activePower = ActivePower;
+            if (activePower == null)
+            {
+                Logger.Warn($"WorldEntity has ActivePowerRef set, but is missing the power in its power collection! Power: [{GameDatabase.GetPrototypeName(ActivePowerRef)}] WorldEntity: [{ToString()}]");
+                return false;
+            }
+            return activePower.DisableOrientationWhileActive;
         }
 
-        internal bool ActivePowerOrientsToTarget()
+        public bool ActivePowerOrientsToTarget()
         {
-            throw new NotImplementedException();
+            if (IsExecutingPower == false) return false;
+
+            var activePower = ActivePower;
+            if (activePower == null) return false;
+
+            return activePower.ShouldOrientToTarget;
         }
 
-        internal bool HasConditionWithKeyword(PrototypeId keywordRef)
+        public bool HasConditionWithKeyword(PrototypeId keywordRef)
         {
-            throw new NotImplementedException();
+            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+            if (keywordProto == null) return false;
+            if (keywordProto is not PowerKeywordPrototype) return false;
+            return HasConditionWithKeyword(GameDatabase.DataDirectory.GetPrototypeEnumValue(keywordRef, GameDatabase.DataDirectory.KeywordBlueprint));
         }
 
-        internal float GetDistanceTo(WorldEntity other, bool calcRadius)
+        private bool HasConditionWithKeyword(int keyword)
         {
-            throw new NotImplementedException();
+            var conditionCollection = ConditionCollection;
+            if (conditionCollection != null)
+            {
+                KeywordsMask keywordsMask = conditionCollection.ConditionKeywordsMask;
+                return keywordsMask[keyword];
+            }
+            return false;
+        }
+
+        public float GetDistanceTo(WorldEntity other, bool calcRadius)
+        {
+            if (other == null) return 0f;
+            float distance = Vector3.Distance2D(RegionLocation.Position, other.RegionLocation.Position);
+            if (calcRadius)
+                distance -= Bounds.Radius + other.Bounds.Radius;
+            return Math.Max(0.0f, distance);
         }
 
         public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
