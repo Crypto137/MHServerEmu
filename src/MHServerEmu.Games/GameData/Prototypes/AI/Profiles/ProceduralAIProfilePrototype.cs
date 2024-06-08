@@ -407,7 +407,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             var allianceOverrideProto = AllianceOverride.As<AlliancePrototype>();
-            AlliancePrototype alliance = allianceOverrideProto ?? agent.GetAlliancePrototype();
+            AlliancePrototype alliance = allianceOverrideProto ?? agent.Alliance;
 
             float proximityRangeOverride = blackboard.PropertyCollection[PropertyEnum.AIProximityRangeOverride];
             float aggroRangeHostile = ownerController.AggroRangeHostile;
@@ -525,7 +525,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (spawnGroup != null && alliance != null)
                     {
                         var filterFlag = SpawnGroupEntityQueryFilterFlags.Allies | SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled;
-                        if (spawnGroup.GetEntities(out List <WorldEntity> allies, filterFlag, agent.GetAlliancePrototype()))                        
+                        if (spawnGroup.GetEntities(out List <WorldEntity> allies, filterFlag, agent.Alliance))                        
                             foreach (var ally in allies)
                                 if (ally != agent)
                                     ally.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedPlayer);                        

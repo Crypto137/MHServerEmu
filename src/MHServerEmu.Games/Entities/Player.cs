@@ -763,7 +763,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsTargetable(AlliancePrototype allianceProto)
         {
             Avatar avatar = PrimaryAvatar ?? SecondaryAvatar;
-            if (avatar != null && allianceProto != null && allianceProto.IsFriendlyTo(avatar.AllianceProto)) return true;
+            if (avatar != null && allianceProto != null && allianceProto.IsFriendlyTo(avatar.Alliance)) return true;
             if (IsFullscreenMoviePlaying || IsOnLoadingScreen) return false;
             if (Properties[PropertyEnum.GracePeriod]) return false;
             return true;

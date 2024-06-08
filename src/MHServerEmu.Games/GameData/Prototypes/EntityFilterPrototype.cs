@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
             if (entity == null) return false;
-            return entity.GetAlliance() == Alliance;
+            return entity.Alliance.DataRef == Alliance;
         }
     }
 

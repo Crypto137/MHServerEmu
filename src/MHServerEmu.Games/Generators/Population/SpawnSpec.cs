@@ -154,7 +154,7 @@ namespace MHServerEmu.Games.Generators.Population
         public static List<WorldEntity> GetEntities(WorldEntity owner, SpawnGroupEntityQueryFilterFlags filterFlag = SpawnGroupEntityQueryFilterFlags.All)
         {
             List<WorldEntity> entities = new();
-            owner?.SpawnGroup?.GetEntities(out entities, filterFlag, owner.GetAlliancePrototype());
+            owner?.SpawnGroup?.GetEntities(out entities, filterFlag, owner.Alliance);
             return entities;
         }
 

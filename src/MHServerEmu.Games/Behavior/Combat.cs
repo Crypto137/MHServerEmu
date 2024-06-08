@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Behavior
             if (flags.HasFlag(CombatTargetFlags.CheckAgent) && target is not Agent) return false;
             if (flags.HasFlag(CombatTargetFlags.CheckItem) && target is not Item) return false;
 
-            AlliancePrototype allianceProto = allianceOverride ?? aggressor.GetAlliancePrototype();
+            AlliancePrototype allianceProto = allianceOverride ?? aggressor.Alliance;
             if (flags.HasFlag(CombatTargetFlags.IgnoreTargetable) == false)
             {
                 if (target.IsTargetable(aggressor) == false && target.HasAITargetableOverride == false) return false;

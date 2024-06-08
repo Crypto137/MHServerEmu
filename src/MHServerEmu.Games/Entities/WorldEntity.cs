@@ -35,7 +35,8 @@ namespace MHServerEmu.Games.Entities
         public ConditionCollection ConditionCollection { get => _conditionCollection; }
         public PowerCollection PowerCollection { get => _powerCollection; }
 
-        public AlliancePrototype AllianceProto { get; private set; }
+        private AlliancePrototype _allianceProto;
+        public AlliancePrototype Alliance { get => GetAlliance(); }
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
         public Area Area { get => RegionLocation.Area; }
@@ -230,35 +231,30 @@ namespace MHServerEmu.Games.Entities
             {
                 var allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
                 if (allianceProto != null)
-                    AllianceProto = allianceProto;
+                    _allianceProto = allianceProto;
             }
             else
             {
                 var worldEntityProto = WorldEntityPrototype;
                 if (worldEntityProto != null)
-                    AllianceProto = GameDatabase.GetPrototype<AlliancePrototype>(worldEntityProto.Alliance);
+                    _allianceProto = GameDatabase.GetPrototype<AlliancePrototype>(worldEntityProto.Alliance);
             }
         }
 
-        public PrototypeId GetAlliance()
+        private AlliancePrototype GetAlliance()
         {
-            if (AllianceProto == null) return PrototypeId.Invalid;
+            if (_allianceProto == null) return null;
 
-            PrototypeId allianceRef = AllianceProto.DataRef;
-            if (IsControlledEntity && AllianceProto.WhileControlled != PrototypeId.Invalid)
-                allianceRef = AllianceProto.WhileControlled;
-            if (IsConfused && AllianceProto.WhileConfused != PrototypeId.Invalid)
-                allianceRef = AllianceProto.WhileConfused;
+            PrototypeId allianceRef = _allianceProto.DataRef;
+            if (IsControlledEntity && _allianceProto.WhileControlled != PrototypeId.Invalid)
+                allianceRef = _allianceProto.WhileControlled;
+            if (IsConfused && _allianceProto.WhileConfused != PrototypeId.Invalid)
+                allianceRef = _allianceProto.WhileConfused;
 
-            return allianceRef;
+            return GameDatabase.GetPrototype<AlliancePrototype>(allianceRef);
         }
 
-        public AlliancePrototype GetAlliancePrototype()
-        {
-            return GameDatabase.GetPrototype<AlliancePrototype>(GetAlliance());
-        }
-
-        public bool IsHostileTo(WorldEntity other, AlliancePrototype allianceOverrideProto = null)
+        public bool IsHostileTo(WorldEntity other, AlliancePrototype allianceOverride = null)
         {
             if (other == null) return false;
 
@@ -283,7 +279,7 @@ namespace MHServerEmu.Games.Entities
                     return false;
             }
 
-            return IsHostileTo(other.AllianceProto, allianceOverrideProto);
+            return IsHostileTo(other.Alliance, allianceOverride);
         }
 
         public NaviPathResult CheckCanPathTo(Vector3 toPosition)
@@ -785,13 +781,13 @@ namespace MHServerEmu.Games.Entities
         public bool IsFriendlyTo(WorldEntity other, AlliancePrototype allianceProto = null)
         {
             if (other == null) return false;
-            return IsFriendlyTo(other.GetAlliancePrototype(), allianceProto);
+            return IsFriendlyTo(other.Alliance, allianceProto);
         }
 
         public bool IsFriendlyTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)
         {
             if (otherAllianceProto == null) return false;
-            AlliancePrototype thisAllianceProto = allianceOverrideProto ?? GetAlliancePrototype();
+            AlliancePrototype thisAllianceProto = allianceOverrideProto ?? Alliance;
             if (thisAllianceProto == null) return false;
             return thisAllianceProto.IsFriendlyTo(otherAllianceProto) && !thisAllianceProto.IsHostileTo(otherAllianceProto);
         }
@@ -799,7 +795,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsHostileTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)
         {
             if (otherAllianceProto == null) return false;
-            AlliancePrototype thisAllianceProto = allianceOverrideProto ?? GetAlliancePrototype();
+            AlliancePrototype thisAllianceProto = allianceOverrideProto ?? Alliance;
             if (thisAllianceProto == null) return false;
             return thisAllianceProto.IsHostileTo(otherAllianceProto);
         }
@@ -934,9 +930,31 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        internal bool IsTargetable(Agent aggressor)
+        public bool IsTargetable(WorldEntity entity)
         {
-            throw new NotImplementedException();
+            if (IsTargetableInternal() == false) return false;
+            if (entity == null) return false;
+
+            var player = GetOwnerOfType<Player>();
+            if (player != null && player.IsTargetable(entity.Alliance) == false) return false;
+
+            return true;
+        }
+
+        private bool IsTargetableInternal()
+        {
+            if (IsAffectedByPowersInternal() == false) return false;
+            if (IsUntargetable) return false;
+            if (Alliance == null) return false;
+            return true;
+        }
+
+        private bool IsAffectedByPowersInternal()
+        {
+            if (IsNeverAffectedByPowers 
+                || IsInWorld == false || IsSimulated == false 
+                || IsDormant || IsUnaffectable || IsHotspot) return false;
+            return true;
         }
 
         internal RankPrototype GetRankPrototype()
