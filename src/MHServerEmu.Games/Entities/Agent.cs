@@ -60,6 +60,24 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public override bool CanMove
+        {
+            get 
+            {
+                Player ownerPlayer = GetOwnerOfType<Player>();
+                if (base.CanMove == false || HasMovementPreventionStatus || IsSystemImmobilized 
+                    || (ownerPlayer!= null && ownerPlayer.IsFullscreenMoviePlaying))
+                    return false;
+                
+                Power power = GetThrowablePower();
+                if (power != null && power.PrototypeDataRef != ActivePowerRef)
+                    return false;
+
+                return true; 
+            }
+        }
+
+
         public bool HasPowerPreventionStatus
             => IsInKnockback 
             || IsInKnockdown 
