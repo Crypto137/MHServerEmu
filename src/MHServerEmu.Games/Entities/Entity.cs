@@ -550,6 +550,18 @@ namespace MHServerEmu.Games.Entities
         {
         }
 
+        public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
+            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
+        {
+            // TODO: InterestReferences
+        }
+
+        public virtual void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
+            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
+        {
+
+        }
+
         #endregion
 
         #region Inventory Management

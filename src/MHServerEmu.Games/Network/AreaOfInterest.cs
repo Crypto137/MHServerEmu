@@ -398,15 +398,62 @@ namespace MHServerEmu.Games.Network
             SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Id).Build());
         }
 
-        private bool ModifyEntity(Entity entity, AOINetworkPolicyValues interestPolicies)
+        private bool ModifyEntity(Entity entity, AOINetworkPolicyValues newInterestPolicies)
         {
+            // No entity to modify
             if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus) == false)
                 return false;
 
-            interestStatus.InterestPolicies = interestPolicies;
+            // Policies are the same, so we don't need to do anything
+            if (interestStatus.InterestPolicies == newInterestPolicies)
+                return false;
 
-            // TODO: NetMessageInterestPolicies
-            // TODO: NetMessageChangeAOIPolicies
+            // Update policies
+            AOINetworkPolicyValues previousInterestPolicies = interestStatus.InterestPolicies;
+            interestStatus.InterestPolicies = newInterestPolicies;
+
+            // Compare old and new policies
+            AOINetworkPolicyValues addedInterestPolicies = newInterestPolicies & (~previousInterestPolicies);
+            AOINetworkPolicyValues removedInterestPolicies = previousInterestPolicies & (~newInterestPolicies);
+
+            // Notify client of the removed policies
+            if (removedInterestPolicies != AOINetworkPolicyValues.AOIChannelNone)
+            {
+                // NOTE: NetMessageChangeAOIPolicies is referred to as "replication policy forget message"
+                // in GameConnection::handleNetMessageChangeAOIPolicies.
+                var changeAoiPolicies = NetMessageChangeAOIPolicies.CreateBuilder()
+                    .SetIdEntity(entity.Id)
+                    .SetCurrentpolicies((uint)newInterestPolicies);
+
+                // Remove world entities from the game world that are no longer in proximity on the client
+                /*
+                if (removedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && entity is WorldEntity)
+                    changeAoiPolicies.SetExitGameWorld(true);
+                */
+
+                // entityPrototypeId field seems to be unused
+
+                SendMessage(changeAoiPolicies.Build());
+            }
+
+            entity.OnChangePlayerAOI(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
+
+            // Entities that already exist on the client and don't have a proximity policy enter game world when they gain a proximity policy
+            if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+            {
+                // TODO: NetMessageEntityEnterGameWorld
+            }
+
+            entity.OnPostAOIAddOrRemove(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
+
+            // Notify client of the added policies (entityDataId unused)
+            SendMessage(NetMessageInterestPolicies.CreateBuilder()
+                .SetIdEntity(entity.Id)
+                .SetNewPolicies((uint)newInterestPolicies)
+                .SetPrevPolicies((uint)previousInterestPolicies)
+                .Build());
+
+            // TODO: UpdateInventories
 
             return true;
         }
