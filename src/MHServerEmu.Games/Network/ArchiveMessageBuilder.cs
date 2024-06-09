@@ -8,6 +8,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Regions.Maps;
 
 namespace MHServerEmu.Games.Network
 {
@@ -128,6 +129,16 @@ namespace MHServerEmu.Games.Network
             condition.Serialize(archive, owner);
 
             return NetMessageAddCondition.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
+        }
+
+        public static NetMessageUpdateMiniMap BuildUpdateMiniMapMessage(LowResMap lowResMap)
+        {
+            // NOTE: NetMessageUpdateMiniMap always uses the default policy values
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy);
+
+            Serializer.Transfer(archive, ref lowResMap);
+
+            return NetMessageUpdateMiniMap.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
         }
     }
 }

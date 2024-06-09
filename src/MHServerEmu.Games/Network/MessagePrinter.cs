@@ -320,13 +320,18 @@ namespace MHServerEmu.Games.Network
         {
             var updateMiniMap = (NetMessageUpdateMiniMap)message;
 
+            StringBuilder sb = new();
+
             using (Archive archive = new(ArchiveSerializeType.Replication, updateMiniMap.ArchiveData))
             {
-                MiniMapArchive miniMapArchive = new();
-                miniMapArchive.ReplicationPolicy = archive.GetReplicationPolicyEnum();
-                miniMapArchive.Serialize(archive);
-                return $"ArchiveData: {miniMapArchive}";
+                sb.AppendLine($"ReplicationPolicy: {archive.GetReplicationPolicyEnum()}");
+
+                LowResMap lowResMap = new();
+                Serializer.Transfer(archive, ref lowResMap);
+                sb.AppendLine($"lowResMap: {lowResMap}");
             }
+
+            return sb.ToString();
         }
 
         [PrintMethod(typeof(NetMessagePowerCollectionAssignPower))]

@@ -119,16 +119,9 @@ namespace MHServerEmu.Games.Network
             {
                 SendMessage(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
 
-                // Mini map
-                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
-                {
-                    LowResMap lowResMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
-                    Serializer.Transfer(archive, ref lowResMap);
-
-                    SendMessage(NetMessageUpdateMiniMap.CreateBuilder()
-                        .SetArchiveData(archive.ToByteString())
-                        .Build());
-                }
+                // Mini map (TODO: keep track of the map server-side)
+                LowResMap lowResMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
+                SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
             }
 
             _lastUpdatePosition.Set(position);
