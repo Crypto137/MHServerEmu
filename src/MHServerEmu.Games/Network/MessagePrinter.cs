@@ -279,7 +279,23 @@ namespace MHServerEmu.Games.Network
         private static string PrintNetMessageAddCondition(IMessage message)
         {
             var addCondition = (NetMessageAddCondition)message;
-            return $"ArchiveData: {new AddConditionArchive(addCondition.ArchiveData)}";
+
+            StringBuilder sb = new();
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, addCondition.ArchiveData))
+            {
+                sb.AppendLine($"ReplicationPolicy: {archive.GetReplicationPolicyEnum()}");
+
+                ulong entityId = 0;
+                Serializer.Transfer(archive, ref entityId);
+                sb.AppendLine($"entityId: {entityId}");
+
+                Condition condition = new();
+                condition.Serialize(archive, null);
+                sb.AppendLine($"condition: {condition}");
+            }
+
+            return sb.ToString();
         }
 
         [PrintMethod(typeof(NetMessageSetProperty))]

@@ -38,16 +38,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             avatar.ConditionCollection.AddCondition(diamondFormCondition);
 
             // Notify the client
-            AddConditionArchive conditionArchive = new()
-            {
-                ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
-                EntityId = avatar.Id,
-                Condition = diamondFormCondition
-            };
-
-            PlayerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                 .SetArchiveData(conditionArchive.SerializeToByteString())
-                 .Build());
+            PlayerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, diamondFormCondition));
 
             return true;
         }

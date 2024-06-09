@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.Network
 
             // World entities that already exist on the client and don't have a proximity policy enter game world when they gain a proximity policy
             if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && entity is WorldEntity worldEntity)
-                SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorld(worldEntity, settings));
+                SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(worldEntity, settings));
 
             entity.OnPostAOIAddOrRemove(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
 

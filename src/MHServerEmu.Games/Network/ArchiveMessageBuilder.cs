@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Network
 {
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Builds <see cref="NetMessageEntityEnterGameWorld"/> for the provided <see cref="WorldEntity"/>.
         /// </summary>
-        public static NetMessageEntityEnterGameWorld BuildEntityEnterGameWorld(WorldEntity worldEntity, EntitySettings settings = null)
+        public static NetMessageEntityEnterGameWorld BuildEntityEnterGameWorldMessage(WorldEntity worldEntity, EntitySettings settings = null)
         {
             // Build flags
             LocomotionMessageFlags locoFieldFlags = LocomotionMessageFlags.None;
@@ -110,6 +111,23 @@ namespace MHServerEmu.Games.Network
             }
 
             return NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
+        }
+
+        /// <summary>
+        /// Builds <see cref="NetMessageAddCondition"/> for the provided <see cref="Condition"/> owned by a <see cref="WorldEntity"/>.
+        /// </summary>
+        public static NetMessageAddCondition BuildAddConditionMessage(WorldEntity owner, Condition condition)
+        {
+            // NOTE: In all of our packets this uses the default policy. This may be different for older versions of the game
+            // where condition replication was heavily based on the ArchiveMessageDispatcher/Handler system.
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy);
+
+            ulong entityId = owner.Id;
+            Serializer.Transfer(archive, ref entityId);
+
+            condition.Serialize(archive, owner);
+
+            return NetMessageAddCondition.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
         }
     }
 }

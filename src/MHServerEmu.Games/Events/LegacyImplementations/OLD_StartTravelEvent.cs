@@ -45,16 +45,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
 
                     // Notify the client
-                    AddConditionArchive conditionArchive = new()
-                    {
-                        ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
-                        EntityId = avatar.Id,
-                        Condition = ghostRiderRideCondition
-                    };
-
-                    _playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                        .SetArchiveData(conditionArchive.SerializeToByteString())
-                        .Build());
+                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, ghostRiderRideCondition));
 
                     _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatar.Id)
@@ -87,16 +78,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     avatar.ConditionCollection.AddCondition(rideCondition);
 
                     // Notify the client
-                    conditionArchive = new()
-                    {
-                        ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
-                        EntityId = avatar.Id,
-                        Condition = rideCondition
-                    };
-
-                    _playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                        .SetArchiveData(conditionArchive.SerializeToByteString())
-                        .Build());
+                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, rideCondition));
 
                     break;
             }

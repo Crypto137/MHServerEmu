@@ -47,16 +47,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             */
 
             // Notify the client
-            AddConditionArchive conditionArchive = new()
-            {
-                ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy,
-                EntityId = avatar.Id,
-                Condition = magikUltimateCondition
-            };
-
-            _playerConnection.SendMessage(NetMessageAddCondition.CreateBuilder()
-                .SetArchiveData(conditionArchive.SerializeToByteString())
-                .Build());
+            _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, magikUltimateCondition));
 
             /*
             playerConnection.SendMessage(arenaEntity.ToNetMessageEntityCreate());
