@@ -1001,6 +1001,18 @@ namespace MHServerEmu.Games.Entities
             return Math.Max(0.0f, distance);
         }
 
+        public override SimulateResult SetSimulated(bool simulated)
+        {
+            var result = base.SetSimulated(simulated);
+            if (result != SimulateResult.None && Locomotor != null)
+                ModifyCollectionMembership(EntityCollection.Locomotion, IsSimulated);
+            if (result == SimulateResult.Set)
+            {
+                // TODO EnemyBoost Rank
+            }
+            return result;
+        }
+
         public virtual void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState) 
         { 
             if (IsInWorld)
@@ -1026,6 +1038,7 @@ namespace MHServerEmu.Games.Entities
                         Position = position,
                         Orientation = orientation
                     };
+                    Logger.Debug($"LocomotionState Send {PrototypeName} PathNodes:[{Locomotor.LocomotionState.PathNodes.Count}]");
                     var playerConnection = GetPlayerConnection();
                     playerConnection?.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
                         .SetArchiveData(locomotion.ToByteString())

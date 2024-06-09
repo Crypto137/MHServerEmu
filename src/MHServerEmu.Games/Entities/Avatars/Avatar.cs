@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -432,6 +433,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         protected override bool InitInventories(bool populateInventories)
         {
             return base.InitInventories(populateInventories);
+        }
+
+        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        {
+           // base.OnLocomotionStateChanged(oldState, newState); // Debug Off
         }
 
         protected override void BuildString(StringBuilder sb)

@@ -79,6 +79,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
+            base.OnLocomotionStateChanged(oldState, newState);
+
             if(IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
             {
                 if((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))

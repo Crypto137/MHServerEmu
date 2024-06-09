@@ -115,6 +115,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             _syncNextRepathTime = new ();
             _syncOrientation = new();
             _updateNavigationInfluenceTime = new();
+            _giveUpPosition = new();
         }
 
         public void Initialize(LocomotorPrototype locomotorProto, WorldEntity entity, float heightOverride = 0.0f)
