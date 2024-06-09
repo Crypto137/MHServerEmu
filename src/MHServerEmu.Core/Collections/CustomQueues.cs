@@ -118,7 +118,6 @@
         public int Capacity => _maxSize - 1;
         public int Size => (_last - _first + _maxSize) % _maxSize;
         public bool Empty => _first == _last;
-        public int End => _last;
         public void Clear()
         {
             Array.Clear(_items, 0, _items.Length);
