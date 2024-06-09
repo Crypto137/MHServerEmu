@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         private readonly Entity _entity;
         private readonly InventoryIterationFlags _flags;
 
-        public InventoryIterator(Entity entity, InventoryIterationFlags flags)
+        public InventoryIterator(Entity entity, InventoryIterationFlags flags = InventoryIterationFlags.None)
         {
             _entity = entity;
             _flags = flags;

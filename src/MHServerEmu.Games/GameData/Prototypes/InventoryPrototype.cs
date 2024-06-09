@@ -53,6 +53,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsPlayerGeneralInventory { get => Category == InventoryCategory.PlayerGeneral; }
 
+        [DoNotCopy]
+        public bool IsPlayerCraftingRecipeInventory { get => Category == InventoryCategory.PlayerCraftingRecipes; }
+
+        [DoNotCopy]
+        public bool IsPlayerVendorInventory { get => Category == InventoryCategory.PlayerVendor; }
+
+        [DoNotCopy]
+        public bool IsPlayerVendorBuybackInventory { get => ConvenienceLabel == InventoryConvenienceLabel.VendorBuyback; }
+
+        [DoNotCopy]
+        public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; } 
+
         /// <summary>
         /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.
         /// </summary>
@@ -80,6 +92,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             // TODO: consoles
             return SoftCapacitySlotGroupsPC;
+        }
+
+        public bool InventoryRequiresFlaggedVisibility()
+        {
+            return IsEquipmentInventory || IsPlayerStashInventory || IsPlayerCraftingRecipeInventory || IsPlayerVendorInventory || IsPlayerVendorInventory;
         }
     }
 

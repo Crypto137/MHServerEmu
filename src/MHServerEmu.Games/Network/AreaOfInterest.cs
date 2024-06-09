@@ -8,6 +8,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -131,6 +132,27 @@ namespace MHServerEmu.Games.Network
             }
 
             _lastUpdatePosition.Set(position);
+        }
+
+        /// <summary>
+        /// Updates interest policies for the provided <see cref="Entity"/>.
+        /// </summary>
+        public bool ConsiderEntity(Entity entity)
+        {
+            if (entity == null) return Logger.WarnReturn(false, "ConsiderEntity(): entity == null");
+
+            AOINetworkPolicyValues newInterestPolicies = GetNewInterestPolicies(entity);
+            bool wasInterested = InterestedInEntity(entity.Id);
+            bool isInterested = newInterestPolicies != AOINetworkPolicyValues.AOIChannelNone;
+
+            if (wasInterested == false && isInterested)
+                AddEntity(entity, newInterestPolicies);
+            else if (wasInterested && isInterested == false)
+                RemoveEntity(entity);
+            else if (wasInterested && isInterested)
+                ModifyEntity(entity, newInterestPolicies);
+
+            return true;
         }
 
         public void Reset(Region region)
@@ -387,6 +409,34 @@ namespace MHServerEmu.Games.Network
             // TODO: NetMessageChangeAOIPolicies
 
             return true;
+        }
+
+        /// <summary>
+        /// Updates interest policies for entities contained in the provided owner's inventories.
+        /// </summary>
+        private void UpdateInventories(Entity owner)
+        {
+            // TODO: Inventory visibility, remove entities when we lose visibility
+            // Protobufs: InterestInInventory, InterestInAvatarEquipment, InterestInTeamUpEquipment
+
+            foreach (Inventory inventory in new InventoryIterator(owner))
+            {
+                // Skip inventories we don't need so that we don't get a Diablo 4 stash situation
+                if (inventory.Prototype.IsVisible == false) continue;
+                if (inventory.Prototype.InventoryRequiresFlaggedVisibility()) continue;     // TODO
+
+                foreach (var inventoryEntry in inventory)
+                {
+                    Entity containedEntity = _game.EntityManager.GetEntity<Entity>(inventoryEntry.Id);
+                    if (containedEntity == null)
+                    {
+                        Logger.Warn("UpdateEntityInventories(): containedEntity == null");
+                        continue;
+                    }
+
+                    ConsiderEntity(containedEntity);
+                }
+            }
         }
 
         /// <summary>
