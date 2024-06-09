@@ -218,15 +218,14 @@ namespace MHServerEmu.Games.Navi
         public NaviPathNode GetCurrentGoalNode()
         {
             int currentIndex = _pathNodes.IndexOf(_currentNode);
-            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return null;
+            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return _currentNode;
             return _pathNodes[currentIndex + 1];
         }
 
         public Vector3 GetCurrentGoalPosition(Vector3 position)
         {
             int currentIndex = _pathNodes.IndexOf(_currentNode);
-            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1)
-                return position;
+            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return position;
             NaviPathNode goalNode = _pathNodes[currentIndex + 1];
             return GetNodeGoalPosition(goalNode, position);
         }
@@ -256,20 +255,20 @@ namespace MHServerEmu.Games.Navi
 
         public Vector3 GetStartPosition()
         {
-            if (!IsValid) return Vector3.Zero;
-            return _pathNodes.First().Vertex;
+            if (IsValid == false) return Vector3.Zero;
+            return _pathNodes[0].Vertex;
         }
 
         public Vector3 GetFinalPosition()
         {
-            if (!IsValid) return Vector3.Zero;
-            return _pathNodes.Last().Vertex;
+            if (IsValid == false) return Vector3.Zero;
+            return _pathNodes[^1].Vertex;
         }
 
         public void UpdateEndPosition(Vector3 position)
         {
             if (_pathNodes.Count > 0)
-                _pathNodes.Last().Vertex = position;
+                _pathNodes[^1].Vertex = position;
         }
 
         public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
