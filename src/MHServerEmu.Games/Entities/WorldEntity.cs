@@ -486,27 +486,39 @@ namespace MHServerEmu.Games.Entities
                     {
                         // TODO send NetMessageEntityPosition position change to clients
 
-                        PlayerConnection playerConnection = null;
-                        foreach (Player player in new PlayerIterator(Game))
-                        {
-                            playerConnection = player.PlayerConnection;
-                            break;
-                        }
-                        playerConnection?.SendMessage(NetMessageEntityPosition.CreateBuilder()
-                                    .SetIdEntity(Id)
-                                    .SetFlags((uint)flags)
-                                    .SetPosition(RegionLocation.Position.ToNetStructPoint3())
-                                    .SetOrientation(RegionLocation.Orientation.ToNetStructPoint3())
-                                    .SetCellId(RegionLocation.CellId)
-                                    .SetAreaId(RegionLocation.AreaId)
-                                    .SetEntityPrototypeId((ulong)Prototype.DataRef)
-                                    .Build());
+                        PlayerConnection playerConnection = GetPlayerConnection();
+                        NetMessageEntityPosition messageEntityPosition = BuildMessageEntityPosition(flags);
+                        playerConnection?.SendMessage(messageEntityPosition);
                     }
                 }
                 return true;
             }
 
             return false;
+        }
+
+        private NetMessageEntityPosition BuildMessageEntityPosition(ChangePositionFlags flags)
+        {
+            return NetMessageEntityPosition.CreateBuilder()
+                .SetIdEntity(Id)
+                .SetFlags((uint)flags)
+                .SetPosition(RegionLocation.Position.ToNetStructPoint3())
+                .SetOrientation(RegionLocation.Orientation.ToNetStructPoint3())
+                .SetCellId(RegionLocation.CellId)
+                .SetAreaId(RegionLocation.AreaId)
+                .SetEntityPrototypeId((ulong)Prototype.DataRef)
+                .Build();
+        }
+
+        public PlayerConnection GetPlayerConnection()
+        {
+            PlayerConnection playerConnection = null;
+            foreach (Player player in new PlayerIterator(Game))
+            {
+                playerConnection = player.PlayerConnection;
+                break;
+            }
+            return playerConnection;
         }
 
         private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
@@ -989,7 +1001,39 @@ namespace MHServerEmu.Games.Entities
             return Math.Max(0.0f, distance);
         }
 
-        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
+        public virtual void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState) 
+        { 
+            if (IsInWorld)
+            {
+                // from CAvatar::UpdateServerAvatarState
+                bool skipGoalNode = newState.FollowEntityId != InvalidId;
+                bool sync = false;
+                bool pathNodesSync = false;
+                LocomotionState.CompareLocomotionStatesForSync(newState, oldState, ref sync, ref pathNodesSync, skipGoalNode);
+                if (sync || pathNodesSync)
+                {
+                    var position = RegionLocation.Position;
+                    var orientation = RegionLocation.Orientation;
+                    LocomotionMessageFlags fieldFlags = LocomotionMessageFlags.None;
+                    if (orientation.Pitch != 0.0f || orientation.Roll != 0.0f)
+                        fieldFlags |= LocomotionMessageFlags.HasFullOrientation;
+                    fieldFlags |= LocomotionState.GetFieldFlags(newState, oldState, pathNodesSync);
+                    LocomotionStateUpdateArchive locomotion = new()
+                    {
+                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                        EntityId = Id,
+                        FieldFlags = fieldFlags,
+                        Position = position,
+                        Orientation = orientation
+                    };
+                    var playerConnection = GetPlayerConnection();
+                    playerConnection?.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
+                        .SetArchiveData(locomotion.ToByteString())
+                        .Build());
+                }
+            }
+        }
+
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
 
         public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)

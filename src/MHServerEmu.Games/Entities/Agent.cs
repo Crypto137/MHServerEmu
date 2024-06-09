@@ -77,11 +77,11 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public override void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState)
+        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
             if(IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
             {
-                if((oldLocomotionState.Method == LocomotorMethod.HighFlying) != (newlocomotionState.Method == LocomotorMethod.HighFlying))
+                if((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))
                 {
                     Vector3 currentPosition = RegionLocation.Position;
                     Vector3 targetPosition = FloorToCenter(RegionLocation.ProjectToFloor(RegionLocation.Region, RegionLocation.Cell, currentPosition));

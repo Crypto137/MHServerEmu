@@ -442,5 +442,48 @@ namespace MHServerEmu.Games.Entities.Locomotion
             PathNodes.Clear();
             PathNodes.AddRange(other.PathNodes);
         }
+
+        public static void CompareLocomotionStatesForSync(LocomotionState newState, LocomotionState oldState, ref bool sync, ref bool pathNodesSync, bool skipGoalNode)
+        {
+            pathNodesSync = CompareLocomotionPathNodesForSync(newState, oldState, skipGoalNode);
+            sync = (newState.LocomotionFlags != oldState.LocomotionFlags)
+                || (newState.BaseMoveSpeed != oldState.BaseMoveSpeed)
+                || (newState.Height != oldState.Height)
+                || (newState.Method != oldState.Method)
+                || (newState.FollowEntityId != oldState.FollowEntityId)
+                || (newState.FollowEntityRangeStart != oldState.FollowEntityRangeStart)
+                || (newState.FollowEntityRangeEnd != oldState.FollowEntityRangeEnd);
+        }
+
+        public static bool CompareLocomotionPathNodesForSync(LocomotionState newState, LocomotionState oldState, bool skipGoalNode)
+        {
+            if ((newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting) ^ oldState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting)) 
+                || (newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking) ^ oldState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking)))
+                return true;
+
+            if (newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting) == false 
+                && newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking) == false)
+                return false;
+
+            if ((newState.PathNodes.Count > oldState.PathNodes.Count)
+                || (newState.PathNodes.Count == 0 && oldState.PathNodes.Count > 0))
+                return true;
+
+            if (newState.PathNodes.Count > 0)
+            {
+                int goalNodeIndex = newState.PathNodes.Count - newState.PathGoalNodeIndex;
+                int newNodeIndex = newState.PathGoalNodeIndex;
+                int oldNodeIndex = oldState.PathNodes.Count - goalNodeIndex;
+                if (skipGoalNode) --goalNodeIndex;
+
+                for (int i = 0; i < goalNodeIndex; ++i)
+                    if ((newState.PathNodes[newNodeIndex + i].VertexSide != oldState.PathNodes[oldNodeIndex + i].VertexSide)
+                        || (newState.PathNodes[newNodeIndex + i].Radius != oldState.PathNodes[oldNodeIndex + i].Radius)
+                        || (newState.PathNodes[newNodeIndex + i].Vertex != oldState.PathNodes[oldNodeIndex + i].Vertex))
+                        return true;
+            }
+
+            return false;
+        }
     }
 }
