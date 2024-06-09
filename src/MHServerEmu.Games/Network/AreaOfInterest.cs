@@ -31,6 +31,8 @@ namespace MHServerEmu.Games.Network
         private readonly Dictionary<uint, CellInterestStatus> _trackedCells = new();
         private readonly Dictionary<ulong, EntityInterestStatus> _trackedEntities = new();
 
+        private readonly Stack<EntityTrackingUpdate> _entityUpdateStack = new(64);
+
         private PlayerConnection _playerConnection;
         private Game _game;
 
@@ -178,15 +180,6 @@ namespace MHServerEmu.Games.Network
                 _trackedCells[kvp.Key] = new(_currentFrame, true);
         }
 
-        public static bool IsDiscoverable(WorldEntity worldEntity)
-        {
-            // REMOVEME: Use GetCurrentInterestPolicies() and GetNewInterestPolicies() instead
-            // TODO write all Player interests for entity
-            if (worldEntity.TrackAfterDiscovery) return true;
-            if (worldEntity.IsAlive() == false) return true;
-            return false;
-        }
-
         private void UpdateAreas()
         {
             Region region = Region;
@@ -253,38 +246,88 @@ namespace MHServerEmu.Games.Network
         private void UpdateEntities()
         {
             Region region = Region;
-            List<WorldEntity> newEntities = new();
 
-            // Update Entity
+            // Update proximity
             foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, new()))
             {
-                if (worldEntity.RegionLocation.Cell == null)
+                AOINetworkPolicyValues newInterestPolicies = GetNewInterestPolicies(worldEntity);
+                bool wasInterested = _trackedEntities.TryGetValue(worldEntity.Id, out EntityInterestStatus interestStatus);
+                bool isInterested = newInterestPolicies != AOINetworkPolicyValues.AOIChannelNone;
+
+                if (wasInterested == false && isInterested)
                 {
-                    Logger.Warn($"UpdateEntity(): worldEntity.RegionLocation.Cell == null, entity: {worldEntity}");
+                    // New entity found in proximity
+                    _entityUpdateStack.Push(new(InterestTrackOperation.Add, worldEntity, newInterestPolicies));
+                }
+                else if (wasInterested && isInterested == false)
+                {
+                    // Entity left proximity and does not have any other interest policies
+                    interestStatus.LastUpdateFrame = _currentFrame;
+                    _entityUpdateStack.Push(new(InterestTrackOperation.Remove, worldEntity));
+                }
+                else if (wasInterested && isInterested && interestStatus.InterestPolicies == newInterestPolicies)
+                {
+                    // Entity is still in proximity and its interest policies did not change
+                    interestStatus.LastUpdateFrame = _currentFrame;
+                }
+            }
+
+            // Update existing entities
+            foreach (var kvp in _trackedEntities)
+            {
+                ulong entityId = kvp.Key;
+                EntityInterestStatus interestStatus = kvp.Value;
+
+                // Skip entities we have already processed in proximity
+                if (interestStatus.LastUpdateFrame >= _currentFrame) continue;
+                interestStatus.LastUpdateFrame = _currentFrame;
+
+                Entity entity = _game.EntityManager.GetEntity<Entity>(entityId);
+                if (entity == null)
+                {
+                    Logger.Warn("UpdateEntities(): entity == null");
                     continue;
                 }
 
-                // TODO: Remove this when we start using GetNewInterestPolicies() that does this check 
-                if (InterestedInCell(worldEntity.RegionLocation.Cell.Id) == false)
+                // Remove entities we are no longer interested in
+                AOINetworkPolicyValues newInterestPolicies = GetNewInterestPolicies(entity);
+                if (newInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                {
+                    _entityUpdateStack.Push(new(InterestTrackOperation.Remove, entity));
                     continue;
+                }
 
-                if (_trackedEntities.ContainsKey(worldEntity.Id) == false && worldEntity.IsAlive())
-                    newEntities.Add(worldEntity);
-
-                // TODO: Use GetNewInterestPolicies() instead
-                AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
-                if (IsDiscoverable(worldEntity)) interestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
-                _trackedEntities[worldEntity.Id] = new(_currentFrame, interestPolicies);
+                // Modify interest policies if they have changed
+                if (newInterestPolicies != interestStatus.InterestPolicies)
+                    _entityUpdateStack.Push(new(InterestTrackOperation.Modify, entity, newInterestPolicies));
             }
 
-            // Delete entities we are no longer interested in
-            foreach (var kvp in _trackedEntities.Where(kvp => kvp.Value.LastUpdateFrame < _currentFrame
-            && kvp.Value.InterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery) == false))
-                RemoveEntity(kvp.Key);      // TODO: Pass a reference to the entity we are removing instead
+            //Logger.Debug($"------ AOI ENTITY UPDATE [{_entityUpdateStack.Count, 3}] ------");
 
-            // Add new entities
-            foreach (Entity entity in newEntities)
-                AddEntity(entity);
+            // Process update stack
+            while (_entityUpdateStack.Count > 0)
+            {
+                EntityTrackingUpdate update = _entityUpdateStack.Pop();
+
+                //Logger.Debug(update.ToString());
+                
+                switch (update.Operation)
+                {
+                    case InterestTrackOperation.Add:
+                        AddEntity(update.Entity, update.InterestPolicies);
+                        break;
+                    case InterestTrackOperation.Remove:
+                        RemoveEntity(update.Entity);
+                        break;
+                    case InterestTrackOperation.Modify:
+                        ModifyEntity(update.Entity, update.InterestPolicies);
+                        break;
+
+                    default:
+                        Logger.Warn($"UpdateEntities(): Invalid update pushed to the stack ({update})");
+                        break;
+                }
+            }
         }
 
         private void AddArea(Area area, bool isStartArea)
@@ -321,16 +364,29 @@ namespace MHServerEmu.Games.Network
             LoadedCellCount--;
         }
 
-        private void AddEntity(Entity entity)
+        private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies)
         {
+            _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
             SendMessage(entity.ToNetMessageEntityCreate());
         }
 
-        private void RemoveEntity(ulong entityId)
+        private void RemoveEntity(Entity entity)
         {
-            // TODO: Pass a reference to the entity we are removing instead
-            _trackedEntities.Remove(entityId);
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entityId).Build());
+            _trackedEntities.Remove(entity.Id);
+            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Id).Build());
+        }
+
+        private bool ModifyEntity(Entity entity, AOINetworkPolicyValues interestPolicies)
+        {
+            if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus) == false)
+                return false;
+
+            interestStatus.InterestPolicies = interestPolicies;
+
+            // TODO: NetMessageInterestPolicies
+            // TODO: NetMessageChangeAOIPolicies
+
+            return true;
         }
 
         /// <summary>
@@ -364,19 +420,32 @@ namespace MHServerEmu.Games.Network
             //      Add more filters here
 
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
+            AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity);
 
             if (entity is WorldEntity worldEntity)
             {
                 // Validate that the entity's location is valid on the client before including it in the proximity channel
                 if (worldEntity.IsInWorld && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                {
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
+
+                    // HACK: Discover
+                    if (worldEntity.TrackAfterDiscovery)
+                        newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
+                }
+
+                // Transfer discovery
+                // TODO: We probably need to keep track of discovered entities somewhere else
+                // so that they can remain discovered when we change regions.
+                if (currentInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery))
+                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
             }
 
             // Ownership
             if (entity.IsOwnedBy(player.Id))
                 newInterestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
 
-            // TODO: Discovery, Party, Trade
+            // TODO: proper Discovery implementation, Party, Trade
 
             // Filter out results that don't match channels specified in the entity prototype
             if ((newInterestPolicies & entity.CompatibleReplicationChannels) == AOINetworkPolicyValues.AOIChannelNone)
@@ -426,15 +495,35 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        private readonly struct EntityInterestStatus
+        private class EntityInterestStatus
         {
-            public readonly ulong LastUpdateFrame;
-            public readonly AOINetworkPolicyValues InterestPolicies;
+            // NOTE: This needs to be a class so that we can modify it during iteration
+            public ulong LastUpdateFrame;
+            public AOINetworkPolicyValues InterestPolicies;
 
             public EntityInterestStatus(ulong frame, AOINetworkPolicyValues interestPolicies)
             {
                 LastUpdateFrame = frame;
                 InterestPolicies = interestPolicies;
+            }
+        }
+
+        private readonly struct EntityTrackingUpdate
+        {
+            public readonly InterestTrackOperation Operation = InterestTrackOperation.Invalid;
+            public readonly Entity Entity;
+            public readonly AOINetworkPolicyValues InterestPolicies;
+
+            public EntityTrackingUpdate(InterestTrackOperation operation, Entity entity, AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelNone)
+            {
+                Operation = operation;
+                Entity = entity;
+                InterestPolicies = interestPolicies;
+            }
+
+            public override string ToString()
+            {
+                return $"{nameof(Operation)}={Operation}, {nameof(Entity)}={Entity}, {nameof(InterestPolicies)}={InterestPolicies}";
             }
         }
     }
