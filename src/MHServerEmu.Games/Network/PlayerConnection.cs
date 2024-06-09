@@ -296,6 +296,9 @@ namespace MHServerEmu.Games.Network
             Player.ExitGame();
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
             SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
+
+            Player.CurrentAvatar.BasePosition = null;
+            Player.CurrentAvatar.BaseOrientation = null;
         }
 
         #endregion
