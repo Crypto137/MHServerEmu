@@ -241,8 +241,7 @@ namespace MHServerEmu.Games.Entities
             Prototype = PrototypeDataRef.As<EntityPrototype>();
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
-            // Is this correct? Should the flag NOT be set?
-            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame) == false)
+            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame))
             {
                 BasePosition = settings.Position;
                 BaseOrientation = settings.Orientation;
