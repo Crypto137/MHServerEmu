@@ -215,6 +215,7 @@ namespace MHServerEmu.Commands.Implementations
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
             avatar.EnterWorld(region, position, orientation);
+            avatar.SetSimulated(true);
             Agent pet = player.CreatePet((PrototypeId)16300889242928224944, position, region); // Pet001OldLace = 16300889242928224944
             pet.EnterWorld(region, position, orientation);
             pet.EnterGame();

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -478,10 +479,32 @@ namespace MHServerEmu.Games.Entities
                 SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
                 if (RegionLocation.IsValid())
                     ExitWorldRegionLocation.Set(RegionLocation);
+
+                if (IsInWorld)
+                {
+                    if (flags.HasFlag(ChangePositionFlags.NoSendToClients) == false && this is not Avatar)
+                    {
+                        // TODO send NetMessageEntityPosition position change to clients
+
+                        PlayerConnection playerConnection = null;
+                        foreach (Player player in new PlayerIterator(Game))
+                        {
+                            playerConnection = player.PlayerConnection;
+                            break;
+                        }
+                        playerConnection?.SendMessage(NetMessageEntityPosition.CreateBuilder()
+                                    .SetIdEntity(Id)
+                                    .SetFlags((uint)flags)
+                                    .SetPosition(RegionLocation.Position.ToNetStructPoint3())
+                                    .SetOrientation(RegionLocation.Orientation.ToNetStructPoint3())
+                                    .SetCellId(RegionLocation.CellId)
+                                    .SetAreaId(RegionLocation.AreaId)
+                                    .SetEntityPrototypeId((ulong)Prototype.DataRef)
+                                    .Build());
+                    }
+                }
                 return true;
             }
-
-            // TODO send NetMessageEntityPosition position change to clients
 
             return false;
         }

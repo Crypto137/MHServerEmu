@@ -424,6 +424,7 @@ namespace MHServerEmu.Games.Network
             if (currentAvatar.IsInWorld == false) return true;
 
             bool canMove = currentAvatar.CanMove;
+            canMove = true; // TODO fix problem with Locomotor MoveSpeed
             bool canRotate = currentAvatar.CanRotate;
             Vector3 position = currentAvatar.RegionLocation.Position;
             Orientation orientation = currentAvatar.RegionLocation.Orientation;

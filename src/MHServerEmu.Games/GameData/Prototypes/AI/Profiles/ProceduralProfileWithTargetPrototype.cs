@@ -774,11 +774,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             WorldEntity master = ownerController.AssistedEntity;
             if (master != null && master.IsInWorld)
-            {
-                ProceduralAI.Logger.Debug($"agent {agent.RegionLocation.Position} master {master.RegionLocation.Position}");
+            {                
                 float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
                 if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
+                {
+                    ProceduralAI.Logger.Debug($"Teleport agent {agent.RegionLocation.Position} to master {master.RegionLocation.Position}");
                     HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);
+                }
             }
 
             HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, PetFollow, false, out _);
