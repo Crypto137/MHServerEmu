@@ -29,6 +29,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
 
+        public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Value; }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }

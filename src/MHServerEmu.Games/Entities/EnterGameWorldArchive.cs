@@ -9,16 +9,6 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
-    [Flags]
-    public enum EnterGameWorldMessageFlags : uint
-    {
-        None                        = 0,
-        HasAvatarWorldInstanceId    = 1 << 0,
-        IsNewOnServer               = 1 << 1,
-        IsClientEntityHidden        = 1 << 2,
-        HasAttachedEntities         = 1 << 3
-    }
-
     public class EnterGameWorldArchive : ISerialize
     {
         private const int LocoFlagCount = 12;

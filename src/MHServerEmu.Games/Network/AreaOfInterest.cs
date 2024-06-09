@@ -398,7 +398,7 @@ namespace MHServerEmu.Games.Network
             SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Id).Build());
         }
 
-        private bool ModifyEntity(Entity entity, AOINetworkPolicyValues newInterestPolicies)
+        private bool ModifyEntity(Entity entity, AOINetworkPolicyValues newInterestPolicies, EntitySettings settings = null)
         {
             // No entity to modify
             if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus) == false)
@@ -426,10 +426,8 @@ namespace MHServerEmu.Games.Network
                     .SetCurrentpolicies((uint)newInterestPolicies);
 
                 // Remove world entities from the game world that are no longer in proximity on the client
-                /*
                 if (removedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && entity is WorldEntity)
                     changeAoiPolicies.SetExitGameWorld(true);
-                */
 
                 // entityPrototypeId field seems to be unused
 
@@ -438,11 +436,9 @@ namespace MHServerEmu.Games.Network
 
             entity.OnChangePlayerAOI(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
 
-            // Entities that already exist on the client and don't have a proximity policy enter game world when they gain a proximity policy
-            if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
-            {
-                // TODO: NetMessageEntityEnterGameWorld
-            }
+            // World entities that already exist on the client and don't have a proximity policy enter game world when they gain a proximity policy
+            if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && entity is WorldEntity worldEntity)
+                SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorld(worldEntity, settings));
 
             entity.OnPostAOIAddOrRemove(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
 
