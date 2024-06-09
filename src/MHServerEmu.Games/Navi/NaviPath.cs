@@ -18,8 +18,16 @@ namespace MHServerEmu.Games.Navi
         private float _width;
 
         public List<NaviPathNode> PathNodeList { get => _pathNodes; }
-        public bool IsComplete { get; internal set; }
-        public bool IsCurrentGoalNodeLastNode { get; internal set; }
+        public bool IsComplete { get => IsValid == false || _pathNodes.IndexOf(GetCurrentGoalNode()) == -1; }
+        public bool IsCurrentGoalNodeLastNode 
+        { 
+            get
+            {
+                if (IsValid == false) return false;
+                int currentNodeIndex = _pathNodes.IndexOf(_currentNode);
+                return currentNodeIndex != -1 && currentNodeIndex + 1 == _pathNodes.Count - 1;
+            }
+        }
 
         public NaviPath()
         {
