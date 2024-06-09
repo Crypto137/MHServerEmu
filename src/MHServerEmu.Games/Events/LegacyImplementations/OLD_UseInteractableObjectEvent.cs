@@ -77,9 +77,8 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             ballSettings.Properties = properties;
 
             bowlingBall = game.EntityManager.CreateEntity(ballSettings);
-            bowlingBall.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
-            _playerConnection.SendMessage(bowlingBall.ToNetMessageEntityCreate());
+            _playerConnection.SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(bowlingBall, AOINetworkPolicyValues.AOIChannelOwner));
 
             //  Unassign bowling ball power if the player already has one
             Avatar avatar = player.CurrentAvatar;

@@ -1,9 +1,11 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -12,6 +14,29 @@ using MHServerEmu.Games.Regions.Maps;
 
 namespace MHServerEmu.Games.Network
 {
+    // Unused bool field names from 1.24: initConditionComponent, startFullInWorldHierarchyUpdate
+    [Flags]
+    public enum EntityCreateMessageFlags : uint
+    {
+        None = 0,
+        HasPositionAndOrientation   = 1 << 0,
+        HasActivePowerPrototypeRef  = 1 << 1,
+        IsNewOnServer               = 1 << 2,
+        HasSourceEntityId           = 1 << 3,
+        HasSourcePosition           = 1 << 4,
+        HasNonProximityInterest     = 1 << 5,
+        HasInvLoc                   = 1 << 6,
+        HasInvLocPrev               = 1 << 7,
+        HasDbId                     = 1 << 8,
+        HasAvatarWorldInstanceId    = 1 << 9,
+        OverrideSnapToFloorOnSpawn  = 1 << 10,
+        HasBoundsScaleOverride      = 1 << 11,
+        IsClientEntityHidden        = 1 << 12,
+        Flag13                      = 1 << 13,  // Unused
+        HasAttachedEntities         = 1 << 14,
+        IgnoreNavi                  = 1 << 15
+    }
+
     [Flags]
     public enum EnterGameWorldMessageFlags : uint
     {
@@ -27,6 +52,145 @@ namespace MHServerEmu.Games.Network
     /// </summary>
     public static class ArchiveMessageBuilder
     {
+        public static NetMessageEntityCreate BuildEntityCreateMessage(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings entitySettings = null)
+        {
+            ByteString baseData = null;
+            ByteString archiveData = null;
+
+            // Base data
+            using (Archive archive = new Archive(ArchiveSerializeType.Replication, (ulong)interestPolicies))
+            {
+                // Build flags
+                EntityCreateMessageFlags fieldFlags = EntityCreateMessageFlags.None;
+                LocomotionMessageFlags locoFieldFlags = LocomotionMessageFlags.None;
+
+                if (entity.BasePosition != null && entity.BaseOrientation != null)
+                {
+                    fieldFlags |= EntityCreateMessageFlags.HasPositionAndOrientation;
+
+                    if (entity.BaseOrientation.Pitch != 0f || entity.BaseOrientation.Roll != 0f)
+                        locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
+                }
+
+                if (interestPolicies != AOINetworkPolicyValues.AOIChannelProximity)
+                    fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
+
+                if (entity.InventoryLocation.IsValid)
+                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
+
+                if (entity is Player)
+                    fieldFlags |= EntityCreateMessageFlags.HasDbId;
+
+                if (entity is Avatar)
+                    fieldFlags |= EntityCreateMessageFlags.HasAvatarWorldInstanceId;
+
+                if (entity.OverrideSnapToFloorOnSpawn)
+                    fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
+
+                // Serialize
+                ulong entityId = entity.Id;
+                Serializer.Transfer(archive, ref entityId);
+
+                PrototypeId entityPrototypeRef = entity.PrototypeDataRef;
+                Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref entityPrototypeRef);
+
+                uint fieldFlagsRaw = (uint)fieldFlags;
+                Serializer.Transfer(archive, ref fieldFlagsRaw);
+
+                uint locoFieldFlagsRaw = (uint)locoFieldFlags;
+                Serializer.Transfer(archive, ref locoFieldFlagsRaw);
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest))
+                {
+                    uint rawInterestPolicies = (uint)interestPolicies;
+                    Serializer.Transfer(archive, ref rawInterestPolicies);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
+                {
+                    uint avatarWorldInstanceId = 1;     // TODO: get this from avatar
+                    Serializer.Transfer(archive, ref avatarWorldInstanceId);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
+                {
+                    ulong dbId = entity.DatabaseUniqueId;
+                    Serializer.Transfer(archive, ref dbId);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
+                {
+                    Vector3 position = entity.BasePosition;
+                    Serializer.TransferVectorFixed(archive, ref position, 3);
+
+                    Orientation orientation = entity.BaseOrientation;
+                    bool yawOnly = locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+                    Serializer.TransferOrientationFixed(archive, ref orientation, yawOnly, 6);
+                }
+
+                if (locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+                    LocomotionState.SerializeTo(archive, entity.BaseLocomotionState, locoFieldFlags);
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
+                {
+                    // TODO
+                    float boundsScaleOverride = 0f;
+                    Serializer.TransferFloatFixed(archive, ref boundsScaleOverride, 8);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
+                {
+                    // TODO
+                    ulong sourceEntityId = 0;
+                    Serializer.Transfer(archive, ref sourceEntityId);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
+                {
+                    // TODO
+                    Vector3 sourcePosition = Vector3.Zero;
+                    Serializer.Transfer(archive, ref sourcePosition);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
+                {
+                    // TODO
+                    PrototypeId activePowerPrototypeRef = PrototypeId.Invalid;
+                    Serializer.Transfer(archive, ref activePowerPrototypeRef);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
+                    InventoryLocation.SerializeTo(archive, entity.InventoryLocation);
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
+                {
+                    // TODO
+                    InventoryLocation invLocPrev = new();
+                    InventoryLocation.SerializeTo(archive, invLocPrev);
+                }
+
+                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
+                {
+                    List<ulong> attachedEntityList = new();
+                    Serializer.Transfer(archive, ref attachedEntityList);
+                }
+
+                baseData = archive.ToByteString();
+            }
+
+            // Archive data
+            using (Archive archive = new Archive(ArchiveSerializeType.Replication, (ulong)interestPolicies))
+            {
+                Serializer.Transfer(archive, ref entity);
+                archiveData = archive.ToByteString();
+            }
+
+            return NetMessageEntityCreate.CreateBuilder()
+                .SetBaseData(baseData)
+                .SetArchiveData(archiveData)
+                .Build();
+        }
+
         /// <summary>
         /// Builds <see cref="NetMessageEntityEnterGameWorld"/> for the provided <see cref="WorldEntity"/>.
         /// </summary>

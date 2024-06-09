@@ -238,15 +238,15 @@ namespace MHServerEmu.Games.Network
                 .SetGameOptions(Game.GameOptions)
                 .Build());
 
-            SendMessage(Player.ToNetMessageEntityCreate());
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(Player, AOINetworkPolicyValues.AOIChannelOwner));
 
             foreach (Avatar avatar in Player.IterateAvatars())
-                SendMessage(avatar.ToNetMessageEntityCreate());
+                SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(avatar, AOINetworkPolicyValues.AOIChannelOwner));
 
             foreach (var entry in Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
             {
                 var teamUp = Game.EntityManager.GetEntity<Agent>(entry.Id);
-                SendMessage(teamUp.ToNetMessageEntityCreate());
+                SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(teamUp, AOINetworkPolicyValues.AOIChannelOwner));
             }
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
@@ -273,10 +273,10 @@ namespace MHServerEmu.Games.Network
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, StartOrientation.Yaw, 350f);
-            SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
-                .Build());
+            avatar.BasePosition = entrancePosition;
+            avatar.BaseOrientation = StartOrientation;
+
+            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(avatar));
 
             AOI.Update(entrancePosition, true);
 
@@ -673,16 +673,18 @@ namespace MHServerEmu.Games.Network
 
             SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(prevAvatar.Id).Build());
 
-            // Recreate the previous avatar
-            SendMessage(prevAvatar.ToNetMessageEntityCreate());
+            // Remove the previous avatar from the world and recreate it in inventory
+            prevAvatar.BasePosition = null;
+            prevAvatar.BaseOrientation = null;
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(prevAvatar, AOINetworkPolicyValues.AOIChannelOwner));
 
-            // Recreate the avatar we just switched to
-            SendMessage(Player.CurrentAvatar.ToNetMessageEntityCreate());
+            // Recreate the avatar we just switched to and put it into the world
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(Player.CurrentAvatar, AOINetworkPolicyValues.AOIChannelOwner));
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new(Player.CurrentAvatar.Id, LastPosition, LastOrientation.Yaw, 350f, true);
-            SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
-                .Build());
+            Player.CurrentAvatar.BasePosition = LastPosition;
+            Player.CurrentAvatar.BaseOrientation = LastOrientation;
+            EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
+            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(Player.CurrentAvatar, settings));
 
             // Power collection needs to be assigned after the avatar enters world
             Player.CurrentAvatar.AssignHardcodedPowers();

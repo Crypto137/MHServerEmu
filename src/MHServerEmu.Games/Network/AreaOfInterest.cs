@@ -382,7 +382,7 @@ namespace MHServerEmu.Games.Network
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies)
         {
             _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
-            SendMessage(entity.ToNetMessageEntityCreate());
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies));
         }
 
         private void RemoveEntity(Entity entity)

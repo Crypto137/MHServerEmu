@@ -7,33 +7,9 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network;
 
-namespace MHServerEmu.Games.Entities
+namespace MHServerEmu.Games.Network.LegacyArchives
 {
-    // Unused bool field names from 1.24: initConditionComponent, startFullInWorldHierarchyUpdate
-    [Flags]
-    public enum EntityCreateMessageFlags : uint
-    {
-        None                        = 0,
-        HasPositionAndOrientation   = 1 << 0,
-        HasActivePowerPrototypeRef  = 1 << 1,
-        IsNewOnServer               = 1 << 2,
-        HasSourceEntityId           = 1 << 3,
-        HasSourcePosition           = 1 << 4,
-        HasNonProximityInterest     = 1 << 5,
-        HasInvLoc                   = 1 << 6,
-        HasInvLocPrev               = 1 << 7,
-        HasDbId                     = 1 << 8,
-        HasAvatarWorldInstanceId    = 1 << 9,
-        OverrideSnapToFloorOnSpawn  = 1 << 10,
-        HasBoundsScaleOverride      = 1 << 11,
-        IsClientEntityHidden        = 1 << 12,
-        Flag13                      = 1 << 13,  // Unused
-        HasAttachedEntities         = 1 << 14,
-        IgnoreNavi                  = 1 << 15
-    }
-
     public class EntityBaseData : ISerialize
     {
         // This used to be a regular protobuf message, but it was converted to archive in 1.25.

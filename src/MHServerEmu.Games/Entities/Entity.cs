@@ -1,11 +1,8 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -110,8 +107,8 @@ namespace MHServerEmu.Games.Entities
         public AOINetworkPolicyValues InterestPolicies { get; set; }
 
         // TODO: Use WorldEntity fields instead
-        public Vector3 BasePosition { get; private set; }
-        public Orientation BaseOrientation { get; private set; }
+        public Vector3 BasePosition { get; set; }
+        public Orientation BaseOrientation { get; set; }
         public LocomotionState BaseLocomotionState { get; private set; } = new();
 
         public bool OverrideSnapToFloorOnSpawn { get; private set; }
@@ -277,143 +274,6 @@ namespace MHServerEmu.Games.Entities
         {
             PropertyCollection defaultCollection = null;    // TODO: Get the default collection from the prototype
             return Properties.SerializeWithDefault(archive, defaultCollection);
-        }
-
-        public NetMessageEntityCreate ToNetMessageEntityCreate()
-        {
-            // Serialize base data (note: this used to be a protobuf)
-            // TODO: Move this to AOI
-
-            // Build flags
-            EntityCreateMessageFlags fieldFlags = EntityCreateMessageFlags.None;
-            LocomotionMessageFlags locoFieldFlags = LocomotionMessageFlags.None;
-
-            if (BasePosition != null && BaseOrientation != null)
-            {
-                fieldFlags |= EntityCreateMessageFlags.HasPositionAndOrientation;
-
-                if (BaseOrientation.Pitch != 0f || BaseOrientation.Roll != 0f)
-                    locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
-            }
-
-            if (InterestPolicies != AOINetworkPolicyValues.AOIChannelProximity)
-                fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
-
-            if (InventoryLocation.IsValid)
-                fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
-
-            if (this is Player)
-                fieldFlags |= EntityCreateMessageFlags.HasDbId;
-
-            if (this is Avatar)
-                fieldFlags |= EntityCreateMessageFlags.HasAvatarWorldInstanceId;
-
-            if (OverrideSnapToFloorOnSpawn)
-                fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
-
-            ByteString baseData;
-            using (Archive archive = new Archive(ArchiveSerializeType.Replication, (ulong)InterestPolicies))
-            {
-                ulong entityId = Id;
-                Serializer.Transfer(archive, ref entityId);
-
-                PrototypeId entityPrototypeRef = PrototypeDataRef;
-                Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref entityPrototypeRef);
-
-                uint fieldFlagsRaw = (uint)fieldFlags;
-                Serializer.Transfer(archive, ref fieldFlagsRaw);
-
-                uint locoFieldFlagsRaw = (uint)locoFieldFlags;
-                Serializer.Transfer(archive, ref locoFieldFlagsRaw);
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasNonProximityInterest))
-                {
-                    uint interestPolicies = (uint)InterestPolicies;
-                    Serializer.Transfer(archive, ref interestPolicies);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
-                {
-                    uint avatarWorldInstanceId = 1;     // TODO: get this from avatar
-                    Serializer.Transfer(archive, ref avatarWorldInstanceId);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasDbId))
-                {
-                    ulong dbId = DatabaseUniqueId;
-                    Serializer.Transfer(archive, ref dbId);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
-                {
-                    Vector3 position = BasePosition;
-                    Serializer.TransferVectorFixed(archive, ref position, 3);
-
-                    Orientation orientation = BaseOrientation;
-                    bool yawOnly = locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
-                    Serializer.TransferOrientationFixed(archive, ref orientation, yawOnly, 6);
-                }
-
-                if (locoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
-                    LocomotionState.SerializeTo(archive, BaseLocomotionState, locoFieldFlags);
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
-                {
-                    // TODO
-                    float boundsScaleOverride = 0f;
-                    Serializer.TransferFloatFixed(archive, ref boundsScaleOverride, 8);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
-                {
-                    // TODO
-                    ulong sourceEntityId = 0;
-                    Serializer.Transfer(archive, ref sourceEntityId);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
-                {
-                    // TODO
-                    Vector3 sourcePosition = Vector3.Zero;
-                    Serializer.Transfer(archive, ref sourcePosition);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
-                {
-                    // TODO
-                    PrototypeId activePowerPrototypeRef = PrototypeId.Invalid;
-                    Serializer.Transfer(archive, ref activePowerPrototypeRef);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
-                    InventoryLocation.SerializeTo(archive, InventoryLocation);
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                {
-                    // TODO
-                    InventoryLocation invLocPrev = new();
-                    InventoryLocation.SerializeTo(archive, invLocPrev);
-                }
-
-                if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
-                {
-                    List<ulong> attachedEntityList = new();
-                    Serializer.Transfer(archive, ref attachedEntityList);
-                }
-
-                baseData = archive.ToByteString();
-            }
-
-            // Serialize archive data
-            using (Archive archive = new Archive(ArchiveSerializeType.Replication, (ulong)InterestPolicies))
-            {
-                Serialize(archive);
-
-                return NetMessageEntityCreate.CreateBuilder()
-                    .SetBaseData(baseData)
-                    .SetArchiveData(archive.ToByteString())
-                    .Build();
-            }
         }
 
         public void TEMP_ReplacePrototype(PrototypeId prototypeRef)
