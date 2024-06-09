@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Navi
             _pathNodes.Clear();
             _currentNode = default; //_pathNodes.FirstOrDefault();
 
-            if (pathNodes != null) Append(pathNodes, 0);
+            if (pathNodes != null && pathNodes.Count > 0) Append(pathNodes, 0);
         }
 
         public void Clear()
