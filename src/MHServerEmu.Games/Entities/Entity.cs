@@ -12,7 +12,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {

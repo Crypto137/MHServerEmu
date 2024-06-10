@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Network
     /// </summary>
     public static class ArchiveMessageBuilder
     {
-        public static NetMessageEntityCreate BuildEntityCreateMessage(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings entitySettings = null)
+        public static NetMessageEntityCreate BuildEntityCreateMessage(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
         {
             ByteString baseData = null;
             ByteString archiveData = null;
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Network
                 if (interestPolicies != AOINetworkPolicyValues.AOIChannelProximity)
                     fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
 
-                if (entity.InventoryLocation.IsValid)
+                if (entity.InventoryLocation.IsValid && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
                     fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
 
                 if (entity is Player)

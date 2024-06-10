@@ -6,6 +6,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -393,7 +394,12 @@ namespace MHServerEmu.Games.Network
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
         {
             _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
+
             SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies));
+
+            // Notify the client that we have finished sending everything needed for this avatar
+            if (entity is Avatar && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                SendMessage(NetMessageFullInWorldHierarchyUpdateEnd.CreateBuilder().SetIdEntity(entity.Id).Build());
         }
 
         private void RemoveEntity(Entity entity)
