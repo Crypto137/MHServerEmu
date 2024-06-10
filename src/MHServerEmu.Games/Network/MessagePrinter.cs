@@ -366,6 +366,30 @@ namespace MHServerEmu.Games.Network
             return $"({unassignPower.EntityId}) {GameDatabase.GetPrototypeName((PrototypeId)unassignPower.PowerProtoId)}";
         }
 
+        [PrintMethod(typeof(NetMessageChangeAOIPolicies))]
+        private static string PrintNetMessageChangeAOIPolicies(IMessage message)
+        {
+            var changeAoiPolicies = (NetMessageChangeAOIPolicies)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"idEntity: {changeAoiPolicies.IdEntity}");
+            sb.AppendLine($"currentPolicies: {(AOINetworkPolicyValues)changeAoiPolicies.Currentpolicies}");
+            if (changeAoiPolicies.HasExitGameWorld)
+                sb.AppendLine($"exitGameWorld: {changeAoiPolicies.ExitGameWorld}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessageInterestPolicies))]
+        private static string PrintNetMessageInterestPolicies(IMessage message)
+        {
+            var interestPolicies = (NetMessageInterestPolicies)message;
+            return string.Format("idEntity: {0}\nnewPolicies: {1}\nprevPolicies: {2}",
+                interestPolicies.IdEntity,
+                (AOINetworkPolicyValues)interestPolicies.NewPolicies,
+                (AOINetworkPolicyValues)interestPolicies.PrevPolicies);
+        }
+
         #endregion
 
         [AttributeUsage(AttributeTargets.Method)]
