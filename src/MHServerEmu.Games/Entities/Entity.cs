@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -302,14 +303,35 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void EnterGame(EntitySettings settings = null)
         {
-            if (IsInGame == false) SetStatus(EntityStatus.InGame, true);
-            // TODO InventoryIterator
+            if (IsInGame) return;
+
+            SetStatus(EntityStatus.InGame, true);
+            NotifyPlayers(false);
+
+            // Put all inventory entities into the game as well
+            foreach (Inventory inventory in new InventoryIterator(this))
+            {
+                foreach (var entry in inventory)
+                {
+                    Entity containedEntity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    if (containedEntity != null) containedEntity.EnterGame();
+                }
+            }
         }
 
         public virtual void ExitGame()
         {
             SetStatus(EntityStatus.InGame, false);
-            // TODO InventoryIterator
+
+            // Remove contained entities
+            foreach (Inventory inventory in new InventoryIterator(this))
+            {
+                foreach (var entry in inventory)
+                {
+                    Entity containedEntity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    if (containedEntity != null) containedEntity.ExitGame();
+                }
+            }
         }
 
         // NOTE: TestStatus and SetStatus can be potentially replaced with an indexer property
@@ -353,6 +375,17 @@ namespace MHServerEmu.Games.Entities
 
             return true;
         }
+
+        #region AOI
+
+        public void NotifyPlayers(bool alreadyInterestedOnly, EntitySettings settings = null)
+        {
+            // TODO: Use InterestReferences to filter to just players who are already interested in this entity
+            foreach (Player player in new PlayerIterator(Game))
+                player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+        }
+
+        #endregion
 
         #region Death Hack
 
@@ -475,8 +508,16 @@ namespace MHServerEmu.Games.Entities
             return GetOwnerOfType<T>();
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the specified entity id matches this <see cref="Entity"/> or one of its owners.
+        /// </summary>
         public bool IsOwnedBy(ulong entityId)
         {
+            // NOTE: If the provided entityId matches this entity, this check will
+            // return true, even though GetOwner() would return null. In other words,
+            // an entity without an owner is owned by itself. This is expected behavior,
+            // because Player entities own themselves.
+
             Entity potentialOwner = this;
 
             while (potentialOwner != null)

@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -15,7 +14,6 @@ using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -135,7 +133,6 @@ namespace MHServerEmu.Games.Network
 
                 EntitySettings avatarSettings = new();
                 avatarSettings.EntityRef = avatarRef;
-                avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories | EntitySettingsOptionFlags.LogInventoryErrors;
                 avatarSettings.InventoryLocation = new(Player.Id, avatarLibrary.PrototypeDataRef);
 
                 Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
@@ -150,7 +147,6 @@ namespace MHServerEmu.Games.Network
             {
                 EntitySettings teamUpSettings = new();
                 teamUpSettings.EntityRef = teamUpRef;
-                teamUpSettings.OptionFlags = EntitySettingsOptionFlags.LogInventoryErrors;
                 teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
                 Game.EntityManager.CreateEntity(teamUpSettings);
@@ -222,33 +218,6 @@ namespace MHServerEmu.Games.Network
         {
             Player.EnterGame();
 
-            SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
-                .SetCurrentservergameid(Game.Id)
-                .SetGamestarttime((ulong)Game.StartTime.TotalMilliseconds)
-                .Build());
-
-            SendMessage(NetMessageServerVersion.CreateBuilder().SetVersion(Game.Version).Build());
-            SendMessage(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
-            SendMessage(NetMessageReadyForTimeSync.DefaultInstance);
-
-            // Load local player data
-            SendMessage(NetMessageLocalPlayer.CreateBuilder()
-                .SetLocalPlayerEntityId(Player.Id)
-                .SetGameOptions(Game.GameOptions)
-                .Build());
-
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(Player, AOINetworkPolicyValues.AOIChannelOwner));
-
-            foreach (Avatar avatar in Player.IterateAvatars())
-                SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(avatar, AOINetworkPolicyValues.AOIChannelOwner));
-
-            foreach (var entry in Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
-            {
-                var teamUp = Game.EntityManager.GetEntity<Agent>(entry.Id);
-                SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(teamUp, AOINetworkPolicyValues.AOIChannelOwner));
-            }
-
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
             // Before changing to the actual destination region the game seems to first change into a transitional region
@@ -279,6 +248,7 @@ namespace MHServerEmu.Games.Network
             SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(avatar));
 
             AOI.Update(entrancePosition, true);
+            //AOI.DebugPrint();
 
             // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
             Player.CurrentAvatar.AssignHardcodedPowers();
@@ -294,11 +264,6 @@ namespace MHServerEmu.Games.Network
         public void ExitGame()
         {
             Player.ExitGame();
-            SendMessage(NetMessageBeginExitGame.DefaultInstance);
-            SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
-
-            Player.CurrentAvatar.BasePosition = null;
-            Player.CurrentAvatar.BaseOrientation = null;
         }
 
         #endregion

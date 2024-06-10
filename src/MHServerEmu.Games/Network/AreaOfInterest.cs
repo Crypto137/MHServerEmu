@@ -4,9 +4,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
@@ -130,7 +128,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates interest policies for the provided <see cref="Entity"/>.
         /// </summary>
-        public bool ConsiderEntity(Entity entity)
+        public bool ConsiderEntity(Entity entity, EntitySettings settings = null)
         {
             if (entity == null) return Logger.WarnReturn(false, "ConsiderEntity(): entity == null");
 
@@ -139,16 +137,22 @@ namespace MHServerEmu.Games.Network
             bool isInterested = newInterestPolicies != AOINetworkPolicyValues.AOIChannelNone;
 
             if (wasInterested == false && isInterested)
-                AddEntity(entity, newInterestPolicies);
+                AddEntity(entity, newInterestPolicies, settings);
             else if (wasInterested && isInterested == false)
                 RemoveEntity(entity);
             else if (wasInterested && isInterested)
-                ModifyEntity(entity, newInterestPolicies);
+                ModifyEntity(entity, newInterestPolicies, settings);
 
             return true;
         }
 
-        public void Reset(Region region)
+        public void SetRegion(Region region)
+        {
+            // TEMP
+            Region = region;
+        }
+
+        public void Reset()
         {
             _trackedAreas.Clear();
             _trackedCells.Clear();
@@ -156,7 +160,6 @@ namespace MHServerEmu.Games.Network
 
             _currentFrame = 0;
             CellsInRegion = 0;
-            Region = region;
             _lastCameraSetting = 0;
         }
 
@@ -193,6 +196,14 @@ namespace MHServerEmu.Games.Network
         {
             foreach (var kvp in _trackedCells.Where(kvp => kvp.Value.IsLoaded == false))
                 _trackedCells[kvp.Key] = new(_currentFrame, true);
+        }
+
+        public void DebugPrint()
+        {
+            Logger.Debug($"------ AOI DEBUG REPORT [{_trackedEntities.Count,3}] ------");
+
+            foreach (var kvp in _trackedEntities)
+                Logger.Debug($"\t{_game.EntityManager.GetEntity<Entity>(kvp.Key)}, interestPolicies={kvp.Value.InterestPolicies}");
         }
 
         private void UpdateAreas()
@@ -379,7 +390,7 @@ namespace MHServerEmu.Games.Network
             LoadedCellCount--;
         }
 
-        private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies)
+        private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
         {
             _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
             SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies));
@@ -528,6 +539,7 @@ namespace MHServerEmu.Games.Network
             }
 
             // Ownership
+            // NOTE: IsOwnedBy() returns true for itself, so the player entity bound to this AOI effectively owns itself
             if (entity.IsOwnedBy(player.Id))
                 newInterestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
 

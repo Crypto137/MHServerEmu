@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             foreach (IMessage message in messages)
                 _playerConnection.SendMessage(message);
 
-            _playerConnection.AOI.Reset(_region);
+            _playerConnection.AOI.SetRegion(_region);
             _playerConnection.AOI.Update(_playerConnection.StartPosition, true, true);
 
             return true;
