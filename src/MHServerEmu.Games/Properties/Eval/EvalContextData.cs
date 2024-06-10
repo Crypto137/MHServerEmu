@@ -21,7 +21,10 @@ namespace MHServerEmu.Games.Properties.Eval
         LoadFloat = 14,
         LoadInt = 15,
         LoadProtoRef = 16,
+        LoadContextInt = 17,
+        LoadContextProtoRef = 18,
         For = 19,
+        ForEachConditionInContext = 20,
         ForEachProtoRefInContextRefList = 21,
         IfElse = 22,
         Scope = 23,
@@ -40,6 +43,7 @@ namespace MHServerEmu.Games.Properties.Eval
         LoadProp = 37,
         LoadPropContextParams = 38,
         LoadPropEvalParams = 39,
+        SwapProp = 40,
         RandomFloat = 41,
         RandomInt = 42,
         LoadEntityToContextVar = 43,
@@ -54,6 +58,7 @@ namespace MHServerEmu.Games.Properties.Eval
         CalcPowerRank = 49,
         GetDamageReductionPct = 51,
         GetDistanceToEntity = 52,
+        IsDynamicCombatLevelEnabled = 53,
     }
 
     public class EvalContextData

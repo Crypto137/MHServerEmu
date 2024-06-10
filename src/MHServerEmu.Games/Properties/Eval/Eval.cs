@@ -262,6 +262,8 @@ namespace MHServerEmu.Games.Properties.Eval
                     return RunNot(evalProto, data);
                 case EvalOpEnums.Or:
                     return RunOr(evalProto, data);
+                case EvalOpEnums.HasEntityInInventory:
+                    return RunHasEntityInInventory(evalProto, data);
                 case EvalOpEnums.LoadAssetRef:
                     return RunLoadAssetRef(evalProto, data);
                 case EvalOpEnums.LoadBool:
@@ -272,8 +274,14 @@ namespace MHServerEmu.Games.Properties.Eval
                     return RunLoadInt(evalProto, data);
                 case EvalOpEnums.LoadProtoRef:
                     return RunLoadProtoRef(evalProto, data);
+                case EvalOpEnums.LoadContextInt:
+                    return RunLoadContextInt(evalProto, data);
+                case EvalOpEnums.LoadContextProtoRef:
+                    return RunLoadContextProtoRef(evalProto, data);
                 case EvalOpEnums.For:
                     return RunFor(evalProto, data);
+                case EvalOpEnums.ForEachConditionInContext:
+                    return RunForEachConditionInContext(evalProto, data);
                 case EvalOpEnums.ForEachProtoRefInContextRefList:
                     return RunForEachProtoRefInContextRefList(evalProto, data);
                 case EvalOpEnums.IfElse:
@@ -324,10 +332,6 @@ namespace MHServerEmu.Games.Properties.Eval
                     return RunEntityHasKeyword(evalProto, data);
                 case EvalOpEnums.EntityHasTalent:
                     return RunEntityHasTalent(evalProto, data);
-                case EvalOpEnums.ExportError:
-                    return RunExportError(evalProto, data);
-                case EvalOpEnums.HasEntityInInventory:
-                    return RunHasEntityInInventory(evalProto, data);
                 case EvalOpEnums.GetCombatLevel:
                     return RunGetCombatLevel(evalProto, data);
                 case EvalOpEnums.GetPowerRank:
@@ -340,6 +344,8 @@ namespace MHServerEmu.Games.Properties.Eval
                     return RunGetDamageReductionPct(evalProto, data);
                 case EvalOpEnums.GetDistanceToEntity:
                     return RunGetDistanceToEntity(evalProto, data);
+                case EvalOpEnums.IsDynamicCombatLevelEnabled:
+                    return RunIsDynamicCombatLevelEnabled(evalProto, data);
                 default:
                     Logger.Warn($"Invalid Operation");
                     break;
