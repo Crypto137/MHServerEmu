@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Eval;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -39,6 +40,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EvalPrototype : Prototype
     {
+        [DoNotCopy]
+        public EvalOpEnums Op { get; protected set; }
+
+        public virtual string ExpressionString()
+        {
+            return "";
+        }
     }
 
     public class ExportErrorPrototype : EvalPrototype
