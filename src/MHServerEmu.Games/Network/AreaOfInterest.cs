@@ -42,10 +42,10 @@ namespace MHServerEmu.Games.Network
         private float _viewOffset = 600.0f;
         private float _aoiVolume = AOIVolumeDefault;
 
-        private Aabb2 _cameraView;
-        private Aabb2 _entitiesVolume;
-        private Aabb2 _visibleVolume;
-        private Aabb2 _invisibleVolume;
+        private Aabb2 _cameraView = new();
+        private Aabb2 _entitiesVolume = new();
+        private Aabb2 _visibleVolume = new();
+        private Aabb2 _invisibleVolume = new();
         private PrototypeId _lastCameraSetting;
 
         public Region Region { get; private set; }
