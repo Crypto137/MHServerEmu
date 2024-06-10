@@ -177,10 +177,10 @@ namespace MHServerEmu.Games.Network
             return cellInterest.IsLoaded;
         }
 
-        public bool InterestedInEntity(ulong entityId)
+        public bool InterestedInEntity(ulong entityId, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.DefaultPolicy)
         {
-            // TODO: Filter by channel
-            return _trackedEntities.ContainsKey(entityId);
+            AOINetworkPolicyValues interestPolicies = GetCurrentInterestPolicies(entityId);
+            return (interestPolicies & interestFilter) != AOINetworkPolicyValues.AOIChannelNone;
         }
 
         public bool OnCellLoaded(uint cellId)
@@ -495,9 +495,9 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Returns the current <see cref="AOINetworkPolicyValues"/> for the provided <see cref="Entity"/>.
         /// </summary>
-        private AOINetworkPolicyValues GetCurrentInterestPolicies(Entity entity)
+        private AOINetworkPolicyValues GetCurrentInterestPolicies(ulong entityId)
         {
-            if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus) == false)
+            if (_trackedEntities.TryGetValue(entityId, out EntityInterestStatus interestStatus) == false)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
             return interestStatus.InterestPolicies;
@@ -523,7 +523,7 @@ namespace MHServerEmu.Games.Network
             //      Add more filters here
 
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
-            AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity);
+            AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
 
             if (entity is WorldEntity worldEntity)
             {
