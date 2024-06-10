@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -34,6 +35,8 @@ namespace MHServerEmu.Games.Generators
 
     public class EntityRegionSpatialPartition
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private WorldEntityRegionSpatialPartition _staticSpatialPartition;
         private WorldEntityRegionSpatialPartition _activeSpatialPartition;
         private HashSet<Avatar> _avatars;
@@ -68,9 +71,10 @@ namespace MHServerEmu.Games.Generators
                 if (node != null)
                 {
                     var tree = node.Tree;
-                    if (tree != null)
-                        return tree.Update(element);
+                    if (tree == null) return Logger.WarnReturn(false, "Update(): tree == null");
+                    return tree.Update(element);
                 }
+
                 return false;
             }
         }
