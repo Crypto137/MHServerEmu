@@ -1,9 +1,10 @@
 ﻿using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties.Eval
 {
-    public enum EvalOpEnums
+    public enum EvalOp
     {
         Invalid = 0,
         And = 1,
@@ -63,9 +64,12 @@ namespace MHServerEmu.Games.Properties.Eval
 
     public class EvalContextData
     {
-        public const int MaxVars = 12;
+        public const int MaxVars = (int)EvalContext.MaxVars;
         public Game Game;
         public EvalContextVar[] Vars = new EvalContextVar[MaxVars];
+
+        public PropertyCollection CallerStackProperties { get; internal set; }
+        public PropertyCollection LocalStackProperties { get; internal set; }
 
         public EvalContextData(Game game)
         {

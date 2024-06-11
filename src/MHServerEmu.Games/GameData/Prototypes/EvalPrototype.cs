@@ -23,8 +23,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Var3 = 9,
         Var4 = 10,
         Var5 = 11,
-        CallerStack = 14,
+        MaxVars = 12,
         LocalStack = 13,
+        CallerStack = 14,
         Globals = 15,
     }
 
@@ -47,7 +48,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EvalPrototype : Prototype
     {
         [DoNotCopy]
-        public EvalOpEnums Op { get; protected set; }
+        public EvalOp Op { get; protected set; }
 
         public virtual void Visit(EvalNodeVisitor visitor)
         {
@@ -65,7 +66,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.ExportError;
+            Op = EvalOp.ExportError;
         }
 
         public override string ExpressionString()
@@ -83,7 +84,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.AssignProp;
+            Op = EvalOp.AssignProp;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -102,7 +103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.SwapProp;
+            Op = EvalOp.SwapProp;
         }
     }
 
@@ -119,7 +120,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.AssignPropEvalParams;
+            Op = EvalOp.AssignPropEvalParams;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -141,7 +142,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.HasProp;
+            Op = EvalOp.HasProp;
         }
     }
 
@@ -153,7 +154,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadProp;
+            Op = EvalOp.LoadProp;
         }
     }
 
@@ -166,7 +167,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadPropContextParams;
+            Op = EvalOp.LoadPropContextParams;
         }
     }
 
@@ -182,7 +183,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadPropEvalParams;
+            Op = EvalOp.LoadPropEvalParams;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -202,7 +203,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadBool;
+            Op = EvalOp.LoadBool;
         }
     }
 
@@ -213,7 +214,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadInt;
+            Op = EvalOp.LoadInt;
         }
     }
 
@@ -224,7 +225,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadFloat;
+            Op = EvalOp.LoadFloat;
         }
     }
 
@@ -236,7 +237,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadCurve;
+            Op = EvalOp.LoadCurve;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -253,7 +254,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadAssetRef;
+            Op = EvalOp.LoadAssetRef;
         }
     }
 
@@ -264,7 +265,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadProtoRef;
+            Op = EvalOp.LoadProtoRef;
         }
     }
 
@@ -275,7 +276,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadContextInt;
+            Op = EvalOp.LoadContextInt;
         }
     }
 
@@ -286,7 +287,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadContextProtoRef;
+            Op = EvalOp.LoadContextProtoRef;
         }
     }
 
@@ -298,7 +299,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Add;
+            Op = EvalOp.Add;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -317,7 +318,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Sub;
+            Op = EvalOp.Sub;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -336,7 +337,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Mult;
+            Op = EvalOp.Mult;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -355,7 +356,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Div;
+            Op = EvalOp.Div;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -374,7 +375,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Exponent;
+            Op = EvalOp.Exponent;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -392,7 +393,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Scope;
+            Op = EvalOp.Scope;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -412,7 +413,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.GreaterThan;
+            Op = EvalOp.GreaterThan;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -431,7 +432,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LessThan;
+            Op = EvalOp.LessThan;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -451,7 +452,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Equals;
+            Op = EvalOp.Equals;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -470,7 +471,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.And;
+            Op = EvalOp.And;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -489,7 +490,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Or;
+            Op = EvalOp.Or;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -507,7 +508,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Not;
+            Op = EvalOp.Not;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -524,7 +525,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.IsContextDataNull;
+            Op = EvalOp.IsContextDataNull;
         }
     }
 
@@ -537,7 +538,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.IfElse;
+            Op = EvalOp.IfElse;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -558,7 +559,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.DifficultyTierRange;
+            Op = EvalOp.DifficultyTierRange;
         }
     }
 
@@ -570,7 +571,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.MissionIsActive;
+            Op = EvalOp.MissionIsActive;
         }
     }
 
@@ -581,7 +582,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.GetCombatLevel;
+            Op = EvalOp.GetCombatLevel;
         }
     }
 
@@ -593,7 +594,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.GetPowerRank;
+            Op = EvalOp.GetPowerRank;
         }
     }
 
@@ -605,7 +606,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.CalcPowerRank;
+            Op = EvalOp.CalcPowerRank;
         }
     }
 
@@ -617,7 +618,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.GetDamageReductionPct;
+            Op = EvalOp.GetDamageReductionPct;
         }
     }
 
@@ -630,7 +631,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.GetDistanceToEntity;
+            Op = EvalOp.GetDistanceToEntity;
         }
     }
 
@@ -643,7 +644,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.HasEntityInInventory;
+            Op = EvalOp.HasEntityInInventory;
         }
     }
 
@@ -654,7 +655,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.IsInParty;
+            Op = EvalOp.IsInParty;
         }
     }
 
@@ -663,7 +664,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.IsDynamicCombatLevelEnabled;
+            Op = EvalOp.IsDynamicCombatLevelEnabled;
         }
     }
 
@@ -675,7 +676,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.MissionIsComplete;
+            Op = EvalOp.MissionIsComplete;
         }
     }
 
@@ -687,7 +688,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Max;
+            Op = EvalOp.Max;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -706,7 +707,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Min;
+            Op = EvalOp.Min;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -725,7 +726,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.Modulus;
+            Op = EvalOp.Modulus;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -744,7 +745,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.RandomFloat;
+            Op = EvalOp.RandomFloat;
         }
     }
 
@@ -756,7 +757,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.RandomInt;
+            Op = EvalOp.RandomInt;
         }
     }
 
@@ -772,7 +773,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.For;
+            Op = EvalOp.For;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -801,7 +802,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.ForEachConditionInContext;
+            Op = EvalOp.ForEachConditionInContext;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -828,7 +829,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.ForEachProtoRefInContextRefList;
+            Op = EvalOp.ForEachProtoRefInContextRefList;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -851,7 +852,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadEntityToContextVar;
+            Op = EvalOp.LoadEntityToContextVar;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -869,7 +870,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.LoadConditionCollectionToContext;
+            Op = EvalOp.LoadConditionCollectionToContext;
         }
 
         public override void Visit(EvalNodeVisitor visitor)
@@ -888,7 +889,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.EntityHasKeyword;
+            Op = EvalOp.EntityHasKeyword;
         }
     }
 
@@ -900,7 +901,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Op = EvalOpEnums.EntityHasTalent;
+            Op = EvalOp.EntityHasTalent;
         }
     }
 }
