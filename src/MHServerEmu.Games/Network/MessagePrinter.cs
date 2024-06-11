@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Network
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
                 {
                     Vector3 position = Vector3.Zero;
-                    Serializer.Transfer(archive, ref position);
+                    Serializer.TransferVectorFixed(archive, ref position, 3);
                     sb.AppendLine($"{nameof(position)}: {position}");
 
                     bool yawOnly = locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
