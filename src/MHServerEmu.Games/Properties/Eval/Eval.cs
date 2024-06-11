@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -7,7 +8,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Regions;
-using Microsoft.VisualBasic;
 
 namespace MHServerEmu.Games.Properties.Eval
 {
@@ -360,6 +360,7 @@ namespace MHServerEmu.Games.Properties.Eval
                 EvalOp.ForEachProtoRefInContextRefList => RunForEachProtoRefInContextRefList(evalProto, data),
                 EvalOp.IfElse => RunIfElse(evalProto, data),
                 EvalOp.Scope => RunScope(evalProto, data),
+                EvalOp.ExportError => RunExportError(evalProto, data),
                 EvalOp.LoadCurve => RunLoadCurve(evalProto, data),
                 EvalOp.Add => RunAdd(evalProto, data),
                 EvalOp.Div => RunDiv(evalProto, data),
@@ -898,6 +899,14 @@ namespace MHServerEmu.Games.Properties.Eval
             throw new NotImplementedException();
         }
 
+        private static EvalVar RunExportError(EvalPrototype evalProto, EvalContextData data)
+        {
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            Logger.Warn("Eval failed to export correctly from Calligraphy");
+            return evalVar;
+        }
+
         private static EvalVar RunLoadCurve(EvalPrototype evalProto, EvalContextData data)
         {
             throw new NotImplementedException();
@@ -905,42 +914,227 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunAdd(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not AddPrototype addProto) return evalVar;
+
+            EvalVar arg1 = Run(addProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Add: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(addProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Add: Non-Numeric/Error field Arg2");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetInt(arg1.Value.Int + arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Int + arg2.Value.Float);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(arg1.Value.Float + arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Float + arg2.Value.Float);
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunDiv(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not DivPrototype divProto) return evalVar;
+
+            EvalVar arg1 = Run(divProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Div: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(divProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Div: Non-Numeric/Error field Arg2");
+
+            if (arg2.Type == EvalReturnType.Int && arg2.Value.Int == 0)
+                return Logger.WarnReturn(evalVar, "Div: Arg2=0 DIVZERO!");
+            else if (arg2.Type == EvalReturnType.Float && arg2.Value.Float == 0)
+                return Logger.WarnReturn(evalVar, "Div: Arg2=0.0f DIVZERO!");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(arg1.Value.Int / (float)arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Int / arg2.Value.Float);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(arg1.Value.Float / arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Float / arg2.Value.Float);
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunExponent(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not ExponentPrototype exponentProto) return evalVar;
+
+            EvalVar baseVar = Run(exponentProto.BaseArg, data);
+            if (baseVar.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Exponent: Non-Numeric/Error field Base");
+
+            EvalVar exponentVar = Run(exponentProto.ExpArg, data);
+            if (exponentVar.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Exponent: Non-Numeric/Error field Exponent");
+
+            if (FromValue(baseVar, out float baseFloat) == false)
+                return Logger.WarnReturn(evalVar, "Exponent: Error Extracting Base from evalVar");
+
+            if (FromValue(exponentVar, out float expFloat) == false)
+                return Logger.WarnReturn(evalVar, "Exponent: Error Extracting Exponent from evalVar");
+
+            evalVar.SetFloat(MathF.Pow(baseFloat, expFloat));
+            return evalVar;
         }
 
         private static EvalVar RunMax(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not MaxPrototype maxProto) return evalVar;
+
+            EvalVar arg1 = Run(maxProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Max: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(maxProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Max: Non-Numeric/Error field Arg2");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetInt(Math.Max(arg1.Value.Int, arg2.Value.Int));
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Max(arg1.Value.Int, arg2.Value.Float));
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(Math.Max(arg1.Value.Float, arg2.Value.Int));
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Max(arg1.Value.Float, arg2.Value.Float));
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunMin(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not MinPrototype minProto) return evalVar;
+
+            EvalVar arg1 = Run(minProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Min: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(minProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Min: Non-Numeric/Error field Arg2");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetInt(Math.Min(arg1.Value.Int, arg2.Value.Int));
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Min(arg1.Value.Int, arg2.Value.Float));
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(Math.Min(arg1.Value.Float, arg2.Value.Int));
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(Math.Min(arg1.Value.Float, arg2.Value.Float));
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunModulus(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not ModulusPrototype modulusProto) return evalVar;
+
+            EvalVar arg1 = Run(modulusProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Modulus: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(modulusProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Modulus: Non-Numeric/Error field Arg2");
+            
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetInt(MathHelper.Modulus(arg1.Value.Int, arg2.Value.Int));
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(MathHelper.FloatModulus(arg1.Value.Int, arg2.Value.Float));
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(MathHelper.FloatModulus(arg1.Value.Float, arg2.Value.Int));
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(MathHelper.FloatModulus(arg1.Value.Float, arg2.Value.Float));
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunMult(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not MultPrototype multProto) return evalVar;
+
+            EvalVar arg1 = Run(multProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Multiply: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(multProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Multiply: Non-Numeric/Error field Arg2");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetInt(arg1.Value.Int * arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Int * arg2.Value.Float);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(arg1.Value.Float * arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Float * arg2.Value.Float);
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunSub(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not SubPrototype subProto) return evalVar;
+
+            EvalVar arg1 = Run(subProto.Arg1, data);
+            if (arg1.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Subtract: Non-Numeric/Error field Arg1");
+
+            EvalVar arg2 = Run(subProto.Arg2, data);
+            if (arg2.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, "Subtract: Non-Numeric/Error field Arg2");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetInt(arg1.Value.Int - arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Int - arg2.Value.Float);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetFloat(arg1.Value.Float - arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetFloat(arg1.Value.Float - arg2.Value.Float);
+            else
+                Logger.Warn("Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunAssignProp(EvalPrototype evalProto, EvalContextData data)
@@ -1040,7 +1234,10 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunIsDynamicCombatLevelEnabled(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar var = new();
+            var.SetError();
+            var.SetBool(true);
+            return var;
         }
 
     }
