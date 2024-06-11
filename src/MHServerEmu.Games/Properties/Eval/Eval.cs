@@ -1,8 +1,13 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Regions;
+using Microsoft.VisualBasic;
 
 namespace MHServerEmu.Games.Properties.Eval
 {
@@ -388,7 +393,7 @@ namespace MHServerEmu.Games.Properties.Eval
             };
         }
 
-        private static EvalVar GetEvalVarFromContext(EvalContext context, EvalContextData data, bool writable, bool checkNull)
+        private static EvalVar GetEvalVarFromContext(EvalContext context, EvalContextData data, bool writable, bool checkNull = true)
         {
             EvalVar evalVar = new ();
             evalVar.SetError();
@@ -570,22 +575,126 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunLessThan(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LessThanPrototype lessThanProto) return evalVar;
+
+            EvalVar arg1 = Run(lessThanProto.Arg1, data);
+            if (arg1.IsNumeric() == false) return Logger.WarnReturn(evalVar, "LessThan: Non-Numeric/Error field Arg1");
+            EvalVar arg2 = Run(lessThanProto.Arg2, data);
+            if (arg2.IsNumeric() == false) return Logger.WarnReturn(evalVar, "LessThan: Non-Numeric/Error field Arg2");
+
+            if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
+                evalVar.SetBool(arg1.Value.Int < arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
+                evalVar.SetBool(arg1.Value.Int < arg2.Value.Float);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
+                evalVar.SetBool(arg1.Value.Float < arg2.Value.Int);
+            else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
+                evalVar.SetBool(arg1.Value.Float < arg2.Value.Float);
+            else return Logger.WarnReturn(evalVar, "Error with arg types!");
+
+            return evalVar;
         }
 
         private static EvalVar RunDifficultyTierRange(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not DifficultyTierRangePrototype DifficultyTierRangeProto) return evalVar;
+
+            PrototypeId tierRef = PrototypeId.Invalid;
+            EvalVar contextVar = GetEvalVarFromContext(DifficultyTierRangeProto.Context, data, false);
+            if (FromValue(contextVar, out Entity entity))
+            {
+                WorldEntity worldEntity = entity as WorldEntity;
+                Region region = worldEntity?.Region;
+                if (region == null && entity is Player player)
+                    region = player.GetRegion();
+                if (region != null)
+                    tierRef = region.GetDifficultyTierRef();
+            }
+            else if (FromValue(contextVar, out PropertyCollection collection))
+                tierRef = collection.GetProperty(PropertyEnum.DifficultyTier);
+
+            if (tierRef == PrototypeId.Invalid)
+            {
+                evalVar.SetBool(true);
+                return evalVar;
+            }
+            else
+            {
+                evalVar.SetBool(DifficultyTierPrototype.InRange(tierRef, DifficultyTierRangeProto.Min, DifficultyTierRangeProto.Max));
+                return evalVar;
+            }
         }
 
         private static EvalVar RunMissionIsActive(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not MissionIsActivePrototype missionIsActiveProto) return evalVar;
+            if (FromValue(GetEvalVarFromContext(missionIsActiveProto.Context, data, false), out Entity entity) == false) return evalVar;
+
+            Player player = entity as Player;
+            if (player == null && entity is Avatar avatar)
+                player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(evalVar, "Context is not a player.");
+
+            MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionIsActiveProto.Mission);
+            if (missionProto == null) return Logger.WarnReturn(evalVar, "Missing Mission field.");
+
+            if (missionProto.ApprovedForUse() == false || missionProto.IsLiveTuningEnabled() == false)
+            {
+                evalVar.SetBool(false);
+                return evalVar;
+            }
+
+            Mission mission = MissionManager.FindMissionForPlayer(player, missionIsActiveProto.Mission);
+            evalVar.SetBool(mission != null && mission.State == MissionState.Active);
+            return evalVar;
         }
 
         private static EvalVar RunMissionIsComplete(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+
+            if (evalProto is not MissionIsCompletePrototype missionIsCompleteProto) return evalVar;
+
+            if (FromValue(GetEvalVarFromContext(missionIsCompleteProto.Context, data, false), out Entity entity) == false) return evalVar;
+
+            Player player = entity?.GetSelfOrOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(evalVar, "Context is not a player.");
+
+            MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionIsCompleteProto.Mission);
+            if (missionProto == null) return evalVar;
+
+            if (missionProto.ApprovedForUse() == false || missionProto.IsLiveTuningEnabled() == false)
+            {
+                evalVar.SetBool(false);
+                return evalVar;
+            }
+
+            bool avatarMissionState = false;
+            Avatar avatar = null;
+            if (missionProto.SaveStatePerAvatar)
+            {
+                avatar = entity as Avatar;
+                if (avatar == null) return Logger.WarnReturn(evalVar, "Mission state is per-avatar but Context is not an avatar.");
+                if (player.PrimaryAvatar != avatar)
+                    avatarMissionState = true;
+            }
+
+            if (avatarMissionState)
+                evalVar.SetBool((int)avatar.Properties[PropertyEnum.AvatarMissionState, missionProto.DataRef] == (int)MissionState.Completed);
+            else
+            {
+                Mission mission = MissionManager.FindMissionForPlayer(player, missionProto.DataRef);
+                evalVar.SetBool(mission != null && mission.State == MissionState.Completed);
+            }
+
+            return evalVar;
         }
 
         private static EvalVar RunNot(EvalPrototype evalProto, EvalContextData data)
@@ -629,42 +738,139 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunHasEntityInInventory(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+
+            if (evalProto is not HasEntityInInventoryPrototype hasEntityInInventoryProto) return evalVar;
+            if (FromValue(GetEvalVarFromContext(hasEntityInInventoryProto.Context, data, false), out Entity inventoryOwner) == false)
+                return Logger.WarnReturn(evalVar, "Inventory owner is not valid. Make sure you're using the var1 (or EntityPointer) context.");
+
+            PrototypeId entityRef = hasEntityInInventoryProto.Entity;
+            InventoryConvenienceLabel inventoryLabel = hasEntityInInventoryProto.Inventory;
+            if (inventoryLabel == InventoryConvenienceLabel.None)
+                return Logger.WarnReturn(evalVar, "The EntityInventory field in the HasEntityInInventoryPrototype is not valid.");
+
+            BlueprintId parent = BlueprintId.Invalid;
+            var dataDir = GameDatabase.DataDirectory;
+            if (entityRef != PrototypeId.Invalid && dataDir.PrototypeIsADefaultPrototype(entityRef))
+                parent = dataDir.GetPrototypeBlueprintDataRef(entityRef);
+
+            Inventory inventory = inventoryOwner.GetInventory(inventoryLabel);
+            bool inInventory = false;
+            if (inventory != null)
+                foreach (var entry in inventory)
+                {
+                    ulong entityId = entry.Id;
+                    Game game = inventoryOwner.Game;
+                    Entity inventoryEntity = game.EntityManager.GetEntity<WorldEntity>(entityId);
+                    if (inventoryEntity == null) continue;
+                    PrototypeId inventoryEntityRef = inventoryEntity.PrototypeDataRef;
+                    if (entityRef == PrototypeId.Invalid 
+                        || inventoryEntityRef == entityRef
+                        || (parent != BlueprintId.Invalid && dataDir.PrototypeIsChildOfBlueprint(inventoryEntityRef, parent)))
+                    {
+                        inInventory = true;
+                        break;
+                    }
+                }
+
+            evalVar.SetBool(inInventory);
+            return evalVar;
         }
 
         private static EvalVar RunLoadAssetRef(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();           
+            if (evalProto is not LoadAssetRefPrototype loadAssetRefProto)
+            {
+                evalVar.SetError();
+                return evalVar;
+            }
+            evalVar.SetAssetRef(loadAssetRefProto.Value);
+            return evalVar;
         }
 
         private static EvalVar RunLoadBool(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();            
+            if (evalProto is not LoadBoolPrototype loadBoolProto)
+            {
+                evalVar.SetError();
+                return evalVar;
+            }
+            evalVar.SetBool(loadBoolProto.Value);
+            return evalVar;
         }
 
         private static EvalVar RunLoadFloat(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            if (evalProto is not LoadFloatPrototype loadFloatProto)
+            {
+                evalVar.SetError();
+                return evalVar;
+            }
+            evalVar.SetFloat(loadFloatProto.Value);
+            return evalVar;
         }
 
         private static EvalVar RunLoadInt(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            if (evalProto is not LoadIntPrototype loadIntProto)
+            {
+                evalVar.SetError();
+                return evalVar;
+            }
+            evalVar.SetInt(loadIntProto.Value);
+            return evalVar;
         }
 
         private static EvalVar RunLoadProtoRef(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            if (evalProto is not LoadProtoRefPrototype loadProtoRefProto)
+            {
+                evalVar.SetError();
+                return evalVar;
+            }
+            evalVar.SetProtoRef(loadProtoRefProto.Value);
+            return evalVar;
         }
 
         private static EvalVar RunLoadContextInt(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LoadContextIntPrototype loadContextIntProto) return evalVar;
+
+            EvalContext context = loadContextIntProto.Context;
+            if (context < 0 || context >= EvalContext.MaxVars)
+                return Logger.WarnReturn(evalVar, $"LoadContextInt: Context ({context}) is out of the bounds of possible context vars ({EvalContextData.MaxVars})");
+
+            if (data.Vars[(int)context].Var.IsNumeric() == false)
+                return Logger.WarnReturn(evalVar, $"LoadContextInt: Non-Numeric value in Context Var {context}");
+
+            FromValue(data.Vars[(int)context].Var, out long resultInt);
+            evalVar.SetInt(resultInt);
+
+            return evalVar;
         }
 
         private static EvalVar RunLoadContextProtoRef(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not LoadContextProtoRefPrototype loadContextProtoRefProto) return evalVar;
+
+            EvalContext context = loadContextProtoRefProto.Context;
+            if (context < 0 || context >= EvalContext.MaxVars)
+                return Logger.WarnReturn(evalVar, $"LoadContextProtoRef: Context ({context}) is out of the bounds of possible context vars ({EvalContextData.MaxVars})");
+
+            FromValue(data.Vars[(int)context].Var, out PrototypeId resultProtoRef);
+            evalVar.SetProtoRef(resultProtoRef);
+
+            return evalVar;
         }
 
         private static EvalVar RunFor(EvalPrototype evalProto, EvalContextData data)
