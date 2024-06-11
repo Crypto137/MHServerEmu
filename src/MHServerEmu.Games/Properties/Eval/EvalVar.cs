@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using System.Runtime.InteropServices;
 
 namespace MHServerEmu.Games.Properties.Eval
 {
@@ -122,22 +123,39 @@ namespace MHServerEmu.Games.Properties.Eval
             }
         }
     }
-
+    [StructLayout(LayoutKind.Explicit)]
     public struct EvalVarValue
     {
-        public bool Bool;
-        public float Float;
-        public long Int;
-        public ulong EntityId;
-        public AssetId AssetId;
-        public PrototypeId Proto;
-        public ulong PropId;
-        public PropertyCollection Props;
-        public List<PrototypeId> ProtoRefList;
-        public PrototypeId[] ProtoRefVector;
-        public ConditionCollection Conditions;
-        public Entity Entity;
-        public ulong EntityGuid;
+        [FieldOffset(0)]
+        public bool Bool = false;
+        [FieldOffset(0)]
+        public float Float = 0.0f;
+        [FieldOffset(0)]
+        public long Int = 0;
+        [FieldOffset(0)]
+        public ulong EntityId = 0;
+        [FieldOffset(0)]
+        public AssetId AssetId = 0;
+        [FieldOffset(0)]
+        public PrototypeId Proto = 0;
+        [FieldOffset(0)]
+        public ulong PropId = 0;
+        [FieldOffset(8)]
+        public PropertyCollection Props = null;
+        [FieldOffset(8)]
+        public List<PrototypeId> ProtoRefList = null;
+        [FieldOffset(8)]
+        public PrototypeId[] ProtoRefVector = null;
+        [FieldOffset(8)]
+        public ConditionCollection Conditions = null;
+        [FieldOffset(8)]
+        public Entity Entity = null;
+        [FieldOffset(0)]
+        public ulong EntityGuid = 0;
+
+        public EvalVarValue()
+        {
+        }
     }
 
     public enum EvalReturnType

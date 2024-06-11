@@ -10,18 +10,18 @@ namespace MHServerEmu.Games.Properties.Eval
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static T Run<T>(EvalPrototype evalP, EvalContextData data)
+        public static int RunInt(EvalPrototype evalProto, EvalContextData data)
         {
-            Run(evalP, data, out T retVal);
+            Run(evalProto, data, out int retVal);
             return retVal;
         }
 
-        public static bool Run<T>(EvalPrototype evalProto, EvalContextData data, out T resultVal)
+        public static bool Run(EvalPrototype evalProto, EvalContextData data, out int resultVal)
         {
-            EvalVar var = Run(evalProto, data);
-            if (FromValue(var, out resultVal) == false)
+            EvalVar evalVar = Run(evalProto, data);
+            if (FromValue(evalVar, out resultVal) == false)
             {
-                Logger.Warn($"Invalid return type [{var.Type}]");
+                Logger.Warn($"Invalid return type [{evalVar.Type}]");
                 if (evalProto != null)
                     Logger.Warn($"for operator [{evalProto.Op}] EvalPrototype=[{evalProto.GetType().Name}] ExpressionString=[{evalProto.ExpressionString()}] Path=[{evalProto}]");
                 return false;
@@ -30,205 +30,294 @@ namespace MHServerEmu.Games.Properties.Eval
             return true;
         }
 
-        public static bool FromValue(EvalVar var, out int resultVal)
+        public static long RunLong(EvalPrototype evalProto, EvalContextData data)
         {
-            switch (var.Type)
+            Run(evalProto, data, out long retVal);
+            return retVal;
+        }
+
+        public static bool Run(EvalPrototype evalProto, EvalContextData data, out long resultVal)
+        {
+            EvalVar evalVar = Run(evalProto, data);
+            if (FromValue(evalVar, out resultVal) == false)
+            {
+                Logger.Warn($"Invalid return type [{evalVar.Type}]");
+                if (evalProto != null)
+                    Logger.Warn($"for operator [{evalProto.Op}] EvalPrototype=[{evalProto.GetType().Name}] ExpressionString=[{evalProto.ExpressionString()}] Path=[{evalProto}]");
+                return false;
+            }
+
+            return true;
+        }
+
+        public static float RunFloat(EvalPrototype evalProto, EvalContextData data)
+        {
+            Run(evalProto, data, out float retVal);
+            return retVal;
+        }
+
+        public static bool Run(EvalPrototype evalProto, EvalContextData data, out float resultVal)
+        {
+            EvalVar evalVar = Run(evalProto, data);
+            if (FromValue(evalVar, out resultVal) == false)
+            {
+                Logger.Warn($"Invalid return type [{evalVar.Type}]");
+                if (evalProto != null)
+                    Logger.Warn($"for operator [{evalProto.Op}] EvalPrototype=[{evalProto.GetType().Name}] ExpressionString=[{evalProto.ExpressionString()}] Path=[{evalProto}]");
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool RunBool(EvalPrototype evalProto, EvalContextData data)
+        {
+            Run(evalProto, data, out bool retVal);
+            return retVal;
+        }
+
+        public static bool Run(EvalPrototype evalProto, EvalContextData data, out bool resultVal)
+        {
+            EvalVar evalVar = Run(evalProto, data);
+            if (FromValue(evalVar, out resultVal) == false)
+            {
+                Logger.Warn($"Invalid return type [{evalVar.Type}]");
+                if (evalProto != null)
+                    Logger.Warn($"for operator [{evalProto.Op}] EvalPrototype=[{evalProto.GetType().Name}] ExpressionString=[{evalProto.ExpressionString()}] Path=[{evalProto}]");
+                return false;
+            }
+
+            return true;
+        }
+
+        public static PrototypeId RunPrototypeId(EvalPrototype evalProto, EvalContextData data)
+        {
+            Run(evalProto, data, out PrototypeId retVal);
+            return retVal;
+        }
+
+        public static bool Run(EvalPrototype evalProto, EvalContextData data, out PrototypeId resultVal)
+        {
+            EvalVar evalVar = Run(evalProto, data);
+            if (FromValue(evalVar, out resultVal) == false)
+            {
+                Logger.Warn($"Invalid return type [{evalVar.Type}]");
+                if (evalProto != null)
+                    Logger.Warn($"for operator [{evalProto.Op}] EvalPrototype=[{evalProto.GetType().Name}] ExpressionString=[{evalProto.ExpressionString()}] Path=[{evalProto}]");
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool FromValue(EvalVar evalVar, out int resultVal)
+        {
+            switch (evalVar.Type)
             {
                 case EvalReturnType.Int:
-                    resultVal = (int)var.Value.Int;
+                    resultVal = (int)evalVar.Value.Int;
                     return true;
                 case EvalReturnType.Float:
-                    resultVal = (int)var.Value.Float;
+                    resultVal = (int)evalVar.Value.Float;
                     return true;
             }
             resultVal = 0;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out long resultVal)
+        public static bool FromValue(EvalVar evalVar, out long resultVal)
         {
-            switch (var.Type)
+            switch (evalVar.Type)
             {
                 case EvalReturnType.Int:
-                    resultVal = var.Value.Int;
+                    resultVal = evalVar.Value.Int;
                     return true;
                 case EvalReturnType.Float:
-                    resultVal = (long)var.Value.Float;
+                    resultVal = (long)evalVar.Value.Float;
                     return true;
             }
             resultVal = 0;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out float resultVal)
+        public static bool FromValue(EvalVar evalVar, out float resultVal)
         {
-            switch (var.Type)
+            switch (evalVar.Type)
             {
                 case EvalReturnType.Int:
-                    resultVal = var.Value.Int;
+                    resultVal = evalVar.Value.Int;
                     return true;
                 case EvalReturnType.Float:
-                    resultVal = var.Value.Float;
+                    resultVal = evalVar.Value.Float;
                     return true;
             }
             resultVal = 0.0f;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out bool resultVal)
+        public static bool FromValue(EvalVar evalVar, out bool resultVal)
         {
-            switch (var.Type)
+            switch (evalVar.Type)
             {
                 case EvalReturnType.Int:
-                    resultVal = var.Value.Int > 0;
+                    resultVal = evalVar.Value.Int > 0;
                     return true;
                 case EvalReturnType.Float:
-                    resultVal = var.Value.Float > 0.0f;
+                    resultVal = evalVar.Value.Float > 0.0f;
                     return true;
                 case EvalReturnType.Bool:
                 case EvalReturnType.Undefined:
-                    resultVal = var.Value.Bool;
+                    resultVal = evalVar.Value.Bool;
                     return true;
             }
             resultVal = false;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out ulong resultVal)
+        public static bool FromValue(EvalVar evalVar, out ulong resultVal)
         {
-            if (var.Type == EvalReturnType.EntityId)
+            if (evalVar.Type == EvalReturnType.EntityId)
             {
-                resultVal = var.Value.EntityId;
+                resultVal = evalVar.Value.EntityId;
                 return true;
             }
             resultVal = Entity.InvalidId;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out PrototypeId resultVal)
+        public static bool FromValue(EvalVar evalVar, out PrototypeId resultVal)
         {
-            if (var.Type == EvalReturnType.ProtoRef)
+            if (evalVar.Type == EvalReturnType.ProtoRef)
             {
-                resultVal = var.Value.Proto; // GetPrototypeDataRef ?
-                return true;
-            }
-            else if (var.Type == EvalReturnType.AssetRef)
-            {
-                resultVal = GameDatabase.GetDataRefByAsset(var.Value.AssetId);
+                resultVal = evalVar.Value.Proto;
                 return true;
             }
             resultVal = PrototypeId.Invalid;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out PropertyId resultVal)
+        public static bool FromValue(EvalVar evalVar, out AssetId resultVal)
+        {
+            if (evalVar.Type == EvalReturnType.AssetRef)
+            {
+                resultVal = evalVar.Value.AssetId;
+                return true;
+            }
+            resultVal = AssetId.Invalid;
+            return false;
+        }
+
+        public static bool FromValue(EvalVar evalVar, out PropertyId resultVal)
         {
             resultVal = new();
-            if (var.Type == EvalReturnType.PropertyId)
+            if (evalVar.Type == EvalReturnType.PropertyId)
             {
-                resultVal.Raw = var.Value.PropId;
+                resultVal.Raw = evalVar.Value.PropId;
                 return true;
             }
             resultVal = PropertyId.Invalid;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out Entity resultVal)
+        public static bool FromValue(EvalVar evalVar, out Entity resultVal)
         {
-            if (var.Type == EvalReturnType.EntityPtr)
+            if (evalVar.Type == EvalReturnType.EntityPtr)
             {
-                resultVal = var.Value.Entity;
+                resultVal = evalVar.Value.Entity;
                 return true;
             }
             resultVal = null;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out PropertyCollection resultVal, Game game)
+        public static bool FromValue(EvalVar evalVar, out PropertyCollection resultVal, Game game)
         {
-            switch (var.Type)
+            switch (evalVar.Type)
             {
                 case EvalReturnType.PropertyCollectionPtr:
-                    resultVal = var.Value.Props;
+                    resultVal = evalVar.Value.Props;
                     return true;
                 case EvalReturnType.EntityPtr:
-                    resultVal = var.Value.Entity.Properties;
+                    resultVal = evalVar.Value.Entity.Properties;
                     return true;
                 case EvalReturnType.EntityGuid:
                     resultVal = null;
-                    if (var.Value.EntityGuid != 0 && game != null)
-                        resultVal = game.EntityManager.GetEntityByDbGuid<Entity>(var.Value.EntityGuid).Properties;
+                    if (evalVar.Value.EntityGuid != 0 && game != null)
+                    {
+                        var entity = game.EntityManager.GetEntityByDbGuid<Entity>(evalVar.Value.EntityGuid);
+                        if (entity != null) resultVal = entity.Properties;
+                    }
                     return resultVal != null;
             }
             resultVal = null;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out ConditionCollection resultVal)
+        public static bool FromValue(EvalVar evalVar, out ConditionCollection resultVal)
         {
-            if (var.Type == EvalReturnType.ConditionCollectionPtr)
+            if (evalVar.Type == EvalReturnType.ConditionCollectionPtr)
             {
-                resultVal = var.Value.Conditions;
+                resultVal = evalVar.Value.Conditions;
                 return true;
             }
             resultVal = null;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out List<PrototypeId> resultVal)
+        public static bool FromValue(EvalVar evalVar, out List<PrototypeId> resultVal)
         {
-            if (var.Type == EvalReturnType.ProtoRefListPtr)
+            if (evalVar.Type == EvalReturnType.ProtoRefListPtr)
             {
-                resultVal = var.Value.ProtoRefList;
+                resultVal = evalVar.Value.ProtoRefList;
                 return true;
             }
             resultVal = null;
             return false;
         }
 
-        public static bool FromValue(EvalVar var, out PrototypeId[] resultVal)
+        public static bool FromValue(EvalVar evalVar, out PrototypeId[] resultVal)
         {
-            if (var.Type == EvalReturnType.ProtoRefVectorPtr)
+            if (evalVar.Type == EvalReturnType.ProtoRefVectorPtr)
             {
-                resultVal = var.Value.ProtoRefVector;
+                resultVal = evalVar.Value.ProtoRefVector;
                 return true;
             }
             resultVal = null;
             return false;
         }
 
-        public static bool FromValue<T>(EvalVar var, out T resultVal)
+        public static bool FromValue<T>(EvalVar evalVar, out T resultVal)
         {
             resultVal = default;
             bool result = false;
             Type targetType = typeof(T);
             if (targetType == typeof(int))
             {
-                result = FromValue(var, out int resultFrom);
+                result = FromValue(evalVar, out int resultFrom);
                 resultVal = (T)(object)resultFrom;
                 return result;
             }
             else if (targetType == typeof(long))
             {
-                result = FromValue(var, out long resultFrom);
+                result = FromValue(evalVar, out long resultFrom);
                 resultVal = (T)(object)resultFrom;
                 return result;
             }
             else if (targetType == typeof(float))
             {
-                result = FromValue(var, out float resultFrom);
+                result = FromValue(evalVar, out float resultFrom);
                 resultVal = (T)(object)resultFrom;
                 return result;
             }
             else if (targetType == typeof(bool))
             {
-                result = FromValue(var, out bool resultFrom);
+                result = FromValue(evalVar, out bool resultFrom);
                 resultVal = (T)(object)resultFrom;
                 return result;
             }
             else if (targetType == typeof(PrototypeId))
             {
-                result = FromValue(var, out PrototypeId resultFrom);
+                result = FromValue(evalVar, out PrototypeId resultFrom);
                 resultVal = (T)(object)resultFrom;
                 return result;
             }            
@@ -237,9 +326,9 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar Run(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new ();
-            var.SetError();
-            if (evalProto == null) return var;
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto == null) return evalVar;
 
             return evalProto.Op switch
             {
@@ -295,29 +384,29 @@ namespace MHServerEmu.Games.Properties.Eval
                 EvalOp.GetDamageReductionPct => RunGetDamageReductionPct(evalProto, data),
                 EvalOp.GetDistanceToEntity => RunGetDistanceToEntity(evalProto, data),
                 EvalOp.IsDynamicCombatLevelEnabled => RunIsDynamicCombatLevelEnabled(evalProto, data),
-                _ => Logger.WarnReturn(var, "Invalid Operation"),
+                _ => Logger.WarnReturn(evalVar, "Invalid Operation"),
             };
         }
 
         private static EvalVar GetEvalVarFromContext(EvalContext context, EvalContextData data, bool writable, bool checkNull)
         {
-            EvalVar var = new ();
-            var.SetError();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
             bool readOnly;
 
             if (context < EvalContext.MaxVars)
             {
-                var = data.Vars[(int)context].Var;
+                evalVar = data.Vars[(int)context].Var;
                 readOnly = data.Vars[(int)context].ReadOnly;
             }
             else if (context == EvalContext.CallerStack)
             {
-                var.SetPropertyCollectionPtr(data.CallerStackProperties);
+                evalVar.SetPropertyCollectionPtr(data.CallerStackProperties);
                 readOnly = false;
             }
             else if (context == EvalContext.LocalStack)
             {
-                var.SetPropertyCollectionPtr(data.LocalStackProperties);
+                evalVar.SetPropertyCollectionPtr(data.LocalStackProperties);
                 readOnly = false;
             }
             else if (context == EvalContext.Globals)
@@ -325,158 +414,158 @@ namespace MHServerEmu.Games.Properties.Eval
                 GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
                 GlobalPropertiesPrototype globalProperties = globals?.Properties;
                 if (globalProperties == null || checkNull && globalProperties.Properties == null)
-                    return Logger.WarnReturn(var, "Failed to get globals prototype for eval with Globals context type.");
-                var.SetPropertyCollectionPtr(globalProperties.Properties);
+                    return Logger.WarnReturn(evalVar, "Failed to get globals prototype for eval with Globals context type.");
+                evalVar.SetPropertyCollectionPtr(globalProperties.Properties);
                 readOnly = true;
             }
             else
-                return Logger.WarnReturn(var, "Invalid Context");
+                return Logger.WarnReturn(evalVar, "Invalid Context");
 
             if (writable && readOnly)
             {
-                var.SetError();
-                return Logger.WarnReturn(var, $"Attempting to get a writable '{context}' from a context that has it set as read-only");
+                evalVar.SetError();
+                return Logger.WarnReturn(evalVar, $"Attempting to get a writable '{context}' from a context that has it set as read-only");
             }
 
-            if (checkNull && var.Type == EvalReturnType.PropertyCollectionPtr && var.Value.Props == null)
+            if (checkNull && evalVar.Type == EvalReturnType.PropertyCollectionPtr && evalVar.Value.Props == null)
             {
-                var.SetError();
-                return Logger.WarnReturn(var, $"Attempting to get '{context}' from a context that doesn't have it set");
+                evalVar.SetError();
+                return Logger.WarnReturn(evalVar, $"Attempting to get '{context}' from a context that doesn't have it set");
             }
 
-            return var;
+            return evalVar;
         }
 
         private static EvalVar RunAnd(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new();
-            var.SetError();
-            if (evalProto is not AndPrototype andProto) return var;
-            if (andProto.Arg1 == null || andProto.Arg2 == null) return var;
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not AndPrototype andProto) return evalVar;
+            if (andProto.Arg1 == null || andProto.Arg2 == null) return evalVar;
 
             EvalVar arg1 = Run(andProto.Arg1, data);
             if (arg1.Type != EvalReturnType.Bool)
-                return Logger.WarnReturn(var, "And: Non-Bool/Error field Arg1");
+                return Logger.WarnReturn(evalVar, "And: Non-Bool/Error field Arg1");
 
             if (arg1.Value.Bool)
             {
                 EvalVar arg2 = Run(andProto.Arg2, data);
                 if (arg2.Type != EvalReturnType.Bool)
-                    return Logger.WarnReturn(var, "Equals: Non-Bool/Error field Arg2");
-                var.SetBool(arg2.Value.Bool);
+                    return Logger.WarnReturn(evalVar, "Equals: Non-Bool/Error field Arg2");
+                evalVar.SetBool(arg2.Value.Bool);
             }
             else
-                var.SetBool(false);
+                evalVar.SetBool(false);
 
-            return var;
+            return evalVar;
         }
 
         private static EvalVar RunEquals(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new ();
-            var.SetError();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
 
-            if (evalProto is not EqualsPrototype equalsProto) return var;
+            if (evalProto is not EqualsPrototype equalsProto) return evalVar;
 
             EvalVar arg1 = Run(equalsProto.Arg1, data);
             if (arg1.Type == EvalReturnType.Error)
-                return Logger.WarnReturn(var, "Equals: Error field Arg1");
+                return Logger.WarnReturn(evalVar, "Equals: Error field Arg1");
 
             EvalVar arg2 = Run(equalsProto.Arg2, data);
             if (arg2.Type == EvalReturnType.Error)
-                return Logger.WarnReturn(var, "Equals: Error field Arg2");
+                return Logger.WarnReturn(evalVar, "Equals: Error field Arg2");
 
             if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                var.SetBool(arg1.Value.Int == arg2.Value.Int);
+                evalVar.SetBool(arg1.Value.Int == arg2.Value.Int);
             else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                var.SetBool(Segment.EpsilonTest(arg1.Value.Int, arg2.Value.Float, equalsProto.Epsilon));
+                evalVar.SetBool(Segment.EpsilonTest(arg1.Value.Int, arg2.Value.Float, equalsProto.Epsilon));
             else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                var.SetBool(Segment.EpsilonTest(arg1.Value.Float, arg2.Value.Int, equalsProto.Epsilon));
+                evalVar.SetBool(Segment.EpsilonTest(arg1.Value.Float, arg2.Value.Int, equalsProto.Epsilon));
             else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                var.SetBool(Segment.EpsilonTest(arg1.Value.Float, arg2.Value.Float, equalsProto.Epsilon));
+                evalVar.SetBool(Segment.EpsilonTest(arg1.Value.Float, arg2.Value.Float, equalsProto.Epsilon));
             else if (arg1.Type == EvalReturnType.ProtoRef && arg2.Type == EvalReturnType.ProtoRef)
-                var.SetBool(arg1.Value.Proto == arg2.Value.Proto);
+                evalVar.SetBool(arg1.Value.Proto == arg2.Value.Proto);
             else if (arg1.Type == EvalReturnType.AssetRef && arg2.Type == EvalReturnType.AssetRef)
-                var.SetBool(arg1.Value.AssetId == arg2.Value.AssetId);
+                evalVar.SetBool(arg1.Value.AssetId == arg2.Value.AssetId);
             else if (arg1.Type == EvalReturnType.Bool && arg2.Type == EvalReturnType.Bool)
-                var.SetBool(arg1.Value.Bool == arg2.Value.Bool);
+                evalVar.SetBool(arg1.Value.Bool == arg2.Value.Bool);
             else
                 Logger.Warn("Error with arg types!");
 
-            return var;
+            return evalVar;
         }
 
         private static EvalVar RunGreaterThan(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new ();
-            var.SetError();
-            if (evalProto is not GreaterThanPrototype greaterThanProto) return var;
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not GreaterThanPrototype greaterThanProto) return evalVar;
 
             EvalVar arg1 = Run(greaterThanProto.Arg1, data);
             if (arg1.IsNumeric() == false) 
-                return Logger.WarnReturn(var, "GreaterThan: Non-Numeric/Error field Arg1");
+                return Logger.WarnReturn(evalVar, "GreaterThan: Non-Numeric/Error field Arg1");
 
             EvalVar arg2 = Run(greaterThanProto.Arg2, data);
             if (arg2.IsNumeric() == false) 
-                return Logger.WarnReturn(var, "GreaterThan: Non-Numeric/Error field Arg2");
+                return Logger.WarnReturn(evalVar, "GreaterThan: Non-Numeric/Error field Arg2");
 
             if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Int)
-                var.SetBool(arg1.Value.Int > arg2.Value.Int);
+                evalVar.SetBool(arg1.Value.Int > arg2.Value.Int);
             else if (arg1.Type == EvalReturnType.Int && arg2.Type == EvalReturnType.Float)
-                var.SetBool(arg1.Value.Int > arg2.Value.Float);
+                evalVar.SetBool(arg1.Value.Int > arg2.Value.Float);
             else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Int)
-                var.SetBool(arg1.Value.Float > arg2.Value.Int);
+                evalVar.SetBool(arg1.Value.Float > arg2.Value.Int);
             else if (arg1.Type == EvalReturnType.Float && arg2.Type == EvalReturnType.Float)
-                var.SetBool(arg1.Value.Float > arg2.Value.Float);
+                evalVar.SetBool(arg1.Value.Float > arg2.Value.Float);
             else
                 Logger.Warn("Error with arg types!");
 
-            return var;
+            return evalVar;
         }
 
         private static EvalVar RunIsContextDataNull(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new ();
-            var.SetError();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
 
-            if (evalProto is not IsContextDataNullPrototype isContextDataNullProto) return var;
+            if (evalProto is not IsContextDataNullPrototype isContextDataNullProto) return evalVar;
 
             EvalVar contextVar = GetEvalVarFromContext(isContextDataNullProto.Context, data, false, false);
             switch (contextVar.Type)
             {
                 case EvalReturnType.PropertyCollectionPtr:
-                    if (FromValue(contextVar, out PropertyCollection collection) == false) return var;
-                    var.SetBool(collection == null);
+                    if (FromValue(contextVar, out PropertyCollection collection) == false) return evalVar;
+                    evalVar.SetBool(collection == null);
                     break;
 
                 case EvalReturnType.ProtoRefListPtr:
-                    if (FromValue(contextVar, out List<PrototypeId> protoRefList) == false) return var;
-                    var.SetBool(protoRefList == null);
+                    if (FromValue(contextVar, out List<PrototypeId> protoRefList) == false) return evalVar;
+                    evalVar.SetBool(protoRefList == null);
                     break;
 
                 case EvalReturnType.ProtoRefVectorPtr:
-                    if (FromValue(contextVar, out PrototypeId[] protoRefVector) == false) return var;
-                    var.SetBool(protoRefVector == null);
+                    if (FromValue(contextVar, out PrototypeId[] protoRefVector) == false) return evalVar;
+                    evalVar.SetBool(protoRefVector == null);
                     break;
 
                 case EvalReturnType.EntityPtr:
-                    if (FromValue(contextVar, out Entity entity) == false) return var;
-                    var.SetBool(entity == null);
+                    if (FromValue(contextVar, out Entity entity) == false) return evalVar;
+                    evalVar.SetBool(entity == null);
                     break;
 
                 case EvalReturnType.Error:
                     if (isContextDataNullProto.Context >= EvalContext.Var1 && isContextDataNullProto.Context < EvalContext.MaxVars)
                     {
-                        var.SetBool(true);
+                        evalVar.SetBool(true);
                         break;
                     }
-                    return Logger.WarnReturn(var, "IsContextDataNull Eval being checked on a context var that is not a pointer!");
+                    return Logger.WarnReturn(evalVar, "IsContextDataNull Eval being checked on a context evalVar that is not a pointer!");
 
                 default:
-                    return Logger.WarnReturn(var, "IsContextDataNull Eval being checked on a context var that is not a pointer!");
+                    return Logger.WarnReturn(evalVar, "IsContextDataNull Eval being checked on a context evalVar that is not a pointer!");
             }
 
-            return var;
+            return evalVar;
         }
 
         private static EvalVar RunLessThan(EvalPrototype evalProto, EvalContextData data)
@@ -501,41 +590,41 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunNot(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new();
-            var.SetError();
-            if (evalProto is not NotPrototype NotProto) return var;
-            if (NotProto.Arg == null) return var;
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not NotPrototype NotProto) return evalVar;
+            if (NotProto.Arg == null) return evalVar;
 
             EvalVar arg1 = Run(NotProto.Arg, data);
             if (arg1.Type != EvalReturnType.Bool)
-                return Logger.WarnReturn(var, "Not: Non-Bool/Error field Arg");
+                return Logger.WarnReturn(evalVar, "Not: Non-Bool/Error field Arg");
 
-            var.SetBool(!arg1.Value.Bool);
-            return var;
+            evalVar.SetBool(!arg1.Value.Bool);
+            return evalVar;
         }
 
         private static EvalVar RunOr(EvalPrototype evalProto, EvalContextData data)
         {
-            EvalVar var = new();
-            var.SetError();
-            if (evalProto is not OrPrototype OrProto) return var;
-            if (OrProto.Arg1 == null || OrProto.Arg2 == null) return var;
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not OrPrototype OrProto) return evalVar;
+            if (OrProto.Arg1 == null || OrProto.Arg2 == null) return evalVar;
 
             EvalVar arg1 = Run(OrProto.Arg1, data);
             if (arg1.Type != EvalReturnType.Bool)
-                return Logger.WarnReturn(var, "Or: Non-Bool/Error field Arg1");
+                return Logger.WarnReturn(evalVar, "Or: Non-Bool/Error field Arg1");
 
             if (arg1.Value.Bool)
-                var.SetBool(false); 
+                evalVar.SetBool(false); 
             else
             {
                 EvalVar arg2 = Run(OrProto.Arg2, data);
                 if (arg2.Type != EvalReturnType.Bool)
-                    return Logger.WarnReturn(var, "Or: Non-Bool/Error field Arg2");
-                var.SetBool(arg2.Value.Bool);
+                    return Logger.WarnReturn(evalVar, "Or: Non-Bool/Error field Arg2");
+                evalVar.SetBool(arg2.Value.Bool);
             }
 
-            return var;
+            return evalVar;
         }
 
         private static EvalVar RunHasEntityInInventory(EvalPrototype evalProto, EvalContextData data)
