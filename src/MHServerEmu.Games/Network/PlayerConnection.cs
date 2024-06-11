@@ -142,14 +142,17 @@ namespace MHServerEmu.Games.Network
             }
 
             // Create team-up entities
-            Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-            foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            if (Game.GameOptions.TeamUpSystemEnabled)
             {
-                EntitySettings teamUpSettings = new();
-                teamUpSettings.EntityRef = teamUpRef;
-                teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
+                Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+                foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    EntitySettings teamUpSettings = new();
+                    teamUpSettings.EntityRef = teamUpRef;
+                    teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
-                Game.EntityManager.CreateEntity(teamUpSettings);
+                    Game.EntityManager.CreateEntity(teamUpSettings);
+                }
             }
 
             // Make sure we have a valid current avatar ref
