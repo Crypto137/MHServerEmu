@@ -321,6 +321,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void ExitGame()
         {
             SetStatus(EntityStatus.InGame, false);
+            NotifyPlayers(false);
 
             // Remove contained entities
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -393,17 +394,18 @@ namespace MHServerEmu.Games.Entities
 
         public void Kill()
         {
-            ExitGame();
             _flags |= EntityFlags.IsDead;
 
             EventPointer<RespawnEvent> eventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(15));
+            Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(10));
             eventPointer.Get().Initialize(this);
         }
 
         public void Respawn()
         {
             Logger.Debug($"Respawn(): {this}");
+
+            ExitGame();
             _flags &= ~EntityFlags.IsDead;
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             Properties[PropertyEnum.IsDead] = false;

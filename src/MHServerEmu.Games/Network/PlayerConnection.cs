@@ -576,14 +576,24 @@ namespace MHServerEmu.Games.Network
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
             if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
 
-            Logger.Info($"Received TryInventoryMove message");
+            Logger.Trace(string.Format("OnTryInventoryMove(): {0} to containerId={1}, inventoryRef={2}, slot={3}, isStackSplit={4}",
+                tryInventoryMove.ItemId,
+                tryInventoryMove.ToInventoryOwnerId,
+                GameDatabase.GetPrototypeName((PrototypeId)tryInventoryMove.ToInventoryPrototype),
+                tryInventoryMove.ToSlot,
+                tryInventoryMove.IsStackSplit));
 
-            SendMessage(NetMessageInventoryMove.CreateBuilder()
-                .SetEntityId(tryInventoryMove.ItemId)
-                .SetInvLocContainerEntityId(tryInventoryMove.ToInventoryOwnerId)
-                .SetInvLocInventoryPrototypeId(tryInventoryMove.ToInventoryPrototype)
-                .SetInvLocSlot(tryInventoryMove.ToSlot)
-                .Build());
+            Entity entity = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ItemId);
+            if (entity == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): entity == null");
+
+            Entity container = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ToInventoryOwnerId);
+            if (container == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): container == null");
+
+            Inventory inventory = container.GetInventoryByRef((PrototypeId)tryInventoryMove.ToInventoryPrototype);
+            if (inventory == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): inventory == null");
+
+            InventoryResult result = entity.ChangeInventoryLocation(inventory, tryInventoryMove.ToSlot);
+            if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
 
             return true;
         }
