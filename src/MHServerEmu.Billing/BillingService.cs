@@ -149,17 +149,6 @@ namespace MHServerEmu.Billing
             avatar.Properties[PropertyEnum.CostumeCurrent] = costumePrototype.DataRef;
             player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = costumePrototype.DataRef;
 
-            // Send client property updates (TODO: Remove this when we have those generated automatically)
-            // Avatar entity
-            client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient));
-
-            // Player entity
-            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.PrototypeDataRef);
-
-            client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
-                player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef));
-
             // Send buy response
             SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
             return true;

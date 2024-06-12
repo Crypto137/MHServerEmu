@@ -50,10 +50,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             avatar.AssignPower(throwableCancelPowerRef, indexProps);
 
             // Notify the client
-            _playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity, _targetId));
-
-            _playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef, throwableProto.UnrealClass));
-
             _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
                 .SetPowerProtoId((ulong)throwableCancelPowerRef)

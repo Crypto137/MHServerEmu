@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Entities
         public Game Game { get; set; } 
         public EntityStatus Status { get; set; }
 
-        public ReplicatedPropertyCollection Properties { get; set; } = new();
+        public ReplicatedPropertyCollection Properties { get; set; }
 
         public virtual ulong PartyId
         {
@@ -233,7 +233,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             // ---
-
             if (Game == null) return Logger.WarnReturn(false, "Initialize(): Game == null");
 
             Id = settings.Id;
@@ -257,7 +256,7 @@ namespace MHServerEmu.Games.Entities
             RegionId = settings.RegionId;
 
             // New
-            Properties = new(Game.CurrentRepId);
+            Properties = new(this, Game.CurrentRepId);
             
             if (entityProto.Properties != null) // TODO: Filter properties during serialization
                 Properties.FlattenCopyFrom(entityProto.Properties, true); 
@@ -467,6 +466,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
             AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
         {
+            Properties.OnEntityChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies);
             // TODO: InterestReferences
         }
 

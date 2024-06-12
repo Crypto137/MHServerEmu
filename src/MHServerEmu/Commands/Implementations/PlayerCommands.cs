@@ -75,16 +75,6 @@ namespace MHServerEmu.Commands.Implementations
             avatar.Properties[PropertyEnum.CostumeCurrent] = costumeId;
             player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = costumeId;
 
-            // Send client property updates (TODO: Remove this when we have those generated automatically)
-            // Avatar entity
-            client.SendMessage(1, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, PropertyEnum.CostumeCurrent, costumeId));
-
-            // Player entity
-            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.PrototypeDataRef);
-            client.SendMessage(1, Property.ToNetMessageSetProperty(
-                player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumeId));
-
             if (costumeId == PrototypeId.Invalid)
                 return "Resetting costume.";
 
@@ -104,7 +94,6 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             playerConnection.Player.Properties[PropertyEnum.OmegaPoints] = value;
 
-            client.SendMessage(1, Property.ToNetMessageSetProperty(playerConnection.Player.Properties.ReplicationId, PropertyEnum.OmegaPoints, value));
             return $"Setting Omega points to {value}.";
         }
 
@@ -123,31 +112,9 @@ namespace MHServerEmu.Commands.Implementations
             {
                 if (gem == InfinityGem.None) continue;
                 playerConnection.Player.Properties[PropertyEnum.InfinityPoints, (int)gem] = value;
-
-                client.SendMessage(1, Property.ToNetMessageSetProperty(playerConnection.Player.Properties.ReplicationId,
-                    new(PropertyEnum.InfinityPoints, (PropertyParam)gem), value));
             }
             
             return $"Setting all Infinity points to {value}.";
-        }
-
-        [Command("fixmana", "Fixes mana display.\nUsage: player fixmana", AccountUserLevel.User)]
-        public string FixMana(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            // remove this when it works on its own
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            var avatar = playerConnection.Player.CurrentAvatar;
-
-            client.SendMessage(1, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, PropertyEnum.Endurance, 0f));
-
-            client.SendMessage(1, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, PropertyEnum.Endurance, avatar.Properties[PropertyEnum.Endurance]));
-
-            return $"Mana fixed.";
         }
     }
 }

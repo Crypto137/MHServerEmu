@@ -1,6 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
@@ -143,23 +141,5 @@ namespace MHServerEmu.Games.Properties
         }
 
         // ToValue() and FromValue() methods from the client are replaced with implicit casting, see PropertyValue.cs for more details
-
-        public static NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId, PropertyId propertyId, PropertyValue value)
-        {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
-            return NetMessageSetProperty.CreateBuilder()
-                .SetReplicationId(replicationId)
-                .SetPropertyId(propertyId.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
-                .SetValueBits(PropertyCollection.ConvertValueToBits(value, info.DataType))
-                .Build();
-        }
-
-        public static NetMessageRemoveProperty ToNetMessageRemoveProperty(ulong replicationId, PropertyId propertyId)
-        {
-            return NetMessageRemoveProperty.CreateBuilder()
-                .SetReplicationId(replicationId)
-                .SetPropertyId(propertyId.Raw.ReverseBits())
-                .Build();
-        }
     }
 }
