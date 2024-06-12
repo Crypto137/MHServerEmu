@@ -180,5 +180,10 @@ namespace MHServerEmu.Games.Entities
             // TODO
             return base.InitInventories(populateInventories);
         }
+
+        internal int GetPowerRank(PrototypeId power)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

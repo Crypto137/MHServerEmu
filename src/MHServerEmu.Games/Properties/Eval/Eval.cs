@@ -405,8 +405,8 @@ namespace MHServerEmu.Games.Properties.Eval
 
             if (context < EvalContext.MaxVars)
             {
-                evalVar = data.Vars[(int)context].Var;
-                readOnly = data.Vars[(int)context].ReadOnly;
+                evalVar = data.ContextVars[(int)context].Var;
+                readOnly = data.ContextVars[(int)context].ReadOnly;
             }
             else if (context == EvalContext.CallerStack)
             {
@@ -852,10 +852,10 @@ namespace MHServerEmu.Games.Properties.Eval
             if (context < 0 || context >= EvalContext.MaxVars)
                 return Logger.WarnReturn(evalVar, $"LoadContextInt: Context ({context}) is out of the bounds of possible context vars ({EvalContext.MaxVars})");
 
-            if (data.Vars[(int)context].Var.IsNumeric() == false)
+            if (data.ContextVars[(int)context].Var.IsNumeric() == false)
                 return Logger.WarnReturn(evalVar, $"LoadContextInt: Non-Numeric value in Context Var {context}");
 
-            FromValue(data.Vars[(int)context].Var, out long resultInt);
+            FromValue(data.ContextVars[(int)context].Var, out long resultInt);
             evalVar.SetInt(resultInt);
 
             return evalVar;
@@ -871,7 +871,7 @@ namespace MHServerEmu.Games.Properties.Eval
             if (context < 0 || context >= EvalContext.MaxVars)
                 return Logger.WarnReturn(evalVar, $"LoadContextProtoRef: Context ({context}) is out of the bounds of possible context vars ({EvalContext.MaxVars})");
 
-            FromValue(data.Vars[(int)context].Var, out PrototypeId resultProtoRef);
+            FromValue(data.ContextVars[(int)context].Var, out PrototypeId resultProtoRef);
             evalVar.SetProtoRef(resultProtoRef);
 
             return evalVar;
@@ -1709,62 +1709,440 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunLoadProp(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LoadPropPrototype loadPropProto) return evalVar;
+
+            if (loadPropProto.Prop == PropertyId.Invalid)
+                return Logger.WarnReturn(evalVar, "LoadPropPrototype contains Invalid \"Prop\" Field");
+
+            PropertyId propId = loadPropProto.Prop;
+            PropertyEnum propEnum = propId.Enum;
+            PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propEnum);
+            PropertyDataType propertyType = propInfo.DataType;
+
+            if (FromValue(GetEvalVarFromContext(loadPropProto.Context, data, false), out PropertyCollection collection) == false)
+                return evalVar;
+
+            if (collection == null)
+                return Logger.WarnReturn(evalVar, $"Invalid Context ({loadPropProto.Context}) when trying to load prop.\nProp: {propInfo.PropertyName}");
+
+            switch (propertyType)
+            {
+                case PropertyDataType.Integer:
+                    evalVar.SetInt(collection[propId]);
+                    break;
+
+                case PropertyDataType.Real:
+                case PropertyDataType.Curve:
+                    evalVar.SetFloat(collection[propId]);
+                    break;
+
+                case PropertyDataType.EntityId:
+                    evalVar.SetEntityId(collection[propId]);
+                    break;
+
+                case PropertyDataType.RegionId:
+                    evalVar.SetRegionId(collection[propId]);
+                    break;
+
+                case PropertyDataType.Boolean:
+                    evalVar.SetBool(collection[propId]);
+                    break;
+
+                case PropertyDataType.Prototype:
+                    evalVar.SetProtoRef(collection[propId]);
+                    break;
+
+                case PropertyDataType.Asset:
+                    evalVar.SetAssetRef(collection[propId]);
+                    break;
+
+                default:
+                    return Logger.WarnReturn(evalVar, "Assignment into invalid property!");
+            }
+
+            return evalVar;
         }
 
         private static EvalVar RunLoadPropContextParams(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LoadPropContextParamsPrototype loadPropContextParamsProto) return evalVar;
+
+            if (loadPropContextParamsProto.Prop == PrototypeId.Invalid)
+                return Logger.WarnReturn(evalVar, "LoadPropContextParamsPrototype contains invalid \"Prop\" field");
+
+            if (FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyIdContext, data, false), out PropertyId propIdParams) == false)
+                return evalVar;
+
+            if (propIdParams == PropertyId.Invalid)
+                return Logger.WarnReturn(evalVar, "LoadPropContextParams eval being run with a context that has an invalid propertyId");
+
+            if (FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyCollectionContext, data, false), out PropertyCollection collection) == false)
+                return evalVar;
+
+            if (collection == null)
+                return Logger.WarnReturn(evalVar, "Invalid Context");
+
+            PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
+            PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(loadPropContextParamsProto.Prop);
+            PropertyInfo propInfoValue = propInfoTable.LookupPropertyInfo(propEnum);
+            PropertyInfo propInfoParams = propInfoTable.LookupPropertyInfo(propIdParams.Enum);
+
+            if (propInfoParams.ParamCount != propInfoValue.ParamCount)
+                return evalVar;
+
+            PropertyParam[] paramValues = new PropertyParam[propInfoParams.ParamCount];
+            for (int i = 0; i < propInfoParams.ParamCount; ++i)
+            {
+                if (propInfoParams.GetParamType(i) != propInfoValue.GetParamType(i)) return evalVar;
+
+                switch (propInfoParams.GetParamType(i))
+                {
+                    case PropertyParamType.Asset:
+                        Property.FromParam(propIdParams.Enum, i, propIdParams.GetParam(i), out AssetId assetRefParam);
+                        paramValues[i] = Property.ToParam(assetRefParam);
+                        break;
+                    case PropertyParamType.Prototype:
+                        Property.FromParam(propIdParams.Enum, i, propIdParams.GetParam(i), out PrototypeId protoRefParam);
+                        paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
+                        break;
+                    case PropertyParamType.Integer:
+                        int intParam = (int)propIdParams.GetParam(i);
+                        paramValues[i] = (PropertyParam)intParam;
+                        break;
+                    default:
+                        return Logger.WarnReturn(evalVar, "Encountered an unknown prop param type in a LoadPropContextParams Eval!");
+                }
+            }
+
+            PropertyId propIdValue = new (propEnum, paramValues);
+
+            switch (propInfoValue.DataType)
+            {
+                case PropertyDataType.Integer:
+                    evalVar.SetInt(collection[propIdValue]);
+                    break;
+                case PropertyDataType.Curve:
+                case PropertyDataType.Real:
+                    evalVar.SetFloat(collection[propIdValue]);
+                    break;
+                case PropertyDataType.Boolean:
+                    evalVar.SetBool(collection[propIdValue]);
+                    break;
+                case PropertyDataType.EntityId:
+                    evalVar.SetEntityId(collection[propIdValue]);
+                    break;
+                case PropertyDataType.RegionId:
+                    evalVar.SetRegionId(collection[propIdValue]);
+                    break;
+                case PropertyDataType.Prototype:
+                    evalVar.SetProtoRef(collection[propIdValue]);
+                    break;
+                case PropertyDataType.Asset:
+                    evalVar.SetAssetRef(collection[propIdValue]);
+                    break;
+                default:
+                    return Logger.WarnReturn(evalVar, "Assignment into invalid property!");
+            }
+
+            return evalVar;
         }
 
         private static EvalVar RunLoadPropEvalParams(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LoadPropEvalParamsPrototype loadPropEvalParamsProto) return evalVar;
+
+            if (loadPropEvalParamsProto.Prop == PrototypeId.Invalid)
+                return Logger.WarnReturn(evalVar, "LoadPropEvalParamsPrototype contains invalid \"Prop\" field");
+
+            if (FromValue(GetEvalVarFromContext(loadPropEvalParamsProto.Context, data, false), out PropertyCollection collection) == false)
+                return evalVar;
+
+            if (collection == null)
+                return Logger.WarnReturn(evalVar, "Invalid Context");
+
+            PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
+            PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(loadPropEvalParamsProto.Prop);
+            PropertyInfo propInfo = propInfoTable.LookupPropertyInfo(propEnum);
+            PropertyParam[] paramValues = propInfo.DefaultParamValues;
+
+            for (int i = 0; i < propInfo.ParamCount; ++i)
+            {
+                if (i >= 4) break;
+                EvalPrototype paramEval = i switch
+                {
+                    0 => loadPropEvalParamsProto.Param0,
+                    1 => loadPropEvalParamsProto.Param1,
+                    2 => loadPropEvalParamsProto.Param2,
+                    3 => loadPropEvalParamsProto.Param3,
+                    _ => null
+                };
+
+                if (paramEval == null) continue;
+
+                switch (propInfo.GetParamType(i))
+                {
+                    case PropertyParamType.Asset:
+                        if (FromValue(Run(paramEval, data), out AssetId assetRefParam))
+                            paramValues[i] = Property.ToParam(assetRefParam);
+                        break;
+
+                    case PropertyParamType.Prototype:
+                        if (FromValue(Run(paramEval, data), out PrototypeId protoRefParam))
+                            paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
+                        break;
+
+                    case PropertyParamType.Integer:
+                        if (FromValue(Run(paramEval, data), out int intParam))
+                            paramValues[i] = (PropertyParam)intParam;
+                        break;
+
+                    default:
+                        return Logger.WarnReturn(evalVar, "Encountered an unknown prop param type in a LoadPropEvalParams Eval!");
+                }
+            }
+
+            PropertyId propId = new (propEnum, paramValues);
+
+            switch (propInfo.DataType)
+            {
+                case PropertyDataType.Integer:
+                    evalVar.SetInt(collection[propId]);
+                    break;
+                case PropertyDataType.Real:
+                case PropertyDataType.Curve:
+                    evalVar.SetFloat(collection[propId]);
+                    break;
+                case PropertyDataType.Boolean:
+                    evalVar.SetBool(collection[propId]);
+                    break;
+                case PropertyDataType.EntityId:
+                    evalVar.SetEntityId(collection[propId]);
+                    break;
+                case PropertyDataType.RegionId:
+                    evalVar.SetRegionId(collection[propId]);
+                    break;
+                case PropertyDataType.Prototype:
+                    evalVar.SetProtoRef(collection[propId]);
+                    break;
+                case PropertyDataType.Asset:
+                    evalVar.SetAssetRef(collection[propId]);
+                    break;
+                default:
+                    return Logger.WarnReturn(evalVar, "Assignment into invalid property!");
+            }
+
+            return evalVar;
         }
 
         private static EvalVar RunSwapProp(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not SwapPropPrototype swapPropProto) return evalVar;
+
+            if (swapPropProto.Prop == PropertyId.Invalid)
+                return Logger.WarnReturn(evalVar, "SwapPropPrototype contains Invalid \"Prop\" Field");
+
+            PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
+            PropertyInfo propInfo = propInfoTable.LookupPropertyInfo(swapPropProto.Prop.Enum);
+            PropertyInfoPrototype propInfoProto = propInfo.Prototype;
+            if (propInfoProto == null)
+                return Logger.WarnReturn(evalVar, "No PropertyInfoPrototype");
+
+            if (propInfoProto.AggMethod != AggregationMethod.None)
+                return Logger.WarnReturn(evalVar, $"SwapPropPrototype cannot swap with a property with an AggMethod other than None. Property: {propInfoProto}");
+
+            if (FromValue(GetEvalVarFromContext(swapPropProto.LeftContext, data, true), out PropertyCollection collectionLeft, data.Game) == false)
+                return evalVar;
+
+            if (collectionLeft == null)
+                return Logger.WarnReturn(evalVar, "Invalid Left Context");
+
+            if (FromValue(GetEvalVarFromContext(swapPropProto.RightContext, data, true), out PropertyCollection collectionRight, data.Game) == false)
+                return evalVar;
+
+            if (collectionRight == null)
+                return Logger.WarnReturn(evalVar, "Invalid Right Context");
+
+            PropertyId propId = swapPropProto.Prop;
+            (collectionRight[propId], collectionLeft[propId]) = (collectionLeft[propId], collectionRight[propId]);
+            evalVar.SetUndefined();
+            return evalVar;
         }
 
         private static EvalVar RunRandomFloat(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not RandomFloatPrototype randomFloatProto) return evalVar;
+
+            if (data.Game == null)
+                return Logger.WarnReturn(evalVar, "The context given to a RandomFloat Eval doesn't have a valid Game to use for the random generator!");
+
+            float randomValue = data.Game.Random.NextFloat(randomFloatProto.Min, randomFloatProto.Max);
+            evalVar.SetFloat(randomValue);
+
+            return evalVar;
         }
 
         private static EvalVar RunRandomInt(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not RandomIntPrototype randomIntProto) return evalVar;
+
+            if (data.Game == null)
+                return Logger.WarnReturn(evalVar, "The context given to a RandomInt Eval doesn't have a valid Game to use for the random generator!");
+
+            int randomValue = data.Game.Random.Next(randomIntProto.Min, randomIntProto.Max + 1);
+            evalVar.SetInt(randomValue);
+
+            return evalVar;
         }
 
         private static EvalVar RunLoadEntityToContextVar(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LoadEntityToContextVarPrototype loadEntityToContextVarProto) return evalVar;
+
+            if (loadEntityToContextVarProto.EntityId == null) return evalVar;
+
+            if (data.Game == null)
+                return Logger.WarnReturn(evalVar, "The context given to a LoadEntityToContextVar Eval doesn't have a valid Game to use for the entity lookup!");
+
+            EvalVar entityIdEvalResult = Run(loadEntityToContextVarProto.EntityId, data);
+            if (entityIdEvalResult.Type != EvalReturnType.EntityId)
+                return Logger.WarnReturn(evalVar, $"A LoadEntityToContextVar eval has an EntityId field Eval that did not return an EntityId (Return type=[{entityIdEvalResult.Type}])");
+
+            Entity entity = data.Game.EntityManager.GetEntity<Entity>(entityIdEvalResult.Value.EntityId);
+            data.SetVar_PropertyCollectionPtr(loadEntityToContextVarProto.Context, entity.Properties);
+
+            evalVar.SetUndefined();
+            return evalVar;
         }
 
         private static EvalVar RunLoadConditionCollectionToContext(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not LoadConditionCollectionToContextPrototype loadConditionCollectionProto) return evalVar;
+
+            if (loadConditionCollectionProto.EntityId == null) return evalVar;
+
+            if (data.Game == null)
+                return Logger.WarnReturn(evalVar, "The context given to a LoadConditionCollectionToContext Eval doesn't have a valid Game to use for the entity lookup!");
+
+            if (data.ContextVars[(int)loadConditionCollectionProto.Context].Var.Type != EvalReturnType.Undefined)
+                Logger.Warn("Attempting to assign to a ContextVar that is currently in use! Operation will be performed but this is usually a bad idea!");
+
+            EvalVar entityIdEvalResult = Run(loadConditionCollectionProto.EntityId, data);
+            if (entityIdEvalResult.Type != EvalReturnType.EntityId)
+                return Logger.WarnReturn(evalVar,
+                    $"A LoadConditionCollectionToContext eval has an EntityId field Eval that did not return an EntityId (Return type=[{entityIdEvalResult.Type}])");
+
+            WorldEntity entity = data.Game.EntityManager.GetEntity<WorldEntity>(entityIdEvalResult.Value.EntityId);
+            if (entity != null)
+                data.SetReadOnlyVar_ConditionCollectionPtr(loadConditionCollectionProto.Context, entity.ConditionCollection);
+
+            evalVar.SetUndefined();
+            return evalVar;
         }
 
         private static EvalVar RunEntityHasKeyword(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not EntityHasKeywordPrototype entityHasKeywordProto) return evalVar;
+
+            if (entityHasKeywordProto.Keyword == PrototypeId.Invalid)
+                return Logger.WarnReturn(evalVar, "EntityHasKeyword Eval doesn't have a valid Keyword to check!");
+
+            EvalVar contextVar = data.ContextVars[(int)entityHasKeywordProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "EntityHasKeyword was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetBool(false);
+
+            if (FromValue(contextVar, out Entity entity))
+                if (entity is WorldEntity worldEntity)
+                {
+                    if (entityHasKeywordProto.ConditionKeywordOnly)
+                        evalVar.SetBool(worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
+                    else
+                        evalVar.SetBool(worldEntity.HasKeyword(entityHasKeywordProto.Keyword) || worldEntity.HasConditionWithKeyword(entityHasKeywordProto.Keyword));
+                }
+
+            return evalVar;
         }
 
         private static EvalVar RunEntityHasTalent(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not EntityHasTalentPrototype entityHasTalentProto) return evalVar;
+
+            if (entityHasTalentProto.Talent == PrototypeId.Invalid)
+                return Logger.WarnReturn(evalVar, "EntityHasTalent Eval doesn't have a valid Talent to check!");
+
+            EvalVar contextVar = data.ContextVars[(int)entityHasTalentProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "EntityHasTalent was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetBool(false);
+
+            if (FromValue(contextVar, out Entity entity))
+                if (entity is WorldEntity worldEntity)
+                    evalVar.SetBool(worldEntity.HasPowerInPowerCollection(entityHasTalentProto.Talent));
+
+            return evalVar;
         }
 
         private static EvalVar RunGetCombatLevel(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not GetCombatLevelPrototype getCombatLevelProto) return evalVar;
+
+            EvalVar contextVar = data.ContextVars[(int)getCombatLevelProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "GetCombatLevel was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetInt(0);
+
+            if (FromValue(contextVar, out Entity entity))
+                if (entity is Agent agent)
+                    evalVar.SetInt(agent.CombatLevel);
+
+            return evalVar;
         }
 
         private static EvalVar RunGetPowerRank(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not GetPowerRankPrototype getPowerRankProto) return evalVar;
+
+            if (getPowerRankProto.Power == PrototypeId.Invalid)
+                return Logger.WarnReturn(evalVar, "GetPowerRank Eval doesn't have a valid Power to check!");
+
+            EvalVar contextVar = data.ContextVars[(int)getPowerRankProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "GetPowerRank was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetInt(0);
+
+            if (FromValue(contextVar, out Entity entity))
+                if (entity is Agent agent)
+                    evalVar.SetInt(agent.GetPowerRank(getPowerRankProto.Power));
+
+            return evalVar;
         }
 
         private static EvalVar RunCalcPowerRank(EvalPrototype evalProto, EvalContextData data)
@@ -1774,7 +2152,24 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunIsInParty(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new();
+            evalVar.SetError();
+            if (evalProto is not IsInPartyPrototype isInPartyProto) return evalVar;
+
+            EvalVar contextVar = data.ContextVars[(int)isInPartyProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "GetPartySize was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetBool(false);
+
+            if (FromValue(contextVar, out Entity entity))
+            {
+                Player player = entity.GetSelfOrOwnerOfType<Player>();
+                if (player != null)
+                    evalVar.SetBool(player.IsInParty);
+            }
+
+            return evalVar;
         }
 
         private static EvalVar RunGetDamageReductionPct(EvalPrototype evalProto, EvalContextData data)
