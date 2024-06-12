@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInGame) return;
 
             SetStatus(EntityStatus.InGame, true);
-            NotifyPlayers(false);
+            NotifyPlayers(true);
 
             // Put all inventory entities into the game as well
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -377,7 +377,7 @@ namespace MHServerEmu.Games.Entities
 
         #region AOI
 
-        public void NotifyPlayers(bool alreadyInterestedOnly, EntitySettings settings = null)
+        public void NotifyPlayers(bool notifyAllPlayers, EntitySettings settings = null)
         {
             // TODO: Use InterestReferences to filter to just players who are already interested in this entity
             foreach (Player player in new PlayerIterator(Game))
@@ -424,6 +424,14 @@ namespace MHServerEmu.Games.Entities
             if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
             if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
             if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
+        }
+
+        public void OnSelfAddedToOtherInventory()
+        {
+        }
+
+        public void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        {
         }
 
         public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)

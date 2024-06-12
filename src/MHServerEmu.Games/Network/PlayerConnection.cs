@@ -629,29 +629,21 @@ namespace MHServerEmu.Games.Network
 
             // Switch avatar
             // NOTE: This is preliminary implementation that will change once we have inventories working
-            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
-                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Destroy the avatar we are switching to on the client
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(Player.CurrentAvatar.Id).Build());
-
-            // Destroy the previous avatar on the client
+            // Manually remove existing avatar from the world
+            Player.CurrentAvatar.BasePosition = null;
+            Player.CurrentAvatar.BaseOrientation = null;
             SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
-                .SetIdEntity(prevAvatar.Id)
+                .SetIdEntity(Player.CurrentAvatar.Id)
                 .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
                 .SetExitGameWorld(true)
                 .Build());
 
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(prevAvatar.Id).Build());
+            // Do inventory switch
+            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
+                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Remove the previous avatar from the world and recreate it in inventory
-            prevAvatar.BasePosition = null;
-            prevAvatar.BaseOrientation = null;
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(prevAvatar, AOINetworkPolicyValues.AOIChannelOwner));
-
-            // Recreate the avatar we just switched to and put it into the world
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(Player.CurrentAvatar, AOINetworkPolicyValues.AOIChannelOwner));
-
+            // Manually add new avatar to the world
             Player.CurrentAvatar.BasePosition = LastPosition;
             Player.CurrentAvatar.BaseOrientation = LastOrientation;
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
