@@ -240,6 +240,17 @@ namespace MHServerEmu.Games.Network
             Player.IsOnLoadingScreen = true;
         }
 
+        public void ExitGame()
+        {
+            // We need to recreate the player entity when we transfer between regions
+            // because client UI breaks for some reason when we reuse the same player entity id
+            // (e.g. inventory grid stops updating).
+            UpdateDBAccount();
+            Player.Destroy();
+            Game.EntityManager.ProcessDeferredLists();
+            InitializeFromDBAccount();
+        }
+
         public void EnterGameWorld()
         {
             var avatar = Player.CurrentAvatar;
@@ -262,11 +273,6 @@ namespace MHServerEmu.Games.Network
             Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
 
             IsLoading = false;
-        }
-
-        public void ExitGame()
-        {
-            Player.ExitGame();
         }
 
         #endregion
@@ -747,8 +753,9 @@ namespace MHServerEmu.Games.Network
             var requestInterestInInventory = message.As<NetMessageRequestInterestInInventory>();
             if (requestInterestInInventory == null) return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to retrieve message");
 
-            string inventory = GameDatabase.GetFormattedPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId);
-            Logger.Trace($"Received NetMessageRequestInterestInInventory for {inventory}");
+            Logger.Trace(string.Format("OnRequestInterestInInventory(): inventoryProtoId={0}, loadState={1}",
+                GameDatabase.GetPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId),
+                requestInterestInInventory.LoadState));
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
