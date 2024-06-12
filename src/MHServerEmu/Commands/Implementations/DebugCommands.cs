@@ -230,8 +230,11 @@ namespace MHServerEmu.Commands.Implementations
             var avatar = player.CurrentAvatar;
             if (create)
             {
-                avatar.EnterWorld(region, position, orientation);
-                avatar.SetSimulated(true);
+                if (avatar.RegionLocation.IsValid() == false)
+                {
+                    avatar.EnterWorld(region, position, orientation);
+                    avatar.SetSimulated(true);
+                }
                 // Pet026FrogThor = 7240687669893536590
                 Agent pet = player.CreatePet((PrototypeId)7240687669893536590, position, region); // Pet001OldLace = 16300889242928224944
                 pet.EnterWorld(region, position, orientation);
@@ -246,14 +249,14 @@ namespace MHServerEmu.Commands.Implementations
                 Agent pet = null;
                 foreach (Agent agent in game.EntityManager.SimulatedEntities.Iterate())
                 {
-                    agent.AIController.SetIsEnabled(enable);
+                    if (destoy == false) agent.AIController.SetIsEnabled(enable);
                     s += $"{agent.PrototypeName} AIEnabled {enable}. ";
                     pet = agent;
                 }
                 if (destoy && pet != null)
                 {
                     pet.SetSimulated(false);
-                    pet.Destroy(); // TODO fix problem with CencelEvent
+                    pet.Destroy();
                     s += $"{pet.PrototypeName}  destroyed.";
                     playerConnection.AOI.Update(playerConnection.LastPosition, true);
                 }
