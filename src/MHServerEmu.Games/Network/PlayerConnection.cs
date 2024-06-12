@@ -142,14 +142,17 @@ namespace MHServerEmu.Games.Network
             }
 
             // Create team-up entities
-            Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-            foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            if (Game.GameOptions.TeamUpSystemEnabled)
             {
-                EntitySettings teamUpSettings = new();
-                teamUpSettings.EntityRef = teamUpRef;
-                teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
+                Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+                foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    EntitySettings teamUpSettings = new();
+                    teamUpSettings.EntityRef = teamUpRef;
+                    teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
-                Game.EntityManager.CreateEntity(teamUpSettings);
+                    Game.EntityManager.CreateEntity(teamUpSettings);
+                }
             }
 
             // Make sure we have a valid current avatar ref
@@ -237,6 +240,17 @@ namespace MHServerEmu.Games.Network
             Player.IsOnLoadingScreen = true;
         }
 
+        public void ExitGame()
+        {
+            // We need to recreate the player entity when we transfer between regions
+            // because client UI breaks for some reason when we reuse the same player entity id
+            // (e.g. inventory grid stops updating).
+            UpdateDBAccount();
+            Player.Destroy();
+            Game.EntityManager.ProcessDeferredLists();
+            InitializeFromDBAccount();
+        }
+
         public void EnterGameWorld()
         {
             var avatar = Player.CurrentAvatar;
@@ -259,11 +273,6 @@ namespace MHServerEmu.Games.Network
             Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
 
             IsLoading = false;
-        }
-
-        public void ExitGame()
-        {
-            Player.ExitGame();
         }
 
         #endregion
@@ -367,6 +376,8 @@ namespace MHServerEmu.Games.Network
         {
             var updateAvatarState = message.As<NetMessageUpdateAvatarState>();
             if (updateAvatarState == null) return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to retrieve message");
+
+            if (AOI.Region == null) return false;
 
             UpdateAvatarStateArchive avatarState = new();
             using (Archive archive = new(ArchiveSerializeType.Replication, updateAvatarState.ArchiveData))
@@ -573,14 +584,24 @@ namespace MHServerEmu.Games.Network
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
             if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
 
-            Logger.Info($"Received TryInventoryMove message");
+            Logger.Trace(string.Format("OnTryInventoryMove(): {0} to containerId={1}, inventoryRef={2}, slot={3}, isStackSplit={4}",
+                tryInventoryMove.ItemId,
+                tryInventoryMove.ToInventoryOwnerId,
+                GameDatabase.GetPrototypeName((PrototypeId)tryInventoryMove.ToInventoryPrototype),
+                tryInventoryMove.ToSlot,
+                tryInventoryMove.IsStackSplit));
 
-            SendMessage(NetMessageInventoryMove.CreateBuilder()
-                .SetEntityId(tryInventoryMove.ItemId)
-                .SetInvLocContainerEntityId(tryInventoryMove.ToInventoryOwnerId)
-                .SetInvLocInventoryPrototypeId(tryInventoryMove.ToInventoryPrototype)
-                .SetInvLocSlot(tryInventoryMove.ToSlot)
-                .Build());
+            Entity entity = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ItemId);
+            if (entity == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): entity == null");
+
+            Entity container = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ToInventoryOwnerId);
+            if (container == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): container == null");
+
+            Inventory inventory = container.GetInventoryByRef((PrototypeId)tryInventoryMove.ToInventoryPrototype);
+            if (inventory == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): inventory == null");
+
+            InventoryResult result = entity.ChangeInventoryLocation(inventory, tryInventoryMove.ToSlot);
+            if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
 
             return true;
         }
@@ -626,29 +647,21 @@ namespace MHServerEmu.Games.Network
 
             // Switch avatar
             // NOTE: This is preliminary implementation that will change once we have inventories working
-            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
-                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Destroy the avatar we are switching to on the client
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(Player.CurrentAvatar.Id).Build());
-
-            // Destroy the previous avatar on the client
+            // Manually remove existing avatar from the world
+            Player.CurrentAvatar.BasePosition = null;
+            Player.CurrentAvatar.BaseOrientation = null;
             SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
-                .SetIdEntity(prevAvatar.Id)
+                .SetIdEntity(Player.CurrentAvatar.Id)
                 .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
                 .SetExitGameWorld(true)
                 .Build());
 
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(prevAvatar.Id).Build());
+            // Do inventory switch
+            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
+                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Remove the previous avatar from the world and recreate it in inventory
-            prevAvatar.BasePosition = null;
-            prevAvatar.BaseOrientation = null;
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(prevAvatar, AOINetworkPolicyValues.AOIChannelOwner));
-
-            // Recreate the avatar we just switched to and put it into the world
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(Player.CurrentAvatar, AOINetworkPolicyValues.AOIChannelOwner));
-
+            // Manually add new avatar to the world
             Player.CurrentAvatar.BasePosition = LastPosition;
             Player.CurrentAvatar.BaseOrientation = LastOrientation;
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
@@ -742,8 +755,9 @@ namespace MHServerEmu.Games.Network
             var requestInterestInInventory = message.As<NetMessageRequestInterestInInventory>();
             if (requestInterestInInventory == null) return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to retrieve message");
 
-            string inventory = GameDatabase.GetFormattedPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId);
-            Logger.Trace($"Received NetMessageRequestInterestInInventory for {inventory}");
+            Logger.Trace(string.Format("OnRequestInterestInInventory(): inventoryProtoId={0}, loadState={1}",
+                GameDatabase.GetPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId),
+                requestInterestInInventory.LoadState));
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)

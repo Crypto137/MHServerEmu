@@ -8,7 +8,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
-    public class Inventory : IEnumerable<Inventory.InventoryIterationEntry>
+    public class Inventory : IEnumerable<Inventory.IterationEntry>
     {
         public const uint InvalidSlot = uint.MaxValue;      // 0xFFFFFFFF / -1
 
@@ -612,19 +612,28 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         }
 
-        private void PostAdd(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
+        private bool PostAdd(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
         {
+            if (entity == null) return Logger.WarnReturn(false, "PostAdd(): entity == null");
 
+            entity.OnSelfAddedToOtherInventory();
+            entity.NotifyPlayers(true);
+
+            return true;
         }
 
         private void PreRemove(Entity entity)
         {
-
         }
 
-        private void PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)
+        private bool PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)
         {
+            if (entity == null) return Logger.WarnReturn(false, "PostRemove(): entity == null");
 
+            entity.OnSelfRemovedFromOtherInventory(prevInvLoc);
+            entity.NotifyPlayers(true);
+
+            return true;
         }
 
         private void PostFinalMove(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
@@ -638,7 +647,7 @@ namespace MHServerEmu.Games.Entities.Inventories
         }
 
         // Replacement implementation for Inventory::Iterator
-        public IEnumerator<InventoryIterationEntry> GetEnumerator()
+        public IEnumerator<IterationEntry> GetEnumerator()
         {
             foreach (var kvp in _entities)
                 yield return new(kvp);
@@ -646,7 +655,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public readonly struct InventoryIterationEntry
+        public readonly struct IterationEntry
         {
             private readonly KeyValuePair<uint, InvEntry> _kvp;
 
@@ -655,7 +664,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             public PrototypeId ProtoRef { get => _kvp.Value.PrototypeDataRef; }
             public InventoryMetaData MetaData { get => _kvp.Value.MetaData; }
 
-            public InventoryIterationEntry(KeyValuePair<uint, InvEntry> kvp)
+            public IterationEntry(KeyValuePair<uint, InvEntry> kvp)
             {
                 _kvp = kvp;
             }

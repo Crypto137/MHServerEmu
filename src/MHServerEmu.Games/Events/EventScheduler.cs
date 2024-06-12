@@ -52,7 +52,8 @@ namespace MHServerEmu.Games.Events
 
         public void CancelEvent<T>(EventPointer<T> eventPointer) where T: ScheduledEvent
         {
-            CancelEvent((T)eventPointer);
+            if (eventPointer.IsValid)
+                CancelEvent((T)eventPointer);
         }
 
         public void CancelAllEvents()

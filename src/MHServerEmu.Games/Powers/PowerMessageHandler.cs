@@ -134,11 +134,7 @@ namespace MHServerEmu.Games.Powers
                 Inventory inventory = playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
                 
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
-                if (bowlingBall != null)
-                {
-                    bowlingBall.Destroy();
-                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
-                }
+                bowlingBall?.Destroy();
             }
 
             // if (powerPrototypePath.Contains("TravelPower/")) 
@@ -176,9 +172,6 @@ namespace MHServerEmu.Games.Powers
                         entity.Kill();
                         newHealth = 0;
                         entity.Properties[PropertyEnum.IsDead] = true;
-                        playerConnection.SendMessage(
-                         Property.ToNetMessageSetProperty(repId, PropertyEnum.IsDead, true)
-                         );
                     } else if (proto is AgentPrototype agent && agent.Locomotion.Immobile == false)
                     {
                         LocomotionStateUpdateArchive locomotion = new()
@@ -201,9 +194,7 @@ namespace MHServerEmu.Games.Powers
                             .Build());
                     }
                     entity.Properties[PropertyEnum.Health] = newHealth;
-                    playerConnection.SendMessage(
-                        Property.ToNetMessageSetProperty(repId, PropertyEnum.Health, newHealth)
-                        );
+
                     if (newHealth == 0)
                     {
                         playerConnection.SendMessage(NetMessageEntityKill.CreateBuilder()
@@ -211,9 +202,7 @@ namespace MHServerEmu.Games.Powers
                             .SetIdKillerEntity(playerConnection.Player.CurrentAvatar.Id)
                             .SetKillFlags(0).Build());
 
-                        playerConnection.SendMessage(
-                            Property.ToNetMessageSetProperty(repId, PropertyEnum.NoEntityCollide, true)
-                        );
+                        entity.Properties[PropertyEnum.NoEntityCollide] = true;
                     }
                 }
             }
@@ -273,9 +262,11 @@ namespace MHServerEmu.Games.Powers
             var assignStolenPower = message.As<NetMessageAssignStolenPower>();
             if (assignStolenPower == null) return Logger.WarnReturn(false, $"OnAssignStolenPower(): Failed to retrieve message");
 
-            PropertyParam param = Property.ToParam(PropertyEnum.AvatarMappedPower, 0, (PrototypeId)assignStolenPower.StealingPowerProtoId);
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty((ulong)HardcodedAvatarPropertyCollectionReplicationId.Rogue,
-                new(PropertyEnum.AvatarMappedPower, param), (PrototypeId)assignStolenPower.StolenPowerProtoId));
+            PrototypeId stealingPowerRef = (PrototypeId)assignStolenPower.StealingPowerProtoId;
+            PrototypeId stolenPowerRef = (PrototypeId)assignStolenPower.StolenPowerProtoId;
+
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            avatar.Properties[PropertyEnum.AvatarMappedPower, stealingPowerRef] = stolenPowerRef;
 
             return true;
         }

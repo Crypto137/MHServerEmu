@@ -273,20 +273,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             player.SendMessage(NetMessageAssignPowerCollection.CreateBuilder().AddRangePower(powerList).Build());
 
             // Set PowerRankCurrentBest for all powers in the collection to make them usable
+            
             foreach (PrototypeId protoId in powersToUnlockList)
-            {
-                PropertyParam enumValue = Property.ToParam(PropertyEnum.PowerRankBase, 0, protoId);
-                PropertyId propertyId = new(PropertyEnum.PowerRankCurrentBest, enumValue);
-                player.SendMessage(NetMessageSetProperty.CreateBuilder()
-                    .SetReplicationId(replicationId)
-                    .SetPropertyId(propertyId.Raw.ReverseBits())
-                    .SetValueBits(2)
-                    .Build());
-            }
+                Properties[PropertyEnum.PowerRankCurrentBest, protoId] = 1;
 
             // PowerRankBase needs to be set for the powers window to show powers without changing spec tabs
             // NOTE: PowerRankBase is also supposed to have a power prototype param
-            player.SendMessage(Property.ToNetMessageSetProperty(replicationId, PropertyEnum.PowerRankBase, 1));
+            Properties[PropertyEnum.PowerRankBase] = 1;
 
             return true;
         }

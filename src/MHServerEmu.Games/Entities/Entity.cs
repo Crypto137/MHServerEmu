@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Entities
         public Game Game { get; set; } 
         public EntityStatus Status { get; set; }
 
-        public ReplicatedPropertyCollection Properties { get; set; } = new();
+        public ReplicatedPropertyCollection Properties { get; set; }
 
         public virtual ulong PartyId
         {
@@ -225,7 +225,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             // ---
-
             if (Game == null) return Logger.WarnReturn(false, "Initialize(): Game == null");
 
             Id = settings.Id;
@@ -249,7 +248,7 @@ namespace MHServerEmu.Games.Entities
             RegionId = settings.RegionId;
 
             // New
-            Properties = new(Game.CurrentRepId);
+            Properties = new(this, Game.CurrentRepId);
             
             if (entityProto.Properties != null) // TODO: Filter properties during serialization
                 Properties.FlattenCopyFrom(entityProto.Properties, true); 
@@ -305,7 +304,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInGame) return;
 
             SetStatus(EntityStatus.InGame, true);
-            NotifyPlayers(false);
+            NotifyPlayers(true);
 
             // Put all inventory entities into the game as well
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -321,6 +320,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void ExitGame()
         {
             SetStatus(EntityStatus.InGame, false);
+            NotifyPlayers(false);
 
             // Remove contained entities
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -377,7 +377,7 @@ namespace MHServerEmu.Games.Entities
 
         #region AOI
 
-        public void NotifyPlayers(bool alreadyInterestedOnly, EntitySettings settings = null)
+        public void NotifyPlayers(bool notifyAllPlayers, EntitySettings settings = null)
         {
             // TODO: Use InterestReferences to filter to just players who are already interested in this entity
             foreach (Player player in new PlayerIterator(Game))
@@ -393,17 +393,18 @@ namespace MHServerEmu.Games.Entities
 
         public void Kill()
         {
-            ExitGame();
             _flags |= EntityFlags.IsDead;
 
             EventPointer<RespawnEvent> eventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(15));
+            Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(10));
             eventPointer.Get().Initialize(this);
         }
 
         public void Respawn()
         {
             Logger.Debug($"Respawn(): {this}");
+
+            ExitGame();
             _flags &= ~EntityFlags.IsDead;
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             Properties[PropertyEnum.IsDead] = false;
@@ -426,6 +427,14 @@ namespace MHServerEmu.Games.Entities
             if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
         }
 
+        public void OnSelfAddedToOtherInventory()
+        {
+        }
+
+        public void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        {
+        }
+
         public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
         }
@@ -445,6 +454,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
             AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
         {
+            Properties.OnEntityChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies);
             // TODO: InterestReferences
         }
 

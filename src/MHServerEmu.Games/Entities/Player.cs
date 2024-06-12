@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private MissionManager _missionManager = new();
-        private ReplicatedPropertyCollection _avatarProperties = new();
+        private ReplicatedPropertyCollection _avatarProperties;
         private ulong _shardId;
         private ReplicatedVariable<string> _playerName = new(0, string.Empty);
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Entities
 
             InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
-            _avatarProperties.ReplicationId = Game.CurrentRepId;
+            _avatarProperties = new(this, Game.CurrentRepId);
             _shardId = 3;
             _playerName = new(Game.CurrentRepId, string.Empty);
             _secondaryPlayerName = new(0, string.Empty);

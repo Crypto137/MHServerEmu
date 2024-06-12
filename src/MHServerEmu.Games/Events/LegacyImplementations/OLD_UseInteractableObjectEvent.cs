@@ -47,11 +47,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
 
             Entity bowlingBall = inventory.GetMatchingEntity(bowlingBallItem) as Item;
-            if (bowlingBall != null)
-            {
-                bowlingBall.Destroy();
-                _playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
-            }
+            bowlingBall?.Destroy();
 
             // Create a new ball
             AffixSpec[] affixSpecs = { new AffixSpec((PrototypeId)4906559676663600947, 0, 1) }; // BindingInformation                        
@@ -76,9 +72,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             ballSettings.ItemSpec = itemSpec;
             ballSettings.Properties = properties;
 
-            bowlingBall = game.EntityManager.CreateEntity(ballSettings);
-
-            _playerConnection.SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(bowlingBall, AOINetworkPolicyValues.AOIChannelOwner));
+            game.EntityManager.CreateEntity(ballSettings);
 
             //  Unassign bowling ball power if the player already has one
             Avatar avatar = player.CurrentAvatar;
