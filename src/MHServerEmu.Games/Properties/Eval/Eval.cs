@@ -2147,7 +2147,46 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunCalcPowerRank(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not CalcPowerRankPrototype calcPowerRankProto) return evalVar;
+            
+            if (calcPowerRankProto.Power == PrototypeId.Invalid)
+                return Logger.WarnReturn(evalVar, "CalcPowerRank Eval doesn't have a valid Power to check!");
+
+            EvalVar contextVar = data.ContextVars[(int)calcPowerRankProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "CalcPowerRank was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetInt(0);
+
+            if (FromValue(contextVar, out Entity entity))
+                if (entity is Agent agent)
+                {
+                    EvalVar defaultContextVar = GetEvalVarFromContext(EvalContext.Default, data, false, false);
+                    PropertyCollection defaultContextProps = null;
+                    if (defaultContextVar.Type == EvalReturnType.PropertyCollectionPtr)
+                        FromValue(defaultContextVar, out defaultContextProps);
+
+                    EvalVar var1ContextVar = GetEvalVarFromContext(EvalContext.Var1, data, false, false);
+                    PropertyCollection var1ContextProps = null;
+                    if (var1ContextVar.Type == EvalReturnType.PropertyCollectionPtr)
+                        FromValue(var1ContextVar, out var1ContextProps);
+
+                    bool showNextRank = 
+                        (defaultContextProps != null && defaultContextProps[PropertyEnum.PowerRankShowNextRank]) 
+                        || (var1ContextProps != null && var1ContextProps[PropertyEnum.PowerRankShowNextRank]);
+
+                    if (agent.GetPowerProgressionInfo(calcPowerRankProto.Power, out PowerProgressionInfo powerInfo) == false)
+                        return evalVar;
+
+                    int powerRank = agent.ComputePowerRank(powerInfo, agent.PowerSpecIndexActive);
+                    if (showNextRank) powerRank++;
+
+                    evalVar.SetInt(powerRank);
+                }
+
+            return evalVar;
         }
 
         private static EvalVar RunIsInParty(EvalPrototype evalProto, EvalContextData data)
@@ -2174,12 +2213,47 @@ namespace MHServerEmu.Games.Properties.Eval
 
         private static EvalVar RunGetDamageReductionPct(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not GetDamageReductionPctPrototype getDamageReductionPctProto) return evalVar;
+
+            EvalVar contextVar = data.ContextVars[(int)getDamageReductionPctProto.Context].Var;
+            if (contextVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "GetDamageReductionPct was given a context variable that is not an EntityPtr.");
+
+            evalVar.SetFloat(0f);
+
+            if (FromValue(contextVar, out Entity entity))
+                if (entity is WorldEntity worldEntity)
+                {
+                    float defenseRating = worldEntity.GetDefenseRating(getDamageReductionPctProto.VsDamageType);
+                    evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity, null));
+                }
+
+            return evalVar;
         }
 
         private static EvalVar RunGetDistanceToEntity(EvalPrototype evalProto, EvalContextData data)
         {
-            throw new NotImplementedException();
+            EvalVar evalVar = new ();
+            evalVar.SetError();
+            if (evalProto is not GetDistanceToEntityPrototype getDistanceToEntityProto) return evalVar;
+
+            EvalVar sourceVar = data.ContextVars[(int)getDistanceToEntityProto.SourceEntity].Var;
+            if (sourceVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "GetDistanceToEntity was given a source context variable that is not an EntityPtr.");
+
+            EvalVar targetVar = data.ContextVars[(int)getDistanceToEntityProto.TargetEntity].Var;
+            if (targetVar.Type != EvalReturnType.EntityPtr)
+                return Logger.WarnReturn(evalVar, "GetDistanceToEntity was given a target context variable that is not an EntityPtr.");
+
+            evalVar.SetFloat(0f);
+
+            if (FromValue(sourceVar, out Entity sourceEntity) && FromValue(targetVar, out Entity targetEntity))
+                if (sourceEntity is WorldEntity sourceWorldEntity && targetEntity is WorldEntity targetWorldEntity)
+                    evalVar.SetFloat(sourceWorldEntity.GetDistanceTo(targetWorldEntity, getDistanceToEntityProto.EdgeToEdge));
+
+            return evalVar;
         }
 
         private static EvalVar RunIsDynamicCombatLevelEnabled(EvalPrototype evalProto, EvalContextData data)

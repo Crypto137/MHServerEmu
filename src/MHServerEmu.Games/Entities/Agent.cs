@@ -54,6 +54,8 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public int PowerSpecIndexActive { get; internal set; }
+
         // New
         public Agent(Game game) : base(game) { }
 
@@ -182,6 +184,11 @@ namespace MHServerEmu.Games.Entities
         }
 
         internal int GetPowerRank(PrototypeId power)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             throw new NotImplementedException();
         }

@@ -779,6 +779,21 @@ namespace MHServerEmu.Games.Entities
                 return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == true;
             return false;
         }
+
+        internal float GetDefenseRating(DamageType damageType)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetDamageReductionPct(float defenseRating, WorldEntity worldEntity, PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetDistanceTo(WorldEntity other, bool edgeToEdge)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum PowerMovementPreventionFlags
