@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Network
 {
@@ -63,6 +64,29 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn($"GetPlayerConnection(): DbId 0x{playerDbId:X} is not bound to a player connection");
 
             return connection;
+        }
+
+        /// <summary>
+        /// Returns <see cref="PlayerConnection"/> instances that are bound to players that are interested in the provided <see cref="Entity"/>.
+        /// </summary>
+        public IEnumerable<PlayerConnection> GetInterestedClients(Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.DefaultPolicy, bool skipOwner = false)
+        {
+            foreach (Player player in GetInterestedPlayers(entity, interestFilter, skipOwner))
+                yield return player.PlayerConnection;
+        }
+
+        /// <summary>
+        /// Returns <see cref="Player"/> instances that are interested in the provided <see cref="Entity"/>.
+        /// </summary>
+        public IEnumerable<Player> GetInterestedPlayers(Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.DefaultPolicy, bool skipOwner = false)
+        {
+            foreach (Player player in new PlayerIterator(entity.Game))
+            {
+                if (skipOwner && entity.IsOwnedBy(player.Id)) continue;
+
+                if (player.PlayerConnection.AOI.InterestedInEntity(entity.Id, interestFilter))
+                    yield return player;
+            }
         }
 
         public void Update()
@@ -153,6 +177,15 @@ namespace MHServerEmu.Games.Network
         public void SendMessage(PlayerConnection connection, IMessage message)
         {
             connection.PostMessage(message);
+        }
+
+        /// <summary>
+        /// Sends the provided <see cref="IMessage"/> to all <see cref="PlayerConnection"/> instances that are interested in the provided <see cref="Entity"/>.
+        /// </summary>
+        public void SendMessageToInterested(IMessage message, Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.DefaultPolicy, bool skipOwner = false)
+        {
+            foreach (PlayerConnection playerConnection in GetInterestedClients(entity, interestFilter, skipOwner))
+                playerConnection.SendMessage(message);
         }
 
         /// <summary>

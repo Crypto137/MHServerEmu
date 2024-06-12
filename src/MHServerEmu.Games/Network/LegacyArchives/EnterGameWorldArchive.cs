@@ -5,20 +5,9 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
 
-namespace MHServerEmu.Games.Entities
+namespace MHServerEmu.Games.Network.LegacyArchives
 {
-    [Flags]
-    public enum EnterGameWorldMessageFlags : uint
-    {
-        None                        = 0,
-        HasAvatarWorldInstanceId    = 1 << 0,
-        IsNewOnServer               = 1 << 1,
-        IsClientEntityHidden        = 1 << 2,
-        HasAttachedEntities         = 1 << 3
-    }
-
     public class EnterGameWorldArchive : ISerialize
     {
         private const int LocoFlagCount = 12;
@@ -69,7 +58,7 @@ namespace MHServerEmu.Games.Entities
 
             // This archive contains additional flags combined with LocomotionMessageFlags in a single 32-bit value
             // TODO: build flags
-            uint flags = (uint)_locoFieldFlags | ((uint)_extraFieldFlags << LocoFlagCount);
+            uint flags = (uint)_locoFieldFlags | (uint)_extraFieldFlags << LocoFlagCount;
             success &= Serializer.Transfer(archive, ref flags);
             _locoFieldFlags = (LocomotionMessageFlags)(flags & 0xFFF);
             _extraFieldFlags = (EnterGameWorldMessageFlags)(flags >> LocoFlagCount);

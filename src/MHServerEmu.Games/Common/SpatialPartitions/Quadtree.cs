@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Common.SpatialPartitions
@@ -11,6 +12,8 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
     public class Quadtree<T>
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public Node<T> Root;
         private Aabb _bounds;
         private readonly int _targetThreshold = 6;
@@ -30,7 +33,8 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
         public bool Update(T element)
         {
-            if (element == null || _outstandingIteratorCount > 0) return false;
+            if (element == null) return Logger.WarnReturn(false, "Update(): element == null");
+            if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Update(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
 
             var location = GetLocation(element);
             var node = location.Node;
@@ -38,7 +42,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
             var elementBounds = GetElementBounds(element);
             if (node.LooseBounds.FullyContainsXY(elementBounds)) return false;
-            if (node.RemoveElement(location) == false) return false;
+            if (node.RemoveElement(location) == false) return Logger.WarnReturn(false, "Update(): node.RemoveElement(location) == false");
             _elementsCount--;
 
             var parent = node.Parent;
@@ -52,34 +56,28 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
                 parent = node.Parent;
             }
 
-            return false;
+            return Logger.WarnReturn(false, "Update(): Unknown failure");
         }
 
         public bool Insert(T element)
         {
-            if (element == null || _outstandingIteratorCount > 0)
-            {
-                Console.WriteLine($"Trying to insert element into quadtree with IteratorCount = [{_outstandingIteratorCount}]");
-                return false;
-            }
+            if (element == null) return Logger.WarnReturn(false, "Insert(): element == null");
+            if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Insert(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
 
             if (Root == null) AllocateNode(new(_bounds.Center, _bounds.Radius2D() * _loose), null);
-            if (Root == null) return false;
+            if (Root == null) return Logger.WarnReturn(false, "Insert(): Root == null");
 
             Aabb elementBounds = GetElementBounds(element);
             float elementRadius = elementBounds.Radius2D();
-            if (!(elementRadius > 0.0f && Root.LooseBounds.FullyContainsXY(elementBounds)))
-            {
-                Console.WriteLine($"Trying to insert element into quadtree with invalid size. ElementRadius={elementRadius}, ElementBounds={elementBounds}, Element={element}");
-                return default;
-            }
+            if ((elementRadius > 0.0f && Root.LooseBounds.FullyContainsXY(elementBounds)) == false)
+                return Logger.WarnReturn(false, $"Trying to insert element into quadtree with invalid size. ElementRadius={elementRadius}, ElementBounds={elementBounds}, Element={element}");
 
             return Insert(Root, element, elementBounds, elementBounds.Center, elementRadius);
         }
 
         private bool Insert(Node<T> node, T element, Aabb elementBounds, Vector3 elementCenter, float elementRadius)
         {
-            if (node == null) return false;
+            if (node == null) return Logger.WarnReturn(false, "Insert(): node == null");
             QuadtreeLocation<T> location = GetLocation(element);
 
             while (true)
@@ -173,13 +171,14 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
         public bool Remove(T element)
         {
-            if (element == null || _outstandingIteratorCount > 0) return false;
+            if (element == null) return Logger.WarnReturn(false, "Remove(): element == null");
+            if (_outstandingIteratorCount > 0) return Logger.WarnReturn(false, $"Remove(): _outstandingIteratorCount > 0 ({_outstandingIteratorCount})");
 
             var location = GetLocation(element);
             var node = location.Node;
 
-            if (node == null || !node.RemoveElement(location))
-                return false;
+            if (node == null) return Logger.WarnReturn(false, "Remove(): node == null");
+            if (node.RemoveElement(location) == false) return Logger.WarnReturn(false, "Remove(): node.RemoveElement(location) == false");
 
             _elementsCount--;
 

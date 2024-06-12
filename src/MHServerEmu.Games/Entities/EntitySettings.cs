@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Entities
         public InventoryLocation InventoryLocation { get; set; }
         public InventoryLocation PreviousInventoryLocation { get; set; }
 
-        public EntitySettingsOptionFlags OptionFlags { get; set; }
+        public EntitySettingsOptionFlags OptionFlags { get; set; } = EntitySettingsOptionFlags.DefaultOptions;
 
         public bool HotspotSkipCollide { get; set; }
         public PropertyCollection Properties { get; set; }

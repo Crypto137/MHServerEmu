@@ -12,6 +12,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network.LegacyArchives;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -110,7 +111,7 @@ namespace MHServerEmu.Games.Network
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
                 {
                     Vector3 position = Vector3.Zero;
-                    Serializer.Transfer(archive, ref position);
+                    Serializer.TransferVectorFixed(archive, ref position, 3);
                     sb.AppendLine($"{nameof(position)}: {position}");
 
                     bool yawOnly = locoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
@@ -279,7 +280,23 @@ namespace MHServerEmu.Games.Network
         private static string PrintNetMessageAddCondition(IMessage message)
         {
             var addCondition = (NetMessageAddCondition)message;
-            return $"ArchiveData: {new AddConditionArchive(addCondition.ArchiveData)}";
+
+            StringBuilder sb = new();
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, addCondition.ArchiveData))
+            {
+                sb.AppendLine($"ReplicationPolicy: {archive.GetReplicationPolicyEnum()}");
+
+                ulong entityId = 0;
+                Serializer.Transfer(archive, ref entityId);
+                sb.AppendLine($"entityId: {entityId}");
+
+                Condition condition = new();
+                condition.Serialize(archive, null);
+                sb.AppendLine($"condition: {condition}");
+            }
+
+            return sb.ToString();
         }
 
         [PrintMethod(typeof(NetMessageSetProperty))]
@@ -304,13 +321,18 @@ namespace MHServerEmu.Games.Network
         {
             var updateMiniMap = (NetMessageUpdateMiniMap)message;
 
+            StringBuilder sb = new();
+
             using (Archive archive = new(ArchiveSerializeType.Replication, updateMiniMap.ArchiveData))
             {
-                MiniMapArchive miniMapArchive = new();
-                miniMapArchive.ReplicationPolicy = archive.GetReplicationPolicyEnum();
-                miniMapArchive.Serialize(archive);
-                return $"ArchiveData: {miniMapArchive}";
+                sb.AppendLine($"ReplicationPolicy: {archive.GetReplicationPolicyEnum()}");
+
+                LowResMap lowResMap = new();
+                Serializer.Transfer(archive, ref lowResMap);
+                sb.AppendLine($"lowResMap: {lowResMap}");
             }
+
+            return sb.ToString();
         }
 
         [PrintMethod(typeof(NetMessagePowerCollectionAssignPower))]
@@ -342,6 +364,30 @@ namespace MHServerEmu.Games.Network
         {
             var unassignPower = (NetMessagePowerCollectionUnassignPower)message;
             return $"({unassignPower.EntityId}) {GameDatabase.GetPrototypeName((PrototypeId)unassignPower.PowerProtoId)}";
+        }
+
+        [PrintMethod(typeof(NetMessageChangeAOIPolicies))]
+        private static string PrintNetMessageChangeAOIPolicies(IMessage message)
+        {
+            var changeAoiPolicies = (NetMessageChangeAOIPolicies)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"idEntity: {changeAoiPolicies.IdEntity}");
+            sb.AppendLine($"currentPolicies: {(AOINetworkPolicyValues)changeAoiPolicies.Currentpolicies}");
+            if (changeAoiPolicies.HasExitGameWorld)
+                sb.AppendLine($"exitGameWorld: {changeAoiPolicies.ExitGameWorld}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessageInterestPolicies))]
+        private static string PrintNetMessageInterestPolicies(IMessage message)
+        {
+            var interestPolicies = (NetMessageInterestPolicies)message;
+            return string.Format("idEntity: {0}\nnewPolicies: {1}\nprevPolicies: {2}",
+                interestPolicies.IdEntity,
+                (AOINetworkPolicyValues)interestPolicies.NewPolicies,
+                (AOINetworkPolicyValues)interestPolicies.PrevPolicies);
         }
 
         #endregion

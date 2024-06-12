@@ -12,6 +12,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
@@ -338,6 +339,40 @@ namespace MHServerEmu.Games.Entities
                     dbAvatar.RawAbilityKeyMapping = archive.AccessAutoBuffer().ToArray();
                 }
             }
+        }
+
+        public override void EnterGame(EntitySettings settings = null)
+        {
+            SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
+                .SetCurrentservergametime((ulong)Game.CurrentTime.TotalMilliseconds)
+                .SetCurrentservergameid(Game.Id)
+                .SetGamestarttime((ulong)Game.StartTime.TotalMilliseconds)
+                .Build());
+
+            SendMessage(NetMessageServerVersion.CreateBuilder().SetVersion(Game.Version).Build());
+            SendMessage(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
+
+            SendMessage(NetMessageLocalPlayer.CreateBuilder()
+                .SetLocalPlayerEntityId(Id)
+                .SetGameOptions(Game.GameOptions)
+                .Build());
+
+            SendMessage(NetMessageReadyForTimeSync.DefaultInstance);
+
+            // Enter game to become added to the AOI
+            base.EnterGame(settings);
+        }
+
+        public override void ExitGame()
+        {
+            SendMessage(NetMessageBeginExitGame.DefaultInstance);
+            SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
+
+            PlayerConnection.AOI.Reset();
+            CurrentAvatar.BasePosition = null;
+            CurrentAvatar.BaseOrientation = null;
+
+            base.ExitGame();
         }
 
         public Region GetRegion()

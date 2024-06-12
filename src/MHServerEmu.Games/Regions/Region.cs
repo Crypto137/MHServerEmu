@@ -561,10 +561,7 @@ namespace MHServerEmu.Games.Regions
         }
 
         public bool InsertEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Insert(entity);
-        public void UpdateEntityInSpatialPartition(WorldEntity entity) {
-            if (EntitySpatialPartition.Update(entity) == false)
-                Logger.Error($"Update EntitySpatialPartition fail {entity.WorldEntityPrototype}");
-        }
+        public void UpdateEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Update(entity);
         public bool RemoveEntityFromSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Remove(entity);
 
         public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)

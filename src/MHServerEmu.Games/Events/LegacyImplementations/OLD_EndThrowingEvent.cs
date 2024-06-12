@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             if (GameDatabase.GetPrototypeName(_powerId).Contains("CancelPower"))
             {
                 if (_playerConnection.ThrowableEntity != null)
-                    _playerConnection.SendMessage(_playerConnection.ThrowableEntity.ToNetMessageEntityCreate());
+                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(_playerConnection.ThrowableEntity, AOINetworkPolicyValues.AOIChannelProximity));
                 Logger.Trace("Event RestoreThrowable");
             }
             else

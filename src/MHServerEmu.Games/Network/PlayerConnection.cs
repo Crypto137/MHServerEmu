@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -15,7 +14,6 @@ using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -135,7 +133,6 @@ namespace MHServerEmu.Games.Network
 
                 EntitySettings avatarSettings = new();
                 avatarSettings.EntityRef = avatarRef;
-                avatarSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories | EntitySettingsOptionFlags.LogInventoryErrors;
                 avatarSettings.InventoryLocation = new(Player.Id, avatarLibrary.PrototypeDataRef);
 
                 Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
@@ -145,15 +142,17 @@ namespace MHServerEmu.Games.Network
             }
 
             // Create team-up entities
-            Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-            foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            if (Game.GameOptions.TeamUpSystemEnabled)
             {
-                EntitySettings teamUpSettings = new();
-                teamUpSettings.EntityRef = teamUpRef;
-                teamUpSettings.OptionFlags = EntitySettingsOptionFlags.LogInventoryErrors;
-                teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
+                Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+                foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    EntitySettings teamUpSettings = new();
+                    teamUpSettings.EntityRef = teamUpRef;
+                    teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
-                Game.EntityManager.CreateEntity(teamUpSettings);
+                    Game.EntityManager.CreateEntity(teamUpSettings);
+                }
             }
 
             // Make sure we have a valid current avatar ref
@@ -222,33 +221,6 @@ namespace MHServerEmu.Games.Network
         {
             Player.EnterGame();
 
-            SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
-                .SetCurrentservergameid(Game.Id)
-                .SetGamestarttime((ulong)Game.StartTime.TotalMilliseconds)
-                .Build());
-
-            SendMessage(NetMessageServerVersion.CreateBuilder().SetVersion(Game.Version).Build());
-            SendMessage(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
-            SendMessage(NetMessageReadyForTimeSync.DefaultInstance);
-
-            // Load local player data
-            SendMessage(NetMessageLocalPlayer.CreateBuilder()
-                .SetLocalPlayerEntityId(Player.Id)
-                .SetGameOptions(Game.GameOptions)
-                .Build());
-
-            SendMessage(Player.ToNetMessageEntityCreate());
-
-            foreach (Avatar avatar in Player.IterateAvatars())
-                SendMessage(avatar.ToNetMessageEntityCreate());
-
-            foreach (var entry in Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
-            {
-                var teamUp = Game.EntityManager.GetEntity<Agent>(entry.Id);
-                SendMessage(teamUp.ToNetMessageEntityCreate());
-            }
-
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
             // Before changing to the actual destination region the game seems to first change into a transitional region
@@ -273,12 +245,13 @@ namespace MHServerEmu.Games.Network
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new(avatar.Id, entrancePosition, StartOrientation.Yaw, 350f);
-            SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
-                .Build());
+            avatar.BasePosition = entrancePosition;
+            avatar.BaseOrientation = StartOrientation;
+
+            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(avatar));
 
             AOI.Update(entrancePosition, true);
+            //AOI.DebugPrint();
 
             // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
             Player.CurrentAvatar.AssignHardcodedPowers();
@@ -294,8 +267,6 @@ namespace MHServerEmu.Games.Network
         public void ExitGame()
         {
             Player.ExitGame();
-            SendMessage(NetMessageBeginExitGame.DefaultInstance);
-            SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
         }
 
         #endregion
@@ -606,14 +577,24 @@ namespace MHServerEmu.Games.Network
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
             if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
 
-            Logger.Info($"Received TryInventoryMove message");
+            Logger.Trace(string.Format("OnTryInventoryMove(): {0} to containerId={1}, inventoryRef={2}, slot={3}, isStackSplit={4}",
+                tryInventoryMove.ItemId,
+                tryInventoryMove.ToInventoryOwnerId,
+                GameDatabase.GetPrototypeName((PrototypeId)tryInventoryMove.ToInventoryPrototype),
+                tryInventoryMove.ToSlot,
+                tryInventoryMove.IsStackSplit));
 
-            SendMessage(NetMessageInventoryMove.CreateBuilder()
-                .SetEntityId(tryInventoryMove.ItemId)
-                .SetInvLocContainerEntityId(tryInventoryMove.ToInventoryOwnerId)
-                .SetInvLocInventoryPrototypeId(tryInventoryMove.ToInventoryPrototype)
-                .SetInvLocSlot(tryInventoryMove.ToSlot)
-                .Build());
+            Entity entity = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ItemId);
+            if (entity == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): entity == null");
+
+            Entity container = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ToInventoryOwnerId);
+            if (container == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): container == null");
+
+            Inventory inventory = container.GetInventoryByRef((PrototypeId)tryInventoryMove.ToInventoryPrototype);
+            if (inventory == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): inventory == null");
+
+            InventoryResult result = entity.ChangeInventoryLocation(inventory, tryInventoryMove.ToSlot);
+            if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
 
             return true;
         }
@@ -659,31 +640,25 @@ namespace MHServerEmu.Games.Network
 
             // Switch avatar
             // NOTE: This is preliminary implementation that will change once we have inventories working
-            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
-                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Destroy the avatar we are switching to on the client
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(Player.CurrentAvatar.Id).Build());
-
-            // Destroy the previous avatar on the client
+            // Manually remove existing avatar from the world
+            Player.CurrentAvatar.BasePosition = null;
+            Player.CurrentAvatar.BaseOrientation = null;
             SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
-                .SetIdEntity(prevAvatar.Id)
+                .SetIdEntity(Player.CurrentAvatar.Id)
                 .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
                 .SetExitGameWorld(true)
                 .Build());
 
-            SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(prevAvatar.Id).Build());
+            // Do inventory switch
+            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
+                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Recreate the previous avatar
-            SendMessage(prevAvatar.ToNetMessageEntityCreate());
-
-            // Recreate the avatar we just switched to
-            SendMessage(Player.CurrentAvatar.ToNetMessageEntityCreate());
-
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new(Player.CurrentAvatar.Id, LastPosition, LastOrientation.Yaw, 350f, true);
-            SendMessage(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.ToByteString())
-                .Build());
+            // Manually add new avatar to the world
+            Player.CurrentAvatar.BasePosition = LastPosition;
+            Player.CurrentAvatar.BaseOrientation = LastOrientation;
+            EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
+            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(Player.CurrentAvatar, settings));
 
             // Power collection needs to be assigned after the avatar enters world
             Player.CurrentAvatar.AssignHardcodedPowers();
