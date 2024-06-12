@@ -203,26 +203,64 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("pet", "Create pet for test AI.", AccountUserLevel.User)]
+        [Command("pet", "Create pet for test AI.\n Usage: debug pet [run | stop | destroy].", AccountUserLevel.User)]
         public string Pet(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
 
+            bool create = true;
+            bool enable = false;
+            bool destoy = false;
+            if (@params.Length > 0)
+            {
+                var param = @params[0].ToLower();
+                create = false;
+                if (param == "stop")
+                    enable = false;
+                else if (param == "run")
+                    enable = true;
+                else if (param == "destroy")
+                    destoy = true;
+            }
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             var player = playerConnection.Player;
             var position = playerConnection.LastPosition;
             var orientation = playerConnection.LastOrientation;
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
-            avatar.EnterWorld(region, position, orientation);
-            avatar.SetSimulated(true);
-            Agent pet = player.CreatePet((PrototypeId)16300889242928224944, position, region); // Pet001OldLace = 16300889242928224944
-            pet.EnterWorld(region, position, orientation);
-            pet.EnterGame();
-            pet.SetSimulated(true);
+            if (create)
+            {
+                avatar.EnterWorld(region, position, orientation);
+                avatar.SetSimulated(true);
+                // Pet026FrogThor = 7240687669893536590
+                Agent pet = player.CreatePet((PrototypeId)7240687669893536590, position, region); // Pet001OldLace = 16300889242928224944
+                pet.EnterWorld(region, position, orientation);
+                pet.EnterGame();
+                pet.SetSimulated(true);
+                playerConnection.AOI.Update(playerConnection.LastPosition, true);
+                return $"Pet {pet.PrototypeName} Created";
+            }
+            else
+            {
+                string s = "";
+                Agent pet = null;
+                foreach (Agent agent in game.EntityManager.SimulatedEntities.Iterate())
+                {
+                    agent.AIController.SetIsEnabled(enable);
+                    s += $"{agent.PrototypeName} AIEnabled {enable}. ";
+                    pet = agent;
+                }
+                if (destoy && pet != null)
+                {
+                    pet.SetSimulated(false);
+                    pet.Destroy(); // TODO fix problem with CencelEvent
+                    s += $"{pet.PrototypeName}  destroyed.";
+                    playerConnection.AOI.Update(playerConnection.LastPosition, true);
+                }
+                return s;
+            }
             // pet.Think();
-            playerConnection.AOI.Update(playerConnection.LastPosition, true);
-            return $"Pet {pet.PrototypeName} Created";
+
         }
 
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]

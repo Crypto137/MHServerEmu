@@ -216,6 +216,12 @@ namespace MHServerEmu.Games.Entities
             AIController?.OnAIExitedWorld();
         }
 
+        public override void OnDeallocate()
+        {
+            AIController?.OnAIDeallocate();
+            base.OnDeallocate();
+        }
+
         public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this
         {
             bool startAction = false;

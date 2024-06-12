@@ -421,5 +421,11 @@ namespace MHServerEmu.Games.Behavior
         {
             return $"AIController: {Owner}";
         }
+
+        public void OnAIDeallocate()
+        {
+            EventScheduler scheduler = Game.GameEventScheduler;
+            scheduler?.CancelAllEvents(_pendingEvents);
+        }
     }
 }

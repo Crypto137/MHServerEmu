@@ -360,6 +360,7 @@ namespace MHServerEmu.Games.Navi
             NaviPoint goalPoint = new(_goalPosition);
             NaviSide vertexSide;
             float radiusSq = _radius * _radius;
+            Logger.Debug($"funnel create {_startPosition} {_goalPosition}");
             NaviFunnel funnel = new (startPoint);
 
             if (pathChannel.Count > 0)
@@ -369,10 +370,12 @@ namespace MHServerEmu.Games.Navi
 
                 NaviPoint leftEnd = firstChannelEdge.LeftEndPoint();
                 vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, firstChannelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Left : NaviSide.Point;
+                Logger.Debug($"FunnelAddSide Left {leftEnd} {vertexSide}");
                 FunnelAddSide(funnel, leftEnd, NaviSide.Left, vertexSide, outPathNodes);
 
                 NaviPoint rightEnd = firstChannelEdge.RightEndPoint();
                 vertexSide = SimpleTestFunnelVertexClearOfObstacles(rightEnd, firstChannelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Point : NaviSide.Right;
+                Logger.Debug($"FunnelAddSide Right {rightEnd} {vertexSide}");
                 FunnelAddSide(funnel, rightEnd, NaviSide.Right, vertexSide, outPathNodes);
 
                 while (--index >= 0)
@@ -385,17 +388,19 @@ namespace MHServerEmu.Games.Navi
                     {
                         rightEnd = rightNext;
                         vertexSide = SimpleTestFunnelVertexClearOfObstacles(rightEnd, channelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Point : NaviSide.Right;
+                        Logger.Debug($"FunnelAddSide Right {rightEnd} {vertexSide}");
                         FunnelAddSide(funnel, rightEnd, NaviSide.Right, vertexSide, outPathNodes);
                     }
                     else
                     {
                         leftEnd = leftNext;
                         vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, channelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Left : NaviSide.Point;
+                        Logger.Debug($"FunnelAddSide Left {leftEnd} {vertexSide}");
                         FunnelAddSide(funnel, leftEnd, NaviSide.Left, vertexSide, outPathNodes);
                     }
                 }
             }
-
+            Logger.Debug($"FunnelAddSide Right {goalPoint} Point");
             FunnelAddSide(funnel, goalPoint, NaviSide.Right, NaviSide.Point, outPathNodes);
 
             if (funnel.IsEmpty) return false;
@@ -439,6 +444,7 @@ namespace MHServerEmu.Games.Navi
             {
                 if (funnel.Left == funnel.Right)
                 {
+                    Logger.Debug($"AddVetex {point} {vertexSide}");
                     funnel.AddVertex(funnelSide, point, vertexSide);
                     break;
                 }
@@ -463,6 +469,7 @@ namespace MHServerEmu.Games.Navi
                 bool cross = Segment.Cross2D(prevPoint, cutPoint) < 0.0f;
                 if (cross ^ (funnelSide == NaviSide.Left))
                 {
+                    Logger.Debug($"AddVetex {point} {vertexSide}");
                     funnel.AddVertex(funnelSide, point, vertexSide);
                     break;
                 }
@@ -473,6 +480,7 @@ namespace MHServerEmu.Games.Navi
                     var distSide = Vector3.DistanceSquared2D(funnel.Vertex(funnelSide).Pos, funnel.VertexPrev(funnelSide).Pos);
                     if (Vector3.DistanceSquared2D(funnel.Apex.Pos, point.Pos) < distSide)
                     {
+                        Logger.Debug($"AddApex {point} {vertexSide}");
                         funnel.AddApex(funnelSide, point, vertexSide);
                         break;
                     }
