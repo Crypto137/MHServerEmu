@@ -13,10 +13,384 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Properties.Eval
-{
+{        
+    public enum GetEvalPropertyIdEnum
+    {
+        PropertyInfoEvalInput,
+        Output,
+        Input
+    }
+
     public class Eval
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static void GetEvalPropertyInputs(PropertyInfo evalInfo, List<PropertyId> resultInputs)
+        {
+            if (evalInfo.IsEvalProperty == false) return;
+            string debugString = evalInfo.PropertyName;
+            GetEvalPropertyIds(evalInfo.Eval, resultInputs, GetEvalPropertyIdEnum.PropertyInfoEvalInput, debugString);
+        }
+
+        public static void GetEvalPropertyIds(EvalPrototype startEvalProto, List<PropertyId> resultIds, GetEvalPropertyIdEnum type, string debugString)
+        {
+            if (startEvalProto == null) return;
+
+            Stack<EvalPrototype> evalStack = new ();
+            evalStack.Push(startEvalProto);
+
+            while (evalStack.Count > 0)
+            {
+                EvalPrototype evalProto = evalStack.Pop();
+                if (evalProto == null) continue;
+
+                switch (evalProto.Op)
+                {
+                    case EvalOp.AssignProp:
+                        {
+                            var typedProto = (AssignPropPrototype)evalProto;
+                            if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                            {
+                                if (typedProto.Context != EvalContext.LocalStack)
+                                {
+                                    Logger.Warn($"Assign property eval operators to context other than local stack not allowed in get-property-eval");
+                                    continue;
+                                }
+                            }
+                            else if (type == GetEvalPropertyIdEnum.Output)
+                                if (resultIds.Contains(typedProto.Prop) == false) resultIds.Add(typedProto.Prop);
+                            evalStack.Push(typedProto.Eval);
+                        }
+                        break;
+
+                    case EvalOp.AssignPropEvalParams:
+                        {
+                            var typedProto = (AssignPropEvalParamsPrototype)evalProto;
+                            if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                                if (typedProto.Context != EvalContext.LocalStack)
+                                {
+                                    Logger.Warn($"Assign property eval operators to context other than local stack not allowed in get-property-eval");
+                                    continue;
+                                }
+
+                            evalStack.Push(typedProto.Eval);
+                            if (typedProto.Param0 != null)
+                                evalStack.Push(typedProto.Param0);
+                            if (typedProto.Param1 != null)
+                                evalStack.Push(typedProto.Param1);
+                            if (typedProto.Param2 != null)
+                                evalStack.Push(typedProto.Param2);
+                            if (typedProto.Param3 != null)
+                                evalStack.Push(typedProto.Param3);
+                        }
+                        break;
+
+                    case EvalOp.LoadEntityToContextVar:
+                    case EvalOp.LoadConditionCollectionToContext:
+                    case EvalOp.EntityHasKeyword:
+                    case EvalOp.EntityHasTalent:
+                    case EvalOp.GetCombatLevel:
+                    case EvalOp.GetPowerRank:
+                    case EvalOp.CalcPowerRank:
+                    case EvalOp.GetDamageReductionPct:
+                    case EvalOp.GetDistanceToEntity:
+                    case EvalOp.IsInParty:
+
+                        if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                            Logger.Warn($"{evalProto.Op} eval operator not allowed in get-property-eval");
+
+                        break;
+
+                    case EvalOp.HasProp:
+                        {
+                            var typedProto = (HasPropPrototype)evalProto;
+                            if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                            {
+                                if (typedProto.Context != EvalContext.Globals && typedProto.Context != EvalContext.Default && typedProto.Context != EvalContext.LocalStack)
+                                {
+                                    Logger.Warn($"Eval operator found in a get-property-eval references unsupported Context type. [{debugString}]");
+                                    continue;
+                                }
+                                if (typedProto.Context == EvalContext.Default)
+                                    if (resultIds.Contains(typedProto.Prop) == false) resultIds.Add(typedProto.Prop);
+                            }
+                            else if (type == GetEvalPropertyIdEnum.Input)
+                                if (resultIds.Contains(typedProto.Prop) == false) resultIds.Add(typedProto.Prop);
+                        }
+                        break;
+
+                    case EvalOp.LoadProp:
+                        {
+                            var typedProto = (LoadPropPrototype)evalProto;
+                            if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                            {
+                                if (typedProto.Context != EvalContext.Globals && typedProto.Context != EvalContext.Default && typedProto.Context != EvalContext.LocalStack)
+                                {
+                                    Logger.Warn($"Eval operator found in a get-property-eval references unsupported Context type. [{debugString}]");
+                                    continue;
+                                }
+                                if (typedProto.Context == EvalContext.Default)
+                                    if (resultIds.Contains(typedProto.Prop) == false) resultIds.Add(typedProto.Prop);
+                            }
+                            else if (type == GetEvalPropertyIdEnum.Input)
+                                if (resultIds.Contains(typedProto.Prop) == false) resultIds.Add(typedProto.Prop);
+                        }
+                        break;
+
+                    case EvalOp.LoadCurve:
+                        {
+                            var typedProto = (LoadCurvePrototype)evalProto;
+                            evalStack.Push(typedProto.Index);
+                        }
+                        break;
+
+                    case EvalOp.LoadContextInt:
+                    case EvalOp.LoadContextProtoRef:
+
+                        if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                            Logger.Warn($"{evalProto.Op} eval operators not allowed in get-property-eval (but there is no reason they couldn't be added in)");
+                        
+                        break;
+
+                    case EvalOp.Add:
+                        {
+                            var typedProto = (AddPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Exponent:
+                        {
+                            var typedProto = (ExponentPrototype)evalProto;
+                            evalStack.Push(typedProto.BaseArg);
+                            evalStack.Push(typedProto.ExpArg);
+                        }
+                        break;
+
+                    case EvalOp.Max:
+                        {
+                            var typedProto = (MaxPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Min:
+                        {
+                            var typedProto = (MinPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Modulus:
+                        {
+                            var typedProto = (ModulusPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Sub:
+                        {
+                            var typedProto = (SubPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Mult:
+                        {
+                            var typedProto = (MultPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Div:
+                        {
+                            var typedProto = (DivPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Scope:
+                        {
+                            var typedProto = (ScopePrototype)evalProto;
+                            if (typedProto.Scope.HasValue())
+                                foreach (var each in typedProto.Scope)
+                                    evalStack.Push(each);
+                        }
+                        break;
+
+                    case EvalOp.For:
+                        {
+                            var typedProto = (ForPrototype)evalProto;
+                            if (typedProto.ScopeLoopBody.HasValue())
+                            {
+                                if (typedProto.PreLoop != null)
+                                    evalStack.Push(typedProto.PreLoop);
+
+                                if (typedProto.LoopVarInit != null)
+                                    evalStack.Push(typedProto.LoopVarInit);
+
+                                if (typedProto.LoopCondition != null)
+                                    evalStack.Push(typedProto.LoopCondition);
+
+                                if (typedProto.LoopAdvance != null)
+                                    evalStack.Push(typedProto.LoopAdvance);
+
+                                if (typedProto.PostLoop != null)
+                                    evalStack.Push(typedProto.PostLoop);
+
+                                foreach (var each in typedProto.ScopeLoopBody)
+                                    evalStack.Push(each);
+                            }
+                        }
+                        break;
+
+                    case EvalOp.ForEachConditionInContext:
+                        {
+                            var typedProto = (ForEachConditionInContextPrototype)evalProto;
+                            if (typedProto.ScopeLoopBody.HasValue())
+                            {
+                                if (typedProto.PreLoop != null)
+                                    evalStack.Push(typedProto.PreLoop);
+
+                                if (typedProto.LoopConditionPreScope != null)
+                                    evalStack.Push(typedProto.LoopConditionPreScope);
+
+                                if (typedProto.LoopConditionPostScope != null)
+                                    evalStack.Push(typedProto.LoopConditionPostScope);
+
+                                if (typedProto.PostLoop != null)
+                                    evalStack.Push(typedProto.PostLoop);
+
+                                foreach (var each in typedProto.ScopeLoopBody)
+                                    evalStack.Push(each);
+                            }
+                        }
+                        break;
+
+                    case EvalOp.ForEachProtoRefInContextRefList:
+                        {
+                            var typedProto = (ForEachProtoRefInContextRefListPrototype)evalProto;
+                            if (typedProto.ScopeLoopBody.HasValue())
+                            {
+                                if (typedProto.PreLoop != null)
+                                    evalStack.Push(typedProto.PreLoop);
+
+                                if (typedProto.LoopCondition != null)
+                                    evalStack.Push(typedProto.LoopCondition);
+
+                                if (typedProto.PostLoop != null)
+                                    evalStack.Push(typedProto.PostLoop);
+
+                                foreach (var each in typedProto.ScopeLoopBody)
+                                    evalStack.Push(each);
+                            }
+                        }
+                        break;
+
+                    case EvalOp.GreaterThan:
+                        {
+                            var typedProto = (GreaterThanPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.LessThan:
+                        {
+                            var typedProto = (LessThanPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Equals:
+                        {
+                            var typedProto = (EqualsPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.And:
+                        {
+                            var typedProto = (AndPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Or:
+                        {
+                            var typedProto = (OrPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg1);
+                            evalStack.Push(typedProto.Arg2);
+                        }
+                        break;
+
+                    case EvalOp.Not:
+                        {
+                            var typedProto = (NotPrototype)evalProto;
+                            evalStack.Push(typedProto.Arg);
+                        }
+                        break;
+
+                    case EvalOp.IfElse:
+                        {
+                            var typedProto = (IfElsePrototype)evalProto;
+                            evalStack.Push(typedProto.Conditional);
+                            evalStack.Push(typedProto.EvalIf);
+                            if (typedProto.EvalElse != null)
+                                evalStack.Push(typedProto.EvalElse);
+                        }
+                        break;
+
+                    case EvalOp.LoadAssetRef:
+                    case EvalOp.LoadProtoRef:
+                    case EvalOp.LoadFloat:
+                    case EvalOp.LoadInt:
+                    case EvalOp.LoadBool:
+                    case EvalOp.DifficultyTierRange:
+                    case EvalOp.MissionIsActive:
+                    case EvalOp.MissionIsComplete:
+                    case EvalOp.RandomFloat:
+                    case EvalOp.RandomInt:
+                    case EvalOp.ExportError:
+                    case EvalOp.HasEntityInInventory:
+                    case EvalOp.IsContextDataNull:
+                    case EvalOp.IsDynamicCombatLevelEnabled:
+                        break;
+
+                    case EvalOp.LoadPropContextParams:
+                        {
+                            var typedProto = (LoadPropContextParamsPrototype)evalProto;
+                            if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                                Logger.Warn("GetEvalPropertyInputs() is being called for a LoadPropContextParams, which means the PropertyInfo doesn't have the 'always re-compute eval' flag set! " +
+                                    $"Prop: [{GameDatabase.GetPrototypeName(typedProto.Prop)}]");
+                        }
+                        break;
+
+                    case EvalOp.LoadPropEvalParams:
+                        {
+                            var typedProto = (LoadPropEvalParamsPrototype)evalProto;
+                            if (type == GetEvalPropertyIdEnum.PropertyInfoEvalInput)
+                                Logger.Warn("GetEvalPropertyInputs() is being called for a LoadPropEvalParams, which means the PropertyInfo doesn't have the 'always re-compute eval' flag set! " +
+                                    $"Prop: [{GameDatabase.GetPrototypeName(typedProto.Prop)}]");
+                        }
+                        break;
+
+                    default:
+                        Logger.Warn("Invalid Operation");
+                        break;
+                }
+            }
+        }
 
         public static int RunInt(EvalPrototype evalProto, EvalContextData data)
         {
