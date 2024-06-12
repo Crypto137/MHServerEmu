@@ -52,9 +52,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             _playerConnection.ThrowableEntity = null;
 
             // Notify the client
-            _playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorEntity));
-            _playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatar.Properties.ReplicationId, PropertyEnum.ThrowableOriginatorAssetRef));
-
             _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                 .SetEntityId(avatar.Id)
                 .SetPowerProtoId((ulong)throwablePower.PrototypeDataRef)

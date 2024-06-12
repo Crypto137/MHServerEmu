@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Removes the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// </summary>
-        public bool RemoveProperty(PropertyId id)
+        public virtual bool RemoveProperty(PropertyId id)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
@@ -574,7 +574,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Sets the <see cref="PropertyValue"/> for the <see cref="PropertyId"/>.
         /// </summary>
-        protected bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
+        protected virtual bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
@@ -617,8 +617,6 @@ namespace MHServerEmu.Games.Properties
 
             return success;
         }
-
-        // TODO: make value <-> bits conversion protected once we no longer need it for hacks
 
         /// <summary>
         /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
