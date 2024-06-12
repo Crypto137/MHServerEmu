@@ -111,6 +111,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Clock.GameTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
+        public PrototypeId[] Keywords { get; internal set; }
 
         public Condition() { }
 
