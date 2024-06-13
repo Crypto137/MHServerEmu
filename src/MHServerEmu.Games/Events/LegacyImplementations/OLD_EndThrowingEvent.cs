@@ -35,8 +35,8 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             Power throwablePower = avatar.GetThrowablePower();
             Power throwableCancelPower = avatar.GetThrowableCancelPower();
 
-            avatar.UnassignPower(throwablePower.PrototypeDataRef);
-            avatar.UnassignPower(throwableCancelPower.PrototypeDataRef);
+            if (throwablePower != null) avatar.UnassignPower(throwablePower.PrototypeDataRef);
+            if (throwableCancelPower != null) avatar.UnassignPower(throwableCancelPower.PrototypeDataRef);
 
             if (GameDatabase.GetPrototypeName(_powerId).Contains("CancelPower"))
             {
