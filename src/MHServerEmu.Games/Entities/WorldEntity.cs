@@ -420,7 +420,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            if (flags.HasFlag(ChangePositionFlags.SkipAOI) == false)
+            if (Cell != null && flags.HasFlag(ChangePositionFlags.SkipAOI) == false)
             {
                 // TODO: Notify if distance is far enough, similar to AOI updates
                 NotifyPlayers(true);
@@ -506,21 +506,20 @@ namespace MHServerEmu.Games.Entities
 
             if (exitStatus)
                 SetStatus(EntityStatus.ExitingWorld, false);
-
-            NotifyPlayers(false);
         }
 
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
+            NotifyPlayers(false);
         }
 
         public RegionLocation ClearWorldLocation()
         {
             if (RegionLocation.IsValid()) ExitWorldRegionLocation.Set(RegionLocation);
             if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
-            var oldLocation = RegionLocation;
-            RegionLocation = RegionLocation.Invalid;
+            RegionLocation oldLocation = new(RegionLocation);
+            RegionLocation.Set(RegionLocation.Invalid);
             return oldLocation;
         }
 

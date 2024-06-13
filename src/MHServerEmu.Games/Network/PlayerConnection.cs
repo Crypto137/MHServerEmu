@@ -653,21 +653,10 @@ namespace MHServerEmu.Games.Network
             Logger.Trace(switchAvatar.ToString());
 
             // Switch avatar
-            // NOTE: This is preliminary implementation that will change once we have inventories working
-
-            // Manually remove existing avatar from the world
-            Player.CurrentAvatar.ExitWorld();
-            Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} exiting world");
-
-            // Do inventory switch
             if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            ExitGame();
-            Game.NetworkManager.SetPlayerConnectionPending(this);
-            return true;
-
-            // Manually add new avatar to the world
+            // Add new avatar to the world
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
             Player.CurrentAvatar.EnterWorld(AOI.Region, LastPosition, LastOrientation, settings);
             Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} entering world");

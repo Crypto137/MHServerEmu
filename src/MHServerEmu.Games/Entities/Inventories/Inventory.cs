@@ -637,6 +637,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private void PreRemove(Entity entity)
         {
+            if (entity is WorldEntity worldEntity && Prototype.ExitWorldOnRemove && worldEntity.IsInWorld)
+                worldEntity.ExitWorld();
         }
 
         private bool PostRemove(Entity entity, InventoryLocation prevInvLoc, bool withinSameInventory)
