@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -437,6 +439,50 @@ namespace MHServerEmu.Games.Entities
             _entityDict.Remove(entity.Id);
             entity.OnDeallocate();
             return true;
+        }
+
+        public void CrateOrb(Vector3 position, Region region)
+        {
+            var settings = new EntitySettings
+            {
+                EntityRef = (PrototypeId)925659119519994384, // HealOrbItem = 925659119519994384,  
+                Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
+                RegionId = region.Id,
+                Properties = new()
+                {
+                    [PropertyEnum.AIStartsEnabled] = false
+                }
+            };
+            Agent orb = (Agent)CreateEntity(settings);
+           // orb.EnterWorld(region, settings.Position, settings.Orientation);
+        }
+
+        public Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, ulong masterDbGuid) // Test funciton
+        {
+            int level = 60;
+            // var inventory = player.GetInventory(InventoryConvenienceLabel.PetItem); 
+            var settings = new EntitySettings
+            {
+                EntityRef = prototypeId,
+                Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
+                RegionId = region.Id,
+                // OptionFlags = EntitySettingsOptionFlags.EnterGame,
+                Properties = new PropertyCollection
+                {
+                    [PropertyEnum.AIStartsEnabled] = false,
+                    [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
+                    [PropertyEnum.AIMasterAvatar] = true,
+                    [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
+                    [PropertyEnum.CharacterLevel] = level,
+                    [PropertyEnum.CombatLevel] = level,
+                    [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
+                }
+                //  InventoryLocation = new(player.Id, inventory.PrototypeDataRef)
+            };
+            var pet = (Agent)CreateEntity(settings);
+            return pet;
         }
     }
 }

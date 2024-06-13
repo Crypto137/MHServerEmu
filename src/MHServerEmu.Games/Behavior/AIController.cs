@@ -316,7 +316,7 @@ namespace MHServerEmu.Games.Behavior
             }
 
             if (Owner.TestStatus(EntityStatus.PendingDestroy) == false 
-                && Owner.TestStatus(EntityStatus.Destroyed) == false)
+                && Owner.TestStatus(EntityStatus.Destroyed) == false && false) // OFF reThink for debug
             {
                 float thinkTime = 500; // slow think 
                 if (TargetEntity != null || AssistedEntity != null)

@@ -1047,7 +1047,12 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
+        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) 
+        {
+            Game.EntityManager.CrateOrb(start, Region);
+         //   Game.EntityManager.CrateOrb(end, Region);
+            Logger.Debug($"PreGeneratePath {PrototypeName} {start} => {end}");
+        }
 
         public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {

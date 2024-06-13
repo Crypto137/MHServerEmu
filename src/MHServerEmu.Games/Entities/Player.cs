@@ -804,30 +804,5 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region) // Test funciton
-        {
-            int level = 60;            
-            // var inventory = player.GetInventory(InventoryConvenienceLabel.PetItem); 
-            var settings = new EntitySettings
-            {
-                EntityRef = prototypeId, 
-                Position = position,
-                Orientation = new(3.14f, 0.0f, 0.0f),
-                RegionId = region.Id,
-               // OptionFlags = EntitySettingsOptionFlags.EnterGame,
-                Properties = new PropertyCollection
-                {
-                    [PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId,
-                    [PropertyEnum.AIMasterAvatar] = true,
-                    [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
-                    [PropertyEnum.CharacterLevel] = level,
-                    [PropertyEnum.CombatLevel] = level,
-                    [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
-                }
-              //  InventoryLocation = new(player.Id, inventory.PrototypeDataRef)
-            };
-            var pet = (Agent)Game.EntityManager.CreateEntity(settings);
-            return pet;
-        }
     }
 }

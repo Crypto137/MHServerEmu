@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -203,32 +204,27 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("pet", "Create pet for test AI.\n Usage: debug pet [run | stop | destroy].", AccountUserLevel.User)]
+        public enum PetDebug
+        {
+            Run,
+            Stop,
+            Destroy,
+            Think
+        }
+
+        [Command("pet", "Create pet for test AI.\n Usage: debug pet [think | run | stop | destroy].", AccountUserLevel.User)]
         public string Pet(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            bool create = true;
-            bool enable = false;
-            bool destoy = false;
-            if (@params.Length > 0)
-            {
-                var param = @params[0].ToLower();
-                create = false;
-                if (param == "stop")
-                    enable = false;
-                else if (param == "run")
-                    enable = true;
-                else if (param == "destroy")
-                    destoy = true;
-            }
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             var player = playerConnection.Player;
             var position = playerConnection.LastPosition;
             var orientation = playerConnection.LastOrientation;
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
-            if (create)
+            PrototypeId petProto = (PrototypeId)16300889242928224944;
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], out PetDebug petFlag)) == false)
             {
                 if (avatar.RegionLocation.IsValid() == false)
                 {
@@ -236,8 +232,12 @@ namespace MHServerEmu.Commands.Implementations
                     avatar.SetSimulated(true);
                 }
                 // Pet026FrogThor = 7240687669893536590
-                Agent pet = player.CreatePet((PrototypeId)7240687669893536590, position, region); // Pet001OldLace = 16300889242928224944
-                pet.EnterWorld(region, position, orientation);
+                Vector3 petPosition = new(position);
+                //petPosition.X += 400.0f;
+                // petPosition.Y += 400.0f;                
+                Agent pet = game.EntityManager.CreatePet(petProto, petPosition, region, player.DatabaseUniqueId); // Pet001OldLace = 16300889242928224944
+ 
+                pet.EnterWorld(region, petPosition, orientation);
                 pet.EnterGame();
                 pet.SetSimulated(true);
                 playerConnection.AOI.Update(playerConnection.LastPosition, true);
@@ -247,23 +247,38 @@ namespace MHServerEmu.Commands.Implementations
             {
                 string s = "";
                 Agent pet = null;
-                foreach (Agent agent in game.EntityManager.SimulatedEntities.Iterate())
+                foreach (var entity in game.EntityManager.SimulatedEntities.Iterate())
+                    if (entity.PrototypeDataRef == petProto)
+                    {
+                        pet = entity as Agent;
+                        break;
+                    }
+
+                if (pet != null)
                 {
-                    if (destoy == false) agent.AIController.SetIsEnabled(enable);
-                    s += $"{agent.PrototypeName} AIEnabled {enable}. ";
-                    pet = agent;
-                }
-                if (destoy && pet != null)
-                {
-                    pet.SetSimulated(false);
-                    pet.Destroy();
-                    s += $"{pet.PrototypeName}  destroyed.";
+                    switch (petFlag)
+                    {
+                        case PetDebug.Run:
+                        case PetDebug.Stop:
+                            bool enable = petFlag == PetDebug.Run;
+                            pet.AIController.SetIsEnabled(enable);
+                            s += $"{pet.PrototypeName} AIEnabled {enable}";
+                            break;
+                        case PetDebug.Destroy:
+                            pet.SetSimulated(false);
+                            pet.Destroy();
+                            s += $"{pet.PrototypeName} Destroyed";
+                            break;
+                        case PetDebug.Think:
+                            pet.Think();
+                            s += $"{pet.PrototypeName} Think";
+                            break;
+                    }
                     playerConnection.AOI.Update(playerConnection.LastPosition, true);
                 }
+                else s = "Pet not found";
                 return s;
             }
-            // pet.Think();
-
         }
 
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]
