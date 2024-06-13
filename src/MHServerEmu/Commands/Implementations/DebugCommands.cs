@@ -245,7 +245,7 @@ namespace MHServerEmu.Commands.Implementations
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
             PrototypeId petProto = (PrototypeId)16300889242928224944;
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], out PetDebug petFlag)) == false)
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PetDebug petFlag)) == false)
             {
                 if (avatar.RegionLocation.IsValid() == false)
                 {
@@ -254,7 +254,7 @@ namespace MHServerEmu.Commands.Implementations
                 }
                 // Pet026FrogThor = 7240687669893536590
                 Vector3 petPosition = new(position);
-                //petPosition.X += 400.0f;
+                petPosition.X += 400.0f;
                 // petPosition.Y += 400.0f;                
                 Agent pet = game.EntityManager.CreatePet(petProto, petPosition, region, player.DatabaseUniqueId); // Pet001OldLace = 16300889242928224944
  

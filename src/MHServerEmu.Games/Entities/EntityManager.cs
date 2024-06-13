@@ -441,11 +441,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public void CrateOrb(Vector3 position, Region region)
+
+        public void CrateOrb(PrototypeId orbProto, Vector3 position, Region region)
         {
             var settings = new EntitySettings
             {
-                EntityRef = (PrototypeId)925659119519994384, // HealOrbItem = 925659119519994384,  
+                EntityRef = orbProto, 
                 Position = position,
                 Orientation = new(3.14f, 0.0f, 0.0f),
                 RegionId = region.Id,
@@ -455,7 +456,7 @@ namespace MHServerEmu.Games.Entities
                 }
             };
             Agent orb = (Agent)CreateEntity(settings);
-           // orb.EnterWorld(region, settings.Position, settings.Orientation);
+            orb.EnterGame();
         }
 
         public Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, ulong masterDbGuid) // Test funciton

@@ -399,8 +399,8 @@ namespace MHServerEmu.Games.Network
             }
 
             Avatar currentAvatar = Player.CurrentAvatar;
-            currentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, avatarState.Position, avatarState.Orientation);         // TODO: remove this
-            return true;
+            //currentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, avatarState.Position, avatarState.Orientation);         // TODO: remove this
+            //return true;
             
             if (currentAvatar.IsInWorld == false) return true;
 
