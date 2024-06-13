@@ -180,6 +180,15 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
+        /// Sends the provided <see cref="IMessage"/> over all <see cref="PlayerConnection"/> instaces in the provided collection.
+        /// </summary>
+        public void SendMessageToMultiple(IEnumerable<PlayerConnection> playerConnections, IMessage message)
+        {
+            foreach (PlayerConnection playerConnection in playerConnections)
+                playerConnection.SendMessage(message);
+        }
+
+        /// <summary>
         /// Sends the provided <see cref="IMessage"/> to all <see cref="PlayerConnection"/> instances that are interested in the provided <see cref="Entity"/>.
         /// </summary>
         public void SendMessageToInterested(IMessage message, Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.DefaultPolicy, bool skipOwner = false)
