@@ -83,6 +83,7 @@ namespace MHServerEmu.Games.Network
             foreach (Player player in new PlayerIterator(entity.Game))
             {
                 if (skipOwner && entity.IsOwnedBy(player.Id)) continue;
+                if (player.PlayerConnection == null) continue;  // This can happen during packet parsing
 
                 if (player.PlayerConnection.AOI.InterestedInEntity(entity.Id, interestFilter))
                     yield return player;
@@ -177,6 +178,15 @@ namespace MHServerEmu.Games.Network
         public void SendMessage(PlayerConnection connection, IMessage message)
         {
             connection.PostMessage(message);
+        }
+
+        /// <summary>
+        /// Sends the provided <see cref="IMessage"/> over all <see cref="PlayerConnection"/> instaces in the provided collection.
+        /// </summary>
+        public void SendMessageToMultiple(IEnumerable<PlayerConnection> playerConnections, IMessage message)
+        {
+            foreach (PlayerConnection playerConnection in playerConnections)
+                playerConnection.SendMessage(message);
         }
 
         /// <summary>

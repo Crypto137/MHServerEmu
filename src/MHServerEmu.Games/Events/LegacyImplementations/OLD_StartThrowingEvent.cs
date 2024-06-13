@@ -50,25 +50,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             avatar.AssignPower(throwableCancelPowerRef, indexProps);
 
             // Notify the client
-            _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)throwableCancelPowerRef)
-                .SetPowerRank(indexProps.PowerRank)
-                .SetCharacterLevel(indexProps.CharacterLevel)
-                .SetCombatLevel(indexProps.CombatLevel)
-                .SetItemLevel(indexProps.ItemLevel)
-                .SetItemVariation(indexProps.ItemVariation)
-                .Build());
-
-            _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)throwablePowerRef)
-                .SetPowerRank(indexProps.PowerRank)
-                .SetCharacterLevel(indexProps.CharacterLevel)
-                .SetCombatLevel(indexProps.CombatLevel)
-                .SetItemLevel(indexProps.ItemLevel)
-                .SetItemVariation(indexProps.ItemVariation)
-                .Build());
 
             _playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
                 .SetIdEntity(_targetId)

@@ -176,8 +176,7 @@ namespace MHServerEmu.Games.Powers
             }
             else
             {
-                // Enabling this check is going to break individual message parsing
-                //if (owner == null) return Logger.WarnReturn(false, "Serialize(): owner == null");
+                if (owner == null) return Logger.WarnReturn(false, "Serialize(): owner == null");
 
                 uint serializationFlags = 0;
                 success &= Serializer.Transfer(archive, ref serializationFlags);

@@ -46,21 +46,10 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             }
             else
             {
-                _playerConnection.ThrowableEntity?.Kill();
+                _playerConnection.ThrowableEntity?.Kill(avatar.Id);
             }
 
             _playerConnection.ThrowableEntity = null;
-
-            // Notify the client
-            _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)throwablePower.PrototypeDataRef)
-                .Build());
-
-            _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)throwableCancelPower.PrototypeDataRef)
-                .Build());
 
             return true;
         }

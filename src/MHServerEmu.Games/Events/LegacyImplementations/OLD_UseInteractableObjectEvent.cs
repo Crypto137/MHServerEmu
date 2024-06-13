@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -77,26 +76,10 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             //  Unassign bowling ball power if the player already has one
             Avatar avatar = player.CurrentAvatar;
             if (avatar.HasPowerInPowerCollection(itemPower))
-            {
-                avatar.UnassignPower((PrototypeId)PowerPrototypes.Items.BowlingBallItemPower);
-                _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                    .SetEntityId(avatar.Id)
-                    .SetPowerProtoId((ulong)PowerPrototypes.Items.BowlingBallItemPower)
-                    .Build());
-            }
+                avatar.UnassignPower(itemPower);
 
             PowerIndexProperties indexProps = new(0, 60, 60, 1, itemVariation);
             avatar.AssignPower(itemPower, indexProps);
-
-            _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)itemPower)
-                .SetPowerRank(indexProps.PowerRank)
-                .SetCharacterLevel(indexProps.CharacterLevel)
-                .SetCombatLevel(indexProps.CombatLevel)
-                .SetItemLevel(indexProps.ItemLevel)
-                .SetItemVariation(itemVariation)
-                .Build());
 
             return true;
         }

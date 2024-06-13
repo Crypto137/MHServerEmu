@@ -4,7 +4,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
-namespace MHServerEmu.Games.Network
+namespace MHServerEmu.Games.Network.Parsing
 {
     public static class PacketHelper
     {

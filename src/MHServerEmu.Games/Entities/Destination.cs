@@ -112,6 +112,7 @@ namespace MHServerEmu.Games.Entities
 
         public static Destination FindDestination(Cell cell, TransitionPrototype transitionProto)
         {
+            if (cell == null) return null;
             PrototypeId area = cell.Area.PrototypeDataRef;
             Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);

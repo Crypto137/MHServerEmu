@@ -44,19 +44,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
                     avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
 
-                    // Notify the client
-                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, ghostRiderRideCondition));
-
-                    _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                        .SetEntityId(avatar.Id)
-                        .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
-                        .SetPowerRank(indexProps.PowerRank)
-                        .SetCharacterLevel(indexProps.CharacterLevel)
-                        .SetCombatLevel(indexProps.CombatLevel)
-                        .SetItemLevel(indexProps.ItemLevel)
-                        .SetItemVariation(indexProps.ItemVariation)
-                        .Build());
-
                     break;
 
                 case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
@@ -76,9 +63,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     rideCondition = avatar.ConditionCollection.AllocateCondition();
                     rideCondition.InitializeFromPowerMixinPrototype(667, _powerId, 0, TimeSpan.Zero);
                     avatar.ConditionCollection.AddCondition(rideCondition);
-
-                    // Notify the client
-                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, rideCondition));
 
                     break;
             }

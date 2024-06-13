@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -104,14 +105,8 @@ namespace MHServerEmu.Games.Entities
 
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
-        public AOINetworkPolicyValues InterestPolicies { get; set; }
 
-        // TODO: Use WorldEntity fields instead
-        public Vector3 BasePosition { get; set; }
-        public Orientation BaseOrientation { get; set; }
-        public LocomotionState BaseLocomotionState { get; private set; } = new();
-
-        public bool OverrideSnapToFloorOnSpawn { get; private set; }
+        public bool OverrideSnapToFloorOnSpawn { get; private set; }    // REMOVEME
 
         public ulong RegionId { get; set; } = 0;
         public Game Game { get; set; } 
@@ -239,11 +234,7 @@ namespace MHServerEmu.Games.Entities
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
             if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame))
-            {
-                BasePosition = settings.Position;
-                BaseOrientation = settings.Orientation;
                 OverrideSnapToFloorOnSpawn = overrideSnapToFloor;
-            }
 
             RegionId = settings.RegionId;
 
@@ -391,9 +382,19 @@ namespace MHServerEmu.Games.Entities
         private class RespawnEvent : CallMethodEvent<Entity>
             { protected override CallbackDelegate GetCallback() => t => t.Respawn(); }
 
-        public void Kill()
+        public void Kill(ulong killerId)
         {
             _flags |= EntityFlags.IsDead;
+            Properties[PropertyEnum.IsDead] = true;
+            Properties[PropertyEnum.NoEntityCollide] = true;
+
+            var killMessage = NetMessageEntityKill.CreateBuilder()
+                .SetIdEntity(Id)
+                .SetIdKillerEntity(killerId)
+                .SetKillFlags(0)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
             EventPointer<RespawnEvent> eventPointer = new();
             Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(10));
@@ -406,8 +407,9 @@ namespace MHServerEmu.Games.Entities
 
             ExitGame();
             _flags &= ~EntityFlags.IsDead;
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             Properties[PropertyEnum.IsDead] = false;
+            Properties[PropertyEnum.NoEntityCollide] = false;
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             EnterGame();
         }
 

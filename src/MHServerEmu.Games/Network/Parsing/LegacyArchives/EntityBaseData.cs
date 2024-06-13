@@ -8,7 +8,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Network.LegacyArchives
+namespace MHServerEmu.Games.Network.Parsing.LegacyArchives
 {
     public class EntityBaseData : ISerialize
     {
