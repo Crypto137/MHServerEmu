@@ -516,9 +516,19 @@ namespace MHServerEmu.Games.Entities
                 return (ScriptRoleKeyEnum)(uint)Properties[PropertyEnum.ScriptRoleKey];
         }
 
+        public bool HasKeyword(PrototypeId keyword)
+        {
+            return HasKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keyword));
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
+        }
+
+        internal bool HasConditionWithKeyword(PrototypeId keyword)
+        {
+            throw new NotImplementedException();
         }
 
         public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
@@ -782,6 +792,21 @@ namespace MHServerEmu.Games.Entities
             if (Vector3.LengthSqr(delta) >= MathHelper.PositionSqTolerance)
                 return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == true;
             return false;
+        }
+
+        internal float GetDefenseRating(DamageType damageType)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetDamageReductionPct(float defenseRating, WorldEntity worldEntity, PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetDistanceTo(WorldEntity other, bool edgeToEdge)
+        {
+            throw new NotImplementedException();
         }
     }
 

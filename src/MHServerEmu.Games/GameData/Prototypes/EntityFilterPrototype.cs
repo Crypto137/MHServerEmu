@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
             if (entity == null) return false;
-            return entity.HasKeyword(Keyword.As<KeywordPrototype>());
+            return entity.HasKeyword(Keyword);
         }
     }
 

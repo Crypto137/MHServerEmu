@@ -102,6 +102,8 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsolePlayer { get => false; }
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
+        public Avatar PrimaryAvatar { get; internal set; }
+        public bool IsInParty { get; internal set; }
 
         public Player(Game game) : base(game)
         {

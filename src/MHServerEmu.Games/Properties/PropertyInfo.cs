@@ -39,6 +39,8 @@ namespace MHServerEmu.Games.Properties
         public PropertyDataType DataType { get; private set; }
         public bool TruncatePropertyValueToInt { get; private set; }
         public bool IsCurveProperty { get => DataType == PropertyDataType.Curve; }
+        public bool IsEvalProperty { get => Eval != null; }
+        public EvalPrototype Eval { get; internal set; }
 
         public PropertyInfo(PropertyEnum @enum, string propertyInfoName, PrototypeId propertyInfoPrototypeRef)
         {
