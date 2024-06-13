@@ -397,7 +397,7 @@ namespace MHServerEmu.Games.Entities
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
             EventPointer<RespawnEvent> eventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(10));
+            Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
             eventPointer.Get().Initialize(this);
         }
 

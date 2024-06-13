@@ -242,16 +242,12 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private const int CleanUpIntervalMS = 1000 * 60 * 5;
-        private static readonly TimeSpan CleanUpTime = TimeSpan.FromMilliseconds(CleanUpIntervalMS);
-        private static readonly TimeSpan UnvisitedTime = TimeSpan.FromMilliseconds(CleanUpIntervalMS);
-
         public async Task CleanUpRegionsAsync()
         {            
             while (true)
             {
                 CleanUpRegions();
-                await Task.Delay(CleanUpTime); 
+                await Task.Delay(Game.CustomGameOptions.RegionCleanupIntervalMS); 
             }
         }
 
@@ -291,7 +287,7 @@ namespace MHServerEmu.Games.Regions
                     else
                     {
                         // TODO check all active local teleport to this Region
-                        if (currentTime - visitedTime >= UnvisitedTime)
+                        if (currentTime - visitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
                             toShutdown.Add(region);
                     }
                 }

@@ -32,6 +32,7 @@ namespace MHServerEmu.Games
         private const int TargetFrameRate = 20;
         public static readonly TimeSpan StartTime = TimeSpan.FromMilliseconds(1);
         public readonly NetStructGameOptions GameOptions;
+        public readonly CustomGameOptionsConfig CustomGameOptions;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -74,6 +75,8 @@ namespace MHServerEmu.Games
             // Initialize game options
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
             GameOptions = config.ToProtobuf();
+
+            CustomGameOptions = ConfigManager.Instance.GetConfig<CustomGameOptionsConfig>();
 
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
