@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
@@ -36,9 +35,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             diamondFormCondition = avatar.ConditionCollection.AllocateCondition();
             diamondFormCondition.InitializeFromPowerMixinPrototype(111, (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition, 0, TimeSpan.Zero, true, costumeAsset);
             avatar.ConditionCollection.AddCondition(diamondFormCondition);
-
-            // Notify the client
-            PlayerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, diamondFormCondition));
 
             return true;
         }

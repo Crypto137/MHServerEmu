@@ -525,7 +525,7 @@ namespace MHServerEmu.Games.Network
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
             AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
 
-            if (entity is WorldEntity worldEntity)
+            if (entity is WorldEntity worldEntity && worldEntity.Cell != null)  // Second condition is temp fix for hacky avatar position
             {
                 // Validate that the entity's location is valid on the client before including it in the proximity channel
                 if (worldEntity.IsInWorld && worldEntity.IsDead == false && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))

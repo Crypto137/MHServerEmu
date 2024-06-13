@@ -256,8 +256,7 @@ namespace MHServerEmu.Games.Network
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
 
-            avatar.BasePosition = entrancePosition;
-            avatar.BaseOrientation = StartOrientation;
+            avatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, entrancePosition, StartOrientation);
 
             SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(avatar));
 
@@ -398,8 +397,11 @@ namespace MHServerEmu.Games.Network
                 //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
                 AOI.Update(avatarState.Position);
             }
-            
+
             Avatar currentAvatar = Player.CurrentAvatar;
+            currentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, avatarState.Position, avatarState.Orientation);         // TODO: remove this
+            return true;
+            
             if (currentAvatar.IsInWorld == false) return true;
 
             bool canMove = currentAvatar.CanMove;
@@ -650,21 +652,21 @@ namespace MHServerEmu.Games.Network
             // NOTE: This is preliminary implementation that will change once we have inventories working
 
             // Manually remove existing avatar from the world
-            Player.CurrentAvatar.BasePosition = null;
-            Player.CurrentAvatar.BaseOrientation = null;
+            Player.CurrentAvatar.RegionLocation.TEMP_OverrideLocation(null, null, null);
+
             SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
                 .SetIdEntity(Player.CurrentAvatar.Id)
                 .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
                 .SetExitGameWorld(true)
                 .Build());
+            Player.CurrentAvatar.PowerCollection.OnOwnerExitedWorld();
 
             // Do inventory switch
             if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
             // Manually add new avatar to the world
-            Player.CurrentAvatar.BasePosition = LastPosition;
-            Player.CurrentAvatar.BaseOrientation = LastOrientation;
+            Player.CurrentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, LastPosition, LastOrientation);
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
             SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(Player.CurrentAvatar, settings));
 

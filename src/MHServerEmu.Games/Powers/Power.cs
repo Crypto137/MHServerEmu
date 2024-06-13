@@ -22,6 +22,11 @@ namespace MHServerEmu.Games.Powers
         public bool RequiresLineOfSight { get; private set; }
 
         public PowerCategoryType PowerCategory { get => Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None; }
+        public bool IsNormalPower { get => PowerCategory == PowerCategoryType.NormalPower; }
+        public bool IsGameFunctionPower { get => PowerCategory == PowerCategoryType.GameFunctionPower; }
+        public bool IsEmotePower { get => PowerCategory == PowerCategoryType.EmotePower; }
+        public bool IsThrowablePower { get => PowerCategory == PowerCategoryType.ThrowablePower; }
+        public bool IsComboEffect() => PowerCategory == PowerCategoryType.ComboEffect;  // This needs to be a method because it has the same name as the static method
 
         public PropertyCollection Properties { get; } = new();
         public bool IsTravelPower { get => Prototype != null && Prototype.IsTravelPower; }
@@ -57,6 +62,10 @@ namespace MHServerEmu.Games.Powers
         public void OnAssign()
         {
             // TODO
+        }
+
+        public void OnOwnerExitedWorld()
+        {
         }
 
         public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype prototype, PropertyCollection initializeProperties, WorldEntity owner)

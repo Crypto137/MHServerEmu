@@ -103,6 +103,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsolePlayer { get => false; }
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
+        public bool IsInParty { get; internal set; }
         public static bool IsPlayerTradeEnabled { get; internal set; }
         public Avatar PrimaryAvatar { get; private set; }
         public Avatar SecondaryAvatar { get; private set; }
@@ -119,8 +120,6 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             PlayerConnection = settings.PlayerConnection;
-
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
 
             _avatarProperties = new(this, Game.CurrentRepId);
             _shardId = 3;
@@ -369,8 +368,7 @@ namespace MHServerEmu.Games.Entities
             SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
 
             PlayerConnection.AOI.Reset();
-            CurrentAvatar.BasePosition = null;
-            CurrentAvatar.BaseOrientation = null;
+            CurrentAvatar.RegionLocation.TEMP_OverrideLocation(null, null, null);
 
             base.ExitGame();
         }

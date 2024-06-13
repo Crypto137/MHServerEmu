@@ -57,5 +57,16 @@
         {
             return value / (float)maxValue;
         }
+
+        public static long Modulus(long v1, long v2)
+        {
+            if (v1 < 0) v1 += v2;
+            return v1 % v2;
+        }
+
+        public static float FloatModulus(float v1, float v2)
+        {
+            return MathF.IEEERemainder(v1, v2);
+        }
     }
 }

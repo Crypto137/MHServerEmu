@@ -94,7 +94,6 @@ namespace MHServerEmu.Games.Entities
             SpawnSpec = settings.SpawnSpec;
 
             // Old
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
             int health = EntityHelper.GetRankHealth(proto);
@@ -119,11 +118,6 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Serialize(Archive archive)
         {
-            // TODO: Remove this when we get rid of old entity constructors
-            if (_trackingContextMap == null) _trackingContextMap = new();
-            if (_conditionCollection == null) _conditionCollection = new(this);
-            if (_powerCollection == null) _powerCollection = new(this);
-
             bool success = base.Serialize(archive);
 
             if (archive.IsTransient)
@@ -602,7 +596,10 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void OnExitedWorld() { }
+        public virtual void OnExitedWorld()
+        {
+            PowerCollection?.OnOwnerExitedWorld();
+        }
 
         public RegionLocation ClearWorldLocation()
         {
@@ -653,9 +650,19 @@ namespace MHServerEmu.Games.Entities
                 return (ScriptRoleKeyEnum)(uint)Properties[PropertyEnum.ScriptRoleKey];
         }
 
+        public bool HasKeyword(PrototypeId keyword)
+        {
+            return HasKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keyword));
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
+        }
+
+        internal bool HasConditionWithKeyword(PrototypeId keyword)
+        {
+            throw new NotImplementedException();
         }
 
         public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
@@ -1054,6 +1061,23 @@ namespace MHServerEmu.Games.Entities
             Logger.Debug($"PreGeneratePath {PrototypeName} {start} => {end}");
         }
 
+        public override void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
+            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
+        {
+            base.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
+
+            // Send our entire power collection when we gain proximity (enter game world)
+            if (previousInterestPolicies != AOINetworkPolicyValues.AOIChannelNone
+                && previousInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) == false
+                && newInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+            {
+                PowerCollection?.SendEntireCollection(player);
+            }
+        }
+
+        public virtual bool OnPowerAssigned(Power power) { return true; }
+        public virtual bool OnPowerUnassigned(Power power) { return true; }
+
         public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {
             return OrientToward(point, RegionLocation.Position, ignorePitch, changeFlags);
@@ -1112,6 +1136,22 @@ namespace MHServerEmu.Games.Entities
                 return GameDatabase.GetPrototype<RankPrototype>(worldEntityProto.Rank);
             }
         }
+
+        internal float GetDefenseRating(DamageType damageType)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetDamageReductionPct(float defenseRating, WorldEntity worldEntity, PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal float GetDistanceTo(WorldEntity other, bool edgeToEdge)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
         public virtual bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
         {

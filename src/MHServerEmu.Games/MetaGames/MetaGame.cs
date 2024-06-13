@@ -26,10 +26,9 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.Initialize(settings);
 
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
             _name = new(0, "");
             Region region = Game.RegionManager.GetRegion(settings.RegionId);
-            region.RegisterMetaGame(this);
+            region?.RegisterMetaGame(this);
 
             return true;
         }

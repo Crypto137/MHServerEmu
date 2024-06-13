@@ -24,7 +24,6 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelProximity;
             _flags |= EntityFlags.NoCollide;
 
             return true;

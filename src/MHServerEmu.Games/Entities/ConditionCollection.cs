@@ -1,8 +1,10 @@
 ﻿using System.Collections;
+using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 
@@ -140,11 +142,24 @@ namespace MHServerEmu.Games.Entities
 
         public bool AddCondition(Condition condition)
         {
-            if (condition == null)
-                return Logger.WarnReturn(false, "AddCondition(): condition == null");
+            if (_owner == null) return Logger.WarnReturn(false, "AddCondition(): _owner == null");
+            if (_owner.Game == null) return Logger.WarnReturn(false, "AddCondition(): _owner.Game == null");
+            if (condition == null) return Logger.WarnReturn(false, "AddCondition(): condition == null");
 
             if (InsertCondition(condition) == false)
                 return false;
+
+            // Notify interested clients if any
+            if (_owner != null)     // TODO: remove null check when we separate parsing from ConditionCollection implementation
+            {
+                var networkManager = _owner.Game.NetworkManager;
+                var interestedClients = networkManager.GetInterestedClients(_owner);
+                if (interestedClients.Any())
+                {
+                    NetMessageAddCondition addConditionMessage = ArchiveMessageBuilder.BuildAddConditionMessage(_owner, condition);
+                    networkManager.SendMessageToMultiple(interestedClients, addConditionMessage);
+                }
+            }
 
             OnInsertCondition(condition);
             return true;
@@ -158,9 +173,10 @@ namespace MHServerEmu.Games.Entities
             return RemoveCondition(condition);
         }
 
-        public void RemoveAllConditions(bool removePersistToDB = true)
+        public bool RemoveAllConditions(bool removePersistToDB = true)
         {
-            //if (_owner.Game == null) return;
+            if (_owner == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner == null");
+            if (_owner.Game == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner.Game == null");
 
             // Convert values to an array so that we can remove items from the dict while we iterate
             foreach (Condition condition in _currentConditionDict.Values.ToArray())
@@ -168,6 +184,8 @@ namespace MHServerEmu.Games.Entities
                 if (removePersistToDB == false && condition.IsPersistToDB()) continue;
                 RemoveCondition(condition);
             }
+
+            return true;
         }
 
         public bool HasANegativeStatusEffectCondition()
@@ -177,24 +195,19 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        // TODO: ConditionCollection::Iterator implementation
         public IEnumerator<KeyValuePair<ulong, Condition>> GetEnumerator() => _currentConditionDict.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public Condition AllocateCondition()
         {
-            // ConditionCollection::AllocateCondition() in the client also checks to make sure this collection has a valid owner / game.
-            // However, this is going to break parsing of individual messages where owners do not exist in a game.
-            // Possible solution: create a dummy game for parsing purposes.
-            // if (_owner == null || _owner.Game == null)
-            //     return null;
-
+            if (_owner == null) return Logger.WarnReturn<Condition>(null, "AllocateCondition(): _owner == null");
+            if (_owner.Game == null) return Logger.WarnReturn<Condition>(null, "AllocateCondition(): _owner.Game == null");
             return new();
         }
 
         private bool InsertCondition(Condition condition)
         {
-            // TODO: ConditionCollection::Handle
+            // TODO: ConditionCollection::Handle?
             return _currentConditionDict.TryAdd(condition.Id, condition);
         }
 
@@ -213,6 +226,19 @@ namespace MHServerEmu.Games.Entities
 
             if (_currentConditionDict.Remove(condition.Id) == false)
                 Logger.Warn($"RemoveCondition(): Failed to remove condition id {condition.Id}");
+
+            // Notify interested clients if any
+            var networkManager = _owner.Game.NetworkManager;
+            var interestedClients = networkManager.GetInterestedClients(_owner);
+            if (interestedClients.Any())
+            {
+                var deleteConditionMessage = NetMessageDeleteCondition.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .Build();
+
+                networkManager.SendMessageToMultiple(interestedClients, deleteConditionMessage);
+            }
 
             return true;
         }

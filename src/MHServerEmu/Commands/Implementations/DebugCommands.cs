@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using System.Text;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -7,6 +8,7 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -201,6 +203,25 @@ namespace MHServerEmu.Commands.Implementations
                 ChatHelper.SendMetagameMessageSplit(client, worldEntity.Bounds.ToString(), false);
                 ChatHelper.SendMetagameMessageSplit(client, worldEntity.PowerCollectionToString(), false);
             }
+            return string.Empty;
+        }
+
+        [Command("powers", "Prints all powers assigned to the current avatar.", AccountUserLevel.User)]
+        public string Powers(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            StringBuilder sb = new();
+            foreach (var kvp in avatar.PowerCollection)
+                sb.AppendLine(kvp.Value.PowerPrototype.ToString());
+
+            if (sb.Length == 0) return $"No powers are assigned to {avatar}.";
+            
+            ChatHelper.SendMetagameMessage(client, $"Powers assigned to {avatar}:");
+            ChatHelper.SendMetagameMessageSplit(client, sb.ToString(), false);
+
             return string.Empty;
         }
 

@@ -5,6 +5,8 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.PowerCollections;
 
 namespace MHServerEmu.Games.Events.LegacyImplementations
 {
@@ -23,30 +25,23 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
         public override bool OnTriggered()
         {
-            ulong avatarEntityId = _playerConnection.Player.CurrentAvatar.Id;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
             var world = _interactObject.Prototype as WorldEntityPrototype;
             if (world == null) return false;
-            var preIteractPower = world.PreInteractPower;
-            if (preIteractPower == PrototypeId.Invalid) return false;
-            Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preIteractPower)}");
+            var preInteractPower = world.PreInteractPower;
+            if (preInteractPower == PrototypeId.Invalid) return false;
+            Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preInteractPower)}");
 
-            _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(avatarEntityId)
-                .SetPowerProtoId((ulong)preIteractPower)
-                .SetPowerRank(0)
-                .SetCharacterLevel(60)
-                .SetCombatLevel(60)
-                .SetItemLevel(1)
-                .SetItemVariation(1)
-                .Build());
+            PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
+            avatar.AssignPower(world.PreInteractPower, indexProps);
 
             ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                 Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
-                UserEntityId = avatarEntityId,
+                UserEntityId = avatar.Id,
                 TargetEntityId = 0,
-                PowerPrototypeRef = preIteractPower,
+                PowerPrototypeRef = preInteractPower,
                 UserPosition = _playerConnection.LastPosition,
                 PowerRandomSeed = 2222,
                 FXRandomSeed = 2222

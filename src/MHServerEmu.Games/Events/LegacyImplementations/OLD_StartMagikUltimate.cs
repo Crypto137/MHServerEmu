@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
@@ -12,12 +11,10 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private PlayerConnection _playerConnection;
-        private NetStructPoint3 _position;
 
-        public void Initialize(PlayerConnection playerConnection, NetStructPoint3 position)
+        public void Initialize(PlayerConnection playerConnection)
         {
             _playerConnection = playerConnection;
-            _position = position;
         }
 
         public override bool OnTriggered()
@@ -33,37 +30,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             magikUltimateCondition = avatar.ConditionCollection.AllocateCondition();
             magikUltimateCondition.InitializeFromPowerMixinPrototype(777, (PrototypeId)PowerPrototypes.Magik.Ultimate, 0, TimeSpan.FromMilliseconds(20000));
             avatar.ConditionCollection.AddCondition(magikUltimateCondition);
-
-            /*
-            // Create the arena entity
-            WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(
-                playerConnection.AOI.Region.Id,
-                (PrototypeId)PowerPrototypes.Magik.UltimateArea,
-                new(position.X, position.Y, position.Z), new());
-
-
-            // Save the entity id for the arena entity (we need to store this state in the avatar entity instead)
-            playerConnection.MagikUltimateEntityId = arenaEntity.Id;
-            */
-
-            // Notify the client
-            _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, magikUltimateCondition));
-
-            /*
-            playerConnection.SendMessage(arenaEntity.ToNetMessageEntityCreate());
-
-            playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(arenaEntity.Id)
-                .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
-                .SetPowerRank(0)
-                .SetCharacterLevel(60)
-                .SetCombatLevel(60)
-                .SetItemLevel(1)
-                .SetItemVariation(1)
-                .Build());
-
-            playerConnection.SendMessage(Property.ToNetMessageSetProperty(arenaEntity.Properties.ReplicationId, new(PropertyEnum.AttachedToEntityId), avatar.Id));
-            */
 
             return true;
         }

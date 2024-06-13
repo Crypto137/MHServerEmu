@@ -111,6 +111,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Clock.GameTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
+        public PrototypeId[] Keywords { get; internal set; }
 
         public Condition() { }
 
@@ -175,8 +176,7 @@ namespace MHServerEmu.Games.Powers
             }
             else
             {
-                // Enabling this check is going to break individual message parsing
-                //if (owner == null) return Logger.WarnReturn(false, "Serialize(): owner == null");
+                if (owner == null) return Logger.WarnReturn(false, "Serialize(): owner == null");
 
                 uint serializationFlags = 0;
                 success &= Serializer.Transfer(archive, ref serializationFlags);
