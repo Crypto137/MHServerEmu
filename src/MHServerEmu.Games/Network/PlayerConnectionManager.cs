@@ -83,6 +83,7 @@ namespace MHServerEmu.Games.Network
             foreach (Player player in new PlayerIterator(entity.Game))
             {
                 if (skipOwner && entity.IsOwnedBy(player.Id)) continue;
+                if (player.PlayerConnection == null) continue;  // This can happen during packet parsing
 
                 if (player.PlayerConnection.AOI.InterestedInEntity(entity.Id, interestFilter))
                     yield return player;

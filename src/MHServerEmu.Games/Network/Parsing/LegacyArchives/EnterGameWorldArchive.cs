@@ -6,7 +6,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 
-namespace MHServerEmu.Games.Network.LegacyArchives
+namespace MHServerEmu.Games.Network.Parsing.LegacyArchives
 {
     public class EnterGameWorldArchive : ISerialize
     {

@@ -115,8 +115,6 @@ namespace MHServerEmu.Games.Entities
 
             PlayerConnection = settings.PlayerConnection;
 
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-
             _avatarProperties = new(this, Game.CurrentRepId);
             _shardId = 3;
             _playerName = new(Game.CurrentRepId, string.Empty);

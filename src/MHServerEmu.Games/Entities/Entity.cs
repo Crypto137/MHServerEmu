@@ -105,7 +105,6 @@ namespace MHServerEmu.Games.Entities
 
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
-        public AOINetworkPolicyValues InterestPolicies { get; set; }
 
         // TODO: Use WorldEntity fields instead
         public Vector3 BasePosition { get; set; }

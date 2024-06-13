@@ -88,7 +88,6 @@ namespace MHServerEmu.Games.Entities
             SpawnSpec = settings.SpawnSpec;
 
             // Old
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelDiscovery;
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
             int health = EntityHelper.GetRankHealth(proto);
@@ -113,11 +112,6 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Serialize(Archive archive)
         {
-            // TODO: Remove this when we get rid of old entity constructors
-            if (_trackingContextMap == null) _trackingContextMap = new();
-            if (_conditionCollection == null) _conditionCollection = new(this);
-            if (_powerCollection == null) _powerCollection = new(this);
-
             bool success = base.Serialize(archive);
 
             if (archive.IsTransient)

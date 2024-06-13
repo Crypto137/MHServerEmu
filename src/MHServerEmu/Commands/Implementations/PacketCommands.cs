@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Network.Parsing;
 
 namespace MHServerEmu.Commands.Implementations
 {

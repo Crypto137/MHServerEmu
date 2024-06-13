@@ -44,7 +44,6 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
             Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
             if (destination != null)

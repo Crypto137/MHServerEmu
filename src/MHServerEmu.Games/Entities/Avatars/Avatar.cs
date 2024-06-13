@@ -49,8 +49,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.Initialize(settings);
 
-            InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
-
             return true;
         }
 
