@@ -51,17 +51,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             _playerConnection.ThrowableEntity = null;
 
-            // Notify the client
-            _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)throwablePower.PrototypeDataRef)
-                .Build());
-
-            _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(avatar.Id)
-                .SetPowerProtoId((ulong)throwableCancelPower.PrototypeDataRef)
-                .Build());
-
             return true;
         }
     }

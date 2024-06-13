@@ -93,6 +93,38 @@ namespace MHServerEmu.Games.Entities
             RegionLocation.Cell.EnemySpawn(); // Calc Enemy
         }
 
+        public override bool OnPowerAssigned(Power power)
+        {
+            if (base.OnPowerAssigned(power) == false) return false;
+
+            // Set rank for normal powers
+            if (power.IsNormalPower)
+            {
+                Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
+                Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
+            }
+
+            return true;
+        }
+
+        public override bool OnPowerUnassigned(Power power)
+        {
+            if (base.OnPowerUnassigned(power) == false) return false;
+
+            Properties.RemoveProperty(new(PropertyEnum.PowerRankBase, power.PrototypeDataRef));
+            Properties.RemoveProperty(new(PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef));
+
+            if (power.IsThrowablePower)
+            {
+                // TODO: clean up after throwing
+
+                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
+            }
+
+            return true;
+        }
+
         public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this
         {
             bool startAction = false;

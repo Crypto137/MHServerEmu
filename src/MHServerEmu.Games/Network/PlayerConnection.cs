@@ -656,6 +656,7 @@ namespace MHServerEmu.Games.Network
                 .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
                 .SetExitGameWorld(true)
                 .Build());
+            Player.CurrentAvatar.PowerCollection.OnOwnerExitedWorld();
 
             // Do inventory switch
             if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)

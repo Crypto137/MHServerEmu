@@ -44,17 +44,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
                     avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
 
-                    // Notify the client
-                    _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                        .SetEntityId(avatar.Id)
-                        .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
-                        .SetPowerRank(indexProps.PowerRank)
-                        .SetCharacterLevel(indexProps.CharacterLevel)
-                        .SetCombatLevel(indexProps.CombatLevel)
-                        .SetItemLevel(indexProps.ItemLevel)
-                        .SetItemVariation(indexProps.ItemVariation)
-                        .Build());
-
                     break;
 
                 case (PrototypeId)PowerPrototypes.Travel.WolverineRide:

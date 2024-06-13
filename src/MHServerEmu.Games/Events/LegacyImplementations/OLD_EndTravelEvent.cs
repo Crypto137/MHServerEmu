@@ -31,15 +31,9 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
                     Logger.Trace($"EventEnd GhostRiderRide");
 
-                    // Remove the ride condition
+                    // Remove the ride condition and unassign bike hotspots power
                     avatar.ConditionCollection.RemoveCondition(666);
                     avatar.UnassignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd);
-
-                    // Notify the client
-                    _playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                        .SetEntityId(avatar.Id)
-                        .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
-                        .Build());
 
                     break;
 
