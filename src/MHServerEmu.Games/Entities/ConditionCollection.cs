@@ -1,8 +1,10 @@
 ﻿using System.Collections;
+using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
@@ -144,6 +146,18 @@ namespace MHServerEmu.Games.Entities
             if (InsertCondition(condition) == false)
                 return false;
 
+            // Notify interested clients if any
+            if (_owner != null)     // TODO: remove null check when we separate parsing from ConditionCollection implementation
+            {
+                var networkManager = _owner.Game.NetworkManager;
+                var interestedClients = networkManager.GetInterestedClients(_owner);
+                if (interestedClients.Any())
+                {
+                    NetMessageAddCondition addConditionMessage = ArchiveMessageBuilder.BuildAddConditionMessage(_owner, condition);
+                    networkManager.SendMessageToMultiple(interestedClients, addConditionMessage);
+                }
+            }
+
             OnInsertCondition(condition);
             return true;
         }
@@ -175,7 +189,6 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        // TODO: ConditionCollection::Iterator implementation
         public IEnumerator<KeyValuePair<ulong, Condition>> GetEnumerator() => _currentConditionDict.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -211,6 +224,22 @@ namespace MHServerEmu.Games.Entities
 
             if (_currentConditionDict.Remove(condition.Id) == false)
                 Logger.Warn($"RemoveCondition(): Failed to remove condition id {condition.Id}");
+
+            // Notify interested clients if any
+            if (_owner != null)     // TODO: remove null check when we separate parsing from ConditionCollection implementation
+            {
+                var networkManager = _owner.Game.NetworkManager;
+                var interestedClients = networkManager.GetInterestedClients(_owner);
+                if (interestedClients.Any())
+                {
+                    var deleteConditionMessage = NetMessageDeleteCondition.CreateBuilder()
+                        .SetIdEntity(_owner.Id)
+                        .SetKey(condition.Id)
+                        .Build();
+
+                    networkManager.SendMessageToMultiple(interestedClients, deleteConditionMessage);
+                }
+            }
 
             return true;
         }

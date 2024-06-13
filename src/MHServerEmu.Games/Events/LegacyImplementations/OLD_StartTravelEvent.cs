@@ -45,8 +45,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
 
                     // Notify the client
-                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, ghostRiderRideCondition));
-
                     _playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatar.Id)
                         .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
@@ -76,9 +74,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                     rideCondition = avatar.ConditionCollection.AllocateCondition();
                     rideCondition.InitializeFromPowerMixinPrototype(667, _powerId, 0, TimeSpan.Zero);
                     avatar.ConditionCollection.AddCondition(rideCondition);
-
-                    // Notify the client
-                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildAddConditionMessage(avatar, rideCondition));
 
                     break;
             }

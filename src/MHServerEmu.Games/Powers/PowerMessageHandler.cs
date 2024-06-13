@@ -1,18 +1,18 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Events.LegacyImplementations;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Powers
             {
                 EventPointer<OLD_StartMagikUltimate> startEventPointer = new();
                 _game.GameEventScheduler.ScheduleEvent(startEventPointer, TimeSpan.Zero);
-                startEventPointer.Get().Initialize(playerConnection, tryActivatePower.TargetPosition);
+                startEventPointer.Get().Initialize(playerConnection);
 
                 EventPointer<OLD_EndMagikUltimateEvent> endEventPointer = new();
                 _game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));

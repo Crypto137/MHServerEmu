@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Network;
 
@@ -20,14 +19,8 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             Logger.Trace($"EventEnd EmmaDiamondForm");
 
-            // Remove the condition server-side
+            // Remove the diamond form condition
             avatar.ConditionCollection.RemoveCondition(111);
-
-            // Notify the client
-            PlayerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-              .SetKey(111)
-              .SetIdEntity(avatar.Id)
-              .Build());
 
             return true;
         }

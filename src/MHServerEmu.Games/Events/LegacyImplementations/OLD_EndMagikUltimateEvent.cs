@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities;
@@ -35,32 +34,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             // Remove the ultimate condition
             avatar.ConditionCollection.RemoveCondition(777);
-
-            /*
-            // TODO: Removed the hotspot effect power from the arena's power collection
-
-            // Destroy the arena entity
-            ulong arenaEntityId = playerConnection.MagikUltimateEntityId;
-            var entity = _game.EntityManager.GetEntityById(arenaEntityId);
-            entity?.Destroy();
-            */
-
-            // Notify the client
-            PlayerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-                .SetIdEntity(avatar.Id)
-                .SetKey(777)
-                .Build());
-
-            /*
-            playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                .SetEntityId(arenaEntityId)
-                .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
-                .Build());
-
-            playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
-                .SetIdEntity(arenaEntityId)
-                .Build());
-            */
 
             return true;
         }
