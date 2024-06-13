@@ -158,54 +158,44 @@ namespace MHServerEmu.Games.Powers
 
         private void TestHit(PlayerConnection playerConnection, ulong entityId, int damage)
         {
-            if (damage > 0)
+            if (damage == 0) return;
+            
+            var entity = playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            if (entity == null) return;
+
+            int health = entity.Properties[PropertyEnum.Health];
+
+            if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])
             {
-                var entity = playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
-                if (entity != null)
-                {
-                    var proto = entity.WorldEntityPrototype;
-                    var repId = entity.Properties.ReplicationId;
-                    int health = entity.Properties[PropertyEnum.Health];
-                    int newHealth = health - damage;
-                    if (newHealth <= 0)
-                    {
-                        entity.Kill();
-                        newHealth = 0;
-                        entity.Properties[PropertyEnum.IsDead] = true;
-                    } else if (proto is AgentPrototype agent && agent.Locomotion.Immobile == false)
-                    {
-                        LocomotionStateUpdateArchive locomotion = new()
-                        {
-                            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                            EntityId = entityId,
-                            FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                            Position = new(entity.RegionLocation.Position)
-                        };
-                        locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
-                        playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                            .SetArchiveData(locomotion.ToByteString())
-                            .Build());
-                    }
-                    if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])
-                    {
-                        playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
-                            .SetIdEntity(entityId)
-                            .SetKey(1)
-                            .Build());
-                    }
-                    entity.Properties[PropertyEnum.Health] = newHealth;
-
-                    if (newHealth == 0)
-                    {
-                        playerConnection.SendMessage(NetMessageEntityKill.CreateBuilder()
-                            .SetIdEntity(entityId)
-                            .SetIdKillerEntity(playerConnection.Player.CurrentAvatar.Id)
-                            .SetKillFlags(0).Build());
-
-                        entity.Properties[PropertyEnum.NoEntityCollide] = true;
-                    }
-                }
+                // TODO: Clean this up
+                playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
+                    .SetIdEntity(entityId)
+                    .SetKey(1)
+                    .Build());
             }
+
+            int newHealth = Math.Max(health - damage, 0);
+            entity.Properties[PropertyEnum.Health] = newHealth;
+
+            if (newHealth == 0)
+            {
+                entity.Kill(playerConnection.Player.CurrentAvatar.Id);
+            }
+            else if (entity.WorldEntityPrototype is AgentPrototype agentProto && agentProto.Locomotion.Immobile == false)
+            {
+                // TODO: Clean this up
+                LocomotionStateUpdateArchive locomotion = new()
+                {
+                    ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                    EntityId = entityId,
+                    FieldFlags = LocomotionMessageFlags.NoLocomotionState,
+                    Position = new(entity.RegionLocation.Position)
+                };
+                locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
+                playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
+                    .SetArchiveData(locomotion.ToByteString())
+                    .Build());
+            }       
         }
 
         private bool OnPowerRelease(PlayerConnection playerConnection, MailboxMessage message)

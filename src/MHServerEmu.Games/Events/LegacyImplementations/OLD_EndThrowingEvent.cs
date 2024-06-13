@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             }
             else
             {
-                _playerConnection.ThrowableEntity?.Kill();
+                _playerConnection.ThrowableEntity?.Kill(avatar.Id);
             }
 
             _playerConnection.ThrowableEntity = null;
