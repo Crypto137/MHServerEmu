@@ -663,6 +663,10 @@ namespace MHServerEmu.Games.Network
             if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
+            ExitGame();
+            Game.NetworkManager.SetPlayerConnectionPending(this);
+            return true;
+
             // Manually add new avatar to the world
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
             Player.CurrentAvatar.EnterWorld(AOI.Region, LastPosition, LastOrientation, settings);
