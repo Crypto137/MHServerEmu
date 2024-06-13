@@ -2,7 +2,7 @@
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Properties.Eval
+namespace MHServerEmu.Games.Properties.Evals
 {
     public enum EvalOp
     {

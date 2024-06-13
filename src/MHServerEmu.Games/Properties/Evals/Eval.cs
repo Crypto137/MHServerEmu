@@ -12,7 +12,7 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
-namespace MHServerEmu.Games.Properties.Eval
+namespace MHServerEmu.Games.Properties.Evals
 {        
     public enum GetEvalPropertyIdEnum
     {

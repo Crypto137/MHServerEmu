@@ -2,7 +2,7 @@
 using MHServerEmu.Games.GameData;
 using System.Runtime.InteropServices;
 
-namespace MHServerEmu.Games.Properties.Eval
+namespace MHServerEmu.Games.Properties.Evals
 {
     public struct EvalContextVar
     {
