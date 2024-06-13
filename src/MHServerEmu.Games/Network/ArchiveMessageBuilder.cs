@@ -97,10 +97,7 @@ namespace MHServerEmu.Games.Network
                     fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
 
                 if (entity.InventoryLocation.IsValid && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
-                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
-
-                if (settings?.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
-                    fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;                       
+                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;               
 
                 if (entity is Player)
                     fieldFlags |= EntityCreateMessageFlags.HasDbId;
@@ -110,6 +107,15 @@ namespace MHServerEmu.Games.Network
 
                 if (entity.OverrideSnapToFloorOnSpawn)
                     fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
+
+                if (settings != null)
+                {
+                    if (settings.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
+                        fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
+
+                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsClientEntityHidden))
+                        fieldFlags |= EntityCreateMessageFlags.IsClientEntityHidden;
+                }
 
                 // Serialize
                 ulong entityId = entity.Id;
