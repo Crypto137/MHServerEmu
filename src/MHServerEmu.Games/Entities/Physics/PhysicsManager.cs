@@ -248,8 +248,8 @@ namespace MHServerEmu.Games.Entities.Physics
                         locomotor.MovementImpeded = clipped || !Vector3.EpsilonSphereTest(collidedDestination, desiredDestination);
 
                         ChangePositionFlags changeFlags = ChangePositionFlags.PhysicsResolve;
-                        changeFlags |= !sendToOwner ? ChangePositionFlags.NoSendToOwner : 0;
-                        changeFlags |= !sendToClients ? ChangePositionFlags.NoSendToClients : 0;
+                        changeFlags |= !sendToOwner ? ChangePositionFlags.DoNotSendToOwner : 0;
+                        changeFlags |= !sendToClients ? ChangePositionFlags.DoNotSendToClients : 0;
 
                         entity.ChangeRegionPosition(collidedDestination, null, changeFlags);
                     }

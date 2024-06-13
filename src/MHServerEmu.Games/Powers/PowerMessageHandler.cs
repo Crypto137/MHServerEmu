@@ -183,18 +183,7 @@ namespace MHServerEmu.Games.Powers
             }
             else if (entity.WorldEntityPrototype is AgentPrototype agentProto && agentProto.Locomotion.Immobile == false)
             {
-                // TODO: Clean this up
-                LocomotionStateUpdateArchive locomotion = new()
-                {
-                    ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                    EntityId = entityId,
-                    FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                    Position = new(entity.RegionLocation.Position)
-                };
-                locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
-                playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                    .SetArchiveData(locomotion.ToByteString())
-                    .Build());
+                entity.ChangeRegionPosition(null, new(Vector3.AngleYaw(entity.RegionLocation.Position, playerConnection.LastPosition), 0f, 0f));
             }       
         }
 

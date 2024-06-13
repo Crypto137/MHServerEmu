@@ -293,7 +293,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     timeSeconds = (float)game.FixedTimeBetweenUpdates.TotalSeconds;
                     Vector3 delta = RotateMaxTurnThisFrame3D(_owner.Forward, syncDir, 300.0f, timeSeconds);
                     var orientation = Orientation.FromDeltaVector(delta);
-                    ChangePositionFlags changeFlags = ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToServer | ChangePositionFlags.NoSendToClients;
+                    ChangePositionFlags changeFlags = ChangePositionFlags.PhysicsResolve | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients;
                     _owner.ChangeRegionPosition(null, orientation, changeFlags);
 
                     if (_syncOrientation == _owner.Orientation)
@@ -352,7 +352,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                                 if (syncTeleport)
                                 {
-                                    ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToServer | ChangePositionFlags.NoSendToClients;
+                                    ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients;
                                     _owner.ChangeRegionPosition(_syncPosition, _syncOrientation, changeFlags);
                                     UpdateNavigationInfluence(true);
                                     ClearSyncState();
@@ -557,7 +557,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     AdminCommandManager adminCommandManager = _owner.Game.AdminCommandManager;
                     ChangePositionFlags changeFlags;
                     if (adminCommandManager != null && adminCommandManager.TestAdminFlag(AdminFlags.LocomotionSync))
-                        changeFlags = ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToClients;
+                        changeFlags = ChangePositionFlags.PhysicsResolve | ChangePositionFlags.DoNotSendToClients;
                     else
                         changeFlags = ChangePositionFlags.None;
                     _owner.ChangeRegionPosition(null, orientation, changeFlags);
@@ -1257,7 +1257,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 {
                     if (LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.MoveForward))
                     {
-                        ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToServer | ChangePositionFlags.NoSendToClients;
+                        ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients;
                         _owner.ChangeRegionPosition(syncPosition, syncOrientation, changeFlags);
                         _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
                         _generatedPath.PathResult = NaviPathResult.Success;
@@ -1338,7 +1338,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                         if (syncTeleport)
                         {
-                            ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.NoSendToServer | ChangePositionFlags.NoSendToClients;
+                            ChangePositionFlags changeFlags = ChangePositionFlags.Force | ChangePositionFlags.PhysicsResolve | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients;
                             _owner.ChangeRegionPosition(syncPosition, syncOrientation, changeFlags);
                             _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
                             _generatedPath.PathResult = NaviPathResult.Success;

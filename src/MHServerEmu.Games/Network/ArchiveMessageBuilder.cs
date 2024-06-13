@@ -210,6 +210,46 @@ namespace MHServerEmu.Games.Network
                 .Build();
         }
 
+        public static NetMessageLocomotionStateUpdate BuildLocomotionStateUpdateMessage(WorldEntity worldEntity, LocomotionState oldLocomotionState, LocomotionState newLocomotionState,
+            bool withPathNodes)
+        {
+            // Build flags
+            LocomotionMessageFlags fieldFlags = LocomotionMessageFlags.None;
+
+            RegionLocation regionLocation = worldEntity.RegionLocation;
+            Vector3 position = regionLocation.Position;
+            Orientation orientation = regionLocation.Orientation;
+
+            if (orientation.Pitch != 0f || orientation.Yaw != 0f)
+                fieldFlags |= LocomotionMessageFlags.HasFullOrientation;
+
+            fieldFlags |= LocomotionState.GetFieldFlags(newLocomotionState, oldLocomotionState, withPathNodes);
+
+            // Serialize
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AOIChannelProximity);
+
+            ulong entityId = worldEntity.Id;
+            Serializer.Transfer(archive, ref entityId);
+
+            uint fieldFlagsRaw = (uint)fieldFlags;
+            Serializer.Transfer(archive, ref fieldFlagsRaw);
+
+            if (fieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
+            {
+                PrototypeId entityPrototypeRef = worldEntity.PrototypeDataRef;
+                Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref entityPrototypeRef);
+            }
+
+            Serializer.TransferVectorFixed(archive, ref position, 3);
+
+            bool yawOnly = fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+            Serializer.TransferOrientationFixed(archive, ref orientation, yawOnly, 6);
+
+            LocomotionState.SerializeTo(archive, newLocomotionState, fieldFlags);
+
+            return NetMessageLocomotionStateUpdate.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
+        }
+
         /// <summary>
         /// Builds <see cref="NetMessageEntityEnterGameWorld"/> for the provided <see cref="WorldEntity"/>.
         /// </summary>

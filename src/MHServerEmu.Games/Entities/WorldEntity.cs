@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -21,6 +22,30 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
+    public enum PowerMovementPreventionFlags
+    {
+        Forced = 0,
+        NonForced = 1,
+        Sync = 2,
+    }
+
+    [Flags]
+    public enum ChangePositionFlags
+    {
+        None                = 0,
+        Update              = 1 << 0,
+        DoNotSendToOwner    = 1 << 1,
+        DoNotSendToServer   = 1 << 2,
+        DoNotSendToClients  = 1 << 3,
+        Orientation         = 1 << 4,
+        Force               = 1 << 5,
+        Teleport            = 1 << 6,
+        HighFlying          = 1 << 7,
+        PhysicsResolve      = 1 << 8,
+        SkipAOI             = 1 << 9,
+        EnterWorld          = 1 << 10,
+    }
+
     public class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -367,18 +392,34 @@ namespace MHServerEmu.Games.Entities
                     Locomotor.ClearOrientationSyncState();
             }
 
-            if (positionChanged || orientationChanged)
+            if (positionChanged == false && orientationChanged == false)
+                return false;
+
+            UpdateRegionBounds(); // Add to Quadtree
+            SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
+            if (RegionLocation.IsValid())
+                ExitWorldRegionLocation.Set(RegionLocation);
+
+            if (flags.HasFlag(ChangePositionFlags.DoNotSendToClients) == false)
             {
-                UpdateRegionBounds(); // Add to Quadtree
-                SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
-                if (RegionLocation.IsValid())
-                    ExitWorldRegionLocation.Set(RegionLocation);
-                return true;
+                bool excludeOwner = flags.HasFlag(ChangePositionFlags.DoNotSendToOwner);
+
+                var networkManager = Game.NetworkManager;
+                var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner);
+                if (interestedClients.Any())
+                {
+                    var entityPositionMessageBuilder = NetMessageEntityPosition.CreateBuilder()
+                        .SetIdEntity(Id)
+                        .SetFlags((uint)flags);
+
+                    if (position != null) entityPositionMessageBuilder.SetPosition(position.ToNetStructPoint3());
+                    if (orientation != null) entityPositionMessageBuilder.SetOrientation(orientation.ToNetStructPoint3());
+
+                    networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
+                }
             }
 
-            // TODO send NetMessageEntityPosition position change to clients
-
-            return false;
+            return true;
         }
 
         private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
@@ -759,7 +800,28 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newlocomotionState) { }
+        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newLocomotionState)
+        {
+            Logger.Debug($"OnLocomotionStateChanged(): {this}");
+            if (IsInWorld == false) return;
+
+            // Check if locomotion state requires updating
+            LocomotionState.CompareLocomotionStatesForSync(oldLocomotionState, newLocomotionState,
+                out bool syncRequired, out bool pathNodeSyncRequired, newLocomotionState.FollowEntityId != InvalidId);
+
+            if (syncRequired == false && pathNodeSyncRequired == false) return;
+
+            // Send locomotion update to interested clients
+            // NOTE: Avatars are locomoted on their local client independently, so they are excluded from locomotion updates.
+            var networkManager = Game.NetworkManager;
+            var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false);
+            if (interestedClients.Any() == false) return;
+
+            NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
+                this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
+            networkManager.SendMessageToMultiple(interestedClients, locomotionStateUpdateMessage);
+        }
+
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
 
         public override void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
@@ -808,29 +870,5 @@ namespace MHServerEmu.Games.Entities
         {
             throw new NotImplementedException();
         }
-    }
-
-    public enum PowerMovementPreventionFlags
-    {
-        Forced = 0,
-        NonForced = 1,
-        Sync = 2,
-    }
-
-    [Flags]
-    public enum ChangePositionFlags
-    {
-        None = 0,
-        Update = 1 << 0,
-        NoSendToOwner = 1 << 1,
-        NoSendToServer = 1 << 2,
-        NoSendToClients = 1 << 3,
-        Orientation = 1 << 4,
-        Force = 1 << 5,
-        Teleport = 1 << 6,
-        HighFlying = 1 << 7,
-        PhysicsResolve = 1 << 8,
-        SkipAOI = 1 << 9,
-        EnterWorld = 1 << 10,
     }
 }
