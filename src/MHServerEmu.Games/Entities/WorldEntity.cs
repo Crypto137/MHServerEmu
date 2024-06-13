@@ -660,9 +660,23 @@ namespace MHServerEmu.Games.Entities
             return keywordProto != null && WorldEntityPrototype.HasKeyword(keywordProto);
         }
 
-        internal bool HasConditionWithKeyword(PrototypeId keyword)
+        public bool HasConditionWithKeyword(PrototypeId keywordRef)
         {
-            throw new NotImplementedException();
+            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+            if (keywordProto == null) return false;
+            if (keywordProto is not PowerKeywordPrototype) return false;
+            return HasConditionWithKeyword(GameDatabase.DataDirectory.GetPrototypeEnumValue(keywordRef, GameDatabase.DataDirectory.KeywordBlueprint));
+        }
+
+        private bool HasConditionWithKeyword(int keyword)
+        {
+            var conditionCollection = ConditionCollection;
+            if (conditionCollection != null)
+            {
+                KeywordsMask keywordsMask = conditionCollection.ConditionKeywordsMask;
+                return keywordsMask[keyword];
+            }
+            return false;
         }
 
         public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
@@ -980,25 +994,6 @@ namespace MHServerEmu.Games.Entities
             return activePower.ShouldOrientToTarget;
         }
 
-        public bool HasConditionWithKeyword(PrototypeId keywordRef)
-        {
-            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
-            if (keywordProto == null) return false;
-            if (keywordProto is not PowerKeywordPrototype) return false;
-            return HasConditionWithKeyword(GameDatabase.DataDirectory.GetPrototypeEnumValue(keywordRef, GameDatabase.DataDirectory.KeywordBlueprint));
-        }
-
-        private bool HasConditionWithKeyword(int keyword)
-        {
-            var conditionCollection = ConditionCollection;
-            if (conditionCollection != null)
-            {
-                KeywordsMask keywordsMask = conditionCollection.ConditionKeywordsMask;
-                return keywordsMask[keyword];
-            }
-            return false;
-        }
-
         public float GetDistanceTo(WorldEntity other, bool calcRadius)
         {
             if (other == null) return 0f;
@@ -1146,12 +1141,6 @@ namespace MHServerEmu.Games.Entities
         {
             throw new NotImplementedException();
         }
-
-        internal float GetDistanceTo(WorldEntity other, bool edgeToEdge)
-        {
-            throw new NotImplementedException();
-        }
-    }
 
         public virtual bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
         {

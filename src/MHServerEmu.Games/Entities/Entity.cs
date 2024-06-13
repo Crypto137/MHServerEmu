@@ -13,8 +13,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.Templates;
 
 namespace MHServerEmu.Games.Entities
 {

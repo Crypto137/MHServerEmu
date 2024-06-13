@@ -380,11 +380,6 @@ namespace MHServerEmu.Games.Entities
             return base.InitInventories(populateInventories);
         }
 
-        internal int GetPowerRank(PrototypeId power)
-        {
-            throw new NotImplementedException();
-        }
-
         internal int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             throw new NotImplementedException();
