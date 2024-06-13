@@ -106,12 +106,7 @@ namespace MHServerEmu.Games.Entities
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
 
-        // TODO: Use WorldEntity fields instead
-        public Vector3 BasePosition { get; set; }
-        public Orientation BaseOrientation { get; set; }
-        public LocomotionState BaseLocomotionState { get; private set; } = new();
-
-        public bool OverrideSnapToFloorOnSpawn { get; private set; }
+        public bool OverrideSnapToFloorOnSpawn { get; private set; }    // REMOVEME
 
         public ulong RegionId { get; set; } = 0;
         public Game Game { get; set; } 
@@ -239,11 +234,7 @@ namespace MHServerEmu.Games.Entities
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
             if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame))
-            {
-                BasePosition = settings.Position;
-                BaseOrientation = settings.Orientation;
                 OverrideSnapToFloorOnSpawn = overrideSnapToFloor;
-            }
 
             RegionId = settings.RegionId;
 
