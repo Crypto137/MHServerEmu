@@ -395,7 +395,7 @@ namespace MHServerEmu.Games.Network
         {
             _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
 
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies));
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies, settings));
 
             // Notify the client that we have finished sending everything needed for this avatar
             if (entity is Avatar && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))

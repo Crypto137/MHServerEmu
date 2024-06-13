@@ -266,10 +266,11 @@ namespace MHServerEmu.Games.Entities
 
             RegionLocation.Region = region;
             
-            if (ChangeRegionPosition(position, orientation))
+            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
             {
                 // TODO: Everything else
                 OnEnteredWorld(settings);
+                NotifyPlayers(true, settings);
             }
         }
 
@@ -419,6 +420,12 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
+            if (flags.HasFlag(ChangePositionFlags.SkipAOI) == false)
+            {
+                // TODO: Notify if distance is far enough, similar to AOI updates
+                NotifyPlayers(true);
+            }
+
             return true;
         }
 
@@ -479,28 +486,28 @@ namespace MHServerEmu.Games.Entities
 
         public void ExitWorld()
         {
-            // TODO send packets for delete entities from world
-            if (IsInWorld)
-            {
-                bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
-                SetStatus(EntityStatus.ExitingWorld, true);
-                Physics.ReleaseCollisionId();
-                // TODO IsAttachedToEntity()
-                Physics.DetachAllChildren();
-                DisableNavigationInfluence();
+            if (IsInWorld == false) return;
 
-                var entityManager = Game.EntityManager;
-                if (entityManager == null) return;
-                entityManager.PhysicsManager?.OnExitedWorld(Physics);
-                OnExitedWorld();
-                var oldLocation = ClearWorldLocation();
-                SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
-                ModifyCollectionMembership(EntityCollection.Simulated, false);
-                ModifyCollectionMembership(EntityCollection.Locomotion, false);
+            bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
+            SetStatus(EntityStatus.ExitingWorld, true);
+            Physics.ReleaseCollisionId();
+            // TODO IsAttachedToEntity()
+            Physics.DetachAllChildren();
+            DisableNavigationInfluence();
 
-                if (exitStatus)
-                    SetStatus(EntityStatus.ExitingWorld, false);
-            }
+            var entityManager = Game.EntityManager;
+            if (entityManager == null) return;
+            entityManager.PhysicsManager?.OnExitedWorld(Physics);
+            OnExitedWorld();
+            var oldLocation = ClearWorldLocation();
+            SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
+            ModifyCollectionMembership(EntityCollection.Simulated, false);
+            ModifyCollectionMembership(EntityCollection.Locomotion, false);
+
+            if (exitStatus)
+                SetStatus(EntityStatus.ExitingWorld, false);
+
+            NotifyPlayers(false);
         }
 
         public virtual void OnExitedWorld()
@@ -802,7 +809,6 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newLocomotionState)
         {
-            Logger.Debug($"OnLocomotionStateChanged(): {this}");
             if (IsInWorld == false) return;
 
             // Check if locomotion state requires updating

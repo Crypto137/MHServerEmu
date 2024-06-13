@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
@@ -256,15 +257,9 @@ namespace MHServerEmu.Games.Network
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
 
-            avatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, entrancePosition, StartOrientation);
-
-            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(avatar));
+            avatar.EnterWorld(AOI.Region, entrancePosition, StartOrientation);
 
             AOI.Update(entrancePosition, true);
-            //AOI.DebugPrint();
-
-            // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
-            Player.CurrentAvatar.AssignHardcodedPowers();
 
             Player.DequeueLoadingScreen();
 
@@ -399,10 +394,20 @@ namespace MHServerEmu.Games.Network
             }
 
             Avatar currentAvatar = Player.CurrentAvatar;
-            currentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, avatarState.Position, avatarState.Orientation);         // TODO: remove this
-            return true;
-            
             if (currentAvatar.IsInWorld == false) return true;
+
+            // Update avatar position
+            currentAvatar.ChangeRegionPosition(avatarState.Position, avatarState.Orientation, ChangePositionFlags.DoNotSendToClients);
+            LastPosition = currentAvatar.RegionLocation.Position;
+            LastOrientation = currentAvatar.RegionLocation.Orientation;
+
+            // Manually send locomotion updates
+            currentAvatar.Locomotor.LastSyncState.Set(currentAvatar.Locomotor.LocomotionState);
+            currentAvatar.Locomotor.LocomotionState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
+            currentAvatar.OnLocomotionStateChanged(currentAvatar.Locomotor.LastSyncState, currentAvatar.Locomotor.LocomotionState);
+            
+            // disable proper locomotion implementation for now
+            return true;
 
             bool canMove = currentAvatar.CanMove;
             bool canRotate = currentAvatar.CanRotate;
@@ -651,31 +656,22 @@ namespace MHServerEmu.Games.Network
             // NOTE: This is preliminary implementation that will change once we have inventories working
 
             // Manually remove existing avatar from the world
-            Player.CurrentAvatar.RegionLocation.TEMP_OverrideLocation(null, null, null);
-
-            SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
-                .SetIdEntity(Player.CurrentAvatar.Id)
-                .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
-                .SetExitGameWorld(true)
-                .Build());
-            Player.CurrentAvatar.PowerCollection.OnOwnerExitedWorld();
+            Player.CurrentAvatar.ExitWorld();
+            Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} exiting world");
 
             // Do inventory switch
             if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
             // Manually add new avatar to the world
-            Player.CurrentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, LastPosition, LastOrientation);
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
-            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(Player.CurrentAvatar, settings));
-
-            // Power collection needs to be assigned after the avatar enters world
-            Player.CurrentAvatar.AssignHardcodedPowers();
+            Player.CurrentAvatar.EnterWorld(AOI.Region, LastPosition, LastOrientation, settings);
+            Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} entering world");
 
             // Activate the swap in power for the avatar to become playable
-            EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.FromMilliseconds(700));
-            activatePowerEventPointer.Get().Initialize(this, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            EventPointer<TEMP_ActivatePowerEvent> avatarSwapInEvent = new();
+            Game.GameEventScheduler.ScheduleEvent(avatarSwapInEvent, TimeSpan.FromMilliseconds(700));
+            avatarSwapInEvent.Get().Initialize(this, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
 
             return true;
         }

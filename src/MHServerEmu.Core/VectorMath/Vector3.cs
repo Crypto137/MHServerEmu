@@ -39,9 +39,12 @@ namespace MHServerEmu.Core.VectorMath
 
         public Vector3(Vector3 vector)
         {
-            X = vector.X;
-            Y = vector.Y;
-            Z = vector.Z;
+            if (vector != null)     // temp fix for multiplayer weirdness
+            {
+                X = vector.X;
+                Y = vector.Y;
+                Z = vector.Z;
+            }
         }
 
         public Vector3(Point3 point)

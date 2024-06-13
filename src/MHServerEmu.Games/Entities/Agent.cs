@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -88,11 +89,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
-            RegionLocation.Cell.EnemySpawn(); // Calc Enemy
+            if (this is not Avatar)     // fix for avatar
+                RegionLocation.Cell.EnemySpawn(); // Calc Enemy
         }
 
         public override bool OnPowerAssigned(Power power)

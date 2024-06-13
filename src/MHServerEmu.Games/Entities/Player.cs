@@ -364,7 +364,6 @@ namespace MHServerEmu.Games.Entities
             SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
 
             PlayerConnection.AOI.Reset();
-            CurrentAvatar.RegionLocation.TEMP_OverrideLocation(null, null, null);
 
             base.ExitGame();
         }

@@ -59,14 +59,6 @@ namespace MHServerEmu.Games.Entities
             _orientation = Orientation.Zero;
         }
 
-        public void TEMP_OverrideLocation(Region region, Vector3 position, Orientation orientation)
-        {
-            // TODO: Remove this when avatars enter the world normally
-            _region = region;
-            _position = position;
-            _orientation = orientation;
-        }
-
         public static Vector3 ProjectToFloor(Cell cell, Vector3 regionPos)
         {
             if (cell == null || cell.RegionBounds.IntersectsXY(regionPos) == false) return regionPos;

@@ -185,6 +185,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             _abilityKeyMappingList.Add(abilityKeyMapping);
         }
 
+        public override void OnEnteredWorld(EntitySettings settings)
+        {
+            base.OnEnteredWorld(settings);
+            AssignHardcodedPowers();
+        }
+
         public bool AssignHardcodedPowers()
         {
             Player player = GetOwnerOfType<Player>();

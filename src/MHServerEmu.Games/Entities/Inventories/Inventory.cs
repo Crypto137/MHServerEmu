@@ -617,7 +617,20 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (entity == null) return Logger.WarnReturn(false, "PostAdd(): entity == null");
 
             entity.OnSelfAddedToOtherInventory();
-            entity.NotifyPlayers(true);
+
+            EntitySettings settings = new() { PreviousInventoryLocation = prevInvLoc };
+
+            /*
+            settings.PreviousInventoryLocation = prevInvLoc;
+
+            if (prevInvLoc?.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarLegendary
+                && invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay)
+            {
+                settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;
+            }
+            */
+
+            entity.NotifyPlayers(true, settings);
 
             return true;
         }

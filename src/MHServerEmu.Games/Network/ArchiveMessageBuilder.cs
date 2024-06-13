@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network
                         if (orientation.Pitch != 0f || orientation.Roll != 0f)
                             locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
 
-                        //locomotionState = worldEntity.Locomotor?.LocomotionState;     // TODO
+                        locomotionState = worldEntity.Locomotor?.LocomotionState;
 
                         locoFieldFlags |= LocomotionState.GetFieldFlags(locomotionState, null, true);
                     }
@@ -98,6 +98,9 @@ namespace MHServerEmu.Games.Network
 
                 if (entity.InventoryLocation.IsValid && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
                     fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
+
+                if (settings?.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
+                    fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;                       
 
                 if (entity is Player)
                     fieldFlags |= EntityCreateMessageFlags.HasDbId;
@@ -182,11 +185,7 @@ namespace MHServerEmu.Games.Network
                     InventoryLocation.SerializeTo(archive, entity.InventoryLocation);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                {
-                    // TODO
-                    InventoryLocation invLocPrev = new();
-                    InventoryLocation.SerializeTo(archive, invLocPrev);
-                }
+                    InventoryLocation.SerializeTo(archive, settings.PreviousInventoryLocation);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {
@@ -268,8 +267,7 @@ namespace MHServerEmu.Games.Network
                 locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
 
             // LocomotionState
-            LocomotionState locomotionState = null;
-            //locomotionState = worldEntity.Locomotor?.LocomotionState;     // TODO: Get real locomotion state from the entity
+            LocomotionState locomotionState = worldEntity.Locomotor?.LocomotionState;
 
             if (locomotionState != null)
                 locoFieldFlags |= LocomotionState.GetFieldFlags(locomotionState, null, true);
