@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -11,6 +13,52 @@ namespace MHServerEmu.Games.Entities
     public static class EntityHelper
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        
+        public static Agent CrateOrb(PrototypeId orbProto, Vector3 position, Region region)
+        {
+            var settings = new EntitySettings
+            {
+                EntityRef = orbProto,
+                Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
+                RegionId = region.Id,
+                Properties = new()
+                {
+                    [PropertyEnum.AIStartsEnabled] = false
+                }
+            };
+            var game = region.Game;
+            Agent orb = (Agent)game.EntityManager.CreateEntity(settings);
+            return orb;
+        }
+
+        public static Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, ulong masterDbGuid) // Test funciton
+        {
+            int level = 60;
+            // var inventory = player.GetInventory(InventoryConvenienceLabel.PetItem); 
+            var settings = new EntitySettings
+            {
+                EntityRef = prototypeId,
+                Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
+                RegionId = region.Id,
+                // OptionFlags = EntitySettingsOptionFlags.EnterGame,
+                Properties = new PropertyCollection
+                {
+                    [PropertyEnum.AIStartsEnabled] = false,
+                    [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
+                    [PropertyEnum.AIMasterAvatar] = true,
+                    [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
+                    [PropertyEnum.CharacterLevel] = level,
+                    [PropertyEnum.CombatLevel] = level,
+                    [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
+                }
+                //  InventoryLocation = new(player.Id, inventory.PrototypeDataRef)
+            };
+            var game = region.Game;
+            var pet = (Agent)game.EntityManager.CreateEntity(settings);
+            return pet;
+        }
 
         public static void SetUpHardcodedEntities(Region region)
         {
