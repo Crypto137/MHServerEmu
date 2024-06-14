@@ -109,11 +109,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
         {
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    yield return kvp;
-            }
+            return this.Where(kvp => kvp.Key.Enum == propertyEnum);
         }
 
         /// <summary>
@@ -140,7 +136,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, int param0)
         {
-            foreach (var kvp in this)
+            foreach (var kvp in this.Where(kvp => kvp.Key.Enum == propertyEnum))
             {
                 Property.FromParam(kvp.Key, 0, out int itParam0);
 
@@ -159,7 +155,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
         {
-            foreach (var kvp in this)
+            foreach (var kvp in this.Where(kvp => kvp.Key.Enum == propertyEnum))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
 
@@ -178,7 +174,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
         {
-            foreach (var kvp in this)
+            foreach (var kvp in this.Where(kvp => kvp.Key.Enum == propertyEnum))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
                 Property.FromParam(kvp.Key, 1, out PrototypeId itParam1);
