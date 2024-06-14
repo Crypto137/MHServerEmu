@@ -13,6 +13,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -113,6 +114,8 @@ namespace MHServerEmu.Games.Entities
         public EntityStatus Status { get; set; }
 
         public ReplicatedPropertyCollection Properties { get; set; }
+
+        public Party Party { get; internal set; }
 
         public virtual ulong PartyId
         {

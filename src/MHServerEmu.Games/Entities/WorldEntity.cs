@@ -883,6 +883,7 @@ namespace MHServerEmu.Games.Entities
         public int InteractFallbackRange { get => GameDatabase.GlobalsPrototype?.InteractFallbackRange ?? 0; }
         public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
         public bool IsGlobalEventVendor { get; internal set; }
+        public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
 
         public PathFlags GetPathFlags()
         {

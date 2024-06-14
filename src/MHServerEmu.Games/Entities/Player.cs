@@ -109,6 +109,7 @@ namespace MHServerEmu.Games.Entities
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
         public GuildMembership GuildMembership { get; internal set; }
+        public string Name { get; internal set; }
 
         public Player(Game game) : base(game)
         {

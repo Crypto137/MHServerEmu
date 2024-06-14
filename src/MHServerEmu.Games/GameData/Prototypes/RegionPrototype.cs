@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
@@ -199,6 +200,50 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+
+        public bool AllowRaids()
+        {
+            var globalsProto = GameDatabase.GlobalsPrototype;
+            if (globalsProto == null) return false;
+            switch (Behavior)
+            {
+                case RegionBehaviorAsset.Town:
+                case RegionBehaviorAsset.PublicCombatZone:
+                case RegionBehaviorAsset.PrivateRaid:
+                    return true;
+                case RegionBehaviorAsset.PrivateStory:
+                case RegionBehaviorAsset.PrivateNonStory:
+                    return false;
+                case RegionBehaviorAsset.MatchPlay:
+                    int largestTeamSize = GetLargestTeamSize();
+                    if (largestTeamSize > 0)
+                        return largestTeamSize >= globalsProto.PlayerRaidMaxSize;
+                    else if (PlayerLimit > 0)
+                        return PlayerLimit >= globalsProto.PlayerRaidMaxSize;
+                    break;
+                default:
+                    return false;
+            }
+            return false;
+        }
+
+        private int GetLargestTeamSize()
+        {
+            int largestTeamSize = 0;
+            if(MetaGames.HasValue())
+                foreach (var metaGameRef in MetaGames)
+                {
+                    MetaGamePrototype metaGameProto = GameDatabase.GetPrototype<MetaGamePrototype>(metaGameRef);
+                    if (metaGameProto != null && metaGameProto.Teams.HasValue())
+                        foreach (var teamRef in metaGameProto.Teams)
+                        {
+                            var teamProto = GameDatabase.GetPrototype<MetaGameTeamPrototype>(teamRef);
+                            if (teamProto != null)
+                                largestTeamSize = Math.Max(largestTeamSize, teamProto.MaxPlayers);
+                        }
+                }
+            return largestTeamSize;
         }
     }
 
