@@ -86,7 +86,7 @@ namespace MHServerEmu.Commands.Implementations
                 case AvatarPrototypeId.Thor:
                     EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
                     game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
-                    activatePowerEventPointer.Get().Initialize(playerConnection, (PrototypeId)PowerPrototypes.Emotes.EmoteDance);
+                    activatePowerEventPointer.Get().Initialize(playerConnection, (PrototypeId)PowerPrototypes.UnlockableEmote.EmoteDance);
                     return $"{avatar} begins to dance";
                 default:
                     return $"{avatar} doesn't want to dance";

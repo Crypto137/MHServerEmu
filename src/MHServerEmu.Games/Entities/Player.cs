@@ -15,6 +15,7 @@ using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
@@ -201,6 +202,10 @@ namespace MHServerEmu.Games.Entities
                 // Set avatar levels to 60
                 // Note: setting this to above level 60 sets the prestige level as well
                 Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototypeRef] = 60;
+
+                // Unlock extra emotes
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)PowerPrototypes.UnlockableEmote.EmoteCongrats] = true;    // Powers/Emotes/EmoteCongrats.prototype
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)PowerPrototypes.UnlockableEmote.EmoteDance] = true;       // Powers/Emotes/EmoteDance.prototype
             }
 
             foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))

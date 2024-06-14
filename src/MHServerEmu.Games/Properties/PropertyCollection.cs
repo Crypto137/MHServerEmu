@@ -85,6 +85,12 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum, param0, param1));
         }
 
+        public PropertyValue this[PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1));
+            set => SetProperty(value, new(propertyEnum, param0, param1));
+        }
+
         public PropertyValue this[PropertyEnum propertyEnum, int param0, PrototypeId param1]
         {
             get => GetProperty(new(propertyEnum, param0, param1));

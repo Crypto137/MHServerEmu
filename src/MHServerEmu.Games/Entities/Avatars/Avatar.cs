@@ -188,16 +188,18 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
-            AssignHardcodedPowers();
+            AssignDefaultAvatarPowers();
         }
 
-        public bool AssignHardcodedPowers()
+        private bool AssignDefaultAvatarPowers()
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "AssignHardcodedPowers(): player == null");
 
-            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
             AvatarPrototype avatarPrototype = AvatarPrototype;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
 
             // Add game function powers (the order is the same as captured packets)
             AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower, indexProps);
@@ -250,8 +252,23 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(avatarPrototype.TravelPower, indexProps);
 
             // Emotes
-            foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Emotes)))
-                AssignPower((PrototypeId)powerProtoId, indexProps);
+            // Starting emotes
+            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
+            {
+                PrototypeId emoteProtoRef = emoteAssignment.Ability;
+                if (GetPower(emoteProtoRef) != null) continue;
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            // Unlockable emotes
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
+                if (GetPower(emoteProtoRef) != null) continue;
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
 
             return true;
         }
