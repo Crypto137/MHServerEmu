@@ -301,6 +301,7 @@ namespace MHServerEmu.Games.Entities
             BlockerEntity.SurturRaidGateBlockerEntityMOM,
             BlockerEntity.SurturRaidGateBlockerEntitySLAG,
             BlockerEntity.SurturRaidGateBlockerEntitySURT,
+            BlockerEntity.SurturRaidGateBlockerEntitySURT2,
             BlockerEntity.OperationsBountyChestA,
             BlockerEntity.OperationsBountyChestB,
             BlockerEntity.OperationsBountyChestC,
@@ -314,6 +315,7 @@ namespace MHServerEmu.Games.Entities
             SurturRaidGateBlockerEntityMOM = 7506253403374886470,
             SurturRaidGateBlockerEntitySLAG = 2107982419118661284,
             SurturRaidGateBlockerEntitySURT = 7080009510741745355,
+            SurturRaidGateBlockerEntitySURT2 = 17385248028568526589,
             // Off BounntyChest
             OperationsBountyChestA = 8947265512402064759,
             OperationsBountyChestB = 16557893689139991928,
