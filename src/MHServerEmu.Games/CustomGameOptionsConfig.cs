@@ -6,7 +6,7 @@ namespace MHServerEmu.Games
     {
         public int RegionCleanupIntervalMS { get; private set; } = 1000 * 60 * 5;       // 5 minutes
         public int RegionUnvisitedThresholdMS { get; private set; } = 1000 * 60 * 5;    // 5 minutes
-        public int WorldEntityRespawnTimeMS { get; private set; } = 1000 * 10;          // 10 seconds
+        public int WorldEntityRespawnTimeMS { get; private set; } = 1000 * 20;          // 20 seconds
 
         [ConfigIgnore]
         public TimeSpan RegionCleanupInterval { get => TimeSpan.FromMilliseconds(RegionCleanupIntervalMS); }

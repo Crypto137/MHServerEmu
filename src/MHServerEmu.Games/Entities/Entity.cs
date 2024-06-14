@@ -413,6 +413,10 @@ namespace MHServerEmu.Games.Entities
             EventPointer<RespawnEvent> eventPointer = new();
             Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
             eventPointer.Get().Initialize(this);
+
+            // LOOT
+            if (this is Agent agent)
+                Game.LootGenerator.CreateRandomItem(agent);
         }
 
         public void Respawn()

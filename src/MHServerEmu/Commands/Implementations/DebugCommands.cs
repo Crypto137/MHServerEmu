@@ -12,6 +12,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
@@ -221,6 +222,20 @@ namespace MHServerEmu.Commands.Implementations
             
             ChatHelper.SendMetagameMessage(client, $"Powers assigned to {avatar}:");
             ChatHelper.SendMetagameMessageSplit(client, sb.ToString(), false);
+
+            return string.Empty;
+        }
+
+        [Command("item", "Drops a random item from the caller's avatar.", AccountUserLevel.User)]
+        public string SpawnItem(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            LootGenerator lootGenerator = playerConnection.Game.LootGenerator;
+            var item = lootGenerator.CreateItem(playerConnection.Player.CurrentAvatar, ItemPrototypeId.Art153);
+            Logger.Debug($"SpawnItem(): {item}");
 
             return string.Empty;
         }

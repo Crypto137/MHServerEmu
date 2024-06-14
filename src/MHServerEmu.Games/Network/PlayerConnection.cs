@@ -9,11 +9,11 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
-using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
@@ -297,7 +297,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAdminCommand:                      OnAdminCommand(message); break;
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:             OnUseInteractableObject(message); break;
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:           OnPerformPreInteractPower(message); break;
+                case ClientToGameServerMessage.NetMessagePickupInteraction:                 OnPickupInteraction(message); break;
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;
+                case ClientToGameServerMessage.NetMessageInventoryTrashItem:                OnInventoryTrashItem(message); break;
                 case ClientToGameServerMessage.NetMessageThrowInteraction:                  OnThrowInteraction(message); break;
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;
@@ -577,6 +579,35 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnPickupInteraction(MailboxMessage message)
+        {
+            var pickupInteraction = message.As<NetMessagePickupInteraction>();
+            if (pickupInteraction == null) return Logger.WarnReturn(false, $"OnPickupInteraction(): Failed to retrieve message");
+
+            // See if the item exists
+            Item item = Game.EntityManager.GetEntity<Item>(pickupInteraction.IdTarget);
+            if (item == null) return Logger.WarnReturn(false, "OnPickupInteraction(): item == null");
+
+            // Make sure the item is in the world
+            if (item.IsInWorld == false) return Logger.WarnReturn(false, "OnPickupInteraction(): item.IsInWorld == false");
+
+            // Add item to the player's inventory
+            Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
+            if (inventory == null) return Logger.WarnReturn(false, "OnPickupInteraction(): inventory == null");
+            if (inventory.Count < inventory.MaxCapacity)
+            {
+                InventoryResult result = item.ChangeInventoryLocation(inventory);
+                if (result != InventoryResult.Success)
+                {
+                    Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
+                    item.Destroy();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private bool OnTryInventoryMove(MailboxMessage message)
         {
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
@@ -600,6 +631,25 @@ namespace MHServerEmu.Games.Network
 
             InventoryResult result = entity.ChangeInventoryLocation(inventory, tryInventoryMove.ToSlot);
             if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
+
+            return true;
+        }
+
+        private bool OnInventoryTrashItem(MailboxMessage message)
+        {
+            var inventoryTrashItem = message.As<NetMessageInventoryTrashItem>();
+            if (inventoryTrashItem == null) return Logger.WarnReturn(false, $"OnInventoryTrashItem(): Failed to retrieve message");
+
+            // See if the item exists
+            Item item = Game.EntityManager.GetEntity<Item>(inventoryTrashItem.ItemId);
+            if (item == null) return Logger.WarnReturn(false, "OnInventoryTrashItem(): item == null");
+
+            // Check ownership
+            if (item.IsOwnedBy(Player.Id) == false)
+                return Logger.WarnReturn(false, $"OnInventoryTrashItem(): Player {Player} is attempting to trash item {item} owned by {item.GetOwner()}");
+
+            // Destroy
+            item.Destroy();
 
             return true;
         }

@@ -47,6 +47,9 @@ namespace MHServerEmu.Games.Entities
         public Orientation Orientation { get; set; }
         public byte[] ArchiveData { get; set; }
 
+        public ulong SourceEntityId { get; set; }
+        public Vector3 SourcePosition { get; set; }
+
         public InventoryLocation InventoryLocation { get; set; }
         public InventoryLocation PreviousInventoryLocation { get; set; }
 

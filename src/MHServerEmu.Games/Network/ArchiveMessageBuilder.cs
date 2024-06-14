@@ -110,8 +110,17 @@ namespace MHServerEmu.Games.Network
 
                 if (settings != null)
                 {
+                    if (settings.SourceEntityId != Entity.InvalidId)
+                        fieldFlags |= EntityCreateMessageFlags.HasSourceEntityId;
+
+                    if (settings.SourcePosition != null && settings.SourcePosition != Vector3.Zero)
+                        fieldFlags |= EntityCreateMessageFlags.HasSourcePosition;
+
                     if (settings.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
                         fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
+
+                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsNewOnServer))
+                        fieldFlags |= EntityCreateMessageFlags.IsNewOnServer;
 
                     if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsClientEntityHidden))
                         fieldFlags |= EntityCreateMessageFlags.IsClientEntityHidden;
@@ -168,16 +177,14 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
                 {
-                    // TODO
-                    ulong sourceEntityId = 0;
+                    ulong sourceEntityId = settings.SourceEntityId;
                     Serializer.Transfer(archive, ref sourceEntityId);
                 }
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
                 {
-                    // TODO
-                    Vector3 sourcePosition = Vector3.Zero;
-                    Serializer.Transfer(archive, ref sourcePosition);
+                    Vector3 sourcePosition = settings.SourcePosition;
+                    Serializer.TransferVectorFixed(archive, ref sourcePosition, 3);
                 }
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))

@@ -16,6 +16,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
@@ -57,6 +58,7 @@ namespace MHServerEmu.Games
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
+        public LootGenerator LootGenerator { get; }
 
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
         public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }
@@ -86,6 +88,7 @@ namespace MHServerEmu.Games
             NetworkManager = new(this);
             RegionManager = new();
             EntityManager = new(this);
+            LootGenerator = new(this);
 
             Random = new();
 
