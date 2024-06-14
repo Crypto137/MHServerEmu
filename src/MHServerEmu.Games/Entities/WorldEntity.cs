@@ -530,31 +530,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private NetMessageEntityPosition BuildMessageEntityPosition(ChangePositionFlags flags)
-        {
-            return NetMessageEntityPosition.CreateBuilder()
-                .SetIdEntity(Id)
-                .SetFlags((uint)flags)
-                .SetPosition(RegionLocation.Position.ToNetStructPoint3())
-                .SetOrientation(RegionLocation.Orientation.ToNetStructPoint3())
-                .SetCellId(RegionLocation.CellId)
-                .SetAreaId(RegionLocation.AreaId)
-                .SetEntityPrototypeId((ulong)Prototype.DataRef)
-                .Build();
-        }
-
-        
-        public PlayerConnection GetPlayerConnection()
-        {
-            PlayerConnection playerConnection = null;
-            foreach (Player player in new PlayerIterator(Game))
-            {
-                playerConnection = player.PlayerConnection;
-                break;
-            }
-            return playerConnection;
-        }
-
         private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
         {
             if (flags.HasFlag(ChangePositionFlags.EnterWorld))
@@ -1076,7 +1051,6 @@ namespace MHServerEmu.Games.Entities
                 this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
             networkManager.SendMessageToMultiple(interestedClients, locomotionStateUpdateMessage);
         }
-
         
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) 
         {

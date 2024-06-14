@@ -415,24 +415,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         protected override bool InitInventories(bool populateInventories)
         {
-            bool success = base.InitInventories(populateInventories);
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
-            {
-                if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
-                {
-                    success = false;
-                    Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
-                }
-            }
-
-            return success;
+            return base.InitInventories(populateInventories);
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
-           if (SkipAI == false) base.OnLocomotionStateChanged(oldState, newState);
+           if (SkipAI) base.OnLocomotionStateChanged(oldState, newState);
         }
 
         protected override void BuildString(StringBuilder sb)
