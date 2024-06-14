@@ -227,6 +227,11 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        public NetMessageActivatePower ToProtobuf()
+        {
+            return NetMessageActivatePower.CreateBuilder().SetArchiveData(ToByteString()).Build();
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();
