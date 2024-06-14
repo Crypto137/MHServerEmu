@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec ItemSpec { get => _itemSpec; }
         public PrototypeId OnUsePower { get; internal set; }
+        public bool IsBoundToAccount { get; internal set; }
 
         public Item(Game game) : base(game) { }
 
@@ -57,6 +58,16 @@ namespace MHServerEmu.Games.Entities.Items
         }
 
         internal bool CanUse(Agent agent, bool powerUse)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal int GetVendorBaseXPGain(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal uint GetSellPrice(Player player)
         {
             throw new NotImplementedException();
         }

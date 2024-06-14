@@ -417,5 +417,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             for (int i = 0; i < _abilityKeyMappingList.Count; i++)
                 sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
         }
+
+        internal bool IsValidTargetForCurrentPower(WorldEntity target)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

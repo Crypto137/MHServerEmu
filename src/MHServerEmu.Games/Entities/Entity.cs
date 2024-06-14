@@ -559,6 +559,12 @@ namespace MHServerEmu.Games.Entities
             return entity.IsOwnedBy(Id);
         }
 
+        public bool Owns(Entity entity)
+        {
+            if (entity == null) return false;
+            return entity.IsOwnedBy(Id); // Owns(entity.Id);
+        }
+
         public Entity GetRootOwner()
         {
             Entity owner = this;

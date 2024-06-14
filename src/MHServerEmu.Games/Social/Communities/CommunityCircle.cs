@@ -133,5 +133,10 @@ namespace MHServerEmu.Games.Social.Communities
             Logger.Warn($"GetPrototype(): Prototype for id {Id} not found");
             return Prototypes[0];
         }
+
+        internal bool CanContainPlayer(string playerName, ulong playerDbId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

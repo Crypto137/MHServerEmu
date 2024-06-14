@@ -108,6 +108,7 @@ namespace MHServerEmu.Games.Entities
         public Avatar PrimaryAvatar { get; private set; }
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
+        public GuildMembership GuildMembership { get; internal set; }
 
         public Player(Game game) : base(game)
         {
@@ -801,6 +802,17 @@ namespace MHServerEmu.Games.Entities
             if (Properties[PropertyEnum.GracePeriod]) return false;
             return true;
         }
+
+        internal WorldEntity GetDialogTarget(bool validateTarget = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool CanAcquireCurrencyItem(WorldEntity localInteractee)
+        {
+            throw new NotImplementedException();
+        }
+
 
     }
 }
