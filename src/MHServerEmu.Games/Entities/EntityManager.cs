@@ -217,8 +217,7 @@ namespace MHServerEmu.Games.Entities
             if (entity is WorldEntity worldEntity)
             {
                 worldEntity.RegisterActions(settings.Actions);
-                // custom StartAction
-                worldEntity.AppendStartAction(settings.ActionsTarget);
+
                 if (settings.RegionId != 0)
                 {
                     Region region = _game.RegionManager.GetRegion(settings.RegionId);
@@ -229,6 +228,9 @@ namespace MHServerEmu.Games.Entities
                         position = worldEntity.FloorToCenter(position);
                     }
                     worldEntity.EnterWorld(region, position, settings.Orientation, settings);
+
+                    // custom StartAction - this needs to happen after the entity enters world
+                    worldEntity.AppendStartAction(settings.ActionsTarget);
                 }
             }
 
