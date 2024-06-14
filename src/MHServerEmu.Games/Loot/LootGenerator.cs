@@ -33,8 +33,9 @@ namespace MHServerEmu.Games.Loot
             Game = game;
             _itemPicker = new(Game.Random);
 
-            foreach (ItemPrototypeId itemProtoRef in Enum.GetValues<ItemPrototypeId>())
-                _itemPicker.Add((PrototypeId)itemProtoRef);
+            // Add all artifacts to the pool
+            foreach (PrototypeId artifactProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy((BlueprintId)1626168533479592044, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                _itemPicker.Add(artifactProtoRef);
         }
 
         public Item CreateItem(WorldEntity source, PrototypeId itemProtoRef)
