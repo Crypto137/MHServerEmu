@@ -257,9 +257,8 @@ namespace MHServerEmu.Games.Network
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
 
-            avatar.EnterWorld(AOI.Region, entrancePosition, StartOrientation);
-
             AOI.Update(entrancePosition, true);
+            avatar.EnterWorld(AOI.Region, entrancePosition, StartOrientation);
 
             Player.DequeueLoadingScreen();
 

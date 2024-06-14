@@ -267,18 +267,15 @@ namespace MHServerEmu.Games.Entities
             RegionLocation.Region = region;
             
             if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
-            {
-                // TODO: Everything else
                 OnEnteredWorld(settings);
-                NotifyPlayers(true, settings);
-            }
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
         {
             if (CanInfluenceNavigationMesh())
                 EnableNavigationInfluence();
-            // TODO PowerCollection
+
+            NotifyPlayers(true, settings);
         }
 
         public void EnableNavigationInfluence()
