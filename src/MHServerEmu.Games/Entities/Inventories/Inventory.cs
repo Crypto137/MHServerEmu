@@ -609,7 +609,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private void PreAdd(Entity entity)
         {
-
+            if (entity is WorldEntity worldEntity && Prototype.ExitWorldOnAdd && worldEntity.IsInWorld)
+                worldEntity.ExitWorld();
         }
 
         private bool PostAdd(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)

@@ -528,7 +528,8 @@ namespace MHServerEmu.Games.Network
             if (entity is WorldEntity worldEntity)
             {
                 // Validate that the entity's location is valid on the client before including it in the proximity channel
-                if (worldEntity.IsInWorld && worldEntity.IsDead == false && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                if (worldEntity.IsInWorld && worldEntity.IsDead == false && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false
+                    && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
                 {
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
 
