@@ -31,6 +31,12 @@ namespace MHServerEmu.Games.Entities
     }
 
     [Flags]
+    public enum KillFlags
+    {
+        None,
+    }
+
+    [Flags]
     public enum ChangePositionFlags
     {
         None                = 0,
@@ -1050,40 +1056,6 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
-        public virtual void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState) 
-        { 
-            if (IsInWorld)
-            {
-                // from CAvatar::UpdateServerAvatarState
-                bool skipGoalNode = newState.FollowEntityId != InvalidId;
-                bool sync = false;
-                bool pathNodesSync = false;
-                LocomotionState.CompareLocomotionStatesForSync(newState, oldState, ref sync, ref pathNodesSync, skipGoalNode);
-                if (sync || pathNodesSync)
-                {
-                    var position = RegionLocation.Position;
-                    var orientation = RegionLocation.Orientation;
-                    LocomotionMessageFlags fieldFlags = LocomotionMessageFlags.None;
-                    if (orientation.Pitch != 0.0f || orientation.Roll != 0.0f)
-                        fieldFlags |= LocomotionMessageFlags.HasFullOrientation;
-                    fieldFlags |= LocomotionState.GetFieldFlags(newState, oldState, pathNodesSync);
-                    LocomotionStateUpdateArchive locomotion = new()
-                    {
-                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                        EntityId = Id,
-                        FieldFlags = fieldFlags,
-                        Position = position,
-                        Orientation = orientation
-                    };
-                    Logger.Debug($"LocomotionState Send {PrototypeName} PathNodes:[{Locomotor.LocomotionState.PathNodes.Count}]");
-                    var playerConnection = GetPlayerConnection();
-                    playerConnection?.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                        .SetArchiveData(locomotion.ToByteString())
-                        .Build());
-                }
-            }
-        }
-
         public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newLocomotionState)
         {
             if (IsInWorld == false) return;
@@ -1337,33 +1309,4 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnDramaticEntranceEnd()  { }
     }
 
-    public enum PowerMovementPreventionFlags
-    {
-        Forced = 0,
-        NonForced = 1,
-        Sync = 2,
-    }
-
-    [Flags]
-    public enum KillFlags
-    {
-        None,
-    }
-
-    [Flags]
-    public enum ChangePositionFlags
-    {
-        None = 0,
-        Update = 1 << 0,
-        NoSendToOwner = 1 << 1,
-        NoSendToServer = 1 << 2,
-        NoSendToClients = 1 << 3,
-        Orientation = 1 << 4,
-        Force = 1 << 5,
-        Teleport = 1 << 6,
-        HighFlying = 1 << 7,
-        PhysicsResolve = 1 << 8,
-        SkipAOI = 1 << 9,
-        EnterWorld = 1 << 10,
-    }
 }

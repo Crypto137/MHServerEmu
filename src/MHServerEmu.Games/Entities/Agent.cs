@@ -5,7 +5,6 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Core.System.Time;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -84,18 +83,17 @@ namespace MHServerEmu.Games.Entities
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
             base.OnLocomotionStateChanged(oldState, newState);
-
-            if(IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+            if (SkipAI) return;
+            if (IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
             {
                 if((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))
                 {
                     Vector3 currentPosition = RegionLocation.Position;
                     Vector3 targetPosition = FloorToCenter(RegionLocation.ProjectToFloor(RegionLocation.Region, RegionLocation.Cell, currentPosition));
-                    ChangeRegionPosition(targetPosition, null, ChangePositionFlags.NoSendToOwner | ChangePositionFlags.HighFlying);
+                    ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
                 }
             }
         }
-
 
         public bool HasPowerPreventionStatus
             => IsInKnockback 
@@ -154,7 +152,6 @@ namespace MHServerEmu.Games.Entities
             }
             return true;
         }
-        public const bool SkipAI = true;
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);

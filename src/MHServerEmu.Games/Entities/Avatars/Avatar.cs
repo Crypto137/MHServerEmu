@@ -420,7 +420,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
-           // base.OnLocomotionStateChanged(oldState, newState); // Debug Off
+           if (SkipAI == false) base.OnLocomotionStateChanged(oldState, newState);
         }
 
         protected override void BuildString(StringBuilder sb)

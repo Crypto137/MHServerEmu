@@ -1487,15 +1487,5 @@ namespace MHServerEmu.Games.Entities.Locomotion
             MoveHeight = moveHeight;
             Flags = flags;
         }
-        
-        
-        /// <summary>
-        /// ToDo: Implement me in the future, added to support potential AI changes
-        /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        public void Stop()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
