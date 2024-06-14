@@ -19,8 +19,8 @@ namespace MHServerEmu.Core.Collisions
 
         public Aabb ToAabb()
         {
-            return new(new(Center.X - Radius, Center.Y - Radius, Center.Z - Radius),
-                        new(Center.X + Radius, Center.Y + Radius, Center.Z + Radius));
+            return new (new Vector3 (Center.X - Radius, Center.Y - Radius, Center.Z - Radius),
+                        new Vector3 (Center.X + Radius, Center.Y + Radius, Center.Z + Radius));
         }
 
         public bool Intersects(Vector3 v)

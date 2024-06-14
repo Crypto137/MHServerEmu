@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Dialog;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -262,7 +263,7 @@ namespace MHServerEmu.Games.Missions
             return missionManager.FindMissionByDataRef(missionRef);
         }
 
-        private static MissionManager FindMissionManagerForMission(Player player, Region region, PrototypeId missionRef)
+        public static MissionManager FindMissionManagerForMission(Player player, Region region, PrototypeId missionRef)
         {
             return FindMissionManagerForMission(player, region, missionRef.As<MissionPrototype>());
         }
@@ -286,12 +287,37 @@ namespace MHServerEmu.Games.Missions
             return null;
         }
 
-        private Mission FindMissionByDataRef(PrototypeId missionRef)
+        public Mission FindMissionByDataRef(PrototypeId missionRef)
         {
             if (_missionDict.TryGetValue(missionRef, out var mission))
                 return mission;
             else
                 return null;
+        }
+
+        public void AttachDialogDataFromMission(DialogDataCollection collection, Mission mission, DialogStyle dialogStyle, 
+            LocaleStringId dialogText, VOCategory voCategory, ulong interactorId, PrototypeId cinematic, ulong interactEntityId, 
+            sbyte objectiveIndex, sbyte conditionIndex, bool isTurnInNPC, bool showRewards, bool showGiveItems, 
+            LocaleStringId dialogTextWhenInventoryFull)
+        {
+            // client only, fill MissionDialogData
+            // collection.Add(missionDialogData);
+        }
+
+        static int UpperBoundsOffset = int.MaxValue;
+        public static int MissionLevelUpperBoundsOffset()
+        {
+            if (UpperBoundsOffset == int.MaxValue)
+            {
+                var missionGlobalsProto = GameDatabase.MissionGlobalsPrototype;
+                UpperBoundsOffset = missionGlobalsProto != null ? missionGlobalsProto.MissionLevelUpperBoundsOffset : 0;
+            }
+            return UpperBoundsOffset;
+        }
+
+        internal static bool MatchItemsToRemove(Player player, MissionItemRequiredEntryPrototype[] requiredItems)
+        {
+            throw new NotImplementedException();
         }
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]

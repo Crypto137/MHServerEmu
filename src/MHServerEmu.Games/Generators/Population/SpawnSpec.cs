@@ -15,17 +15,33 @@ namespace MHServerEmu.Games.Generators.Population
         public PrototypeId EntityRef { get; set; }
         public WorldEntity ActiveEntity { get; set; }
         public PropertyCollection Properties { get; set; }
-        public Transform3 Transform { get; set; }
+        public Transform3 Transform { get; set; } = Transform3.Identity();
         public bool? SnapToFloor { get; set; }
         public EntitySelectorPrototype EntitySelectorProto { get; set; }
         public PrototypeId MissionRef { get; set; }
         public List<EntitySelectorActionPrototype> Actions { get; private set; }
         public ScriptRoleKeyEnum RoleKey { get; internal set; }
+        public float LeashDistance 
+        { 
+            get 
+            {
+                PopulationObjectPrototype objectProto = Group?.ObjectProto;
+                if (objectProto != null)
+                    return objectProto.LeashDistance;
+                return 3000.0f; // Default LeashDistance in PopulationObject
+            } 
+        }
 
         public SpawnSpec(ulong id, SpawnGroup group)
         {
             Id = id;
             Group = group;
+            Properties = new();
+        }
+
+        public SpawnSpec()
+        {
+            // TODO check std::shared_ptr<Gazillion::SpawnSpec>
             Properties = new();
         }
 
@@ -102,6 +118,7 @@ namespace MHServerEmu.Games.Generators.Population
         public PrototypeId EncounterRef {  get; set; }
         public PopulationManager PopulationManager { get; set; }
         public ulong SpawnerId { get; set; }
+        public PopulationObjectPrototype ObjectProto { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
@@ -114,5 +131,60 @@ namespace MHServerEmu.Games.Generators.Population
         {
             Specs.Add(spec);
         }
+
+        public bool GetEntities(out List<WorldEntity> entities, SpawnGroupEntityQueryFilterFlags filterFlag, AlliancePrototype allianceProto = null)
+        {
+            entities = new();
+            foreach (SpawnSpec spec in Specs)
+            {
+                WorldEntity entity = spec.ActiveEntity;
+                if (entity != null)
+                {
+                    if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled) 
+                        && (entity.IsDead || entity.IsDestroyed || entity.IsControlledEntity))
+                        continue;
+
+                    if (EntityQueryAllianceCheck(filterFlag, entity, allianceProto))
+                        entities.Add(entity);
+                }
+            }
+            return entities.Count > 0;
+        }
+
+        public static List<WorldEntity> GetEntities(WorldEntity owner, SpawnGroupEntityQueryFilterFlags filterFlag = SpawnGroupEntityQueryFilterFlags.All)
+        {
+            List<WorldEntity> entities = new();
+            owner?.SpawnGroup?.GetEntities(out entities, filterFlag, owner.Alliance);
+            return entities;
+        }
+
+        private static bool EntityQueryAllianceCheck(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity entity, AlliancePrototype allianceProto)
+        {
+            if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.All))
+                return true;
+            
+            if (allianceProto != null)
+            {
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.Allies) && entity.IsFriendlyTo(allianceProto))
+                    return true;
+
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.Hostiles) && entity.IsHostileTo(allianceProto))
+                    return true;
+
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.Neutrals))
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
+    public enum SpawnGroupEntityQueryFilterFlags
+    {
+        Neutrals                    = 1 << 0,
+        Hostiles                    = 1 << 1,
+        Allies                      = 1 << 2,
+        NotDeadDestroyedControlled  = 1 << 3,
+        All                         = Neutrals | Hostiles | Allies
     }
 }

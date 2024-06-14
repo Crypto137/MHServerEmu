@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
@@ -103,8 +104,13 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsolePlayer { get => false; }
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
-        public Avatar PrimaryAvatar { get; internal set; }
         public bool IsInParty { get; internal set; }
+        public static bool IsPlayerTradeEnabled { get; internal set; }
+        public Avatar PrimaryAvatar { get; private set; }
+        public Avatar SecondaryAvatar { get; private set; }
+        public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
+        public GuildMembership GuildMembership { get; internal set; }
+        public string Name { get; internal set; }
 
         public Player(Game game) : base(game)
         {
@@ -792,5 +798,26 @@ namespace MHServerEmu.Games.Entities
                     StashTabInsert(stashRef, 0);
             }
         }
+
+        public bool IsTargetable(AlliancePrototype allianceProto)
+        {
+            Avatar avatar = PrimaryAvatar ?? SecondaryAvatar;
+            if (avatar != null && allianceProto != null && allianceProto.IsFriendlyTo(avatar.Alliance)) return true;
+            if (IsFullscreenMoviePlaying || IsOnLoadingScreen) return false;
+            if (Properties[PropertyEnum.GracePeriod]) return false;
+            return true;
+        }
+
+        internal WorldEntity GetDialogTarget(bool validateTarget = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool CanAcquireCurrencyItem(WorldEntity localInteractee)
+        {
+            throw new NotImplementedException();
+        }
+
+
     }
 }

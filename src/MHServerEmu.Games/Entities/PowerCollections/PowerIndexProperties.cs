@@ -8,6 +8,13 @@
         public int ItemLevel { get; } = 1;
         public float ItemVariation { get; } = 1.0f;
 
+        public PowerIndexProperties(int combatLevel, int powerRank, int characterLevel) : this()
+        {
+            CombatLevel = combatLevel;
+            PowerRank = powerRank;
+            CharacterLevel = characterLevel;
+        }
+
         public PowerIndexProperties(int powerRank = 0, int characterLevel = 1, int combatLevel = 1, int itemLevel = 1, float itemVariation = 1.0f)
         {
             PowerRank = powerRank;

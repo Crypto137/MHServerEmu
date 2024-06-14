@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Entities
         public override Bounds EntityCollideBounds { get; set; }
         public override bool CanRepulseOthers => false;
 
-        private MissileCreationContextPrototype _contextPrototype;
+        private MissileCreationContextPrototype _contextPrototype = null;
         public MissileCreationContextPrototype MissileCreationContextPrototype { get => _contextPrototype; }
         public Random Random { get; private set; }
 

@@ -17,9 +17,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Event FollowEntityGiveUpEvent;
-        public Event ReturnTargetMissingEvent;
+        public Event FollowEntityGiveUpEvent { get; private set; }
+        public Event FollowEntityMissileReturnEvent { get; private set; }
 
+        public const float ReachedPathPointEpsilon = 2.0f;
         public const float MovementSweepPadding = 0.5f;
         public const float GiveUpGoalDistance = 16.0f;
 
@@ -62,7 +63,6 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public bool IsStuck { get => HasPath && !IsPathComplete() && !IsEnabled; }
         public NaviPathResult LastGeneratedPathResult { get => _generatedPath.PathResult; }
         public static LocomotionOptions DefaultFollowEntityLocomotionOptions => new(TimeSpan.FromSeconds(1.0), 0, 0.0f, 0.0f, 0, 0);
-
         private bool _hasOrientationSyncState;
         private TimeSpan _syncStateTime;
         private Orientation _syncOrientation;
@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public Locomotor()
         {
             FollowEntityGiveUpEvent = new();
-            ReturnTargetMissingEvent = new();
+            FollowEntityMissileReturnEvent = new();
             LocomotionState = new();
             _lastLocomotionState = new();
             _defaultMethod = LocomotorMethod.None;
@@ -115,6 +115,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             _syncNextRepathTime = new ();
             _syncOrientation = new();
             _updateNavigationInfluenceTime = new();
+            _giveUpPosition = new();
         }
 
         public void Initialize(LocomotorPrototype locomotorProto, WorldEntity entity, float heightOverride = 0.0f)
@@ -487,7 +488,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     if (followEntity != null)
                     {
                         float distanceSq = Vector3.DistanceSquared2D(_owner.RegionLocation.Position, followEntity.RegionLocation.Position);
-                        return distanceSq <= MathHelper.Square(LocomotionState.FollowEntityRangeEnd + 2.0f);
+                        return distanceSq <= MathHelper.Square(LocomotionState.FollowEntityRangeEnd + ReachedPathPointEpsilon);
                     }
                     else
                         return true;
@@ -709,7 +710,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                             Vector3 currentDirection = _owner.Forward;
                             Vector3 currentVelocity = currentDirection * GetCurrentSpeed();
                             Vector3 nextVelocity = currentVelocity + (Vector3.Up * gravitatedContext.Gravity);
-                            Vector3 nextDirection = Vector3.Normalize(nextVelocity);
+                            Vector3 nextDirection = Vector3.SafeNormalize(nextVelocity);
                             Vector3 nextPosition = currentPosition + nextVelocity * timeSeconds;
                             Vector3 floorPosition = RegionLocation.ProjectToFloor(_owner.Region, _owner.Cell, nextPosition);
 
@@ -724,7 +725,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                     Random random = ownerAsMissile.Random;
                                     nextDirection = Vector3.AxisAngleRotate(nextDirection, Vector3.ZAxis, MathHelper.ToRadians(random.Next(-randomDegree, randomDegree)));
                                 }
-                                Vector3 axisVector = Vector3.Normalize(Vector3.Cross(Vector3.Up, nextDirection));
+                                Vector3 axisVector = Vector3.SafeNormalize(Vector3.Cross(Vector3.Up, nextDirection));
                                 Vector3 normalDirection = Vector3.AxisAngleRotate(Vector3.Up, axisVector, MathHelper.ToRadians(90.0f));
                                 float angle = MathF.Acos(Vector3.Dot(normalDirection, nextDirection));
                                 newOrientation = Orientation.FromDeltaVector(Vector3.AxisAngleRotate(nextDirection, -axisVector, 2 * angle));
@@ -844,7 +845,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     }
                     else
                     {
-                        ReturnTargetMissingEvent.Invoke();
+                        FollowEntityMissileReturnEvent.Invoke();
                         Stop();
                         if (IsSeekingMissile && _owner.IsInWorld)
                         {
@@ -961,7 +962,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
-        public bool FollowEntity(ulong targetId, float range, LocomotionOptions options = null, bool clearPath = true)
+        public bool FollowEntity(ulong targetId, float range = 0.0f, LocomotionOptions options = null, bool clearPath = true)
         {
             options ??= DefaultFollowEntityLocomotionOptions;
             return FollowEntity(targetId, range, range, options, clearPath);
@@ -1080,7 +1081,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         private void UnregisterFollowEvents()
         {
             FollowEntityGiveUpEvent.UnregisterCallbacks();
-            ReturnTargetMissingEvent.UnregisterCallbacks();
+            FollowEntityMissileReturnEvent.UnregisterCallbacks();
         }
 
         public bool MoveTo(Vector3 position, LocomotionOptions options)
@@ -1204,7 +1205,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             _syncStateTime = TimeSpan.Zero;
         }
 
-        public void SetMethod(LocomotorMethod method, float moveSpeedOverride)
+        public void SetMethod(LocomotorMethod method, float moveSpeedOverride = 0.0f)
         {
             LocomotionState.Method = (method == LocomotorMethod.Default) ? _defaultMethod : method;
             if (_moveSpeedOverride != moveSpeedOverride)
@@ -1485,6 +1486,16 @@ namespace MHServerEmu.Games.Entities.Locomotion
             BaseMoveSpeed = baseMoveSpeed;
             MoveHeight = moveHeight;
             Flags = flags;
+        }
+        
+        
+        /// <summary>
+        /// ToDo: Implement me in the future, added to support potential AI changes
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Stop()
+        {
+            throw new NotImplementedException();
         }
     }
 }

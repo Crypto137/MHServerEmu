@@ -3,9 +3,20 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.Dialog
 {
+    public struct EntityObjectiveInfo
+    {
+        public PrototypeId MissionRef;
+        public MissionStateFlags MissionState;
+        public MissionObjectiveStateFlags ObjectiveState;
+        public sbyte ObjectiveIndex;
+        public BaseMissionOption MissionOption;
+        public PlayerHUDEnum Flags;
+    }
+
     public class BaseMissionOption : InteractionOption
     {
         public MissionPrototype MissionProto { get; private set; }
@@ -37,11 +48,42 @@ namespace MHServerEmu.Games.Dialog
 
             EntityFilterWrapper.FilterContextMissionRef = missionProto.DataRef;
         }
+
+        public Mission GetMission(Player player)
+        {
+            MissionManager missionManger = MissionManager.FindMissionManagerForMission(player, player.GetRegion(), MissionProto.DataRef);
+            return missionManger?.FindMissionByDataRef(MissionProto.DataRef);
+        }
+
+        internal MissionObjective GetObjective(Mission mission)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool HasObjective()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsActiveForMissionAndEntity(Mission mission, WorldEntity interactee)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void SetInteractDataObjectiveFlags(Player interactingPlayer, ref InteractData outInteractData, Mission mission, BaseMissionOption completeOption)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool ObjectiveFlagsAllowed()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class MissionHintOption : BaseMissionOption
     {
-        public MissionObjectiveHintPrototype Proto { get; internal set; }  
+        public MissionObjectiveHintPrototype Proto { get; set; }  
 
         public MissionHintOption()
         {
@@ -62,7 +104,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class BaseMissionConditionOption : BaseMissionOption
     {
-        public MissionConditionPrototype Proto { get; internal set; }
+        public MissionConditionPrototype Proto { get; set; }
 
         public BaseMissionConditionOption()
         {
@@ -87,6 +129,7 @@ namespace MHServerEmu.Games.Dialog
     public class MissionConditionMissionCompleteOption : BaseMissionConditionOption
     {
         private readonly SortedSet<PrototypeId> _missionRefs = new();
+        public SortedSet<PrototypeId> CompleteMissionRefs { get => _missionRefs; }
 
         public override void InitializeForMission(MissionPrototype missionProto, MissionStateFlags state, sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, MissionOptionTypeFlags optionType)
         {
@@ -178,7 +221,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class MissionVisibilityOption : BaseMissionOption
     {
-        public EntityVisibilitySpecPrototype Proto { get; internal set; }
+        public EntityVisibilitySpecPrototype Proto { get; set; }
 
         public MissionVisibilityOption()
         {
@@ -198,7 +241,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class MissionDialogOption : BaseMissionOption
     {
-        public MissionDialogTextPrototype Proto { get; internal set; }
+        public MissionDialogTextPrototype Proto { get; set; }
 
         public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
         {
@@ -213,7 +256,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class MissionConnectionTargetEnableOption : BaseMissionOption
     {
-        public ConnectionTargetEnableSpecPrototype Proto { get; internal set; }
+        public ConnectionTargetEnableSpecPrototype Proto { get; set; }
 
         public MissionConnectionTargetEnableOption()
         {
@@ -242,7 +285,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class MissionAppearanceOption : BaseMissionOption
     {
-        public EntityAppearanceSpecPrototype Proto { get; internal set; }
+        public EntityAppearanceSpecPrototype Proto { get; set; }
 
         public MissionAppearanceOption()
         {
@@ -262,7 +305,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class MissionActionEntityTargetOption: BaseMissionOption
     {
-        public MissionActionEntityTargetPrototype Proto { get; internal set; }
+        public MissionActionEntityTargetPrototype Proto { get; set; }
 
         public MissionActionEntityTargetOption()
         {

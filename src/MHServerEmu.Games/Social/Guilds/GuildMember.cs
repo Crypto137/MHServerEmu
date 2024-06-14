@@ -44,5 +44,10 @@ namespace MHServerEmu.Games.Social.Guilds
 
             return success;
         }
+
+        public static bool CanInvite(GuildMembership guildMembership)
+        {
+            return guildMembership == GuildMembership.eGMLeader || guildMembership == GuildMembership.eGMOfficer;
+        }
     }
 }

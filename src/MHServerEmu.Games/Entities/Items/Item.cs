@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
@@ -13,6 +14,8 @@ namespace MHServerEmu.Games.Entities.Items
         private ItemSpec _itemSpec = new();
 
         public ItemSpec ItemSpec { get => _itemSpec; }
+        public PrototypeId OnUsePower { get; internal set; }
+        public bool IsBoundToAccount { get; internal set; }
 
         public Item(Game game) : base(game) { }
 
@@ -52,6 +55,21 @@ namespace MHServerEmu.Games.Entities.Items
         {
             _itemSpec = itemSpec;
             // TODO: everything else
+        }
+
+        internal bool CanUse(Agent agent, bool powerUse)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal int GetVendorBaseXPGain(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal uint GetSellPrice(Player player)
+        {
+            throw new NotImplementedException();
         }
     }
 }

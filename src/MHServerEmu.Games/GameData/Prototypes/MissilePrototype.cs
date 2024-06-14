@@ -95,6 +95,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MissileUsesActualTargetPos { get; protected set; }
         public bool MissileSelectRandomContext { get; protected set; }
         public EvalPrototype EvalSelectMissileContextIndex { get; protected set; }
+
+        [DoNotCopy]
+        public float MaximumMissileBoundsSphereRadius { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            MaximumMissileBoundsSphereRadius = -1.0f;
+            foreach (var missileContext in MissileCreationContexts)
+            {
+                if (missileContext == null) return;
+                float radius = missileContext.Radius;
+                if (GameDatabase.DataDirectory.PrototypeIsAbstract(missileContext.Entity) == false)
+                {
+                    var missileEntity = missileContext.Entity.As<MissilePrototype>();
+                    if (missileEntity == null) return;
+                    var boundsProto = missileEntity.Bounds;
+                    if (boundsProto == null) return;
+                    radius = boundsProto.GetSphereRadius();
+                }
+                MaximumMissileBoundsSphereRadius = Math.Max(radius, MaximumMissileBoundsSphereRadius);
+            }
+        }
     }
 
     public class PublicEventTeamPrototype : Prototype

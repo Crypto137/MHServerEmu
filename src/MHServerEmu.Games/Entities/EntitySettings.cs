@@ -63,6 +63,7 @@ namespace MHServerEmu.Games.Entities
         // Class-specific
         public PlayerConnection PlayerConnection { get; set; }      // For Player
         public ItemSpec ItemSpec { get; set; }                      // For Item
+        public TimeSpan Lifespan { get; set; }
     }
 
     public struct EntityCreateResults

@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Navi
         Point = 2
     }
 
-    public class NaviPathNode   // TODO: Change to struct?
+    public class NaviPathNode   // We can't use struct here because it can be null
     {
         public Vector3 Vertex { get; set; }
         public NaviSide VertexSide { get; set; }

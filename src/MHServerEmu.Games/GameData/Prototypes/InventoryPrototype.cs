@@ -54,6 +54,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsPlayerGeneralInventory { get => Category == InventoryCategory.PlayerGeneral; }
 
         [DoNotCopy]
+        public bool IsPlayerGeneralExtraInventory { get => Category == InventoryCategory.PlayerGeneralExtra; }
+
+        [DoNotCopy]
         public bool IsPlayerCraftingRecipeInventory { get => Category == InventoryCategory.PlayerCraftingRecipes; }
 
         [DoNotCopy]

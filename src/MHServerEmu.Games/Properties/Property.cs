@@ -19,7 +19,8 @@ namespace MHServerEmu.Games.Properties
         Time,
         Guid,
         RegionId,
-        Int21Vector3
+        Int21Vector3,
+        Invalid = -1,
     }
 
     [AssetEnum((int)None)]

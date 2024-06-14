@@ -97,6 +97,7 @@ namespace MHServerEmu.Games.Entities
         public float Radius { get => GetRadius(); set => SetRadius(value); }
         public float HalfHeight { get => GetHalfHeight(); }
         public BoundsFlags Flags { get; private set; }
+        public float EyeHeight { get => HalfHeight * 0.8333f; }
 
         private BoundData _params = new();
         private Orientation _orientation;
@@ -120,6 +121,12 @@ namespace MHServerEmu.Games.Entities
             CollisionType = bounds.CollisionType;
             _params = bounds._params;
             Flags = bounds.Flags;
+        }
+
+        public Bounds(BoundsPrototype boundsProto, Vector3 position)
+        {
+            InitializeFromPrototype(boundsProto); 
+            Center = position;
         }
 
         public void InitializeFromPrototype(BoundsPrototype boundsProto)
@@ -206,7 +213,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private void InitializeWedge(float angleDegrees, float heightFromCenter, float length, float baseWidth, BoundsCollisionType collisionType, BoundsFlags flags)
+        public void InitializeWedge(float angleDegrees, float heightFromCenter, float length, float baseWidth, BoundsCollisionType collisionType, BoundsFlags flags)
         {
             Geometry = GeometryType.Wedge;
             _params.WedgeBaseWidth = baseWidth;
@@ -217,7 +224,7 @@ namespace MHServerEmu.Games.Entities
             Flags = flags;
         }
 
-        private void InitializeIsocelesTriangle(float angleDegrees, float heightFromCenter, float length, BoundsCollisionType collisionType, BoundsFlags flags)
+        public void InitializeIsocelesTriangle(float angleDegrees, float heightFromCenter, float length, BoundsCollisionType collisionType, BoundsFlags flags)
         {
             Geometry = GeometryType.Triangle;
             _params.TriangleBase = 2 * length * MathF.Tan(MathHelper.ToRadians(angleDegrees * 0.5f));
@@ -227,7 +234,7 @@ namespace MHServerEmu.Games.Entities
             Flags = flags;
         }
 
-        private void InitializeSphere(float radius, BoundsCollisionType collisionType, BoundsFlags flags)
+        public void InitializeSphere(float radius, BoundsCollisionType collisionType, BoundsFlags flags = BoundsFlags.None)
         {
             Geometry = GeometryType.Sphere;
             _params.SphereRadius = radius;
@@ -235,7 +242,7 @@ namespace MHServerEmu.Games.Entities
             Flags = flags;
         }
 
-        private void InitializeCapsule(float radius, float heightFromCenter, BoundsCollisionType collisionType, BoundsFlags flags)
+        public void InitializeCapsule(float radius, float heightFromCenter, BoundsCollisionType collisionType, BoundsFlags flags)
         {
             Geometry = GeometryType.Capsule;
             _params.CapsuleRadius = radius;
@@ -244,7 +251,7 @@ namespace MHServerEmu.Games.Entities
             Flags = flags;
         }
 
-        private void InitializeBox(float width, float length, float height, bool axisAligned, BoundsCollisionType collisionType, BoundsFlags flags)
+        public void InitializeBox(float width, float length, float height, bool axisAligned, BoundsCollisionType collisionType, BoundsFlags flags = BoundsFlags.None)
         {
             if (axisAligned)
             {

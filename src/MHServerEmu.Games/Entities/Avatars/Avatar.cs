@@ -6,6 +6,7 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -417,6 +418,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             return base.InitInventories(populateInventories);
         }
 
+        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        {
+           // base.OnLocomotionStateChanged(oldState, newState); // Debug Off
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
@@ -433,6 +439,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             for (int i = 0; i < _abilityKeyMappingList.Count; i++)
                 sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
+        }
+
+        internal bool IsValidTargetForCurrentPower(WorldEntity target)
+        {
+            throw new NotImplementedException();
         }
     }
 }

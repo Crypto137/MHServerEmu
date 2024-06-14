@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.Inventories;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
@@ -379,8 +380,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
+        public static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static PrototypeId RecursiveGetPowerRefOfPowerTypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
+        {
+            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "RecursiveGetPowerRefOfPowerTypeInCombo(): power == null");
+
+            if (powerProto is T)
+                return powerRef;
+
+            // for loop here
+
+            return PrototypeId.Invalid;
+        }
+
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
+
+        public virtual bool IsHighFlyingPower() => false;
+
         public override bool ApprovedForUse()
         {
             return GameDatabase.DesignStateOk(DesignState);
@@ -400,6 +419,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return (keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto));
+        }
+
+        public TargetingStylePrototype GetTargetingStyle()
+        {
+            return TargetingStyle.As<TargetingStylePrototype>();
         }
     }
 
@@ -425,6 +449,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IgnoreTeleportBlockers { get; protected set; }
         public bool HighFlying { get; protected set; }
         public TeleportMethodType TeleportMethod { get; protected set; }
+
+        public override bool IsHighFlyingPower() => HighFlying;
     }
 
     public class SpecializationPowerPrototype : PowerPrototype

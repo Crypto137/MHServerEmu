@@ -702,6 +702,7 @@ namespace MHServerEmu.Games.Generators.Population
                 group.Transform = Transform3.BuildTransform(GetAbsolutePosition(), Orientation.Zero);
                 if (ObjectProto is PopulationEncounterPrototype populationEncounter)
                     group.EncounterRef = populationEncounter.GetEncounterRef();
+                group.ObjectProto = ObjectProto;
                 group.MissionRef = MissionRef;
                 group.SpawnerId = spawner != null ? spawner.Id : 0;
             }
