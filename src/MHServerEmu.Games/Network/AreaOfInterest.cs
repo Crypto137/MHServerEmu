@@ -8,6 +8,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -534,7 +535,7 @@ namespace MHServerEmu.Games.Network
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
 
                     // HACK: Discover
-                    if (worldEntity.TrackAfterDiscovery)
+                    if (worldEntity.TrackAfterDiscovery && worldEntity is not Item)
                         newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
                 }
 
