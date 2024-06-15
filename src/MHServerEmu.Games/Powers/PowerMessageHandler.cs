@@ -141,7 +141,12 @@ namespace MHServerEmu.Games.Powers
                 Inventory inventory = playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
                 
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
-                bowlingBall?.Destroy();
+                if (bowlingBall == null) return false;
+
+                if (bowlingBall.Properties[PropertyEnum.InventoryStackCount] > 1)
+                    bowlingBall.Properties.AdjustProperty(-1, PropertyEnum.InventoryStackCount);
+                else
+                    bowlingBall.Destroy();
             }
 
             // if (powerPrototypePath.Contains("TravelPower/")) 

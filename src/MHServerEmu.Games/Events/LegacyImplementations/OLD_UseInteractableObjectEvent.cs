@@ -2,7 +2,6 @@
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Powers;
 
@@ -36,11 +35,11 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             // Destroy bowling balls that are already present in the player general inventory
             Inventory inventory = _player.GetInventory(InventoryConvenienceLabel.General);
 
-            Entity bowlingBall = inventory.GetMatchingEntity(bowlingBallProtoRef) as Item;
-            bowlingBall?.Destroy();
+            // A player can't have more than ten balls
+            if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
 
             // Give the player a new bowling ball
-            bowlingBall = _player.Game.LootGenerator.GiveItem(_player, bowlingBallProtoRef);
+            _player.Game.LootGenerator.GiveItem(_player, bowlingBallProtoRef);
 
             // Assign bowling ball power if the player's avatar doesn't have one
             Avatar avatar = _player.CurrentAvatar;
