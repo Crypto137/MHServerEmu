@@ -16,18 +16,81 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Picker<PrototypeId> _artifactPicker;
+        private readonly Picker<Picker<PrototypeId>> _commonMetaPicker;
+        private readonly Picker<Picker<PrototypeId>> _uncommonMetaPicker;
+        private readonly Picker<Picker<PrototypeId>> _rareMetaPicker;
 
         public Game Game { get; }
 
         public LootGenerator(Game game)
         {
             Game = game;
-            _artifactPicker = new(Game.Random);
 
-            // Add all artifacts to the pool
-            foreach (PrototypeId artifactProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.Artifact, PrototypeIterateFlags.NoAbstractApprovedOnly))
-                _artifactPicker.Add(artifactProtoRef);
+            // NOTE: This is a first, highly inaccurate iteration of loot just to have something dropping
+
+            // Initialize pickers
+
+            // Picker of pickers (meta pickers)
+            _commonMetaPicker = new(Game.Random);
+            _uncommonMetaPicker = new(Game.Random);
+            _rareMetaPicker = new(Game.Random);
+
+            // Populate pickers by type
+            DataDirectory dataDirectory = DataDirectory.Instance;
+
+            // Common drops
+            // Crafting elements
+            Picker<PrototypeId> craftingElementPicker = new(Game.Random);
+            _commonMetaPicker.Add(craftingElementPicker);
+
+            foreach (PrototypeId craftingElementRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.CraftingElement, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                craftingElementPicker.Add(craftingElementRef);
+
+            // Relics
+            Picker<PrototypeId> relicPicker = new(Game.Random);
+            _commonMetaPicker.Add(relicPicker);
+
+            foreach (PrototypeId relicProtoRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.Relic, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                relicPicker.Add(relicProtoRef);
+
+            // Uncommon drops
+            // Artifacts
+            Picker<PrototypeId> artifactPicker = new(Game.Random);
+            _uncommonMetaPicker.Add(artifactPicker);
+
+            foreach (PrototypeId artifactProtoRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.Artifact, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                artifactPicker.Add(artifactProtoRef);
+
+            // Rings
+            Picker<PrototypeId> ringPicker = new(Game.Random);
+            _uncommonMetaPicker.Add(ringPicker);
+
+            foreach (PrototypeId ringProtoRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.RingBlueprint, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                ringPicker.Add(ringProtoRef);
+
+            // Runeword glyphs
+            Picker<PrototypeId> runewordGlyphPicker = new(Game.Random);
+            _uncommonMetaPicker.Add(runewordGlyphPicker);
+
+            foreach (PrototypeId runewordGlyphRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.RunewordGlyphParent, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                runewordGlyphPicker.Add(runewordGlyphRef);
+
+
+            // Rare drops
+
+            // Costumes
+            Picker<PrototypeId> costumePicker = new(Game.Random);
+            _rareMetaPicker.Add(costumePicker);
+
+            foreach (PrototypeId petItemProtoRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.Costume, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                costumePicker.Add(petItemProtoRef);
+
+            // Pets
+            Picker<PrototypeId> petItemPicker = new(Game.Random);
+            _rareMetaPicker.Add(petItemPicker);
+
+            foreach (PrototypeId petItemProtoRef in dataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.PetItem, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                petItemPicker.Add(petItemProtoRef);
         }
 
         /// <summary>
@@ -94,7 +157,7 @@ namespace MHServerEmu.Games.Loot
         /// </summary>
         public void DropRandomLoot(WorldEntity source)
         {
-            int numDrops = source.GetRankPrototype().Rank switch
+            int lootRating = source.GetRankPrototype().Rank switch
             {
                 Rank.Popcorn    => 1,
                 Rank.Champion   => 2,
@@ -104,10 +167,26 @@ namespace MHServerEmu.Games.Loot
                 _ => 0,
             };
 
-            float maxDistanceFromSource = 25f * numDrops + 25f;
+            float maxDistanceFromSource = 25f + 25f * lootRating;
 
-            for (int i = 0; i < numDrops; i++)
-                DropItem(source, _artifactPicker.Pick(), maxDistanceFromSource);
+            // Drop a bunch of common items
+            for (int i = 0; i < lootRating; i++)
+                DropItem(source, _commonMetaPicker.Pick().Pick(), maxDistanceFromSource);
+
+            // Occasionally drop an uncommon item
+            for (int i = 0; i < lootRating; i++)
+            {
+                if (Game.Random.NextFloat() <= 0.33f)
+                    DropItem(source, _uncommonMetaPicker.Pick().Pick(), maxDistanceFromSource);
+            }
+
+            // Eternity splinter
+            if (Game.Random.NextFloat() <= 0.10f * lootRating)
+                DropItem(source, (PrototypeId)11087194553833821680, maxDistanceFromSource);
+
+            // Rare 1% drops
+            if (Game.Random.NextFloat() <= 0.01f)
+                DropItem(source, _rareMetaPicker.Pick().Pick(), maxDistanceFromSource);
         }
     }
 }
