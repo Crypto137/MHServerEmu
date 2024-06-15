@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Navi
                         if (skipGen) break;
                         if (shortestPathDistance < 0.0f)
                         {
-                            NaviPathChannel shortestPathChannel = new ();
+                            NaviPathChannel shortestPathChannel = new (256);
                             CopySearchStateToPathChannel(genPathState, shortestPathChannel);
                             AddPathNodeBack(outPathNodes, _startPosition, NaviSide.Point, _radius, 0.0f);
                             if (FunnelStep(shortestPathChannel, outPathNodes) == false)
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Navi
                         }
                         else
                         {
-                            NaviPathChannel tempPathChannel = new ();
+                            NaviPathChannel tempPathChannel = new (256);
                             CopySearchStateToPathChannel(genPathState, tempPathChannel);
                             tempPath = new(256);
                             AddPathNodeBack(tempPath, _startPosition, NaviSide.Point, _radius, 0.0f);
@@ -176,7 +176,7 @@ namespace MHServerEmu.Games.Navi
 
                 if (_pathGenerationFlags.HasFlag(PathGenerationFlags.IncompletedPath) && !pathFound && closestPathState != null)
                 {
-                    NaviPathChannel tempPathChannel = new();
+                    NaviPathChannel tempPathChannel = new(256);
                     if (closestPathState.ParentState != null)
                         CopySearchStateToPathChannel(closestPathState, tempPathChannel);
                     AddPathNodeBack(outPathNodes, _startPosition, NaviSide.Point, _radius, 0.0f);
@@ -622,7 +622,10 @@ namespace MHServerEmu.Games.Navi
         }
     }
 
-    public class NaviPathChannel : List<NaviChannelEdge> { }
+    public class NaviPathChannel : List<NaviChannelEdge>
+    {
+        public NaviPathChannel(int capacity) : base(capacity) { }
+    }
 
     public struct NaviChannelEdge
     {
