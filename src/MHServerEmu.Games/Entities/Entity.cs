@@ -416,7 +416,7 @@ namespace MHServerEmu.Games.Entities
 
             // LOOT
             if (this is Agent agent)
-                Game.LootGenerator.CreateRandomItem(agent);
+                Game.LootGenerator.DropRandomLoot(agent);
         }
 
         public void Respawn()

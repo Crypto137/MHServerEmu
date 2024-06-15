@@ -10,6 +10,15 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype|asset] [pattern]", AccountUserLevel.User)]
     public class LookupCommands : CommandGroup
     {
+        [Command("item", "Searches prototypes that use the item blueprint.\nUsage: lookup item [pattern]", AccountUserLevel.User)]
+        public string Item(string[] @params, FrontendClient client)
+        {
+            if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
+
+            // Find matches for the given pattern
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Item, client);
+        }
+
         [Command("costume", "Searches prototypes that use the costume blueprint.\nUsage: lookup costume [pattern]", AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {

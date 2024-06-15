@@ -225,20 +225,6 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("item", "Drops a random item from the caller's avatar.", AccountUserLevel.User)]
-        public string SpawnItem(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
-
-            LootGenerator lootGenerator = playerConnection.Game.LootGenerator;
-            var item = lootGenerator.CreateItem(playerConnection.Player.CurrentAvatar, ItemPrototypeId.Art153);
-            Logger.Debug($"SpawnItem(): {item}");
-
-            return string.Empty;
-        }
-
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]
         public string ScheduleTestEvent(string[] @params, FrontendClient client)
         {

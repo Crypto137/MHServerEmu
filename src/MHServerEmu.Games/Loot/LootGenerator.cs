@@ -1,7 +1,11 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -24,22 +28,46 @@ namespace MHServerEmu.Games.Loot
 
     public class LootGenerator
     {
-        private readonly Picker<PrototypeId> _itemPicker;
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly Picker<PrototypeId> _artifactPicker;
 
         public Game Game { get; }
 
         public LootGenerator(Game game)
         {
             Game = game;
-            _itemPicker = new(Game.Random);
+            _artifactPicker = new(Game.Random);
 
             // Add all artifacts to the pool
-            foreach (PrototypeId artifactProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy((BlueprintId)1626168533479592044, PrototypeIterateFlags.NoAbstractApprovedOnly))
-                _itemPicker.Add(artifactProtoRef);
+            foreach (PrototypeId artifactProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(HardcodedBlueprints.Artifact, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                _artifactPicker.Add(artifactProtoRef);
         }
 
-        public Item CreateItem(WorldEntity source, PrototypeId itemProtoRef)
+        /// <summary>
+        /// Creates an <see cref="ItemSpec"/> for the provided <see cref="PrototypeId"/>.
+        /// </summary>
+        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef)
         {
+            // Create a dummy item spec for now
+            PrototypeId rarityProtoRef = GameDatabase.LootGlobalsPrototype.RarityDefault;  // R1Common
+            int itemLevel = 1;
+            int creditsAmount = 0;
+            IEnumerable<AffixSpec> affixSpecs = Array.Empty<AffixSpec>();
+            int seed = 1;
+            PrototypeId equippableBy = PrototypeId.Invalid;
+
+            return new(itemProtoRef, rarityProtoRef, itemLevel, creditsAmount, affixSpecs, seed, equippableBy); 
+        }
+
+        /// <summary>
+        /// Creates and drops a new <see cref="Item"/> near the provided source <see cref="WorldEntity"/>. 
+        /// </summary>
+        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef)
+        {
+            if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
+                return Logger.WarnReturn<Item>(null, $"DropItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
+
             EntitySettings settings = new();
             settings.EntityRef = itemProtoRef;
             settings.RegionId = source.RegionLocation.RegionId;
@@ -48,13 +76,34 @@ namespace MHServerEmu.Games.Loot
             settings.SourceEntityId = source.Id;
             // TODO: settings.SourcePosition
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
-            settings.ItemSpec = new(itemProtoRef, (PrototypeId)10195041726035595077, 1, 0, Array.Empty<AffixSpec>(), 1, PrototypeId.Invalid);
+            settings.ItemSpec = CreateItemSpec(itemProtoRef);
 
             return Game.EntityManager.CreateEntity(settings) as Item;
         }
 
-        public Item CreateItem(WorldEntity source, ItemPrototypeId itemProtoRef) => CreateItem(source, (PrototypeId)itemProtoRef);
+        /// <summary>
+        /// Creates and gives a new item to the provided <see cref="Player"/>.
+        /// </summary>
+        public Item GiveItem(Player player, PrototypeId itemProtoRef)
+        {
+            if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
+                return Logger.WarnReturn<Item>(null, $"GiveItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
 
-        public Item CreateRandomItem(WorldEntity source) => CreateItem(source, _itemPicker.Pick());
+            Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
+            if (inventory == null) return Logger.WarnReturn<Item>(null, "GiveItem(): inventory == null");
+
+            EntitySettings settings = new();
+            settings.EntityRef = itemProtoRef;
+            settings.InventoryLocation = new(player.Id, inventory.PrototypeDataRef);
+            settings.ItemSpec = CreateItemSpec(itemProtoRef);
+
+            return Game.EntityManager.CreateEntity(settings) as Item;
+        }
+
+        public void DropRandomLoot(WorldEntity source)
+        {
+            // Drop a random artifact
+            DropItem(source, _artifactPicker.Pick());
+        }
     }
 }

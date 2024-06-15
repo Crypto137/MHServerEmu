@@ -71,6 +71,8 @@
     {
         public const BlueprintId DiamondFormActivatePower   = (BlueprintId)18066325974134561036;    // Powers/Blueprints/Keywords/DiamondFormActivatePower.blueprint
         public const BlueprintId Mental                     = (BlueprintId)720980541349630335;      // Powers/Blueprints/Keywords/Mental.blueprint
+        public const BlueprintId Item                       = (BlueprintId)10622579046198020830;    // Entity/Items/Item.blueprint
+        public const BlueprintId Artifact                   = (BlueprintId)1626168533479592044;     // Entity/Items/Artifacts/Artifact.blueprint
         public const BlueprintId Costume                    = (BlueprintId)10774581141289766864;    // Entity/Items/Costumes/Costume.blueprint 
         public const BlueprintId Region                     = (BlueprintId)1677652504589371837;     // Regions/Region.blueprint
     }
