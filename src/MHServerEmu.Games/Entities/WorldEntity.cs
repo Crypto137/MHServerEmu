@@ -126,7 +126,7 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            int health = EntityHelper.GetRankHealth(proto);
+            int health = EntityHelper.GetHealthForWorldEntity(this);
             if (health > 0)
             {
                 Properties[PropertyEnum.Health] = health;

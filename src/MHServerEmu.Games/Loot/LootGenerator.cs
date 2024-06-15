@@ -1,31 +1,17 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
-    public enum ItemPrototypeId : ulong
-    {
-        Art067SuperHeroic = 1934310603366604595,    // doom1
-        Art153 = 16667966083210025606,              // doom2
-        Art209 = 2348277069438327432,               // kurse
-        Art208 = 16219747376418921095,              // kingpin
-        Art210 = 13870721159688493696,              // modok
-        Art224 = 3596602080314202505,               // jugg2
-        Art225 = 17322934653406550410,              // jugg1
-        Art236 = 17447023190666713484,              // mandarin
-        Art237 = 3724082061191682445,               // taskmaster
-        Art321 = 12391768528730856067,              // sinister
-        Art354 = 11017918513942632845,              // shocker
-        Art356 = 17751953736382093963,              // hood
-        Art357 = 73716217325623696,                 // doc oc
-    }
-
     public class LootGenerator
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -63,16 +49,19 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates and drops a new <see cref="Item"/> near the provided source <see cref="WorldEntity"/>. 
         /// </summary>
-        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef)
+        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef, float maxDistanceFromSource)
         {
             if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
                 return Logger.WarnReturn<Item>(null, $"DropItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
 
+            // Pick a random point near source entity
+            source.Region.ChooseRandomPositionNearPoint(source.Bounds, PathFlags.Walk, PositionCheckFlags.CheckClearOfEntity,
+                BlockingCheckFlags.None, 10f, maxDistanceFromSource, out Vector3 dropPosition);
+
             EntitySettings settings = new();
             settings.EntityRef = itemProtoRef;
             settings.RegionId = source.RegionLocation.RegionId;
-            settings.Position = new(source.RegionLocation.Position);
-            settings.Orientation = new(source.RegionLocation.Orientation);
+            settings.Position = dropPosition;
             settings.SourceEntityId = source.Id;
             // TODO: settings.SourcePosition
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
@@ -100,10 +89,25 @@ namespace MHServerEmu.Games.Loot
             return Game.EntityManager.CreateEntity(settings) as Item;
         }
 
+        /// <summary>
+        /// Drops random loot from the provided source <see cref="WorldEntity"/>.
+        /// </summary>
         public void DropRandomLoot(WorldEntity source)
         {
-            // Drop a random artifact
-            DropItem(source, _artifactPicker.Pick());
+            int numDrops = source.GetRankPrototype().Rank switch
+            {
+                Rank.Popcorn    => 1,
+                Rank.Champion   => 2,
+                Rank.Elite      => 3,
+                Rank.MiniBoss   => 4,
+                Rank.Boss       => 5,
+                _ => 0,
+            };
+
+            float maxDistanceFromSource = 25f * numDrops + 25f;
+
+            for (int i = 0; i < numDrops; i++)
+                DropItem(source, _artifactPicker.Pick(), maxDistanceFromSource);
         }
     }
 }

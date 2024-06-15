@@ -29,7 +29,7 @@ namespace MHServerEmu.Commands.Implementations
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             LootGenerator lootGenerator = playerConnection.Game.LootGenerator;
-            var item = lootGenerator.DropItem(avatar, itemProtoRef);
+            var item = lootGenerator.DropItem(avatar, itemProtoRef, 50f);
             Logger.Debug($"DropItem(): {item} from {avatar}");
 
             return string.Empty;

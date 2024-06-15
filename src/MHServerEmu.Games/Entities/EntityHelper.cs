@@ -127,41 +127,25 @@ namespace MHServerEmu.Games.Entities
 
         #region HardCodeRank
 
-        public static int GetRankHealth(EntityPrototype entity)
+        public static int GetHealthForWorldEntity(WorldEntity worldEntity)
         {
-            if (entity is PropPrototype)
-            {
+            WorldEntityPrototype worldEntityProto = worldEntity.WorldEntityPrototype;
+
+            if (worldEntityProto is PropPrototype)
                 return 200;
-            }
-            else if (entity is SpawnerPrototype || entity is HotspotPrototype)
-            {
+
+            if (worldEntityProto is SpawnerPrototype || worldEntityProto is HotspotPrototype)
                 return 0;
-            }
-            else if (entity is WorldEntityPrototype worldEntity)
+
+            switch (worldEntity.GetRankPrototype().Rank)
             {
-                return (RankPrototypeId)worldEntity.Rank switch
-                {
-                    RankPrototypeId.Popcorn => 600,
-                    RankPrototypeId.Champion => 800,
-                    RankPrototypeId.Elite => 1000,
-                    RankPrototypeId.MiniBoss => 1500,
-                    RankPrototypeId.Boss => 2000,
-                    _ => 1000,
-                };
+                case Rank.Popcorn:  return 600;
+                case Rank.Champion: return 800;
+                case Rank.Elite:    return 1000;
+                case Rank.MiniBoss: return 1500;
+                case Rank.Boss:     return 2000;
+                default:            return 1000;
             }
-            return 0;
-
-        }
-
-        public enum RankPrototypeId : ulong
-        {
-            Popcorn = 15168672998566398820,
-            Champion = 3048000484526787506,
-            Elite = 17308931952834644598,
-            EliteMinion = 7470660573381266688,
-            EliteNamed = 11012647903754259579,
-            MiniBoss = 18093345044982008775,
-            Boss = 9550003146522364442,
         }
 
         #endregion
