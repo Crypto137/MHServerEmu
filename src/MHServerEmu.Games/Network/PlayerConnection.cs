@@ -594,15 +594,12 @@ namespace MHServerEmu.Games.Network
             // Add item to the player's inventory
             Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
             if (inventory == null) return Logger.WarnReturn(false, "OnPickupInteraction(): inventory == null");
-            if (inventory.Count < inventory.MaxCapacity)
+
+            InventoryResult result = item.ChangeInventoryLocation(inventory);
+            if (result != InventoryResult.Success)
             {
-                InventoryResult result = item.ChangeInventoryLocation(inventory);
-                if (result != InventoryResult.Success)
-                {
-                    Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
-                    item.Destroy();
-                    return false;
-                }
+                Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
+                return false;
             }
 
             return true;
