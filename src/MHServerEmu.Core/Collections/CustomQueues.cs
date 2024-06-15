@@ -2,10 +2,15 @@
 {
     public class FixedPriorityQueue<T> where T : IComparable<T>
     {
-        private readonly List<T> _items = new();
+        private readonly List<T> _items;
         public bool Empty => _items.Count == 0;
         public int Count => _items.Count;
         public T Top => _items[0];
+
+        public FixedPriorityQueue(int capacity) 
+        { 
+            _items = new(capacity); 
+        }
 
         public void Push(T value)
         {

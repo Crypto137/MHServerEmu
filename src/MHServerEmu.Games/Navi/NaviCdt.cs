@@ -840,7 +840,7 @@ namespace MHServerEmu.Games.Navi
             NaviTriangleState triangleState = new (triangle);
 
             List<NaviEar> listEar = new ();
-            FixedPriorityQueue<NaviEar> queueEar = new ();
+            FixedPriorityQueue<NaviEar> queueEar = new (512);
 
             NaviTriangle it = triangle;
             NaviTriangle nextTriangle;

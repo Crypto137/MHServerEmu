@@ -273,14 +273,14 @@ namespace MHServerEmu.Games.Navi
 
         public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
-            List<NaviPathNode> pathNodes = new();
+            List<NaviPathNode> pathNodes = new(256);
             var pathGen = new NaviPathGenerator(naviMesh);
             return pathGen.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, true, 0, 0f);
         }
 
         public NaviPathResult GeneratePath(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags, PathGenerationFlags pathGenerationFlags, float incompleteDistance)
         {
-            List<NaviPathNode> pathNodes = new();
+            List<NaviPathNode> pathNodes = new(256);
             var generator = new NaviPathGenerator(naviMesh);
             NaviPathResult result = generator.GeneratePath(position, goalPosition, radius, pathFlags, pathNodes, false, pathGenerationFlags, incompleteDistance);
             Init(radius, pathFlags, pathNodes);
@@ -293,7 +293,7 @@ namespace MHServerEmu.Games.Navi
                 return NaviPathResult.Failed;
 
             var startNode = new NaviPathNode(position, NaviSide.Point, 0f, false);
-            List<NaviPathNode> pathNodes = new ();
+            List<NaviPathNode> pathNodes = new (256);
             var generator = new NaviPathGenerator(naviMesh);
             NaviPathResult result = NaviPathResult.Success;
 
@@ -306,7 +306,7 @@ namespace MHServerEmu.Games.Navi
 
                 var pathNode = new NaviPathNode(wp.Point,wp.Side, wp.Radius, false);
                 Segment pathSegment = GetPathSegment(pathNodes.Count > 0 ? pathNodes[^1] : startNode, pathNode);
-                List<NaviPathNode> wpPath = new ();
+                List<NaviPathNode> wpPath = new (256);
                 result = generator.GeneratePath(pathSegment.Start, pathSegment.End, radius, pathFlags, wpPath, false, 0, 0f);
                 if (result == NaviPathResult.Success)
                 {
@@ -332,7 +332,7 @@ namespace MHServerEmu.Games.Navi
 
         public NaviPathResult GenerateSimpleMove(Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
         {
-            List<NaviPathNode> pathNodes = new ();
+            List<NaviPathNode> pathNodes = new (256);
             NaviPathGenerator.GenerateDirectMove(position, goalPosition, pathNodes);
             Init(radius, pathFlags, pathNodes);
             return NaviPathResult.Success;
@@ -430,7 +430,6 @@ namespace MHServerEmu.Games.Navi
         FailedNoPathFound = 7,
         FailedOutMaxSize = 9,
         IncompletedPath = 10,
-
     }
 
 }

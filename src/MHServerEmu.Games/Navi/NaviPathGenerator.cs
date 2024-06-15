@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Navi
         {
             // _navi = naviMesh.NaviSystem; // not used
             _naviMesh = naviMesh;
-            _searchStateQueue = new();
+            _searchStateQueue = new(128);
         }
 
         public static void GenerateDirectMove(Vector3 startPosition, Vector3 goalPosition, List<NaviPathNode> pathNodes)
@@ -133,7 +133,7 @@ namespace MHServerEmu.Games.Navi
                         {
                             NaviPathChannel tempPathChannel = new ();
                             CopySearchStateToPathChannel(genPathState, tempPathChannel);
-                            tempPath = new();
+                            tempPath = new(256);
                             AddPathNodeBack(tempPath, _startPosition, NaviSide.Point, _radius, 0.0f);
                             if (FunnelStep(tempPathChannel, tempPath) == false)
                                 throw new InvalidOperationException("FunnelStep failed.");
