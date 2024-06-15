@@ -16,7 +16,7 @@ namespace MHServerEmu.Commands.Implementations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("drop", "Creates and drops the specified item from the current avatar.\nUsage: item drop [pattern]")]
+        [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]")]
         public string Drop(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -25,12 +25,19 @@ namespace MHServerEmu.Commands.Implementations
             PrototypeId itemProtoRef = FindItem(@params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
+            if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
+                count = 1;
+
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             LootGenerator lootGenerator = playerConnection.Game.LootGenerator;
-            var item = lootGenerator.DropItem(avatar, itemProtoRef, 50f);
-            Logger.Debug($"DropItem(): {item} from {avatar}");
+            
+            for (int i = 0; i < count; i++)
+            {
+                var item = lootGenerator.DropItem(avatar, itemProtoRef, 50f);
+                Logger.Debug($"DropItem(): {item} from {avatar}");
+            }
 
             return string.Empty;
         }
