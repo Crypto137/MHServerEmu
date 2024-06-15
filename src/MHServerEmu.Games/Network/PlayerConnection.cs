@@ -573,7 +573,7 @@ namespace MHServerEmu.Games.Network
             {
                 EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
                 Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(this, interactableObject);
+                eventPointer.Get().Initialize(Player, interactableObject);
             }
 
             return true;
