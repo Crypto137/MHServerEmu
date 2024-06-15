@@ -1,10 +1,8 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities

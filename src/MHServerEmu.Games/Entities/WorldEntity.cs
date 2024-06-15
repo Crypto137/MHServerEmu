@@ -57,6 +57,8 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private AlliancePrototype _allianceProto;
+
         protected EntityTrackingContextMap _trackingContextMap;
         protected ConditionCollection _conditionCollection;
         protected PowerCollection _powerCollection;
@@ -65,8 +67,6 @@ namespace MHServerEmu.Games.Entities
         public EntityTrackingContextMap TrackingContextMap { get => _trackingContextMap; }
         public ConditionCollection ConditionCollection { get => _conditionCollection; }
         public PowerCollection PowerCollection { get => _powerCollection; }
-
-        private AlliancePrototype _allianceProto;
         public AlliancePrototype Alliance { get => GetAlliance(); }
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsTeamUpAgent { get => false; }
         public virtual bool IsSummonedPet { get => false; }
         public bool IsInWorld { get => RegionLocation.IsValid(); }
-        public bool IsAliveInWorld { get => IsInWorld && !IsDead; }
+        public bool IsAliveInWorld { get => IsInWorld && IsDead == false; }
         public bool IsVendor { get => Properties[PropertyEnum.VendorType] != PrototypeId.Invalid; }
         public EntityPhysics Physics { get; private set; }
         public bool HasNavigationInfluence { get; private set; }
@@ -527,6 +527,7 @@ namespace MHServerEmu.Games.Entities
                 // TODO: Notify if distance is far enough, similar to AOI updates
                 NotifyPlayers(true);
             }
+
             return true;
         }
 

@@ -564,14 +564,13 @@ namespace MHServerEmu.Games.Entities
         public bool Owns(ulong entityId)
         {
             Entity entity = Game.EntityManager.GetEntity<Entity>(entityId);
-            if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
-            return entity.IsOwnedBy(Id);
+            return Owns(entity);
         }
 
         public bool Owns(Entity entity)
         {
-            if (entity == null) return false;
-            return entity.IsOwnedBy(Id); // Owns(entity.Id);
+            if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
+            return entity.IsOwnedBy(Id);
         }
 
         public Entity GetRootOwner()
