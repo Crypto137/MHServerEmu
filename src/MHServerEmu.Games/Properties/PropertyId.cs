@@ -71,6 +71,17 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PropertyEnum param0)
+        {
+            // This is for properties that have enums for other properties as their params (example: Requirement)
+            PropertyInfo paramInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(param0);
+            PrototypeId paramProtoRef = paramInfo.Prototype.DataRef;
+            Raw = new PropertyId(propertyEnum, paramProtoRef).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
         public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);

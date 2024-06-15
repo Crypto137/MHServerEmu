@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 
@@ -90,6 +91,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SortSubCategory { get; protected set; }
         public ItemInstrumentedDropGroup InstrumentedDropGroup { get; protected set; }
         public bool IsContainer { get; protected set; }
+
+        public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
+        {
+            // TODO
+        }
     }
 
     public class ItemAbilitySettingsPrototype : Prototype

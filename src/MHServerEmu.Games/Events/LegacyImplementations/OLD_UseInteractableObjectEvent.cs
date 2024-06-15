@@ -33,18 +33,6 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             var itemPower = (PrototypeId)PowerPrototypes.Items.BowlingBallItemPower; // BowlingBallItemPower
                                                                                      // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
 
-            /*
-            PropertyCollection properties = new();
-            properties[PropertyEnum.Requirement, (PrototypeId)4312898931213406054] = 1.0f;    // Property/Info/CharacterLevel.defaults
-            properties[PropertyEnum.ItemRarity] = itemRarity;
-            properties[PropertyEnum.ItemVariation] = itemVariation;
-            // TODO: applyItemSpecProperties 
-            properties[PropertyEnum.InventoryStackSizeMax] = 1000;          // Item.StackSettings
-            properties[PropertyEnum.ItemIsTradable] = false;                // DefaultSettings.IsTradable
-            properties[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
-            properties[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
-            */
-
             // Destroy bowling balls that are already present in the player general inventory
             Inventory inventory = _player.GetInventory(InventoryConvenienceLabel.General);
 
@@ -52,7 +40,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             bowlingBall?.Destroy();
 
             // Give the player a new bowling ball
-            _player.Game.LootGenerator.GiveItem(_player, bowlingBallProtoRef);
+            bowlingBall = _player.Game.LootGenerator.GiveItem(_player, bowlingBallProtoRef);
 
             // Assign bowling ball power if the player's avatar doesn't have one
             Avatar avatar = _player.CurrentAvatar;
