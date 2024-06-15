@@ -20,6 +20,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MissionAccepted = 7,
         InsufficientFunds = 8,
         VendorError = 9,
+        Invalid = -1,
     }
 
     [AssetEnum((int)None)]

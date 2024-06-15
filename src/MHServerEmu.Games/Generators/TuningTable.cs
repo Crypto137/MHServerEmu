@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Regions
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
 
-        public TuningPrototype GetPrototype() => _tuningProto;
+        public TuningPrototype Prototype { get => _tuningProto; }
 
         public TuningTable(Region region)
         {

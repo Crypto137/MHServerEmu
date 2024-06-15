@@ -146,7 +146,7 @@ namespace MHServerEmu.Core.Collections
         public class Iterator : IEnumerator<T>
         {
             private InvasiveList<T> _list;            
-            public bool SkipNext { get; internal set; }
+            public bool SkipNext { get; set; }
 
             public Iterator(InvasiveList<T> invasiveList)
             {

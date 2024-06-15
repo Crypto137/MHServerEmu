@@ -18,8 +18,16 @@ namespace MHServerEmu.Games.Navi
         private float _width;
 
         public List<NaviPathNode> PathNodeList { get => _pathNodes; }
-        public bool IsComplete { get; internal set; }
-        public bool IsCurrentGoalNodeLastNode { get; internal set; }
+        public bool IsComplete { get => IsValid == false || _pathNodes.IndexOf(GetCurrentGoalNode()) == -1; }
+        public bool IsCurrentGoalNodeLastNode 
+        { 
+            get
+            {
+                if (IsValid == false) return false;
+                int currentNodeIndex = _pathNodes.IndexOf(_currentNode);
+                return currentNodeIndex != -1 && currentNodeIndex + 1 == _pathNodes.Count - 1;
+            }
+        }
 
         public NaviPath()
         {
@@ -38,7 +46,7 @@ namespace MHServerEmu.Games.Navi
             _pathNodes.Clear();
             _currentNode = default; //_pathNodes.FirstOrDefault();
 
-            if (pathNodes != null) Append(pathNodes, 0);
+            if (pathNodes != null && pathNodes.Count > 0) Append(pathNodes, 0);
         }
 
         public void Clear()
@@ -210,15 +218,14 @@ namespace MHServerEmu.Games.Navi
         public NaviPathNode GetCurrentGoalNode()
         {
             int currentIndex = _pathNodes.IndexOf(_currentNode);
-            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return null;
+            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return _currentNode;
             return _pathNodes[currentIndex + 1];
         }
 
         public Vector3 GetCurrentGoalPosition(Vector3 position)
         {
             int currentIndex = _pathNodes.IndexOf(_currentNode);
-            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1)
-                return position;
+            if (currentIndex == -1 || currentIndex == _pathNodes.Count - 1) return position;
             NaviPathNode goalNode = _pathNodes[currentIndex + 1];
             return GetNodeGoalPosition(goalNode, position);
         }
@@ -248,20 +255,20 @@ namespace MHServerEmu.Games.Navi
 
         public Vector3 GetStartPosition()
         {
-            if (!IsValid) return Vector3.Zero;
-            return _pathNodes.First().Vertex;
+            if (IsValid == false) return Vector3.Zero;
+            return _pathNodes[0].Vertex;
         }
 
         public Vector3 GetFinalPosition()
         {
-            if (!IsValid) return Vector3.Zero;
-            return _pathNodes.Last().Vertex;
+            if (IsValid == false) return Vector3.Zero;
+            return _pathNodes[^1].Vertex;
         }
 
         public void UpdateEndPosition(Vector3 position)
         {
             if (_pathNodes.Count > 0)
-                _pathNodes.Last().Vertex = position;
+                _pathNodes[^1].Vertex = position;
         }
 
         public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
@@ -345,7 +352,7 @@ namespace MHServerEmu.Games.Navi
                 {
                     float distanceSq = Vector3.DistanceSquared2D(goalNode.Vertex, fromPoint);
                     float moveDistanceSq = moveDistance * moveDistance;
-                    moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                    moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint);
                     if (distanceSq < moveDistanceSq)
                     {
                         movePosition = goalNode.Vertex;
@@ -361,17 +368,17 @@ namespace MHServerEmu.Games.Navi
                     {
                         moveDirection = goalNode.VertexSide == NaviSide.Left ? tangent.End : tangent.Start;
                         if (!Vector3.IsFinite(moveDirection))
-                            moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                            moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint);
                     }
                     else
-                        moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint, Vector3.XAxis);
+                        moveDirection = Vector3.SafeNormalize2D(goalNode.Vertex - fromPoint);
                     movePosition = fromPoint + moveDirection * moveDistance;
                 }
             }
             else
             {
                 movePosition = GetFinalPosition();
-                moveDirection = Vector3.SafeNormalize2D(GetFinalPosition() - fromPoint, Vector3.XAxis);
+                moveDirection = Vector3.SafeNormalize2D(GetFinalPosition() - fromPoint);
             }
 
             if (!Vector3.IsFinite(movePosition))

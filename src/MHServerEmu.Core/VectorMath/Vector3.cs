@@ -220,10 +220,17 @@ namespace MHServerEmu.Core.VectorMath
 
         public float MaxElem() => Math.Max(Z, Math.Max(X, Y));
 
-        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero)
+        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero = null)
         {
+            if (zero == null) zero = XAxis;
             Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? zero : Normalize(vector2D);
+        }
+
+        public static Vector3 SafeNormalize(Vector3 v, Vector3 zero = null)
+        {
+            if (zero == null) zero = XAxis;
+            return IsNearZero(v) ? zero : Normalize(v);
         }
 
         public static Vector3 Perp2D(Vector3 v) => new(v.Y, -v.X, 0.0f);
@@ -251,6 +258,33 @@ namespace MHServerEmu.Core.VectorMath
             Vector3 u = p1 - p0;
             Vector3 v = p2 - p0;
             return u * (Dot(u, v) / Dot(u, u)) + p0;
+        }
+
+        public static Vector3 Truncate(Vector3 v, float maxLength)
+        {
+            Vector3 truncatedVector = new(v);
+            float length = Length(truncatedVector);
+            if (length > maxLength)
+                truncatedVector = (truncatedVector / length) * maxLength;
+
+            return truncatedVector;
+        }
+
+        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 resultNormal, out float resultLength, Vector3 zero = null)
+        {
+            Vector3 vector = v.To2D();
+            if (IsNearZero(vector))
+            {
+                if (zero == null) zero = XAxis;
+                resultNormal = new(zero);
+                resultLength = 0f;
+            }
+            else            
+            {
+                float length = Length(vector);
+                resultNormal = vector / length;
+                resultLength = length;
+            }
         }
 
         // static vectors

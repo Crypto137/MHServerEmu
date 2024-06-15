@@ -13,6 +13,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -96,6 +97,8 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity : ISerialize
     {
+
+        public bool SkipAI = true;
         public const ulong InvalidId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -113,6 +116,8 @@ namespace MHServerEmu.Games.Entities
         public EntityStatus Status { get; set; }
 
         public ReplicatedPropertyCollection Properties { get; set; }
+
+        public Party Party { get; internal set; }
 
         public virtual ulong PartyId
         {
@@ -195,6 +200,12 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        public TimeSpan TotalLifespan { get; private set; }
+
+        private EventGroup _pendingEvents = new();
+
+        public EventPointer<ScheduledLifespanEvent> ScheduledLifespanEvent = new();
+
         public Entity(Game game)
         {
             Game = game;
@@ -251,6 +262,9 @@ namespace MHServerEmu.Games.Entities
 
             InventoryCollection.Initialize(this);
             InitInventories(settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.PopulateInventories));
+
+            TotalLifespan = settings.Lifespan;
+            InitLifespan(settings.Lifespan);
 
             return true;
         }
@@ -341,7 +355,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsSimulated != simulated)
             {
-                if (simulated == false || (this is WorldEntity worldEntity && worldEntity.IsInWorld))
+                if (simulated == true &&  (this is not WorldEntity worldEntity || worldEntity.IsInWorld == false))
                     Logger.Debug($"SetSimulated(): An entity must be in the world to be simulated {ToString()}");
                 ModifyCollectionMembership(EntityCollection.Simulated, simulated);
                 return simulated ? SimulateResult.Set : SimulateResult.Clear;
@@ -431,6 +445,7 @@ namespace MHServerEmu.Games.Entities
             if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
             if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
             if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
+            if (Properties.HasProperty(PropertyEnum.AIMasterAvatar)) _flags |= EntityFlags.AIMasterAvatar;
         }
 
         public void OnSelfAddedToOtherInventory()
@@ -549,6 +564,11 @@ namespace MHServerEmu.Games.Entities
         public bool Owns(ulong entityId)
         {
             Entity entity = Game.EntityManager.GetEntity<Entity>(entityId);
+            return Owns(entity);
+        }
+
+        public bool Owns(Entity entity)
+        {
             if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
             return entity.IsOwnedBy(Id);
         }
@@ -757,6 +777,66 @@ namespace MHServerEmu.Games.Entities
             return _entityListNodes.GetInvasiveListNode(listId);
         }
 
+        public TimeSpan GetRemainingLifespan()
+        {
+            if (ScheduledLifespanEvent.IsValid == false)  return TimeSpan.Zero;
+            if (Game == null) return TimeSpan.Zero;
+            return ScheduledLifespanEvent.Get().FireTime - Game.CurrentTime;
+        }
+
+        public void InitLifespan(TimeSpan overrideLifespan)
+        {
+            if (Prototype == null) return;
+            if (overrideLifespan > TimeSpan.Zero)
+                ResetLifespan(overrideLifespan);
+            else if (Prototype.LifespanMS > 0)
+                ResetLifespan(TimeSpan.FromMilliseconds(Prototype.LifespanMS));
+        }
+
+        public void ResetLifespan(TimeSpan lifespan)
+        {
+            if (ScheduledLifespanEvent.IsValid)
+            {
+                var scheduler = Game?.GameEventScheduler;
+                if (scheduler == null) return;
+                scheduler.RescheduleEvent(ScheduledLifespanEvent, lifespan);
+            }
+            else
+                ScheduleEntityEvent(ScheduledLifespanEvent, lifespan);
+
+            TotalLifespan = lifespan;
+        }
+
+        public void ScheduleEntityEvent<T>(EventPointer<T> eventPointer, TimeSpan lifespan) 
+            where T : ScheduledEvent, IEventTarget, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, lifespan, _pendingEvents);
+            eventPointer.Get().EventTarget = this;
+        }
+
+        public void OnLifespanExpired()
+        {
+            Destroy();
+        }
+
         #endregion
+    }
+
+    public class ScheduledLifespanEvent : TargetedScheduledEvent<Entity> , IEventTarget 
+    {
+        public Entity EventTarget { get => _eventTarget; set => _eventTarget = value; }
+        public override bool OnTriggered()
+        {
+            if (_eventTarget == null) return false;
+            _eventTarget.OnLifespanExpired();
+            return true;
+        }
+    }
+
+    public interface IEventTarget
+    {
+        Entity EventTarget { get; set; }
     }
 }

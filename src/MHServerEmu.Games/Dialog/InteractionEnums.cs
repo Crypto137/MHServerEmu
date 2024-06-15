@@ -52,10 +52,10 @@ namespace MHServerEmu.Games.Dialog
         GuildPromote = 1L << 25,
         Heal = 1L << 26,
         Flag27 = 1L << 27,
-        Flag28 = 1L << 28,
+        StoryWarp = 1L << 28,
         Follow = 1L << 29,
         Duel = 1L << 30,
-        Flag31 = 1L << 31,
+        Neutral = 1L << 31,
         PartyLeave = 1L << 32,
         PartyBoot = 1L << 33,
         Unfriend = 1L << 34,
@@ -73,12 +73,31 @@ namespace MHServerEmu.Games.Dialog
         MoveToTradeInventory = 1L << 46,
         MoveToTeamUp = 1L << 47,
         LinkItemInChat = 1L << 48,
+        OpenMTXStore = 1L << 49,
+        All = ulong.MaxValue
+    }
+
+    public enum InteractionResult
+    {
+        Success,
+        Failure,
+        OutOfRange,
+        AttackFail,
+        ExecutingPower,
     }
 
     [Flags]
     public enum InteractionFlags
     {
         None = 0,
+        Flag0 = 1 << 0,
+        Default = 1 << 1,
+        Flag2 = 1 << 2,
+        Flag3 = 1 << 3,
+        StopMove = 1 << 4,
+        DeadInteractor = 1 << 5,
+        DormanInvisibleInteractee = 1 << 6,
+        EvaluateInteraction = 1 << 7,
     }
 
     [Flags]

@@ -4,6 +4,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [Flags]
+    public enum PlayerHUDEnum
+    {
+        None = 0,
+        HasObjectives = 1 << 0, // SetInteractDataObjectiveFlags HasObjective
+        Hint = 1 << 1, // GetPlayerHUDFlags IsA<MissionHintOption>
+        ShowObjs = 1 << 2, // PlayerHUDShowObjs
+        ShowObjsOnMap = 1 << 3,
+        ShowObjsOnMapNoPing = 1 << 4,
+        ShowObjsOnScreenEdge = 1 << 5,
+        ShowObjsOnEntityFloor = 1 << 6,
+        ShowToParty = 1 << 7, // EdgeArrowCanShowNormal VisibleToParty
+        ShowObjsEntityAbove = 1 << 8,
+    }
+
     [AssetEnum((int)None)]
     public enum HUDEntityFloorEffect    // What is this? Appears only in UIMapInfoPrototype, and that doesn't have any fields defined
     {

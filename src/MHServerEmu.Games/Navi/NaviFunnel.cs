@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Navi
         public NaviPoint Left { get => Front.Point; }
         public NaviPoint Right { get => Back.Point; }
         public NaviPoint LeftPrev { get => this[1].Point; }
-        public NaviPoint RightPrev { get => this[End - 2].Point; }
+        public NaviPoint RightPrev { get => this[Size - 2].Point; }
         public NaviPoint Apex { get => _apex.Point; }
         public NaviSide ApexSide { get => _apex.VertexSide; }
         public bool IsApexPathStart { get => Apex == _pathStart; }

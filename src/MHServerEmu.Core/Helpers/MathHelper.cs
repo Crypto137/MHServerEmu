@@ -40,6 +40,24 @@
                 return (int)(value + 0.5f);
         }
 
+        public static long RoundToInt64(float value)
+        {
+            if (value < 0.0f)
+                return (long)(value - 0.5f);
+            else
+                return (long)(value + 0.5f);
+        }
+
+        public static bool IsBelowOrEqual(long value, long maxValue, float thresholdPct)
+        {
+            return value <= (maxValue * thresholdPct);
+        }
+
+        public static float Ratio(long value, long maxValue)
+        {
+            return value / (float)maxValue;
+        }
+
         public static long Modulus(long v1, long v2)
         {
             if (v1 < 0) v1 += v2;

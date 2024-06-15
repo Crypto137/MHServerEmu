@@ -12,7 +12,8 @@ namespace MHServerEmu.Games.Generators
     {
         ActivePartition = 1 << 0,
         StaticPartition = 1 << 1,
-        PlayersPartition = 1 << 2
+        PlayersPartition = 1 << 2,
+        All = ActivePartition | StaticPartition | PlayersPartition
     }
 
     public readonly struct EntityRegionSPContext
@@ -39,7 +40,7 @@ namespace MHServerEmu.Games.Generators
 
         private WorldEntityRegionSpatialPartition _staticSpatialPartition;
         private WorldEntityRegionSpatialPartition _activeSpatialPartition;
-        private HashSet<Avatar> _avatars;
+        private List<Avatar> _avatars;
         private Dictionary<ulong, WorldEntityRegionSpatialPartition> _players;
         private Aabb _bounds;
         private float _minRadius;
@@ -224,6 +225,92 @@ namespace MHServerEmu.Games.Generators
             finally
             {
                 iterator.Clear();
+            }
+        }
+
+        public IEnumerable<Avatar> IterateAvatarsInVolume(Sphere volume)
+        {
+            var iterator = new RegionAvatarIterator(this, volume);
+
+            try
+            {
+                while (iterator.End() == false)
+                {
+                    var element = iterator.Current;
+                    iterator.MoveNext();
+                    yield return element;
+                }
+            }
+            finally
+            {
+                iterator.Clear();
+            }
+        }
+
+        public void GetElementsInVolume<B>(List<WorldEntity> elements, B volume, EntityRegionSPContext context) where B : IBounds
+        {
+            foreach (var element in IterateElementsInVolume(volume, context))
+                elements.Add(element);
+        }
+
+        public class RegionAvatarIterator : IEnumerator<Avatar>
+        {
+            private EntityRegionSpatialPartition _spatialPartition;
+            private Sphere _volume;
+            private int _current;
+
+            public RegionAvatarIterator(EntityRegionSpatialPartition spatialPartition, Sphere volume)
+            {
+                _spatialPartition = spatialPartition;
+                _volume = volume;
+                _current = 0;
+
+                IncrementIteratorCount();
+                if (_spatialPartition != null)
+                {
+                    for (int index = 0; index < _spatialPartition._avatars.Count; index++)
+                    {
+                        Avatar entity = _spatialPartition._avatars[index];
+                        if (entity != null && DoesSphereContainAvatar(_volume, entity))
+                        {
+                            _current = index;
+                            return;
+                        }
+                    }
+                    _current = int.MaxValue;
+                }
+            }
+
+            public bool MoveNext()
+            {
+                if (_spatialPartition != null && _current < _spatialPartition._avatars.Count)
+                {
+                    _current++;
+                    for (; _current < _spatialPartition._avatars.Count; _current++)
+                    {
+                        Avatar entity = _spatialPartition._avatars[_current];
+                        if (entity != null && DoesSphereContainAvatar(_volume, entity))
+                            break;
+                    }
+                }
+                return true;
+            }
+
+            public Avatar Current => End() ? null : _spatialPartition._avatars[_current];
+            object IEnumerator.Current => Current;
+            public void Dispose() { }
+            public void Reset() { }
+            public bool End() => _spatialPartition == null || _current >= _spatialPartition._avatars.Count;
+            public void Clear() => DecrementIteratorCount();
+
+            private void IncrementIteratorCount()
+            {
+                if (_spatialPartition != null) _spatialPartition.AvatarIteratorCount++;
+            }
+
+            private void DecrementIteratorCount()
+            {
+                if (_spatialPartition != null) _spatialPartition.AvatarIteratorCount--;
             }
         }
     }

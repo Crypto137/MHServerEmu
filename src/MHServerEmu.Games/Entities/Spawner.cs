@@ -1,6 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
@@ -36,7 +37,8 @@ namespace MHServerEmu.Games.Entities
             DebugLog = false;
             if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}]");
             if (EntityHelper.InvSpawners.Contains((EntityHelper.InvSpawner)PrototypeDataRef)) return;
-            
+            if (spawnerProto.DataRef == (PrototypeId)12390588549200814321) // SurturBossSpawner = 12390588549200814321, 
+                RegionLocation.Orientation = new(-2.356194f, 0f, 0f); // Fix for SurturBoss
             // if (spawnerProto.StartEnabled)
             Spawn();
         }
@@ -83,6 +85,16 @@ namespace MHServerEmu.Games.Entities
                 properties[PropertyEnum.MissionPrototype] = Properties[PropertyEnum.MissionPrototype];
 
             populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
+        }
+
+        internal void Trigger(EntityTriggerEnum trigger)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void KillSummonedInventory()
+        {
+            throw new NotImplementedException();
         }
     }
 }
