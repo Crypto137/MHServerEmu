@@ -1344,9 +1344,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
                             _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
                             _generatedPath.PathResult = NaviPathResult.Success;
                         }
-
-                        if (IsDrivingMovementMode && _owner.IsExecutingPower && _owner.Orientation != syncOrientation)
+                        else if (IsDrivingMovementMode && _owner.IsExecutingPower && _owner.Orientation != syncOrientation)
                             _hasOrientationSyncState = true;
+
                         SetEnabled(true);
                     }
                 }
