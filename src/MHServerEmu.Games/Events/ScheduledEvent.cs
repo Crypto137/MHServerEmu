@@ -7,6 +7,8 @@
         public LinkedListNode<ScheduledEvent> EventGroupNode { get; set; }
         public TimeSpan FireTime { get; set; }
 
+        public bool IsValid { get => _pointers.Count > 0; }
+
         public bool Link(IEventPointer pointer)
         {
             return _pointers.Add(pointer);

@@ -104,6 +104,8 @@ namespace MHServerEmu.Games.Events
                 {
                     foreach (ScheduledEvent @event in frameEvents)
                     {
+                        if (@event.IsValid == false) continue;      // skip cancelled events
+
                         // It seems in the client time can roll back within the same frame, is this correct?
                         if (CurrentTime > @event.FireTime)
                             Logger.Debug($"TriggerEvents(): Time rollback (-{(CurrentTime - @event.FireTime).TotalMilliseconds} ms)");
