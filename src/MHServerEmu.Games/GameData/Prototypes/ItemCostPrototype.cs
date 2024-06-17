@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Items;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class ProductPrototype : Prototype
     {
@@ -57,5 +60,16 @@
         public ItemCostComponentPrototype[] Components { get; protected set; }
         public EvalPrototype Credits { get; protected set; }
         public EvalPrototype Runestones { get; protected set; }
+
+        public int GetSellPriceInCredits(Player player, Item item)
+        {
+            return GetNoStackSellPriceInCredits(player, item.ItemSpec, item) * item.CurrentStackSize;
+        }
+
+        public int GetNoStackSellPriceInCredits(Player player, ItemSpec itemSpec, Item item)
+        {
+            // TODO
+            return 0;
+        }
     }
 }

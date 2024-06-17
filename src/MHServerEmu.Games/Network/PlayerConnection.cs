@@ -9,6 +9,7 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
@@ -256,15 +257,8 @@ namespace MHServerEmu.Games.Network
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
 
-            avatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, entrancePosition, StartOrientation);
-
-            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(avatar));
-
             AOI.Update(entrancePosition, true);
-            //AOI.DebugPrint();
-
-            // Assign powers for the current avatar who just entered the world (TODO: move this to Avatar.OnEnteredWorld())
-            Player.CurrentAvatar.AssignHardcodedPowers();
+            avatar.EnterWorld(AOI.Region, entrancePosition, StartOrientation);
 
             Player.DequeueLoadingScreen();
 
@@ -303,7 +297,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAdminCommand:                      OnAdminCommand(message); break;
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:             OnUseInteractableObject(message); break;
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:           OnPerformPreInteractPower(message); break;
+                case ClientToGameServerMessage.NetMessagePickupInteraction:                 OnPickupInteraction(message); break;
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;
+                case ClientToGameServerMessage.NetMessageInventoryTrashItem:                OnInventoryTrashItem(message); break;
                 case ClientToGameServerMessage.NetMessageThrowInteraction:                  OnThrowInteraction(message); break;
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;
@@ -399,13 +395,22 @@ namespace MHServerEmu.Games.Network
             }
 
             Avatar currentAvatar = Player.CurrentAvatar;
-            //currentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, avatarState.Position, avatarState.Orientation);         // TODO: remove this
-            //return true;
-            
             if (currentAvatar.IsInWorld == false) return true;
 
+            // Update avatar position
+            currentAvatar.ChangeRegionPosition(avatarState.Position, avatarState.Orientation, ChangePositionFlags.DoNotSendToClients);
+            LastPosition = currentAvatar.RegionLocation.Position;
+            LastOrientation = currentAvatar.RegionLocation.Orientation;
+
+            // Manually send locomotion updates
+            currentAvatar.Locomotor.LastSyncState.Set(currentAvatar.Locomotor.LocomotionState);
+            currentAvatar.Locomotor.LocomotionState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
+            currentAvatar.OnLocomotionStateChanged(currentAvatar.Locomotor.LastSyncState, currentAvatar.Locomotor.LocomotionState);
+            
+            // disable proper locomotion implementation for now
+            return true;
+
             bool canMove = currentAvatar.CanMove;
-            canMove = true; // TODO fix problem with Locomotor MoveSpeed
             bool canRotate = currentAvatar.CanRotate;
             Vector3 position = currentAvatar.RegionLocation.Position;
             Orientation orientation = currentAvatar.RegionLocation.Orientation;
@@ -558,17 +563,9 @@ namespace MHServerEmu.Games.Network
 
                 uint cellId = target.Properties[PropertyEnum.MapCellId];
                 uint areaId = target.Properties[PropertyEnum.MapAreaId];
-                Logger.Trace($"Teleporting to areaid {areaId} cellid {cellId}");
+                Logger.Trace($"Teleporting to areaId={areaId} cellId={cellId}");
 
-                SendMessage(NetMessageEntityPosition.CreateBuilder()
-                    .SetIdEntity(Player.CurrentAvatar.Id)
-                    .SetFlags((uint)ChangePositionFlags.Teleport)
-                    .SetPosition(targetPos.ToNetStructPoint3())
-                    .SetOrientation(targetRot.ToNetStructPoint3())
-                    .SetCellId(cellId)
-                    .SetAreaId(areaId)
-                    .SetEntityPrototypeId((ulong)Player.CurrentAvatar.PrototypeDataRef)
-                    .Build());
+                Player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
 
                 LastPosition = targetPos;
             }
@@ -576,7 +573,33 @@ namespace MHServerEmu.Games.Network
             {
                 EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
                 Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(this, interactableObject);
+                eventPointer.Get().Initialize(Player, interactableObject);
+            }
+
+            return true;
+        }
+
+        private bool OnPickupInteraction(MailboxMessage message)
+        {
+            var pickupInteraction = message.As<NetMessagePickupInteraction>();
+            if (pickupInteraction == null) return Logger.WarnReturn(false, $"OnPickupInteraction(): Failed to retrieve message");
+
+            // See if the item exists
+            Item item = Game.EntityManager.GetEntity<Item>(pickupInteraction.IdTarget);
+            if (item == null) return Logger.WarnReturn(false, "OnPickupInteraction(): item == null");
+
+            // Make sure the item is in the world
+            if (item.IsInWorld == false) return Logger.WarnReturn(false, "OnPickupInteraction(): item.IsInWorld == false");
+
+            // Add item to the player's inventory
+            Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
+            if (inventory == null) return Logger.WarnReturn(false, "OnPickupInteraction(): inventory == null");
+
+            InventoryResult result = item.ChangeInventoryLocation(inventory);
+            if (result != InventoryResult.Success)
+            {
+                Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
+                return false;
             }
 
             return true;
@@ -605,6 +628,25 @@ namespace MHServerEmu.Games.Network
 
             InventoryResult result = entity.ChangeInventoryLocation(inventory, tryInventoryMove.ToSlot);
             if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
+
+            return true;
+        }
+
+        private bool OnInventoryTrashItem(MailboxMessage message)
+        {
+            var inventoryTrashItem = message.As<NetMessageInventoryTrashItem>();
+            if (inventoryTrashItem == null) return Logger.WarnReturn(false, $"OnInventoryTrashItem(): Failed to retrieve message");
+
+            // See if the item exists
+            Item item = Game.EntityManager.GetEntity<Item>(inventoryTrashItem.ItemId);
+            if (item == null) return Logger.WarnReturn(false, "OnInventoryTrashItem(): item == null");
+
+            // Check ownership
+            if (item.IsOwnedBy(Player.Id) == false)
+                return Logger.WarnReturn(false, $"OnInventoryTrashItem(): Player {Player} is attempting to trash item {item} owned by {item.GetOwner()}");
+
+            // Destroy
+            item.Destroy();
 
             return true;
         }
@@ -649,34 +691,18 @@ namespace MHServerEmu.Games.Network
             Logger.Trace(switchAvatar.ToString());
 
             // Switch avatar
-            // NOTE: This is preliminary implementation that will change once we have inventories working
-
-            // Manually remove existing avatar from the world
-            Player.CurrentAvatar.RegionLocation.TEMP_OverrideLocation(null, null, null);
-
-            SendMessage(NetMessageChangeAOIPolicies.CreateBuilder()
-                .SetIdEntity(Player.CurrentAvatar.Id)
-                .SetCurrentpolicies((uint)AOINetworkPolicyValues.AOIChannelOwner)
-                .SetExitGameWorld(true)
-                .Build());
-            Player.CurrentAvatar.PowerCollection.OnOwnerExitedWorld();
-
-            // Do inventory switch
             if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
 
-            // Manually add new avatar to the world
-            Player.CurrentAvatar.RegionLocation.TEMP_OverrideLocation(AOI.Region, LastPosition, LastOrientation);
+            // Add new avatar to the world
             EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
-            SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(Player.CurrentAvatar, settings));
-
-            // Power collection needs to be assigned after the avatar enters world
-            Player.CurrentAvatar.AssignHardcodedPowers();
+            Player.CurrentAvatar.EnterWorld(AOI.Region, LastPosition, LastOrientation, settings);
+            Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} entering world");
 
             // Activate the swap in power for the avatar to become playable
-            EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.FromMilliseconds(700));
-            activatePowerEventPointer.Get().Initialize(this, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            EventPointer<TEMP_ActivatePowerEvent> avatarSwapInEvent = new();
+            Game.GameEventScheduler.ScheduleEvent(avatarSwapInEvent, TimeSpan.FromMilliseconds(700));
+            avatarSwapInEvent.Get().Initialize(this, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
 
             return true;
         }

@@ -278,6 +278,11 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        public NetMessagePowerResult ToProtobuf()
+        {
+            return NetMessagePowerResult.CreateBuilder().SetArchiveData(ToByteString()).Build();
+        }
+
         public void SetFlag(PowerResultFlags flag, bool value)
         {
             if (value)

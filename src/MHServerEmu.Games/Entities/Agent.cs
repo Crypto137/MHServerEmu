@@ -83,18 +83,16 @@ namespace MHServerEmu.Games.Entities
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
             base.OnLocomotionStateChanged(oldState, newState);
-
-            if(IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+            if (IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
             {
                 if((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))
                 {
                     Vector3 currentPosition = RegionLocation.Position;
                     Vector3 targetPosition = FloorToCenter(RegionLocation.ProjectToFloor(RegionLocation.Region, RegionLocation.Cell, currentPosition));
-                    ChangeRegionPosition(targetPosition, null, ChangePositionFlags.NoSendToOwner | ChangePositionFlags.HighFlying);
+                    ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
                 }
             }
         }
-
 
         public bool HasPowerPreventionStatus
             => IsInKnockback 
@@ -153,13 +151,13 @@ namespace MHServerEmu.Games.Entities
             }
             return true;
         }
-
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
-            RegionLocation.Cell.EnemySpawn(); // Calc Enemy
+            if (this is not Avatar)     // fix for avatar
+                RegionLocation.Cell.EnemySpawn(); // Calc Enemy
             // ActivePowerRef = settings.PowerPrototype
-
+            if (SkipAI) return;
             if (AIController != null) 
             {
                 var behaviorProfile = AgentPrototype?.BehaviorProfile;

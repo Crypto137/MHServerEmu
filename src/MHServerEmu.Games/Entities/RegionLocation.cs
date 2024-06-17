@@ -47,10 +47,7 @@ namespace MHServerEmu.Games.Entities
 
         public RegionLocation(RegionLocation other)
         {
-            _position = new(other._position);
-            _orientation = new(other._orientation);
-            _region = other._region;
-            Cell = other.Cell;
+            Set(other);
         }
 
         public RegionLocation()
@@ -59,12 +56,12 @@ namespace MHServerEmu.Games.Entities
             _orientation = Orientation.Zero;
         }
 
-        public void TEMP_OverrideLocation(Region region, Vector3 position, Orientation orientation)
+        public void Set(RegionLocation other)
         {
-            // TODO: Remove this when avatars enter the world normally
-            _region = region;
-            _position = position;
-            _orientation = orientation;
+            _position = new(other._position);
+            _orientation = new(other._orientation);
+            _region = other._region;
+            Cell = other.Cell;
         }
 
         public static Vector3 ProjectToFloor(Cell cell, Vector3 regionPos)

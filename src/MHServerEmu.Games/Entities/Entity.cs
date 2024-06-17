@@ -3,10 +3,8 @@ using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -97,6 +95,8 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity : ISerialize
     {
+
+        public bool SkipAI = true;
         public const ulong InvalidId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -409,8 +409,12 @@ namespace MHServerEmu.Games.Entities
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
             EventPointer<RespawnEvent> eventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromSeconds(10));
+            Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
             eventPointer.Get().Initialize(this);
+
+            // LOOT
+            if (this is Agent agent)
+                Game.LootGenerator.DropRandomLoot(agent);
         }
 
         public void Respawn()
@@ -558,14 +562,13 @@ namespace MHServerEmu.Games.Entities
         public bool Owns(ulong entityId)
         {
             Entity entity = Game.EntityManager.GetEntity<Entity>(entityId);
-            if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
-            return entity.IsOwnedBy(Id);
+            return Owns(entity);
         }
 
         public bool Owns(Entity entity)
         {
-            if (entity == null) return false;
-            return entity.IsOwnedBy(Id); // Owns(entity.Id);
+            if (entity == null) return Logger.WarnReturn(false, "Owns(): entity == null");
+            return entity.IsOwnedBy(Id);
         }
 
         public Entity GetRootOwner()

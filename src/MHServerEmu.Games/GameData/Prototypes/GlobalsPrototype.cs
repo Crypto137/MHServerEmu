@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
@@ -288,6 +289,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancementGlobalsPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public CurveId LevelingCurve { get; protected set; }
         public CurveId DeathPenaltyCost { get; protected set; }
         public CurveId ItemEquipRequirementOffset { get; protected set; }
@@ -325,6 +328,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
 
+        public int GetAvatarLevelCap()
+        {
+            Curve levelingCurve = GetAvatarLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(0, "GetAvatarLevelCap(): levelingCurve == null");
+
+            return levelingCurve.MaxPosition;
+        }
+
         public int GetMaxPrestigeLevel() => PrestigeLevels.Length;
 
         public int GetPrestigeLevelIndex(PrestigeLevelPrototype prestigeLevelProto)
@@ -341,6 +352,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return 0;
         }
+
+        private Curve GetAvatarLevelingCurve() => CurveDirectory.Instance.GetCurve(LevelingCurve);
     }
 
     public class AIGlobalsPrototype : Prototype

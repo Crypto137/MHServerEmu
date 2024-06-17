@@ -71,7 +71,14 @@
     {
         public const BlueprintId DiamondFormActivatePower   = (BlueprintId)18066325974134561036;    // Powers/Blueprints/Keywords/DiamondFormActivatePower.blueprint
         public const BlueprintId Mental                     = (BlueprintId)720980541349630335;      // Powers/Blueprints/Keywords/Mental.blueprint
+        public const BlueprintId Item                       = (BlueprintId)10622579046198020830;    // Entity/Items/Item.blueprint
+        public const BlueprintId Artifact                   = (BlueprintId)1626168533479592044;     // Entity/Items/Artifacts/Artifact.blueprint
         public const BlueprintId Costume                    = (BlueprintId)10774581141289766864;    // Entity/Items/Costumes/Costume.blueprint 
+        public const BlueprintId CraftingElement            = (BlueprintId)12132161488226819436;    // Entity/Items/Crafting/Ingredients/ElementProtos/CraftingElement.defaults
+        public const BlueprintId PetItem                    = (BlueprintId)10446998100463455761;    // Entity/Items/Pets/PetItem.blueprint 
+        public const BlueprintId Relic                      = (BlueprintId)8255039456199642606;     // Entity/Items/Relics/Relic.blueprint 
+        public const BlueprintId RingBlueprint              = (BlueprintId)17978417066261680389;    // Entity/Items/Rings/RingBlueprint.blueprint 
+        public const BlueprintId RunewordGlyphParent        = (BlueprintId)8882767421611578730;     // Entity/Items/Runewords/RunewordGlyphParen.blueprint 
         public const BlueprintId Region                     = (BlueprintId)1677652504589371837;     // Regions/Region.blueprint
     }
 

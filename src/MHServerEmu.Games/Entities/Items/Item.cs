@@ -1,9 +1,12 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -12,6 +15,8 @@ namespace MHServerEmu.Games.Entities.Items
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ItemSpec _itemSpec = new();
+
+        public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
 
         public ItemSpec ItemSpec { get => _itemSpec; }
         public PrototypeId OnUsePower { get; internal set; }
@@ -45,31 +50,123 @@ namespace MHServerEmu.Games.Entities.Items
             return itemProto.StackSettings.AutoStackWhenAddedToInventory;
         }
 
+        public bool CanUse(Agent agent, bool powerUse)
+        {
+            // TODO
+            return true;
+        }
+
+        public uint GetVendorBaseXPGain(Player player)
+        {
+            if (player == null) return Logger.WarnReturn(0u, "GetVendorBaseXPGain(): player == null");
+            float xpGain = GetSellPrice(player);
+            // TODO: Apply LiveTuningManager multiplier
+            return (uint)xpGain;
+        }
+
+        public uint GetSellPrice(Player player)
+        {
+            if (player == null) return Logger.WarnReturn(0u, "GetSellPrice(): player == null");
+
+            ItemPrototype itemProto = Prototype as ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(0u, "GetSellPrice(): proto == null");
+
+            return itemProto.Cost != null ? (uint)itemProto.Cost.GetSellPriceInCredits(player, this) : 0u;
+        }
+
+        public static int GetEquippableAtLevelForItemLevel(int itemLevel)
+        {
+            AdvancementGlobalsPrototype advanGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advanGlobalsProto == null) return Logger.WarnReturn(0, "GetEquippableAtLevelForItemLevel(): advanGlobalsProto == null");
+
+            Curve itemEquipReqOffsetCurve = CurveDirectory.Instance.GetCurve(advanGlobalsProto.ItemEquipRequirementOffset);
+            if (itemEquipReqOffsetCurve == null) return Logger.WarnReturn(0, "GetEquippableAtLevelForItemLevel(): itemEquipReqOffsetCurve == null");
+
+            return Math.Clamp(itemLevel + itemEquipReqOffsetCurve.GetIntAt(itemLevel), 1, advanGlobalsProto.GetAvatarLevelCap());
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
             sb.AppendLine($"{nameof(_itemSpec)}: {_itemSpec}");
         }
 
-        private void ApplyItemSpec(ItemSpec itemSpec)
+        private bool ApplyItemSpec(ItemSpec itemSpec)
         {
-            _itemSpec = itemSpec;
-            // TODO: everything else
+            if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");
+
+            _itemSpec.Set(itemSpec);
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): itemProto == null");
+
+            if (ApplyItemSpecProperties() == false) return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
+
+            itemProto.OnApplyItemSpec(this, _itemSpec);
+
+            // TODO: Roll affixes
+
+            return true;
         }
 
-        internal bool CanUse(Agent agent, bool powerUse)
+        private bool ApplyItemSpecProperties()
         {
-            throw new NotImplementedException();
-        }
+            // We can skip some validation here because this is called only from ApplyItemSpec()
+            ItemPrototype itemProto = ItemPrototype;
 
-        internal int GetVendorBaseXPGain(Player player)
-        {
-            throw new NotImplementedException();
-        }
+            // Apply rarity
+            RarityPrototype rarityProto = GameDatabase.GetPrototype<RarityPrototype>(_itemSpec.RarityProtoRef);
+            if (rarityProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): rarityProto == null");
+            Properties[PropertyEnum.ItemRarity] = _itemSpec.RarityProtoRef;
 
-        internal uint GetSellPrice(Player player)
-        {
-            throw new NotImplementedException();
+            // Apply level and level requirement
+            int itemLevel = Math.Max(1, _itemSpec.ItemLevel);
+            Properties[PropertyEnum.ItemLevel] = Math.Max(1, _itemSpec.ItemLevel);
+            Properties[PropertyEnum.Requirement, PropertyEnum.CharacterLevel] = (float)GetEquippableAtLevelForItemLevel(itemLevel);
+
+            // Apply binding settings
+            if (itemProto.BindingSettings != null)
+            {
+                // Apply default settings
+                ItemBindingSettingsEntryPrototype defaultSettings = itemProto.BindingSettings.DefaultSettings;
+                if (defaultSettings != null)
+                {
+                    Properties[PropertyEnum.ItemBindsToAccountOnPickup] = defaultSettings.BindsToAccountOnPickup;
+                    Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = defaultSettings.BindsToCharacterOnEquip;
+                    Properties[PropertyEnum.ItemIsTradable] = defaultSettings.IsTradable;
+                }
+
+                // Override with rarity settings if there are any
+                if (itemProto.BindingSettings.PerRaritySettings != null)
+                {
+                    foreach (ItemBindingSettingsEntryPrototype perRaritySettingProto in itemProto.BindingSettings.PerRaritySettings)
+                    {
+                        if (perRaritySettingProto.RarityFilter != _itemSpec.RarityProtoRef) continue;
+
+                        Properties[PropertyEnum.ItemBindsToAccountOnPickup] = defaultSettings.BindsToAccountOnPickup;
+                        Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = defaultSettings.BindsToCharacterOnEquip;
+                        Properties[PropertyEnum.ItemIsTradable] = defaultSettings.IsTradable;
+                    }
+                }
+            }
+
+            // Apply stack settings
+            ItemStackSettingsPrototype stackSettings = itemProto.StackSettings;
+            if (stackSettings != null)
+            {
+                Properties[PropertyEnum.InventoryStackSizeMax] = stackSettings.MaxStacks;
+                Properties[PropertyEnum.ItemLevel] = stackSettings.ItemLevelOverride;
+                Properties[PropertyEnum.Requirement, PropertyEnum.CharacterLevel] = (float)stackSettings.RequiredCharLevelOverride;
+            }
+
+            // Apply rarity bonus to item level
+            Properties.AdjustProperty(rarityProto.ItemLevelBonus, PropertyEnum.ItemLevel);
+
+            // Apply random variation using item spec seed
+            GRandom random = new(_itemSpec.Seed);
+            Properties[PropertyEnum.ItemVariation] = random.NextFloat();
+
+            return true;
         }
     }
 }

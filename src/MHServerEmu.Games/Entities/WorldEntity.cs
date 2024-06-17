@@ -23,9 +23,41 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
+    public enum PowerMovementPreventionFlags
+    {
+        Forced = 0,
+        NonForced = 1,
+        Sync = 2,
+    }
+
+    [Flags]
+    public enum KillFlags
+    {
+        None,
+    }
+
+    [Flags]
+    public enum ChangePositionFlags
+    {
+        None                = 0,
+        Update              = 1 << 0,
+        DoNotSendToOwner    = 1 << 1,
+        DoNotSendToServer   = 1 << 2,
+        DoNotSendToClients  = 1 << 3,
+        Orientation         = 1 << 4,
+        Force               = 1 << 5,
+        Teleport            = 1 << 6,
+        HighFlying          = 1 << 7,
+        PhysicsResolve      = 1 << 8,
+        SkipAOI             = 1 << 9,
+        EnterWorld          = 1 << 10,
+    }
+
     public class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private AlliancePrototype _allianceProto;
 
         protected EntityTrackingContextMap _trackingContextMap;
         protected ConditionCollection _conditionCollection;
@@ -35,8 +67,6 @@ namespace MHServerEmu.Games.Entities
         public EntityTrackingContextMap TrackingContextMap { get => _trackingContextMap; }
         public ConditionCollection ConditionCollection { get => _conditionCollection; }
         public PowerCollection PowerCollection { get => _powerCollection; }
-
-        private AlliancePrototype _allianceProto;
         public AlliancePrototype Alliance { get => GetAlliance(); }
         public RegionLocation RegionLocation { get; private set; } = new();
         public Cell Cell { get => RegionLocation.Cell; }
@@ -60,7 +90,7 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsTeamUpAgent { get => false; }
         public virtual bool IsSummonedPet { get => false; }
         public bool IsInWorld { get => RegionLocation.IsValid(); }
-        public bool IsAliveInWorld { get => IsInWorld && !IsDead; }
+        public bool IsAliveInWorld { get => IsInWorld && IsDead == false; }
         public bool IsVendor { get => Properties[PropertyEnum.VendorType] != PrototypeId.Invalid; }
         public EntityPhysics Physics { get; private set; }
         public bool HasNavigationInfluence { get; private set; }
@@ -96,7 +126,7 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            int health = EntityHelper.GetRankHealth(proto);
+            int health = EntityHelper.GetHealthForWorldEntity(this);
             if (health > 0)
             {
                 Properties[PropertyEnum.Health] = health;
@@ -341,18 +371,16 @@ namespace MHServerEmu.Games.Entities
 
             RegionLocation.Region = region;
             
-            if (ChangeRegionPosition(position, orientation))
-            {
-                // TODO: Everything else
+            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
                 OnEnteredWorld(settings);
-            }
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
         {
             if (CanInfluenceNavigationMesh())
                 EnableNavigationInfluence();
-            // TODO PowerCollection
+
+            NotifyPlayers(true, settings);
         }
 
         public void EnableNavigationInfluence()
@@ -467,52 +495,40 @@ namespace MHServerEmu.Games.Entities
                     Locomotor.ClearOrientationSyncState();
             }
 
-            if (positionChanged || orientationChanged)
-            {
-                UpdateRegionBounds(); // Add to Quadtree
-                SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
-                if (RegionLocation.IsValid())
-                    ExitWorldRegionLocation.Set(RegionLocation);
+            if (positionChanged == false && orientationChanged == false)
+                return false;
 
-                if (IsInWorld)
+            UpdateRegionBounds(); // Add to Quadtree
+            SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
+            if (RegionLocation.IsValid())
+                ExitWorldRegionLocation.Set(RegionLocation);
+
+            if (flags.HasFlag(ChangePositionFlags.DoNotSendToClients) == false)
+            {
+                bool excludeOwner = flags.HasFlag(ChangePositionFlags.DoNotSendToOwner);
+
+                var networkManager = Game.NetworkManager;
+                var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner);
+                if (interestedClients.Any())
                 {
-                    if (flags.HasFlag(ChangePositionFlags.NoSendToClients) == false && this is not Avatar)
-                    {
-                        // TODO send NetMessageEntityPosition position change to clients
+                    var entityPositionMessageBuilder = NetMessageEntityPosition.CreateBuilder()
+                        .SetIdEntity(Id)
+                        .SetFlags((uint)flags);
 
-                        PlayerConnection playerConnection = GetPlayerConnection();
-                        NetMessageEntityPosition messageEntityPosition = BuildMessageEntityPosition(flags);
-                        playerConnection?.SendMessage(messageEntityPosition);
-                    }
+                    if (position != null) entityPositionMessageBuilder.SetPosition(position.ToNetStructPoint3());
+                    if (orientation != null) entityPositionMessageBuilder.SetOrientation(orientation.ToNetStructPoint3());
+
+                    networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
                 }
-                return true;
             }
 
-            return false;
-        }
-
-        private NetMessageEntityPosition BuildMessageEntityPosition(ChangePositionFlags flags)
-        {
-            return NetMessageEntityPosition.CreateBuilder()
-                .SetIdEntity(Id)
-                .SetFlags((uint)flags)
-                .SetPosition(RegionLocation.Position.ToNetStructPoint3())
-                .SetOrientation(RegionLocation.Orientation.ToNetStructPoint3())
-                .SetCellId(RegionLocation.CellId)
-                .SetAreaId(RegionLocation.AreaId)
-                .SetEntityPrototypeId((ulong)Prototype.DataRef)
-                .Build();
-        }
-
-        public PlayerConnection GetPlayerConnection()
-        {
-            PlayerConnection playerConnection = null;
-            foreach (Player player in new PlayerIterator(Game))
+            if (Cell != null && flags.HasFlag(ChangePositionFlags.SkipAOI) == false)
             {
-                playerConnection = player.PlayerConnection;
-                break;
+                // TODO: Notify if distance is far enough, similar to AOI updates
+                NotifyPlayers(true);
             }
-            return playerConnection;
+
+            return true;
         }
 
         private void SendLocationChangeEvents(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
@@ -572,41 +588,40 @@ namespace MHServerEmu.Games.Entities
 
         public void ExitWorld()
         {
-            // TODO send packets for delete entities from world
-            if (IsInWorld)
-            {
-                bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
-                SetStatus(EntityStatus.ExitingWorld, true);
-                Physics.ReleaseCollisionId();
-                // TODO IsAttachedToEntity()
-                Physics.DetachAllChildren();
-                DisableNavigationInfluence();
+            if (IsInWorld == false) return;
 
-                var entityManager = Game.EntityManager;
-                if (entityManager == null) return;
-                entityManager.PhysicsManager?.OnExitedWorld(Physics);
-                OnExitedWorld();
-                var oldLocation = ClearWorldLocation();
-                SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
-                ModifyCollectionMembership(EntityCollection.Simulated, false);
-                ModifyCollectionMembership(EntityCollection.Locomotion, false);
+            bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
+            SetStatus(EntityStatus.ExitingWorld, true);
+            Physics.ReleaseCollisionId();
+            // TODO IsAttachedToEntity()
+            Physics.DetachAllChildren();
+            DisableNavigationInfluence();
 
-                if (exitStatus)
-                    SetStatus(EntityStatus.ExitingWorld, false);
-            }
+            var entityManager = Game.EntityManager;
+            if (entityManager == null) return;
+            entityManager.PhysicsManager?.OnExitedWorld(Physics);
+            OnExitedWorld();
+            var oldLocation = ClearWorldLocation();
+            SendLocationChangeEvents(oldLocation, RegionLocation, ChangePositionFlags.None);
+            ModifyCollectionMembership(EntityCollection.Simulated, false);
+            ModifyCollectionMembership(EntityCollection.Locomotion, false);
+
+            if (exitStatus)
+                SetStatus(EntityStatus.ExitingWorld, false);
         }
 
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
+            NotifyPlayers(false);
         }
 
         public RegionLocation ClearWorldLocation()
         {
             if (RegionLocation.IsValid()) ExitWorldRegionLocation.Set(RegionLocation);
             if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
-            var oldLocation = RegionLocation;
-            RegionLocation = RegionLocation.Invalid;
+            RegionLocation oldLocation = new(RegionLocation);
+            RegionLocation.Set(RegionLocation.Invalid);
             return oldLocation;
         }
 
@@ -873,7 +888,7 @@ namespace MHServerEmu.Games.Entities
 
         public Vector3 Forward { get => GetTransform().Col0; }
         public Vector3 GetUp { get => GetTransform().Col2; }
-        public float MovementSpeedRate { get => 1.0f; /* Properties [PropertyEnum.MovementSpeedRate]; */} // PropertyTemp[PropertyEnum.MovementSpeedRate]
+        public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
         public float MovementSpeedOverride { get => Properties[PropertyEnum.MovementSpeedOverride]; } // PropertyTemp[PropertyEnum.MovementSpeedOverride]
         public float BonusMovementSpeed => Locomotor?.GetBonusMovementSpeed(false) ?? 0.0f;
         public NaviPoint NavigationInfluencePoint { get => NaviInfluence.Point; }
@@ -1017,44 +1032,32 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
-        public virtual void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState) 
-        { 
-            if (IsInWorld)
-            {
-                // from CAvatar::UpdateServerAvatarState
-                bool skipGoalNode = newState.FollowEntityId != InvalidId;
-                bool sync = false;
-                bool pathNodesSync = false;
-                LocomotionState.CompareLocomotionStatesForSync(newState, oldState, ref sync, ref pathNodesSync, skipGoalNode);
-                if (sync || pathNodesSync)
-                {
-                    var position = RegionLocation.Position;
-                    var orientation = RegionLocation.Orientation;
-                    LocomotionMessageFlags fieldFlags = LocomotionMessageFlags.None;
-                    if (orientation.Pitch != 0.0f || orientation.Roll != 0.0f)
-                        fieldFlags |= LocomotionMessageFlags.HasFullOrientation;
-                    fieldFlags |= LocomotionState.GetFieldFlags(newState, oldState, pathNodesSync);
-                    LocomotionStateUpdateArchive locomotion = new()
-                    {
-                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                        EntityId = Id,
-                        FieldFlags = fieldFlags,
-                        Position = position,
-                        Orientation = orientation
-                    };
-                    Logger.Debug($"LocomotionState Send {PrototypeName} PathNodes:[{Locomotor.LocomotionState.PathNodes.Count}]");
-                    var playerConnection = GetPlayerConnection();
-                    playerConnection?.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                        .SetArchiveData(locomotion.ToByteString())
-                        .Build());
-                }
-            }
-        }
+        public virtual void OnLocomotionStateChanged(LocomotionState oldLocomotionState, LocomotionState newLocomotionState)
+        {
+            if (IsInWorld == false) return;
 
+            // Check if locomotion state requires updating
+            LocomotionState.CompareLocomotionStatesForSync(oldLocomotionState, newLocomotionState,
+                out bool syncRequired, out bool pathNodeSyncRequired, newLocomotionState.FollowEntityId != InvalidId);
+
+            if (syncRequired == false && pathNodeSyncRequired == false) return;
+
+            // Send locomotion update to interested clients
+            // NOTE: Avatars are locomoted on their local client independently, so they are excluded from locomotion updates.
+            var networkManager = Game.NetworkManager;
+            var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false);
+            if (interestedClients.Any() == false) return;
+
+            NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
+                this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
+            networkManager.SendMessageToMultiple(interestedClients, locomotionStateUpdateMessage);
+        }
+        
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) 
-        {        
-            Game.EntityManager.CrateOrb((PrototypeId)925659119519994384, start, Region);// HealOrbItem = 925659119519994384, 
-            Game.EntityManager.CrateOrb((PrototypeId)9607833165236212779, end, Region); //EnduranceOrbItem = 9607833165236212779,
+        {
+            if (SkipAI) return;
+            EntityHelper.CrateOrb((PrototypeId)925659119519994384, start, Region);// HealOrbItem = 925659119519994384, 
+            EntityHelper.CrateOrb((PrototypeId)9607833165236212779, end, Region); //EnduranceOrbItem = 9607833165236212779,
             Logger.Debug($"PreGeneratePath {PrototypeName} {start} => {end}");
         }
 
@@ -1281,33 +1284,4 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnDramaticEntranceEnd()  { }
     }
 
-    public enum PowerMovementPreventionFlags
-    {
-        Forced = 0,
-        NonForced = 1,
-        Sync = 2,
-    }
-
-    [Flags]
-    public enum KillFlags
-    {
-        None,
-    }
-
-    [Flags]
-    public enum ChangePositionFlags
-    {
-        None = 0,
-        Update = 1 << 0,
-        NoSendToOwner = 1 << 1,
-        NoSendToServer = 1 << 2,
-        NoSendToClients = 1 << 3,
-        Orientation = 1 << 4,
-        Force = 1 << 5,
-        Teleport = 1 << 6,
-        HighFlying = 1 << 7,
-        PhysicsResolve = 1 << 8,
-        SkipAOI = 1 << 9,
-        EnterWorld = 1 << 10,
-    }
 }

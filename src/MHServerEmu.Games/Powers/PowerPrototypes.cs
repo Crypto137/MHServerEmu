@@ -2,36 +2,15 @@
 {
     public static class PowerPrototypes
     {
+        public enum UnlockableEmote : ulong
+        {
+            EmoteCongrats = 11651334702101696313,
+            EmoteDance = 773103106671775187,
+        }
+
         public enum Items : ulong
         {
             BowlingBallItemPower = 18211158277448213692,
-        }
-
-        public enum Emotes : ulong
-        {
-            EmoteAgree = 35979121165012444,
-            EmoteBeckon = 13408078584516906570,
-            EmoteBored = 16417161465323261412,
-            EmoteBow = 14005778202823494944,
-            EmoteCheer = 12741992301278072287,
-            EmoteLaugh = 6804726470184799721,
-            EmoteListen = 13877535226012307047,
-            EmoteNo = 472510912049319093,
-            EmotePoint = 9483224279656697346,
-            EmotePose = 17036145266975772047,
-            EmoteSalute = 4539076641357500006,
-            EmoteShowOff = 12075678235207864020,
-            EmoteVolunteer = 12123467190089879484,
-            EmoteWait = 18018958450018749837,
-            EmoteWave = 16997810656631262603,
-            EmoteYawn = 11023620089749835159,
-
-            EmoteDance = 773103106671775187,
-            
-            EmoteRetreat = 10309092512011849423,
-            EmoteAttack = 2540014191070350928,  
-            EmoteCongrats = 11651334702101696313,
-            EmoteCry = 16071547722904833318,
         }
 
         public enum Travel : ulong

@@ -8,6 +8,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -395,7 +396,7 @@ namespace MHServerEmu.Games.Network
         {
             _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
 
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies));
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies, settings));
 
             // Notify the client that we have finished sending everything needed for this avatar
             if (entity is Avatar && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
@@ -525,15 +526,16 @@ namespace MHServerEmu.Games.Network
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
             AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
 
-            if (entity is WorldEntity worldEntity && worldEntity.Cell != null)  // Second condition is temp fix for hacky avatar position
+            if (entity is WorldEntity worldEntity)
             {
                 // Validate that the entity's location is valid on the client before including it in the proximity channel
-                if (worldEntity.IsInWorld && worldEntity.IsDead == false && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                if (worldEntity.IsInWorld && worldEntity.IsDead == false && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false
+                    && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
                 {
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
 
                     // HACK: Discover
-                    if (worldEntity.TrackAfterDiscovery)
+                    if (worldEntity.TrackAfterDiscovery && worldEntity is not Item)
                         newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
                 }
 

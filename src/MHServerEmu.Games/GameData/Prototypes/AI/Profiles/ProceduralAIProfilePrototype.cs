@@ -164,7 +164,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (power == PrototypeId.Invalid) return;
             if (agent.HasPowerInPowerCollection(power) == false)
             {
-                var indexPowerProps = new PowerIndexProperties(agent.CharacterLevel, agent.CombatLevel, agent.Properties[PropertyEnum.PowerRank]);
+                PowerIndexProperties indexPowerProps = new(agent.Properties[PropertyEnum.PowerRank], agent.CharacterLevel, agent.CombatLevel);
                 // TODO PropertyEnum.AILOSMaxPowerRadius
                 agent.AssignPower(power, indexPowerProps);
             }

@@ -3,7 +3,6 @@ using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -12,6 +11,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
@@ -223,83 +223,6 @@ namespace MHServerEmu.Commands.Implementations
             ChatHelper.SendMetagameMessageSplit(client, sb.ToString(), false);
 
             return string.Empty;
-        }
-
-        public enum PetDebug
-        {
-            Run,
-            Stop,
-            Destroy,
-            Think
-        }
-
-        [Command("pet", "Create pet for test AI.\n Usage: debug pet [think | run | stop | destroy].", AccountUserLevel.User)]
-        public string Pet(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            var player = playerConnection.Player;
-            var position = playerConnection.LastPosition;
-            var orientation = playerConnection.LastOrientation;
-            var region = playerConnection.AOI.Region;
-            var avatar = player.CurrentAvatar;
-            PrototypeId petProto = (PrototypeId)16300889242928224944;
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PetDebug petFlag)) == false)
-            {
-                if (avatar.RegionLocation.IsValid() == false)
-                {
-                    avatar.EnterWorld(region, position, orientation);
-                    avatar.SetSimulated(true);
-                }
-                // Pet026FrogThor = 7240687669893536590
-                Vector3 petPosition = new(position);
-                petPosition.X += 400.0f;
-                // petPosition.Y += 400.0f;                
-                Agent pet = game.EntityManager.CreatePet(petProto, petPosition, region, player.DatabaseUniqueId); // Pet001OldLace = 16300889242928224944
- 
-                pet.EnterWorld(region, petPosition, orientation);
-                pet.EnterGame();
-                pet.SetSimulated(true);
-                playerConnection.AOI.Update(playerConnection.LastPosition, true);
-                return $"Pet {pet.PrototypeName} Created";
-            }
-            else
-            {
-                string s = "";
-                Agent pet = null;
-                foreach (var entity in game.EntityManager.SimulatedEntities.Iterate())
-                    if (entity.PrototypeDataRef == petProto)
-                    {
-                        pet = entity as Agent;
-                        break;
-                    }
-
-                if (pet != null)
-                {
-                    switch (petFlag)
-                    {
-                        case PetDebug.Run:
-                        case PetDebug.Stop:
-                            bool enable = petFlag == PetDebug.Run;
-                            pet.AIController.SetIsEnabled(enable);
-                            s += $"{pet.PrototypeName} AIEnabled {enable}";
-                            break;
-                        case PetDebug.Destroy:
-                            pet.SetSimulated(false);
-                            pet.Destroy();
-                            s += $"{pet.PrototypeName} Destroyed";
-                            break;
-                        case PetDebug.Think:
-                            pet.Think();
-                            s += $"{pet.PrototypeName} Think";
-                            break;
-                    }
-                    playerConnection.AOI.Update(playerConnection.LastPosition, true);
-                }
-                else s = "Pet not found";
-                return s;
-            }
         }
 
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]

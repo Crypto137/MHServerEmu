@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network
                         if (orientation.Pitch != 0f || orientation.Roll != 0f)
                             locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
 
-                        //locomotionState = worldEntity.Locomotor?.LocomotionState;     // TODO
+                        locomotionState = worldEntity.Locomotor?.LocomotionState;
 
                         locoFieldFlags |= LocomotionState.GetFieldFlags(locomotionState, null, true);
                     }
@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Network
                     fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
 
                 if (entity.InventoryLocation.IsValid && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
-                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
+                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;               
 
                 if (entity is Player)
                     fieldFlags |= EntityCreateMessageFlags.HasDbId;
@@ -107,6 +107,24 @@ namespace MHServerEmu.Games.Network
 
                 if (entity.OverrideSnapToFloorOnSpawn)
                     fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
+
+                if (settings != null)
+                {
+                    if (settings.SourceEntityId != Entity.InvalidId)
+                        fieldFlags |= EntityCreateMessageFlags.HasSourceEntityId;
+
+                    if (settings.SourcePosition != null && settings.SourcePosition != Vector3.Zero)
+                        fieldFlags |= EntityCreateMessageFlags.HasSourcePosition;
+
+                    if (settings.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
+                        fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
+
+                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsNewOnServer))
+                        fieldFlags |= EntityCreateMessageFlags.IsNewOnServer;
+
+                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsClientEntityHidden))
+                        fieldFlags |= EntityCreateMessageFlags.IsClientEntityHidden;
+                }
 
                 // Serialize
                 ulong entityId = entity.Id;
@@ -159,16 +177,14 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourceEntityId))
                 {
-                    // TODO
-                    ulong sourceEntityId = 0;
+                    ulong sourceEntityId = settings.SourceEntityId;
                     Serializer.Transfer(archive, ref sourceEntityId);
                 }
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
                 {
-                    // TODO
-                    Vector3 sourcePosition = Vector3.Zero;
-                    Serializer.Transfer(archive, ref sourcePosition);
+                    Vector3 sourcePosition = settings.SourcePosition;
+                    Serializer.TransferVectorFixed(archive, ref sourcePosition, 3);
                 }
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
@@ -182,11 +198,7 @@ namespace MHServerEmu.Games.Network
                     InventoryLocation.SerializeTo(archive, entity.InventoryLocation);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                {
-                    // TODO
-                    InventoryLocation invLocPrev = new();
-                    InventoryLocation.SerializeTo(archive, invLocPrev);
-                }
+                    InventoryLocation.SerializeTo(archive, settings.PreviousInventoryLocation);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {
@@ -210,6 +222,46 @@ namespace MHServerEmu.Games.Network
                 .Build();
         }
 
+        public static NetMessageLocomotionStateUpdate BuildLocomotionStateUpdateMessage(WorldEntity worldEntity, LocomotionState oldLocomotionState, LocomotionState newLocomotionState,
+            bool withPathNodes)
+        {
+            // Build flags
+            LocomotionMessageFlags fieldFlags = LocomotionMessageFlags.None;
+
+            RegionLocation regionLocation = worldEntity.RegionLocation;
+            Vector3 position = regionLocation.Position;
+            Orientation orientation = regionLocation.Orientation;
+
+            if (orientation.Pitch != 0f || orientation.Yaw != 0f)
+                fieldFlags |= LocomotionMessageFlags.HasFullOrientation;
+
+            fieldFlags |= LocomotionState.GetFieldFlags(newLocomotionState, oldLocomotionState, withPathNodes);
+
+            // Serialize
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AOIChannelProximity);
+
+            ulong entityId = worldEntity.Id;
+            Serializer.Transfer(archive, ref entityId);
+
+            uint fieldFlagsRaw = (uint)fieldFlags;
+            Serializer.Transfer(archive, ref fieldFlagsRaw);
+
+            if (fieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
+            {
+                PrototypeId entityPrototypeRef = worldEntity.PrototypeDataRef;
+                Serializer.TransferPrototypeEnum<EntityPrototype>(archive, ref entityPrototypeRef);
+            }
+
+            Serializer.TransferVectorFixed(archive, ref position, 3);
+
+            bool yawOnly = fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+            Serializer.TransferOrientationFixed(archive, ref orientation, yawOnly, 6);
+
+            LocomotionState.SerializeTo(archive, newLocomotionState, fieldFlags);
+
+            return NetMessageLocomotionStateUpdate.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
+        }
+
         /// <summary>
         /// Builds <see cref="NetMessageEntityEnterGameWorld"/> for the provided <see cref="WorldEntity"/>.
         /// </summary>
@@ -228,8 +280,7 @@ namespace MHServerEmu.Games.Network
                 locoFieldFlags |= LocomotionMessageFlags.HasFullOrientation;
 
             // LocomotionState
-            LocomotionState locomotionState = null;
-            //locomotionState = worldEntity.Locomotor?.LocomotionState;     // TODO: Get real locomotion state from the entity
+            LocomotionState locomotionState = worldEntity.Locomotor?.LocomotionState;
 
             if (locomotionState != null)
                 locoFieldFlags |= LocomotionState.GetFieldFlags(locomotionState, null, true);

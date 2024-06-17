@@ -83,6 +83,13 @@ namespace MHServerEmu.Games.MetaGames
                 }
                 else if (region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
                     popManager.MetaStateRegisty((PrototypeId)7730041682554854878); // CH04UpperMoloids
+                else if (region.PrototypeId == RegionPrototypeId.SurturRaidRegionGreen) // Hardcode for Surtur
+                {   
+                    var stateRef = (PrototypeId)5463286934959496963; // SurturMissionProgressionStateFiveMan
+                    var missionProgression = stateRef.As<MetaStateMissionProgressionPrototype>();
+                    foreach(var state in missionProgression.StatesProgression)
+                        popManager.MetaStateRegisty(state);
+                }
             }
         }
     }

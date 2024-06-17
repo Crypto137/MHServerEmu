@@ -144,8 +144,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             var powerProto = powerProtoRef.As<PowerPrototype>();
             if (powerProto == null) return Logger.WarnReturn<Power>(null, "AssignPower(): powerProto == null");
 
-            // TODO: Uncomment IsInWorld check when we have world entities properly entering and exiting world
-            if (Power.IsComboEffect(powerProto) == false && (_owner == null /* || _owner.IsInWorld == false */))
+            if (Power.IsComboEffect(powerProto) == false && (_owner == null || _owner.IsInWorld == false))
                 return Logger.WarnReturn<Power>(null, "AssignPower(): PowerCollection only supports Assign() of powers while the owner is in world!");
 
             return AssignPowerInternal(powerProtoRef, indexProps, triggeringPowerRef, sendPowerAssignmentToClients);
@@ -153,8 +152,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public bool UnassignPower(PrototypeId powerProtoRef, bool sendPowerUnassignToClients = true)
         {
-            // TODO: Uncomment IsInWorld check when we have world entities properly entering and exiting world
-            if (_owner == null /* || _owner.IsInWorld == false */)
+            if (_owner == null || _owner.IsInWorld == false)
                 return Logger.WarnReturn(false, "UnassignPower(): PowerCollection only supports Unassign() of powers while the owner is in world!");
 
             return UnassignPowerInternal(powerProtoRef, sendPowerUnassignToClients);
@@ -201,7 +199,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             foreach (PowerCollectionRecord record in _powerDict.Values)
                 record.Power?.OnOwnerExitedWorld();
 
-            // Store records in a temp array instead of using a custom iterator (for now)
+            // Convert dict to array to be able to remove entries while iterating
             foreach (var kvp in _powerDict.ToArray())
             {
                 Power power = kvp.Value.Power;
@@ -237,9 +235,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 return Logger.WarnReturn<Power>(null, $"AssignPowerInternal(): Power is not approved for use ({GameDatabase.GetPrototypeName(powerProtoRef)})");
 
             // Send power assignment message to interested clients
-            if (sendPowerAssignmentToClients && _owner != null)
+            if (sendPowerAssignmentToClients && _owner != null && _owner.IsInGame)
             {
-                // TODO: owner.IsInGame
                 var assignPowerMessage = NetMessagePowerCollectionAssignPower.CreateBuilder()
                     .SetEntityId(_owner.Id)
                     .SetPowerProtoId((ulong)powerProtoRef)
@@ -250,9 +247,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     .SetItemVariation(indexProps.ItemVariation)
                     .Build();
 
-                // TODO: Turn message filter on
-                _owner.Game.NetworkManager.SendMessageToInterested(assignPowerMessage, _owner);
-                //_owner.Game.NetworkManager.SendMessageToInterested(assignPowerMessage, _owner, AOINetworkPolicyValues.AOIChannelProximity);
+                _owner.Game.NetworkManager.SendMessageToInterested(assignPowerMessage, _owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
             // See if the power we are trying to assign is already in this collection
@@ -281,9 +276,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                             if (isPowerProgressionPower == false)
                             {
-                                // TODO: Uncomment this once all avatars have a game
-                                //var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
-                                Avatar avatarOwner = _owner.Game != null ? _owner.GetMostResponsiblePowerUser<Avatar>() : null;
+                                var avatarOwner = _owner.GetMostResponsiblePowerUser<Avatar>();
                                 if (avatarOwner != null)
                                 {
                                     Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
@@ -339,13 +332,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private Power CreatePower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, PrototypeId triggeringPowerRef, bool isTeamUpPassivePowerWhileAway)
         {
-            if (powerProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn<Power>(null, "CreatePower(): powerProtoRef == PrototypeId.Invalid");
+            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Power>(null, "CreatePower(): powerProtoRef == PrototypeId.Invalid");
+            if (_owner == null) return Logger.WarnReturn<Power>(null, "CreatePower(): _owner == null");
+            if (_owner.Game == null) return Logger.WarnReturn<Power>(null, "CreatePower(): _owner.Game == null");
 
-            // TODO: owner null check
-            // TODO: owner game null check
-
-            Power power = new(null, powerProtoRef);
+            Power power = _owner.Game.AllocatePower(powerProtoRef);
 
             // Assemble property values passed as arguments into a collection
             PropertyCollection initializeProperties = new();
@@ -388,8 +379,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         private bool UnassignPowerInternal(PrototypeId powerProtoRef, bool sendPowerUnassignToClients)
         {
             if (_owner == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner == null");
-            // TODO: Uncomment this later
-            //if (_owner.Game == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner.Game == null");
+            if (_owner.Game == null) return Logger.WarnReturn(false, "UnassignPowerInternal(): _owner.Game == null");
 
             // Find and validate the record for our powerProtoRef
             PowerCollectionRecord powerRecord = GetPowerRecordByRef(powerProtoRef);
@@ -411,18 +401,14 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
 
             // Send power unassignment message to interested clients
-            if (sendPowerUnassignToClients)
+            if (sendPowerUnassignToClients && _owner.IsInGame && _owner.IsInWorld)
             {
-                // TODO: _owner.IsInGame / _owner.IsInWorld
-
                 var unassignPowerMessage = NetMessagePowerCollectionUnassignPower.CreateBuilder()
                     .SetEntityId(_owner.Id)
                     .SetPowerProtoId((ulong)powerProtoRef)
                     .Build();
 
-                // TODO: Turn message filter on
-                _owner.Game.NetworkManager.SendMessageToInterested(unassignPowerMessage, _owner);
-                //_owner.Game.NetworkManager.SendMessageToInterested(unassignPowerMessage, _owner, AOINetworkPolicyValues.AOIChannelProximity);
+                _owner.Game.NetworkManager.SendMessageToInterested(unassignPowerMessage, _owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
             return true;

@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -11,6 +13,52 @@ namespace MHServerEmu.Games.Entities
     public static class EntityHelper
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        
+        public static Agent CrateOrb(PrototypeId orbProto, Vector3 position, Region region)
+        {
+            var settings = new EntitySettings
+            {
+                EntityRef = orbProto,
+                Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
+                RegionId = region.Id,
+                Properties = new()
+                {
+                    [PropertyEnum.AIStartsEnabled] = false
+                }
+            };
+            var game = region.Game;
+            Agent orb = (Agent)game.EntityManager.CreateEntity(settings);
+            return orb;
+        }
+
+        public static Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, ulong masterDbGuid) // Test funciton
+        {
+            int level = 60;
+            // var inventory = player.GetInventory(InventoryConvenienceLabel.PetItem); 
+            var settings = new EntitySettings
+            {
+                EntityRef = prototypeId,
+                Position = position,
+                Orientation = new(3.14f, 0.0f, 0.0f),
+                RegionId = region.Id,
+                // OptionFlags = EntitySettingsOptionFlags.EnterGame,
+                Properties = new PropertyCollection
+                {
+                    [PropertyEnum.AIStartsEnabled] = false,
+                    [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
+                    [PropertyEnum.AIMasterAvatar] = true,
+                    [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
+                    [PropertyEnum.CharacterLevel] = level,
+                    [PropertyEnum.CombatLevel] = level,
+                    [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
+                }
+                //  InventoryLocation = new(player.Id, inventory.PrototypeDataRef)
+            };
+            var game = region.Game;
+            var pet = (Agent)game.EntityManager.CreateEntity(settings);
+            return pet;
+        }
 
         public static void SetUpHardcodedEntities(Region region)
         {
@@ -79,41 +127,25 @@ namespace MHServerEmu.Games.Entities
 
         #region HardCodeRank
 
-        public static int GetRankHealth(EntityPrototype entity)
+        public static int GetHealthForWorldEntity(WorldEntity worldEntity)
         {
-            if (entity is PropPrototype)
-            {
+            WorldEntityPrototype worldEntityProto = worldEntity.WorldEntityPrototype;
+
+            if (worldEntityProto is PropPrototype)
                 return 200;
-            }
-            else if (entity is SpawnerPrototype || entity is HotspotPrototype)
-            {
+
+            if (worldEntityProto is SpawnerPrototype || worldEntityProto is HotspotPrototype)
                 return 0;
-            }
-            else if (entity is WorldEntityPrototype worldEntity)
+
+            switch (worldEntity.GetRankPrototype().Rank)
             {
-                return (RankPrototypeId)worldEntity.Rank switch
-                {
-                    RankPrototypeId.Popcorn => 600,
-                    RankPrototypeId.Champion => 800,
-                    RankPrototypeId.Elite => 1000,
-                    RankPrototypeId.MiniBoss => 1500,
-                    RankPrototypeId.Boss => 2000,
-                    _ => 1000,
-                };
+                case Rank.Popcorn:  return 600;
+                case Rank.Champion: return 800;
+                case Rank.Elite:    return 1000;
+                case Rank.MiniBoss: return 1500;
+                case Rank.Boss:     return 2000;
+                default:            return 1000;
             }
-            return 0;
-
-        }
-
-        public enum RankPrototypeId : ulong
-        {
-            Popcorn = 15168672998566398820,
-            Champion = 3048000484526787506,
-            Elite = 17308931952834644598,
-            EliteMinion = 7470660573381266688,
-            EliteNamed = 11012647903754259579,
-            MiniBoss = 18093345044982008775,
-            Boss = 9550003146522364442,
         }
 
         #endregion
@@ -253,6 +285,7 @@ namespace MHServerEmu.Games.Entities
             BlockerEntity.SurturRaidGateBlockerEntityMOM,
             BlockerEntity.SurturRaidGateBlockerEntitySLAG,
             BlockerEntity.SurturRaidGateBlockerEntitySURT,
+            BlockerEntity.SurturRaidGateBlockerEntitySURT2,
             BlockerEntity.OperationsBountyChestA,
             BlockerEntity.OperationsBountyChestB,
             BlockerEntity.OperationsBountyChestC,
@@ -266,6 +299,7 @@ namespace MHServerEmu.Games.Entities
             SurturRaidGateBlockerEntityMOM = 7506253403374886470,
             SurturRaidGateBlockerEntitySLAG = 2107982419118661284,
             SurturRaidGateBlockerEntitySURT = 7080009510741745355,
+            SurturRaidGateBlockerEntitySURT2 = 17385248028568526589,
             // Off BounntyChest
             OperationsBountyChestA = 8947265512402064759,
             OperationsBountyChestB = 16557893689139991928,

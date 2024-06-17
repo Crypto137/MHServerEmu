@@ -39,9 +39,8 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                 PowerRandomSeed = (uint)_playerConnection.Game.Random.Next()
             };
 
-            _playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
-                .SetArchiveData(activatePower.ToByteString())
-                .Build());
+            var activatePowerMessage = NetMessageActivatePower.CreateBuilder().SetArchiveData(activatePower.ToByteString()).Build();
+            _playerConnection.Game.NetworkManager.SendMessageToInterested(activatePowerMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity);
 
             return true;
         }

@@ -16,6 +16,16 @@ namespace MHServerEmu.Games.Entities.Items
         private int _seed;
         private PrototypeId _equippableBy;
 
+        public PrototypeId ItemProtoRef { get => _itemProtoRef; }
+        public PrototypeId RarityProtoRef { get => _rarityProtoRef; }
+        public int ItemLevel { get => _itemLevel; }
+        public int CreditsAmount { get => _creditsAmount; }
+        public IEnumerable<AffixSpec> AffixSpecs { get => _affixSpecList; }
+        public int Seed { get => _seed; }
+        public PrototypeId EquippableBy { get => _equippableBy; }
+
+        public bool IsValid { get => _itemProtoRef != PrototypeId.Invalid && _rarityProtoRef != PrototypeId.Invalid; }
+
         public ItemSpec() { }
 
         public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef, int itemLevel, int creditsAmount, IEnumerable<AffixSpec> affixSpecs, int seed, PrototypeId equippableBy)
@@ -69,6 +79,23 @@ namespace MHServerEmu.Games.Entities.Items
                 .SetSeed((uint)_seed)
                 .SetEquippableBy((ulong)_equippableBy)
                 .Build();
+        }
+
+        public void Set(ItemSpec other)
+        {
+            if (other == null) throw new ArgumentException("other == null");
+            if (ReferenceEquals(this, other)) return;
+
+            _itemProtoRef = other._itemProtoRef;
+            _rarityProtoRef = other._rarityProtoRef;
+            _itemLevel = other._itemLevel;
+            _creditsAmount = other._creditsAmount;
+            _seed = other._seed;
+            _equippableBy = other._equippableBy;
+
+            _affixSpecList.Clear();
+            foreach (AffixSpec otherAffixSpec in other._affixSpecList)
+                _affixSpecList.Add(new(otherAffixSpec));
         }
 
         public override string ToString()

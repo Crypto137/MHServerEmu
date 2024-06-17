@@ -16,8 +16,10 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games
@@ -32,6 +34,7 @@ namespace MHServerEmu.Games
         private const int TargetFrameRate = 20;
         public static readonly TimeSpan StartTime = TimeSpan.FromMilliseconds(1);
         public readonly NetStructGameOptions GameOptions;
+        public readonly CustomGameOptionsConfig CustomGameOptions;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -55,6 +58,7 @@ namespace MHServerEmu.Games
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
+        public LootGenerator LootGenerator { get; }
 
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
         public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }
@@ -75,6 +79,8 @@ namespace MHServerEmu.Games
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
             GameOptions = config.ToProtobuf();
 
+            CustomGameOptions = ConfigManager.Instance.GetConfig<CustomGameOptionsConfig>();
+
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
 
@@ -82,6 +88,7 @@ namespace MHServerEmu.Games
             NetworkManager = new(this);
             RegionManager = new();
             EntityManager = new(this);
+            LootGenerator = new(this);
 
             Random = new();
 
@@ -225,6 +232,18 @@ namespace MHServerEmu.Games
             return entity;
         }
 
+        public Power AllocatePower(PrototypeId powerProtoRef)
+        {
+            Type powerClassType = GameDatabase.DataDirectory.GetPrototypeClassType(powerProtoRef);
+
+            if (powerClassType == typeof(MissilePowerPrototype))
+                return new MissilePower(this, powerProtoRef);
+            else if (powerClassType == typeof(SummonPowerPrototype))
+                return new SummonPower(this, powerProtoRef);
+            else
+                return new Power(this, powerProtoRef);
+        }
+
         public IEnumerable<Region> RegionIterator()
         {            
             foreach (Region region in RegionManager.AllRegions) 
@@ -303,8 +322,8 @@ namespace MHServerEmu.Games
             GameEventScheduler.TriggerEvents(_currentGameTime);
 
             // Re-enable locomotion and physics when we get rid of multithreading issues
-            EntityManager.LocomoteEntities();
-            EntityManager.PhysicsResolveEntities();
+            //EntityManager.LocomoteEntities();
+            //EntityManager.PhysicsResolveEntities();
             EntityManager.ProcessDeferredLists();
 
             // Send responses to all clients

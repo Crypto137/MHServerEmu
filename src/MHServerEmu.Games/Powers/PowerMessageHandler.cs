@@ -93,6 +93,13 @@ namespace MHServerEmu.Games.Powers
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
 
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            // Send this activation to other players
+            ActivatePowerArchive activatePowerArchive = new();
+            activatePowerArchive.Initialize(tryActivatePower, avatar.RegionLocation.Position);
+            _game.NetworkManager.SendMessageToInterested(activatePowerArchive.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
+
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
                 Logger.Trace($"AddEvent EndThrowing for {GameDatabase.GetPrototypeName(powerPrototypeId)}");
@@ -134,7 +141,12 @@ namespace MHServerEmu.Games.Powers
                 Inventory inventory = playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
                 
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
-                bowlingBall?.Destroy();
+                if (bowlingBall == null) return false;
+
+                if (bowlingBall.Properties[PropertyEnum.InventoryStackCount] > 1)
+                    bowlingBall.Properties.AdjustProperty(-1, PropertyEnum.InventoryStackCount);
+                else
+                    bowlingBall.Destroy();
             }
 
             // if (powerPrototypePath.Contains("TravelPower/")) 
@@ -145,11 +157,8 @@ namespace MHServerEmu.Games.Powers
             PowerResults results = new();
             results.Init(tryActivatePower);
             if (results.TargetEntityId > 0)
-            {                
-                playerConnection.SendMessage(NetMessagePowerResult.CreateBuilder()
-                    .SetArchiveData(results.ToByteString())
-                    .Build());
-
+            {
+                _game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity);
                 TestHit(playerConnection, results.TargetEntityId, (int)results.DamagePhysical);
             }
 
@@ -183,18 +192,7 @@ namespace MHServerEmu.Games.Powers
             }
             else if (entity.WorldEntityPrototype is AgentPrototype agentProto && agentProto.Locomotion.Immobile == false)
             {
-                // TODO: Clean this up
-                LocomotionStateUpdateArchive locomotion = new()
-                {
-                    ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                    EntityId = entityId,
-                    FieldFlags = LocomotionMessageFlags.NoLocomotionState,
-                    Position = new(entity.RegionLocation.Position)
-                };
-                locomotion.Orientation.Yaw = Vector3.AngleYaw(locomotion.Position, playerConnection.LastPosition);
-                playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
-                    .SetArchiveData(locomotion.ToByteString())
-                    .Build());
+                entity.ChangeRegionPosition(null, new(Vector3.AngleYaw(entity.RegionLocation.Position, playerConnection.LastPosition), 0f, 0f));
             }       
         }
 
@@ -214,6 +212,21 @@ namespace MHServerEmu.Games.Powers
 
             string powerPrototypePath = GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId);
             Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
+
+            Logger.Trace(tryCancelPower.ToString());
+
+            // Broadcast to other interested clients
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            // NOTE: Although NetMessageCancelPower is not an archive, it uses power prototype enums
+            ulong powerPrototypeEnum = (ulong)DataDirectory.Instance.GetPrototypeEnumValue<PowerPrototype>((PrototypeId)tryCancelPower.PowerPrototypeId);
+            var clientMessage = NetMessageCancelPower.CreateBuilder()
+                .SetIdAgent(tryCancelPower.IdUserEntity)
+                .SetPowerPrototypeId(powerPrototypeEnum)
+                .SetEndPowerFlags(tryCancelPower.EndPowerFlags)
+                .Build();
+
+            _game.NetworkManager.SendMessageToInterested(clientMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
 
             if (powerPrototypePath.Contains("TravelPower/"))
             {
@@ -239,10 +252,29 @@ namespace MHServerEmu.Games.Powers
             var powerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
+            // Logger.Trace(continuousPowerUpdate.ToString());
 
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            // Broadcast to other interested clients
+            var clientMessageBuilder = NetMessageContinuousPowerUpdateToClient.CreateBuilder()
+                .SetIdAvatar(avatar.Id)
+                .SetPowerPrototypeId(continuousPowerUpdate.PowerPrototypeId);
+
+            if (continuousPowerUpdate.HasIdTargetEntity)
+                clientMessageBuilder.SetIdTargetEntity(continuousPowerUpdate.IdTargetEntity);
+
+            if (continuousPowerUpdate.HasTargetPosition)
+                clientMessageBuilder.SetTargetPosition(continuousPowerUpdate.TargetPosition);
+
+            if (continuousPowerUpdate.HasRandomSeed)
+                clientMessageBuilder.SetRandomSeed(continuousPowerUpdate.RandomSeed);
+
+            _game.NetworkManager.SendMessageToInterested(clientMessageBuilder.Build(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
+
+            // Handle travel
             if (powerPrototypePath.Contains("TravelPower/"))
                 HandleTravelPower(playerConnection, powerPrototypeId);
-            // Logger.Trace(continuousPowerUpdate.ToString());
 
             return true;
         }
