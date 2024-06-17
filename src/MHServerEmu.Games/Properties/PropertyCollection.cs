@@ -537,12 +537,19 @@ namespace MHServerEmu.Games.Properties
             {
                 // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
                 // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
-                // and updates the number. This is most likely a side effect of not all properties being saved to the database in the
-                // original implementation.
-                archive.WriteUnencodedStream((uint)_baseList.Count);
+                // and updates the number.
+
+                // Remember current offset and reserve 4 bytes
+                long numPropertiesOffset = archive.CurrentOffset;
+                archive.WriteUnencodedStream(0u);
+
+                uint numProperties = 0;
 
                 foreach (var kvp in _baseList)
-                    success &= SerializePropertyForPacking(kvp, archive, defaultCollection);
+                    success &= SerializePropertyForPacking(kvp, ref numProperties, archive, defaultCollection);
+
+                // Write the number of serialized properties to the reserved bytes
+                archive.WriteUnencodedStream(numProperties, numPropertiesOffset);                    
             }
             else
             {
@@ -615,17 +622,37 @@ namespace MHServerEmu.Games.Properties
             return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
         }
 
-        protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, Archive archive, PropertyCollection defaultCollection)
+        protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, ref uint numProperties, Archive archive, PropertyCollection defaultCollection)
         {
             bool success = true;
 
-            // TODO: Serialize only properties that are different from the base collection for replication 
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
 
-            ulong id = kvp.Key.Raw.ReverseBytes();  // Id is reversed so that it can be efficiently encoded into varint when all params are 0
+            // TODO: Filter properties for persistent archives
+
+            // Filter properties for replication
+            if (archive.IsReplication)
+            {
+                // Skip properties that don't match AOI channels for this archive
+                if ((info.Prototype.RepNetwork & archive.GetReplicationPolicyEnum()) == Network.AOINetworkPolicyValues.AOIChannelNone)
+                    return true;
+
+                // Skip properties that have the same value as the provided default collection (if there is one)
+                if (defaultCollection != null && defaultCollection.GetBaseValue(kvp.Key, out PropertyValue baseValue) && kvp.Value.RawLong == baseValue.RawLong)
+                    return true;
+            }
+
+            // Serialize
+
+            // Id is reversed so that it can be efficiently encoded into varint when all params are 0
+            // NOTE: Here we reverse bytes, but when we serialize individual properties for replication we reserve bits
+            // (see ReplicatedPropertyCollection.MarkPropertyChanged()).
+            ulong id = kvp.Key.Raw.ReverseBytes();
             ulong value = ConvertValueToBits(kvp.Value, info.DataType);
             success &= Serializer.Transfer(archive, ref id);
             success &= Serializer.Transfer(archive, ref value);
+
+            numProperties++;        // Increment the number of properties that will be written when we finish iterating
 
             return success;
         }

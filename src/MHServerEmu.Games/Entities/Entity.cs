@@ -274,8 +274,7 @@ namespace MHServerEmu.Games.Entities
 
         public virtual bool Serialize(Archive archive)
         {
-            PropertyCollection defaultCollection = null;    // TODO: Get the default collection from the prototype
-            return Properties.SerializeWithDefault(archive, defaultCollection);
+            return Properties.SerializeWithDefault(archive, Prototype?.Properties);
         }
 
         public void TEMP_ReplacePrototype(PrototypeId prototypeRef)

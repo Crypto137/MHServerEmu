@@ -67,6 +67,8 @@ namespace MHServerEmu.Core.Serialization
         public bool IsPacking { get; }
         public bool IsUnpacking { get => IsPacking == false; }
 
+        public long CurrentOffset { get => _bufferStream.Position; }
+
         /// <summary>
         /// Constructs a new <see cref="Archive"/> instance for packing.
         /// </summary>
@@ -567,11 +569,6 @@ namespace MHServerEmu.Core.Serialization
             }
         }
 
-        // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
-        // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
-        // and updates the number. This is most likely a side effect of not all properties being saved to the database in the
-        // original implementation.
-
         // These methods are also used for FavorSpeed (disk mode).
 
         /// <summary>
@@ -582,6 +579,17 @@ namespace MHServerEmu.Core.Serialization
             _cos.WriteRawBytes(BitConverter.GetBytes(value));
             _cos.Flush();
             return true;
+        }
+
+        /// <summary>
+        /// Writes the provided <see cref="uint"/> value at the specified position in the underlying stream. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool WriteUnencodedStream(uint value, long position)
+        {
+            // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
+            // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
+            // and updates the number.
+            return _bufferStream.WriteUInt32At(position, value);
         }
 
         /// <summary>
