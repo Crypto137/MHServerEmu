@@ -314,9 +314,9 @@ namespace MHServerEmu.Games.Behavior
                 Brain.LastThinkQTime = Game.NumQuantumFixedTimeUpdates;
                 Brain.ThinkCountPerFrame = 0;
             }
-
+            bool thinking = false;
             if (Owner.TestStatus(EntityStatus.PendingDestroy) == false 
-                && Owner.TestStatus(EntityStatus.Destroyed) == false)
+                && Owner.TestStatus(EntityStatus.Destroyed) == false && thinking)
             {
                 float thinkTime = 500; // slow think 
                 if (TargetEntity != null || AssistedEntity != null)
