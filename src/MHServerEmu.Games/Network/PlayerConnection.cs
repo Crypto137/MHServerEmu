@@ -702,7 +702,7 @@ namespace MHServerEmu.Games.Network
             // Activate the swap in power for the avatar to become playable
             EventPointer<TEMP_ActivatePowerEvent> avatarSwapInEvent = new();
             Game.GameEventScheduler.ScheduleEvent(avatarSwapInEvent, TimeSpan.FromMilliseconds(700));
-            avatarSwapInEvent.Get().Initialize(this, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            avatarSwapInEvent.Get().Initialize(Player.CurrentAvatar, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
 
             return true;
         }

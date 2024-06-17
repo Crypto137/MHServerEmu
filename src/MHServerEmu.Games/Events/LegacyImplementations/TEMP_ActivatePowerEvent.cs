@@ -1,6 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
@@ -11,20 +11,18 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private PlayerConnection _playerConnection;
+        private WorldEntity _worldEntity;
         private PrototypeId _powerProtoRef;
 
-        public void Initialize(PlayerConnection playerConnection, PrototypeId powerProtoRef)
+        public void Initialize(WorldEntity worldEntity, PrototypeId powerProtoRef)
         {
-            _playerConnection = playerConnection;
+            _worldEntity = worldEntity;
             _powerProtoRef = powerProtoRef;
         }
 
         public override bool OnTriggered()
         {
-            Avatar avatar = _playerConnection.Player.CurrentAvatar;
-
-            Logger.Trace($"Activating {GameDatabase.GetPrototypeName(_powerProtoRef)} for {avatar}");
+            Logger.Trace($"Activating {GameDatabase.GetPrototypeName(_powerProtoRef)} for {_worldEntity}");
 
             ActivatePowerArchive activatePower = new()
             {
@@ -33,14 +31,14 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                 ActivatePowerMessageFlags.HasPowerRandomSeed,
 
                 PowerPrototypeRef = _powerProtoRef,
-                UserEntityId = avatar.Id,
-                TargetPosition = _playerConnection.LastPosition,
-                FXRandomSeed = (uint)_playerConnection.Game.Random.Next(),
-                PowerRandomSeed = (uint)_playerConnection.Game.Random.Next()
+                UserEntityId = _worldEntity.Id,
+                TargetPosition = _worldEntity.RegionLocation.Position,
+                FXRandomSeed = (uint)_worldEntity.Game.Random.Next(),
+                PowerRandomSeed = (uint)_worldEntity.Game.Random.Next()
             };
 
             var activatePowerMessage = NetMessageActivatePower.CreateBuilder().SetArchiveData(activatePower.ToByteString()).Build();
-            _playerConnection.Game.NetworkManager.SendMessageToInterested(activatePowerMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity);
+            _worldEntity.Game.NetworkManager.SendMessageToInterested(activatePowerMessage, _worldEntity, AOINetworkPolicyValues.AOIChannelProximity);
 
             return true;
         }
