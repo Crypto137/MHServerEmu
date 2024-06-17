@@ -41,5 +41,21 @@
                 return false;
             }
         }
+
+        public static bool WriteUInt32At(this MemoryStream stream, long position, uint value)
+        {
+            try
+            {
+                long previousPosition = stream.Position;
+                stream.Position = position;
+                stream.Write(BitConverter.GetBytes(value));
+                stream.Position = previousPosition;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
