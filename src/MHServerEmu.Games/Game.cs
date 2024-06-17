@@ -322,8 +322,8 @@ namespace MHServerEmu.Games
             GameEventScheduler.TriggerEvents(_currentGameTime);
 
             // Re-enable locomotion and physics when we get rid of multithreading issues
-            //EntityManager.LocomoteEntities();
-            //EntityManager.PhysicsResolveEntities();
+            EntityManager.LocomoteEntities();
+            EntityManager.PhysicsResolveEntities();
             EntityManager.ProcessDeferredLists();
 
             // Send responses to all clients

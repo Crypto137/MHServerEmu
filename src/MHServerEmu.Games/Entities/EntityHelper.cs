@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Entities
                 Position = position,
                 Orientation = new(3.14f, 0.0f, 0.0f),
                 RegionId = region.Id,
+                Lifespan = TimeSpan.FromSeconds(3),
                 Properties = new()
                 {
                     [PropertyEnum.AIStartsEnabled] = false
@@ -45,7 +46,8 @@ namespace MHServerEmu.Games.Entities
                 // OptionFlags = EntitySettingsOptionFlags.EnterGame,
                 Properties = new PropertyCollection
                 {
-                    [PropertyEnum.AIStartsEnabled] = false,
+                    [PropertyEnum.AIStartsEnabled] = true,
+                    [PropertyEnum.MovementSpeedRate] = 1.0f,
                     [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
                     [PropertyEnum.AIMasterAvatar] = true,
                     [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players

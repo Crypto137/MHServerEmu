@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Entities
     public class Entity : ISerialize
     {
 
-        public bool SkipAI = true;
+        public bool SkipAI = false;
         public const ulong InvalidId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();

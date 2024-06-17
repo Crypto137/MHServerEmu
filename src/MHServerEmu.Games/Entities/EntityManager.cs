@@ -410,7 +410,7 @@ namespace MHServerEmu.Games.Entities
                     Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
                 else
                 {
-                    Logger.Trace($"Deleting entity {entity}");
+                    //Logger.Trace($"Deleting entity {entity}");
                     DeleteEntity(entity);
                 }
 

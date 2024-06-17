@@ -414,7 +414,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             syncRequired = true;
             pathNodeSyncRequired = true;
 
-            return;
+            //return;
 
             // todo
 

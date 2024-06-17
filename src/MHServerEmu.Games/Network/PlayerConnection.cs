@@ -408,7 +408,7 @@ namespace MHServerEmu.Games.Network
             currentAvatar.OnLocomotionStateChanged(currentAvatar.Locomotor.LastSyncState, currentAvatar.Locomotor.LocomotionState);
             
             // disable proper locomotion implementation for now
-            return true;
+            // return true;
 
             bool canMove = currentAvatar.CanMove;
             bool canRotate = currentAvatar.CanRotate;

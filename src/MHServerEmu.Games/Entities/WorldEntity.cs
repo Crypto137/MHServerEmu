@@ -1056,6 +1056,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) 
         {
             if (SkipAI) return;
+            Properties[PropertyEnum.MovementSpeedRate] = 1.0f;
             EntityHelper.CrateOrb((PrototypeId)925659119519994384, start, Region);// HealOrbItem = 925659119519994384, 
             EntityHelper.CrateOrb((PrototypeId)9607833165236212779, end, Region); //EnduranceOrbItem = 9607833165236212779,
             Logger.Debug($"PreGeneratePath {PrototypeName} {start} => {end}");
