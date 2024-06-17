@@ -33,29 +33,32 @@ namespace MHServerEmu.Games.Entities
             return orb;
         }
 
-        public static Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, ulong masterDbGuid) // Test funciton
+        public static Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, Player player) // Test funciton
         {
             int level = 60;
-            // var inventory = player.GetInventory(InventoryConvenienceLabel.PetItem); 
+            ulong masterDbGuid = player.DatabaseUniqueId;
+            AssetId creatorAsset = player.CurrentAvatar.WorldEntityPrototype.UnrealClass;
+            PrototypeId allianceRef = player.CurrentAvatar.Alliance.DataRef;
             var settings = new EntitySettings
             {
                 EntityRef = prototypeId,
                 Position = position,
                 Orientation = new(3.14f, 0.0f, 0.0f),
                 RegionId = region.Id,
-                // OptionFlags = EntitySettingsOptionFlags.EnterGame,
                 Properties = new PropertyCollection
                 {
+                    [PropertyEnum.NoMissileCollide] = true,
+                    [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
+                    [PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset,
                     [PropertyEnum.AIStartsEnabled] = true,
                     [PropertyEnum.MovementSpeedRate] = 1.0f,
                     [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
                     [PropertyEnum.AIMasterAvatar] = true,
-                    [PropertyEnum.AllianceOverride] = (PrototypeId)1600648780956896730, // Players
+                    [PropertyEnum.AllianceOverride] = allianceRef,
                     [PropertyEnum.CharacterLevel] = level,
                     [PropertyEnum.CombatLevel] = level,
                     [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
                 }
-                //  InventoryLocation = new(player.Id, inventory.PrototypeDataRef)
             };
             var game = region.Game;
             var pet = (Agent)game.EntityManager.CreateEntity(settings);

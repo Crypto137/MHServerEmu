@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Behavior
         private static readonly Logger Logger = LogManager.CreateLogger();
         private EventGroup _pendingEvents = new();
         private EventPointer<AIThinkEvent> _thinkEvent = new();
+        private ulong _thinkCount = 0;
         public Agent Owner { get; private set; }
         public Game Game { get; private set; }
         public ProceduralAI.ProceduralAI Brain { get; private set; }
@@ -325,6 +326,8 @@ namespace MHServerEmu.Games.Behavior
             }
 
             Brain?.Think();
+            Logger.Debug($"Think [{Owner.PrototypeName}] {_thinkCount}");
+            _thinkCount++;
         }
 
         public void OnAIKilled()

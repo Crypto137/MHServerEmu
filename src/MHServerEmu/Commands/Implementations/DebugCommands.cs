@@ -256,7 +256,7 @@ namespace MHServerEmu.Commands.Implementations
                 Vector3 petPosition = new(position);
                 petPosition.X += 400.0f;
                 // petPosition.Y += 400.0f;                
-                Agent pet = EntityHelper.CreatePet(petProto, petPosition, region, player.DatabaseUniqueId); // Pet001OldLace = 16300889242928224944
+                Agent pet = EntityHelper.CreatePet(petProto, petPosition, region, player); // Pet001OldLace = 16300889242928224944
 
                 pet.EnterWorld(region, petPosition, orientation);
                 pet.EnterGame();
