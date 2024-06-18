@@ -4,11 +4,13 @@ using Gazillion;
 using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
@@ -128,6 +130,46 @@ namespace MHServerEmu.Games.Network.Parsing
                 (AOINetworkPolicyValues)interestPolicies.PrevPolicies);
         }
 
+        [PrintMethod(typeof(NetMessageAddArea))]
+        private static string PrintNetMessageAddArea(IMessage message)
+        {
+            var addArea = (NetMessageAddArea)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"areaId: {addArea.AreaId}");
+            sb.AppendLine($"areaPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)addArea.AreaPrototypeId)}");
+            sb.AppendLine($"areaOrigin: {new Vector3(addArea.AreaOrigin)}");
+
+            if (addArea.HasIsStartArea)
+                sb.AppendLine($"isStartArea: {addArea.IsStartArea}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessageCellCreate))]
+        private static string PrintNetMessageCellCreate(IMessage message)
+        {
+            var cellCreate = (NetMessageCellCreate)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"areaId: {cellCreate.AreaId}");
+            sb.AppendLine($"cellId: {cellCreate.CellId}");
+            sb.AppendLine($"cellPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)cellCreate.CellPrototypeId)}");
+            sb.AppendLine($"positionInArea: {new Vector3(cellCreate.PositionInArea)}");
+            sb.AppendLine($"cellRandomSeed: {cellCreate.CellRandomSeed}");
+
+            for (int i = 0; i < cellCreate.EncountersCount; i++)
+            {
+                NetStructReservedSpawn encounter = cellCreate.EncountersList[i];
+                sb.AppendLine($"encounters[{i}]: asset={GameDatabase.GetAssetName((AssetId)encounter.Asset)}, id={encounter.Id}, useMarkerOrientation={encounter.UseMarkerOrientation}");
+            }
+
+            sb.AppendLine($"bufferWidth: {cellCreate.Bufferwidth}");
+            sb.AppendLine($"overrideLocationName: {cellCreate.OverrideLocationName}");
+
+            return sb.ToString();
+        }
+
         [PrintMethod(typeof(NetMessageChangeAOIPolicies))]
         private static string PrintNetMessageChangeAOIPolicies(IMessage message)
         {
@@ -191,11 +233,122 @@ namespace MHServerEmu.Games.Network.Parsing
             return sb.ToString();
         }
 
+        [PrintMethod(typeof(NetMessageMissionUpdate))]
+        private static string PrintNetMessageMissionUpdate(IMessage message)
+        {
+            var missionUpdate = (NetMessageMissionUpdate)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"missionPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)missionUpdate.MissionPrototypeId)}");
+
+            if (missionUpdate.HasMissionState)
+                sb.AppendLine($"missionState: {(MissionState)missionUpdate.MissionState}");
+
+            if (missionUpdate.HasMissionStateExpireTime)
+                sb.AppendLine($"missionStateExpireTime: {missionUpdate.MissionStateExpireTime}");
+
+            if (missionUpdate.HasRewards)
+                sb.AppendLine($"rewards: {missionUpdate.Rewards}");
+
+            if (missionUpdate.ParticipantsCount > 0)
+                sb.AppendLine($"participants: {string.Join(' ', missionUpdate.ParticipantsList)}");
+
+            if (missionUpdate.HasSuppressNotification)
+                sb.AppendLine($"suppressNotification: {missionUpdate.SuppressNotification}");
+
+            if (missionUpdate.HasSuspendedState)
+                sb.AppendLine($"suspendedState: {missionUpdate.SuspendedState}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessageMissionObjectiveUpdate))]
+        private static string PrintNetMessageMissionObjectiveUpdate(IMessage message)
+        {
+            var missionObjectiveUpdate = (NetMessageMissionObjectiveUpdate)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"missionPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)missionObjectiveUpdate.MissionPrototypeId)}");
+            sb.AppendLine($"objectiveIndex: {missionObjectiveUpdate.ObjectiveIndex}");
+
+            if (missionObjectiveUpdate.HasObjectiveState)
+                sb.AppendLine($"objectiveState: {(MissionObjectiveState)missionObjectiveUpdate.ObjectiveState}");
+
+            if (missionObjectiveUpdate.HasObjectiveStateExpireTime)
+                sb.AppendLine($"objectiveStateExpireTime: {missionObjectiveUpdate.ObjectiveStateExpireTime}");
+
+            if (missionObjectiveUpdate.HasCurrentCount || missionObjectiveUpdate.HasRequiredCount)
+                sb.AppendLine($"count: {missionObjectiveUpdate.CurrentCount}/{missionObjectiveUpdate.RequiredCount}");
+
+            if (missionObjectiveUpdate.HasFailCurrentCount || missionObjectiveUpdate.HasFailRequiredCount)
+                sb.AppendLine($"failCount: {missionObjectiveUpdate.FailCurrentCount}/{missionObjectiveUpdate.FailRequiredCount}");
+
+            for (int i = 0; i < missionObjectiveUpdate.InteractedEntitiesCount; i++)
+            {
+                var interactedEntity = missionObjectiveUpdate.InteractedEntitiesList[i];
+                sb.AppendLine($"interactedEntities[{i}]: entityId={interactedEntity.EntityId}, regionId={interactedEntity.RegionId}");
+            }
+
+            if (missionObjectiveUpdate.HasSuppressNotification)
+                sb.AppendLine($"suppressNotification: {missionObjectiveUpdate.SuppressNotification}");
+
+            if (missionObjectiveUpdate.HasSuspendedState)
+                sb.AppendLine($"suspendedState: {missionObjectiveUpdate.SuspendedState}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessagePrefetchAssets))]
+        private static string PrintNetMessagePrefetchAssets(IMessage message)
+        {
+            var prefetchAssets = (NetMessagePrefetchAssets)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"priority: {prefetchAssets.Priority}");
+
+            for (int i = 0; i < prefetchAssets.AssetsCount; i++)
+                sb.AppendLine($"assets[{i}]: {GameDatabase.GetAssetName((AssetId)prefetchAssets.AssetsList[i])}");
+
+            for (int i = 0; i < prefetchAssets.PrototypesCount; i++)
+                sb.AppendLine($"prototypes[{i}]: {GameDatabase.GetPrototypeName((PrototypeId)prefetchAssets.PrototypesList[i])}");
+
+            for (int i = 0; i < prefetchAssets.CellsCount; i++)
+            {
+                NetStructPrefetchCell prefetchCell = prefetchAssets.CellsList[i];
+                sb.AppendLine($"cells[{i}]: cellId={prefetchCell.CellId}, cellPrototypeId={GameDatabase.GetPrototypeName((PrototypeId)prefetchCell.CellPrototypeId)}");
+            }
+
+            if (prefetchAssets.HasRegionId)
+                sb.AppendLine($"regionId: {prefetchAssets.RegionId}");
+
+            return sb.ToString();
+        }
+
         [PrintMethod(typeof(NetMessageQueryIsRegionAvailable))]
         private static string PrintNetMessageQueryIsRegionAvailable(IMessage message)
         {
             var queryIsRegionAvailable = (NetMessageQueryIsRegionAvailable)message;
             return $"regionPrototype: {GameDatabase.GetPrototypeName((PrototypeId)queryIsRegionAvailable.RegionPrototype)}";
+        }
+
+        [PrintMethod(typeof(NetMessageStoryNotification))]
+        private static string PrintNetMessageStoryNotification(IMessage message)
+        {
+            var storyNotification = (NetMessageStoryNotification)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"displayTextStringId: {storyNotification.DisplayTextStringId}");
+
+            if (storyNotification.HasSpeakingEntityPrototypeId)
+                sb.AppendLine($"speakingEntityPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)storyNotification.SpeakingEntityPrototypeId)}");
+
+            sb.AppendLine($"timeToLiveMS: {storyNotification.TimeToLiveMS}");
+            sb.AppendLine($"voTriggerAssetId: {GameDatabase.GetAssetName((AssetId)storyNotification.VoTriggerAssetId)}");
+
+            if (storyNotification.HasMissionPrototypeId)
+                sb.AppendLine($"missionPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)storyNotification.MissionPrototypeId)}");
+
+            return sb.ToString();
         }
 
         [PrintMethod(typeof(NetMessageSetProperty))]
@@ -287,6 +440,35 @@ namespace MHServerEmu.Games.Network.Parsing
                 Serializer.Transfer(archive, ref lowResMap);
                 sb.AppendLine($"lowResMap: {lowResMap}");
             }
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessagePlayStoryBanter))]
+        private static string PrintNetMessagePlayStoryBanter(IMessage message)
+        {
+            var playStoryBanter = (NetMessagePlayStoryBanter)message;
+            return $"banterAssetId: {GameDatabase.GetAssetName((AssetId)playStoryBanter.BanterAssetId)}";
+        }
+
+        [PrintMethod(typeof(NetMessagePlayKismetSeq))]
+        private static string PrintNetMessagePlayKismetSeq(IMessage message)
+        {
+            var playKismetSeq = (NetMessagePlayKismetSeq)message;
+            return $"kismetSeqPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)playKismetSeq.KismetSeqPrototypeId)}";
+        }
+
+        [PrintMethod(typeof(NetMessageInventoryLoaded))]
+        private static string PrintNetMessageInventoryLoaded(IMessage message)
+        {
+            var inventoryLoaded = (NetMessageInventoryLoaded)message;
+
+            StringBuilder sb = new();
+
+            sb.AppendLine($"inventoryProtoId={GameDatabase.GetPrototypeName((PrototypeId)inventoryLoaded.InventoryProtoId)}");
+            sb.AppendLine($"loadState={inventoryLoaded.LoadState}");
+            for (int i = 0; i < inventoryLoaded.ArchivedEntitiesCount; i++)
+                sb.AppendLine($"archivedEntities[{i}]: {inventoryLoaded.ArchivedEntitiesList[i]}");
 
             return sb.ToString();
         }
