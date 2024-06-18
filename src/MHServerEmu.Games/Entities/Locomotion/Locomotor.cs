@@ -684,7 +684,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                         {
                             if (_generatedPath.Path.IsValid == false || _generatedPath.Path.IsComplete) return false;
                             _generatedPath.Path.GetNextMovePosition(currentPosition, moveDistance, out resultMovePosition, out _);
-                            LocomotionState.PathGoalNodeIndex = _generatedPath.Path.PathNodeList.IndexOf(_generatedPath.Path.GetCurrentGoalNode());
+                            LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNodeIndex();
                         }
 
                         if (IgnoresWorldCollision == false)
@@ -902,7 +902,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     if (updateEnd && _generatedPath.Path.IsValid)
                         _generatedPath.Path.UpdateEndPosition(updateEndPosition);
                     LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
-                    LocomotionState.PathGoalNodeIndex = _generatedPath.Path.PathNodeList.IndexOf(_generatedPath.Path.GetCurrentGoalNode());
+                    LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNodeIndex();
                     _syncPathGoalNodeIndex = 0;
                     _initRotation = false;
                 }
@@ -1326,7 +1326,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                     if (syncTeleport == false)
                                     {
                                         LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
-                                        LocomotionState.PathGoalNodeIndex = _generatedPath.Path.PathNodeList.IndexOf(_generatedPath.Path.GetCurrentGoalNode());
+                                        LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNodeIndex();
                                         _syncPathGoalNodeIndex = Math.Max(0, numPathNodeList - 1);
                                     }
                                 }
