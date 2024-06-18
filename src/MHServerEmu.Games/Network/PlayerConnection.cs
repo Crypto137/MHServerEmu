@@ -55,8 +55,6 @@ namespace MHServerEmu.Games.Network
         public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
         public Vector3 LastPosition { get; set; }
         public Orientation LastOrientation { get; set; }
-        public ulong MagikUltimateEntityId { get; set; }
-        public Entity ThrowableEntity { get; set; }
 
         public AreaOfInterest AOI { get; private set; }
         public Vector3 StartPosition { get; internal set; }
@@ -660,9 +658,7 @@ namespace MHServerEmu.Games.Network
             int avatarIndex = throwInteraction.AvatarIndex;
             Logger.Trace($"Received ThrowInteraction message Avatar[{avatarIndex}] Target[{idTarget}]");
 
-            EventPointer<OLD_StartThrowingEvent> throwEventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(throwEventPointer, TimeSpan.Zero);
-            throwEventPointer.Get().Initialize(this, idTarget);
+            Player.CurrentAvatar.StartThrowing(idTarget);
 
             return true;
         }

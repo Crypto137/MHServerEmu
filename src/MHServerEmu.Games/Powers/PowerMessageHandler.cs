@@ -5,7 +5,6 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
@@ -82,13 +81,6 @@ namespace MHServerEmu.Games.Powers
             var tryActivatePower = message.As<NetMessageTryActivatePower>();
             if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
 
-            /* ActivatePower using TryActivatePower data
-            ActivatePowerArchive activatePowerArchive = new(tryActivatePowerMessage, client.LastPosition);
-            client.SendMessage(muxId, new(NetMessageActivatePower.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(activatePowerArchive.Encode()))
-                .Build()));
-            */
-
             var powerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
@@ -102,12 +94,14 @@ namespace MHServerEmu.Games.Powers
 
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
-                Logger.Trace($"AddEvent EndThrowing for {GameDatabase.GetPrototypeName(powerPrototypeId)}");
-                var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
+                Logger.Trace($"AddEvent EndThrowing for {powerPrototypePath}");
+
+                bool isCancelling = powerPrototypePath.Contains("CancelPower");
+                var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
 
                 EventPointer<OLD_EndThrowingEvent> endThrowingPointer = new();
-                _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, TimeSpan.FromMilliseconds(power.AnimationTimeMS));
-                endThrowingPointer.Get().Initialize(playerConnection, (PrototypeId)tryActivatePower.PowerPrototypeId);
+                _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, TimeSpan.FromMilliseconds(powerProto.AnimationTimeMS));
+                endThrowingPointer.Get().Initialize(avatar, isCancelling);
 
                 return true;
             }
