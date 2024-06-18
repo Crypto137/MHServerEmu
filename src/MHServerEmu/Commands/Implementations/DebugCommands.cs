@@ -15,6 +15,10 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Events.LegacyImplementations;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -244,21 +248,31 @@ namespace MHServerEmu.Commands.Implementations
             var orientation = playerConnection.LastOrientation;
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
-            PrototypeId petProto = (PrototypeId)16300889242928224944;
+            // Pet066CosmoSummon = 2287896284030047804,
+            PrototypeId petPowerRef = (PrototypeId)2287896284030047804;// Pet001OldLace = 2580962285041620037,
+            var petPowerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(petPowerRef);
+            PrototypeId petPower = petPowerProto.DataRef;
+            PrototypeId petRef = petPowerProto.SummonEntityContexts[0].SummonEntity;
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PetDebug petFlag)) == false)
             {
                 if (avatar.RegionLocation.IsValid() == false)
                 {
                     avatar.EnterWorld(region, position, orientation);
                     avatar.SetSimulated(false);
+                    avatar.AssignPower(petPower, new());
                 }
+                avatar.Properties[PropertyEnum.PowerToggleOn, petPower] = true;
+                avatar.Properties[PropertyEnum.PowerSummonedEntityCount, petPower] = 1;
+                EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
+                game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
+                activatePowerEventPointer.Get().Initialize(playerConnection, petPower);
                 // Pet026FrogThor = 7240687669893536590
                 Vector3 petPosition = new(position);
                 petPosition.X += 400.0f;
                 // petPosition.Y += 400.0f;                
-                Agent pet = EntityHelper.CreatePet(petProto, petPosition, region, player); // Pet001OldLace = 16300889242928224944
-
+                Agent pet = EntityHelper.CreatePet(petPowerProto, petPosition, region, player);
                 pet.EnterWorld(region, petPosition, orientation);
+                pet.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id; // link to owner
                 pet.EnterGame();
                 pet.SetSimulated(true);
                 playerConnection.AOI.Update(playerConnection.LastPosition, true);
@@ -269,7 +283,7 @@ namespace MHServerEmu.Commands.Implementations
                 string s = "";
                 Agent pet = null;
                 foreach (var entity in game.EntityManager.SimulatedEntities.Iterate())
-                    if (entity.PrototypeDataRef == petProto)
+                    if (entity.PrototypeDataRef == petRef)
                     {
                         pet = entity as Agent;
                         break;

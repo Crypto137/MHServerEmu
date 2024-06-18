@@ -33,31 +33,36 @@ namespace MHServerEmu.Games.Entities
             return orb;
         }
 
-        public static Agent CreatePet(PrototypeId prototypeId, Vector3 position, Region region, Player player) // Test funciton
+        public static Agent CreatePet(SummonPowerPrototype powerPet, Vector3 position, Region region, Player player) // Test funciton
         {
+
+            PrototypeId petRef = powerPet.SummonEntityContexts[0].SummonEntity;
             int level = 60;
-            ulong masterDbGuid = player.DatabaseUniqueId;
-            AssetId creatorAsset = player.CurrentAvatar.WorldEntityPrototype.UnrealClass;
-            PrototypeId allianceRef = player.CurrentAvatar.Alliance.DataRef;
+            //ulong masterDbGuid = player.DatabaseUniqueId;
+            var avatar = player.CurrentAvatar;
+            AssetId creatorAsset = avatar.WorldEntityPrototype.UnrealClass;
+            PrototypeId allianceRef = avatar.Alliance.DataRef;
+            AgentPrototype petAgentProto = GameDatabase.GetPrototype<AgentPrototype>(petRef);
             var settings = new EntitySettings
             {
-                EntityRef = prototypeId,
+                EntityRef = petRef,
                 Position = position,
                 Orientation = new(3.14f, 0.0f, 0.0f),
                 RegionId = region.Id,
                 Properties = new PropertyCollection
                 {
-                    [PropertyEnum.NoMissileCollide] = true,
+                    [PropertyEnum.NoMissileCollide] = true, // EvalOnCreate
                     [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
                     [PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset,
+                    [PropertyEnum.CreatorPowerPrototype] = powerPet.DataRef,
                     [PropertyEnum.AIStartsEnabled] = true,
                     [PropertyEnum.MovementSpeedRate] = 1.0f,
-                    [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
-                    [PropertyEnum.AIMasterAvatar] = true,
+                   // [PropertyEnum.AIMasterAvatarDbGuid] = masterDbGuid,
+                   // [PropertyEnum.AIMasterAvatar] = true,
                     [PropertyEnum.AllianceOverride] = allianceRef,
                     [PropertyEnum.CharacterLevel] = level,
                     [PropertyEnum.CombatLevel] = level,
-                    [PropertyEnum.Rank] = (PrototypeId)9078509249777569459, // InvulnerablePet
+                    [PropertyEnum.Rank] = petAgentProto.Rank, // InvulnerablePet
                 }
             };
             var game = region.Game;
