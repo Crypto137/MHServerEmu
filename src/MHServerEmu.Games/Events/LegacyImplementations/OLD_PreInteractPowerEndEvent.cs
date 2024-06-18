@@ -31,10 +31,12 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             Logger.Trace($"OnPreInteractPowerEnd");
             avatar.UnassignPower(preInteractPower);
 
-            _playerConnection.SendMessage(NetMessageOnPreInteractPowerEnd.CreateBuilder()
+            var onPreInteractPowerEndMessage = NetMessageOnPreInteractPowerEnd.CreateBuilder()
                 .SetIdTargetEntity(_interactObject.Id)
                 .SetAvatarIndex(0)
-                .Build());
+                .Build();
+
+            avatar.Game.NetworkManager.SendMessageToInterested(onPreInteractPowerEndMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity);
 
             return true;
         }

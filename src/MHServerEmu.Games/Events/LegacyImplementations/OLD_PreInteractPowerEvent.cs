@@ -42,15 +42,12 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
                 UserEntityId = avatar.Id,
                 TargetEntityId = 0,
                 PowerPrototypeRef = preInteractPower,
-                UserPosition = _playerConnection.LastPosition,
+                UserPosition = avatar.RegionLocation.Position,
                 PowerRandomSeed = 2222,
                 FXRandomSeed = 2222
             };
 
-            _playerConnection.SendMessage(NetMessageActivatePower.CreateBuilder()
-                 .SetArchiveData(activatePower.ToByteString())
-                 .Build());
-
+            avatar.Game.NetworkManager.SendMessageToInterested(activatePower.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity);
             return true;
         }
     }
