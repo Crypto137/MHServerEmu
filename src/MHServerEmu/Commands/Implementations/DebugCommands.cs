@@ -265,7 +265,7 @@ namespace MHServerEmu.Commands.Implementations
                 avatar.Properties[PropertyEnum.PowerSummonedEntityCount, petPower] = 1;
                 EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
                 game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
-                activatePowerEventPointer.Get().Initialize(playerConnection, petPower);
+                activatePowerEventPointer.Get().Initialize(avatar, petPower);
                 // Pet026FrogThor = 7240687669893536590
                 Vector3 petPosition = new(position);
                 petPosition.X += 400.0f;
