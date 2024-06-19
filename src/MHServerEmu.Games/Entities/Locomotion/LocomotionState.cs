@@ -411,21 +411,15 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
         public static void CompareLocomotionStatesForSync(LocomotionState newState, LocomotionState oldState, out bool syncRequired, out bool pathNodeSyncRequired, bool skipGoalNode)
         {
-            syncRequired = true;
-            pathNodeSyncRequired = true;
-
-            return;
-
-            // todo
-
             pathNodeSyncRequired = CompareLocomotionPathNodesForSync(newState, oldState, skipGoalNode);
-            syncRequired = (newState.LocomotionFlags != oldState.LocomotionFlags)
-                || (newState.BaseMoveSpeed != oldState.BaseMoveSpeed)
-                || (newState.Height != oldState.Height)
-                || (newState.Method != oldState.Method)
-                || (newState.FollowEntityId != oldState.FollowEntityId)
-                || (newState.FollowEntityRangeStart != oldState.FollowEntityRangeStart)
-                || (newState.FollowEntityRangeEnd != oldState.FollowEntityRangeEnd);
+
+            syncRequired = newState.LocomotionFlags != oldState.LocomotionFlags;
+            syncRequired |= newState.BaseMoveSpeed != oldState.BaseMoveSpeed;
+            syncRequired |= newState.Height != oldState.Height;
+            syncRequired |= newState.Method != oldState.Method;
+            syncRequired |= newState.FollowEntityId != oldState.FollowEntityId;
+            syncRequired |= newState.FollowEntityRangeStart != oldState.FollowEntityRangeStart;
+            syncRequired |= newState.FollowEntityRangeEnd != oldState.FollowEntityRangeEnd;
         }
 
         public static bool CompareLocomotionPathNodesForSync(LocomotionState newState, LocomotionState oldState, bool skipGoalNode)
@@ -444,16 +438,16 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             if (newState.PathNodes.Count > 0)
             {
-                int goalNodeIndex = newState.PathNodes.Count - newState.PathGoalNodeIndex;
+                int nodesRemaining = newState.PathNodes.Count - newState.PathGoalNodeIndex;
                 int newNodeIndex = newState.PathGoalNodeIndex;
-                int oldNodeIndex = oldState.PathNodes.Count - goalNodeIndex;
-                if (skipGoalNode) --goalNodeIndex;
+                int oldNodeIndex = oldState.PathNodes.Count - nodesRemaining;
+                if (skipGoalNode) --nodesRemaining;
 
-                for (int i = 0; i < goalNodeIndex; ++i)
+                for (int i = 0; i < nodesRemaining; ++i)
                 {
                     bool changed = newState.PathNodes[newNodeIndex + i].VertexSide != oldState.PathNodes[oldNodeIndex + i].VertexSide;
-                    changed &= newState.PathNodes[newNodeIndex + i].Radius != oldState.PathNodes[oldNodeIndex + i].Radius;
-                    changed &= newState.PathNodes[newNodeIndex + i].Vertex != oldState.PathNodes[oldNodeIndex + i].Vertex;
+                    changed |= newState.PathNodes[newNodeIndex + i].Radius != oldState.PathNodes[oldNodeIndex + i].Radius;
+                    changed |= newState.PathNodes[newNodeIndex + i].Vertex != oldState.PathNodes[oldNodeIndex + i].Vertex;
 
                     if (changed) return true;
                 }
