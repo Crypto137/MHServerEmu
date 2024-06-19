@@ -112,8 +112,12 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Initialize(EntitySettings settings)
         {
-            base.Initialize(settings);
+            if (base.Initialize(settings) == false) return Logger.WarnReturn(false, "Initialize(): base.Initialize(settings) == false");
+
             var proto = WorldEntityPrototype;
+
+            if (settings.IgnoreNavi)
+                _flags |= EntityFlags.IgnoreNavi;
 
             ShouldSnapToFloorOnSpawn = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
                 ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)

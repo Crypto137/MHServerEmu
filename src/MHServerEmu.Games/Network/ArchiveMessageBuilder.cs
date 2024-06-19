@@ -64,9 +64,24 @@ namespace MHServerEmu.Games.Network
                 EntityCreateMessageFlags fieldFlags = EntityCreateMessageFlags.None;
                 LocomotionMessageFlags locoFieldFlags = LocomotionMessageFlags.None;
 
+                // The client assumes interest to be proximity-based unless flagged otherwise
+                if (interestPolicies != AOINetworkPolicyValues.AOIChannelProximity)
+                    fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
+
+                // Add database guid for players
+                if (entity is Player)
+                    fieldFlags |= EntityCreateMessageFlags.HasDbId;
+
+                // Add world instance id for avatars
+                Avatar avatar = entity as Avatar;
+                if (avatar != null)
+                    fieldFlags |= EntityCreateMessageFlags.HasAvatarWorldInstanceId;
+
+                // Apply world entity specific flags
                 Vector3 position = Vector3.Zero;
                 Orientation orientation = Orientation.Zero;
                 LocomotionState locomotionState = null;
+                PrototypeId activePowerPrototypeRef = PrototypeId.Invalid;
 
                 if (entity is WorldEntity worldEntity)
                 {
@@ -85,31 +100,26 @@ namespace MHServerEmu.Games.Network
                         locoFieldFlags |= LocomotionState.GetFieldFlags(locomotionState, null, true);
                     }
 
-                    /*
-                    if (worldEntity.ActivePowerRef != PrototypeId.Invalid)
+                    //activePowerPrototypeRef = worldEntity.ActivePowerRef;     // TODO
+                    if (activePowerPrototypeRef != PrototypeId.Invalid)
                         fieldFlags |= EntityCreateMessageFlags.HasActivePowerPrototypeRef;
-                    */
 
                     // TODO: worldEntity.Physics.HasAttachedEntities();
+
+                    if (worldEntity.ShouldSnapToFloorOnSpawn != worldEntity.WorldEntityPrototype.SnapToFloorOnSpawn)
+                        fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
                 }
 
-                if (interestPolicies != AOINetworkPolicyValues.AOIChannelProximity)
-                    fieldFlags |= EntityCreateMessageFlags.HasNonProximityInterest;
-
+                // TODO: Include inventory location based on inventory visibility
                 if (entity.InventoryLocation.IsValid && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
                     fieldFlags |= EntityCreateMessageFlags.HasInvLoc;               
 
-                if (entity is Player)
-                    fieldFlags |= EntityCreateMessageFlags.HasDbId;
-
-                if (entity is Avatar)
-                    fieldFlags |= EntityCreateMessageFlags.HasAvatarWorldInstanceId;
-
-                if (entity.OverrideSnapToFloorOnSpawn)
-                    fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
-
+                // Apply flags from settings
                 if (settings != null)
                 {
+                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsNewOnServer))
+                        fieldFlags |= EntityCreateMessageFlags.IsNewOnServer;
+
                     if (settings.SourceEntityId != Entity.InvalidId)
                         fieldFlags |= EntityCreateMessageFlags.HasSourceEntityId;
 
@@ -119,11 +129,14 @@ namespace MHServerEmu.Games.Network
                     if (settings.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
                         fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
 
-                    if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsNewOnServer))
-                        fieldFlags |= EntityCreateMessageFlags.IsNewOnServer;
+                    if (settings.BoundsScaleOverride != 1f)
+                        fieldFlags |= EntityCreateMessageFlags.HasBoundsScaleOverride;
 
                     if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsClientEntityHidden))
                         fieldFlags |= EntityCreateMessageFlags.IsClientEntityHidden;
+
+                    if (settings.IgnoreNavi)
+                        fieldFlags |= EntityCreateMessageFlags.IgnoreNavi;
                 }
 
                 // Serialize
@@ -147,7 +160,7 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
                 {
-                    uint avatarWorldInstanceId = 1;     // TODO: get this from avatar
+                    uint avatarWorldInstanceId = avatar.AvatarWorldInstanceId;
                     Serializer.Transfer(archive, ref avatarWorldInstanceId);
                 }
 
@@ -170,8 +183,7 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasBoundsScaleOverride))
                 {
-                    // TODO
-                    float boundsScaleOverride = 0f;
+                    float boundsScaleOverride = settings.BoundsScaleOverride;
                     Serializer.TransferFloatFixed(archive, ref boundsScaleOverride, 8);
                 }
 
@@ -188,11 +200,7 @@ namespace MHServerEmu.Games.Network
                 }
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeRef))
-                {
-                    // TODO
-                    PrototypeId activePowerPrototypeRef = PrototypeId.Invalid;
-                    Serializer.Transfer(archive, ref activePowerPrototypeRef);
-                }
+                    Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref activePowerPrototypeRef);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
                     InventoryLocation.SerializeTo(archive, entity.InventoryLocation);
