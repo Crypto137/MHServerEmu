@@ -112,8 +112,12 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Initialize(EntitySettings settings)
         {
-            base.Initialize(settings);
+            if (base.Initialize(settings) == false) return Logger.WarnReturn(false, "Initialize(): base.Initialize(settings) == false");
+
             var proto = WorldEntityPrototype;
+
+            if (settings.IgnoreNavi)
+                _flags |= EntityFlags.IgnoreNavi;
 
             ShouldSnapToFloorOnSpawn = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
                 ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
@@ -125,6 +129,7 @@ namespace MHServerEmu.Games.Entities
 
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
+            Properties[PropertyEnum.MovementSpeedRate] = 1f;    // TODO: Remove this when eval works
 
             int health = EntityHelper.GetHealthForWorldEntity(this);
             if (health > 0)

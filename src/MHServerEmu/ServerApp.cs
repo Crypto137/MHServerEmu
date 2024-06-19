@@ -7,6 +7,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Logging.Targets;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -184,7 +185,7 @@ namespace MHServerEmu
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.IsInitialized
-                && AccountManager.IsInitialized;
+                && AccountManager.Initialize(SQLiteDBManager.Instance);     // TODO: Multiple IDBManager implementations
         }
     }
 }

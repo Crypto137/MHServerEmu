@@ -49,6 +49,8 @@ namespace MHServerEmu.Games.Entities
 
         public ulong SourceEntityId { get; set; }
         public Vector3 SourcePosition { get; set; }
+        public float BoundsScaleOverride { get; set; } = 1f;
+        public bool IgnoreNavi { get; set; }
 
         public InventoryLocation InventoryLocation { get; set; }
         public InventoryLocation PreviousInventoryLocation { get; set; }

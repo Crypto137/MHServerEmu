@@ -1,8 +1,6 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -12,44 +10,59 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private PlayerConnection _playerConnection;
-        private PrototypeId _powerId;
+        private Agent _throwerAgent;
+        private bool _isCancelling;
 
-        public void Initialize(PlayerConnection playerConnection, PrototypeId powerId)
+        public void Initialize(Agent throwerAgent, bool isCancelling)
         {
-            _playerConnection = playerConnection;
-            _powerId = powerId;
+            _throwerAgent = throwerAgent;
+            _isCancelling = isCancelling;
         }
 
         public override bool OnTriggered()
         {
             Logger.Trace("Event EndThrowing");
 
-            Avatar avatar = _playerConnection.Player.CurrentAvatar;
+            // Do the throwing if not cancelling
+            if (_isCancelling == false)
+            {
+                ulong throwableEntityId = _throwerAgent.Properties[PropertyEnum.ThrowableOriginatorEntity];
+                if (throwableEntityId != 0)
+                {
+                    var throwableEntity = _throwerAgent.Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
+                    if (throwableEntity != null)
+                    {
+                        // Remember spawn spec to create a replacement
+                        SpawnSpec spawnSpec = throwableEntity.SpawnSpec;
 
-            // Remove throwable properties
-            avatar.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
-            avatar.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
+                        // Destroy throwable
+                        throwableEntity.Destroy();
+
+                        // Schedule the creation of a replacement entity
+                        if (spawnSpec != null)
+                        {
+                            Game game = _throwerAgent.Game;
+
+                            EventPointer<TEMP_SpawnEntityEvent> spawnEntityEvent = new();
+                            game.GameEventScheduler.ScheduleEvent(spawnEntityEvent, game.CustomGameOptions.WorldEntityRespawnTime);
+                            spawnEntityEvent.Get().Initialize(spawnSpec);
+                        }
+                    }
+                }
+
+                _throwerAgent.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+                _throwerAgent.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
+            }
 
             // Unassign throwable and throwable cancel powers
-            Power throwablePower = avatar.GetThrowablePower();
-            Power throwableCancelPower = avatar.GetThrowableCancelPower();
+            // If we are cancelling, the entity is going to be restored in Agent.OnPowerUnassigned()
+            Power throwablePower = _throwerAgent.GetThrowablePower();
+            if (throwablePower != null)
+                _throwerAgent.UnassignPower(throwablePower.PrototypeDataRef);
 
-            if (throwablePower != null) avatar.UnassignPower(throwablePower.PrototypeDataRef);
-            if (throwableCancelPower != null) avatar.UnassignPower(throwableCancelPower.PrototypeDataRef);
-
-            if (GameDatabase.GetPrototypeName(_powerId).Contains("CancelPower"))
-            {
-                if (_playerConnection.ThrowableEntity != null)
-                    _playerConnection.SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(_playerConnection.ThrowableEntity, AOINetworkPolicyValues.AOIChannelProximity));
-                Logger.Trace("Event RestoreThrowable");
-            }
-            else
-            {
-                _playerConnection.ThrowableEntity?.Kill(avatar.Id);
-            }
-
-            _playerConnection.ThrowableEntity = null;
+            Power throwableCancelPower = _throwerAgent.GetThrowableCancelPower();
+            if (throwableCancelPower != null)
+                _throwerAgent.UnassignPower(throwableCancelPower.PrototypeDataRef);
 
             return true;
         }

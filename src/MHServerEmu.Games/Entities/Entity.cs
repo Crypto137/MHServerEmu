@@ -107,8 +107,6 @@ namespace MHServerEmu.Games.Entities
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
 
-        public bool OverrideSnapToFloorOnSpawn { get; private set; }    // REMOVEME
-
         public ulong RegionId { get; set; } = 0;
         public Game Game { get; set; } 
         public EntityStatus Status { get; set; }
@@ -116,15 +114,7 @@ namespace MHServerEmu.Games.Entities
         public ReplicatedPropertyCollection Properties { get; set; }
 
         public Party Party { get; internal set; }
-
-        public virtual ulong PartyId
-        {
-            get
-            {
-                var ownerPlayer = GetOwnerOfType<Player>();
-                return ownerPlayer != null ? ownerPlayer.PartyId : 0;
-            }
-        }
+        public virtual ulong PartyId { get { var ownerPlayer = GetOwnerOfType<Player>(); return ownerPlayer != null ? ownerPlayer.PartyId : 0; } }
 
         public EntityPrototype Prototype { get; private set; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
@@ -216,19 +206,6 @@ namespace MHServerEmu.Games.Entities
 
         public virtual bool Initialize(EntitySettings settings)
         {   
-            // Old
-            var entityProto = GameDatabase.GetPrototype<EntityPrototype>(settings.EntityRef);
-            bool overrideSnapToFloor = false;
-            if (entityProto is WorldEntityPrototype worldEntityProto)
-            {
-                bool snapToFloor = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
-                    ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
-                    : worldEntityProto.SnapToFloorOnSpawn;
-
-                overrideSnapToFloor = snapToFloor != worldEntityProto.SnapToFloorOnSpawn;
-            }
-
-            // ---
             if (Game == null) return Logger.WarnReturn(false, "Initialize(): Game == null");
 
             Id = settings.Id;
@@ -236,31 +213,33 @@ namespace MHServerEmu.Games.Entities
 
             DatabaseUniqueId = settings.DbGuid;
 
+            // Set prototype reference
             PrototypeDataRef = settings.EntityRef;
             if (PrototypeDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "Initialize(): Invalid PrototypeDataRef");
 
             Prototype = PrototypeDataRef.As<EntityPrototype>();
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
-            if (settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.EnterGame))
-                OverrideSnapToFloorOnSpawn = overrideSnapToFloor;
-
+            // Set region - REMOVEME: non-world entities should not have a region
             RegionId = settings.RegionId;
 
-            // New
+            // Initialize property collection and copy baseline properties from prototype / settings
+            // TODO: Bind to ArchiveMessageDispatcher
             Properties = new(this, Game.CurrentRepId);
             
-            if (entityProto.Properties != null) // TODO: Filter properties during serialization
-                Properties.FlattenCopyFrom(entityProto.Properties, true); 
+            if (Prototype.Properties != null)
+                Properties.FlattenCopyFrom(Prototype.Properties, true); 
             
             if (settings.Properties != null)
                 Properties.FlattenCopyFrom(settings.Properties, false);
             
             OnPropertyChange(); // Temporary solution for for _flags
 
+            // Inventories
             InventoryCollection.Initialize(this);
             InitInventories(settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.PopulateInventories));
 
+            // Lifespan
             TotalLifespan = settings.Lifespan;
             InitLifespan(settings.Lifespan);
 

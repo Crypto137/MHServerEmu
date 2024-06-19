@@ -5,7 +5,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
-using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;
@@ -294,7 +293,7 @@ namespace MHServerEmu.PlayerManagement
 
                 // Save data and remove pending save
                 if (Config.BypassAuth == false)
-                    DBManager.UpdateAccountData(client.Session.Account);    // Save to the database when we have our full account system enabled
+                    AccountManager.DBManager.UpdateAccountData(client.Session.Account);    // Save to the database when we have our full account system enabled
                 else
                     AccountManager.SaveDefaultAccount();                    // Save to a JSON file when we are using bypass auth
 

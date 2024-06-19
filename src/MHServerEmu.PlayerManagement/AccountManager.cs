@@ -18,20 +18,19 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string DefaultAccountFilePath = Path.Combine(FileHelper.DataDirectory, "DefaultPlayer.json");
 
-        public static bool IsInitialized { get; }
-
-        public static DBAccount DefaultAccount { get; }
+        public static IDBManager DBManager { get; private set; }
+        public static DBAccount DefaultAccount { get; private set; }
 
         /// <summary>
         /// Initializes <see cref="AccountManager"/>.
         /// </summary>
-        static AccountManager()
+        public static bool Initialize(IDBManager dbManager)
         {
             // Initialize default account if BypassAuth is enabled
             if (ConfigManager.Instance.GetConfig<PlayerManagerConfig>().BypassAuth)
             {
                 bool defaultAccountLoaded = false;
-                
+
                 if (File.Exists(DefaultAccountFilePath))
                 {
                     try
@@ -54,7 +53,8 @@ namespace MHServerEmu.PlayerManagement
                 }
             }
 
-            IsInitialized = DBManager.IsInitialized;
+            DBManager = dbManager;
+            return DBManager.Initialize();
         }
 
         /// <summary>

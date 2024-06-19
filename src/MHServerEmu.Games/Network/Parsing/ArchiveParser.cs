@@ -429,7 +429,10 @@ namespace MHServerEmu.Games.Network.Parsing
                 {
                     Vector3 previousVertex = Vector3.Zero;
                     for (uint i = 0; i < pathNodeCount; i++)
+                    {
+                        sb.Append($"pathNodes[{i}]: ");
                         previousVertex = ParseNaviPathNode(archive, previousVertex, sb);
+                    }
                 }
             }
         }
