@@ -20,7 +20,6 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly IdGenerator _idGenerator = new(IdType.Session, 0);
 
-        private readonly object _sessionLock = new();
         private readonly Dictionary<ulong, ClientSession> _sessionDict = new();
         private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
 
@@ -76,7 +75,7 @@ namespace MHServerEmu.PlayerManagement
                     Logger.Warn($"TryCreateSessionFromLoginDataPB(): Invalid client downloader {loginDataPB.ClientDownloader}, defaulting to {downloaderEnum}");
                 }
 
-                lock (_sessionLock)
+                lock (_sessionDict)
                 {
                     session = new(_idGenerator.Generate(), account, downloaderEnum, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
@@ -104,14 +103,14 @@ namespace MHServerEmu.PlayerManagement
                 if (CryptographyHelper.TryDecryptToken(ByteString.Unsafe.GetBuffer(credentials.EncryptedToken), session.Key,
                     ByteString.Unsafe.GetBuffer(credentials.Iv), out byte[] decryptedToken) == false)
                 {
-                    lock (_sessionLock) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
+                    lock (_sessionDict) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
                     return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for sessionId 0x{session.Id:X}"); ;
                 }
 
                 // Verify the token
                 if (CryptographyHelper.VerifyToken(decryptedToken, session.Token) == false)
                 {
-                    lock (_sessionLock) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
+                    lock (_sessionDict) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
                     return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to verify token for sessionId 0x{session.Id:X}"); ;
                 }
             }
@@ -119,7 +118,7 @@ namespace MHServerEmu.PlayerManagement
             Logger.Info($"Verified client for sessionId 0x{session.Id:X} - account {session.Account}");
 
             // Assign the session to the client if the token is valid
-            lock (_sessionLock)
+            lock (_sessionDict)
             {
                 client.AssignSession(session);
                 _clientDict.Add(session.Id, client);
@@ -132,7 +131,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public void RemoveSession(ulong sessionId)
         {
-            lock (_sessionLock)
+            lock (_sessionDict)
             {
                 _sessionDict.Remove(sessionId);
                 _clientDict.Remove(sessionId);
