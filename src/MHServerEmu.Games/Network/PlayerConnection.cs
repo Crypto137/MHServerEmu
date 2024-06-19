@@ -400,12 +400,15 @@ namespace MHServerEmu.Games.Network
             LastPosition = currentAvatar.RegionLocation.Position;
             LastOrientation = currentAvatar.RegionLocation.Orientation;
 
-            // Manually send locomotion updates
-            currentAvatar.Locomotor.LastSyncState.Set(currentAvatar.Locomotor.LocomotionState);
-            currentAvatar.Locomotor.LocomotionState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
-            currentAvatar.OnLocomotionStateChanged(currentAvatar.Locomotor.LastSyncState, currentAvatar.Locomotor.LocomotionState);
+            // Manually force locomotion sync state update
+            if (avatarState.FieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+            {
+                LocomotionState previousSyncState = new(currentAvatar.Locomotor.LastSyncState);
+                currentAvatar.Locomotor.LastSyncState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
+                currentAvatar.OnLocomotionStateChanged(previousSyncState, currentAvatar.Locomotor.LastSyncState);
+            }
             
-            // disable proper locomotion implementation for now
+            // Disable proper locomotion implementation for now
             return true;
 
             bool canMove = currentAvatar.CanMove;
