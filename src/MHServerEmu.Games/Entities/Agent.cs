@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -593,15 +594,27 @@ namespace MHServerEmu.Games.Entities
 
             // Validate entity
             var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
-            if (throwableEntity == null) return Logger.WarnReturn(false, "StartThrowing(): throwableEntity == null");
-            if (throwableEntity.IsAliveInWorld == false) return Logger.WarnReturn(false, "StartThrowing(): throwableEntity.IsAliveInWorld == false");
+            if (throwableEntity == null || throwableEntity.IsAliveInWorld == false)
+            {
+                // Cancel pending throw action on the client set in CAvatar::StartThrowing()
+                // NOTE: AvatarIndex can be hardcoded to 0 because we don't have couch coop (yet?)
+                if (this is Avatar)
+                {
+                    var player = GetOwnerOfType<Player>();
+                    player.SendMessage(NetMessageCancelPendingActionToClient.CreateBuilder().SetAvatarIndex(0).Build());
+                }
+
+                return Logger.WarnReturn(false, "StartThrowing(): Invalid throwable entity");
+            }
 
             // Make sure we are not throwing something already
             Power throwablePower = GetThrowablePower();
-            if (throwablePower != null) UnassignPower(throwablePower.PrototypeDataRef);
+            if (throwablePower != null)
+                UnassignPower(throwablePower.PrototypeDataRef);
 
             Power throwableCancelPower = GetThrowableCancelPower();
-            if (throwableCancelPower != null) UnassignPower(throwableCancelPower.PrototypeDataRef);
+            if (throwableCancelPower != null)
+                UnassignPower(throwableCancelPower.PrototypeDataRef);
 
             // Record throwable entity in agent's properties
             Properties[PropertyEnum.ThrowableOriginatorEntity] = entityId;
