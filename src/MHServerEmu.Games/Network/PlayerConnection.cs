@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -370,66 +371,87 @@ namespace MHServerEmu.Games.Network
             var updateAvatarState = message.As<NetMessageUpdateAvatarState>();
             if (updateAvatarState == null) return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to retrieve message");
 
-            if (AOI.Region == null) return false;
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false) return false;
 
-            UpdateAvatarStateArchive avatarState = new();
-            using (Archive archive = new(ArchiveSerializeType.Replication, updateAvatarState.ArchiveData))
-                avatarState.Serialize(archive);
+            // Transfer data from the archive
+            // NOTE: We need to be extra careful here because this is the only archive that is serialized by the client,
+            // so it can be potentially malformed / malicious.
+            using Archive archive = new(ArchiveSerializeType.Replication, updateAvatarState.ArchiveData);
 
-            // Logger spam
-            //Logger.Trace(avatarState.ToString());
-            //Logger.Trace(avatarState.Position.ToString());
+            int avatarIndex = 0;
+            if (Serializer.Transfer(archive, ref avatarIndex) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer avatarIndex");
 
-            //Vector3 oldPosition = client.LastPosition;
-            LastPosition = avatarState.Position;
-            LastOrientation = avatarState.Orientation;
-            AOI.Region.Visited();
+            ulong avatarEntityId = 0;
+            if (Serializer.Transfer(archive, ref avatarEntityId) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer avatarEntityId");
+
+            if (avatarEntityId != avatar.Id) return false;
+
+            bool isUsingGamepadInput = false;
+            if (Serializer.Transfer(archive, ref isUsingGamepadInput) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer isUsingGamepadInput");
+
+            uint avatarWorldInstanceId = 0;
+            if (Serializer.Transfer(archive, ref avatarWorldInstanceId) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer avatarWorldInstanceId");
+
+            uint fieldFlagsRaw = 0;
+            if (Serializer.Transfer(archive, ref fieldFlagsRaw) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer fieldFlags");
+            var fieldFlags = (LocomotionMessageFlags)fieldFlagsRaw;
+
+            Vector3 syncPosition = Vector3.Zero;
+            if (Serializer.TransferVectorFixed(archive, ref syncPosition, 3) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer syncPosition");
+
+            Orientation syncOrientation = Orientation.Zero;
+            bool yawOnly = fieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation) == false;
+            if (Serializer.TransferOrientationFixed(archive, ref syncOrientation, yawOnly, 6) == false)
+                return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer syncOrientation");
 
             // AOI
+            AOI.Region.Visited();
             if (IsLoading == false)
+                AOI.Update(syncPosition);
+
+            // Update locomotion state
+            bool canMove = avatar.CanMove;
+            bool canRotate = avatar.CanRotate;
+            Vector3 position = avatar.RegionLocation.Position;
+            Orientation orientation = avatar.RegionLocation.Orientation;
+
+            if (canMove || canRotate)
             {
-                //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
-                AOI.Update(avatarState.Position);
+                position = syncPosition;
+                orientation = syncOrientation;
+
+                // Update position without sending it to clients (local avatar is moved by its own client, other avatars are moved by locomotion)
+                avatar.ChangeRegionPosition(canMove ? position : null, canRotate ? orientation : null, ChangePositionFlags.DoNotSendToClients);
+                avatar.UpdateNavigationInfluence();
             }
 
-            Avatar currentAvatar = Player.CurrentAvatar;
-            if (currentAvatar.IsInWorld == false) return true;
-
-            // Update avatar position
-            currentAvatar.ChangeRegionPosition(avatarState.Position, avatarState.Orientation, ChangePositionFlags.DoNotSendToClients);
-            LastPosition = currentAvatar.RegionLocation.Position;
-            LastOrientation = currentAvatar.RegionLocation.Orientation;
-
-            // Manually force locomotion sync state update
-            if (avatarState.FieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+            if (fieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && avatar.Locomotor != null)
             {
-                LocomotionState previousSyncState = new(currentAvatar.Locomotor.LastSyncState);
-                currentAvatar.Locomotor.LastSyncState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
-                currentAvatar.OnLocomotionStateChanged(previousSyncState, currentAvatar.Locomotor.LastSyncState);
-            }
-            
-            // Disable proper locomotion implementation for now
-            return true;
+                // Make a copy of the last sync state and update it with new data
+                LocomotionState newSyncState = new(avatar.Locomotor.LastSyncState);
 
-            bool canMove = currentAvatar.CanMove;
-            bool canRotate = currentAvatar.CanRotate;
-            Vector3 position = currentAvatar.RegionLocation.Position;
-            Orientation orientation = currentAvatar.RegionLocation.Orientation;
+                // NOTE: Deserialize in a try block because we don't trust this
+                try
+                {
+                    LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags);
+                }
+                catch (Exception e)
+                {
+                    return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to transfer newSyncState ({e.Message})");
+                }
 
-            if (canMove || canRotate) {
-                position = avatarState.Position;
-                orientation = avatarState.Orientation;
-                currentAvatar.ChangeRegionPosition(canMove ? position : null, canRotate ? orientation : null);
-                currentAvatar.UpdateNavigationInfluence();
+                avatar.Locomotor.SetSyncState(newSyncState, position, orientation);
             }
 
-            if (avatarState.FieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && currentAvatar.Locomotor != null)
-            {
-                // TODO: Deserialize straight into a copy of the existing state using LocomotionState.SerializeFrom()
-                LocomotionState locomotionState = new(currentAvatar.Locomotor.LastSyncState);
-                locomotionState.UpdateFrom(avatarState.LocomotionState, avatarState.FieldFlags);
-                currentAvatar.Locomotor.SetSyncState(locomotionState, position, orientation);
-            }
+            LastPosition = new(avatar.RegionLocation.Position);
+            LastOrientation = new(avatar.RegionLocation.Orientation);
 
             return true;
         }
