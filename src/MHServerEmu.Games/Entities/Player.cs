@@ -10,6 +10,7 @@ using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -629,6 +630,55 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 PlayerConnection.AOI.ConsiderEntity(entity);
+            }
+
+            return true;
+        }
+
+        public bool TrashItem(Item item)
+        {
+            // See CPlayer::RequestItemTrash for reference
+
+            // Make sure this player is allowed to destroy this item
+            if (item.PlayerCanDestroy(this) == false)
+                return false;
+
+            Avatar avatar = CurrentAvatar;
+
+            // Make sure there is an avatar in the world
+            if (avatar.IsInWorld == false)
+                return false;
+
+            // Destroy the item if it cannot be dropped
+            if (item.WouldBeDestroyedOnDrop)
+            {
+                item.Destroy();
+                return true;
+            }
+
+            // Drop item to the ground
+            Region region = avatar.Region;
+
+            // Find a position to drop, bail out if no space
+            if (region.ChooseRandomPositionNearPoint(avatar.Bounds, Navi.PathFlags.Walk, PositionCheckFlags.CheckCanBlockedEntity,
+                BlockingCheckFlags.CheckSpawns, 50f, 100f, out Vector3 dropPosition) == false)
+            {
+                return false;
+            }
+
+            // Remove the item from its inventory (no going back now)
+            item.ChangeInventoryLocation(null);
+
+            // Drop it
+            EntitySettings settings = new();
+            settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
+            settings.SourceEntityId = avatar.Id;
+            settings.SourcePosition = avatar.RegionLocation.Position;
+
+            if (item.EnterWorld(region, dropPosition, Orientation.Zero, settings) == false)
+            {
+                item.Destroy();     // We have to destroy this item because it's no longer in player's inventory
+                return Logger.WarnReturn(false, $"TrashItem(): Item {item} failed to enter world");
             }
 
             return true;

@@ -367,17 +367,20 @@ namespace MHServerEmu.Games.Entities
             return retPos;
         }
 
-        public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
+        public virtual bool EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             var proto = WorldEntityPrototype;
-            Game ??= region.Game; // Fix for old constructor
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
 
             RegionLocation.Region = region;
-            
+
             if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
                 OnEnteredWorld(settings);
+            else
+                ClearWorldLocation();
+
+            return IsInWorld;
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)

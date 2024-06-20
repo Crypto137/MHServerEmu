@@ -200,7 +200,8 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
                 {
-                    Vector3 sourcePosition = settings.SourcePosition;
+                    // NOTE: Source position is serialized as a delta from position
+                    Vector3 sourcePosition = settings.SourcePosition - position;
                     Serializer.TransferVectorFixed(archive, ref sourcePosition, 3);
                 }
 
