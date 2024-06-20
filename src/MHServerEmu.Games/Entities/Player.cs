@@ -598,6 +598,42 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool RevealInventory(PrototypeId inventoryProtoRef)
+        {
+            // Validate inventory prototype
+            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>(inventoryProtoRef);
+            if (inventoryPrototype == null) return Logger.WarnReturn(false, "RevealInventory(): inventoryPrototype == null");
+
+            // Skip reveal if this inventory does not require flagged visibility
+            if (inventoryPrototype.InventoryRequiresFlaggedVisibility() == false)
+                return true;
+
+            // Validate inventory
+            Inventory inventory = GetInventoryByRef(inventoryPrototype.DataRef);
+            if (inventory == null) return Logger.WarnReturn(false, "RevealInventory(): inventory == null");
+
+            // Skip reveal if already visible
+            if (inventory.VisibleToOwner) return true;
+
+            // Enable visibility
+            inventory.VisibleToOwner = true;
+
+            // Update interest for all contained entities
+            foreach (var entry in inventory)
+            {
+                var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                if (entity == null)
+                {
+                    Logger.Warn("RevealInventory(): entity == null");
+                    continue;
+                }
+
+                PlayerConnection.AOI.ConsiderEntity(entity);
+            }
+
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);
@@ -646,7 +682,20 @@ namespace MHServerEmu.Games.Entities
         public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
 
 
-        #region Avatar Management
+        #region Avatar and Team-Up Management
+
+        public Avatar GetAvatar(PrototypeId avatarProtoRef, AvatarMode avatarMode = AvatarMode.Normal)
+        {
+            if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Avatar>(null, "GetAvatar(): avatarProtoRef == PrototypeId.Invalid");
+
+            foreach (Avatar avatar in IterateAvatars())
+            {
+                if (avatar.PrototypeDataRef == avatarProtoRef)
+                    return avatar;
+            }
+
+            return null;
+        }
 
         public bool SwitchAvatar(PrototypeId avatarProtoRef, out Avatar prevAvatar)
         {
@@ -672,6 +721,16 @@ namespace MHServerEmu.Games.Entities
                 foreach (var entry in inventory)
                     yield return Game.EntityManager.GetEntity<Avatar>(entry.Id);
             }
+        }
+
+        public Agent GetTeamUpAgent(PrototypeId teamUpProtoRef)
+        {
+            if (teamUpProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Agent>(null, "GetTeamUpAgent(): teamUpProtoRef == PrototypeId.Invalid");
+
+            Inventory teamUpInv = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (teamUpInv == null) return Logger.WarnReturn<Agent>(null, "GetTeamUpAgent(): teamUpInv == null");
+
+            return teamUpInv.GetMatchingEntity(teamUpProtoRef) as Agent;
         }
 
         #endregion

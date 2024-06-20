@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Entities
                 // Attempt to put the entity in the inventory it belongs to
                 settings.Results.InventoryResult = Inventory.ChangeEntityInventoryLocationOnCreate(entity, ownerInventory, invLoc.Slot,
                     settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.IsPacked), settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.DoNotAllowStackingOnCreate) == false,
-                    settings.PreviousInventoryLocation);
+                    settings.InventoryLocationPrevious);
 
                 // Report error if something went wrong
                 if (settings.Results.InventoryResult != InventoryResult.Success)

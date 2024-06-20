@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Network
     /// </summary>
     public static class ArchiveMessageBuilder
     {
-        public static NetMessageEntityCreate BuildEntityCreateMessage(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
+        public static NetMessageEntityCreate BuildEntityCreateMessage(Entity entity, AOINetworkPolicyValues interestPolicies, bool includeInvLoc, EntitySettings settings = null)
         {
             ByteString baseData = null;
             ByteString archiveData = null;
@@ -85,7 +85,9 @@ namespace MHServerEmu.Games.Network
 
                 if (entity is WorldEntity worldEntity)
                 {
-                    if (interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                    // Make sure that the world entity in proximity is in world, because items in other players' inventories
+                    // (e.g. equipment) are also considered to be in proximity.
+                    if (interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && worldEntity.IsInWorld)
                     {
                         fieldFlags |= EntityCreateMessageFlags.HasPositionAndOrientation;
 
@@ -108,11 +110,7 @@ namespace MHServerEmu.Games.Network
 
                     if (worldEntity.ShouldSnapToFloorOnSpawn != worldEntity.WorldEntityPrototype.SnapToFloorOnSpawn)
                         fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
-                }
-
-                // TODO: Include inventory location based on inventory visibility
-                if (entity.InventoryLocation.IsValid && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
-                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;               
+                }             
 
                 // Apply flags from settings
                 if (settings != null)
@@ -126,9 +124,6 @@ namespace MHServerEmu.Games.Network
                     if (settings.SourcePosition != null && settings.SourcePosition != Vector3.Zero)
                         fieldFlags |= EntityCreateMessageFlags.HasSourcePosition;
 
-                    if (settings.PreviousInventoryLocation != null && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner))
-                        fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
-
                     if (settings.BoundsScaleOverride != 1f)
                         fieldFlags |= EntityCreateMessageFlags.HasBoundsScaleOverride;
 
@@ -137,6 +132,16 @@ namespace MHServerEmu.Games.Network
 
                     if (settings.IgnoreNavi)
                         fieldFlags |= EntityCreateMessageFlags.IgnoreNavi;
+                }
+
+                // Include inventory location based on inventory visibility
+                if (includeInvLoc)
+                {
+                    fieldFlags |= EntityCreateMessageFlags.HasInvLoc;
+
+                    // We need a second null check for settings here because we send invLocPrev only if we have a current invLoc
+                    if (settings != null && settings.InventoryLocationPrevious.Equals(entity.InventoryLocation) == false)
+                        fieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
                 }
 
                 // Serialize
@@ -206,7 +211,7 @@ namespace MHServerEmu.Games.Network
                     InventoryLocation.SerializeTo(archive, entity.InventoryLocation);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLocPrev))
-                    InventoryLocation.SerializeTo(archive, settings.PreviousInventoryLocation);
+                    InventoryLocation.SerializeTo(archive, settings.InventoryLocationPrevious);
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {

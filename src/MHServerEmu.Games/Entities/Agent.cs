@@ -14,6 +14,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -392,6 +393,37 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO
             return InventoryResult.Success;     // Bypass property restrictions
+        }
+
+        public bool RevealEquipmentToOwner()
+        {
+            // Make sure this agent is owned by a player (only avatars and team-ups have equipment that needs to be made visible)
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "RevealEquipmentToOwner(): player == null");
+
+            AreaOfInterest aoi = player.PlayerConnection.AOI;
+
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                if (inventory.VisibleToOwner) continue;     // Skip inventories that are already visible
+                inventory.VisibleToOwner = true;
+
+                foreach (var entry in inventory)
+                {
+                    // Validate entity
+                    var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    if (entity == null)
+                    {
+                        Logger.Warn("RevealEquipmentToOwner(): entity == null");
+                        continue;
+                    }
+
+                    // Update interest for it
+                    aoi.ConsiderEntity(entity);
+                }
+            }
+
+            return true;
         }
 
         protected override bool InitInventories(bool populateInventories)

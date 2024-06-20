@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Entities
         public bool IgnoreNavi { get; set; }
 
         public InventoryLocation InventoryLocation { get; set; }
-        public InventoryLocation PreviousInventoryLocation { get; set; }
+        public InventoryLocation InventoryLocationPrevious { get; set; } = InventoryLocation.Invalid;
 
         public EntitySettingsOptionFlags OptionFlags { get; set; } = EntitySettingsOptionFlags.DefaultOptions;
 

@@ -1,5 +1,28 @@
-﻿namespace MHServerEmu.Games.Entities.Avatars
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+
+namespace MHServerEmu.Games.Entities.Avatars
 {
+    [AssetEnum((int)Invalid)]
+    public enum AvatarStat
+    {
+        Invalid = 0,
+        Durability = 1,
+        Energy = 2,
+        Fighting = 3,
+        Intelligence = 4,
+        Speed = 5,
+        Strength = 6,
+    }
+
+    [AssetEnum((int)Invalid)]
+    public enum AvatarMode
+    {
+        Invalid = -1,
+        Normal = 0,
+        Hardcore = 1,
+        Ladder = 2,
+    }
+
     public enum AvatarUnlockType : long
     {
         None,

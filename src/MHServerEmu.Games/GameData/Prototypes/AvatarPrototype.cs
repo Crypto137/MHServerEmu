@@ -1,35 +1,11 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)Invalid)]
-    public enum AvatarStat
-    {
-        Invalid = 0,
-        Durability = 1,
-        Energy = 2,
-        Fighting = 3,
-        Intelligence = 4,
-        Speed = 5,
-        Strength = 6,
-    }
-
-    [AssetEnum((int)Invalid)]
-    public enum AvatarMode
-    {
-        Invalid = -1,
-        Normal = 0,
-        Hardcore = 1,
-        Ladder = 2,
-    }
-
-    #endregion
-
     public class AvatarPrototype : AgentPrototype
     {
         private static readonly Logger Logger = LogManager.CreateLogger();

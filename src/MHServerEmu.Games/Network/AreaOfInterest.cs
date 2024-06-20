@@ -396,7 +396,16 @@ namespace MHServerEmu.Games.Network
         {
             _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
 
-            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies, settings));
+            // Check inventory for visibility
+            Inventory inventory = entity.InventoryLocation.GetInventory();
+            bool includeInvLoc = inventory != null && InterestedInEntity(inventory.OwnerId)
+                && GetInventoryInterestPolicies(inventory) != AOINetworkPolicyValues.AOIChannelNone;
+
+            // Build and send entity create message
+            SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies, includeInvLoc, settings));
+
+            // Update contained entities
+            ConsiderContainedEntities(entity, InterestTrackOperation.Add);
 
             // Notify the client that we have finished sending everything needed for this avatar
             if (entity is Avatar && interestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
@@ -405,7 +414,17 @@ namespace MHServerEmu.Games.Network
 
         private void RemoveEntity(Entity entity)
         {
+            // Remove
             _trackedEntities.Remove(entity.Id);
+
+            // Notify the client of a hierarchy update for avatars
+            if (entity is Avatar avatar && avatar.IsInWorld)
+                SendMessage(NetMessageFullInWorldHierarchyUpdateBegin.CreateBuilder().SetIdEntity(avatar.Id).Build());
+
+            // Update contained entities
+            ConsiderContainedEntities(entity, InterestTrackOperation.Remove);
+
+            // Notify client
             SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Id).Build());
         }
 
@@ -447,8 +466,9 @@ namespace MHServerEmu.Games.Network
 
             entity.OnChangePlayerAOI(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
 
-            // World entities that already exist on the client and don't have a proximity policy enter game world when they gain a proximity policy
-            if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && entity is WorldEntity worldEntity)
+            // World entities that already exist on the client and don't have a proximity policy enter game world
+            // when they gain a proximity policy, as long as they are in the world on the server as well.
+            if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) && entity is WorldEntity worldEntity && worldEntity.IsInWorld)
                 SendMessage(ArchiveMessageBuilder.BuildEntityEnterGameWorldMessage(worldEntity, settings));
 
             entity.OnPostAOIAddOrRemove(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
@@ -460,7 +480,8 @@ namespace MHServerEmu.Games.Network
                 .SetPrevPolicies((uint)previousInterestPolicies)
                 .Build());
 
-            // TODO: UpdateInventories
+            // Update entities contained in inventories
+            ConsiderContainedEntities(entity, InterestTrackOperation.Modify);
 
             return true;
         }
@@ -468,16 +489,15 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates interest policies for entities contained in the provided owner's inventories.
         /// </summary>
-        private void UpdateInventories(Entity owner)
+        private void ConsiderContainedEntities(Entity owner, InterestTrackOperation operation)
         {
-            // TODO: Inventory visibility, remove entities when we lose visibility
-            // Protobufs: InterestInInventory, InterestInAvatarEquipment, InterestInTeamUpEquipment
-
             foreach (Inventory inventory in new InventoryIterator(owner))
             {
-                // Skip inventories we don't need so that we don't get a Diablo 4 stash situation
-                if (inventory.Prototype.IsVisible == false) continue;
-                if (inventory.Prototype.InventoryRequiresFlaggedVisibility()) continue;     // TODO
+                AOINetworkPolicyValues inventoryInterestPolicies = GetInventoryInterestPolicies(inventory);
+
+                // Skip adding entities from inventories we don't have any interest in
+                if (operation == InterestTrackOperation.Add && inventoryInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                    continue;
 
                 foreach (var inventoryEntry in inventory)
                 {
@@ -488,7 +508,41 @@ namespace MHServerEmu.Games.Network
                         continue;
                     }
 
-                    ConsiderEntity(containedEntity);
+                    switch (operation)
+                    {
+                        case InterestTrackOperation.Add:
+                            if (InterestedInEntity(containedEntity.Id))
+                            {
+                                // If we were already interested in the contained entity and are now becoming
+                                // aware of its owner, rather than recreating it, we move it on the client.
+                                SendMessage(NetMessageInventoryMove.CreateBuilder()
+                                    .SetEntityId(containedEntity.Id)
+                                    .SetInvLocContainerEntityId(inventory.OwnerId)
+                                    .SetInvLocInventoryPrototypeId((ulong)inventory.PrototypeDataRef)
+                                    .SetInvLocSlot(inventoryEntry.Slot)
+                                    .SetRequiredNoOwnerOnClient(true)
+                                    .Build());
+                            }
+
+                            ConsiderEntity(containedEntity);
+
+                            break;
+
+                        case InterestTrackOperation.Remove:
+                            // Consider contained entity for removal if we are interested in it
+                            if (InterestedInEntity(inventoryEntry.Id) == false) continue;
+                            ConsiderEntity(containedEntity);
+
+                            break;
+
+                        case InterestTrackOperation.Modify:
+                            // Update interest in this contained entity if we have any interest in this inventory in general,
+                            // or we are already interested in this entity specifically.
+                            if (inventoryInterestPolicies != AOINetworkPolicyValues.AOIChannelNone || InterestedInEntity(inventoryEntry.Id))
+                                ConsiderEntity(containedEntity);
+
+                            break;
+                    }
                 }
             }
         }
@@ -521,6 +575,13 @@ namespace MHServerEmu.Games.Network
             if (player.IsInGame == false)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
+            // Skip entities in "on-person" inventories that are invisible to the client
+            // (e.g. equipment for discovered avatars owned by other players that are not in proximity)
+            Inventory inventory = entity.InventoryLocation.GetInventory();
+            AOINetworkPolicyValues inventoryInterestPolicies = GetInventoryInterestPolicies(inventory);
+            if (inventory != null && inventory.Prototype.OnPersonLocation && inventoryInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
             //      Add more filters here
 
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
@@ -537,6 +598,11 @@ namespace MHServerEmu.Games.Network
                     // HACK: Discover
                     if (worldEntity.TrackAfterDiscovery && worldEntity is not Item)
                         newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
+                }
+                else if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                {
+                    // Transfer proximity channel from owner in proximity
+                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
                 }
 
                 // Transfer discovery
@@ -558,6 +624,48 @@ namespace MHServerEmu.Games.Network
                 return AOINetworkPolicyValues.AOIChannelNone;
 
             return newInterestPolicies;
+        }
+
+        private AOINetworkPolicyValues GetInventoryInterestPolicies(Inventory inventory)
+        {
+            // Inventory is going to be null in recursive checks when we reach the top of the hierarchy
+            if (inventory == null)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            InventoryPrototype inventoryPrototype = inventory.Prototype;
+            Player player = _playerConnection.Player;
+            Entity container = inventory.Owner;
+
+            if (inventoryPrototype.IsVisible == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            if (inventoryPrototype.InventoryRequiresFlaggedVisibility() && player.Owns(container) && inventory.VisibleToOwner == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            if (container == null)
+                return Logger.WarnReturn(AOINetworkPolicyValues.AOIChannelNone, "GetInventoryInterestPolicies(): container == null");
+
+            AOINetworkPolicyValues interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
+
+            if (inventoryPrototype.VisibleToOwner && player.Owns(container))
+                interestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
+
+            if (inventoryPrototype.VisibleToTrader || inventoryPrototype.VisibleToParty)
+            {
+                // TODO
+            }
+
+            if (inventoryPrototype.VisibleToProximity)
+            {
+                // Check container entity and its owners recursively for proximity interest
+                if (InterestedInEntity(container.Id, AOINetworkPolicyValues.AOIChannelProximity)
+                    || GetInventoryInterestPolicies(container.InventoryLocation.GetInventory()).HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                {
+                    interestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
+                }
+            }
+
+            return interestPolicies;
         }
 
         private void CalcVolumes(Vector3 playerPosition)

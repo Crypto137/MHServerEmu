@@ -310,6 +310,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break;
+                case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break;
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;
@@ -805,9 +806,18 @@ namespace MHServerEmu.Games.Network
             var requestInterestInInventory = message.As<NetMessageRequestInterestInInventory>();
             if (requestInterestInInventory == null) return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to retrieve message");
 
+            PrototypeId inventoryProtoRef = (PrototypeId)requestInterestInInventory.InventoryProtoId;
+
             Logger.Trace(string.Format("OnRequestInterestInInventory(): inventoryProtoId={0}, loadState={1}",
-                GameDatabase.GetPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId),
+                GameDatabase.GetPrototypeName(inventoryProtoRef),
                 requestInterestInInventory.LoadState));
+
+            // Validate inventory prototype
+            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
+            if (inventoryPrototype == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
+
+            if (Player.RevealInventory(inventoryProtoRef) == false)
+                return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to reveal inventory {GameDatabase.GetPrototypeName(inventoryProtoRef)}");
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
@@ -822,8 +832,35 @@ namespace MHServerEmu.Games.Network
             var requestInterestInAvatarEquipment = message.As<NetMessageRequestInterestInAvatarEquipment>();
             if (requestInterestInAvatarEquipment == null) return Logger.WarnReturn(false, $"OnRequestInterestInAvatarEquipment(): Failed to retrieve message");
 
-            string avatar = GameDatabase.GetFormattedPrototypeName((PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId);
-            Logger.Trace($"Received NetMessageRequestInterestInAvatarEquipment for {avatar}");
+            PrototypeId avatarProtoId = (PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId;
+
+            Logger.Trace(string.Format("OnRequestInterestInAvatarEquipment(): avatarProtoId={0}, avatarModeEnum={1}",
+                GameDatabase.GetPrototypeName(avatarProtoId),
+                (AvatarMode)requestInterestInAvatarEquipment.AvatarModeEnum));
+
+            Avatar avatar = Player.GetAvatar(avatarProtoId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnRequestInterestInAvatarEquipment(): avatar == null");
+
+            avatar.RevealEquipmentToOwner();
+
+            return true;
+        }
+
+        private bool OnRequestInterestInTeamUpEquipment(MailboxMessage message)
+        {
+            var requestInterestInTeamUpEquipment = message.As<NetMessageRequestInterestInTeamUpEquipment>();
+            if (requestInterestInTeamUpEquipment == null) return Logger.WarnReturn(false, $"OnRequestRequestInterestInTeamUpEquipment(): Failed to retrieve message");
+
+            PrototypeId teamUpProtoId = (PrototypeId)requestInterestInTeamUpEquipment.TeamUpProtoId;
+
+            Logger.Trace(string.Format("OnRequestRequestInterestInTeamUpEquipment(): teamUpProtoId={0}",
+                GameDatabase.GetPrototypeName(teamUpProtoId)));
+
+            Agent teamUpAgent = Player.GetTeamUpAgent(teamUpProtoId);
+            if (teamUpAgent == null) return Logger.WarnReturn(false, "OnRequestRequestInterestInTeamUpEquipment(): teamUpAgent == null");
+
+            teamUpAgent.RevealEquipmentToOwner();
+
             return true;
         }
 
