@@ -230,7 +230,7 @@ namespace MHServerEmu.Games.Navi
 
             NaviPathSearchState topState = _searchStateQueue.Top;
             _searchStateQueue.Pop();
-            if (Test) Logger.Debug($"topStateTriangle {topState.Triangle.ToHashString64()}");
+            if (Test) Logger.Debug($"\n topState DistDone={topState.DistDone} DistLeft={topState.DistLeft} Distance={topState.Distance}\ntopStateTriangle {topState.Triangle.ToHashString64()}");
             NaviTriangle triangle;
             for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
             {
@@ -657,7 +657,7 @@ namespace MHServerEmu.Games.Navi
 
         public int CompareTo(NaviPathSearchState other)
         {
-            return Distance.CompareTo(other.Distance);
+            return other.Distance.CompareTo(Distance);
         }
 
         public bool IsAncestor(NaviTriangle triangle)
