@@ -11,6 +11,8 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
@@ -56,6 +58,8 @@ namespace MHServerEmu.Games.Entities
     public class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private EventPointer<TEMP_SendActivatePowerMessageEvent> _sendActivatePowerMessageEvent = new();
 
         private AlliancePrototype _allianceProto;
 
@@ -1290,6 +1294,43 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual void OnDramaticEntranceEnd()  { }
+
+        public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
+        {
+            if (_sendActivatePowerMessageEvent.IsValid) return false;
+            ScheduleEntityEvent(_sendActivatePowerMessageEvent, timeOffset, powerProtoRef);
+            return true;
+        }
+
+        public bool TEMP_SendActivatePowerMessage(PrototypeId powerProtoRef)
+        {
+            if (IsInWorld == false) return false;
+
+            Logger.Trace($"Activating {GameDatabase.GetPrototypeName(powerProtoRef)} for {this}");
+
+            ActivatePowerArchive activatePower = new()
+            {
+                Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
+                ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
+                ActivatePowerMessageFlags.HasPowerRandomSeed,
+
+                PowerPrototypeRef = powerProtoRef,
+                UserEntityId = Id,
+                TargetPosition = RegionLocation.Position,
+                FXRandomSeed = (uint)Game.Random.Next(),
+                PowerRandomSeed = (uint)Game.Random.Next()
+            };
+
+            var activatePowerMessage = NetMessageActivatePower.CreateBuilder().SetArchiveData(activatePower.ToByteString()).Build();
+            Game.NetworkManager.SendMessageToInterested(activatePowerMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            return true;
+        }
+
+        protected class TEMP_SendActivatePowerMessageEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).TEMP_SendActivatePowerMessage(p1);
+        }
     }
 
 }

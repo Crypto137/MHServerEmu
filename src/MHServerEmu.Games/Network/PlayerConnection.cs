@@ -126,15 +126,24 @@ namespace MHServerEmu.Games.Network
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
             Player.LoadFromDBAccount(_dbAccount);
 
+            // Make sure we have a valid current avatar ref
+            var lastCurrentAvatarRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
+            if (dataDirectory.PrototypeIsA<AvatarPrototype>(lastCurrentAvatarRef) == false)
+            {
+                lastCurrentAvatarRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
+                Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(lastCurrentAvatarRef)}");
+            }
+
             // Create avatars
             Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+            Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
             foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 EntitySettings avatarSettings = new();
                 avatarSettings.EntityRef = avatarRef;
-                avatarSettings.InventoryLocation = new(Player.Id, avatarLibrary.PrototypeDataRef);
+                avatarSettings.InventoryLocation = new(Player.Id, avatarRef == lastCurrentAvatarRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
                 Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
 
@@ -155,17 +164,6 @@ namespace MHServerEmu.Games.Network
                     Game.EntityManager.CreateEntity(teamUpSettings);
                 }
             }
-
-            // Make sure we have a valid current avatar ref
-            var avatarDataRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
-            if (dataDirectory.PrototypeIsA<AvatarPrototype>(avatarDataRef) == false)
-            {
-                avatarDataRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
-                Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(avatarDataRef)}");
-            }
-
-            // Switch to the current avatar
-            Player.SwitchAvatar(avatarDataRef, out _);
         }
 
         #endregion
@@ -256,9 +254,11 @@ namespace MHServerEmu.Games.Network
         {
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
-
             AOI.Update(entrancePosition, true);
-            avatar.EnterWorld(AOI.Region, entrancePosition, StartOrientation);
+
+            LastPosition = StartPosition;
+            LastOrientation = StartOrientation;
+            Player.EnableCurrentAvatar(false);
 
             Player.DequeueLoadingScreen();
 
@@ -709,19 +709,9 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"Received NetMessageSwitchAvatar");
             Logger.Trace(switchAvatar.ToString());
 
-            // Switch avatar
-            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
-                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
-
-            // Add new avatar to the world
-            EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
-            Player.CurrentAvatar.EnterWorld(AOI.Region, LastPosition, LastOrientation, settings);
-            Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} entering world");
-
-            // Activate the swap in power for the avatar to become playable
-            EventPointer<TEMP_ActivatePowerEvent> avatarSwapInEvent = new();
-            Game.GameEventScheduler.ScheduleEvent(avatarSwapInEvent, TimeSpan.FromMilliseconds(700));
-            avatarSwapInEvent.Get().Initialize(Player.CurrentAvatar, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            // Start the avatar switching process
+            if (Player.BeginSwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId) == false)
+                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to begin avatar switch");
 
             return true;
         }

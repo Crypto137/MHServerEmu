@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Entities
 
         private EventGroup _pendingEvents = new();
 
-        public EventPointer<ScheduledLifespanEvent> ScheduledLifespanEvent = new();
+        public EventPointer<ScheduledLifespanEvent> ScheduledLifespanEvent { get; } = new();
 
         public Entity(Game game)
         {
@@ -424,28 +424,29 @@ namespace MHServerEmu.Games.Entities
             if (Properties.HasProperty(PropertyEnum.AIMasterAvatar)) _flags |= EntityFlags.AIMasterAvatar;
         }
 
-        public void OnSelfAddedToOtherInventory()
+        public virtual void OnSelfAddedToOtherInventory()
         {
         }
 
-        public void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        public virtual void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
         {
         }
 
-        public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        public virtual void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
         }
 
-        public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        public virtual void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
         {
         }
 
-        public void OnDetachedFromDestroyedContainer()
+        public virtual void OnDetachedFromDestroyedContainer()
         {
         }
 
         public virtual void OnDeallocate()
         {
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
         }
 
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
@@ -459,6 +460,11 @@ namespace MHServerEmu.Games.Entities
             AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
         {
 
+        }
+
+        public void OnLifespanExpired()
+        {
+            Destroy();
         }
 
         #endregion
@@ -783,36 +789,47 @@ namespace MHServerEmu.Games.Entities
             TotalLifespan = lifespan;
         }
 
-        public void ScheduleEntityEvent<T>(EventPointer<T> eventPointer, TimeSpan lifespan) 
-            where T : ScheduledEvent, IEventTarget, new()
+        public void ScheduleEntityEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
+            where TEvent : CallMethodEvent<Entity>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this);
+        }
+
+        public void ScheduleEntityEvent<TEvent, TParam1>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset, TParam1 param1)
+            where TEvent : CallMethodEventParam1<Entity, TParam1>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this, param1);
+        }
+
+        public void ScheduleEntityEvent<TEvent, TParam1, TParam2>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset, TParam1 param1, TParam2 param2)
+            where TEvent : CallMethodEventParam2<Entity, TParam1, TParam2>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this, param1, param2);
+        }
+
+        public void ScheduleEntityEvent<TEvent, TParam1, TParam2, TParam3>(EventPointer<TEvent> eventPointer, TimeSpan lifespan, TParam1 param1, TParam2 param2, TParam3 param3)
+            where TEvent : CallMethodEventParam3<Entity, TParam1, TParam2, TParam3>, new()
         {
             var scheduler = Game?.GameEventScheduler;
             if (scheduler == null) return;
             scheduler.ScheduleEvent(eventPointer, lifespan, _pendingEvents);
-            eventPointer.Get().EventTarget = this;
-        }
-
-        public void OnLifespanExpired()
-        {
-            Destroy();
+            eventPointer.Get().Initialize(this, param1, param2, param3);
         }
 
         #endregion
     }
 
-    public class ScheduledLifespanEvent : TargetedScheduledEvent<Entity> , IEventTarget 
+    public class ScheduledLifespanEvent : CallMethodEvent<Entity>
     {
-        public Entity EventTarget { get => _eventTarget; set => _eventTarget = value; }
-        public override bool OnTriggered()
-        {
-            if (_eventTarget == null) return false;
-            _eventTarget.OnLifespanExpired();
-            return true;
-        }
-    }
-
-    public interface IEventTarget
-    {
-        Entity EventTarget { get; set; }
+        protected override CallbackDelegate GetCallback() => (t) => t.OnLifespanExpired();
     }
 }
