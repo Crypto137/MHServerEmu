@@ -43,6 +43,16 @@ namespace MHServerEmu.Games.Navi
             return hash;
         }
 
+        public ulong GetHash64()
+        {
+            ulong hash = 14695981039346656037;
+            //  hash = (hash ^ (byte)EdgeFlags) * 1099511628211;
+            //   hash = (hash ^ PathingFlags.GetHash64()) * 1099511628211;
+            hash = (hash ^ Points[0].GetHash64()) * 1099511628211;
+            hash = hash ^ Points[1].GetHash64();
+            return hash;
+        }
+
         public void AttachTriangle(NaviTriangle triangle)
         {
             if (Triangles[0] == null)
@@ -132,6 +142,13 @@ namespace MHServerEmu.Games.Navi
             uint tri0 = Triangles[0] != null ? Triangles[0].GetHash() : 0;
             uint tri1 = Triangles[1] != null ? Triangles[1].GetHash() : 0;
             return $"{GetHash():X} T[{tri0:X} {tri1:X}]";
+        }
+
+        public string ToHashString64()
+        {
+            ulong tri0 = Triangles[0] != null ? Triangles[0].GetHash64() : 0;
+            ulong tri1 = Triangles[1] != null ? Triangles[1].GetHash64() : 0;
+            return $"{GetHash64():X} T[{tri0:X} {tri1:X}] [{Points[0].ToStringCoord2D()} {Points[1].ToStringCoord2D()}]";
         }
 
         public static bool IsBlockingDoorEdge(NaviEdge edge, PathFlags pathFlags)

@@ -33,6 +33,21 @@ namespace MHServerEmu.Games.Navi
             return hash;
         }
 
+        public ulong GetHash64()
+        {
+            ulong hash = 14695981039346656037;
+            hash = (hash ^ BitConverter.SingleToUInt32Bits(Pos.X)) * 1099511628211;
+            hash = (hash ^ BitConverter.SingleToUInt32Bits(Pos.Y)) * 1099511628211;
+            hash = (hash ^ BitConverter.SingleToUInt32Bits(Pos.Z)) * 1099511628211;
+            // hash = (hash ^ (byte)Flags) * 1099511628211;
+            return hash;
+        }
+
+        public string ToStringCoord2D()
+        {
+            return $"({Pos.X:F4} {Pos.Y:F4})";
+        }
+
         public string ToHashString()
         {
             return $"{GetHash():X}";
