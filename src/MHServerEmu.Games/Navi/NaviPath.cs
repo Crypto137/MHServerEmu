@@ -34,6 +34,18 @@ namespace MHServerEmu.Games.Navi
             Clear();
         }
 
+        public void Copy(NaviPath other)
+        {
+            _pathNodes = new (other._pathNodes);
+            _currentNodeIndex = other._currentNodeIndex;
+            _radius = other._radius;
+            _radiusSq = other._radiusSq;
+            _width = other._width;
+            _pathFlags = other._pathFlags;
+            _approxTotalDistance = other._approxTotalDistance;
+            _hasAccurateDistance = other._hasAccurateDistance;
+        }
+
         public void Init(float radius, PathFlags pathFlags, List<NaviPathNode> pathNodes)
         {
             _radius = radius;

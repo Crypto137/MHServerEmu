@@ -898,7 +898,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                 if (validDistance || (pathSuccess && movementImpeded))
                 {
-                    _generatedPath = newPath;
+                    _generatedPath.Set(newPath);
                     if (updateEnd && _generatedPath.Path.IsValid)
                         _generatedPath.Path.UpdateEndPosition(updateEndPosition);
                     LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
@@ -997,7 +997,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (success)
             {
                 ResetState();
-                _generatedPath = followPath;
+                _generatedPath.Set(followPath);
                 _pathGenerationFlags = options.PathGenerationFlags;
                 _incompleteDistance = options.IncompleteDistance;
                 _repathDelay = options.RepathDelay;
@@ -1454,6 +1454,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             Path = new();
             Clear();
+        }
+
+        public void Set(GeneratedPath other)
+        {
+            Path.Copy(other.Path);
+            PathResult = other.PathResult;
         }
 
         public void Clear()
