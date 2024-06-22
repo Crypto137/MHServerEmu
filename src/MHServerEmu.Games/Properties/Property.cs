@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Properties
         None    = 0,
         Flag0   = 1 << 0,
         Flag1   = 1 << 1,
-        Flag2   = 1 << 2
+        Refresh = 1 << 2
     }
 
     #endregion

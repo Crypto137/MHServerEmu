@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Entities
 
     #endregion
 
-    public class Entity : ISerialize
+    public class Entity : ISerialize, IPropertyChangeWatcher
     {
 
         public bool SkipAI = true;
@@ -226,14 +226,15 @@ namespace MHServerEmu.Games.Entities
             // Initialize property collection and copy baseline properties from prototype / settings
             // TODO: Bind to ArchiveMessageDispatcher
             Properties = new(this, Game.CurrentRepId);
+
+            // We use IPropertyChangeWatcher implementation as a replacement for multiple inheritance
+            Attach(Properties);
             
             if (Prototype.Properties != null)
                 Properties.FlattenCopyFrom(Prototype.Properties, true); 
             
             if (settings.Properties != null)
                 Properties.FlattenCopyFrom(settings.Properties, false);
-            
-            OnPropertyChange(); // Temporary solution for for _flags
 
             // Inventories
             InventoryCollection.Initialize(this);
@@ -416,14 +417,6 @@ namespace MHServerEmu.Games.Entities
 
         #region Event Handlers
 
-        public virtual void OnPropertyChange()
-        {
-            if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
-            if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
-            if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
-            if (Properties.HasProperty(PropertyEnum.AIMasterAvatar)) _flags |= EntityFlags.AIMasterAvatar;
-        }
-
         public virtual void OnSelfAddedToOtherInventory()
         {
         }
@@ -465,6 +458,55 @@ namespace MHServerEmu.Games.Entities
         public void OnLifespanExpired()
         {
             Destroy();
+        }
+
+        #endregion
+
+        #region IPropertyChangeWatcher
+
+        public void Attach(PropertyCollection propertyCollection)
+        {
+            if (propertyCollection != Properties)
+            {
+                Logger.Warn("Attach(): Entities can attach only to their own property collection");
+                return;
+            }
+
+            Properties.AttachWatcher(this);
+        }
+
+        public void Detach(bool removeFromAttachedCollection)
+        {
+            if (removeFromAttachedCollection)
+                Properties.DetachWatcher(this);
+        }
+
+        public virtual void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.AIMasterAvatar:
+                    if (newValue) _flags |= EntityFlags.AIMasterAvatar;
+                    else _flags &= ~EntityFlags.AIMasterAvatar;
+                    break;
+
+                case PropertyEnum.ClusterPrototype:
+                    if (newValue) _flags |= EntityFlags.ClusterPrototype;
+                    else _flags &= ~EntityFlags.ClusterPrototype;
+                    break;
+
+                case PropertyEnum.EncounterResource:
+                    if (newValue) _flags |= EntityFlags.EncounterResource;
+                    else _flags &= ~EntityFlags.EncounterResource;
+                    break;
+
+                case PropertyEnum.MissionPrototype:
+                    if (newValue) _flags |= EntityFlags.HasMissionPrototype;
+                    else _flags &= ~EntityFlags.HasMissionPrototype;
+                    break;
+            }
         }
 
         #endregion

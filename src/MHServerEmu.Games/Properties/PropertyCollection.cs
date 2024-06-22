@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -18,7 +19,6 @@ namespace MHServerEmu.Games.Properties
     public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize
     {
         // TODO: Eval
-        // TODO: PropertyChangeWatcher API: AttachWatcher(), RemoveWatcher(), RemoveAllWatchers()
         // TODO: Consider implementing IDisposable for optimization
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -32,6 +32,9 @@ namespace MHServerEmu.Games.Properties
         // I'm not sure what the intention there was, but it makes zero sense for us to do it the same way.
         private readonly HashSet<PropertyCollection> _parentCollections = new();
         private readonly HashSet<PropertyCollection> _childCollections = new();
+
+        // A collection of registered watchers
+        private readonly HashSet<IPropertyChangeWatcher> _watchers = new();
 
         #region Value Indexers
 
@@ -286,8 +289,6 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
-            // TODO: Implement as an event that entities can register to?
-            
             // Update curve properties that rely on this property as an index property
             foreach (var kvp in IterateCurveProperties())
             {
@@ -295,9 +296,11 @@ namespace MHServerEmu.Games.Properties
                     UpdateCurvePropertyValue(kvp.Value, flags, null);
             }
 
-            // TODO: Update evals
+            // TODO: Update dependent evals
 
-            // TODO: Notify watchers
+            // Notify watchers
+            foreach (IPropertyChangeWatcher watcher in _watchers)
+                watcher.OnPropertyChange(id, newValue, oldValue, flags);
         }
 
         /// <summary>
@@ -448,6 +451,47 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
 
+        /// <summary>
+        /// Subscribes the provided <see cref="IPropertyChangeWatcher"/> for property changes happening in this <see cref="PropertyCollection"/>.
+        /// </summary>
+        public bool AttachWatcher(IPropertyChangeWatcher watcher)
+        {
+            // VERIFY: m_isDeallocating == false
+
+            if (_watchers.Add(watcher) == false)
+                return Logger.WarnReturn(false, $"AttachWatcher(): Failed to attach property change watcher {watcher}");
+
+            foreach (var kvp in this)
+                watcher.OnPropertyChange(kvp.Key, kvp.Value, kvp.Value, SetPropertyFlags.Refresh);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Unsubscribes the provided <see cref="IPropertyChangeWatcher"/> from property changes happening in this <see cref="PropertyCollection"/>.
+        /// </summary>
+        public bool DetachWatcher(IPropertyChangeWatcher watcher)
+        {
+            if (watcher == null)
+                return Logger.WarnReturn(false, "DetachWatcher(): watcher == null");
+
+            if (_watchers.Remove(watcher) == false)
+                return Logger.WarnReturn(false, $"DetachWatcher(): Failed to detach property change watcher {watcher}");
+
+            watcher.Detach(false);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes all subscribed <see cref="IPropertyChangeWatcher"/> instances.
+        /// </summary>
+        public void RemoveAllWatchers()
+        {
+            while (_watchers.Count > 0)
+                DetachWatcher(_watchers.First());
+        }
+
         public override string ToString() => _aggregateList.ToString();
 
         #region Iteration
@@ -530,8 +574,6 @@ namespace MHServerEmu.Games.Properties
         public virtual bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
         {
             bool success = true;
-
-            // TODO: skip properties that match the default collection
 
             if (archive.IsPacking)
             {
@@ -619,7 +661,7 @@ namespace MHServerEmu.Games.Properties
                     UpdateAggregateValueFromBase(id, info, flags, true, value);
             }
 
-            return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
+            return hasChanged || flags.HasFlag(SetPropertyFlags.Refresh);  // Some kind of flag that forces property value update
         }
 
         protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, ref uint numProperties, Archive archive, PropertyCollection defaultCollection)
@@ -907,7 +949,7 @@ namespace MHServerEmu.Games.Properties
             if (hasValue)
             {
                 _aggregateList.GetSetPropertyValue(id, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
-                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Flag2))
+                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Refresh))
                 {
                     if (wasAdded) oldValue = info.DefaultValue;
                     OnPropertyChange(id, aggregateValue, oldValue, flags);
