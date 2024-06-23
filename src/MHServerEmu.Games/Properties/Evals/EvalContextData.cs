@@ -4,68 +4,10 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties.Evals
 {
-    public enum EvalOp
-    {
-        Invalid = 0,
-        And = 1,
-        Equals = 2,
-        GreaterThan = 3,
-        IsContextDataNull = 4,
-        LessThan = 5,
-        DifficultyTierRange = 6,
-        MissionIsActive = 7,
-        MissionIsComplete = 8,
-        Not = 9,
-        Or = 10,
-        HasEntityInInventory = 11,
-        LoadAssetRef = 12,
-        LoadBool = 13,
-        LoadFloat = 14,
-        LoadInt = 15,
-        LoadProtoRef = 16,
-        LoadContextInt = 17,
-        LoadContextProtoRef = 18,
-        For = 19,
-        ForEachConditionInContext = 20,
-        ForEachProtoRefInContextRefList = 21,
-        IfElse = 22,
-        Scope = 23,
-        ExportError = 24,
-        LoadCurve = 25,
-        Add = 26,
-        Div = 27,
-        Exponent = 28,
-        Max = 29,
-        Min = 30,
-        Modulus = 31,
-        Mult = 32,
-        Sub = 33,
-        AssignProp = 34,
-        AssignPropEvalParams = 35,
-        HasProp = 36,
-        LoadProp = 37,
-        LoadPropContextParams = 38,
-        LoadPropEvalParams = 39,
-        SwapProp = 40,
-        RandomFloat = 41,
-        RandomInt = 42,
-        LoadEntityToContextVar = 43,
-        LoadConditionCollectionToContext = 44,
-        EntityHasKeyword = 45,
-        EntityHasTalent = 46,
-        GetCombatLevel = 47,
-        GetPowerRank = 48,
-        CalcPowerRank = 49,
-        IsInParty = 50,
-        GetDamageReductionPct = 51,
-        GetDistanceToEntity = 52,
-        IsDynamicCombatLevelEnabled = 53,
-    }
-
     public class EvalContextData
     {
-        public Game Game;
-        public EvalContextVar[] ContextVars = new EvalContextVar[(int)EvalContext.MaxVars];
+        public Game Game { get; }
+        public EvalContextVar[] ContextVars { get; } = new EvalContextVar[(int)EvalContext.MaxVars];
 
         public PropertyCollection CallerStackProperties { get; internal set; }
         public PropertyCollection LocalStackProperties { get; internal set; }

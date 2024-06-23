@@ -14,13 +14,6 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Properties.Evals
 {        
-    public enum GetEvalPropertyIdEnum
-    {
-        PropertyInfoEvalInput,
-        Output,
-        Input
-    }
-
     public class Eval
     {
         private static readonly Logger Logger = LogManager.CreateLogger();

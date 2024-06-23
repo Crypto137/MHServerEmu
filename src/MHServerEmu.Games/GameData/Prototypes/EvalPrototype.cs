@@ -6,40 +6,6 @@ using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)Default)]
-    public enum EvalContext
-    {
-        Default = 0,
-        Entity = 1,
-        EntityBehaviorBlackboard = 2,
-        Other = 3,
-        Condition = 4,
-        ConditionKeywords = 5,
-        TeamUp = 6,
-        Var1 = 7,
-        Var2 = 8,
-        Var3 = 9,
-        Var4 = 10,
-        Var5 = 11,
-        MaxVars = 12,
-        LocalStack = 13,
-        CallerStack = 14,
-        Globals = 15,
-    }
-
-    [AssetEnum((int)Physical)]
-    public enum DamageType
-    {
-        Physical = 0,
-        Energy = 1,
-        Mental = 2,
-        Any = 4,
-    }
-
-    #endregion
-
     public class EvalNodeVisitor
     {
         public virtual void Visit(EvalPrototype visitor) { }

@@ -7,6 +7,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum((int)Physical)]
+    public enum DamageType
+    {
+        Physical = 0,
+        Energy = 1,
+        Mental = 2,
+        Any = 4,
+    }
+
     [AssetEnum((int)MoveIntoRange)]
     public enum WhenOutOfRangeType
     {
