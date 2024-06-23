@@ -7,6 +7,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -17,6 +18,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -441,6 +443,13 @@ namespace MHServerEmu.Games.Network
                 try
                 {
                     LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags);
+                    if (newSyncState.PathNodes.Count > 3)
+                    {
+                        NaviSvgHelper svg = new(avatar.NaviMesh.NaviCdt);
+                        svg.AddTrianlges(newSyncState.PathNodes);
+                        svg.AddPath(newSyncState.PathNodes);
+                        svg.SaveToFile($"AvatarPath-{DateTime.Now:mm-ss-fff}.svg");
+                    }
                 }
                 catch (Exception e)
                 {

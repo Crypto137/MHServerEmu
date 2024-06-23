@@ -143,6 +143,7 @@ namespace MHServerEmu.Games.Navi
                             maxAttempts = steps <= 5 ? 1 : steps <= 50 ? 3 : 5;
                             if (Test)
                             {
+                                Svg?.AddСomment($"FirstGen shortestPathDistance {shortestPathDistance}, maxAttempts = {maxAttempts}");
                                 Svg?.AddPath(outPathNodes);
                                 Logger.Debug($"shortestPathDistance = {shortestPathDistance} maxAttempts = {maxAttempts} pathFound = true");
                             }
@@ -156,10 +157,19 @@ namespace MHServerEmu.Games.Navi
                             if (FunnelStep(tempPathChannel, tempPath) == false)
                                 throw new InvalidOperationException("FunnelStep failed.");
                             float tempPathDistance = NaviPath.CalcAccurateDistance(tempPath);
-                            if (Test) Svg?.AddPath(outPathNodes);
+                            if (Test)
+                            {
+                                Svg.AddСomment("tempPath");
+                                Svg.AddPath(tempPath);
+                                Svg.AddСomment($"NextGen tempPathDistance {tempPathDistance} < {shortestPathDistance}");
+                            }
                             if (tempPathDistance < shortestPathDistance)
                             {
-                                if (Test) Svg?.AddPath(tempPath);
+                                if (Test)
+                                {
+                                    Svg.AddСomment("old outPathNodes");
+                                    Svg.AddPath(outPathNodes);
+                                }
                                 shortestPathDistance = tempPathDistance;
                                 outPathNodes.Clear();
                                 outPathNodes.AddRange(tempPath);
@@ -236,8 +246,9 @@ namespace MHServerEmu.Games.Navi
             {
                 if (Test)
                 {
+                    Svg?.AddСomment($"PathFound Result");
                     Svg?.AddPath(outPathNodes);
-                    Svg?.SaveToFile($"Path-{DateTime.Now.ToString("mm-ss-fff")}.svg");
+                    Svg?.SaveToFile($"Path-{DateTime.Now:mm-ss-fff}.svg");
                 }
                 return NaviPathResult.Success; 
             }

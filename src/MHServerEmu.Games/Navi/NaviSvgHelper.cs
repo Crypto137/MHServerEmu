@@ -84,29 +84,55 @@ namespace MHServerEmu.Games.Navi
             _elements.Add($"<polygon points=\"{p1.X},{p1.Y} {p2.X},{p2.Y} {p3.X},{p3.Y}\" style=\"fill:{color};stroke:black;stroke-width:1\" />");
         }
 
+        public void AddTrianlges(List<NaviPathNode> pathNodes)
+        {
+            foreach (var node in pathNodes)
+            {
+                var triangle = _cdt.FindTriangleAtPoint(node.Vertex);
+                AddTriangle(triangle); 
+                for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
+                {
+                    NaviEdge edge = triangle.Edges[edgeIndex];
+                    AddTriangle(edge.OpposedTriangle(triangle));
+                }
+            }
+        }
+
         public void AddPath(List<NaviPathNode> path)
         {
             if (path.Count < 2) return;
-            string color = GetColorFromHash();
+            string color = "#FFCD00";//GetColorFromHash();
             var pathData = new StringBuilder();
             var firstPoint = Scale(path[0].Vertex);
             pathData.Append($"M {firstPoint.X},{firstPoint.Y} ");
 
             for (int i = 1; i < path.Count; i++)
             {
-                var point = Scale(path[i].Vertex);
+                var point = Scale(path[i].Vertex);               
                 pathData.Append($"L {point.X},{point.Y} ");
             }
 
             _elements.Add($"<path d=\"{pathData}\" style=\"fill:none;stroke:{color};stroke-width:2\" />");
+            foreach (var node in path)
+                if (node.Radius > 0) {
+                    string sideColor = color;
+                    if (node.VertexSide == NaviSide.Left) sideColor = "#FF7800";
+                    else if (node.VertexSide == NaviSide.Right) sideColor = "#D0006E";
+                    AddCircle(node.Vertex, node.Radius, sideColor, color);
+                }
         }
 
-        public void AddCircle(Vector3 centerIn, float radius, string color = "blue")
+        public void AddCircle(Vector3 centerIn, float radius, string color = "blue", string fill = "none")
         {
             var center = Scale(centerIn);
             if (radius == 0) radius = 10;
             float scaledRadius = radius * Math.Min(_scaleX, _scaleY);
-            _elements.Add($"<circle cx=\"{center.X}\" cy=\"{center.Y}\" r=\"{scaledRadius}\" style=\"fill:none;stroke:{color};stroke-width:1\" />");
+            _elements.Add($"<circle cx=\"{center.X}\" cy=\"{center.Y}\" r=\"{scaledRadius}\" style=\"fill:{fill};stroke:{color};stroke-width:1\" />");
+        }
+
+        public void AddСomment(string comment)
+        {
+            _elements.Add($"<!-- {comment} -->");
         }
 
         public void SaveToFile(string filePath)
@@ -115,5 +141,6 @@ namespace MHServerEmu.Games.Navi
             File.WriteAllLines(filePath, _elements);
             Logger.Debug($"{filePath} saved");
         }
+
     }
 }
