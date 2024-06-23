@@ -655,7 +655,6 @@ namespace MHServerEmu.Games.Properties
         {
             // NOTE: This function isn't really needed because we use implicit casting for PropertyValue,
             // but we are keeping it anyway to match the client API.
-            Logger.Debug($"EvalProperty(): {id}");
             return EvalPropertyValue(id, contextData);
         }
 

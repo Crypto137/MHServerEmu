@@ -1201,7 +1201,9 @@ namespace MHServerEmu.Games.Properties.Evals
                 result = FromValue(evalVar, out PrototypeId resultFrom);
                 resultVal = (T)(object)resultFrom;
                 return result;
-            }            
+            }
+
+            Logger.Warn($"FromValue<T>(): Unhandled target type {targetType.Name}");
             return result;
         }
 
@@ -1416,7 +1418,7 @@ namespace MHServerEmu.Games.Properties.Evals
             switch (contextVar.Type)
             {
                 case EvalReturnType.PropertyCollectionPtr:
-                    if (FromValue(contextVar, out PropertyCollection collection) == false) return evalVar;
+                    if (FromValue(contextVar, out PropertyCollection collection, data.Game) == false) return evalVar;
                     evalVar.SetBool(collection == null);
                     break;
 
@@ -1491,7 +1493,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 if (region != null)
                     tierRef = region.GetDifficultyTierRef();
             }
-            else if (FromValue(contextVar, out PropertyCollection collection))
+            else if (FromValue(contextVar, out PropertyCollection collection, data.Game))
                 tierRef = collection.GetProperty(PropertyEnum.DifficultyTier);
 
             if (tierRef == PrototypeId.Invalid)
@@ -2359,7 +2361,7 @@ namespace MHServerEmu.Games.Properties.Evals
             if (assignVar.Type == EvalReturnType.Error || assignVar.Type == EvalReturnType.Undefined)
                 return Logger.WarnReturn(evalVar, "AssignPrototype has Eval that returns Error or Undefined Value");
 
-            if (FromValue(GetEvalVarFromContext(assignPropProto.Context, data, true), out PropertyCollection collection) == false)
+            if (FromValue(GetEvalVarFromContext(assignPropProto.Context, data, true), out PropertyCollection collection, data.Game) == false)
                 return evalVar;
 
             if (collection == null)
@@ -2454,7 +2456,7 @@ namespace MHServerEmu.Games.Properties.Evals
             if (assignVar.Type == EvalReturnType.Error || assignVar.Type == EvalReturnType.Undefined)
                 return Logger.WarnReturn(evalVar, "AssignPropEvalParamsPrototype has Eval that returns Error or Undefined Value");
 
-            if (FromValue(GetEvalVarFromContext(assignPropEvalParamsProto.Context, data, true), out PropertyCollection collection) == false)
+            if (FromValue(GetEvalVarFromContext(assignPropEvalParamsProto.Context, data, true), out PropertyCollection collection, data.Game) == false)
                 return evalVar;
 
             if (collection == null)
@@ -2594,7 +2596,7 @@ namespace MHServerEmu.Games.Properties.Evals
             PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propEnum);
             PropertyDataType propertyType = propInfo.DataType;
 
-            if (FromValue(GetEvalVarFromContext(loadPropProto.Context, data, false), out PropertyCollection collection) == false)
+            if (FromValue(GetEvalVarFromContext(loadPropProto.Context, data, false), out PropertyCollection collection, data.Game) == false)
                 return evalVar;
 
             if (collection == null)
@@ -2653,7 +2655,7 @@ namespace MHServerEmu.Games.Properties.Evals
             if (propIdParams == PropertyId.Invalid)
                 return Logger.WarnReturn(evalVar, "LoadPropContextParams eval being run with a context that has an invalid propertyId");
 
-            if (FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyCollectionContext, data, false), out PropertyCollection collection) == false)
+            if (FromValue(GetEvalVarFromContext(loadPropContextParamsProto.PropertyCollectionContext, data, false), out PropertyCollection collection, data.Game) == false)
                 return evalVar;
 
             if (collection == null)
@@ -2733,7 +2735,7 @@ namespace MHServerEmu.Games.Properties.Evals
             if (loadPropEvalParamsProto.Prop == PrototypeId.Invalid)
                 return Logger.WarnReturn(evalVar, "LoadPropEvalParamsPrototype contains invalid \"Prop\" field");
 
-            if (FromValue(GetEvalVarFromContext(loadPropEvalParamsProto.Context, data, false), out PropertyCollection collection) == false)
+            if (FromValue(GetEvalVarFromContext(loadPropEvalParamsProto.Context, data, false), out PropertyCollection collection, data.Game) == false)
                 return evalVar;
 
             if (collection == null)

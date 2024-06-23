@@ -190,10 +190,8 @@ namespace MHServerEmu.Games.Properties
                     continue;
                 }
 
-                /* Disabled because this runs with errors at the moment
                 if (info.IsEvalAlwaysCalculated == false)
                     info.SetEvalDefaultValue(PropertyCollection.EvalProperty(info.Id, contextData));
-                */
 
                 evalDoneList[(int)evalPropertyEnum] = true;
             }
