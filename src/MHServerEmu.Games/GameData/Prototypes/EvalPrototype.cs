@@ -766,7 +766,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override string ExpressionString()
         {
-            return string.Format("DifficultyTier( %s,%s )",
+            return string.Format("DifficultyTier( {0},{1} )",
                 GameDatabase.GetPrototypeName(Min),
                 GameDatabase.GetPrototypeName(Max));
         }
