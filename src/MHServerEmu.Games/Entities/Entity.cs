@@ -11,6 +11,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
@@ -249,7 +250,17 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnPostInit(EntitySettings settings)
         {
-            // TODO init
+            if (Prototype.EvalOnCreate?.Length > 0)
+            {
+                EvalContextData contextData = new(Game);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+
+                foreach (EvalPrototype evalProto in Prototype.EvalOnCreate)
+                {
+                    if (Eval.RunBool(evalProto, contextData) == false)
+                        Logger.Warn($"OnPostInit(): Failed to run eval {evalProto.ExpressionString()}");
+                }
+            }
         }
 
         public virtual bool Serialize(Archive archive)
