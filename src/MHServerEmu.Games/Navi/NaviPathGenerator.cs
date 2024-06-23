@@ -414,7 +414,7 @@ namespace MHServerEmu.Games.Navi
                 NaviChannelEdge firstChannelEdge = pathChannel[index];
 
                 NaviPoint leftEnd = firstChannelEdge.LeftEndPoint();
-                vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, firstChannelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Left : NaviSide.Point;
+                vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, firstChannelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Point : NaviSide.Left;
                 FunnelAddSide(funnel, leftEnd, NaviSide.Left, vertexSide, outPathNodes);
 
                 NaviPoint rightEnd = firstChannelEdge.RightEndPoint();
@@ -436,7 +436,7 @@ namespace MHServerEmu.Games.Navi
                     else
                     {
                         leftEnd = leftNext;
-                        vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, channelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Left : NaviSide.Point;
+                        vertexSide = SimpleTestFunnelVertexClearOfObstacles(leftEnd, channelEdge.Edge.Triangles[0], radiusSq, _pathFlags) ? NaviSide.Point : NaviSide.Left;
                         FunnelAddSide(funnel, leftEnd, NaviSide.Left, vertexSide, outPathNodes);
                     }
                 }
