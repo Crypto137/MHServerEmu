@@ -104,7 +104,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
 
             // Health
-            Properties[PropertyEnum.HealthMaxOther] = (int)(float)Properties[PropertyEnum.HealthBase];
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
 
             // Resources

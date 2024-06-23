@@ -18,7 +18,6 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize
     {
-        // TODO: Eval
         // TODO: Consider implementing IDisposable for optimization
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -296,7 +295,26 @@ namespace MHServerEmu.Games.Properties
                     UpdateCurvePropertyValue(kvp.Value, flags, null);
             }
 
-            // TODO: Update dependent evals
+            // Run eval if needed
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            if (info.HasDependentEvals)
+            {
+                EvalContextData contextData = new(Game.Current);
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+
+                foreach (PropertyId dependentEvalId in info.DependentEvals)
+                {
+                    PropertyInfo dependentEvalInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(dependentEvalId.Enum);
+                    PropertyValue oldDependentValue = GetPropertyValue(dependentEvalId);
+                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, contextData);
+
+                    if (newDependentValue.RawLong != oldDependentValue.RawLong)
+                    {
+                        _aggregateList.SetPropertyValue(dependentEvalId, newDependentValue);
+                        OnPropertyChange(dependentEvalId, newDependentValue, oldDependentValue, flags);
+                    }
+                }
+            }
 
             // Notify watchers
             foreach (IPropertyChangeWatcher watcher in _watchers)
@@ -666,11 +684,20 @@ namespace MHServerEmu.Games.Properties
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
-            // TODO: EvalPropertyValue()
+            // First try running eval
+            if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
+            {
+                EvalContextData contextData = new();
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
+                return EvalPropertyValue(info, contextData);
+            }
 
+            // Fall back to the default value if no value is specified in the aggregate list
             if (_aggregateList.GetPropertyValue(id, out PropertyValue value) == false)
                 return info.DefaultValue;
 
+            // Return the value from the aggregate list
             return value;
         }
 

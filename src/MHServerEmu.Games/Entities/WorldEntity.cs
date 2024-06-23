@@ -133,13 +133,13 @@ namespace MHServerEmu.Games.Entities
 
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
-            Properties[PropertyEnum.MovementSpeedRate] = 1f;    // TODO: Remove this when eval works
 
-            int health = EntityHelper.GetHealthForWorldEntity(this);
-            if (health > 0)
+            // Override base health to make things more reasonable with the current damage implementation
+            float healthBaseOverride = EntityHelper.GetHealthForWorldEntity(this);
+            if (healthBaseOverride > 0f)
             {
-                Properties[PropertyEnum.Health] = health;
-                Properties[PropertyEnum.HealthMaxOther] = health;
+                Properties[PropertyEnum.HealthBase] = healthBaseOverride;
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             }
 
             if (proto.Bounds != null)
@@ -393,6 +393,19 @@ namespace MHServerEmu.Games.Entities
                 EnableNavigationInfluence();
 
             NotifyPlayers(true, settings);
+        }
+
+        public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            base.OnPropertyChange(id, newValue, oldValue, flags);
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.HealthMax:
+                    Properties[PropertyEnum.HealthMaxOther] = newValue;
+                    break;
+            }
         }
 
         public void EnableNavigationInfluence()
