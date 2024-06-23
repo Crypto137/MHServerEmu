@@ -549,7 +549,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             sb.Append('{');
             foreach (EvalPrototype scopeEval in Scope)
                 sb.Append($" {scopeEval.ExpressionString()};");
-            sb.Append('}');
+            sb.Append(" }");
             return sb.ToString();
         }
     }
