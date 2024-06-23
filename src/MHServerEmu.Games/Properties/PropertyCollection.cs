@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -10,6 +9,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -617,6 +617,49 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
+        /// </summary>
+        public static ulong ConvertValueToBits(PropertyValue value, PropertyDataType type)
+        {
+            switch (type)
+            {
+                case PropertyDataType.Real:
+                case PropertyDataType.Curve:        return BitConverter.SingleToUInt32Bits(value.RawFloat);
+                case PropertyDataType.Integer:
+                case PropertyDataType.Time:         return CodedOutputStream.EncodeZigZag64(value.RawLong);
+                case PropertyDataType.Prototype:    return (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value.RawLong);
+                default:                            return (ulong)value.RawLong;
+            }
+        }
+
+        /// <summary>
+        /// Converts a <see cref="ulong"/> bit representation to a <see cref="PropertyValue"/>.
+        /// </summary>
+        public static PropertyValue ConvertBitsToValue(ulong bits, PropertyDataType type)
+        {
+            switch (type)
+            {
+                case PropertyDataType.Real:
+                case PropertyDataType.Curve:        return new(BitConverter.ToSingle(BitConverter.GetBytes(bits)));
+                case PropertyDataType.Integer:
+                case PropertyDataType.Time:         return new(CodedInputStream.DecodeZigZag64(bits));
+                case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
+                default:                            return new((long)bits);
+            }
+        }
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyId"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        public static PropertyValue EvalProperty(PropertyId id, EvalContextData contextData)
+        {
+            // NOTE: This function isn't really needed because we use implicit casting for PropertyValue,
+            // but we are keeping it anyway to match the client API.
+            Logger.Debug($"EvalProperty(): {id}");
+            return EvalPropertyValue(id, contextData);
+        }
+
+        /// <summary>
         /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
         /// </summary>
@@ -697,38 +740,6 @@ namespace MHServerEmu.Games.Properties
             numProperties++;        // Increment the number of properties that will be written when we finish iterating
 
             return success;
-        }
-
-        /// <summary>
-        /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
-        /// </summary>
-        public static ulong ConvertValueToBits(PropertyValue value, PropertyDataType type)
-        {
-            switch (type)
-            {
-                case PropertyDataType.Real:
-                case PropertyDataType.Curve:        return BitConverter.SingleToUInt32Bits(value.RawFloat);
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return CodedOutputStream.EncodeZigZag64(value.RawLong);
-                case PropertyDataType.Prototype:    return (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value.RawLong);
-                default:                            return (ulong)value.RawLong;
-            }
-        }
-
-        /// <summary>
-        /// Converts a <see cref="ulong"/> bit representation to a <see cref="PropertyValue"/>.
-        /// </summary>
-        public static PropertyValue ConvertBitsToValue(ulong bits, PropertyDataType type)
-        {
-            switch (type)
-            {
-                case PropertyDataType.Real:
-                case PropertyDataType.Curve:        return new(BitConverter.ToSingle(BitConverter.GetBytes(bits)));
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return new(CodedInputStream.DecodeZigZag64(bits));
-                case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
-                default:                            return new((long)bits);
-            }
         }
 
         /// <summary>
@@ -1072,6 +1083,50 @@ namespace MHServerEmu.Games.Properties
             ClampPropertyValue(info.Prototype, ref output);
             return true;
         }
+
+        #region Eval Calculation
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyId"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        private static PropertyValue EvalPropertyValue(PropertyId id, EvalContextData contextData)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            return EvalPropertyValue(info, contextData);
+        }
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyInfo"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        private static PropertyValue EvalPropertyValue(PropertyInfo info, EvalContextData contextData)
+        {
+            if (info.IsEvalProperty == false)
+                return Logger.WarnReturn(new PropertyValue(), "EvalPropertyValue(): info.IsEvalProperty == false");
+
+            PropertyValue value;
+            switch (info.DataType)
+            {
+                case PropertyDataType.Boolean:
+                    value = Eval.RunBool(info.Eval, contextData);                    
+                    break;
+
+                case PropertyDataType.Real:
+                    value = Eval.RunFloat(info.Eval, contextData);
+                    break;
+
+                case PropertyDataType.Integer:
+                    value = Eval.RunLong(info.Eval, contextData);
+                    break;
+
+                default:
+                    return Logger.WarnReturn(new PropertyValue(), $"EvalPropertyValue(): Unsupported eval property data type {info.DataType}");
+            }
+
+            ClampPropertyValue(info.Prototype, ref value);
+            return value;
+        }
+
+        #endregion
 
         #region Protection Implementation
 

@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties.Evals
 {
@@ -12,9 +11,9 @@ namespace MHServerEmu.Games.Properties.Evals
         public PropertyCollection CallerStackProperties { get; internal set; }
         public PropertyCollection LocalStackProperties { get; internal set; }
 
-        public EvalContextData(Game game)
+        public EvalContextData(Game game = null)
         {
-            Game = game ?? Game.Current;
+            Game = game;
             for (int i = 0; i < (int)EvalContext.MaxVars; i++)
                 ContextVars[i] = new EvalContextVar();
         }

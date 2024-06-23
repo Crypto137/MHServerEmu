@@ -148,14 +148,6 @@ namespace MHServerEmu.Games.GameData
             tablesWatch.Stop();
             Logger.Info($"Initialized GameDataTables in {tablesWatch.ElapsedMilliseconds} ms");
 
-            // Verify
-            if (VerifyData() == false)
-            {
-                Logger.Fatal("Failed to initialize game database");
-                IsInitialized = false;
-                return;
-            }
-
             // Finish game database initialization
             stopwatch.Stop();
             Logger.Info($"Finished initializing game database in {stopwatch.ElapsedMilliseconds} ms");
@@ -365,12 +357,6 @@ namespace MHServerEmu.Games.GameData
         public static bool DesignStateOk(DesignWorkflowState designState)
         {
             return designState >= ApprovalThreshold;
-        }
-
-        private static bool VerifyData()
-        {
-            return DataDirectory.Verify()
-                && PropertyInfoTable.Verify();
         }
     }
 }

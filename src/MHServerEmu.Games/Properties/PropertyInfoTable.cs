@@ -3,15 +3,17 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
 {
     public class PropertyInfoTable
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        // Number of properties for allocating property info list, 1030 is the number for version 1.52
+        // This is for optimization only and should not affect functionality.
+        private const int ExpectedNumberOfProperties = 1030;
 
-        private readonly Dictionary<PropertyEnum, PropertyInfo> _propertyInfoDict = new();
-        private readonly Dictionary<PrototypeId, PropertyEnum> _prototypeIdToPropertyEnumDict = new();
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public static readonly (string, Type)[] AssetEnumBindings = new(string, Type)[]     // s_PropertyParamEnumLookups
         {
@@ -33,6 +35,9 @@ namespace MHServerEmu.Games.Properties
             ("Ranks",                           typeof(Rank))
         };
 
+        private readonly List<PropertyInfo> _propertyInfoList = new(ExpectedNumberOfProperties);
+        private readonly Dictionary<PrototypeId, PropertyEnum> _prototypeIdToPropertyEnumDict = new();
+
         public void Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
@@ -42,6 +47,13 @@ namespace MHServerEmu.Games.Properties
             var propertyBlueprintId = dataDirectory.PropertyBlueprint;
             var propertyInfoBlueprintId = dataDirectory.PropertyInfoBlueprint;
             var propertyInfoDefaultPrototypeId = dataDirectory.GetBlueprintDefaultPrototype(propertyInfoBlueprintId);
+
+            // Initialize property info list
+            foreach (PropertyEnum propertyEnum in Enum.GetValues<PropertyEnum>())
+            {
+                if (propertyEnum == PropertyEnum.Invalid) continue;
+                _propertyInfoList.Add(null);
+            }
 
             // Create property infos
             foreach (PrototypeId propertyInfoPrototypeRef in dataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
@@ -60,8 +72,7 @@ namespace MHServerEmu.Games.Properties
                 _prototypeIdToPropertyEnumDict.Add(propertyInfoPrototypeRef, propertyEnum);
 
                 // Create property info instance
-                PropertyInfo propertyInfo = new(propertyEnum, propertyName, propertyInfoPrototypeRef);
-                _propertyInfoDict.Add(propertyEnum, propertyInfo);
+                _propertyInfoList[(int)propertyEnum] = new(propertyEnum, propertyName, propertyInfoPrototypeRef);
             }
 
             // Match property infos with mixin prototypes where possible
@@ -77,7 +88,7 @@ namespace MHServerEmu.Games.Properties
 
                 // Try to find a matching property info for this property mixin
                 bool infoFound = false;
-                foreach (var propertyInfo in _propertyInfoDict.Values)
+                foreach (var propertyInfo in _propertyInfoList)
                 {
                     // Property mixin blueprints are inconsistently named: most have the Prop suffix, but some do not
                     if (propertyInfo.PropertyName == propertyName || propertyInfo.PropertyInfoName == propertyName)
@@ -95,28 +106,108 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Preload infos
-            foreach (var propertyInfo in _propertyInfoDict.Values)
+            foreach (var propertyInfo in _propertyInfoList)
                 LoadPropertyInfo(propertyInfo);                
 
             // Preload property default prototypes
             foreach (var propertyPrototypeRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy< PropertyPrototype>())
                 GameDatabase.GetPrototype<Prototype>(propertyPrototypeRef);
 
-            // todo: eval dependencies
+            // Initialize eval dependencies
+            foreach (PropertyInfo evalInfo in _propertyInfoList)
+            {
+                if (evalInfo.IsEvalProperty == false || evalInfo.IsEvalAlwaysCalculated) continue;
+
+                Eval.GetEvalPropertyInputs(evalInfo, evalInfo.EvalDependencies);
+                foreach (PropertyId propertyId in evalInfo.EvalDependencies)
+                {
+                    PropertyInfo dependencyInfo = _propertyInfoList[(int)propertyId.Enum];
+                    dependencyInfo.DependentEvals.Add(evalInfo.Id);
+                }
+            }
+
+            // Check for cyclic dependencies
+            Stack<PropertyId> checkStack = new();
+            foreach (PropertyInfo info in _propertyInfoList)
+            {
+                checkStack.Push(info.Id);
+
+                while (checkStack.Count > 0)
+                {
+                    PropertyInfo checkInfo = _propertyInfoList[(int)checkStack.Pop().Enum];
+                    foreach (PropertyId evalId in checkInfo.DependentEvals)
+                    {
+                        if (evalId == info.Id)
+                        {
+                            Logger.Warn($"Initialize(): Cyclic property eval dependency found in property {info.PropertyInfoName}");
+                            continue;
+                        }
+
+                        checkStack.Push(evalId);
+                    }
+                }
+            }
+
+            // Calculate default values for enum properties
+            List<bool> evalDoneList = new(_propertyInfoList.Count);
+            for (int i = 0; i < _propertyInfoList.Count; i++)
+                evalDoneList.Add(false);
+
+            Queue<PropertyEnum> evalQueue = new();
+            foreach (PropertyInfo info in _propertyInfoList)
+            {
+                if (info.IsEvalProperty == false) continue;
+                evalQueue.Enqueue(info.Id.Enum);
+            }
+
+            PropertyCollection dummyCollection = new();
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, dummyCollection);
+            contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, PropertyId.Invalid);
+
+            while (evalQueue.Count > 0)
+            {
+                PropertyEnum evalPropertyEnum = evalQueue.Dequeue();
+                PropertyInfo info = _propertyInfoList[(int)evalPropertyEnum];
+
+                // Check all dependencies to make sure input has been calculated
+                bool hasInput = true;
+                foreach (PropertyId dependencyId in info.EvalDependencies)
+                {
+                    int dependencyIndex = (int)dependencyId.Enum;
+                    PropertyInfo dependencyInfo = _propertyInfoList[dependencyIndex];
+                    if (dependencyInfo.IsEvalProperty && evalDoneList[dependencyIndex] == false)
+                    {
+                        hasInput = false;
+                        break;
+                    }
+                }
+
+                // Add the property back to the queue if we are not ready to run its eval yet
+                if (hasInput == false)
+                {
+                    evalQueue.Enqueue(evalPropertyEnum);
+                    continue;
+                }
+
+                /* Disabled because this runs with errors at the moment
+                if (info.IsEvalAlwaysCalculated == false)
+                    info.SetEvalDefaultValue(PropertyCollection.EvalProperty(info.Id, contextData));
+                */
+
+                evalDoneList[(int)evalPropertyEnum] = true;
+            }
 
             // Finish initialization
-            if (Verify())
-                Logger.Info($"Initialized info for {_propertyInfoDict.Count} properties in {stopwatch.ElapsedMilliseconds} ms");
-            else
-                Logger.Error("Failed to initialize PropertyInfoTable");
+            Logger.Info($"Initialized info for {_propertyInfoList.Count} properties in {stopwatch.ElapsedMilliseconds} ms");
         }
 
-        public PropertyInfo LookupPropertyInfo(PropertyEnum property)
+        public PropertyInfo LookupPropertyInfo(PropertyEnum propertyEnum)
         {
-            if (property == PropertyEnum.Invalid)
-                Logger.WarnReturn<PropertyInfo>(null, "Attempted to lookup property info for invalid enum");
+            if (propertyEnum == PropertyEnum.Invalid)
+                Logger.WarnReturn<PropertyInfo>(null, "LookupPropertyInfo(): propertyEnum == PropertyEnum.Invalid");
 
-            return _propertyInfoDict[property];
+            return _propertyInfoList[(int)propertyEnum];
         }
 
         public PropertyEnum GetPropertyEnumFromPrototype(PrototypeId propertyDataRef)
@@ -126,8 +217,6 @@ namespace MHServerEmu.Games.Properties
 
             return propertyEnum;
         }
-
-        public bool Verify() => _propertyInfoDict.Count > 0;
 
         private bool LoadPropertyInfo(PropertyInfo propertyInfo)
         {
