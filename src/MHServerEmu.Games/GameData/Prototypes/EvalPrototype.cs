@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
@@ -6,40 +7,6 @@ using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)Default)]
-    public enum EvalContext
-    {
-        Default = 0,
-        Entity = 1,
-        EntityBehaviorBlackboard = 2,
-        Other = 3,
-        Condition = 4,
-        ConditionKeywords = 5,
-        TeamUp = 6,
-        Var1 = 7,
-        Var2 = 8,
-        Var3 = 9,
-        Var4 = 10,
-        Var5 = 11,
-        MaxVars = 12,
-        LocalStack = 13,
-        CallerStack = 14,
-        Globals = 15,
-    }
-
-    [AssetEnum((int)Physical)]
-    public enum DamageType
-    {
-        Physical = 0,
-        Energy = 1,
-        Mental = 2,
-        Any = 4,
-    }
-
-    #endregion
-
     public class EvalNodeVisitor
     {
         public virtual void Visit(EvalPrototype visitor) { }
@@ -57,7 +24,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual string ExpressionString()
         {
-            return "";
+            return string.Empty;
         }
     }
 
@@ -92,6 +59,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Eval?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = Prop.Enum;
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return $"!PropError! = {(Eval != null ? Eval.ExpressionString() : "NULL")}";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            string propertyName = info.BuildPropertyName(Prop);
+
+            return string.Format("{0} = {1}",
+                string.IsNullOrWhiteSpace(propertyName) == false ? propertyName : "!PropError!",
+                Eval != null ? Eval.ExpressionString() : "NULL");
+        }
     }
 
     public class SwapPropPrototype : EvalPrototype
@@ -104,6 +86,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.SwapProp;
+        }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = Prop.Enum;
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return "!PropError!";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            return $"SwapProp(LeftContext=[{LeftContext}], RightContext=[{RightContext}], Prop={{{info.PropertyName}}}";
         }
     }
 
@@ -132,6 +125,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Param3?.Visit(visitor);
             Eval?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(Prop);
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return $"!PropError! = {(Eval != null ? Eval.ExpressionString() : "NULL")}";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            return string.Format("{0}({1},{2},{3},{4}) = {5}",
+                info.PropertyName,
+                Param0?.ExpressionString(),
+                Param1?.ExpressionString(),
+                Param2?.ExpressionString(),
+                Param3?.ExpressionString(),
+                Eval != null ? Eval.ExpressionString() : "NULL");
+        }
     }
 
     public class HasPropPrototype : EvalPrototype
@@ -143,6 +153,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.HasProp;
+        }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = Prop.Enum;
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return "!PropError!";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            return $"HasProperty(Context=[{Context}], Prop={{{info.PropertyName}}})";
         }
     }
 
@@ -156,6 +177,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.LoadProp;
         }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = Prop.Enum;
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return "!PropError!";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            return info.BuildPropertyName(Prop);
+        }
     }
 
     public class LoadPropContextParamsPrototype : EvalPrototype
@@ -168,6 +200,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.LoadPropContextParams;
+        }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(Prop);
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return "!PropError!";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            return $"{info.PropertyName}(<PropColContext[{PropertyCollectionContext}], PropIdContext[{PropertyIdContext}]>)";
         }
     }
 
@@ -194,6 +237,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Param2?.Visit(visitor);
             Param3?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(Prop);
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return "!PropError!";
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            return string.Format("{0}({1},{2},{3},{4})",
+                info.PropertyInfoName,
+                Param0?.ExpressionString(),
+                Param1?.ExpressionString(),
+                Param2?.ExpressionString(),
+                Param3?.ExpressionString());
+        }
     }
 
     public class LoadBoolPrototype : EvalPrototype
@@ -204,6 +263,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.LoadBool;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"{Value}";
         }
     }
 
@@ -216,6 +280,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.LoadInt;
         }
+
+        public override string ExpressionString()
+        {
+            return $"{Value}";
+        }
     }
 
     public class LoadFloatPrototype : EvalPrototype
@@ -226,6 +295,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.LoadFloat;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"{Value}";
         }
     }
 
@@ -245,6 +319,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Index?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0}[{1}] )",
+                GameDatabase.GetCurveName(Curve),
+                Index != null ? Index.ExpressionString() : "NULL");
+        }
     }
 
     public class LoadAssetRefPrototype : EvalPrototype
@@ -255,6 +336,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.LoadAssetRef;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"({GameDatabase.GetAssetName(Value)})";
         }
     }
 
@@ -267,6 +353,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.LoadProtoRef;
         }
+
+        public override string ExpressionString()
+        {
+            return $"({GameDatabase.GetPrototypeName(Value)})";
+        }
     }
 
     public class LoadContextIntPrototype : EvalPrototype
@@ -278,6 +369,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.LoadContextInt;
         }
+
+        public override string ExpressionString()
+        {
+            return $"(context<int>[{Context}])";
+        }
     }
 
     public class LoadContextProtoRefPrototype : EvalPrototype
@@ -288,6 +384,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.LoadContextProtoRef;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"(context<protoref>[{Context}])";
         }
     }
 
@@ -308,6 +409,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} + {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class SubPrototype : EvalPrototype
@@ -326,6 +434,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} - {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
         }
     }
 
@@ -346,6 +461,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} * {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class DivPrototype : EvalPrototype
@@ -364,6 +486,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} / {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
         }
     }
 
@@ -384,6 +513,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             BaseArg?.Visit(visitor);
             ExpArg?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0}^{1} )",
+                BaseArg != null ? BaseArg.ExpressionString() : "NULL",
+                ExpArg != null ? ExpArg.ExpressionString() : "NULL");
+        }
     }
 
     public class ScopePrototype : EvalPrototype
@@ -402,6 +538,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Scope.HasValue())
                 foreach (var node in Scope)
                     node?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            if (Scope.IsNullOrEmpty())
+                return "{ ..Empty.. }";
+
+            StringBuilder sb = new();
+            sb.Append('{');
+            foreach (EvalPrototype scopeEval in Scope)
+                sb.Append($" {scopeEval.ExpressionString()};");
+            sb.Append(" }");
+            return sb.ToString();
         }
     }
 
@@ -422,6 +571,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} > {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class LessThanPrototype : EvalPrototype
@@ -440,6 +596,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} < {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
         }
     }
 
@@ -461,6 +624,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} == {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class AndPrototype : EvalPrototype
@@ -479,6 +649,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} && {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
         }
     }
 
@@ -499,6 +676,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} || {1} )",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class NotPrototype : EvalPrototype
@@ -516,6 +700,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Arg?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return $"!({(Arg != null ? Arg.ExpressionString() : "NULL")})";
+        }
     }
 
     public class IsContextDataNullPrototype : EvalPrototype
@@ -526,6 +715,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.IsContextDataNull;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"IsNULL({Context})";
         }
     }
 
@@ -548,6 +742,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             EvalIf?.Visit(visitor);
             EvalElse?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("( {0} ? {1} : {2} )",
+                Conditional != null ? Conditional.ExpressionString() : "NULL",
+                EvalIf != null ? EvalIf.ExpressionString() : "NULL",
+                EvalElse != null ? EvalElse.ExpressionString() : "NULL");
+        }
     }
 
     public class DifficultyTierRangePrototype : EvalPrototype
@@ -561,6 +763,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.DifficultyTierRange;
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("DifficultyTier( {0},{1} )",
+                GameDatabase.GetPrototypeName(Min),
+                GameDatabase.GetPrototypeName(Max));
+        }
     }
 
     public class MissionIsActivePrototype : EvalPrototype
@@ -573,6 +782,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.MissionIsActive;
         }
+
+        public override string ExpressionString()
+        {
+            return $"MissionIsActive(Context=[{Context}], Mission=[{GameDatabase.GetPrototypeName(Mission)}])";
+        }
     }
 
     public class GetCombatLevelPrototype : EvalPrototype
@@ -583,6 +797,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.GetCombatLevel;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"GetCombatLevel(Context=[{Context}])";
         }
     }
 
@@ -596,6 +815,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.GetPowerRank;
         }
+
+        public override string ExpressionString()
+        {
+            return $"GetPowerRank(Context=[{Context}], Power=[{GameDatabase.GetPrototypeName(Power)}]))";
+        }
     }
 
     public class CalcPowerRankPrototype : EvalPrototype
@@ -608,6 +832,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.CalcPowerRank;
         }
+
+        public override string ExpressionString()
+        {
+            return $"CalcPowerRank(Context=[{Context}], Power=[{GameDatabase.GetPrototypeName(Power)}])";
+        }
     }
 
     public class GetDamageReductionPctPrototype : EvalPrototype
@@ -619,6 +848,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.GetDamageReductionPct;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"GetDamageReductionPct(Context=[{Context}], VsDamageType=[{VsDamageType}])";
         }
     }
 
@@ -633,6 +867,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.GetDistanceToEntity;
         }
+
+        public override string ExpressionString()
+        {
+            return $"GetDistanceToEntity(SourceEntity=[{SourceEntity}], TargetEntity=[{TargetEntity}], EdgeToEdge=[{EdgeToEdge}])";
+        }
     }
 
     public class HasEntityInInventoryPrototype : EvalPrototype
@@ -646,6 +885,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.HasEntityInInventory;
         }
+
+        public override string ExpressionString()
+        {
+            return $"HasEntityInInventory(Context=[{Context}], Entity=[{GameDatabase.GetPrototypeName(Entity)}], Inventory=[{Inventory}])";
+        }
     }
 
     public class IsInPartyPrototype : EvalPrototype
@@ -657,6 +901,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.IsInParty;
         }
+
+        public override string ExpressionString()
+        {
+            return $"IsInParty(Context=[{Context}])";
+        }
     }
 
     public class IsDynamicCombatLevelEnabledPrototype : EvalPrototype
@@ -665,6 +914,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.IsDynamicCombatLevelEnabled;
+        }
+
+        public override string ExpressionString()
+        {
+            return "IsDynamicCombatLevelEnabled";
         }
     }
 
@@ -677,6 +931,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.MissionIsComplete;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"MissionIsComplete(Context=[{Context}], Mission=[{GameDatabase.GetPrototypeName(Mission)}])";
         }
     }
 
@@ -697,6 +956,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+
+        public override string ExpressionString()
+        {
+            return string.Format("Max({0}, {1})",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class MinPrototype : EvalPrototype
@@ -715,6 +982,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            return string.Format("Min({0}, {1})",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
         }
     }
 
@@ -735,6 +1009,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Arg1?.Visit(visitor);
             Arg2?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return string.Format("Modulus({0}, {1})",
+                Arg1 != null ? Arg1.ExpressionString() : "NULL",
+                Arg2 != null ? Arg2.ExpressionString() : "NULL");
+        }
     }
 
     public class RandomFloatPrototype : EvalPrototype
@@ -747,6 +1028,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.RandomFloat;
         }
+
+        public override string ExpressionString()
+        {
+            return $"RandFloat( {Min}:{Max} )";
+        }
     }
 
     public class RandomIntPrototype : EvalPrototype
@@ -758,6 +1044,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.RandomInt;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"RandInt( {Min}:{Max} )";
         }
     }
 
@@ -788,6 +1079,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var node in ScopeLoopBody)
                     node?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            StringBuilder sb = new();
+
+            if (ScopeLoopBody != null)
+            {
+                foreach (EvalPrototype evalProto in ScopeLoopBody)
+                    sb.Append($" {evalProto.ExpressionString()};");
+            }
+
+            return string.Format("{{ Pre({0}) For ({1}; {2}; {3}) {{{4}}} Post({5}) }}",
+                PreLoop?.ExpressionString(),
+                LoopVarInit?.ExpressionString(),
+                LoopCondition?.ExpressionString(),
+                LoopAdvance?.ExpressionString(),
+                sb.ToString(),
+                PostLoop?.ToString());
+        }
     }
 
     public class ForEachConditionInContextPrototype : EvalPrototype
@@ -816,6 +1126,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var node in ScopeLoopBody)
                     node?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            StringBuilder sb = new();
+
+            if (ScopeLoopBody != null)
+            {
+                foreach (EvalPrototype evalProto in ScopeLoopBody)
+                    sb.Append($" {evalProto.ExpressionString()};");
+            }
+
+            return string.Format("{{ Pre({0}) Foreach (Condition in context [{1}], LoopCondition={{{2}}}) {{{3} if(LoopConditionPostScope{{{4}}}){{break}}}} Post({5}) }}",
+                PreLoop?.ExpressionString(),
+                ConditionCollectionContext,
+                LoopConditionPreScope?.ExpressionString(),
+                sb.ToString(),
+                LoopConditionPostScope?.ExpressionString(),
+                PostLoop?.ExpressionString());
+        }
     }
 
     public class ForEachProtoRefInContextRefListPrototype : EvalPrototype
@@ -842,6 +1171,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var node in ScopeLoopBody)
                     node?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            StringBuilder sb = new();
+
+            if (ScopeLoopBody != null)
+            {
+                foreach (EvalPrototype evalProto in ScopeLoopBody)
+                    sb.Append($" {evalProto.ExpressionString()};");
+            }
+
+            return string.Format("{{ Pre({0}) Foreach (ProtoRef in context [{1}], LoopCondition={{{2}}}) {{{3}}} Post({4}) }}",
+                PreLoop?.ExpressionString(),
+                ProtoRefListContext,
+                LoopCondition?.ExpressionString(),
+                sb.ToString(),
+                PostLoop?.ExpressionString());
+        }
     }
 
     public class LoadEntityToContextVarPrototype : EvalPrototype
@@ -859,6 +1206,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Visit(visitor);
             EntityId?.Visit(visitor);
+        }
+
+        public override string ExpressionString()
+        {
+            return $"LoadEntityToContextVar(Context=[{Context}], EntityId={{{(EntityId != null ? EntityId.ExpressionString() : "!NULL Eval!")}}})";
         }
     }
 
@@ -878,6 +1230,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Visit(visitor);
             EntityId?.Visit(visitor);
         }
+
+        public override string ExpressionString()
+        {
+            return $"LoadConditionCollectionToContext(Context=[{Context}], EntityId={{{(EntityId != null ? EntityId.ExpressionString() : "!NULL Eval!")}}})";
+        }
     }
 
     public class EntityHasKeywordPrototype : EvalPrototype
@@ -891,6 +1248,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             Op = EvalOp.EntityHasKeyword;
         }
+
+        public override string ExpressionString()
+        {
+            return $"EntityHasKeyword(Context=[{Context}], Keyword={{{(Keyword != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(Keyword) : "!NONE!")}}}";
+        }
     }
 
     public class EntityHasTalentPrototype : EvalPrototype
@@ -902,6 +1264,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             Op = EvalOp.EntityHasTalent;
+        }
+
+        public override string ExpressionString()
+        {
+            return $"EntityHasTalent(Context=[{Context}], Talent={{{(Talent != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(Talent) : "!NONE!")}}})";
         }
     }
 }

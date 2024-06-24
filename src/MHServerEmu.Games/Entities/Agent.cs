@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -13,6 +14,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -393,6 +395,37 @@ namespace MHServerEmu.Games.Entities
             return InventoryResult.Success;     // Bypass property restrictions
         }
 
+        public bool RevealEquipmentToOwner()
+        {
+            // Make sure this agent is owned by a player (only avatars and team-ups have equipment that needs to be made visible)
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "RevealEquipmentToOwner(): player == null");
+
+            AreaOfInterest aoi = player.PlayerConnection.AOI;
+
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                if (inventory.VisibleToOwner) continue;     // Skip inventories that are already visible
+                inventory.VisibleToOwner = true;
+
+                foreach (var entry in inventory)
+                {
+                    // Validate entity
+                    var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    if (entity == null)
+                    {
+                        Logger.Warn("RevealEquipmentToOwner(): entity == null");
+                        continue;
+                    }
+
+                    // Update interest for it
+                    aoi.ConsiderEntity(entity);
+                }
+            }
+
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             // TODO
@@ -593,15 +626,27 @@ namespace MHServerEmu.Games.Entities
 
             // Validate entity
             var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
-            if (throwableEntity == null) return Logger.WarnReturn(false, "StartThrowing(): throwableEntity == null");
-            if (throwableEntity.IsAliveInWorld == false) return Logger.WarnReturn(false, "StartThrowing(): throwableEntity.IsAliveInWorld == false");
+            if (throwableEntity == null || throwableEntity.IsAliveInWorld == false)
+            {
+                // Cancel pending throw action on the client set in CAvatar::StartThrowing()
+                // NOTE: AvatarIndex can be hardcoded to 0 because we don't have couch coop (yet?)
+                if (this is Avatar)
+                {
+                    var player = GetOwnerOfType<Player>();
+                    player.SendMessage(NetMessageCancelPendingActionToClient.CreateBuilder().SetAvatarIndex(0).Build());
+                }
+
+                return Logger.WarnReturn(false, "StartThrowing(): Invalid throwable entity");
+            }
 
             // Make sure we are not throwing something already
             Power throwablePower = GetThrowablePower();
-            if (throwablePower != null) UnassignPower(throwablePower.PrototypeDataRef);
+            if (throwablePower != null)
+                UnassignPower(throwablePower.PrototypeDataRef);
 
             Power throwableCancelPower = GetThrowableCancelPower();
-            if (throwableCancelPower != null) UnassignPower(throwableCancelPower.PrototypeDataRef);
+            if (throwableCancelPower != null)
+                UnassignPower(throwableCancelPower.PrototypeDataRef);
 
             // Record throwable entity in agent's properties
             Properties[PropertyEnum.ThrowableOriginatorEntity] = entityId;

@@ -11,6 +11,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
@@ -93,7 +94,7 @@ namespace MHServerEmu.Games.Entities
 
     #endregion
 
-    public class Entity : ISerialize
+    public class Entity : ISerialize, IPropertyChangeWatcher
     {
 
         public bool SkipAI = false;
@@ -192,7 +193,7 @@ namespace MHServerEmu.Games.Entities
 
         private EventGroup _pendingEvents = new();
 
-        public EventPointer<ScheduledLifespanEvent> ScheduledLifespanEvent = new();
+        public EventPointer<ScheduledLifespanEvent> ScheduledLifespanEvent { get; } = new();
 
         public Entity(Game game)
         {
@@ -226,14 +227,15 @@ namespace MHServerEmu.Games.Entities
             // Initialize property collection and copy baseline properties from prototype / settings
             // TODO: Bind to ArchiveMessageDispatcher
             Properties = new(this, Game.CurrentRepId);
+
+            // We use IPropertyChangeWatcher implementation as a replacement for multiple inheritance
+            Attach(Properties);
             
             if (Prototype.Properties != null)
                 Properties.FlattenCopyFrom(Prototype.Properties, true); 
             
             if (settings.Properties != null)
                 Properties.FlattenCopyFrom(settings.Properties, false);
-            
-            OnPropertyChange(); // Temporary solution for for _flags
 
             // Inventories
             InventoryCollection.Initialize(this);
@@ -248,7 +250,17 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnPostInit(EntitySettings settings)
         {
-            // TODO init
+            if (Prototype.EvalOnCreate?.Length > 0)
+            {
+                EvalContextData contextData = new(Game);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+
+                foreach (EvalPrototype evalProto in Prototype.EvalOnCreate)
+                {
+                    if (Eval.RunBool(evalProto, contextData) == false)
+                        Logger.Warn($"OnPostInit(): Failed to run eval {evalProto.ExpressionString()}");
+                }
+            }
         }
 
         public virtual bool Serialize(Archive archive)
@@ -416,36 +428,29 @@ namespace MHServerEmu.Games.Entities
 
         #region Event Handlers
 
-        public virtual void OnPropertyChange()
-        {
-            if (Properties.HasProperty(PropertyEnum.ClusterPrototype)) _flags |= EntityFlags.ClusterPrototype;
-            if (Properties.HasProperty(PropertyEnum.EncounterResource)) _flags |= EntityFlags.EncounterResource;
-            if (Properties.HasProperty(PropertyEnum.MissionPrototype)) _flags |= EntityFlags.HasMissionPrototype;
-            if (Properties.HasProperty(PropertyEnum.AIMasterAvatar)) _flags |= EntityFlags.AIMasterAvatar;
-        }
-
-        public void OnSelfAddedToOtherInventory()
+        public virtual void OnSelfAddedToOtherInventory()
         {
         }
 
-        public void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        public virtual void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
         {
         }
 
-        public void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        public virtual void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
         }
 
-        public void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        public virtual void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
         {
         }
 
-        public void OnDetachedFromDestroyedContainer()
+        public virtual void OnDetachedFromDestroyedContainer()
         {
         }
 
         public virtual void OnDeallocate()
         {
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
         }
 
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
@@ -459,6 +464,60 @@ namespace MHServerEmu.Games.Entities
             AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
         {
 
+        }
+
+        public void OnLifespanExpired()
+        {
+            Destroy();
+        }
+
+        #endregion
+
+        #region IPropertyChangeWatcher
+
+        public void Attach(PropertyCollection propertyCollection)
+        {
+            if (propertyCollection != Properties)
+            {
+                Logger.Warn("Attach(): Entities can attach only to their own property collection");
+                return;
+            }
+
+            Properties.AttachWatcher(this);
+        }
+
+        public void Detach(bool removeFromAttachedCollection)
+        {
+            if (removeFromAttachedCollection)
+                Properties.DetachWatcher(this);
+        }
+
+        public virtual void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.AIMasterAvatar:
+                    if (newValue) _flags |= EntityFlags.AIMasterAvatar;
+                    else _flags &= ~EntityFlags.AIMasterAvatar;
+                    break;
+
+                case PropertyEnum.ClusterPrototype:
+                    if (newValue) _flags |= EntityFlags.ClusterPrototype;
+                    else _flags &= ~EntityFlags.ClusterPrototype;
+                    break;
+
+                case PropertyEnum.EncounterResource:
+                    if (newValue) _flags |= EntityFlags.EncounterResource;
+                    else _flags &= ~EntityFlags.EncounterResource;
+                    break;
+
+                case PropertyEnum.MissionPrototype:
+                    if (newValue) _flags |= EntityFlags.HasMissionPrototype;
+                    else _flags &= ~EntityFlags.HasMissionPrototype;
+                    break;
+            }
         }
 
         #endregion
@@ -783,36 +842,47 @@ namespace MHServerEmu.Games.Entities
             TotalLifespan = lifespan;
         }
 
-        public void ScheduleEntityEvent<T>(EventPointer<T> eventPointer, TimeSpan lifespan) 
-            where T : ScheduledEvent, IEventTarget, new()
+        public void ScheduleEntityEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
+            where TEvent : CallMethodEvent<Entity>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this);
+        }
+
+        public void ScheduleEntityEvent<TEvent, TParam1>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset, TParam1 param1)
+            where TEvent : CallMethodEventParam1<Entity, TParam1>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this, param1);
+        }
+
+        public void ScheduleEntityEvent<TEvent, TParam1, TParam2>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset, TParam1 param1, TParam2 param2)
+            where TEvent : CallMethodEventParam2<Entity, TParam1, TParam2>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this, param1, param2);
+        }
+
+        public void ScheduleEntityEvent<TEvent, TParam1, TParam2, TParam3>(EventPointer<TEvent> eventPointer, TimeSpan lifespan, TParam1 param1, TParam2 param2, TParam3 param3)
+            where TEvent : CallMethodEventParam3<Entity, TParam1, TParam2, TParam3>, new()
         {
             var scheduler = Game?.GameEventScheduler;
             if (scheduler == null) return;
             scheduler.ScheduleEvent(eventPointer, lifespan, _pendingEvents);
-            eventPointer.Get().EventTarget = this;
-        }
-
-        public void OnLifespanExpired()
-        {
-            Destroy();
+            eventPointer.Get().Initialize(this, param1, param2, param3);
         }
 
         #endregion
     }
 
-    public class ScheduledLifespanEvent : TargetedScheduledEvent<Entity> , IEventTarget 
+    public class ScheduledLifespanEvent : CallMethodEvent<Entity>
     {
-        public Entity EventTarget { get => _eventTarget; set => _eventTarget = value; }
-        public override bool OnTriggered()
-        {
-            if (_eventTarget == null) return false;
-            _eventTarget.OnLifespanExpired();
-            return true;
-        }
-    }
-
-    public interface IEventTarget
-    {
-        Entity EventTarget { get; set; }
+        protected override CallbackDelegate GetCallback() => (t) => t.OnLifespanExpired();
     }
 }

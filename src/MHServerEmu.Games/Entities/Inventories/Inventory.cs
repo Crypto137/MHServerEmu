@@ -31,6 +31,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public int Count { get => _entities.Count; }
 
+        public bool VisibleToOwner { get; set; }    // For AOI
+
         public Inventory(Game game)
         {
             Game = game;
@@ -619,7 +621,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             entity.OnSelfAddedToOtherInventory();
 
-            EntitySettings settings = new() { PreviousInventoryLocation = prevInvLoc };
+            EntitySettings settings = new() { InventoryLocationPrevious = prevInvLoc };
 
             /*
             settings.PreviousInventoryLocation = prevInvLoc;

@@ -6,8 +6,10 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.PlayerManagement;
 
@@ -15,8 +17,6 @@ namespace MHServerEmu.Billing
 {
     public class BillingService : IGameService
     {
-        private const ushort MuxChannel = 1;
-
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string BillingDataDirectory = Path.Combine(FileHelper.DataDirectory, "Billing");
 
@@ -78,11 +78,16 @@ namespace MHServerEmu.Billing
         {
             var client = (FrontendClient)tcpClient;
 
+            // This is pretty rough, we need a better way of handling this
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageGetCatalog:            OnGetCatalog(client, message); break;
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:    OnGetCurrencyBalance(client, message); break;
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:    OnBuyItemFromCatalog(client, message); break;
+                case ClientToGameServerMessage.NetMessageGetCatalog:            OnGetCatalog(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:    OnGetCurrencyBalance(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:    OnBuyItemFromCatalog(playerConnection, message); break;
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -95,7 +100,7 @@ namespace MHServerEmu.Billing
 
         #endregion
 
-        private bool OnGetCatalog(FrontendClient client, MailboxMessage message)
+        private bool OnGetCatalog(PlayerConnection playerConnection, MailboxMessage message)
         {
             var getCatalog = message.As<NetMessageGetCatalog>();
             if (getCatalog == null) return Logger.WarnReturn(false, $"OnGetCatalog(): Failed to retrieve message");
@@ -105,18 +110,18 @@ namespace MHServerEmu.Billing
                 return true;
 
             // Send the current catalog
-            client.SendMessage(MuxChannel, _catalog.ToNetMessageCatalogItems(false));
+            playerConnection.SendMessage(_catalog.ToNetMessageCatalogItems(false));
             return true;
         }
 
-        private void OnGetCurrencyBalance(FrontendClient client, MailboxMessage message)
+        private void OnGetCurrencyBalance(PlayerConnection playerConnection, MailboxMessage message)
         {
-            client.SendMessage(MuxChannel, NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(_currencyBalance)
                 .Build());
         }
 
-        private bool OnBuyItemFromCatalog(FrontendClient client, MailboxMessage message)
+        private bool OnBuyItemFromCatalog(PlayerConnection playerConnection, MailboxMessage message)
         {
             var buyItemFromCatalog = message.As<NetMessageBuyItemFromCatalog>();
             if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
@@ -124,39 +129,50 @@ namespace MHServerEmu.Billing
             Logger.Info($"Received NetMessageBuyItemFromCatalog");
             Logger.Trace(buyItemFromCatalog.ToString());
 
-            // HACK: change costume when a player "buys" a costume
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
             var player = playerConnection.Player;
-            var avatar = player.CurrentAvatar;
 
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
             if (entry == null || entry.GuidItems.Length == 0)
             {
-                SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
+                SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
                 return true;
             }
 
-            var costumePrototype = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<CostumePrototype>();
-            if (costumePrototype == null || costumePrototype.UsableBy != avatar.PrototypeDataRef)
+            PrototypeId itemProtoRef = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
+            if (GameDatabase.DataDirectory.PrototypeIsA<CostumePrototype>(itemProtoRef))
             {
-                SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
+                // HACK: change costume when a player "buys" a costume
+                Avatar avatar = player.GetAvatar(itemProtoRef.As<CostumePrototype>().UsableBy);
+                if (avatar == null)
+                {
+                    SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
+                    return true;
+                }
+
+                // Update player and avatar properties
+                avatar.Properties[PropertyEnum.CostumeCurrent] = itemProtoRef;
+                player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = itemProtoRef;
+            }
+            else if (GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(itemProtoRef))
+            {
+                // Give the player the item they are trying to "buy"
+                player.Game.LootGenerator.GiveItem(player, itemProtoRef);
+            }
+            else
+            {
+                // Return error if this SKU is not an item
+                SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
                 return true;
             }
-
-            // Update player and avatar properties
-            avatar.Properties[PropertyEnum.CostumeCurrent] = costumePrototype.DataRef;
-            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = costumePrototype.DataRef;
 
             // Send buy response
-            SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
+            SendBuyItemResponse(playerConnection, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
             return true;
         }
 
-        private void SendBuyItemResponse(FrontendClient client, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
+        private void SendBuyItemResponse(PlayerConnection playerConnection, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
         {
-            client.SendMessage(MuxChannel, NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(didSucceed)
                 .SetCurrentCurrencyBalance(_currencyBalance)
                 .SetErrorcode(errorCode)

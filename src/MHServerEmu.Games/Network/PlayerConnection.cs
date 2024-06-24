@@ -22,6 +22,7 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using static MHServerEmu.Games.Powers.PowerPrototypes;
 
 namespace MHServerEmu.Games.Network
 {
@@ -127,15 +128,24 @@ namespace MHServerEmu.Games.Network
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
             Player.LoadFromDBAccount(_dbAccount);
 
+            // Make sure we have a valid current avatar ref
+            var lastCurrentAvatarRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
+            if (dataDirectory.PrototypeIsA<AvatarPrototype>(lastCurrentAvatarRef) == false)
+            {
+                lastCurrentAvatarRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
+                Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(lastCurrentAvatarRef)}");
+            }
+
             // Create avatars
             Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+            Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
             foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 EntitySettings avatarSettings = new();
                 avatarSettings.EntityRef = avatarRef;
-                avatarSettings.InventoryLocation = new(Player.Id, avatarLibrary.PrototypeDataRef);
+                avatarSettings.InventoryLocation = new(Player.Id, avatarRef == lastCurrentAvatarRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
                 Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
 
@@ -156,17 +166,6 @@ namespace MHServerEmu.Games.Network
                     Game.EntityManager.CreateEntity(teamUpSettings);
                 }
             }
-
-            // Make sure we have a valid current avatar ref
-            var avatarDataRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
-            if (dataDirectory.PrototypeIsA<AvatarPrototype>(avatarDataRef) == false)
-            {
-                avatarDataRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
-                Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(avatarDataRef)}");
-            }
-
-            // Switch to the current avatar
-            Player.SwitchAvatar(avatarDataRef, out _);
         }
 
         #endregion
@@ -257,9 +256,11 @@ namespace MHServerEmu.Games.Network
         {
             var avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
-
             AOI.Update(entrancePosition, true);
-            avatar.EnterWorld(AOI.Region, entrancePosition, StartOrientation);
+
+            LastPosition = StartPosition;
+            LastOrientation = StartOrientation;
+            Player.EnableCurrentAvatar(false);
 
             Player.DequeueLoadingScreen();
 
@@ -312,6 +313,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break;
+                case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break;
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;
@@ -609,12 +611,12 @@ namespace MHServerEmu.Games.Network
             var pickupInteraction = message.As<NetMessagePickupInteraction>();
             if (pickupInteraction == null) return Logger.WarnReturn(false, $"OnPickupInteraction(): Failed to retrieve message");
 
-            // See if the item exists
+            // Find item entity
             Item item = Game.EntityManager.GetEntity<Item>(pickupInteraction.IdTarget);
-            if (item == null) return Logger.WarnReturn(false, "OnPickupInteraction(): item == null");
 
-            // Make sure the item is in the world
-            if (item.IsInWorld == false) return Logger.WarnReturn(false, "OnPickupInteraction(): item.IsInWorld == false");
+            // Make sure the item still exists and is not owned by item (multiple pickup interactions can be received due to lag)
+            if (item == null || Player.Owns(item))
+                return true;
 
             // Add item to the player's inventory
             Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
@@ -662,18 +664,14 @@ namespace MHServerEmu.Games.Network
             var inventoryTrashItem = message.As<NetMessageInventoryTrashItem>();
             if (inventoryTrashItem == null) return Logger.WarnReturn(false, $"OnInventoryTrashItem(): Failed to retrieve message");
 
-            // See if the item exists
-            Item item = Game.EntityManager.GetEntity<Item>(inventoryTrashItem.ItemId);
+            // Validate item
+            if (inventoryTrashItem.ItemId == Entity.InvalidId) return Logger.WarnReturn(false, "OnInventoryTrashItem(): itemId == Entity.InvalidId");
+
+            var item = Game.EntityManager.GetEntity<Item>(inventoryTrashItem.ItemId);
             if (item == null) return Logger.WarnReturn(false, "OnInventoryTrashItem(): item == null");
 
-            // Check ownership
-            if (item.IsOwnedBy(Player.Id) == false)
-                return Logger.WarnReturn(false, $"OnInventoryTrashItem(): Player {Player} is attempting to trash item {item} owned by {item.GetOwner()}");
-
-            // Destroy
-            item.Destroy();
-
-            return true;
+            // Trash it
+            return Player.TrashItem(item);
         }
 
         private bool OnThrowInteraction(MailboxMessage message)
@@ -713,19 +711,9 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"Received NetMessageSwitchAvatar");
             Logger.Trace(switchAvatar.ToString());
 
-            // Switch avatar
-            if (Player.SwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId, out Avatar prevAvatar) == false)
-                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to switch avatar");
-
-            // Add new avatar to the world
-            EntitySettings settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
-            Player.CurrentAvatar.EnterWorld(AOI.Region, LastPosition, LastOrientation, settings);
-            Logger.Debug($"OnSwitchAvatar(): {Player.CurrentAvatar} entering world");
-
-            // Activate the swap in power for the avatar to become playable
-            EventPointer<TEMP_ActivatePowerEvent> avatarSwapInEvent = new();
-            Game.GameEventScheduler.ScheduleEvent(avatarSwapInEvent, TimeSpan.FromMilliseconds(700));
-            avatarSwapInEvent.Get().Initialize(Player.CurrentAvatar, GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            // Start the avatar switching process
+            if (Player.BeginSwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId) == false)
+                return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to begin avatar switch");
 
             return true;
         }
@@ -807,9 +795,18 @@ namespace MHServerEmu.Games.Network
             var requestInterestInInventory = message.As<NetMessageRequestInterestInInventory>();
             if (requestInterestInInventory == null) return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to retrieve message");
 
+            PrototypeId inventoryProtoRef = (PrototypeId)requestInterestInInventory.InventoryProtoId;
+
             Logger.Trace(string.Format("OnRequestInterestInInventory(): inventoryProtoId={0}, loadState={1}",
-                GameDatabase.GetPrototypeName((PrototypeId)requestInterestInInventory.InventoryProtoId),
+                GameDatabase.GetPrototypeName(inventoryProtoRef),
                 requestInterestInInventory.LoadState));
+
+            // Validate inventory prototype
+            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
+            if (inventoryPrototype == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
+
+            if (Player.RevealInventory(inventoryProtoRef) == false)
+                return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to reveal inventory {GameDatabase.GetPrototypeName(inventoryProtoRef)}");
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
@@ -824,8 +821,35 @@ namespace MHServerEmu.Games.Network
             var requestInterestInAvatarEquipment = message.As<NetMessageRequestInterestInAvatarEquipment>();
             if (requestInterestInAvatarEquipment == null) return Logger.WarnReturn(false, $"OnRequestInterestInAvatarEquipment(): Failed to retrieve message");
 
-            string avatar = GameDatabase.GetFormattedPrototypeName((PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId);
-            Logger.Trace($"Received NetMessageRequestInterestInAvatarEquipment for {avatar}");
+            PrototypeId avatarProtoId = (PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId;
+
+            Logger.Trace(string.Format("OnRequestInterestInAvatarEquipment(): avatarProtoId={0}, avatarModeEnum={1}",
+                GameDatabase.GetPrototypeName(avatarProtoId),
+                (AvatarMode)requestInterestInAvatarEquipment.AvatarModeEnum));
+
+            Avatar avatar = Player.GetAvatar(avatarProtoId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnRequestInterestInAvatarEquipment(): avatar == null");
+
+            avatar.RevealEquipmentToOwner();
+
+            return true;
+        }
+
+        private bool OnRequestInterestInTeamUpEquipment(MailboxMessage message)
+        {
+            var requestInterestInTeamUpEquipment = message.As<NetMessageRequestInterestInTeamUpEquipment>();
+            if (requestInterestInTeamUpEquipment == null) return Logger.WarnReturn(false, $"OnRequestRequestInterestInTeamUpEquipment(): Failed to retrieve message");
+
+            PrototypeId teamUpProtoId = (PrototypeId)requestInterestInTeamUpEquipment.TeamUpProtoId;
+
+            Logger.Trace(string.Format("OnRequestRequestInterestInTeamUpEquipment(): teamUpProtoId={0}",
+                GameDatabase.GetPrototypeName(teamUpProtoId)));
+
+            Agent teamUpAgent = Player.GetTeamUpAgent(teamUpProtoId);
+            if (teamUpAgent == null) return Logger.WarnReturn(false, "OnRequestRequestInterestInTeamUpEquipment(): teamUpAgent == null");
+
+            teamUpAgent.RevealEquipmentToOwner();
+
             return true;
         }
 

@@ -44,8 +44,15 @@ namespace MHServerEmu.Games.Entities.Locomotion
         IgnoresWorldCollision       = 1 << 11,
     }
 
-    public class LocomotionState // TODO: Change to struct? Consider how this is used before doing it
+    /// <summary>
+    /// Represents state of a <see cref="Locomotor"/>.
+    /// </summary>
+    public class LocomotionState
     {
+        // TODO: For optimization reasons it may be a good idea to change this to a struct.
+        // However, it is going to be large + mutable + have a reference type as one of its
+        // fields (List<NaviPathNode>), so this should be done with care and only if actually needed.
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // NOTE: Due to how LocomotionState serialization is implemented, we should be able to
@@ -67,14 +74,51 @@ namespace MHServerEmu.Games.Entities.Locomotion
             Set(other);
         }
 
+        public void Set(LocomotionState other)
+        {
+            LocomotionFlags = other.LocomotionFlags;
+            Method = other.Method;
+            BaseMoveSpeed = other.BaseMoveSpeed;
+            Height = other.Height;
+            FollowEntityId = other.FollowEntityId;
+            FollowEntityRangeStart = other.FollowEntityRangeStart;
+            FollowEntityRangeEnd = other.FollowEntityRangeEnd;
+            PathGoalNodeIndex = other.PathGoalNodeIndex;
+
+            // NOTE: Is it okay to add path nodes here by reference? Do we need a copy?
+            // Review this if/when we change NaviPathNode to struct.
+            //PathNodes = new(other.PathNodes);
+            PathNodes.Clear();
+            PathNodes.AddRange(other.PathNodes);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"{nameof(LocomotionFlags)}: {LocomotionFlags}");
+            sb.AppendLine($"{nameof(Method)}: {Method}");
+            sb.AppendLine($"{nameof(BaseMoveSpeed)}: {BaseMoveSpeed}");
+            sb.AppendLine($"{nameof(Height)}: {Height}");
+            sb.AppendLine($"{nameof(FollowEntityId)}: {FollowEntityId}");
+            sb.AppendLine($"{nameof(FollowEntityRangeStart)}: {FollowEntityRangeStart}");
+            sb.AppendLine($"{nameof(FollowEntityRangeEnd)}: {FollowEntityRangeEnd}");
+            sb.AppendLine($"{nameof(PathGoalNodeIndex)}: {PathGoalNodeIndex}");
+            for (int i = 0; i < PathNodes.Count; i++)
+                sb.AppendLine($"{nameof(PathNodes)}[{i}]: {PathNodes[i]}");
+            return sb.ToString();
+        }
+
         // NOTE: LocomotionState serialization implementation is similar to what PowerCollection is doing
         // (i.e. separate static serialization methods for serialization and deserialization rather than
-        // combined ISerialize implementention we have seen everywhere else).
+        // combined ISerialize implementation we have seen in most other cases).
 
+        /// <summary>
+        /// Serializes a <see cref="NaviPathNode"/> to the provided <see cref="Archive"/>.
+        /// </summary>
         public static bool SerializeTo(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
         {
             bool success = true;
-            
+
             // Encode offset from the previous vertex
             Vector3 offset = pathNode.Vertex - previousVertex;
             success &= Serializer.TransferVectorFixed(archive, ref offset, 3);
@@ -87,6 +131,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
+        /// <summary>
+        /// Deserializes a <see cref="NaviPathNode"/> from the provided <see cref="Archive"/>.
+        /// </summary>
         public static bool SerializeFrom(Archive archive, NaviPathNode pathNode, Vector3 previousVertex)
         {
             bool success = true;
@@ -118,6 +165,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
+        /// <summary>
+        /// Serializes <see cref="LocomotionState"/> to the provided <see cref="Archive"/>
+        /// given the specified <see cref="LocomotionMessageFlags"/>.
+        /// </summary>
         public static bool SerializeTo(Archive archive, LocomotionState state, LocomotionMessageFlags flags)
         {
             bool success = true;
@@ -184,6 +235,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
+        /// <summary>
+        /// Deserializes <see cref="LocomotionState"/> from the provided <see cref="Archive"/>
+        /// given the specified <see cref="LocomotionMessageFlags"/>.
+        /// </summary>
         public static bool SerializeFrom(Archive archive, LocomotionState state, LocomotionMessageFlags flags)
         {
             bool success = true;
@@ -283,60 +338,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return success;
         }
 
-        public void UpdateFrom(LocomotionState update, LocomotionMessageFlags flags)
-        {
-            // TODO Replace with SerializeFrom()
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
-                LocomotionFlags = update.LocomotionFlags;
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-                LocomotionFlags = LocomotionFlags.None;
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
-                Method = update.Method;
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-                Method = LocomotorMethod.Ground;
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
-                BaseMoveSpeed = update.BaseMoveSpeed;
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-                BaseMoveSpeed = 0f;
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
-                Height = update.Height;
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-                Height = 0;
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
-                FollowEntityId = update.FollowEntityId;
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-                FollowEntityId = 0;
-
-            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
-            {
-                FollowEntityRangeStart = update.FollowEntityRangeStart;
-                FollowEntityRangeEnd = update.FollowEntityRangeEnd;
-            }
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-            {
-                FollowEntityRangeStart = 0f;
-                FollowEntityRangeEnd = 0f;
-            }
-
-            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
-            {
-                PathGoalNodeIndex = update.PathGoalNodeIndex;
-
-                PathNodes.Clear();
-                PathNodes.AddRange(update.PathNodes);
-            }
-            else if (flags.HasFlag(LocomotionMessageFlags.RelativeToPreviousState) == false)
-            {
-                PathGoalNodeIndex = 0;
-                PathNodes.Clear();
-            }
-        }
-
+        /// <summary>
+        /// Compares two <see cref="LocomotionState"/> instances and returns <see cref="LocomotionMessageFlags"/> for serialization.
+        /// </summary>
         public static LocomotionMessageFlags GetFieldFlags(LocomotionState currentState, LocomotionState previousState, bool withPathNodes)
         {
             if (currentState == null) return LocomotionMessageFlags.NoLocomotionState;
@@ -409,25 +413,26 @@ namespace MHServerEmu.Games.Entities.Locomotion
             return flags;
         }
 
+        /// <summary>
+        /// Compares two <see cref="LocomotionState"/> instances and returns whether or not sync is required.
+        /// </summary>
         public static void CompareLocomotionStatesForSync(LocomotionState newState, LocomotionState oldState, out bool syncRequired, out bool pathNodeSyncRequired, bool skipGoalNode)
         {
-            syncRequired = true;
-            pathNodeSyncRequired = true;
-
-            //return;
-
-            // todo
-
             pathNodeSyncRequired = CompareLocomotionPathNodesForSync(newState, oldState, skipGoalNode);
-            syncRequired = (newState.LocomotionFlags != oldState.LocomotionFlags)
-                || (newState.BaseMoveSpeed != oldState.BaseMoveSpeed)
-                || (newState.Height != oldState.Height)
-                || (newState.Method != oldState.Method)
-                || (newState.FollowEntityId != oldState.FollowEntityId)
-                || (newState.FollowEntityRangeStart != oldState.FollowEntityRangeStart)
-                || (newState.FollowEntityRangeEnd != oldState.FollowEntityRangeEnd);
+
+            syncRequired = newState.LocomotionFlags != oldState.LocomotionFlags;
+            syncRequired |= newState.BaseMoveSpeed != oldState.BaseMoveSpeed;
+            syncRequired |= newState.Height != oldState.Height;
+            syncRequired |= newState.Method != oldState.Method;
+            syncRequired |= newState.FollowEntityId != oldState.FollowEntityId;
+            syncRequired |= newState.FollowEntityRangeStart != oldState.FollowEntityRangeStart;
+            syncRequired |= newState.FollowEntityRangeEnd != oldState.FollowEntityRangeEnd;
         }
 
+        /// <summary>
+        /// Compares <see cref="NaviPathNode"/> collections of two <see cref="LocomotionState"/> instances
+        /// and returns <see langword="true"/> if an update is required.
+        /// </summary>
         public static bool CompareLocomotionPathNodesForSync(LocomotionState newState, LocomotionState oldState, bool skipGoalNode)
         {
             if ((newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting) ^ oldState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting))
@@ -444,56 +449,21 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             if (newState.PathNodes.Count > 0)
             {
-                int goalNodeIndex = newState.PathNodes.Count - newState.PathGoalNodeIndex;
+                int nodesRemaining = newState.PathNodes.Count - newState.PathGoalNodeIndex;
                 int newNodeIndex = newState.PathGoalNodeIndex;
-                int oldNodeIndex = oldState.PathNodes.Count - goalNodeIndex;
-                if (skipGoalNode) --goalNodeIndex;
+                int oldNodeIndex = oldState.PathNodes.Count - nodesRemaining;
+                if (skipGoalNode) --nodesRemaining;
 
-                for (int i = 0; i < goalNodeIndex; ++i)
+                for (int i = 0; i < nodesRemaining; ++i)
                 {
-                    bool changed = newState.PathNodes[newNodeIndex + i].VertexSide != oldState.PathNodes[oldNodeIndex + i].VertexSide;
-                    changed &= newState.PathNodes[newNodeIndex + i].Radius != oldState.PathNodes[oldNodeIndex + i].Radius;
-                    changed &= newState.PathNodes[newNodeIndex + i].Vertex != oldState.PathNodes[oldNodeIndex + i].Vertex;
-
-                    if (changed) return true;
+                    if (newState.PathNodes[newNodeIndex + i].VertexSide != oldState.PathNodes[oldNodeIndex + i].VertexSide
+                    || newState.PathNodes[newNodeIndex + i].Radius != oldState.PathNodes[oldNodeIndex + i].Radius
+                    || newState.PathNodes[newNodeIndex + i].Vertex != oldState.PathNodes[oldNodeIndex + i].Vertex)
+                        return true;
                 }
             }
 
             return false;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(LocomotionFlags)}: {LocomotionFlags}");
-            sb.AppendLine($"{nameof(Method)}: {Method}");
-            sb.AppendLine($"{nameof(BaseMoveSpeed)}: {BaseMoveSpeed}");
-            sb.AppendLine($"{nameof(Height)}: {Height}");
-            sb.AppendLine($"{nameof(FollowEntityId)}: {FollowEntityId}");
-            sb.AppendLine($"{nameof(FollowEntityRangeStart)}: {FollowEntityRangeStart}");
-            sb.AppendLine($"{nameof(FollowEntityRangeEnd)}: {FollowEntityRangeEnd}");
-            sb.AppendLine($"{nameof(PathGoalNodeIndex)}: {PathGoalNodeIndex}");
-            for (int i = 0; i < PathNodes.Count; i++)
-                sb.AppendLine($"{nameof(PathNodes)}[{i}]: {PathNodes[i]}");
-            return sb.ToString();
-        }
-
-        public void Set(LocomotionState other)
-        {
-            LocomotionFlags = other.LocomotionFlags;
-            Method = other.Method;
-            BaseMoveSpeed = other.BaseMoveSpeed;
-            Height = other.Height;
-            FollowEntityId = other.FollowEntityId;
-            FollowEntityRangeStart = other.FollowEntityRangeStart;
-            FollowEntityRangeEnd = other.FollowEntityRangeEnd;
-            PathGoalNodeIndex = other.PathGoalNodeIndex;
-
-            // NOTE: Is it okay to add path nodes here by reference? Do we need a copy?
-            // Review this if/when we change NaviPathNode to struct.
-            //PathNodes = new(other.PathNodes);
-            PathNodes.Clear();
-            PathNodes.AddRange(other.PathNodes);
         }
     }
 }

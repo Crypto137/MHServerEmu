@@ -16,22 +16,6 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
     public class PlayerCommands : CommandGroup
     {
-        [Command("avatar", "Changes player avatar.\nUsage: player avatar [avatar]", AccountUserLevel.User)]
-        public string Avatar(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
-
-            if (Enum.TryParse(@params[0], true, out AvatarPrototypeId avatar) == false)
-                return $"Failed to change player avatar to {@params[0]}";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-
-            playerConnection.Player.SwitchAvatar((PrototypeId)avatar, out _);
-            game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
-            return $"Changing avatar to {avatar}.";
-        }
-
         [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]", AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {

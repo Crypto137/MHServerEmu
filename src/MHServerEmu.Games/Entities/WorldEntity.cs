@@ -11,6 +11,8 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
@@ -56,6 +58,8 @@ namespace MHServerEmu.Games.Entities
     public class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private EventPointer<TEMP_SendActivatePowerMessageEvent> _sendActivatePowerMessageEvent = new();
 
         private AlliancePrototype _allianceProto;
 
@@ -129,13 +133,13 @@ namespace MHServerEmu.Games.Entities
 
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
-            Properties[PropertyEnum.MovementSpeedRate] = 1f;    // TODO: Remove this when eval works
 
-            int health = EntityHelper.GetHealthForWorldEntity(this);
-            if (health > 0)
+            // Override base health to make things more reasonable with the current damage implementation
+            float healthBaseOverride = EntityHelper.GetHealthForWorldEntity(this);
+            if (healthBaseOverride > 0f)
             {
-                Properties[PropertyEnum.Health] = health;
-                Properties[PropertyEnum.HealthMaxOther] = health;
+                Properties[PropertyEnum.HealthBase] = healthBaseOverride;
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             }
 
             if (proto.Bounds != null)
@@ -367,17 +371,20 @@ namespace MHServerEmu.Games.Entities
             return retPos;
         }
 
-        public virtual void EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
+        public virtual bool EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             var proto = WorldEntityPrototype;
-            Game ??= region.Game; // Fix for old constructor
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
 
             RegionLocation.Region = region;
-            
+
             if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
                 OnEnteredWorld(settings);
+            else
+                ClearWorldLocation();
+
+            return IsInWorld;
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
@@ -386,6 +393,19 @@ namespace MHServerEmu.Games.Entities
                 EnableNavigationInfluence();
 
             NotifyPlayers(true, settings);
+        }
+
+        public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            base.OnPropertyChange(id, newValue, oldValue, flags);
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.HealthMax:
+                    Properties[PropertyEnum.HealthMaxOther] = newValue;
+                    break;
+            }
         }
 
         public void EnableNavigationInfluence()
@@ -1280,6 +1300,43 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual void OnDramaticEntranceEnd()  { }
+
+        public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
+        {
+            if (_sendActivatePowerMessageEvent.IsValid) return false;
+            ScheduleEntityEvent(_sendActivatePowerMessageEvent, timeOffset, powerProtoRef);
+            return true;
+        }
+
+        public bool TEMP_SendActivatePowerMessage(PrototypeId powerProtoRef)
+        {
+            if (IsInWorld == false) return false;
+
+            Logger.Trace($"Activating {GameDatabase.GetPrototypeName(powerProtoRef)} for {this}");
+
+            ActivatePowerArchive activatePower = new()
+            {
+                Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
+                ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
+                ActivatePowerMessageFlags.HasPowerRandomSeed,
+
+                PowerPrototypeRef = powerProtoRef,
+                UserEntityId = Id,
+                TargetPosition = RegionLocation.Position,
+                FXRandomSeed = (uint)Game.Random.Next(),
+                PowerRandomSeed = (uint)Game.Random.Next()
+            };
+
+            var activatePowerMessage = NetMessageActivatePower.CreateBuilder().SetArchiveData(activatePower.ToByteString()).Build();
+            Game.NetworkManager.SendMessageToInterested(activatePowerMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            return true;
+        }
+
+        protected class TEMP_SendActivatePowerMessageEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).TEMP_SendActivatePowerMessage(p1);
+        }
     }
 
 }

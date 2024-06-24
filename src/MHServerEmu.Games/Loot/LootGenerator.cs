@@ -119,14 +119,14 @@ namespace MHServerEmu.Games.Loot
 
             // Pick a random point near source entity
             source.Region.ChooseRandomPositionNearPoint(source.Bounds, PathFlags.Walk, PositionCheckFlags.CheckClearOfEntity,
-                BlockingCheckFlags.None, 10f, maxDistanceFromSource, out Vector3 dropPosition);
+                BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
 
             EntitySettings settings = new();
             settings.EntityRef = itemProtoRef;
             settings.RegionId = source.RegionLocation.RegionId;
             settings.Position = dropPosition;
             settings.SourceEntityId = source.Id;
-            // TODO: settings.SourcePosition
+            settings.SourcePosition = source.RegionLocation.Position;
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
             settings.ItemSpec = CreateItemSpec(itemProtoRef);
 
@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Loot
                 _ => 0,
             };
 
-            float maxDistanceFromSource = 25f + 25f * lootRating;
+            float maxDistanceFromSource = 75f + 25f * lootRating;
 
             // Drop a bunch of common items
             for (int i = 0; i < lootRating; i++)

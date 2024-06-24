@@ -68,8 +68,9 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
-            var avatar = (AvatarPrototypeId)playerConnection.Player.CurrentAvatar.PrototypeDataRef;
-            switch (avatar)
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            var avatarPrototypeId = (AvatarPrototypeId)avatar.PrototypeDataRef;
+            switch (avatarPrototypeId)
             {
                 case AvatarPrototypeId.BlackPanther:
                 case AvatarPrototypeId.BlackWidow:
@@ -84,12 +85,10 @@ namespace MHServerEmu.Commands.Implementations
                 case AvatarPrototypeId.Storm:
                 case AvatarPrototypeId.Thing:
                 case AvatarPrototypeId.Thor:
-                    EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
-                    game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
-                    activatePowerEventPointer.Get().Initialize(playerConnection.Player.CurrentAvatar, (PrototypeId)PowerPrototypes.UnlockableEmote.EmoteDance);
-                    return $"{avatar} begins to dance";
+                    avatar.TEMP_SendActivatePowerMessage((PrototypeId)PowerPrototypes.UnlockableEmote.EmoteDance);
+                    return $"{avatarPrototypeId} begins to dance";
                 default:
-                    return $"{avatar} doesn't want to dance";
+                    return $"{avatarPrototypeId} doesn't want to dance";
             }
 
         }

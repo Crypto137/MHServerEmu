@@ -35,7 +35,7 @@ namespace MHServerEmu.Commands.Implementations
             
             for (int i = 0; i < count; i++)
             {
-                var item = lootGenerator.DropItem(avatar, itemProtoRef, 50f);
+                var item = lootGenerator.DropItem(avatar, itemProtoRef, 100f);
                 Logger.Debug($"DropItem(): {item} from {avatar}");
             }
 

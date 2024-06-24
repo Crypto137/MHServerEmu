@@ -9,6 +9,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -17,8 +18,6 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize
     {
-        // TODO: Eval
-        // TODO: PropertyChangeWatcher API: AttachWatcher(), RemoveWatcher(), RemoveAllWatchers()
         // TODO: Consider implementing IDisposable for optimization
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -32,6 +31,9 @@ namespace MHServerEmu.Games.Properties
         // I'm not sure what the intention there was, but it makes zero sense for us to do it the same way.
         private readonly HashSet<PropertyCollection> _parentCollections = new();
         private readonly HashSet<PropertyCollection> _childCollections = new();
+
+        // A collection of registered watchers
+        private readonly HashSet<IPropertyChangeWatcher> _watchers = new();
 
         #region Value Indexers
 
@@ -286,8 +288,6 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
-            // TODO: Implement as an event that entities can register to?
-            
             // Update curve properties that rely on this property as an index property
             foreach (var kvp in IterateCurveProperties())
             {
@@ -295,9 +295,30 @@ namespace MHServerEmu.Games.Properties
                     UpdateCurvePropertyValue(kvp.Value, flags, null);
             }
 
-            // TODO: Update evals
+            // Run eval if needed
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            if (info.HasDependentEvals)
+            {
+                EvalContextData contextData = new(Game.Current);
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
 
-            // TODO: Notify watchers
+                foreach (PropertyId dependentEvalId in info.DependentEvals)
+                {
+                    PropertyInfo dependentEvalInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(dependentEvalId.Enum);
+                    PropertyValue oldDependentValue = GetPropertyValue(dependentEvalId);
+                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, contextData);
+
+                    if (newDependentValue.RawLong != oldDependentValue.RawLong)
+                    {
+                        _aggregateList.SetPropertyValue(dependentEvalId, newDependentValue);
+                        OnPropertyChange(dependentEvalId, newDependentValue, oldDependentValue, flags);
+                    }
+                }
+            }
+
+            // Notify watchers
+            foreach (IPropertyChangeWatcher watcher in _watchers)
+                watcher.OnPropertyChange(id, newValue, oldValue, flags);
         }
 
         /// <summary>
@@ -448,6 +469,47 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
 
+        /// <summary>
+        /// Subscribes the provided <see cref="IPropertyChangeWatcher"/> for property changes happening in this <see cref="PropertyCollection"/>.
+        /// </summary>
+        public bool AttachWatcher(IPropertyChangeWatcher watcher)
+        {
+            // VERIFY: m_isDeallocating == false
+
+            if (_watchers.Add(watcher) == false)
+                return Logger.WarnReturn(false, $"AttachWatcher(): Failed to attach property change watcher {watcher}");
+
+            foreach (var kvp in this)
+                watcher.OnPropertyChange(kvp.Key, kvp.Value, kvp.Value, SetPropertyFlags.Refresh);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Unsubscribes the provided <see cref="IPropertyChangeWatcher"/> from property changes happening in this <see cref="PropertyCollection"/>.
+        /// </summary>
+        public bool DetachWatcher(IPropertyChangeWatcher watcher)
+        {
+            if (watcher == null)
+                return Logger.WarnReturn(false, "DetachWatcher(): watcher == null");
+
+            if (_watchers.Remove(watcher) == false)
+                return Logger.WarnReturn(false, $"DetachWatcher(): Failed to detach property change watcher {watcher}");
+
+            watcher.Detach(false);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes all subscribed <see cref="IPropertyChangeWatcher"/> instances.
+        /// </summary>
+        public void RemoveAllWatchers()
+        {
+            while (_watchers.Count > 0)
+                DetachWatcher(_watchers.First());
+        }
+
         public override string ToString() => _aggregateList.ToString();
 
         #region Iteration
@@ -531,8 +593,6 @@ namespace MHServerEmu.Games.Properties
         {
             bool success = true;
 
-            // TODO: skip properties that match the default collection
-
             if (archive.IsPacking)
             {
                 // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
@@ -575,6 +635,48 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
+        /// </summary>
+        public static ulong ConvertValueToBits(PropertyValue value, PropertyDataType type)
+        {
+            switch (type)
+            {
+                case PropertyDataType.Real:
+                case PropertyDataType.Curve:        return BitConverter.SingleToUInt32Bits(value.RawFloat);
+                case PropertyDataType.Integer:
+                case PropertyDataType.Time:         return CodedOutputStream.EncodeZigZag64(value.RawLong);
+                case PropertyDataType.Prototype:    return (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value.RawLong);
+                default:                            return (ulong)value.RawLong;
+            }
+        }
+
+        /// <summary>
+        /// Converts a <see cref="ulong"/> bit representation to a <see cref="PropertyValue"/>.
+        /// </summary>
+        public static PropertyValue ConvertBitsToValue(ulong bits, PropertyDataType type)
+        {
+            switch (type)
+            {
+                case PropertyDataType.Real:
+                case PropertyDataType.Curve:        return new(BitConverter.ToSingle(BitConverter.GetBytes(bits)));
+                case PropertyDataType.Integer:
+                case PropertyDataType.Time:         return new(CodedInputStream.DecodeZigZag64(bits));
+                case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
+                default:                            return new((long)bits);
+            }
+        }
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyId"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        public static PropertyValue EvalProperty(PropertyId id, EvalContextData contextData)
+        {
+            // NOTE: This function isn't really needed because we use implicit casting for PropertyValue,
+            // but we are keeping it anyway to match the client API.
+            return EvalPropertyValue(id, contextData);
+        }
+
+        /// <summary>
         /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
         /// </summary>
@@ -582,11 +684,20 @@ namespace MHServerEmu.Games.Properties
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
-            // TODO: EvalPropertyValue()
+            // First try running eval
+            if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
+            {
+                EvalContextData contextData = new();
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
+                return EvalPropertyValue(info, contextData);
+            }
 
+            // Fall back to the default value if no value is specified in the aggregate list
             if (_aggregateList.GetPropertyValue(id, out PropertyValue value) == false)
                 return info.DefaultValue;
 
+            // Return the value from the aggregate list
             return value;
         }
 
@@ -619,7 +730,7 @@ namespace MHServerEmu.Games.Properties
                     UpdateAggregateValueFromBase(id, info, flags, true, value);
             }
 
-            return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
+            return hasChanged || flags.HasFlag(SetPropertyFlags.Refresh);  // Some kind of flag that forces property value update
         }
 
         protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, ref uint numProperties, Archive archive, PropertyCollection defaultCollection)
@@ -655,38 +766,6 @@ namespace MHServerEmu.Games.Properties
             numProperties++;        // Increment the number of properties that will be written when we finish iterating
 
             return success;
-        }
-
-        /// <summary>
-        /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
-        /// </summary>
-        public static ulong ConvertValueToBits(PropertyValue value, PropertyDataType type)
-        {
-            switch (type)
-            {
-                case PropertyDataType.Real:
-                case PropertyDataType.Curve:        return BitConverter.SingleToUInt32Bits(value.RawFloat);
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return CodedOutputStream.EncodeZigZag64(value.RawLong);
-                case PropertyDataType.Prototype:    return (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value.RawLong);
-                default:                            return (ulong)value.RawLong;
-            }
-        }
-
-        /// <summary>
-        /// Converts a <see cref="ulong"/> bit representation to a <see cref="PropertyValue"/>.
-        /// </summary>
-        public static PropertyValue ConvertBitsToValue(ulong bits, PropertyDataType type)
-        {
-            switch (type)
-            {
-                case PropertyDataType.Real:
-                case PropertyDataType.Curve:        return new(BitConverter.ToSingle(BitConverter.GetBytes(bits)));
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return new(CodedInputStream.DecodeZigZag64(bits));
-                case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
-                default:                            return new((long)bits);
-            }
         }
 
         /// <summary>
@@ -907,7 +986,7 @@ namespace MHServerEmu.Games.Properties
             if (hasValue)
             {
                 _aggregateList.GetSetPropertyValue(id, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
-                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Flag2))
+                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Refresh))
                 {
                     if (wasAdded) oldValue = info.DefaultValue;
                     OnPropertyChange(id, aggregateValue, oldValue, flags);
@@ -1030,6 +1109,50 @@ namespace MHServerEmu.Games.Properties
             ClampPropertyValue(info.Prototype, ref output);
             return true;
         }
+
+        #region Eval Calculation
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyId"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        private static PropertyValue EvalPropertyValue(PropertyId id, EvalContextData contextData)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            return EvalPropertyValue(info, contextData);
+        }
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyInfo"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        private static PropertyValue EvalPropertyValue(PropertyInfo info, EvalContextData contextData)
+        {
+            if (info.IsEvalProperty == false)
+                return Logger.WarnReturn(new PropertyValue(), "EvalPropertyValue(): info.IsEvalProperty == false");
+
+            PropertyValue value;
+            switch (info.DataType)
+            {
+                case PropertyDataType.Boolean:
+                    value = Eval.RunBool(info.Eval, contextData);                    
+                    break;
+
+                case PropertyDataType.Real:
+                    value = Eval.RunFloat(info.Eval, contextData);
+                    break;
+
+                case PropertyDataType.Integer:
+                    value = Eval.RunLong(info.Eval, contextData);
+                    break;
+
+                default:
+                    return Logger.WarnReturn(new PropertyValue(), $"EvalPropertyValue(): Unsupported eval property data type {info.DataType}");
+            }
+
+            ClampPropertyValue(info.Prototype, ref value);
+            return value;
+        }
+
+        #endregion
 
         #region Protection Implementation
 

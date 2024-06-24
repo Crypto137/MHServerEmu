@@ -19,8 +19,10 @@ namespace MHServerEmu.Games.Entities.Items
         public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
 
         public ItemSpec ItemSpec { get => _itemSpec; }
-        public PrototypeId OnUsePower { get; internal set; }
-        public bool IsBoundToAccount { get; internal set; }
+        public PrototypeId OnUsePower { get; set; }
+        public bool IsBoundToAccount { get; set; }
+
+        public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
 
         public Item(Game game) : base(game) { }
 
@@ -53,6 +55,23 @@ namespace MHServerEmu.Games.Entities.Items
         public bool CanUse(Agent agent, bool powerUse)
         {
             // TODO
+            return true;
+        }
+
+        public bool PlayerCanDestroy(Player player)
+        {
+            if (player.Owns(this) == false)
+                return false;
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null)
+                return Logger.WarnReturn(false, "PlayerCanDestroy(): itemProto == null");
+
+            if (itemProto.CanBeDestroyed == false)
+                return false;
+
+            // TODO: Avatar::ValidateEquipmentChange
+
             return true;
         }
 

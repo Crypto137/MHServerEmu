@@ -10,7 +10,11 @@ using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -52,6 +56,8 @@ namespace MHServerEmu.Games.Entities
     public class Player : Entity, IMissionManagerOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
 
         private MissionManager _missionManager = new();
         private ReplicatedPropertyCollection _avatarProperties;
@@ -598,6 +604,101 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool RevealInventory(PrototypeId inventoryProtoRef)
+        {
+            // Validate inventory prototype
+            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>(inventoryProtoRef);
+            if (inventoryPrototype == null) return Logger.WarnReturn(false, "RevealInventory(): inventoryPrototype == null");
+
+            // Skip reveal if this inventory does not require flagged visibility
+            if (inventoryPrototype.InventoryRequiresFlaggedVisibility() == false)
+                return true;
+
+            // Validate inventory
+            Inventory inventory = GetInventoryByRef(inventoryPrototype.DataRef);
+            if (inventory == null) return Logger.WarnReturn(false, "RevealInventory(): inventory == null");
+
+            // Skip reveal if already visible
+            if (inventory.VisibleToOwner) return true;
+
+            // Enable visibility
+            inventory.VisibleToOwner = true;
+
+            // Update interest for all contained entities
+            foreach (var entry in inventory)
+            {
+                var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                if (entity == null)
+                {
+                    Logger.Warn("RevealInventory(): entity == null");
+                    continue;
+                }
+
+                PlayerConnection.AOI.ConsiderEntity(entity);
+            }
+
+            return true;
+        }
+
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+
+            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay && entity is Avatar avatar && invLoc.Slot == 0)
+            {
+                CurrentAvatar = avatar;
+            }
+        }
+
+        public bool TrashItem(Item item)
+        {
+            // See CPlayer::RequestItemTrash for reference
+
+            // Make sure this player is allowed to destroy this item
+            if (item.PlayerCanDestroy(this) == false)
+                return false;
+
+            Avatar avatar = CurrentAvatar;
+
+            // Make sure there is an avatar in the world
+            if (avatar.IsInWorld == false)
+                return false;
+
+            // Destroy the item if it cannot be dropped
+            if (item.WouldBeDestroyedOnDrop)
+            {
+                item.Destroy();
+                return true;
+            }
+
+            // Drop item to the ground
+            Region region = avatar.Region;
+
+            // Find a position to drop, bail out if no space
+            if (region.ChooseRandomPositionNearPoint(avatar.Bounds, Navi.PathFlags.Walk, PositionCheckFlags.CheckCanBlockedEntity,
+                BlockingCheckFlags.CheckSpawns, 50f, 100f, out Vector3 dropPosition) == false)
+            {
+                return false;
+            }
+
+            // Remove the item from its inventory (no going back now)
+            item.ChangeInventoryLocation(null);
+
+            // Drop it
+            EntitySettings settings = new();
+            settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
+            settings.SourceEntityId = avatar.Id;
+            settings.SourcePosition = avatar.RegionLocation.Position;
+
+            if (item.EnterWorld(region, dropPosition, Orientation.Zero, settings) == false)
+            {
+                item.Destroy();     // We have to destroy this item because it's no longer in player's inventory
+                return Logger.WarnReturn(false, $"TrashItem(): Item {item} failed to enter world");
+            }
+
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);
@@ -646,23 +747,19 @@ namespace MHServerEmu.Games.Entities
         public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
 
 
-        #region Avatar Management
+        #region Avatar and Team-Up Management
 
-        public bool SwitchAvatar(PrototypeId avatarProtoRef, out Avatar prevAvatar)
+        public Avatar GetAvatar(PrototypeId avatarProtoRef, AvatarMode avatarMode = AvatarMode.Normal)
         {
-            Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
-            Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
+            if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Avatar>(null, "GetAvatar(): avatarProtoRef == PrototypeId.Invalid");
 
-            prevAvatar = CurrentAvatar;
+            foreach (Avatar avatar in IterateAvatars())
+            {
+                if (avatar.PrototypeDataRef == avatarProtoRef)
+                    return avatar;
+            }
 
-            Avatar avatar = avatarLibrary.GetMatchingEntity(avatarProtoRef) as Avatar;
-            if (avatar == null)
-                Logger.WarnReturn(false, $"SwitchAvatar(): Failed to find avatar entity for avatarProtoRef {GameDatabase.GetPrototypeName(avatarProtoRef)}");
-
-            avatar.ChangeInventoryLocation(avatarInPlay, 0);
-            CurrentAvatar = avatar;
-
-            return true;
+            return null;
         }
         
         public IEnumerable<Avatar> IterateAvatars()
@@ -674,8 +771,72 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        #endregion
+        public Agent GetTeamUpAgent(PrototypeId teamUpProtoRef)
+        {
+            if (teamUpProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Agent>(null, "GetTeamUpAgent(): teamUpProtoRef == PrototypeId.Invalid");
 
+            Inventory teamUpInv = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (teamUpInv == null) return Logger.WarnReturn<Agent>(null, "GetTeamUpAgent(): teamUpInv == null");
+
+            return teamUpInv.GetMatchingEntity(teamUpProtoRef) as Agent;
+        }
+
+        public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
+        {
+            if (_switchAvatarEvent.IsValid) return false;
+
+            // Activate swap out power for the current avatar
+            // TODO: Replace this with regular power activation
+            CurrentAvatar.TEMP_ScheduleSendActivatePowerMessage(GameDatabase.GlobalsPrototype.AvatarSwapOutPower, TimeSpan.Zero);
+
+            // Schedule avatar switch
+            ScheduleEntityEvent(_switchAvatarEvent, TimeSpan.FromMilliseconds(1066), avatarProtoRef);
+
+            return true;
+        }
+
+        public bool SwitchAvatar(PrototypeId avatarProtoRef)
+        {
+            Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+            Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
+
+            if (avatarLibrary.GetMatchingEntity(avatarProtoRef) is not Avatar avatar)
+                return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to find avatar entity for avatarProtoRef {GameDatabase.GetPrototypeName(avatarProtoRef)}");
+
+            InventoryResult result = avatar.ChangeInventoryLocation(avatarInPlay, 0);
+
+            if (result != InventoryResult.Success)
+                return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
+
+            EnableCurrentAvatar(true);
+            return true;
+        }
+
+        public bool EnableCurrentAvatar(bool withSwapInPower)
+        {
+            // TODO: Use this for teleportation within region as well
+
+            if (CurrentAvatar == null)
+                return Logger.WarnReturn(false, "EnableCurrentAvatar(): CurrentAvatar == null");
+
+            if (CurrentAvatar.IsInWorld)
+                return Logger.WarnReturn(false, "EnableCurrentAvatar(): Current avatar is already active");
+
+            Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
+
+            // Disable initial visibility and schedule swap-in power if requested
+            EntitySettings settings = null;
+            if (withSwapInPower)
+            {
+                settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
+                CurrentAvatar.ScheduleSwapInPower();
+            }
+
+            // Add new avatar to the world
+            return CurrentAvatar.EnterWorld(PlayerConnection.AOI.Region, PlayerConnection.LastPosition, PlayerConnection.LastOrientation, settings);
+        }
+
+        #endregion
 
         #region Messages
 
@@ -808,16 +969,19 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        internal WorldEntity GetDialogTarget(bool validateTarget = false)
+        public WorldEntity GetDialogTarget(bool validateTarget = false)
         {
             throw new NotImplementedException();
         }
 
-        internal bool CanAcquireCurrencyItem(WorldEntity localInteractee)
+        public bool CanAcquireCurrencyItem(WorldEntity localInteractee)
         {
             throw new NotImplementedException();
         }
 
-
+        private class SwitchAvatarEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).SwitchAvatar(p1);
+        }
     }
 }
