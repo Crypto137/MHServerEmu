@@ -443,13 +443,6 @@ namespace MHServerEmu.Games.Network
                 try
                 {
                     LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags);
-                    if (newSyncState.PathNodes.Count > 3)
-                    {
-                        NaviSvgHelper svg = new(avatar.NaviMesh.NaviCdt);
-                        svg.AddTrianlges(newSyncState.PathNodes);
-                        svg.AddPath(newSyncState.PathNodes);
-                        svg.SaveToFile($"AvatarPath-{DateTime.Now:mm-ss-fff}.svg");
-                    }
                 }
                 catch (Exception e)
                 {

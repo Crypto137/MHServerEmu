@@ -8,7 +8,6 @@ namespace MHServerEmu.Games.Navi
     public class NaviPathGenerator
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private const bool Test = true; 
         private NaviMesh _naviMesh;
         private float _radius;
         private float _width;
@@ -21,19 +20,16 @@ namespace MHServerEmu.Games.Navi
         private NaviTriangle _goalTriangle;
         private NaviPoint _goalPoint;
         private readonly FixedPriorityQueue<NaviPathSearchState> _searchStateQueue;
-        public NaviSvgHelper Svg;
 
         public NaviPathGenerator(NaviMesh naviMesh)
         {
             // _navi = naviMesh.NaviSystem; // not used
             _naviMesh = naviMesh;
             _searchStateQueue = new(128);
-            if (Test) Svg = new(naviMesh.NaviCdt);
         }
 
         public static void GenerateDirectMove(Vector3 startPosition, Vector3 goalPosition, List<NaviPathNode> pathNodes)
         {
-            if (Test) Logger.Debug($"GenerateDirectMove = {startPosition} => {goalPosition}");
             AddPathNodeBack(pathNodes, startPosition, NaviSide.Point, 0f, 0f);
             AddPathNodeBack(pathNodes, goalPosition, NaviSide.Point, 0f, 0f);
         }
@@ -61,7 +57,6 @@ namespace MHServerEmu.Games.Navi
             _pathFlags = pathFlags;
             _startPosition = new(startPosition);
             _goalPosition = new(goalPosition);
-            if (Test) Logger.Debug($"start = {_startPosition}\n goal = {_goalPosition}");
             _pathGenerationFlags = pathGenerationFlags;
             _incompleteDistance = incompleteDistance;
             if (!_naviMesh.IsMeshValid)  
@@ -81,16 +76,9 @@ namespace MHServerEmu.Games.Navi
         private NaviPathResult GeneratePathInternal(List<NaviPathNode> outPathNodes, bool skipGen)
         {
             if (_startTriangle == null || _goalTriangle == null) return NaviPathResult.FailedTriangle;
-            if (Test)
-            {
-                Svg?.AddTriangle(_startTriangle); 
-                Svg?.AddTriangle(_goalTriangle);
-                Logger.Debug($"GeneratePathInternal startTriangle = {_startTriangle.ToHashString64()}\n goalTriangle = {_goalTriangle.ToHashString64()}");
-            }
             _startPosition = NaviUtil.ProjectToPlane(_startTriangle, _startPosition);
             _goalPosition = NaviUtil.ProjectToPlane(_goalTriangle, _goalPosition);
 
-            if (Test) Logger.Debug($"startPlane = {_startPosition}\n goalPlane = {_goalPosition}");
             _searchStateQueue.Clear();
 
             if (_goalTriangle.TestPathFlags(_pathFlags) == false) return NaviPathResult.FailedTriangle;
@@ -126,10 +114,8 @@ namespace MHServerEmu.Games.Navi
 
                 while (GeneratePathStep(out NaviPathSearchState genPathState) && _searchStateQueue.Count < 128 && ++steps < 256)
                 {
-                    if (Test) Logger.Debug($"QueueSize = {_searchStateQueue.Count}");
                     if (genPathState != null)
                     {
-                        if (Test) Logger.Debug($"genPathState DistDone={state.DistDone} DistLeft={state.DistLeft} Distance={state.Distance}");
                         pathFound = true;
                         if (skipGen) break;
                         if (shortestPathDistance < 0.0f)
@@ -141,12 +127,6 @@ namespace MHServerEmu.Games.Navi
                                 throw new InvalidOperationException("FunnelStep failed.");
                             shortestPathDistance = NaviPath.CalcAccurateDistance(outPathNodes);
                             maxAttempts = steps <= 5 ? 1 : steps <= 50 ? 3 : 5;
-                            if (Test)
-                            {
-                                Svg?.AddСomment($"FirstGen shortestPathDistance {shortestPathDistance}, maxAttempts = {maxAttempts}");
-                                Svg?.AddPath(outPathNodes);
-                                Logger.Debug($"shortestPathDistance = {shortestPathDistance} maxAttempts = {maxAttempts} pathFound = true");
-                            }
                         }
                         else
                         {
@@ -157,19 +137,8 @@ namespace MHServerEmu.Games.Navi
                             if (FunnelStep(tempPathChannel, tempPath) == false)
                                 throw new InvalidOperationException("FunnelStep failed.");
                             float tempPathDistance = NaviPath.CalcAccurateDistance(tempPath);
-                            if (Test)
-                            {
-                                Svg.AddСomment("tempPath");
-                                Svg.AddPath(tempPath);
-                                Svg.AddСomment($"NextGen tempPathDistance {tempPathDistance} < {shortestPathDistance}");
-                            }
                             if (tempPathDistance < shortestPathDistance)
                             {
-                                if (Test)
-                                {
-                                    Svg.AddСomment("old outPathNodes");
-                                    Svg.AddPath(outPathNodes);
-                                }
                                 shortestPathDistance = tempPathDistance;
                                 outPathNodes.Clear();
                                 outPathNodes.AddRange(tempPath);
@@ -242,16 +211,7 @@ namespace MHServerEmu.Games.Navi
 
             if (_goalPoint != null) _goalPoint.InfluenceRadius = influenceRadius;
             
-            if (pathFound)  
-            {
-                if (Test)
-                {
-                    Svg?.AddСomment($"PathFound Result");
-                    Svg?.AddPath(outPathNodes);
-                    Svg?.SaveToFile($"Path-{DateTime.Now:mm-ss-fff}.svg");
-                }
-                return NaviPathResult.Success; 
-            }
+            if (pathFound) return NaviPathResult.Success;
             else if (incompletePath) return NaviPathResult.IncompletedPath;
             else return NaviPathResult.FailedNoPathFound;
         }
@@ -263,7 +223,7 @@ namespace MHServerEmu.Games.Navi
 
             NaviPathSearchState topState = _searchStateQueue.Top;
             _searchStateQueue.Pop();
-            if (Test) Logger.Debug($"GeneratePathStep\n topState DistDone={topState.DistDone} DistLeft={topState.DistLeft} Distance={topState.Distance}\ntopStateTriangle {topState.Triangle.ToHashString64()}");
+            
             NaviTriangle triangle;
             for (int edgeIndex = 0; edgeIndex < 3; edgeIndex++)
             {
@@ -271,11 +231,7 @@ namespace MHServerEmu.Games.Navi
                 if (topState.Edge == edge) continue;
 
                 triangle = edge.OpposedTriangle(topState.Triangle);
-                if (Test)
-                {
-                    Svg?.AddTriangle(triangle);
-                    Logger.Debug($"step#{edgeIndex} \n edge {edge.ToHashString64()}\n triangle {triangle.ToHashString64()}");
-                }
+                
                 if (triangle == null || !triangle.TestPathFlags(_pathFlags) || NaviEdge.IsBlockingDoorEdge(edge, _pathFlags)) 
                     continue;
 
@@ -283,7 +239,7 @@ namespace MHServerEmu.Games.Navi
                 if (!isGoalTriangle && topState.IsAncestor(triangle)) continue;
 
                 float edgeWidth = edge.Length2D() - edge.Points[0].InfluenceRadius - edge.Points[1].InfluenceRadius;
-                if (Test) Logger.Debug($"InfluenceRadius {edge.Length2D()}");
+                
                 if (_width >= edgeWidth) continue;
 
                 if (topState.Edge != null)
@@ -305,7 +261,6 @@ namespace MHServerEmu.Games.Navi
                 };
 
                 Vector3 closestPoint = Segment.SegmentPointClosestPoint(edge.Points[0].Pos, edge.Points[1].Pos, _goalPosition);
-                if (Test) Logger.Debug($"closestPoint {closestPoint}");
                 state.DistLeft = Vector3.Length2D(_goalPosition - closestPoint);
 
                 float dist1 = Vector3.Length2D(_startPosition - closestPoint);
@@ -314,7 +269,6 @@ namespace MHServerEmu.Games.Navi
                 float dist3 = topState.DistDone + (topState.DistLeft - state.DistLeft);
                 state.DistDone = Math.Max(dist1, Math.Max(dist2, dist3));
                 state.Distance = state.DistDone + state.DistLeft;
-                if (Test) Logger.Debug($"stateRef DistDone={state.DistDone} DistLeft={state.DistLeft} Distance={state.Distance}");
                 if (isGoalTriangle && CanCrossTriangle(triangle, triangle.EdgeIndex(edge), edge, _goalPosition, _width))
                 {
                     resultPathState = state;
@@ -463,15 +417,12 @@ namespace MHServerEmu.Games.Navi
 
         private bool SimpleTestFunnelVertexClearOfObstacles(NaviPoint point, NaviTriangle triangle, float radiusSq, PathFlags pathFlags)
         {
-            if (point.InfluenceRef > 0) {
-                if (Test) Svg?.AddCircle(point.Pos, point.InfluenceRadius);
-                return false; 
-            }
+            if (point.InfluenceRef > 0) return false; 
+
             NaviTriangle nextTriangle = triangle;
             do
             {
                 if (nextTriangle == null || nextTriangle.TestPathFlags(pathFlags) == false) return false;
-                if (Test) Svg?.AddTriangle(nextTriangle);
                 var edge = nextTriangle.OpposedEdge(point);
                 float distanceSq = Segment.SegmentPointDistanceSq(edge.Points[0].Pos, edge.Points[1].Pos, point.Pos);
                 if (distanceSq < radiusSq) return false;

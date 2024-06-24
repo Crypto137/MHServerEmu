@@ -1052,21 +1052,12 @@ namespace MHServerEmu.Games.Entities
             var networkManager = Game.NetworkManager;
             var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false);
             if (interestedClients.Any() == false) return;
-            if (Locomotor.LocomotionState.PathNodes.Count > 0) 
-                Logger.Debug($"LocomotionState Send {PrototypeName} PathNodes:[{Locomotor.LocomotionState.PathNodes.Count}]");
             NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
                 this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
             networkManager.SendMessageToMultiple(interestedClients, locomotionStateUpdateMessage);
         }
         
-        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) 
-        {
-            if (SkipAI) return;
-           /*  Properties[PropertyEnum.MovementSpeedRate] = 1.0f;*/
-            EntityHelper.CrateOrb((PrototypeId)925659119519994384, start, Region);// HealOrbItem = 925659119519994384, 
-            EntityHelper.CrateOrb((PrototypeId)9607833165236212779, end, Region); //EnduranceOrbItem = 9607833165236212779,
-            Logger.Debug($"PreGeneratePath {PrototypeName} {start} => {end}");
-        }
+        public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
 
         public override void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
             AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
