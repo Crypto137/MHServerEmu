@@ -260,9 +260,7 @@ namespace MHServerEmu.Commands.Implementations
                 }
                 avatar.Properties[PropertyEnum.PowerToggleOn, petPower] = true;
                 avatar.Properties[PropertyEnum.PowerSummonedEntityCount, petPower] = 1;
-                EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
-                game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
-                activatePowerEventPointer.Get().Initialize(avatar, petPower);
+                avatar.TEMP_ScheduleSendActivatePowerMessage(petPower, TimeSpan.Zero);
                 var petProto = GameDatabase.GetPrototype<AgentPrototype>(petRef);
                 region.ChooseRandomPositionNearPoint(avatar.Bounds, PathFlags.Walk, PositionCheckFlags.CheckClearOfEntity,
                     BlockingCheckFlags.None, petProto.Bounds.GetSphereRadius(), avatar.Bounds.Radius * 2, out Vector3 petPosition);

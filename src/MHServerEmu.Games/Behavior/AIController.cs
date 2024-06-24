@@ -326,7 +326,7 @@ namespace MHServerEmu.Games.Behavior
             }
 
             Brain?.Think();
-            Logger.Debug($"Think [{Owner.PrototypeName}] {_thinkCount}");
+            //Logger.Debug($"Think [{Owner.PrototypeName}] {_thinkCount}");
             _thinkCount++;
         }
 
