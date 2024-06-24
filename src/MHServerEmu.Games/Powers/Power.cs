@@ -26,6 +26,8 @@ namespace MHServerEmu.Games.Powers
         public WorldEntity Owner { get; private set; }
         public PropertyCollection Properties { get; } = new();
 
+        public float AnimSpeedCache { get; private set; } = -1f;
+
         public bool IsChannelingPower { get; set; }
         public bool IsOnExtraActivation { get; set; }
         public bool LOSCheckAlongGround { get; set; }
@@ -75,6 +77,11 @@ namespace MHServerEmu.Games.Powers
 
         public void OnOwnerExitedWorld()
         {
+        }
+
+        public void OnOwnerCastSpeedChange()
+        {
+            AnimSpeedCache = -1f;
         }
 
         public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype powerProto, PropertyCollection initializeProperties, WorldEntity owner)
@@ -393,6 +400,36 @@ namespace MHServerEmu.Games.Powers
                 return 0f;
 
             return GamepadSettingsPrototype.Range;
+        }
+
+        public float GetAnimSpeed()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(1f, "GetAnimSpeed(): powerProto == null");
+            return GetAnimSpeed(powerProto, Owner, this);
+        }
+
+        public static float GetAnimSpeed(PowerPrototype powerProto, WorldEntity owner, Power power)
+        {
+            // -1 is invalid speed cache
+            if (power != null && power.AnimSpeedCache >= 0f)
+                return power.AnimSpeedCache;
+
+            float animSpeed = 1f;
+
+            // No owner to get speed bonuses from
+            if (owner == null)
+                return Logger.WarnReturn(animSpeed, "GetAnimSpeed(): powerOwner == null");
+
+            // Movement power animations don't scale with cast speed
+            if (IsMovementPower(powerProto) == false)
+                animSpeed = owner.GetCastSpeedPct(powerProto);
+
+            // Update cache
+            if (power != null)
+                power.AnimSpeedCache = animSpeed;
+
+            return animSpeed;
         }
 
         #endregion

@@ -51,6 +51,17 @@ namespace MHServerEmu.Games.Powers
         InstantKill     = 1 << 12
     }
 
+    public enum PowerActivationPhase
+    {
+        Inactive,
+        Active,
+        Charging,
+        ChannelStarting,
+        Channeling,
+        MinTimeEnding,
+        LoopEnding
+    }
+
     public enum PowerPositionSweepResult
     {
         Error,
