@@ -19,6 +19,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Entities.Inventories;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -229,7 +230,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        public enum PetDebug
+        public enum AIDebug
         {
             Run,
             Stop,
@@ -251,7 +252,7 @@ namespace MHServerEmu.Commands.Implementations
             var petPowerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(petPowerRef);
             PrototypeId petPower = petPowerProto.DataRef;
             PrototypeId petRef = petPowerProto.SummonEntityContexts[0].SummonEntity;
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PetDebug petFlag)) == false)
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out AIDebug petFlag)) == false)
             {
                 if (avatar.RegionLocation.IsValid() == false)
                 {
@@ -286,18 +287,18 @@ namespace MHServerEmu.Commands.Implementations
                 {
                     switch (petFlag)
                     {
-                        case PetDebug.Run:
-                        case PetDebug.Stop:
-                            bool enable = petFlag == PetDebug.Run;
+                        case AIDebug.Run:
+                        case AIDebug.Stop:
+                            bool enable = petFlag == AIDebug.Run;
                             pet.AIController.SetIsEnabled(enable);
                             s += $"{pet.PrototypeName} AIEnabled {enable}";
                             break;
-                        case PetDebug.Destroy:
+                        case AIDebug.Destroy:
                             pet.SetSimulated(false);
                             pet.Destroy();
                             s += $"{pet.PrototypeName} Destroyed";
                             break;
-                        case PetDebug.Think:
+                        case AIDebug.Think:
                             pet.Think();
                             s += $"{pet.PrototypeName} Think";
                             break;
@@ -309,6 +310,76 @@ namespace MHServerEmu.Commands.Implementations
             }
         }
 
+        [Command("tu", "Create TeamUp for test AI.\n Usage: debug tu [think | run | stop | destroy].", AccountUserLevel.User)]
+        public string Tu(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            var player = playerConnection.Player;
+            var region = playerConnection.AOI.Region;
+            var avatar = player.CurrentAvatar;
+            // Drax = 2943735762294018090,
+            PrototypeId teamUpRef = (PrototypeId)2943735762294018090;
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out AIDebug petFlag)) == false)
+            {
+                if (avatar.RegionLocation.IsValid() == false)
+                    avatar.SetSimulated(false);
+
+                avatar.Properties[PropertyEnum.AvatarTeamUpAgent] = teamUpRef;
+                Inventory inventory = player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+                player.Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatar.Prototype.DataRef] = teamUpRef;
+                Agent teamUp = (Agent)inventory.GetMatchingEntity(teamUpRef);
+                avatar.Properties[PropertyEnum.AvatarTeamUpAgentId] = teamUp.Id;
+                avatar.Properties[PropertyEnum.AvatarTeamUpIsSummoned] = true;
+                teamUp.Properties[PropertyEnum.TeamUpOwnerId] = avatar.Id;
+                var teamUpProto = teamUp.AgentPrototype;
+             //   region.ChooseRandomPositionNearPoint(avatar.Bounds, PathFlags.Walk, PositionCheckFlags.CheckClearOfEntity,
+            //        BlockingCheckFlags.None, teamUpProto.Bounds.GetSphereRadius(), avatar.Bounds.Radius * 2, out Vector3 teamUpPosition);
+                teamUp.EnterWorld(region, avatar.RegionLocation.Position, avatar.RegionLocation.Orientation);
+                teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id; // link to owner
+                teamUp.EnterGame();
+                teamUp.SetSimulated(true);
+                playerConnection.AOI.Update(playerConnection.LastPosition, true);
+                return $"TeamUp {teamUp.PrototypeName} Created";
+            }
+            else
+            {
+                string s = "";
+                Agent teamup = null;
+                foreach (var entity in game.EntityManager.SimulatedEntities.Iterate())
+                    if (entity.PrototypeDataRef == teamUpRef)
+                    {
+                        teamup = entity as Agent;
+                        break;
+                    }
+
+                if (teamup != null)
+                {
+                    switch (petFlag)
+                    {
+                        case AIDebug.Run:
+                        case AIDebug.Stop:
+                            bool enable = petFlag == AIDebug.Run;
+                            teamup.AIController.SetIsEnabled(enable);
+                            s += $"{teamup.PrototypeName} AIEnabled {enable}";
+                            break;
+                        case AIDebug.Destroy:
+                            teamup.SetSimulated(false);
+                            teamup.ExitWorld();
+                            s += $"{teamup.PrototypeName} ExitWorld";
+                            break;
+                        case AIDebug.Think:
+                            teamup.Think();
+                            s += $"{teamup.PrototypeName} Think";
+                            break;
+                    }
+                    playerConnection.AOI.Update(playerConnection.LastPosition, true);
+                }
+                else s = "TeamUp not found";
+                return s;
+            }
+        }
 
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]
         public string ScheduleTestEvent(string[] @params, FrontendClient client)
