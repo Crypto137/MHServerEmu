@@ -17,8 +17,8 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Events.LegacyImplementations;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -244,8 +244,6 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             var player = playerConnection.Player;
-            var position = playerConnection.LastPosition;
-            var orientation = playerConnection.LastOrientation;
             var region = playerConnection.AOI.Region;
             var avatar = player.CurrentAvatar;
             // Pet066CosmoSummon = 2287896284030047804,
@@ -257,7 +255,6 @@ namespace MHServerEmu.Commands.Implementations
             {
                 if (avatar.RegionLocation.IsValid() == false)
                 {
-                    avatar.EnterWorld(region, position, orientation);
                     avatar.SetSimulated(false);
                     avatar.AssignPower(petPower, new());
                 }
@@ -266,12 +263,10 @@ namespace MHServerEmu.Commands.Implementations
                 EventPointer<TEMP_ActivatePowerEvent> activatePowerEventPointer = new();
                 game.GameEventScheduler.ScheduleEvent(activatePowerEventPointer, TimeSpan.Zero);
                 activatePowerEventPointer.Get().Initialize(avatar, petPower);
-                // Pet026FrogThor = 7240687669893536590
-                Vector3 petPosition = new(position);
-                petPosition.X += 400.0f;
-                // petPosition.Y += 400.0f;                
+                var petProto = GameDatabase.GetPrototype<AgentPrototype>(petRef);
+                region.ChooseRandomPositionNearPoint(avatar.Bounds, PathFlags.Walk, PositionCheckFlags.CheckClearOfEntity,
+                    BlockingCheckFlags.None, petProto.Bounds.GetSphereRadius(), avatar.Bounds.Radius * 2, out Vector3 petPosition);
                 Agent pet = EntityHelper.CreatePet(petPowerProto, petPosition, region, player);
-                pet.EnterWorld(region, petPosition, orientation);
                 pet.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id; // link to owner
                 pet.EnterGame();
                 pet.SetSimulated(true);
