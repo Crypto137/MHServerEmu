@@ -3741,21 +3741,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (SymbiotePower1.PowerContext == null || SymbiotePower1.PowerContext.Power == PrototypeId.Invalid) return;
                 var symbiotePower = agent.GetPower(SymbiotePower1.PowerContext.Power);
-                symbiotePower?.EndPower(EndFlag.Force | EndFlag.ExplicitCancel);
+                symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId1] = 0;
             }
             else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2])
             {
                 if (SymbiotePower2.PowerContext == null || SymbiotePower2.PowerContext.Power == PrototypeId.Invalid) return;
                 var symbiotePower = agent.GetPower(SymbiotePower2.PowerContext.Power);
-                symbiotePower?.EndPower(EndFlag.Force | EndFlag.ExplicitCancel);
+                symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId2] = 0;
             }
             else if (deadEntityId == blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3])
             {
                 if (SymbiotePower3.PowerContext == null || SymbiotePower3.PowerContext.Power == PrototypeId.Invalid) return;
                 var symbiotePower = agent.GetPower(SymbiotePower3.PowerContext.Power);
-                symbiotePower?.EndPower(EndFlag.Force | EndFlag.ExplicitCancel);
+                symbiotePower?.EndPower(EndPowerFlags.Force | EndPowerFlags.ExplicitCancel);
                 blackboard.PropertyCollection[PropertyEnum.AICustomEntityId3] = 0;
             }
         }

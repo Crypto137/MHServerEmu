@@ -559,7 +559,7 @@ namespace MHServerEmu.Games.Entities
                     if (activePower.IsTravelPower)
                     {
                         if (activePower.IsEnding == false)
-                            activePower.EndPower(EndFlag.ExplicitCancel | EndFlag.Interrupting);
+                            activePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting);
                     }
                     else
                         return PowerUseResult.PowerInProgress;

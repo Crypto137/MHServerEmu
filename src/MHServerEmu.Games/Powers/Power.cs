@@ -161,7 +161,7 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        public bool EndPower(EndFlag endFlag)
+        public bool EndPower(EndPowerFlags flags)
         {
             throw new NotImplementedException();
         }

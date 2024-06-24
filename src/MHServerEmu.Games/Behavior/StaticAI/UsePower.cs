@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Power activatePower = agent.ActivePower;
                 if (activatePower != null) return;
 
-                if (activatePower.EndPower(EndFlag.ExplicitCancel | EndFlag.Interrupting) == false)
+                if (activatePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting) == false)
                     Logger.Warn($"{agent}: is trying to end {activatePower} but something went wrong");
             }
 

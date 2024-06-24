@@ -14,6 +14,7 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Network.Parsing
 {
@@ -191,7 +192,7 @@ namespace MHServerEmu.Games.Network.Parsing
             return string.Format("idAgent: {0}\npowerPrototypeId: {1}\nendPowerFlags: {2}",
                 cancelPower.IdAgent,
                 GameDatabase.GetPrototypeName(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<PowerPrototype>((int)cancelPower.PowerPrototypeId)),
-                (UInt32Flags)cancelPower.EndPowerFlags);
+                (EndPowerFlags)cancelPower.EndPowerFlags);
         }
 
         [PrintMethod(typeof(NetMessageActivatePower))]

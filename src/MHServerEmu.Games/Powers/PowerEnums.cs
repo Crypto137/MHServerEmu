@@ -17,18 +17,19 @@ namespace MHServerEmu.Games.Powers
     }
 
     [Flags]
-    public enum EndFlag
+    public enum EndPowerFlags
     {
-        None            = 0,
-        ExplicitCancel  = 1 << 0,
-        Flag1           = 1 << 1,
-        Flag2           = 1 << 2,
-        Interrupting    = 1 << 3,
-        Flag4           = 1 << 4,
-        Flag5           = 1 << 5,
-        Flag6           = 1 << 6,
-        Flag7           = 1 << 7,
-        Force           = 1 << 8,
+        None                = 0,
+        ExplicitCancel      = 1 << 0,
+        Flag1               = 1 << 1,
+        Flag2               = 1 << 2,
+        Interrupting        = 1 << 3,
+        Flag4               = 1 << 4,
+        Flag5               = 1 << 5,
+        Flag6               = 1 << 6,
+        Flag7               = 1 << 7,
+        Force               = 1 << 8,
+        PowerEventAction    = 1 << 9
     }
 
     [Flags]
