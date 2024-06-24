@@ -198,7 +198,7 @@ namespace MHServerEmu.Games.Behavior
 
                 if (nextThinkTimeOffset < TimeSpan.Zero)
                 {
-                    Logger.Warn($"Agent tried to schedule a negative think time of {nextThinkTimeOffset.TotalMilliseconds}MS!\n  Agent: {Owner}");
+                    Logger.Warn($"Agent tried to schedule a negative think time of {(long)nextThinkTimeOffset.TotalMilliseconds}MS!\n  Agent: {Owner}");
                     nextThinkTimeOffset = TimeSpan.Zero;
                 }
 
