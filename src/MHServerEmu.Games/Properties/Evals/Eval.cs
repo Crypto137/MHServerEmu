@@ -1167,46 +1167,6 @@ namespace MHServerEmu.Games.Properties.Evals
             return false;
         }
 
-        public static bool FromValue<T>(EvalVar evalVar, out T resultVal)
-        {
-            resultVal = default;
-            bool result = false;
-            Type targetType = typeof(T);
-            if (targetType == typeof(int))
-            {
-                result = FromValue(evalVar, out int resultFrom);
-                resultVal = (T)(object)resultFrom;
-                return result;
-            }
-            else if (targetType == typeof(long))
-            {
-                result = FromValue(evalVar, out long resultFrom);
-                resultVal = (T)(object)resultFrom;
-                return result;
-            }
-            else if (targetType == typeof(float))
-            {
-                result = FromValue(evalVar, out float resultFrom);
-                resultVal = (T)(object)resultFrom;
-                return result;
-            }
-            else if (targetType == typeof(bool))
-            {
-                result = FromValue(evalVar, out bool resultFrom);
-                resultVal = (T)(object)resultFrom;
-                return result;
-            }
-            else if (targetType == typeof(PrototypeId))
-            {
-                result = FromValue(evalVar, out PrototypeId resultFrom);
-                resultVal = (T)(object)resultFrom;
-                return result;
-            }
-
-            Logger.Warn($"FromValue<T>(): Unhandled target type {targetType.Name}");
-            return result;
-        }
-
         private static EvalVar Run(EvalPrototype evalProto, EvalContextData data)
         {
             EvalVar evalVar = new ();
@@ -3041,12 +3001,12 @@ namespace MHServerEmu.Games.Properties.Evals
                     EvalVar defaultContextVar = GetEvalVarFromContext(EvalContext.Default, data, false, false);
                     PropertyCollection defaultContextProps = null;
                     if (defaultContextVar.Type == EvalReturnType.PropertyCollectionPtr)
-                        FromValue(defaultContextVar, out defaultContextProps);
+                        FromValue(defaultContextVar, out defaultContextProps, data.Game);
 
                     EvalVar var1ContextVar = GetEvalVarFromContext(EvalContext.Var1, data, false, false);
                     PropertyCollection var1ContextProps = null;
                     if (var1ContextVar.Type == EvalReturnType.PropertyCollectionPtr)
-                        FromValue(var1ContextVar, out var1ContextProps);
+                        FromValue(var1ContextVar, out var1ContextProps, data.Game);
 
                     bool showNextRank = 
                         (defaultContextProps != null && defaultContextProps[PropertyEnum.PowerRankShowNextRank]) 
