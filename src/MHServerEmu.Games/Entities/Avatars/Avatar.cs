@@ -433,7 +433,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
-           if (SkipAI) base.OnLocomotionStateChanged(oldState, newState);
+            base.OnLocomotionStateChanged(oldState, newState);
         }
 
         public void ScheduleSwapInPower()
