@@ -121,6 +121,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Run,
     }
 
+    [AssetEnum((int)Set)]
+    public enum BlackboardOperatorType
+    {
+        Add = 0,
+        Div = 1,
+        Mul = 2,
+        Set = 3,
+        Sub = 4,
+        SetTargetId = 5,
+        ClearTargetId = 6,
+    }
+
     #endregion
 
     public class BrainPrototype : Prototype

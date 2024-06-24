@@ -1,5 +1,4 @@
-﻿using System.Text;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -32,13 +31,25 @@ namespace MHServerEmu.Games.Powers
 
         public PropertyCollection Properties { get; } = new();
         public bool IsTravelPower { get => Prototype != null && Prototype.IsTravelPower; }
-        public bool IsChannelingPower { get; internal set; }
-        public TargetingStylePrototype TargetingStylePrototype { get; internal set; }
-        public bool IsOnExtraActivation { get; internal set; }
-        public bool IsOwnerCenteredAOE { get; internal set; }
-        public bool LOSCheckAlongGround { get; internal set; }
-        public bool AlwaysTargetsMousePosition { get; internal set; }
-        public bool IsMelee { get; internal set; }
+        public bool IsChannelingPower { get; set; }
+        public TargetingStylePrototype TargetingStylePrototype { get; set; }
+        public bool IsOnExtraActivation { get; set; }
+        public bool IsOwnerCenteredAOE { get; set; }
+        public bool LOSCheckAlongGround { get; set; }
+        public bool AlwaysTargetsMousePosition { get; set; }
+        public bool IsMelee { get; set; }
+
+        public bool IsExclusiveActivation { get; }
+        public bool IsEnding { get; set; }
+        public TimeSpan LastActivateGameTime { get; set; }
+        public TimeSpan AnimationTime { get; set; }
+        public bool IsItemPower { get; set; }
+        public bool IsPartOfAMovementPower { get; set; }
+        public bool PreventsNewMovementWhileActive { get; set; }
+        public bool IsNonCancellableChannelPower { get; set; }
+        public bool IsCancelledOnMove { get; set; }
+        public bool DisableOrientationWhileActive { get; set; }
+        public bool ShouldOrientToTarget { get; set; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {
@@ -122,219 +133,143 @@ namespace MHServerEmu.Games.Powers
 
         public override string ToString()
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(PrototypeDataRef)}: {GameDatabase.GetPrototypeName(PrototypeDataRef)}");
-            sb.AppendLine($"{nameof(Owner)}: {(Owner != null ? Owner.Id : 0)}");
-            sb.AppendLine($"{nameof(Properties)}: {Properties}");
-            return sb.ToString();
+            return $"powerProtoRef={GameDatabase.GetPrototypeName(PrototypeDataRef)}, owner={Owner}";
         }
 
-        // Static accessors
-        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto) => powerProto.PowerCategory;
-        public static bool IsComboEffect(PowerPrototype powerProto) => GetPowerCategory(powerProto) == PowerCategoryType.ComboEffect;
-        public static bool IsUltimatePower(PowerPrototype powerProto) => powerProto.IsUltimate;
+        public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
+        {
+            throw new NotImplementedException();
+        }
+
+        public PowerUseResult Activate(PowerActivationSettings powerSettings)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TimeSpan GetCooldownTimeRemaining()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInRange(WorldEntity target, RangeCheckType checkType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInRange(Vector3 position, RangeCheckType activation)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool EndPower(EndFlag endFlag)
+        {
+            throw new NotImplementedException();
+        }
+
+        public float GetRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public TimeSpan GetFullExecutionTime()
+        {
+            throw new NotImplementedException();
+        }
+
+        public TargetingShapeType GetTargetingShape()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TargetsAOE()
+        { 
+            throw new NotImplementedException(); 
+        }
+
+        public bool TargetsAOE(PowerPrototype powerProto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,
+            int beamSweepCount, TimeSpan beamSweepTime, PowerPrototype powerProto, PropertyCollection properties)
+        {
+            throw new NotImplementedException();
+        }
+
+        public float GetApplicationRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool NeedsTarget() 
+        {
+            throw new NotImplementedException(); 
+        }
+
+        public PowerPositionSweepResult PowerPositionSweep(RegionLocation startLocation, Vector3 targetPosition, ulong targetEntityId, Vector3 resultPosition, bool forceDoNotPassTarget = false, float maxRangeOverride = 0f)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
+        {
+            throw new NotImplementedException();
+        }
+
+        #region Static
+
+        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto)
+        {
+            return powerProto.PowerCategory;
+        }
+
+        public static bool IsComboEffect(PowerPrototype powerProto)
+        {
+            return GetPowerCategory(powerProto) == PowerCategoryType.ComboEffect;
+        }
+
+        public static bool IsUltimatePower(PowerPrototype powerProto)
+        {
+            return powerProto.IsUltimate;
+        }
 
         public static TargetingShapeType GetTargetingShape(PowerPrototype powerProto)
         {
             throw new NotImplementedException();
         }
 
-        internal TimeSpan GetCooldownTimeRemaining()
+        public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
         {
             throw new NotImplementedException();
         }
 
-        internal bool IsInRange(WorldEntity target, RangeCheckType checkType)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal bool IsInRange(Vector3 position, RangeCheckType activation)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal bool EndPower(EndFlag endFlag)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal float GetRange()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal TimeSpan GetFullExecutionTime()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal TargetingShapeType GetTargetingShape()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal bool TargetsAOE()
-        { 
-            throw new NotImplementedException(); 
-        }
-
-        internal bool TargetsAOE(PowerPrototype powerProto)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,
-            int beamSweepCount, TimeSpan beamSweepTime, PowerPrototype powerProto, PropertyCollection properties)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal float GetApplicationRange()
-        {
-            throw new NotImplementedException();
-        }
-
-        static internal bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 powerUserPosition,
+        public static bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 powerUserPosition,
             AlliancePrototype userAllianceProto, bool needsLineOfSight)
         {
             throw new NotImplementedException();
         }
 
-        internal bool NeedsTarget() 
-        {
-            throw new NotImplementedException(); 
-        }
-
-        internal PowerPositionSweepResult PowerPositionSweep(RegionLocation startLocation, Vector3 targetPosition, ulong targetEntityId, Vector3 resultPosition, bool forceDoNotPassTarget = false, float maxRangeOverride = 0f)
+        public static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
         {
             throw new NotImplementedException();
         }
 
-        internal PowerUseResult Activate(PowerActivationSettings powerSettings)
+        public static bool IsMovementPower(PowerPrototype powerProto)
         {
             throw new NotImplementedException();
         }
 
-        internal bool IsExclusiveActivation { get; }
-        public bool IsEnding { get; internal set; }
-        public TimeSpan LastActivateGameTime { get; internal set; }
-        public TimeSpan AnimationTime { get; internal set; }
-        public bool IsItemPower { get; internal set; }
-        public bool IsPartOfAMovementPower { get; internal set; }
-        public bool PreventsNewMovementWhileActive { get; internal set; }
-        public bool IsNonCancellableChannelPower { get; internal set; }
-        public bool IsCancelledOnMove { get; internal set; }
-        public bool DisableOrientationWhileActive { get; internal set; }
-        public bool ShouldOrientToTarget { get; internal set; }
-
-        internal bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
+        public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
         {
             throw new NotImplementedException();
         }
 
-        internal PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal static bool IsMovementPower(PowerPrototype powerProto)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    [Flags]
-    public enum EndFlag
-    {
-        None = 0,
-        ExplicitCancel = 1 << 0,
-        Interrupting = 1 << 3,
-        Force = 1 << 8,
-    }
-
-    public enum PowerPositionSweepResult
-    {
-        Error,
-        Success,
-        TargetPositionInvalid,
-        Clipped,
-    };
-
-    public enum RangeCheckType
-    {
-        Activation,
-        Application
-    }
-
-    public enum PowerUseResult
-    {
-        Success = 0,
-        Cooldown = 1,
-        RestrictiveCondition = 2,
-        BadTarget = 3,
-        AbilityMissing = 4,
-        TargetIsMissing = 5,
-        InsufficientCharges = 6,
-        InsufficientEndurance = 7,
-        InsufficientSecondaryResource = 8,
-        PowerInProgress = 9,
-        OutOfPosition = 10,
-        SummonSimultaneousLimit = 11,
-        SummonLifetimeLimit = 12,
-        WeaponMissing = 13,
-        RegionRestricted = 14,
-        NoFlyingUse = 15,
-        ExtraActivationFailed = 16,
-        GenericError = 17,
-        OwnerNotSimulated = 18,
-        OwnerDead = 19,
-        ItemUseRestricted = 20,
-        MinimumReactivateTime = 21,
-        DisabledByLiveTuning = 22,
-        NotAllowedByTransformMode = 23,
-        FullscreenMovie = 24,
-        ForceFailed = 25,
-    }
-
-    [Flags]
-    public enum PowerActivationSettingsFlags
-    {
-        None = 0,
-        Flag7 = 1 << 7,
-    }
-
-    public struct PowerActivationSettings
-    {
-        public ulong TargetEntityId;
-        public Vector3 UserPosition;
-        public Vector3 TargetPosition;
-
-        public PowerActivationSettings(ulong targetEntityId, Vector3 userPosition, Vector3 targetPosition)
-        {
-            TargetEntityId = targetEntityId;
-            UserPosition = userPosition;
-            TargetPosition = targetPosition;
-        }
+        #endregion
     }
 }
