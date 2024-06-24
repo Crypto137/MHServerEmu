@@ -115,7 +115,7 @@ namespace MHServerEmu.Games.Powers
     }
 
     [AssetEnum((int)None)]
-    public enum ActivationType
+    public enum PowerActivationType
     {
         None = 0,
         Passive = 1,

@@ -3,6 +3,8 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -10,7 +12,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypePropertyCollection Properties { get; protected set; }
         public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; protected set; }
-        public ActivationType Activation { get; protected set; }
+        public PowerActivationType Activation { get; protected set; }
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
         [ListMixin(typeof(ConditionPrototype))]
@@ -196,6 +198,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TargetingStylePrototype GetTargetingStyle()
         {
             return TargetingStyle.As<TargetingStylePrototype>();
+        }
+
+        public float GetRange(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            if (Range == null) return Logger.WarnReturn(0f, "GetRange(): Range == null");
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? new());
+
+            return Eval.RunFloat(Range, contextData);            
         }
     }
 
@@ -499,6 +512,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public Vector2Prototype PositionOffset { get; protected set; }
         public int RandomPositionRadius { get; protected set; }
         public bool DisableOrientationDuringPower { get; protected set; }
+
+        public bool TargetsAOE()
+        {
+            return TargetingShape switch
+            {
+                TargetingShapeType.ArcArea
+                or TargetingShapeType.BeamSweep
+                or TargetingShapeType.CapsuleArea
+                or TargetingShapeType.CircleArea
+                or TargetingShapeType.RingArea
+                or TargetingShapeType.WedgeArea => true,
+                _ => false,
+            };
+        }
     }
 
     public class TargetingReachPrototype : Prototype

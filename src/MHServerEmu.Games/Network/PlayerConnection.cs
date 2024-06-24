@@ -408,6 +408,7 @@ namespace MHServerEmu.Games.Network
             bool isUsingGamepadInput = false;
             if (Serializer.Transfer(archive, ref isUsingGamepadInput) == false)
                 return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer isUsingGamepadInput");
+            avatar.IsUsingGamepadInput = isUsingGamepadInput;
 
             uint avatarWorldInstanceId = 0;
             if (Serializer.Transfer(archive, ref avatarWorldInstanceId) == false)

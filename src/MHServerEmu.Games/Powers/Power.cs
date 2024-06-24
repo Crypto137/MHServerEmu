@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -19,25 +20,17 @@ namespace MHServerEmu.Games.Powers
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
         public PowerPrototype Prototype { get; }
+        public TargetingStylePrototype TargetingStylePrototype { get; }
+        public GamepadSettingsPrototype GamepadSettingsPrototype { get; }
+
         public WorldEntity Owner { get; private set; }
-        public bool RequiresLineOfSight { get; private set; }
-
-        public PowerCategoryType PowerCategory { get => Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None; }
-        public bool IsNormalPower { get => PowerCategory == PowerCategoryType.NormalPower; }
-        public bool IsGameFunctionPower { get => PowerCategory == PowerCategoryType.GameFunctionPower; }
-        public bool IsEmotePower { get => PowerCategory == PowerCategoryType.EmotePower; }
-        public bool IsThrowablePower { get => PowerCategory == PowerCategoryType.ThrowablePower; }
-        public bool IsComboEffect() => PowerCategory == PowerCategoryType.ComboEffect;  // This needs to be a method because it has the same name as the static method
-
         public PropertyCollection Properties { get; } = new();
-        public bool IsTravelPower { get => Prototype != null && Prototype.IsTravelPower; }
+
         public bool IsChannelingPower { get; set; }
-        public TargetingStylePrototype TargetingStylePrototype { get; set; }
         public bool IsOnExtraActivation { get; set; }
-        public bool IsOwnerCenteredAOE { get; set; }
         public bool LOSCheckAlongGround { get; set; }
         public bool AlwaysTargetsMousePosition { get; set; }
-        public bool IsMelee { get; set; }
+        public bool RequiresLineOfSight { get; private set; }
 
         public bool IsExclusiveActivation { get; }
         public bool IsEnding { get; set; }
@@ -56,6 +49,9 @@ namespace MHServerEmu.Games.Powers
             Game = game;
             PrototypeDataRef = prototypeDataRef;
             Prototype = prototypeDataRef.As<PowerPrototype>();
+
+            TargetingStylePrototype = Prototype.TargetingStyle.As<TargetingStylePrototype>();
+            GamepadSettingsPrototype = Prototype.GamepadSettings.As<GamepadSettingsPrototype>();
         }
 
         public bool Initialize(WorldEntity owner, bool isTeamUpPassivePowerWhileAway, PropertyCollection initializeProperties)
@@ -146,47 +142,7 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        public TimeSpan GetCooldownTimeRemaining()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsInRange(WorldEntity target, RangeCheckType checkType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsInRange(Vector3 position, RangeCheckType activation)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool EndPower(EndPowerFlags flags)
-        {
-            throw new NotImplementedException();
-        }
-
-        public float GetRange()
-        {
-            throw new NotImplementedException();
-        }
-
-        public TimeSpan GetFullExecutionTime()
-        {
-            throw new NotImplementedException();
-        }
-
-        public TargetingShapeType GetTargetingShape()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TargetsAOE()
-        { 
-            throw new NotImplementedException(); 
-        }
-
-        public bool TargetsAOE(PowerPrototype powerProto)
         {
             throw new NotImplementedException();
         }
@@ -197,49 +153,12 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        public float GetApplicationRange()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool NeedsTarget() 
-        {
-            throw new NotImplementedException(); 
-        }
-
         public PowerPositionSweepResult PowerPositionSweep(RegionLocation startLocation, Vector3 targetPosition, ulong targetEntityId, Vector3 resultPosition, bool forceDoNotPassTarget = false, float maxRangeOverride = 0f)
         {
             throw new NotImplementedException();
         }
 
         public bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
-        {
-            throw new NotImplementedException();
-        }
-
-        #region Static
-
-        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto)
-        {
-            return powerProto.PowerCategory;
-        }
-
-        public static bool IsComboEffect(PowerPrototype powerProto)
-        {
-            return GetPowerCategory(powerProto) == PowerCategoryType.ComboEffect;
-        }
-
-        public static bool IsUltimatePower(PowerPrototype powerProto)
-        {
-            return powerProto.IsUltimate;
-        }
-
-        public static TargetingShapeType GetTargetingShape(PowerPrototype powerProto)
         {
             throw new NotImplementedException();
         }
@@ -260,16 +179,252 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        public static bool IsMovementPower(PowerPrototype powerProto)
-        {
-            throw new NotImplementedException();
-        }
-
         public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
         {
             throw new NotImplementedException();
         }
 
+        #region Prototype Accessors
+
+        // NOTE: We have to use methods instead of properties here because we can't have static methods and properties share the same name.
+
+        public PowerCategoryType GetPowerCategory()
+        {
+            return Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None;
+        }
+
+        public bool IsNormalPower()
+        {
+            return GetPowerCategory() == PowerCategoryType.NormalPower;
+        }
+
+        public bool IsGameFunctionPower()
+        {
+            return GetPowerCategory() == PowerCategoryType.GameFunctionPower;
+        }
+
+        public bool IsEmotePower()
+        {
+            return GetPowerCategory() == PowerCategoryType.EmotePower;
+        }
+
+        public bool IsThrowablePower()
+        {
+            return GetPowerCategory() == PowerCategoryType.ThrowablePower;
+        }
+
+        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto)
+        {
+            return powerProto.PowerCategory;
+        }
+
+        public PowerActivationType GetPowerActivationType()
+        {
+            return Prototype != null ? Prototype.Activation : PowerActivationType.None;
+        }
+
+        public static PowerActivationType GetPowerActivationType(PowerPrototype powerProto)
+        {
+            return powerProto.Activation;
+        }
+
+        public bool IsComboEffect()
+        {
+            return GetPowerCategory() == PowerCategoryType.ComboEffect;
+        }
+
+        public static bool IsComboEffect(PowerPrototype powerProto)
+        {
+            return GetPowerCategory(powerProto) == PowerCategoryType.ComboEffect;
+        }
+
+        public static bool IsUltimatePower(PowerPrototype powerProto)
+        {
+            return powerProto.IsUltimate;
+        }
+
+        public bool IsTravelPower()
+        {
+            return Prototype != null && Prototype.IsTravelPower;
+        }
+
+        public static bool IsTravelPower(PowerPrototype powerProto)
+        {
+            return powerProto.IsTravelPower;
+        }
+
+        public bool IsMovementPower()
+        {
+            return Prototype is MovementPowerPrototype;
+        }
+
+        public static bool IsMovementPower(PowerPrototype powerProto)
+        {
+            return powerProto is MovementPowerPrototype;
+        }
+
+        public bool NeedsTarget()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "NeedsTarget(): powerProto == null");
+            return NeedsTarget(powerProto);
+        }
+
+        public static bool NeedsTarget(PowerPrototype powerProto)
+        {
+            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            if (stylePrototype == null) return Logger.WarnReturn(false, "NeedsTarget(): stylePrototype == null");
+            return stylePrototype.NeedsTarget;
+        }
+
+        public bool TargetsAOE()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TargetsAOE(): powerProto == null");
+            return TargetsAOE(powerProto);
+        }
+
+        public static bool TargetsAOE(PowerPrototype powerProto)
+        {
+            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            if (stylePrototype == null) return Logger.WarnReturn(false, "TargetsAOE(): stylePrototype == null");
+            return stylePrototype.TargetsAOE();
+        }
+
+        public bool IsOwnerCenteredAOE()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsOwnerCenteredAOE(): powerProto == null");
+            return IsOwnerCenteredAOE(powerProto);
+        }
+
+        public static bool IsOwnerCenteredAOE(PowerPrototype powerProto)
+        {
+            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            if (stylePrototype == null) return Logger.WarnReturn(false, "IsOwnerCenteredAOE(): stylePrototype == null");
+            return stylePrototype.AOESelfCentered;
+        }
+
+        public float GetAOERadius()
+        {
+            if (Owner == null) return Logger.WarnReturn(0f, "GetAOERadius(): Owner == null");
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetAOERadius(): powerProto == null");
+            return GetAOERadius();
+        }
+
+        public static float GetAOERadius(PowerPrototype powerProto, PropertyCollection ownerProperties = null)
+        {
+            float radius = powerProto.Radius;
+            radius *= GetAOESizePctModifier(powerProto, ownerProperties);
+            return radius;
+        }
+
+        public static float GetAOESizePctModifier(PowerPrototype powerProto, PropertyCollection ownerProperties)
+        {
+            // TODO
+            return 1f;
+        }
+
+        public TargetingShapeType GetTargetingShape()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TargetingShapeType.None, "GetTargetingShape(): powerProto == null");
+            return GetTargetingShape(powerProto);
+        }
+
+        public static TargetingShapeType GetTargetingShape(PowerPrototype powerProto)
+        {
+            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            if (stylePrototype == null) return Logger.WarnReturn(TargetingShapeType.None, "GetTargetingShape(): stylePrototype == null");
+            return stylePrototype.TargetingShape;
+        }
+
+        public bool IsMelee()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsMelee(): powerProto == null");
+            return IsMelee(powerProto);
+        }
+
+        public static bool IsMelee(PowerPrototype powerProto)
+        {
+            var reachProto = powerProto.TargetingReach.As<TargetingReachPrototype>();
+            if (reachProto == null) return Logger.WarnReturn(false, "IsMelee(): reachProto == null");
+            return reachProto.Melee;
+        }
+
+        public float GetRange()
+        {
+            if (Owner == null) return Logger.WarnReturn(0f, "GetRange(): Owner == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetRange(): powerProto == null");
+
+            float range;
+
+            if (Owner is Avatar avatar && avatar.IsUsingGamepadInput && GetGamepadRange() > 0f)
+                range = GetGamepadRange();
+            else
+                range = GetRange(powerProto, Properties, Owner.Properties);
+
+            if (powerProto.PowerCategory == PowerCategoryType.MissileEffect)
+                range = Math.Max(range, Owner.EntityCollideBounds.Radius);
+
+            return range;
+        }
+
+        public static float GetRange(PowerPrototype powerProto, PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            float range = IsOwnerCenteredAOE(powerProto) ? GetAOERadius(powerProto) : powerProto.GetRange(powerProperties, ownerProperties);
+
+            if (ownerProperties != null && range > 0f && IsMelee(powerProto) == false && IsOwnerCenteredAOE(powerProto) == false)
+            {
+                range += ownerProperties[PropertyEnum.RangeModifier];
+                // TODO: Power::AccumulateKeywordProperties<float>()
+            }
+
+            return range;
+        }
+
+        public float GetGamepadRange()
+        {
+            if (GamepadSettingsPrototype == null)
+                return 0f;
+
+            return GamepadSettingsPrototype.Range;
+        }
+
         #endregion
+
+        public TimeSpan GetCooldownTimeRemaining()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInRange(WorldEntity target, RangeCheckType checkType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInRange(Vector3 position, RangeCheckType activation)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TimeSpan GetFullExecutionTime()
+        {
+            throw new NotImplementedException();
+        }
+
+        public float GetApplicationRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

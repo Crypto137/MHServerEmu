@@ -42,6 +42,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
 
+        public bool IsUsingGamepadInput { get; set; } = false;
+
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;

@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Dialog
@@ -26,7 +25,7 @@ namespace MHServerEmu.Games.Dialog
                 if (isAvailable && interactor.GetThrowablePower() != null)
                 {
                     Power activePower = interactor.ActivePower;
-                    if (activePower == null || activePower.PowerCategory != PowerCategoryType.ThrowableCancelPower)
+                    if (activePower == null || activePower.GetPowerCategory() != PowerCategoryType.ThrowableCancelPower)
                         isAvailable = false;
                 }
             }

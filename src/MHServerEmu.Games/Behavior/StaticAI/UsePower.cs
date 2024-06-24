@@ -194,7 +194,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 if (powerProto == null) return genericErrorResult;
 
                 Vector3 targetPosition = targetWorldEntity.RegionLocation.Position;
-                if (power.TargetsAOE(powerProto))
+                if (Power.TargetsAOE(powerProto))
                 {
                     if (powerContext.UseMainTargetForAOEActivation)
                     {

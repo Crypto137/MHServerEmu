@@ -356,14 +356,14 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private void FinishAssignPower(Power power)
         {
-            if (power.PowerCategory == PowerCategoryType.ThrowablePower)
+            if (power.GetPowerCategory() == PowerCategoryType.ThrowablePower)
             {
                 if (ThrowablePower != null)
                     Logger.Warn("FinishAssignPower(): Trying to assign a throwable power when this entity already has a throwable power in its power collection");
 
                 ThrowablePower = power;
             }
-            else if (power.PowerCategory == PowerCategoryType.ThrowableCancelPower)
+            else if (power.GetPowerCategory() == PowerCategoryType.ThrowableCancelPower)
             {
                 if (ThrowableCancelPower != null)
                     Logger.Warn("FinishAssignPower(): Trying to assign a throwable cancel power when this entity already has a throwable cancel power in its power collection");
@@ -428,7 +428,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         private void FinishUnassignPower(Power power)
         {
-            if (power.PowerCategory == PowerCategoryType.ThrowablePower)
+            if (power.GetPowerCategory() == PowerCategoryType.ThrowablePower)
             {
                 if (ThrowablePower == null)
                     Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable power when this entity does not have a throwable power in its power collection");
@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
                 ThrowablePower = null;
             }
-            else if (power.PowerCategory == PowerCategoryType.ThrowableCancelPower)
+            else if (power.GetPowerCategory() == PowerCategoryType.ThrowableCancelPower)
             {
                 if (ThrowableCancelPower == null)
                     Logger.Warn("FinishUnassignPower(): Trying to unassign a throwable cancel power when this entity does not have a throwable cancel power in its power collection");
