@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -328,6 +329,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RarityPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PrototypeId DowngradeTo { get; protected set; }
         public PrototypeId TextStyle { get; protected set; }
         public CurveId Weight { get; protected set; }
@@ -335,5 +338,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int BroadcastToPartyLevelMax { get; protected set; }
         public AffixEntryPrototype[] AffixesBuiltIn { get; protected set; }
         public int ItemLevelBonus { get; protected set; }
+
+        [DoNotCopy]
+        public int Tier { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            Tier = 1;
+
+            PrototypeId downgrade = DowngradeTo;
+            while (downgrade != PrototypeId.Invalid)
+            {
+                RarityPrototype descendant = GameDatabase.GetPrototype<RarityPrototype>(downgrade);
+
+                if (descendant == null)
+                {
+                    Logger.Warn("PostProcess(): descendant == null");
+                    break;
+                }
+
+                downgrade = descendant.DowngradeTo;
+                Tier++;
+            }
+        }
     }
 }

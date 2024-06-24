@@ -184,12 +184,6 @@ namespace MHServerEmu.Games
             NetworkManager.SetPlayerConnectionPending(playerConnection);
         }
 
-        public void GetRegionAsync(PlayerConnection playerConnection)
-        {
-            Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
-            RegionManager.AsyncFinishRegionGeneration(region, playerConnection);
-        }
-
         public Entity AllocateEntity(PrototypeId entityRef)
         {
             var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);

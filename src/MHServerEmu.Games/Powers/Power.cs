@@ -1,10 +1,12 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
@@ -68,31 +70,53 @@ namespace MHServerEmu.Games.Powers
         {
         }
 
-        public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype prototype, PropertyCollection initializeProperties, WorldEntity owner)
+        public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype powerProto, PropertyCollection initializeProperties, WorldEntity owner)
         {
             // Start with a clean copy from the prototype
-            if (prototype.Properties != null)
-                primaryCollection.FlattenCopyFrom(prototype.Properties, true);
+            if (powerProto.Properties != null)
+                primaryCollection.FlattenCopyFrom(powerProto.Properties, true);
 
             // Add properties from the collection passed in the Initialize() method if we have one
             if (initializeProperties != null)
                 primaryCollection.FlattenCopyFrom(initializeProperties, false);
 
             // Set properties for all keywords assigned in the prototype
-            if (prototype.Keywords != null)
+            if (powerProto.Keywords != null)
             {
-                foreach (PrototypeId keywordRef in prototype.Keywords)
+                foreach (PrototypeId keywordRef in powerProto.Keywords)
                     primaryCollection[PropertyEnum.HasPowerKeyword, keywordRef] = true;
             }
 
-            if (prototype.EvalOnCreate != null)
+            // Run evals
+            if (powerProto.EvalOnCreate.HasValue())
             {
-                // TODO
+                EvalContextData contextData = new(owner?.Game);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, primaryCollection);
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+
+                Eval.InitTeamUpEvalContext(contextData, owner);
+
+                foreach (EvalPrototype evalProto in powerProto.EvalOnCreate)
+                {
+                    if (Eval.RunBool(evalProto, contextData) == false)
+                        Logger.Warn($"GeneratePowerProperties(): The following EvalOnCreate Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
+                }
+
             }
 
-            if (prototype.EvalPowerSynergies != null)
+            if (powerProto.EvalPowerSynergies != null)
             {
-                // TODO
+                EvalContextData contextData = new(owner?.Game);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, primaryCollection);
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, owner?.ConditionCollection);
+                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, owner);
+
+                Eval.InitTeamUpEvalContext(contextData, owner);
+
+                if (Eval.RunBool(powerProto.EvalPowerSynergies, contextData) == false)
+                    Logger.Warn($"GeneratePowerProperties(): The EvalPowerSynergies in a power failed:\nPower: [{powerProto}]");
             }
         }
 
