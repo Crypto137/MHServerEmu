@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Diagnostics;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
@@ -428,9 +429,16 @@ namespace MHServerEmu.Games.Regions
                         && GenerateNaviMesh()
                         && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
             // BuildObjectiveGraph()
-            if (success) success &= GenerateMissionPopulation()
+
+            if (success)
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                success &= GenerateMissionPopulation()
                         && GenerateHelper(regionGenerator, GenerateFlag.Population)
                         && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
+                Logger.Debug($"GenerateAreas(): Generated population in {stopwatch.ElapsedMilliseconds} ms");
+            }
+
             return success;
         }
 

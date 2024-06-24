@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -149,33 +150,8 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public void AsyncFinishRegionGeneration(Region region, PlayerConnection playerConnection)
-        {
-            // Temp method until we make async region generation better
-            _generationQueue.Enqueue((region, playerConnection));
-        }
-
         public void ProcessPendingRegions()
         {
-            // Process regions that finished generating asynchronously
-            while (_generationQueue.TryDequeue(out var pending))
-            {
-                Region region = pending.Item1;
-                PlayerConnection playerConnection = pending.Item2;
-
-                if (region == null)
-                {
-                    EventPointer<OLD_ErrorInRegionEvent> errorEventPointer = new();
-                    Game.GameEventScheduler.ScheduleEvent(errorEventPointer, TimeSpan.Zero);
-                    errorEventPointer.Get().Initialize(playerConnection, playerConnection.RegionDataRef);
-                    continue;
-                }
-
-                EventPointer<OLD_GetRegionEvent> eventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(playerConnection, region);
-            }
-
             // Process regions that need to be shut down
             while (_shutdownQueue.TryDequeue(out Region region))
             {
@@ -219,7 +195,9 @@ namespace MHServerEmu.Games.Regions
                     Logger.Debug($"GenerateRegion {GameDatabase.GetFormattedPrototypeName((PrototypeId)prototype)}");
                     try
                     {
+                        Stopwatch stopwatch = Stopwatch.StartNew();
                         region = GenerateRegion(prototype);
+                        Logger.Debug($"GetRegion(): Generated region {prototype} in {stopwatch.ElapsedMilliseconds} ms");
                     } 
                     catch(Exception e) 
                     {

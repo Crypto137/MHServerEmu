@@ -20,6 +20,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using System.Diagnostics;
 using static MHServerEmu.Games.Powers.PowerPrototypes;
 
 namespace MHServerEmu.Games.Network
@@ -231,12 +232,25 @@ namespace MHServerEmu.Games.Network
 
             Player.QueueLoadingScreen(RegionDataRef);
 
-            // Run region generation as a task
-            Task.Run(() => Game.GetRegionAsync(this));
             AOI.LoadedCellCount = 0;
             IsLoading = true;
 
             Player.IsOnLoadingScreen = true;
+
+            Region region = Game.RegionManager.GetRegion((RegionPrototypeId)RegionDataRef);
+            if (region == null)
+            {
+                Logger.Error($"Event ErrorInRegion {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
+                Disconnect();
+                return;
+            }
+
+            var messages = region.GetLoadingMessages(Game.Id, WaypointDataRef, this);
+            foreach (IMessage message in messages)
+                SendMessage(message);
+
+            AOI.SetRegion(region);
+            AOI.Update(StartPosition, true, true);
         }
 
         public void ExitGame()
