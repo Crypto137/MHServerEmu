@@ -650,6 +650,16 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void OnChangeActiveAvatar(int avatarIndex, ulong lastCurrentAvatarId)
+        {
+            // TODO: Apply and remove avatar properties stored in the player
+
+            SendMessage(NetMessageCurrentAvatarChanged.CreateBuilder()
+                .SetAvatarIndex(avatarIndex)
+                .SetLastCurrentEntityId(lastCurrentAvatarId)
+                .Build());
+        }
+
         public bool TrashItem(Item item)
         {
             // See CPlayer::RequestItemTrash for reference
@@ -790,8 +800,6 @@ namespace MHServerEmu.Games.Entities
             var avatarSwapOutProto = GameDatabase.GlobalsPrototype.AvatarSwapOutPower.As<PowerPrototype>();
             TimeSpan animationTime = Power.GetAnimationTime(avatarSwapOutProto, CurrentAvatar, null);
 
-            Logger.Debug($"{avatarSwapOutProto.AnimationTimeMS} ms => {animationTime.TotalMilliseconds} ms");
-
             // Activate swap out power for the current avatar
             CurrentAvatar.TEMP_SendActivatePowerMessage(avatarSwapOutProto.DataRef);
 
@@ -803,6 +811,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool SwitchAvatar(PrototypeId avatarProtoRef)
         {
+            ulong lastCurrentAvatarId = CurrentAvatar != null ? CurrentAvatar.Id : InvalidId;
+
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
             Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
 
@@ -814,11 +824,11 @@ namespace MHServerEmu.Games.Entities
             if (result != InventoryResult.Success)
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
 
-            EnableCurrentAvatar(true);
+            EnableCurrentAvatar(true, lastCurrentAvatarId);
             return true;
         }
 
-        public bool EnableCurrentAvatar(bool withSwapInPower)
+        public bool EnableCurrentAvatar(bool withSwapInPower, ulong lastCurrentAvatarId)
         {
             // TODO: Use this for teleportation within region as well
 
@@ -839,7 +849,11 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Add new avatar to the world
-            return CurrentAvatar.EnterWorld(PlayerConnection.AOI.Region, PlayerConnection.LastPosition, PlayerConnection.LastOrientation, settings);
+            if (CurrentAvatar.EnterWorld(PlayerConnection.AOI.Region, PlayerConnection.LastPosition, PlayerConnection.LastOrientation, settings) == false)
+                return false;
+
+            OnChangeActiveAvatar(0, lastCurrentAvatarId);
+            return true;
         }
 
         #endregion

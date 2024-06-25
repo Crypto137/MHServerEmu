@@ -272,7 +272,7 @@ namespace MHServerEmu.Games.Network
 
             LastPosition = StartPosition;
             LastOrientation = StartOrientation;
-            Player.EnableCurrentAvatar(false);
+            Player.EnableCurrentAvatar(false, Player.CurrentAvatar.Id);
 
             Player.DequeueLoadingScreen();
 
