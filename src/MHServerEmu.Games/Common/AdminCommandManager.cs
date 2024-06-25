@@ -32,6 +32,13 @@ namespace MHServerEmu.Games.Common
             foreach (string line in response.Split("\r\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 SendAdminCommandResponse(playerConnection, line);
         }
+
+        public static void SendVerify(PlayerConnection playerConnection, string message)
+        {
+            playerConnection.SendMessage(NetMessageVerifyOnClient.CreateBuilder()
+                .SetMessage($"(Server) {message}")
+                .Build());
+        }
     }
 
     [Flags]
