@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Text;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -200,12 +201,16 @@ namespace MHServerEmu.Games.Network
                 _trackedCells[kvp.Key] = new(_currentFrame, true);
         }
 
-        public void DebugPrint()
+        public string DebugPrint()
         {
-            Logger.Debug($"------ AOI DEBUG REPORT [{_trackedEntities.Count,3}] ------");
+            StringBuilder sb = new();
+
+            sb.AppendLine($"------ AOI SERVER DEBUG REPORT [{_trackedEntities.Count,3}] ------");
 
             foreach (var kvp in _trackedEntities)
-                Logger.Debug($"\t{_game.EntityManager.GetEntity<Entity>(kvp.Key)}, interestPolicies={kvp.Value.InterestPolicies}");
+                sb.AppendLine($"{_game.EntityManager.GetEntity<Entity>(kvp.Key)}, interestPolicies={kvp.Value.InterestPolicies}");
+
+            return sb.ToString();
         }
 
         private void UpdateAreas()

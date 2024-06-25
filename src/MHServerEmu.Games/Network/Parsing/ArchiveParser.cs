@@ -317,6 +317,8 @@ namespace MHServerEmu.Games.Network.Parsing
             Serializer.Transfer(archive, ref flags);
             var locoFieldFlags = (LocomotionMessageFlags)(flags & 0xFFF);
             var extraFieldFlags = (EnterGameWorldMessageFlags)(flags >> 12);
+            sb.AppendLine($"locoFieldFlags: {locoFieldFlags}");
+            sb.AppendLine($"extraFieldFlags: {extraFieldFlags}");
 
             if (locoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeRef))
             {

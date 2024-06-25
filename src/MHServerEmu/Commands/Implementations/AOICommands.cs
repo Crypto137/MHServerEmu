@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
@@ -37,9 +38,9 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            playerConnection.AOI.DebugPrint();
+            AdminCommandManager.SendAdminCommandResponseSplit(playerConnection, playerConnection.AOI.DebugPrint());
 
-            return "AOI information printed to the server console.";
+            return "AOI information printed to the console.";
         }
 
         [Command("update", "Forces AOI proximity update.\nUsage: aoi update", AccountUserLevel.Admin)]

@@ -270,7 +270,7 @@ namespace MHServerEmu.Games.Network
 
             LastPosition = StartPosition;
             LastOrientation = StartOrientation;
-            Player.EnableCurrentAvatar(false);
+            Player.EnableCurrentAvatar(false, Player.CurrentAvatar.Id);
 
             Player.DequeueLoadingScreen();
 
@@ -521,8 +521,8 @@ namespace MHServerEmu.Games.Network
             {
                 // Naughty hacker here, TODO: handle this properly
                 Logger.Warn($"OnAdminCommand(): Unauthorized admin command received from {_dbAccount}");
-                SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
-                    .SetResponse($"{_dbAccount.PlayerName} is not in the sudoers file. This incident will be reported.").Build());
+                AdminCommandManager.SendAdminCommandResponse(this,
+                    $"{_dbAccount.PlayerName} is not in the sudoers file. This incident will be reported.");
                 return true;
             }
 
@@ -530,7 +530,7 @@ namespace MHServerEmu.Games.Network
             var command = message.As<NetMessageAdminCommand>();
             string output = $"Unhandled admin command: {command.Command.Split(' ')[0]}";
             Logger.Warn(output);
-            SendMessage(NetMessageAdminCommandResponse.CreateBuilder().SetResponse(output).Build());
+            AdminCommandManager.SendAdminCommandResponse(this, output);
             return true;
         }
 
