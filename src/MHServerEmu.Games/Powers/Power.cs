@@ -200,6 +200,11 @@ namespace MHServerEmu.Games.Powers
             return Prototype != null ? Prototype.PowerCategory : PowerCategoryType.None;
         }
 
+        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto)
+        {
+            return powerProto.PowerCategory;
+        }
+
         public bool IsNormalPower()
         {
             return GetPowerCategory() == PowerCategoryType.NormalPower;
@@ -220,17 +225,22 @@ namespace MHServerEmu.Games.Powers
             return GetPowerCategory() == PowerCategoryType.ThrowablePower;
         }
 
-        public static PowerCategoryType GetPowerCategory(PowerPrototype powerProto)
+        public bool IsProcEffect()
         {
-            return powerProto.PowerCategory;
+            return GetPowerCategory() == PowerCategoryType.ProcEffect;
         }
 
-        public PowerActivationType GetPowerActivationType()
+        public static bool IsProcEffect(PowerPrototype powerProto)
+        {
+            return GetPowerCategory(powerProto) == PowerCategoryType.ProcEffect;
+        }
+
+        public PowerActivationType GetActivationType()
         {
             return Prototype != null ? Prototype.Activation : PowerActivationType.None;
         }
 
-        public static PowerActivationType GetPowerActivationType(PowerPrototype powerProto)
+        public static PowerActivationType GetActivationType(PowerPrototype powerProto)
         {
             return powerProto.Activation;
         }

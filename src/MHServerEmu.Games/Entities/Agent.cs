@@ -434,7 +434,7 @@ namespace MHServerEmu.Games.Entities
 
         internal int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
-            throw new NotImplementedException();
+            return 0;
         }
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)

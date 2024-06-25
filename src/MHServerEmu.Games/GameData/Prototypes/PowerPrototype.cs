@@ -427,6 +427,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalEventTriggerChance { get; protected set; }
         public EvalPrototype EvalEventParam { get; protected set; }
         public bool ResetFXRandomSeed { get; protected set; }
+
+        [DoNotCopy]
+        public bool HasEvalEventTriggerChance { get => EvalEventTriggerChance != null; }
     }
 
     public class SituationalTriggerPrototype : Prototype
