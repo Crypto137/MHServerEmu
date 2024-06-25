@@ -16,19 +16,17 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 {
     public class PowerCollection : IEnumerable<KeyValuePair<PrototypeId, PowerCollectionRecord>>
     {
-        // Relevant protobufs: NetMessagePowerCollectionAssignPower, NetMessageAssignPowerCollection,
-        // NetMessagePowerCollectionUnassignPower, NetMessageUpdatePowerIndexProps
-
         private const int MaxNumRecordsToSerialize = 256;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly SortedDictionary<PrototypeId, PowerCollectionRecord> _powerDict = new();
         private readonly WorldEntity _owner;
-
-        private SortedDictionary<PrototypeId, PowerCollectionRecord> _powerDict = new();
  
         public Power ThrowablePower { get; private set; }
         public Power ThrowableCancelPower { get; private set; }
+
+        public int PowerCount { get => _powerDict.Count; }
 
         public PowerCollection(WorldEntity owner)
         {

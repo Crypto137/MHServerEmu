@@ -194,8 +194,13 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in _conditionCollection)
                 sb.AppendLine($"{nameof(_conditionCollection)}[{kvp.Key}]: {kvp.Value}");
 
-            foreach (var kvp in _powerCollection)
-                sb.AppendLine($"{nameof(_powerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+            if (_powerCollection.PowerCount > 0)
+            {
+                sb.AppendLine($"{nameof(_powerCollection)}:");
+                foreach (var kvp in _powerCollection)
+                    sb.AppendLine(kvp.Value.ToString());
+                sb.AppendLine();
+            }
 
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }

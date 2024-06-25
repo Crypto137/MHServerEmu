@@ -211,11 +211,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
         public override string ToString()
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(_powerProto)}: {_powerProto}");
-            sb.AppendLine($"{nameof(_indexProps)}: {_indexProps}");
-            sb.AppendLine($"{nameof(_powerRefCount)}: {_powerRefCount}");
-            return sb.ToString();
+            return $"[x{_powerRefCount}] {_powerProto} ({_indexProps})";
         }
     }
 }
