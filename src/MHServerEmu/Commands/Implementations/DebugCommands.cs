@@ -264,6 +264,7 @@ namespace MHServerEmu.Commands.Implementations
                     BlockingCheckFlags.None, petProto.Bounds.GetSphereRadius(), avatar.Bounds.Radius * 2, out Vector3 petPosition);
                 Agent pet = EntityHelper.CreatePet(petPowerProto, petPosition, region, player);
                 pet.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id; // link to owner
+                pet.Properties[PropertyEnum.PowerUserOverrideID] = avatar.Id;
                 pet.EnterGame();                
                 playerConnection.AOI.Update(playerConnection.LastPosition, true);
                 return $"Pet {pet.PrototypeName} Created";

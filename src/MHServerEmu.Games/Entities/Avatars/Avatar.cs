@@ -491,6 +491,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (teamUp == null) return;
             if (teamUp.IsInWorld) return;
             Properties[PropertyEnum.AvatarTeamUpIsSummoned] = true;
+            Properties[PropertyEnum.AvatarTeamUpStartTime] = (long)Game.CurrentTime.TotalMilliseconds;
+            //Power power = GetPower(TeamUpPowerRef);
+            //Properties[PropertyEnum.AvatarTeamUpDuration] = power.GetCooldownDuration();
             EntitySettings setting = new()
             { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden };            
             teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, setting);
@@ -512,6 +515,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     .Build();
                 Game.NetworkManager.SendMessageToInterested(killMessage, teamUp, AOINetworkPolicyValues.AOIChannelProximity);             
                 Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
+                Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
+                Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
                 teamUp.AIController.SetIsEnabled(false);
                 teamUp.ScheduleExitWorldEvent(TimeSpan.FromMilliseconds(teamUp.WorldEntityPrototype.RemoveFromWorldTimerMS));
             }
