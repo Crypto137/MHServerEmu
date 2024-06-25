@@ -650,7 +650,7 @@ namespace MHServerEmu.Games.Entities
 
             // Record throwable entity in agent's properties
             Properties[PropertyEnum.ThrowableOriginatorEntity] = entityId;
-            Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableEntity.EntityWorldAsset;
+            Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableEntity.GetEntityWorldAsset();
             _throwableEntityLocation.Set(throwableEntity.RegionLocation);
 
             // Assign throwable powers

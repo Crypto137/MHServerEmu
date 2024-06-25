@@ -432,6 +432,28 @@ namespace MHServerEmu.Games.Powers
             return animSpeed;
         }
 
+        public TimeSpan GetAnimationTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetAnimationTime(): powerProto == null");
+            return GetAnimationTime(powerProto, Owner, this);
+        }
+
+        public static TimeSpan GetAnimationTime(PowerPrototype powerProto, WorldEntity owner, Power power)
+        {
+            if (owner == null) return Logger.WarnReturn(TimeSpan.Zero, "GetAnimationTime(): owner == null");
+
+            TimeSpan baseTime = powerProto.GetAnimationTime(owner.GetOriginalWorldAsset(), owner.GetEntityWorldAsset());
+            float animSpeed = GetAnimSpeed(powerProto, owner, power);
+            TimeSpan result = animSpeed > 0f ? baseTime / animSpeed : TimeSpan.Zero;
+
+            // What exactly are these Bad Things? o_o
+            if (baseTime != TimeSpan.Zero && result <= TimeSpan.Zero)
+                Logger.Warn($"GetAnimationTime(): The following power has a non-zero animation time, but bonuses on the character are such that the time is being reduced to 0, which will cause Bad Things to happen...\n[{powerProto}]");
+
+            return result;
+        }
+
         public TimeSpan GetChannelStartTime()
         {
             PowerPrototype powerProto = Prototype;

@@ -83,7 +83,6 @@ namespace MHServerEmu.Games.Entities
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
-        public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
@@ -720,7 +719,16 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
+        public virtual AssetId GetEntityWorldAsset()
+        {
+            // NOTE: Overriden in Agent, Avatar, and Missile
+            return GetOriginalWorldAsset();
+        }
+
+        public AssetId GetOriginalWorldAsset()
+        {
+            return GetOriginalWorldAsset(WorldEntityPrototype);
+        }
 
         public static AssetId GetOriginalWorldAsset(WorldEntityPrototype prototype)
         {

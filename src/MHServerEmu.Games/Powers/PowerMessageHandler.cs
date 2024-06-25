@@ -97,10 +97,12 @@ namespace MHServerEmu.Games.Powers
                 Logger.Trace($"AddEvent EndThrowing for {powerPrototypePath}");
 
                 bool isCancelling = powerPrototypePath.Contains("CancelPower");
-                var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
+
+                Power power = avatar.GetPower(powerPrototypeId);
+                if (power == null) Logger.Warn("OnTryActivatePower(): power == null");
 
                 EventPointer<OLD_EndThrowingEvent> endThrowingPointer = new();
-                _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, TimeSpan.FromMilliseconds(powerProto.AnimationTimeMS));
+                _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, power.GetAnimationTime());
                 endThrowingPointer.Get().Initialize(avatar, isCancelling);
 
                 return true;

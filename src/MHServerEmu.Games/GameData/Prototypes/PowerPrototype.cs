@@ -235,6 +235,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int channelLoopTimeMS = Eval.RunInt(ChannelLoopTimeMS, contextData);
             return TimeSpan.FromMilliseconds(channelLoopTimeMS);
         }
+
+        public TimeSpan GetAnimationTime(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            int animationTimeMS = AnimationTimeMS;
+
+            if (PowerUnrealOverrides == null)
+                return TimeSpan.FromMilliseconds(animationTimeMS);
+
+            foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
+            {
+                if (unrealAssetOverrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                if (unrealAssetOverrideProto.AnimationTimeMS >= 0)
+                    animationTimeMS = unrealAssetOverrideProto.AnimationTimeMS;
+
+                if (unrealAssetOverrideProto.ArtOnlyReplacements == null)
+                    continue;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    if (replacementProto.AnimationTimeMS >= 0)
+                        animationTimeMS = replacementProto.AnimationTimeMS;
+                }
+            }
+
+            return TimeSpan.FromMilliseconds(animationTimeMS);
+        }
     }
 
     public class MovementPowerPrototype : PowerPrototype
