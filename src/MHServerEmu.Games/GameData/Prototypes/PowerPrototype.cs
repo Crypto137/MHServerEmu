@@ -10,6 +10,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PowerPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private TargetingStylePrototype _targetingStylePtr;     // Local ref to speed up access
+
         public PrototypePropertyCollection Properties { get; protected set; }
         public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; protected set; }
         public PowerActivationType Activation { get; protected set; }
@@ -154,7 +158,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
-        public static readonly Logger Logger = LogManager.CreateLogger();
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+
+        [DoNotCopy]
+        public TimeSpan ChannelStartTime { get => TimeSpan.FromMilliseconds(ChannelStartTimeMS); }
+        [DoNotCopy]
+        public TimeSpan ChannelMinTime { get => TimeSpan.FromMilliseconds(ChannelMinTimeMS); }
+        [DoNotCopy]
+        public TimeSpan ChannelEndTime { get => TimeSpan.FromMilliseconds(ChannelEndTimeMS); }
+        [DoNotCopy]
+        public TimeSpan ChargeTime { get => TimeSpan.FromMilliseconds(ChargingTimeMS); }
 
         public static PrototypeId RecursiveGetPowerRefOfPowerTypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
         {
@@ -168,9 +182,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return PrototypeId.Invalid;
         }
-
-        [DoNotCopy]
-        public KeywordsMask KeywordsMask { get; protected set; }
 
         public virtual bool IsHighFlyingPower() => false;
 
@@ -188,6 +199,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             // TODO 
+
+            _targetingStylePtr = TargetingStyle.As<TargetingStylePrototype>();
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
@@ -197,7 +210,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public TargetingStylePrototype GetTargetingStyle()
         {
-            return TargetingStyle.As<TargetingStylePrototype>();
+            return _targetingStylePtr;
         }
 
         public float GetRange(PropertyCollection powerProperties, PropertyCollection ownerProperties)
@@ -209,6 +222,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? new());
 
             return Eval.RunFloat(Range, contextData);            
+        }
+
+        public TimeSpan GetChannelLoopTime(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            if (ChannelLoopTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelLoopTime(): ChannelLoopTimeMS == null");
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties);
+
+            int channelLoopTimeMS = Eval.RunInt(ChannelLoopTimeMS, contextData);
+            return TimeSpan.FromMilliseconds(channelLoopTimeMS);
         }
     }
 

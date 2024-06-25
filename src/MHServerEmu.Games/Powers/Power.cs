@@ -279,7 +279,7 @@ namespace MHServerEmu.Games.Powers
 
         public static bool NeedsTarget(PowerPrototype powerProto)
         {
-            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
             if (stylePrototype == null) return Logger.WarnReturn(false, "NeedsTarget(): stylePrototype == null");
             return stylePrototype.NeedsTarget;
         }
@@ -293,7 +293,7 @@ namespace MHServerEmu.Games.Powers
 
         public static bool TargetsAOE(PowerPrototype powerProto)
         {
-            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
             if (stylePrototype == null) return Logger.WarnReturn(false, "TargetsAOE(): stylePrototype == null");
             return stylePrototype.TargetsAOE();
         }
@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.Powers
 
         public static bool IsOwnerCenteredAOE(PowerPrototype powerProto)
         {
-            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
             if (stylePrototype == null) return Logger.WarnReturn(false, "IsOwnerCenteredAOE(): stylePrototype == null");
             return stylePrototype.AOESelfCentered;
         }
@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.Powers
 
         public static TargetingShapeType GetTargetingShape(PowerPrototype powerProto)
         {
-            var stylePrototype = powerProto.TargetingStyle.As<TargetingStylePrototype>();
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
             if (stylePrototype == null) return Logger.WarnReturn(TargetingShapeType.None, "GetTargetingShape(): stylePrototype == null");
             return stylePrototype.TargetingShape;
         }
@@ -430,6 +430,113 @@ namespace MHServerEmu.Games.Powers
                 power.AnimSpeedCache = animSpeed;
 
             return animSpeed;
+        }
+
+        public TimeSpan GetChannelStartTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelStartTime(): powerProto == null");
+            return GetChannelStartTime(powerProto, Owner, this);
+        }
+
+        public static TimeSpan GetChannelStartTime(PowerPrototype powerProto, WorldEntity owner, Power power)
+        {
+            float animSpeed = GetAnimSpeed(powerProto, owner, power);
+            float timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;     // Avoid division by 0 / negative
+            return powerProto.ChannelStartTime * timeMult;
+        }
+
+        public TimeSpan GetChannelLoopTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelLoopTime(): powerProto == null");
+            return GetChannelLoopTime(powerProto, Owner, Properties, this);
+        }
+
+        public static TimeSpan GetChannelLoopTime(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, Power power)
+        {
+            if (owner == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelLoopTime(): owner == null");
+
+            float timeMult = 1f;
+
+            if (powerProto.IsRecurring)
+            {
+                float animSpeed = GetAnimSpeed(powerProto, owner, power);
+                timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;     // Avoid division by 0 / negative
+            }
+
+            if (powerProto.OmniDurationBonusExclude == false)
+            {
+                timeMult += owner.Properties[PropertyEnum.OmniDurationBonusPct];
+                timeMult = MathF.Max(timeMult, 0.5f);
+            }
+
+            return powerProto.GetChannelLoopTime(powerProperties, owner.Properties) * timeMult;
+        }
+
+        public TimeSpan GetChannelEndTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelEndTime(): powerProto == null");
+            return GetChannelEndTime(powerProto, Owner, this);
+        }
+
+        public static TimeSpan GetChannelEndTime(PowerPrototype powerProto, WorldEntity owner, Power power)
+        {
+            float animSpeed = GetAnimSpeed(powerProto, owner, power);
+            float timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;     // Avoid division by 0 / negative
+            return powerProto.ChannelEndTime * timeMult;
+        }
+
+        public TimeSpan GetChannelMinTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelMinTime(): powerProto == null");
+            return GetChannelMinTime(powerProto, Owner, Properties, this);
+        }
+
+        public static TimeSpan GetChannelMinTime(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, Power power)
+        {
+            if (powerProto.IsRecurring)
+            {
+                // NOTE: We calculate using ticks here to avoid unnecessary conversions to float / double
+                long channelStartTime = GetChannelStartTime(powerProto, owner, power).Ticks;
+                long channelLoopTime = GetChannelLoopTime(powerProto, owner, powerProperties, power).Ticks;
+                long channelMinTime = powerProto.ChannelMinTime.Ticks;
+                return TimeSpan.FromTicks(Math.Max(channelStartTime + channelLoopTime, channelMinTime));
+            }
+
+            float animSpeed = GetAnimSpeed(powerProto, owner, power);
+            float timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;     // Avoid division by 0 / negative
+            return powerProto.ChannelMinTime * timeMult;
+        }
+
+        public TimeSpan GetTotalChannelingTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetTotalChannelingTime(): powerProto == null");
+            return GetTotalChannelingTime(powerProto, Owner, Properties, this);
+        }
+
+        public static TimeSpan GetTotalChannelingTime(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, Power power)
+        {
+            TimeSpan channelStartTime = GetChannelStartTime(powerProto, owner, power);
+            TimeSpan channelLoopTime = GetChannelLoopTime(powerProto, owner, powerProperties, power);
+            TimeSpan channelEndTime = GetChannelEndTime(powerProto, owner, power);
+            return channelStartTime + channelLoopTime + channelEndTime;
+        }
+
+        public TimeSpan GetChargingTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChargingTime(): powerProto == null");
+            return GetChargingTime(powerProto, Owner, this);
+        }
+
+        public static TimeSpan GetChargingTime(PowerPrototype powerProto, WorldEntity owner, Power power)
+        {
+            float animSpeed = GetAnimSpeed(powerProto, owner, power);
+            return animSpeed > 0f ? powerProto.ChargeTime / animSpeed : TimeSpan.Zero;  // Avoid division by 0 / negative
         }
 
         #endregion
