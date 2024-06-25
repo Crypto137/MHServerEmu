@@ -3,7 +3,9 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Events.LegacyImplementations
 {
@@ -25,9 +27,59 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             var proto = _interactObject.PrototypeDataRef;
             Logger.Trace($"UseInteractableObject {GameDatabase.GetPrototypeName(proto)}");
 
-            if (proto != (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
+            if (proto == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
+                return HandleBowlingBallItem();
+
+            ItemPrototype itemPrototype = GameDatabase.GetPrototype<ItemPrototype>(proto);
+
+            if (itemPrototype?.ActionsTriggeredOnItemEvent?.Choices == null)
                 return true;
 
+            if (itemPrototype.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll) // TODO : other pick method
+            {
+                foreach (var choice in itemPrototype.ActionsTriggeredOnItemEvent.Choices)
+                {
+                    ItemActionPrototype itemActionPrototype = choice as ItemActionPrototype;
+                    if (itemActionPrototype == null)
+                        continue;
+
+                    ExecuteAction(itemActionPrototype);
+                }
+            }
+
+            return true;
+        }
+
+        private void ExecuteAction(ItemActionPrototype itemActionPrototype)
+        {
+            if (itemActionPrototype.TriggeringEvent != ItemEventType.OnUse)
+                return;
+
+            ItemActionUsePowerPrototype itemActionUsePowerPrototype = itemActionPrototype as ItemActionUsePowerPrototype;
+            if (itemActionUsePowerPrototype != null)
+                UsePower(_player.CurrentAvatar, itemActionUsePowerPrototype.Power);
+        }
+
+        private void UsePower(Avatar avatar, PrototypeId powerPrototypeId)
+        {
+            if (avatar.HasPowerInPowerCollection(powerPrototypeId) == false)
+                avatar.AssignPower(powerPrototypeId, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+
+            Power power = avatar.GetPower(powerPrototypeId);
+            if (power == null)
+                return;
+
+            if (power.Prototype.IsToggled)
+            {
+                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerPrototypeId])
+                    EntityHelper.DestroySummonFromPower(avatar, powerPrototypeId);
+                else
+                    EntityHelper.SummonEntityFromPower(avatar, powerPrototypeId);
+            }
+        }
+
+        private bool HandleBowlingBallItem()
+        {
             var bowlingBallProtoRef = (PrototypeId)7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
             var itemPower = (PrototypeId)PowerPrototypes.Items.BowlingBallItemPower; // BowlingBallItemPower
                                                                                      // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
