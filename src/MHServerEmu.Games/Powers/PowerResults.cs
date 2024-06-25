@@ -28,25 +28,6 @@ namespace MHServerEmu.Games.Powers
         HasTransferToEntityId       = 1 << 11
     }
 
-    [Flags]
-    public enum PowerResultFlags    // PowerResults::getStringForFlag()
-    {
-        None            = 0,
-        Hostile         = 1 << 0,
-        Proc            = 1 << 1,
-        OverTime        = 1 << 2,
-        Critical        = 1 << 3,
-        Dodged          = 1 << 4,
-        Resisted        = 1 << 5,
-        Blocked         = 1 << 6,
-        SuperCritical   = 1 << 7,   // Brutal Strike
-        Unaffected      = 1 << 8,
-        Teleport        = 1 << 9,
-        NoDamage        = 1 << 10,
-        Resurrect       = 1 << 11,
-        InstantKill     = 1 << 12
-    }
-
     // Inherits from PowerEffectsPacket class
     // Related to PowerPayload?
     public class PowerResults : ISerialize

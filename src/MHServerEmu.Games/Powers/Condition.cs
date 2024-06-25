@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.Powers
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.OwnerAssetRefOverride))
                     success &= Serializer.Transfer(archive, ref _ownerAssetRef);                // Get asset override if we have one
                 else if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRef))
-                    _ownerAssetRef = owner != null ? owner.EntityWorldAsset : AssetId.Invalid;  // Fall back to the owner asset
+                    _ownerAssetRef = owner != null ? owner.GetEntityWorldAsset() : AssetId.Invalid;  // Fall back to the owner asset
 
                 // _startTime should always be present
                 success &= Serializer.TransferTimeAsDelta(archive, null, ref _startTime);

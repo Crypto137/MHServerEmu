@@ -1406,7 +1406,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     currentSpeed *= GetCurrentSpeedRate();
             }
             Power activePower = _owner.ActivePower;
-            if (activePower != null && activePower.IsTravelPower)
+            if (activePower != null && activePower.IsTravelPower())
             {
                 var combatGlobals = GameDatabase.CombatGlobalsPrototype;
                 if (combatGlobals != null)

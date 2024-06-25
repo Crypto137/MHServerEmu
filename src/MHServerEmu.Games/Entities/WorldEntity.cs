@@ -84,7 +84,6 @@ namespace MHServerEmu.Games.Entities
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
-        public AssetId EntityWorldAsset { get => GetOriginalWorldAsset(); }
         public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
@@ -721,7 +720,16 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public AssetId GetOriginalWorldAsset() => GetOriginalWorldAsset(WorldEntityPrototype);
+        public virtual AssetId GetEntityWorldAsset()
+        {
+            // NOTE: Overriden in Agent, Avatar, and Missile
+            return GetOriginalWorldAsset();
+        }
+
+        public AssetId GetOriginalWorldAsset()
+        {
+            return GetOriginalWorldAsset(WorldEntityPrototype);
+        }
 
         public static AssetId GetOriginalWorldAsset(WorldEntityPrototype prototype)
         {
@@ -1045,6 +1053,59 @@ namespace MHServerEmu.Games.Entities
             if (calcRadius)
                 distance -= Bounds.Radius + other.Bounds.Radius;
             return Math.Max(0.0f, distance);
+        }
+
+        public float GetCastSpeedPct(PowerPrototype powerProto)
+        {
+            float castSpeedPct = Properties[PropertyEnum.CastSpeedIncrPct] - Properties[PropertyEnum.CastSpeedDecrPct];
+            float castSpeedMult = Properties[PropertyEnum.CastSpeedMult];
+
+            if (powerProto != null)
+            {
+                // Apply power-specific multiplier
+                castSpeedMult += Properties[PropertyEnum.CastSpeedMultPower, powerProto.DataRef];
+                
+                // Apply keyword bonuses
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.CastSpeedIncrPctKwd))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordRef);
+                    if (powerProto.HasKeyword(keywordRef.As<KeywordPrototype>()))
+                        castSpeedPct += kvp.Value;
+                }
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.CastSpeedMultKwd))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordRef);
+                    if (powerProto.HasKeyword(keywordRef.As<KeywordPrototype>()))
+                        castSpeedMult += kvp.Value;
+                }
+
+                // Apply tab bonuses for avatars
+                if (Prototype is AvatarPrototype avatarProto)
+                {
+                    var powerProgTableRef = avatarProto.GetPowerProgressionTableTabRefForPower(powerProto.DataRef);
+                    if (powerProgTableRef != PrototypeId.Invalid)
+                        castSpeedPct += Properties[PropertyEnum.CastSpeedIncrPctTab, powerProgTableRef, avatarProto.DataRef];
+                }
+            }
+
+            // Cast speed is capped at 50000%
+            castSpeedPct = MathF.Min(castSpeedPct, 500f);
+
+            // Diminishing returns?
+            if (castSpeedPct > 0f)
+            {
+                float pow = MathF.Pow(2.718f, -3f * castSpeedPct);
+                castSpeedPct = MathF.Min(castSpeedPct, 0.4f - (0.4f * pow));
+            }
+
+            // Apply multiplier
+            castSpeedPct = (1f + castSpeedPct) * (1f + castSpeedMult);
+
+            // Cast speed can't go below 50%
+            castSpeedPct = MathF.Max(castSpeedPct, 0.5f);
+
+            return castSpeedPct;
         }
 
         public override SimulateResult SetSimulated(bool simulated)

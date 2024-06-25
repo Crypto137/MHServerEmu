@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties

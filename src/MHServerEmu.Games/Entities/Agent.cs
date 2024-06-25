@@ -251,7 +251,7 @@ namespace MHServerEmu.Games.Entities
             if (base.OnPowerAssigned(power) == false) return false;
 
             // Set rank for normal powers
-            if (power.IsNormalPower)
+            if (power.IsNormalPower())
             {
                 Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
                 Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Entities
             Properties.RemoveProperty(new(PropertyEnum.PowerRankBase, power.PrototypeDataRef));
             Properties.RemoveProperty(new(PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef));
 
-            if (power.IsThrowablePower)
+            if (power.IsThrowablePower())
             {
                 // Return throwable entity to the world if throwing was cancelled
                 ulong throwableEntityId = Properties[PropertyEnum.ThrowableOriginatorEntity];
@@ -466,7 +466,7 @@ namespace MHServerEmu.Games.Entities
             if (power.IsOnExtraActivation)
                 return IsInPositionForPowerResult.Success;
 
-            if (power.IsOwnerCenteredAOE && (targetingProto.MovesToRangeOfPrimaryTarget == false || target == null))
+            if (power.IsOwnerCenteredAOE() && (targetingProto.MovesToRangeOfPrimaryTarget == false || target == null))
                 return IsInPositionForPowerResult.Success;
             
             Vector3 position = targetPosition;
@@ -527,7 +527,7 @@ namespace MHServerEmu.Games.Entities
                 if (target.IsInWorld == false) return false;
                 return power.IsInRange(target, RangeCheckType.Activation);
             }
-            else if (power.IsMelee)
+            else if (power.IsMelee())
                 return true;
 
             return power.IsInRange(position, RangeCheckType.Activation);
@@ -574,10 +574,10 @@ namespace MHServerEmu.Games.Entities
                         return PowerUseResult.PowerInProgress;
                     }
 
-                    if (activePower.IsTravelPower)
+                    if (activePower.IsTravelPower())
                     {
                         if (activePower.IsEnding == false)
-                            activePower.EndPower(EndFlag.ExplicitCancel | EndFlag.Interrupting);
+                            activePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting);
                     }
                     else
                         return PowerUseResult.PowerInProgress;
@@ -668,7 +668,7 @@ namespace MHServerEmu.Games.Entities
 
             // Record throwable entity in agent's properties
             Properties[PropertyEnum.ThrowableOriginatorEntity] = entityId;
-            Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableEntity.EntityWorldAsset;
+            Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableEntity.GetEntityWorldAsset();
             _throwableEntityLocation.Set(throwableEntity.RegionLocation);
 
             // Assign throwable powers

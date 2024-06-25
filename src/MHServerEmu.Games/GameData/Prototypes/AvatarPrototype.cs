@@ -173,6 +173,52 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
+        public PowerProgressionTablePrototype GetPowerProgressionTableAtIndex(int index)
+        {
+            if (PowerProgressionTables == null) return null;
+
+            if (index < 0)
+                return Logger.WarnReturn<PowerProgressionTablePrototype>(null, "GetPowerProgressionTableAtIndex(): index < 0");
+
+            if (index >= PowerProgressionTables.Length)
+                return Logger.WarnReturn<PowerProgressionTablePrototype>(null, "GetPowerProgressionTableAtIndex(): index >= PowerProgressionTables.Length");
+
+            return PowerProgressionTables[index];
+        }
+
+        public int GetPowerProgressionTableIndexForPower(PrototypeId powerProtoRef)
+        {
+            if (PowerProgressionTables == null) return -1;
+
+            int index = 0;
+
+            foreach (PowerProgressionTablePrototype powerProgTableProto in PowerProgressionTables)
+            {
+                foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgTableProto.PowerProgressionEntries)
+                {
+                    AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
+                    if (abilityAssignmentProto?.Ability == powerProtoRef)
+                        return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        public PrototypeId GetPowerProgressionTableTabRefForPower(PrototypeId powerProtoRef)
+        {
+            int tableIndex = GetPowerProgressionTableIndexForPower(powerProtoRef);
+            if (tableIndex < 0) return PrototypeId.Invalid;
+
+            PowerProgressionTablePrototype powerProgTableProto = GetPowerProgressionTableAtIndex(tableIndex);
+            if (powerProgTableProto == null)
+                return Logger.WarnReturn(PrototypeId.Invalid, "GetPowerProgressionTableTabRefForPower(): powerProgTableProto == null");
+
+            return powerProgTableProto.PowerProgTableTabRef;
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided costume is approved for use.
         /// </summary>
