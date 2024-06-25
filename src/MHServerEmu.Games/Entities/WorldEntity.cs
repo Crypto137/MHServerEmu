@@ -60,6 +60,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private EventPointer<TEMP_SendActivatePowerMessageEvent> _sendActivatePowerMessageEvent = new();
+        private EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
 
         private AlliancePrototype _allianceProto;
 
@@ -1301,6 +1302,22 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual void OnDramaticEntranceEnd()  { }
+
+        public void ScheduleExitWorldEvent(TimeSpan time)
+        {
+            if (_exitWorldEvent.IsValid)
+            {
+                if (_exitWorldEvent.Get().FireTime > Game.CurrentTime + time)
+                    Game.GameEventScheduler.RescheduleEvent(_exitWorldEvent, time);
+            }
+            else
+                ScheduleEntityEvent(_exitWorldEvent, time);
+        }
+
+        protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.ExitWorld();
+        }
 
         public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
         {

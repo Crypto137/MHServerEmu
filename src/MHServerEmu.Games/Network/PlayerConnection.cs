@@ -328,6 +328,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;
+                case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;
+                case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;
 
                 // Power Messages
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -365,6 +367,19 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private void OnRequestTeamUpDismiss(MailboxMessage message)
+        {
+            Avatar avatar = Player.CurrentAvatar;
+            avatar.DismissTeamUpAgent();
+        }
+
+        private void OnTryTeamUpSelect(MailboxMessage message)
+        {
+            var tryTeamUpSelect = message.As<NetMessageTryTeamUpSelect>();
+            Avatar avatar = Player.CurrentAvatar;
+            avatar.SelectTeamUpAgent((PrototypeId)tryTeamUpSelect.TeamUpPrototypeId);
         }
 
         private void OnNotifyLoadingScreenFinished(MailboxMessage message)

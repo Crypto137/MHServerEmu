@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -12,8 +13,10 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
 
 namespace MHServerEmu.Games.Entities.Avatars
@@ -36,15 +39,15 @@ namespace MHServerEmu.Games.Entities.Avatars
         public string PlayerName { get => _playerName.Value; }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }
-
-        public Agent CurrentTeamUpAgent { get; set; } = null;
-
+        public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
 
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
+
+        public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
 
         public Avatar(Game game) : base(game) { }
 
@@ -191,6 +194,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
+            SetSimulated(false); // For AI
         }
 
         private bool AssignDefaultAvatarPowers()
@@ -463,5 +467,79 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             throw new NotImplementedException();
         }
+
+        public void SelectTeamUpAgent(PrototypeId teamUpProtoRef)
+        {
+            if (teamUpProtoRef == PrototypeId.Invalid || IsTeamUpAgentUnlocked(teamUpProtoRef) == false) return;
+            Agent currentTeamUp = CurrentTeamUpAgent;
+            if (currentTeamUp != null)
+                if (currentTeamUp.IsInWorld || currentTeamUp.PrototypeDataRef == teamUpProtoRef) return;
+
+            Properties[PropertyEnum.AvatarTeamUpAgent] = teamUpProtoRef;
+            LinkTeamUpAgent(CurrentTeamUpAgent);
+            Player player = GetOwnerOfType<Player>();
+            player.Properties[PropertyEnum.AvatarLibraryTeamUp, 0, Prototype.DataRef] = teamUpProtoRef;
+
+            // TODO affixes, event PlayerActivatedTeamUpGameEvent
+        }
+
+        public void SummonTeamUpAgent()
+        {
+            Agent teamUp = CurrentTeamUpAgent;
+            if (teamUp == null) return;
+            if (teamUp.IsInWorld) return;
+            Properties[PropertyEnum.AvatarTeamUpIsSummoned] = true;
+            EntitySettings setting = new()
+            { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden };            
+            teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, setting);
+            teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
+        }
+
+        public void DismissTeamUpAgent()
+        {
+            Agent teamUp = CurrentTeamUpAgent;
+            if (teamUp == null) return;
+            if (teamUp.IsAliveInWorld)
+            {
+                // TODO: teamUp.Kill(null);
+
+                var killMessage = NetMessageEntityKill.CreateBuilder()
+                    .SetIdEntity(teamUp.Id)
+                    .SetIdKillerEntity(0)
+                    .SetKillFlags(0)
+                    .Build();
+                Game.NetworkManager.SendMessageToInterested(killMessage, teamUp, AOINetworkPolicyValues.AOIChannelProximity);             
+                Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
+                teamUp.AIController.SetIsEnabled(false);
+                teamUp.ScheduleExitWorldEvent(TimeSpan.FromMilliseconds(teamUp.WorldEntityPrototype.RemoveFromWorldTimerMS));
+            }
+        }
+
+        public void LinkTeamUpAgent(Agent teamUpAgent)
+        {
+            Properties[PropertyEnum.AvatarTeamUpAgentId] = teamUpAgent.Id;
+            teamUpAgent.Properties[PropertyEnum.TeamUpOwnerId] = Id;
+            teamUpAgent.Properties[PropertyEnum.PowerUserOverrideID] = Id;
+        }
+
+        public bool IsTeamUpAgentUnlocked(PrototypeId teamUpProtoRef)
+        {
+            return GetTeamUpAgent(teamUpProtoRef) != null;
+        }
+
+        public Agent GetTeamUpAgent(PrototypeId teamUpProtoRef)
+        {
+            if (teamUpProtoRef == PrototypeId.Invalid) return null;
+            Player player = GetOwnerOfType<Player>();
+            return player?.GetTeamUpAgent(teamUpProtoRef);
+        }
+
+        public override void OnExitedWorld()
+        {
+            base.OnExitedWorld();
+            SetSimulated(false); // put it here for test
+            if (CurrentTeamUpAgent != null) DismissTeamUpAgent();
+        }
+
     }
 }

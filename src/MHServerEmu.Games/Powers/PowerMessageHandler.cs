@@ -142,6 +142,11 @@ namespace MHServerEmu.Games.Powers
                 else
                     bowlingBall.Destroy();
             }
+            
+            if (tryActivatePower.PowerPrototypeId == (ulong)avatar.TeamUpPowerRef)
+            {
+                avatar.SummonTeamUpAgent();
+            }
 
             // if (powerPrototypePath.Contains("TravelPower/")) 
             //    TrawerPower(client, tryActivatePower.PowerPrototypeId);
