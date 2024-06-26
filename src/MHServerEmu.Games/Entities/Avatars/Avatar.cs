@@ -18,6 +18,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
+using static MHServerEmu.Games.Entities.Inventories.Inventory;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -547,6 +548,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             base.OnExitedWorld();
             SetSimulated(false); // put it here for test
             if (CurrentTeamUpAgent != null) DismissTeamUpAgent();
+            Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
+            if (summonedInventory != null)
+            {
+                List<WorldEntity> summoners = new();
+                foreach (var entry in summonedInventory)
+                    summoners.Add(Game.EntityManager.GetEntity<WorldEntity>(entry.Id));
+                foreach (var summoner in summoners)
+                    summoner.Destroy();
+            }
         }
 
     }

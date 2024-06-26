@@ -714,7 +714,7 @@ namespace MHServerEmu.Games.Entities
         {
             Region region = avatar.Region;
             region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.CheckClearOfEntity,
-                    BlockingCheckFlags.CheckSpawns, 50, 250, out Vector3 position);
+                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
             return position;
         }
     }

@@ -61,7 +61,8 @@ namespace MHServerEmu.Games.Entities
             };
 
             Agent summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
-            summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation);
+            EntitySettings setting = new() { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer};
+            summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, setting);
 
             if (summonPowerProto.ActionsTriggeredOnPowerEvent.HasValue())
                 summoner.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
