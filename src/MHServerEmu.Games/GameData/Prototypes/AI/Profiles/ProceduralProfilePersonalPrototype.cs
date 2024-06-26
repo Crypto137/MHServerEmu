@@ -494,7 +494,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] == 0L)
                         blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
                     TimeSpan elapsedTime = TimeSpan.FromMilliseconds(currentTime - blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1]);
-                    if (elapsedTime.TotalMilliseconds >= PreOpenDelayMS)
+                    if ((long)elapsedTime.TotalMilliseconds >= PreOpenDelayMS)
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.PreOpenDelayCompleted;
                     break;
 
@@ -516,7 +516,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 case State.CylinderOpenCompleted:
                     elapsedTime = TimeSpan.FromMilliseconds(currentTime - blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1]);
-                    if (elapsedTime.TotalMilliseconds > PostOpenDelayMS)
+                    if ((long)elapsedTime.TotalMilliseconds > PostOpenDelayMS)
                         HandleContext(proceduralAI, ownerController, DespawnAction);
                     break;
             }

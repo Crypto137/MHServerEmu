@@ -96,8 +96,6 @@ namespace MHServerEmu.Games.Entities
 
     public class Entity : ISerialize, IPropertyChangeWatcher
     {
-
-        public bool SkipAI = true;
         public const ulong InvalidId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();

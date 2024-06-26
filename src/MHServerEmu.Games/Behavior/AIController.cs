@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Behavior
         private static readonly Logger Logger = LogManager.CreateLogger();
         private EventGroup _pendingEvents = new();
         private EventPointer<AIThinkEvent> _thinkEvent = new();
+        private ulong _thinkCount = 0;
         public Agent Owner { get; private set; }
         public Game Game { get; private set; }
         public ProceduralAI.ProceduralAI Brain { get; private set; }
@@ -197,7 +198,7 @@ namespace MHServerEmu.Games.Behavior
 
                 if (nextThinkTimeOffset < TimeSpan.Zero)
                 {
-                    Logger.Warn($"Agent tried to schedule a negative think time of {nextThinkTimeOffset.TotalMilliseconds}MS!\n  Agent: {Owner}");
+                    Logger.Warn($"Agent tried to schedule a negative think time of {(long)nextThinkTimeOffset.TotalMilliseconds}MS!\n  Agent: {Owner}");
                     nextThinkTimeOffset = TimeSpan.Zero;
                 }
 
@@ -314,9 +315,9 @@ namespace MHServerEmu.Games.Behavior
                 Brain.LastThinkQTime = Game.NumQuantumFixedTimeUpdates;
                 Brain.ThinkCountPerFrame = 0;
             }
-
+            bool thinking = true;
             if (Owner.TestStatus(EntityStatus.PendingDestroy) == false 
-                && Owner.TestStatus(EntityStatus.Destroyed) == false)
+                && Owner.TestStatus(EntityStatus.Destroyed) == false && thinking)
             {
                 float thinkTime = 500; // slow think 
                 if (TargetEntity != null || AssistedEntity != null)
@@ -325,6 +326,8 @@ namespace MHServerEmu.Games.Behavior
             }
 
             Brain?.Think();
+            //Logger.Debug($"Think [{Owner.PrototypeName}] {_thinkCount}");
+            _thinkCount++;
         }
 
         public void OnAIKilled()

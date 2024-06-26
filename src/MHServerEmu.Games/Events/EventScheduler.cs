@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Events
                 }
             }
 
-            if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
+            //if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
 
             CurrentTime = updateEndTime;
         }

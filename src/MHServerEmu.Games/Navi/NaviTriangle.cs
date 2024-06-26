@@ -52,6 +52,20 @@ namespace MHServerEmu.Games.Navi
             return hash;
         }
 
+        public ulong GetHash64()
+        {
+            ulong hash = 14695981039346656037;
+            hash = (hash ^ Edges[0].GetHash64()) * 1099511628211;
+            hash = (hash ^ Edges[1].GetHash64()) * 1099511628211;
+            hash = (hash ^ Edges[2].GetHash64()) * 1099511628211;
+            // hash = (hash ^ EdgeSideFlags) * 1099511628211;
+            // hash = (hash ^ (byte)Flags) * 1099511628211;
+            // hash = (hash ^ (byte)PathingFlags) * 1099511628211;
+            // hash = (hash ^ ContentFlagCounts.GetHash64()) * 1099511628211;
+
+            return hash;
+        }
+
         public string ToHashString()
         {
             return $"{GetHash():X} E[{Edges[0].GetHashOpposedTriangle(this):X} {Edges[1].GetHashOpposedTriangle(this):X} {Edges[2].GetHashOpposedTriangle(this):X}]";
@@ -60,6 +74,11 @@ namespace MHServerEmu.Games.Navi
         public string ToHashString2()
         {
             return $"{GetHash():X} E[{Edges[0].GetHash():X} {Edges[1].GetHash():X} {Edges[2].GetHash():X}] [{EdgeSideFlags:X} {(byte)Flags:X} {(byte)PathingFlags:X}]";
+        }
+
+        public string ToHashString64()
+        {
+            return $"{GetHash64():X} E[{Edges[0].GetHash64():X} {Edges[1].GetHash64():X} {Edges[2].GetHash64():X}]\n [{PointCW(0).ToStringCoord2D()} {PointCW(1).ToStringCoord2D()} {PointCW(2).ToStringCoord2D()}]";
         }
 
         public void SetFlag(NaviTriangleFlags flag)

@@ -481,16 +481,15 @@ namespace MHServerEmu.Games.Navi
 
         private bool AddInfluenceHelper(NaviPoint point, float radius, NavigationInfluence outInfluence)
         {
-            if (outInfluence.Point != null)
+            if (outInfluence.Point != null) return false;            
+            NaviTriangle foundTriangle = NaviCdt.FindTriangleContainingVertex(point);
+            if (foundTriangle == null) return false;
+            if (NaviUtil.IsPointConstraint(point, foundTriangle) == false)
             {
-                NaviTriangle foundT = NaviCdt.FindTriangleContainingVertex(point);
-                if (foundT != null && NaviUtil.IsPointConstraint(point, foundT) == false)
-                    {
-                        if (++point.InfluenceRef == 1) point.InfluenceRadius = radius;
-                        outInfluence.Point = point;
-                        outInfluence.Triangle = foundT;
-                    }
-            }
+                if (point.InfluenceRef++ == 0) point.InfluenceRadius = radius;
+                outInfluence.Point = point;
+                outInfluence.Triangle = foundTriangle;
+            }            
             return true;
         }
 

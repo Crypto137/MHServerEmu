@@ -172,7 +172,10 @@ namespace MHServerEmu.Games.Entities
             if (this is not Avatar)     // fix for avatar
                 RegionLocation.Cell.EnemySpawn(); // Calc Enemy
             // ActivePowerRef = settings.PowerPrototype
-            if (SkipAI) return;
+                        
+            if (TestAI() == false) return;
+            // If AI passed SetSimulated;
+            SetSimulated(true);
             if (AIController != null) 
             {
                 var behaviorProfile = AgentPrototype?.BehaviorProfile;
@@ -186,6 +189,16 @@ namespace MHServerEmu.Games.Entities
                 AIController.OnAIEnteredWorld();
                 ActivateAI();
             }
+        }
+
+        private bool TestAI()
+        {
+            var behaviorProfile = AgentPrototype?.BehaviorProfile;
+            if (behaviorProfile == null) return false;
+            var brain = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(behaviorProfile.Brain);
+            if (brain == null) return false;
+            if (brain is ProceduralProfileVanityPetPrototype || brain is ProceduralProfileTeamUpPrototype) return true; // Pet and TeamUp only
+            return false;
         }
 
         public void ActivateAI()
@@ -229,7 +242,11 @@ namespace MHServerEmu.Games.Entities
         public override void OnExitedWorld()
         {
             base.OnExitedWorld();
-            AIController?.OnAIExitedWorld();
+            if (AIController != null) 
+            {
+                SetSimulated(false); // Put it here for test
+                AIController.OnAIExitedWorld();
+            }
         }
 
         public override void OnDeallocate()
@@ -444,6 +461,7 @@ namespace MHServerEmu.Games.Entities
         internal int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             return 0;
+            // Not Implemented
         }
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
@@ -690,6 +708,14 @@ namespace MHServerEmu.Games.Entities
                         $"Check to see if there's *anything* that can happen in the course of executing the power that can take them out of the world.\n Agent: {this}");
             }
             return result;
+        }
+
+        public Vector3 GetPositionNearAvatar(Avatar avatar)
+        {
+            Region region = avatar.Region;
+            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.CheckClearOfEntity,
+                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
+            return position;
         }
     }
 }
