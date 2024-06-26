@@ -712,6 +712,10 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, $"TrashItem(): Item {item} failed to enter world");
             }
 
+            // Reapply lifespan
+            TimeSpan expirationTime = item.GetExpirationTime();
+            item.ResetLifespan(expirationTime);
+
             return true;
         }
 

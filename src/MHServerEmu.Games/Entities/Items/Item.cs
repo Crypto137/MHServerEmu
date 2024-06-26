@@ -107,28 +107,16 @@ namespace MHServerEmu.Games.Entities.Items
             return Math.Clamp(itemLevel + itemEquipReqOffsetCurve.GetIntAt(itemLevel), 1, advanGlobalsProto.GetAvatarLevelCap());
         }
 
+        public TimeSpan GetExpirationTime()
+        {
+            PrototypeId rarityProtoRef = Properties[PropertyEnum.ItemRarity];
+            return ItemPrototype.GetExpirationTime(rarityProtoRef);
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
             sb.AppendLine($"{nameof(_itemSpec)}: {_itemSpec}");
-        }
-
-        private bool ApplyItemSpec(ItemSpec itemSpec)
-        {
-            if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");
-
-            _itemSpec.Set(itemSpec);
-
-            ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): itemProto == null");
-
-            if (ApplyItemSpecProperties() == false) return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
-
-            itemProto.OnApplyItemSpec(this, _itemSpec);
-
-            // TODO: Roll affixes
-
-            return true;
         }
 
         public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
@@ -159,6 +147,24 @@ namespace MHServerEmu.Games.Entities.Items
                 }
 
             }
+        }
+
+        private bool ApplyItemSpec(ItemSpec itemSpec)
+        {
+            if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");
+
+            _itemSpec.Set(itemSpec);
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): itemProto == null");
+
+            if (ApplyItemSpecProperties() == false) return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
+
+            itemProto.OnApplyItemSpec(this, _itemSpec);
+
+            // TODO: Roll affixes
+
+            return true;
         }
 
         private bool ApplyItemSpecProperties()

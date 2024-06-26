@@ -655,6 +655,11 @@ namespace MHServerEmu.Games.Network
                 return false;
             }
 
+            // Cancel lifespan expiration for the picked up item
+            item.CancelScheduledLifespanExpireEvent();
+
+            // TODO: Remove RestrictedToPlayerGuid property once we have personal loot
+
             return true;
         }
 
