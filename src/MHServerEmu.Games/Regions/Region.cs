@@ -49,14 +49,14 @@ namespace MHServerEmu.Games.Regions
     public enum PositionCheckFlags
     {
         None = 0,
-        CheckCanBlockedEntity   = 1 << 0,
-        CheckCanBlockedAvatar   = 1 << 1,
-        CheckCanPathTo          = 1 << 2,
-        CheckCanSweepTo         = 1 << 3,
-        CheckCanSweepRadius     = 1 << 4,
-        CheckCanPathToEntities  = 1 << 5,
-        CheckInRadius           = 1 << 6,
-        CheckClearOfEntity      = 1 << 7,
+        CanBeBlockedEntity = 1 << 0,
+        CanBeBlockedAvatar = 1 << 1,
+        CanPathTo          = 1 << 2,
+        CanSweepTo         = 1 << 3,
+        CanSweepRadius     = 1 << 4,
+        CanPathToEntities  = 1 << 5,
+        InRadius           = 1 << 6,
+        PreferNoEntity     = 1 << 7,
     }
 
     public class Region : IMissionManagerOwner
@@ -1077,7 +1077,7 @@ namespace MHServerEmu.Games.Regions
             resultPosition = Vector3.Zero;
             if (maxDistanceFromPoint < minDistanceFromPoint) return false;
 
-            if (posFlags.HasFlag(PositionCheckFlags.CheckCanPathTo) && posFlags.HasFlag(PositionCheckFlags.CheckCanSweepTo))
+            if (posFlags.HasFlag(PositionCheckFlags.CanPathTo) && posFlags.HasFlag(PositionCheckFlags.CanSweepTo))
             {
                 Logger.Warn("Do not use CheckCanSweepTo with CheckCanPathTo, it is a worthless CheckPath after the CheckSweep passes. " +
                             "If the CheckSweep fails, the point is dropped and CheckPath never happens. " +
@@ -1096,12 +1096,12 @@ namespace MHServerEmu.Games.Regions
             var random = Game.Random;
 
             List<WorldEntity> entitiesInRadius = new ();
-            if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CheckCanPathToEntities))
+            if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
             {
                 entitiesInRadius.Capacity = 256;
                 GetEntitiesInVolume(entitiesInRadius, new Sphere(point, maxDistanceFromPoint), new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition));
 
-                if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) && checkPredicate != null)
+                if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) && checkPredicate != null)
                     for (int i = entitiesInRadius.Count - 1; i >= 0; i--)
                         if (checkPredicate.Test(entitiesInRadius[i]) == false)
                             entitiesInRadius.RemoveAt(i);
@@ -1119,7 +1119,7 @@ namespace MHServerEmu.Games.Regions
 
             List<WorldEntity> influenceEntities = new ();
 
-            if (posFlags.HasFlag(PositionCheckFlags.CheckCanPathToEntities))
+            if (posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
                 foreach (WorldEntity entity in entitiesInRadius)
                     if (entity.HasNavigationInfluence)
                     {
@@ -1140,7 +1140,7 @@ namespace MHServerEmu.Games.Regions
             while (tries-- > 0)
             {
                 Vector3 offset = Vector3.Zero;
-                if (posFlags.HasFlag(PositionCheckFlags.CheckInRadius))
+                if (posFlags.HasFlag(PositionCheckFlags.InRadius))
                 {
                     offset.X = checkRadius;
                     offset = Vector3.AxisAngleRotate(offset, Vector3.ZAxis, angle);
@@ -1168,27 +1168,27 @@ namespace MHServerEmu.Games.Regions
                 var naviMesh = NaviMesh;
                 if (naviMesh.Contains(checkBounds.Center, checkBounds.Radius, new DefaultContainsPathFlagsCheck(checkPathFlags)))
                 {
-                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanSweepTo) || posFlags.HasFlag(PositionCheckFlags.CheckCanSweepRadius))
+                    if (posFlags.HasFlag(PositionCheckFlags.CanSweepTo) || posFlags.HasFlag(PositionCheckFlags.CanSweepRadius))
                     {
                         Vector3 resultSweepPosition = new();
                         Vector3 resultNorm = null;
-                        float radius = posFlags.HasFlag(PositionCheckFlags.CheckCanSweepRadius) ? 0f : bounds.Radius;
+                        float radius = posFlags.HasFlag(PositionCheckFlags.CanSweepRadius) ? 0f : bounds.Radius;
                         SweepResult sweepResult = naviMesh.Sweep(point, resultPosition, radius, pathFlags, 
                             ref resultSweepPosition, ref resultNorm, 0f, heightSweep, maxSweepHeight);
                         if (sweepResult != SweepResult.Success) continue;
                     }
 
-                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanPathTo) || posFlags.HasFlag(PositionCheckFlags.CheckCanPathToEntities))
+                    if (posFlags.HasFlag(PositionCheckFlags.CanPathTo) || posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
                         if (NaviPath.CheckCanPathTo(naviMesh, bounds.Center, resultPosition, bounds.Radius, pathFlags) != NaviPathResult.Success)
                             continue;
 
                     if (positionPredicate != null && positionPredicate.Test(resultPosition) == false)
                         continue;
 
-                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity))
+                    if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity))
                         if (IsLocationClearOfEntities(checkBounds, entitiesInRadius, blockFlags) == false)
                         {
-                            if (posFlags.HasFlag(PositionCheckFlags.CheckClearOfEntity) && foundBlockedEntity == false)
+                            if (posFlags.HasFlag(PositionCheckFlags.PreferNoEntity) && foundBlockedEntity == false)
                             {
                                 foundBlockedEntity = true;
                                 blockedPosition = checkBounds.Center;
@@ -1203,7 +1203,7 @@ namespace MHServerEmu.Games.Regions
             foreach (WorldEntity entity in influenceEntities)
                 entity.EnableNavigationInfluence();
 
-            if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) && posFlags.HasFlag(PositionCheckFlags.CheckClearOfEntity) && foundBlockedEntity)
+            if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) && posFlags.HasFlag(PositionCheckFlags.PreferNoEntity) && foundBlockedEntity)
             {
                 resultPosition = blockedPosition;
                 return true;
@@ -1231,12 +1231,12 @@ namespace MHServerEmu.Games.Regions
             if (NaviMesh.Contains(bounds.Center, bounds.Radius, new DefaultContainsPathFlagsCheck(pathFlags)) == false)
                 return false;
 
-            if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedAvatar))
+            if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar))
             {
                 var volume = new Sphere(bounds.Center, bounds.Radius);
                 foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new ( EntityRegionSPContextFlags.ActivePartition)))
                 {
-                    if (posFlags.HasFlag(PositionCheckFlags.CheckCanBlockedAvatar) && entity is not Avatar) continue;
+                    if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar) && entity is not Avatar) continue;
                     if (IsBoundsBlockedByEntity(bounds, entity, blockFlags)) 
                         return false;
                 }

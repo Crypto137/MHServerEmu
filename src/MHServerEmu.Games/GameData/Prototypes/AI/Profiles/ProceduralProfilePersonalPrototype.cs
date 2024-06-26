@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         region.ChooseRandomPositionNearPoint(
                             bounds,
                             Region.GetPathFlagsForEntity(agent.WorldEntityPrototype),
-                            PositionCheckFlags.CheckCanBlockedEntity | PositionCheckFlags.CheckCanSweepTo | PositionCheckFlags.CheckClearOfEntity,
+                            PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo | PositionCheckFlags.PreferNoEntity,
                             BlockingCheckFlags.None,
                             SpecialPowerMinRadius,
                             SpecialPowerMaxRadius,
@@ -2616,7 +2616,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         region.ChooseRandomPositionNearPoint(
                             bounds,
                             Region.GetPathFlagsForEntity(agent.WorldEntityPrototype),
-                            PositionCheckFlags.CheckCanBlockedEntity | PositionCheckFlags.CheckCanSweepTo | PositionCheckFlags.CheckClearOfEntity,
+                            PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo | PositionCheckFlags.PreferNoEntity,
                             BlockingCheckFlags.None,
                             SpecialPowerMinRadius,
                             SpecialPowerMaxRadius,

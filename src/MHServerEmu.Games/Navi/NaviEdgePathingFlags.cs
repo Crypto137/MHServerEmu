@@ -39,27 +39,27 @@ namespace MHServerEmu.Games.Navi
 
     public interface IContainsPathFlagsCheck
     {
-        bool CanBypassCheck(); // Inverted return
-        bool PathingFlagsCheck(PathFlags pathingFlags);
+        public bool CanBypassCheck(); // Inverted return
+        public bool PathingFlagsCheck(PathFlags pathingFlags);
     }
 
-    public class DefaultContainsPathFlagsCheck : IContainsPathFlagsCheck
+    public readonly struct DefaultContainsPathFlagsCheck : IContainsPathFlagsCheck
     {
-        public PathFlags PathFlags { get; set; }
+        private readonly PathFlags _pathFlags;
 
         public DefaultContainsPathFlagsCheck(PathFlags pathFlags)
         {
-            PathFlags = pathFlags;
+            _pathFlags = pathFlags;
         }
 
         public bool CanBypassCheck() 
         {
-            return PathFlags != PathFlags.None;
+            return _pathFlags != PathFlags.None;
         }
 
         public bool PathingFlagsCheck(PathFlags pathingFlags)
         {
-            return pathingFlags.HasFlag(PathFlags);
+            return pathingFlags.HasFlag(_pathFlags);
         }
     }
 

@@ -516,7 +516,7 @@ namespace MHServerEmu.Games.Entities
                 if (region == null) return IsInPositionForPowerResult.Error;
                 if (summonContext.IgnoreBlockingOnSpawn == false && summonedProto.Bounds.CollisionType == BoundsCollisionType.Blocking)
                 {
-                    if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.CheckCanBlockedEntity) == false)
+                    if (region.IsLocationClear(bounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity) == false)
                         return IsInPositionForPowerResult.BadTargetPosition;
                 }
                 else if (pathFlags != 0)
@@ -713,7 +713,7 @@ namespace MHServerEmu.Games.Entities
         public Vector3 GetPositionNearAvatar(Avatar avatar)
         {
             Region region = avatar.Region;
-            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.CheckClearOfEntity,
+            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
                     BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
             return position;
         }

@@ -19,6 +19,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -684,11 +685,16 @@ namespace MHServerEmu.Games.Entities
             // Drop item to the ground
             Region region = avatar.Region;
 
-            // Find a position to drop, bail out if no space
-            if (region.ChooseRandomPositionNearPoint(avatar.Bounds, Navi.PathFlags.Walk, PositionCheckFlags.CheckCanBlockedEntity,
+            // Find a position to drop
+            if (region.ChooseRandomPositionNearPoint(avatar.Bounds, PathFlags.Walk, PositionCheckFlags.CanBeBlockedEntity,
                 BlockingCheckFlags.CheckSpawns, 50f, 100f, out Vector3 dropPosition) == false)
             {
-                return false;
+                // Fall back to avatar position if didn't find a free spot
+                dropPosition = avatar.RegionLocation.Position;
+
+                // Make sure we don't drop it somewhere where it can't be picked up (e.g. if the avatar is flying above something)
+                if (region.NaviMesh.Contains(dropPosition, item.Bounds.Radius, new DefaultContainsPathFlagsCheck(PathFlags.Walk)) == false)
+                    return false;
             }
 
             // Remove the item from its inventory (no going back now)

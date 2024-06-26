@@ -273,7 +273,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Bounds targetPositionBounds = agent.Bounds;
                 targetPositionBounds.Center = targetPositionForPower;
 
-                PositionCheckFlags positionCheckFlags = PositionCheckFlags.CheckCanBlockedEntity | PositionCheckFlags.CheckCanSweepTo;
+                PositionCheckFlags positionCheckFlags = PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo;
                 if (region.IsLocationClear(targetPositionBounds, agent.GetPathFlags(), positionCheckFlags) == false
                     || agent.CheckCanPathTo(targetPositionForPower) != NaviPathResult.Success)
                     return PowerUseResult.OutOfPosition;
@@ -430,7 +430,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             DistanceRangePredicate distanceRangePredicat = new(agent.RegionLocation.Position, minDistance, DistanceRangePredicate.Unbound);
             return region.ChooseRandomPositionNearPoint(bounds, Region.GetPathFlagsForEntity(worldEntity.WorldEntityPrototype),
-                (PositionCheckFlags.CheckCanBlockedEntity | PositionCheckFlags.CheckCanSweepTo), BlockingCheckFlags.None,
+                (PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo), BlockingCheckFlags.None,
                 minTargetDistance, maxTargetDistance, out targetPosition, distanceRangePredicat);
         }
 
