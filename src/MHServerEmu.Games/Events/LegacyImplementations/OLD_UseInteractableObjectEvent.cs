@@ -69,7 +69,9 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             if (power == null)
                 return;
 
-            if (power.Prototype.IsToggled)
+            SummonPowerPrototype summonPowerPrototype = power.Prototype as SummonPowerPrototype;
+
+            if(summonPowerPrototype != null)
             {
                 if (avatar.Properties[PropertyEnum.PowerToggleOn, powerPrototypeId])
                     EntityHelper.DestroySummonFromPower(avatar, powerPrototypeId);
