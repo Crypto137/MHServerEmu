@@ -525,6 +525,7 @@ namespace MHServerEmu.Games.Entities
 
             UpdateRegionBounds(); // Add to Quadtree
             SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
+            SetStatus(EntityStatus.ToTransform, true);
             if (RegionLocation.IsValid())
                 ExitWorldRegionLocation.Set(RegionLocation);
 
