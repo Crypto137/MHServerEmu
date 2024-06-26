@@ -718,13 +718,4 @@ namespace MHServerEmu.Games.Entities
             return position;
         }
     }
-
-    public enum IsInPositionForPowerResult
-    {
-        Error,
-        Success,
-        BadTargetPosition,
-        OutOfRange,
-        NoPowerLOS
-    }
 }
