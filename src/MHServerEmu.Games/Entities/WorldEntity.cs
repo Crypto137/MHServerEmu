@@ -1009,17 +1009,17 @@ namespace MHServerEmu.Games.Entities
             var activePower = ActivePower;
             if (activePower == null) return false;
 
-            if (activePower.IsPartOfAMovementPower)
+            if (activePower.IsPartOfAMovementPower())
                 return movementPreventionFlag == PowerMovementPreventionFlags.NonForced;
 
-            if (movementPreventionFlag == PowerMovementPreventionFlags.NonForced && activePower.PreventsNewMovementWhileActive)
+            if (movementPreventionFlag == PowerMovementPreventionFlags.NonForced && activePower.PreventsNewMovementWhileActive())
             {
-                if (activePower.IsChannelingPower == false) return true;
-                else if (activePower.IsNonCancellableChannelPower) return true;
+                if (activePower.IsChannelingPower() == false) return true;
+                else if (activePower.IsNonCancellableChannelPower()) return true;
             }
 
             if (movementPreventionFlag == PowerMovementPreventionFlags.Sync)
-                if (activePower.IsChannelingPower == false || activePower.IsCancelledOnMove)
+                if (activePower.IsChannelingPower() == false || activePower.IsCancelledOnMove())
                     return true;
 
             if (activePower.TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd))
@@ -1037,7 +1037,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"WorldEntity has ActivePowerRef set, but is missing the power in its power collection! Power: [{GameDatabase.GetPrototypeName(ActivePowerRef)}] WorldEntity: [{ToString()}]");
                 return false;
             }
-            return activePower.DisableOrientationWhileActive;
+            return activePower.DisableOrientationWhileActive();
         }
 
         public bool ActivePowerOrientsToTarget()
@@ -1047,7 +1047,7 @@ namespace MHServerEmu.Games.Entities
             var activePower = ActivePower;
             if (activePower == null) return false;
 
-            return activePower.ShouldOrientToTarget;
+            return activePower.ShouldOrientToTarget();
         }
 
         public float GetDistanceTo(WorldEntity other, bool calcRadius)

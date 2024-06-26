@@ -336,7 +336,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 && CheckAgentOrientation(agent, targetPositionForPower, powerContext.OrientationThreshold) == false)
                 return PowerUseResult.OutOfPosition;
 
-            if (targetingShape != TargetingShapeType.Self && power.RequiresLineOfSight == false && powerContext.ForceIgnoreLOS == false
+            if (targetingShape != TargetingShapeType.Self && power.RequiresLineOfSight() == false && powerContext.ForceIgnoreLOS == false
                 && CheckLineOfSightForPower(agent, power, targetWorldEntity, targetPositionForPower) == false)
                 return PowerUseResult.OutOfPosition;
 

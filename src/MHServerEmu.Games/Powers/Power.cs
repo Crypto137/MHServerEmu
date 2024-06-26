@@ -17,6 +17,8 @@ namespace MHServerEmu.Games.Powers
 
         private bool _isTeamUpPassivePowerWhileAway;
 
+        private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
+
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
         public PowerPrototype Prototype { get; }
@@ -27,24 +29,9 @@ namespace MHServerEmu.Games.Powers
         public PropertyCollection Properties { get; } = new();
 
         public float AnimSpeedCache { get; private set; } = -1f;
+        public TimeSpan LastActivateGameTime { get; private set; }
 
-        public bool IsChannelingPower { get; set; }
-        public bool IsOnExtraActivation { get; set; }
-        public bool LOSCheckAlongGround { get; set; }
-        public bool AlwaysTargetsMousePosition { get; set; }
-        public bool RequiresLineOfSight { get; private set; }
-
-        public bool IsExclusiveActivation { get; }
         public bool IsEnding { get; set; }
-        public TimeSpan LastActivateGameTime { get; set; }
-        public TimeSpan AnimationTime { get; set; }
-        public bool IsItemPower { get; set; }
-        public bool IsPartOfAMovementPower { get; set; }
-        public bool PreventsNewMovementWhileActive { get; set; }
-        public bool IsNonCancellableChannelPower { get; set; }
-        public bool IsCancelledOnMove { get; set; }
-        public bool DisableOrientationWhileActive { get; set; }
-        public bool ShouldOrientToTarget { get; set; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {
@@ -191,9 +178,45 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        #region Prototype Accessors
+        public bool IsInRange(WorldEntity target, RangeCheckType checkType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInRange(Vector3 position, RangeCheckType activation)
+        {
+            throw new NotImplementedException();
+        }
+
+        #region State Accessors
+
+        public bool PreventsNewMovementWhileActive()
+        {
+            if (Prototype == null) return false;
+
+            if (Prototype.MovementPreventWhileActive)
+                return true;
+
+            return _activationPhase switch
+            {
+                PowerActivationPhase.ChannelStarting => Prototype.MovementPreventChannelStart,
+                PowerActivationPhase.Channeling => Prototype.MovementPreventChannelLoop,
+                PowerActivationPhase.LoopEnding => Prototype.MovementPreventChannelEnd,
+                _ => false,
+            };
+        }
+
+        public TimeSpan GetCooldownTimeRemaining()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Data Accessors
 
         // NOTE: We have to use methods instead of properties here because we can't have static methods and properties share the same name.
+        // NOTE: Do we actually need all these prototype null checks in instance methods?
 
         public PowerCategoryType GetPowerCategory()
         {
@@ -225,6 +248,16 @@ namespace MHServerEmu.Games.Powers
             return GetPowerCategory() == PowerCategoryType.ThrowablePower;
         }
 
+        public bool IsMissileEffect()
+        {
+            return GetPowerCategory() == PowerCategoryType.MissileEffect;
+        }
+
+        public static bool IsMissileEffect(PowerPrototype powerProto)
+        {
+            return GetPowerCategory(powerProto) == PowerCategoryType.MissileEffect;
+        }
+
         public bool IsProcEffect()
         {
             return GetPowerCategory() == PowerCategoryType.ProcEffect;
@@ -233,6 +266,23 @@ namespace MHServerEmu.Games.Powers
         public static bool IsProcEffect(PowerPrototype powerProto)
         {
             return GetPowerCategory(powerProto) == PowerCategoryType.ProcEffect;
+        }
+
+        public bool IsItemPower()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsItemPower(): powerProto == null");
+            return IsItemPower(powerProto);
+        }
+
+        public static bool IsItemPower(PowerPrototype powerProto)
+        {
+            return GetPowerCategory(powerProto) == PowerCategoryType.ItemPower;
+        }
+
+        public bool IsRecurring()
+        {
+            return Prototype != null && Prototype.IsRecurring;
         }
 
         public PowerActivationType GetActivationType()
@@ -280,6 +330,23 @@ namespace MHServerEmu.Games.Powers
             return powerProto is MovementPowerPrototype;
         }
 
+        public bool IsPartOfAMovementPower()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsPartOfAMovementPower(): powerProto == null");
+            return IsPartOfAMovementPower(powerProto);
+        }
+
+        public static bool IsPartOfAMovementPower(PowerPrototype powerProto)
+        {
+            return powerProto is MovementPowerPrototype;
+        }
+
+        public bool IsChannelingPower()
+        {
+            return GetTotalChannelingTime() != TimeSpan.Zero && IsRecurring() == false;
+        }
+
         public bool NeedsTarget()
         {
             PowerPrototype powerProto = Prototype;
@@ -292,6 +359,48 @@ namespace MHServerEmu.Games.Powers
             TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
             if (stylePrototype == null) return Logger.WarnReturn(false, "NeedsTarget(): stylePrototype == null");
             return stylePrototype.NeedsTarget;
+        }
+
+        public bool AlwaysTargetsMousePosition()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "AlwaysTargetsMousePosition(): powerProto == null");
+            return AlwaysTargetsMousePosition(powerProto);
+        }
+
+        public static bool AlwaysTargetsMousePosition(PowerPrototype powerProto)
+        {
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
+            if (stylePrototype == null) return Logger.WarnReturn(false, "AlwaysTargetsMousePosition(): stylePrototype == null");
+            return stylePrototype.AlwaysTargetMousePos;
+        }
+
+        public bool ShouldOrientToTarget()
+        {
+            TargetingStylePrototype stylePrototype = TargetingStylePrototype;
+            if (stylePrototype == null) return Logger.WarnReturn(false, "ShouldOrientToTarget(): stylePrototype == null");
+            return stylePrototype.TurnsToFaceTarget;
+        }
+
+        public static bool ShouldOrientToTarget(PowerPrototype powerProto)
+        {
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
+            if (stylePrototype == null) return Logger.WarnReturn(false, "ShouldOrientToTarget(): stylePrototype == null");
+            return stylePrototype.TurnsToFaceTarget;
+        }
+
+        public bool DisableOrientationWhileActive()
+        {
+            TargetingStylePrototype stylePrototype = TargetingStylePrototype;
+            if (stylePrototype == null) return Logger.WarnReturn(false, "DisableOrientationWhileActive(): stylePrototype == null");
+            return stylePrototype.DisableOrientationDuringPower;
+        }
+
+        public static bool DisableOrientationWhileActive(PowerPrototype powerProto)
+        {
+            TargetingStylePrototype stylePrototype = powerProto.GetTargetingStyle();
+            if (stylePrototype == null) return Logger.WarnReturn(false, "DisableOrientationWhileActive(): stylePrototype == null");
+            return stylePrototype.DisableOrientationDuringPower;
         }
 
         public bool TargetsAOE()
@@ -366,7 +475,7 @@ namespace MHServerEmu.Games.Powers
 
         public static bool IsMelee(PowerPrototype powerProto)
         {
-            var reachProto = powerProto.TargetingReach.As<TargetingReachPrototype>();
+            TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
             if (reachProto == null) return Logger.WarnReturn(false, "IsMelee(): reachProto == null");
             return reachProto.Melee;
         }
@@ -410,6 +519,37 @@ namespace MHServerEmu.Games.Powers
                 return 0f;
 
             return GamepadSettingsPrototype.Range;
+        }
+
+        public float GetApplicationRange()
+        {
+            if (Owner == null) return Logger.WarnReturn(0f, "GetApplicationRange(): Owner == null");
+            return TargetsAOE() ? GetAOERadius() : GetRange();
+        }
+
+        public bool RequiresLineOfSight()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "RequiresLineOfSight(): powerProto == null");
+            return RequiresLineOfSight(powerProto);
+        }
+
+        public static bool RequiresLineOfSight(PowerPrototype powerProto)
+        {
+            TargetingReachPrototype targetingReachProto = powerProto.GetTargetingReach();
+            if (targetingReachProto == null) return Logger.WarnReturn(false, "RequiresLineOfSight(): targetingReachProto == null");
+            return targetingReachProto.RequiresLineOfSight;
+        }
+
+        public bool LOSCheckAlongGround()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "LOSCheckAlongGround(): powerProto == null");
+
+            TargetingReachPrototype targetingReachProto = powerProto.GetTargetingReach();
+            if (targetingReachProto == null) return Logger.WarnReturn(false, "LostCheckAlongGround(): targetingReachProto == null");
+
+            return targetingReachProto.LOSCheckAlongGround;
         }
 
         public float GetAnimSpeed()
@@ -459,7 +599,10 @@ namespace MHServerEmu.Games.Powers
 
             // What exactly are these Bad Things? o_o
             if (baseTime != TimeSpan.Zero && result <= TimeSpan.Zero)
-                Logger.Warn($"GetAnimationTime(): The following power has a non-zero animation time, but bonuses on the character are such that the time is being reduced to 0, which will cause Bad Things to happen...\n[{powerProto}]");
+            {
+                Logger.Warn($"GetAnimationTime(): The following power has a non-zero animation time, but bonuses on the character are such" +
+                    $" that the time is being reduced to 0, which will cause Bad Things to happen...\n[{powerProto}]");
+            }
 
             return result;
         }
@@ -571,36 +714,121 @@ namespace MHServerEmu.Games.Powers
             return animSpeed > 0f ? powerProto.ChargeTime / animSpeed : TimeSpan.Zero;  // Avoid division by 0 / negative
         }
 
-        #endregion
-
-        public TimeSpan GetCooldownTimeRemaining()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsInRange(WorldEntity target, RangeCheckType checkType)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsInRange(Vector3 position, RangeCheckType activation)
-        {
-            throw new NotImplementedException();
-        }
-
         public TimeSpan GetFullExecutionTime()
         {
-            throw new NotImplementedException();
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetFullExecutionTime(): powerProto == null");
+            return GetFullExecutionTime(powerProto, Owner, Properties, this);
         }
 
-        public float GetApplicationRange()
+        public static TimeSpan GetFullExecutionTime(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, Power power)
         {
-            throw new NotImplementedException();
+            TimeSpan chargingTime = GetChargingTime(powerProto, owner, power);
+            TimeSpan animationTime = GetAnimationTime(powerProto, owner, power);
+            TimeSpan standardExecutionTime = chargingTime + animationTime;
+
+            TimeSpan totalChannelingTime = GetTotalChannelingTime(powerProto, owner, powerProperties, power);
+            if (totalChannelingTime > TimeSpan.Zero)
+            {
+                if (standardExecutionTime > TimeSpan.Zero)
+                {
+                    Logger.Warn($"GetFullExecutionTime(): The following power has non-zero charging/standard-anim time AND non-zero channel time," +
+                        $" which are incompatible! Using the channel time only.\nPower: [{powerProto}]");
+                }
+
+                return totalChannelingTime;
+            }
+
+            return standardExecutionTime;
         }
 
         public bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
         {
-            throw new NotImplementedException();
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TriggersComboPowerOnEvent(): powerProto == null");
+            return powerProto.ExtraActivation != null && powerProto.ExtraActivation is SecondaryActivateOnReleasePrototype;
         }
+
+        public bool IsOnExtraActivation()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsOnExtraActivation(): powerProto == null");
+            return IsOnExtraActivation(powerProto, Owner);
+        }
+
+        public static bool IsOnExtraActivation(PowerPrototype powerProto, WorldEntity owner)
+        {
+            if (owner == null) return Logger.WarnReturn(false, "IsOnExtraActivation(): owner == null");
+            if (powerProto.DataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsOnExtraActivation(): powerProto.DataRef == PrototypeId.Invalid");
+
+            if (powerProto.ExtraActivation == null || powerProto.ExtraActivation is not ExtraActivateOnSubsequentPrototype extraActivate)
+                return false;
+
+            if (extraActivate.ExtraActivateEffect == SubsequentActivateType.RepeatActivation)
+                return false;
+
+            int powerActivationCount = owner.Properties[PropertyEnum.PowerActivationCount, powerProto.DataRef];
+
+            if (extraActivate.ExtraActivateEffect != SubsequentActivateType.DestroySummonedEntity || powerActivationCount % 2 != 1)
+                return false;
+
+            return true;
+        }
+
+        public bool IsCancelledOnDamage()
+        {
+            return Prototype != null && Prototype.CancelledOnDamage;
+        }
+
+        public bool IsCancelledOnMove()
+        {
+            return Prototype != null && Prototype.CancelledOnMove;
+        }
+
+        public bool IsCancelledOnRelease()
+        {
+            return Prototype != null && Prototype.CancelledOnButtonRelease;
+        }
+
+        public bool IsCancelledOnTargetKilled()
+        {
+            return Prototype != null && Prototype.CancelledOnTargetKilled;
+        }
+
+        public bool IsNonCancellableChannelPower()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsNonCancellableChannelPower(): powerProto == null");
+
+            return powerProto.CanBeInterrupted == false && IsCancelledOnRelease() == false && IsCancelledOnMove() == false && IsChannelingPower();
+        }
+
+        public bool IsExclusiveActivation()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsExclusiveActivation(): powerProto == null");
+            return IsExclusiveActivation(powerProto, Owner, Properties, this);
+        }
+
+        public static bool IsExclusiveActivation(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, Power power)
+        {
+            if (owner == null) return Logger.WarnReturn(false, "IsExclusiveActivation(): owner == null");
+
+            if (GetActivationType(powerProto) == PowerActivationType.Passive)
+                return false;
+
+            if (powerProto.ForceNonExclusive)
+                return false;
+
+            if (IsProcEffect(powerProto) || IsComboEffect(powerProto) || IsMissileEffect(powerProto) || powerProto.IsToggled || IsItemPower(powerProto))
+            {
+                if (GetFullExecutionTime(powerProto, owner, powerProperties, power) == TimeSpan.Zero)
+                    return powerProto is MovementPowerPrototype movementPowerProto && movementPowerProto.ConstantMoveTime == false;
+            }
+
+            return IsOnExtraActivation(powerProto, owner) == false;
+        }
+
+        #endregion
     }
 }

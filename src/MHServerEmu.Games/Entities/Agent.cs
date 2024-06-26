@@ -21,6 +21,15 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
+    public enum IsInPositionForPowerResult
+    {
+        Error,
+        Success,
+        BadTargetPosition,
+        OutOfRange,
+        NoPowerLOS
+    }
+
     public class Agent : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -445,7 +454,7 @@ namespace MHServerEmu.Games.Entities
             if (targetingProto.TargetingShape == TargetingShapeType.Self)
                 return IsInPositionForPowerResult.Success;
 
-            if (power.IsOnExtraActivation)
+            if (power.IsOnExtraActivation())
                 return IsInPositionForPowerResult.Success;
 
             if (power.IsOwnerCenteredAOE() && (targetingProto.MovesToRangeOfPrimaryTarget == false || target == null))
@@ -464,10 +473,10 @@ namespace MHServerEmu.Games.Entities
             if (IsInRangeToActivatePower(power, target, position) == false)
                 return IsInPositionForPowerResult.OutOfRange;
 
-            if (power.RequiresLineOfSight)
+            if (power.RequiresLineOfSight())
             {
                 ulong targetId = (target != null ? target.Id : InvalidId);
-                if (power.PowerLOSCheck(RegionLocation, position, targetId, out _, power.LOSCheckAlongGround) == false)
+                if (power.PowerLOSCheck(RegionLocation, position, targetId, out _, power.LOSCheckAlongGround()) == false)
                     return IsInPositionForPowerResult.NoPowerLOS;
             }
 
@@ -504,7 +513,7 @@ namespace MHServerEmu.Games.Entities
 
         private static bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
         {
-            if (target != null && power.AlwaysTargetsMousePosition)
+            if (target != null && power.AlwaysTargetsMousePosition())
             {
                 if (target.IsInWorld == false) return false;
                 return power.IsInRange(target, RangeCheckType.Activation);
@@ -545,7 +554,7 @@ namespace MHServerEmu.Games.Entities
             if (triggerResult != PowerUseResult.Success)
                 return triggerResult;
 
-            if (power.IsExclusiveActivation)
+            if (power.IsExclusiveActivation())
             {
                 if (IsExecutingPower)
                 {
@@ -566,8 +575,8 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 if (Game == null) return PowerUseResult.GenericError;
-                var activateTime = Game.CurrentTime - power.LastActivateGameTime;
-                var animationTime = power.AnimationTime;
+                TimeSpan activateTime = Game.CurrentTime - power.LastActivateGameTime;
+                TimeSpan animationTime = power.GetAnimationTime();
                 if (activateTime < animationTime)
                     return PowerUseResult.MinimumReactivateTime;
             }
@@ -576,7 +585,7 @@ namespace MHServerEmu.Games.Entities
             if (targetId != InvalidId)
                 target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
 
-            if (power.IsItemPower)
+            if (power.IsItemPower())
             {
                 if (itemSourceId == InvalidId)
                 {
@@ -672,7 +681,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
                 ActivePowerRef = PrototypeId.Invalid;
             }
-            else if (power.IsExclusiveActivation)
+            else if (power.IsExclusiveActivation())
             {
                 if (IsInWorld)
                     ActivePowerRef = power.PrototypeDataRef;
@@ -682,14 +691,5 @@ namespace MHServerEmu.Games.Entities
             }
             return result;
         }
-    }
-
-    public enum IsInPositionForPowerResult
-    {
-        Error,
-        Success,
-        BadTargetPosition,
-        OutOfRange,
-        NoPowerLOS
     }
 }

@@ -12,7 +12,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private TargetingStylePrototype _targetingStylePtr;     // Local ref to speed up access
+        // Local instance refs to speed up access
+        private TargetingReachPrototype _targetingReachPtr;
+        private TargetingStylePrototype _targetingStylePtr;
 
         public PrototypePropertyCollection Properties { get; protected set; }
         public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; protected set; }
@@ -200,12 +202,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // TODO 
 
+            // We don't use prototype data ref pointers, so we need to go through the game database
+            // to get the prototype for the ref. This can be slow for lookups that happen often, so
+            // we cache instance references for often requested prototypes here.
+            _targetingReachPtr = TargetingReach.As<TargetingReachPrototype>();
             _targetingStylePtr = TargetingStyle.As<TargetingStylePrototype>();
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return (keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto));
+        }
+
+        public TargetingReachPrototype GetTargetingReach()
+        {
+            return _targetingReachPtr;
         }
 
         public TargetingStylePrototype GetTargetingStyle()
