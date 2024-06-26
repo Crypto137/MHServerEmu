@@ -277,6 +277,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return TimeSpan.FromMilliseconds(animationTimeMS);
         }
+
+        public TimeSpan GetCooldownDuration(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            if (CooldownTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownDuration(): CooldownTimeMS == null");
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties);
+
+            int cooldownTimeMS = Eval.RunInt(CooldownTimeMS, contextData);
+            return TimeSpan.FromMilliseconds(cooldownTimeMS);
+        }
     }
 
     public class MovementPowerPrototype : PowerPrototype

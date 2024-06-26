@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -195,8 +196,20 @@ namespace MHServerEmu.Games.Powers
 
         public WorldEntity GetUltimateOwner()
         {
-            // TODO
-            return Owner;
+            if (Owner == null) return Logger.WarnReturn<WorldEntity>(null, "GetUltimateOwner(): Owner == null");
+
+            if (Owner.HasPowerUserOverride == false)
+                return Owner;
+
+            ulong powerUserOverrideId = Owner.Properties[PropertyEnum.PowerUserOverrideID];
+            if (powerUserOverrideId == Entity.InvalidId)
+                return Owner;
+
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(powerUserOverrideId);
+            if (ultimateOwner == null || ultimateOwner.IsInWorld == false)
+                return null;
+
+            return ultimateOwner;
         }
 
         public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
@@ -760,11 +773,10 @@ namespace MHServerEmu.Games.Powers
         {
             if (powerProto.IsRecurring)
             {
-                // NOTE: We calculate using ticks here to avoid unnecessary conversions to float / double
-                long channelStartTime = GetChannelStartTime(powerProto, owner, power).Ticks;
-                long channelLoopTime = GetChannelLoopTime(powerProto, owner, powerProperties, power).Ticks;
-                long channelMinTime = powerProto.ChannelMinTime.Ticks;
-                return TimeSpan.FromTicks(Math.Max(channelStartTime + channelLoopTime, channelMinTime));
+                TimeSpan channelStartTime = GetChannelStartTime(powerProto, owner, power);
+                TimeSpan channelLoopTime = GetChannelLoopTime(powerProto, owner, powerProperties, power);
+                TimeSpan channelMinTime = powerProto.ChannelMinTime;
+                return Clock.Max(channelStartTime + channelLoopTime, channelMinTime);
             }
 
             float animSpeed = GetAnimSpeed(powerProto, owner, power);
@@ -828,6 +840,44 @@ namespace MHServerEmu.Games.Powers
             return standardExecutionTime;
         }
 
+        public TimeSpan GetCooldownDuration()
+        {
+            if (Owner == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownDuration(): Owner == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownDuration(): powerProto == null");
+
+            return GetCooldownDuration(powerProto, Owner, Properties);
+        }
+
+        public static TimeSpan GetCooldownDuration(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties)
+        {
+            // First check if the power is already on cooldown and return that if it is
+            TimeSpan cooldownTimeElapsed = owner.GetAbilityCooldownTimeElapsed(powerProto);
+            TimeSpan cooldownDurationForLastActivation = owner.GetAbilityCooldownDurationUsedForLastActivation(powerProto);
+
+            if (cooldownTimeElapsed <= cooldownDurationForLastActivation)
+                return cooldownDurationForLastActivation;
+
+            // Calculate new cooldown duration
+            return CalcCooldownDuration(powerProto, owner, powerProperties);
+        }
+
+        public static TimeSpan CalcCooldownDuration(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, TimeSpan baseCooldown = default)
+        {
+            if (baseCooldown == TimeSpan.Zero)
+                baseCooldown = powerProto.GetCooldownDuration(powerProperties, owner.Properties);
+
+            // TODO: apply modifiers
+
+            return baseCooldown;
+        }
+
+        public static bool IsCooldownOnPlayer(PowerPrototype powerProto)
+        {
+            return powerProto.CooldownOnPlayer;
+        }
+
         public bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
         {
             PowerPrototype powerProto = Prototype;
@@ -859,6 +909,11 @@ namespace MHServerEmu.Games.Powers
                 return false;
 
             return true;
+        }
+
+        public bool IsToggled()
+        {
+            return Prototype != null && Prototype.IsToggled;
         }
 
         public bool IsCancelledOnDamage()
@@ -913,6 +968,48 @@ namespace MHServerEmu.Games.Powers
             }
 
             return IsOnExtraActivation(powerProto, owner) == false;
+        }
+
+        public bool IsSecondActivateOnRelease()
+        {
+            return false;
+        }
+
+        public bool IsContinuous()
+        {
+            if (IsToggled())
+                return false;
+
+            // <= 50 ms is too fast to be a continuous power - is this related to game fixed time update time?
+            if (GetFullExecutionTime().TotalMilliseconds <= 50)
+                return false;
+
+            if (GetCooldownDuration() > TimeSpan.Zero)
+                return false;
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsContinuous(): powerProto == null");
+
+            if (powerProto.DisableContinuous)
+                return false;
+
+            if (powerProto.PowerCategory != PowerCategoryType.NormalPower)
+                return false;
+
+            if (powerProto.ExtraActivation != null)
+                return false;
+
+            if (powerProto.Activation == PowerActivationType.Passive || powerProto.Activation == PowerActivationType.TwoStageTargeted)
+                return false;
+
+            if (IsCancelledOnRelease())
+                return false;
+
+            if (IsSecondActivateOnRelease())
+                return false;
+
+            // After facing many challenges, we have reached the end and earned our right to be a continuous power
+            return true;
         }
 
         #endregion
