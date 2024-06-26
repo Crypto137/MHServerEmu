@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Web;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
@@ -11,6 +12,12 @@ using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Auth.Handlers
 {
+    public enum AuthWebApiOutputFormat
+    {
+        Html,
+        Json
+    }
+
     /// <summary>
     /// Handler for web API requests sent to the <see cref="AuthServer"/>.
     /// </summary>
@@ -42,19 +49,22 @@ namespace MHServerEmu.Auth.Handlers
                 ? request.RemoteEndPoint.ToStringMasked()
                 : request.RemoteEndPoint.ToString();
 
-            // Parse query string from POST requests
-            NameValueCollection queryString = null;
+            if (Enum.TryParse(request.QueryString["outputFormat"], true, out AuthWebApiOutputFormat outputFormat) == false)
+                outputFormat = AuthWebApiOutputFormat.Html;
+
+            // Parse query string body from POST requests
+            NameValueCollection bodyQueryString = null;
             if (request.HttpMethod == "POST")
             {
                 using (StreamReader reader = new(request.InputStream))
-                    queryString = HttpUtility.ParseQueryString(reader.ReadToEnd());
+                    bodyQueryString = HttpUtility.ParseQueryString(reader.ReadToEnd());
             }
 
             // Handling
             switch (request.Url.LocalPath)
             {
-                case "/AccountManagement/Create":   await OnAccountCreate(queryString, response); break;
-                case "/ServerStatus":               await OnServerStatus(response); break;
+                case "/AccountManagement/Create":   await OnAccountCreate(bodyQueryString, response, outputFormat); break;
+                case "/ServerStatus":               await OnServerStatus(response, outputFormat); break;
 
                 default:
                     Logger.Warn($"HandleRequestAsync(): Unhandled web API request\nRequest: {request.Url.LocalPath}\nRemoteEndPoint: {endPointName}\nUserAgent: {request.UserAgent}");
@@ -74,12 +84,22 @@ namespace MHServerEmu.Auth.Handlers
         /// <summary>
         /// Formats a response as an html page and sends it as an <see cref="HttpListenerResponse"/>.
         /// </summary>
-        private async Task SendResponseAsync(string title, string text, HttpListenerResponse response)
+        private async Task SendResponseAsync(ResponseData data, HttpListenerResponse response, AuthWebApiOutputFormat outputFormat)
         {
-            StringBuilder sb = new(ResponseHtml);
-            sb.Replace("%RESPONSE_TITLE%", title);
-            sb.Replace("%RESPONSE_TEXT%", text);
-            await SendTextAsync(sb.ToString(), response);
+            string output = string.Empty;
+            if (outputFormat == AuthWebApiOutputFormat.Html)
+            {
+                StringBuilder sb = new(ResponseHtml);
+                sb.Replace("%RESPONSE_TITLE%", data.Title);
+                sb.Replace("%RESPONSE_TEXT%", data.Text);
+                output = sb.ToString();
+            }
+            else if (outputFormat == AuthWebApiOutputFormat.Json)
+            {
+                output = JsonSerializer.Serialize(data);
+            }
+
+            await SendTextAsync(output, response);
         }
 
         /// <summary>
@@ -95,46 +115,69 @@ namespace MHServerEmu.Auth.Handlers
         /// <summary>
         /// Handles an account creation web request.
         /// </summary>
-        private async Task<bool> OnAccountCreate(NameValueCollection queryString, HttpListenerResponse response)
+        private async Task<bool> OnAccountCreate(NameValueCollection bodyQueryString, HttpListenerResponse response, AuthWebApiOutputFormat outputFormat)
         {
             // Show account creation form when no parameters are specified in the query string
-            if (queryString == null)
+            if (bodyQueryString == null)
             {
-                await SendTextAsync(AccountCreateFormHtml, response);
+                if (outputFormat == AuthWebApiOutputFormat.Html)
+                    await SendTextAsync(AccountCreateFormHtml, response);
+                else if (outputFormat == AuthWebApiOutputFormat.Json)
+                    await SendResponseAsync(new(false, "Invalid Request", "This request does not support JSON output."), response, outputFormat);
+
                 return true;
             }
 
             // Validate input
             bool inputIsValid = true;
-            inputIsValid &= ValidateField(queryString["email"]);
-            inputIsValid &= ValidateField(queryString["playerName"]);
-            inputIsValid &= ValidateField(queryString["password"]);
+            inputIsValid &= ValidateField(bodyQueryString["email"]);
+            inputIsValid &= ValidateField(bodyQueryString["playerName"]);
+            inputIsValid &= ValidateField(bodyQueryString["password"]);
 
             if (inputIsValid == false)
             {
-                await SendResponseAsync("Error", "Input is not valid.", response);
+                await SendResponseAsync(new(false, "Error", "Input is not valid."), response, outputFormat);
                 return false;
             }
 
-            (bool, string) result = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"]);
-            if (HideSensitiveInformation == false) Logger.Trace(result.Item2);
+            (bool result, string text) = AccountManager.CreateAccount(bodyQueryString["email"].ToLower(), bodyQueryString["playerName"], bodyQueryString["password"]);
+            if (HideSensitiveInformation == false) Logger.Trace(text);
 
-            await SendResponseAsync(result.Item1 ? "Success" : "Error", result.Item2, response);
+            ResponseData responseData = new(result, result ? "Success" : "Error", text);
+
+            await SendResponseAsync(responseData, response, outputFormat);
             return true;
         }
 
         /// <summary>
         /// Handles a server status web request.
         /// </summary>
-        private async Task<bool> OnServerStatus(HttpListenerResponse response)
+        private async Task<bool> OnServerStatus(HttpListenerResponse response, AuthWebApiOutputFormat outputFormat)
         {
             string status = ServerManager.Instance.GetServerStatus();
-            status = status.Replace("\n", "<br/>");     // Fix line breaks for display in browsers
 
-            await SendResponseAsync("Server Status", status, response);
+            // Fix line breaks for display in browsers
+            if (outputFormat == AuthWebApiOutputFormat.Html)
+                status = status.Replace("\n", "<br/>");
+
+            await SendResponseAsync(new(true, "Server Status", status), response, outputFormat);
             return true;
         }
 
         #endregion
+
+        private readonly struct ResponseData
+        {
+            public bool Result { get; }
+            public string Title { get; }
+            public string Text { get; }
+
+            public ResponseData(bool result, string title, string text)
+            {
+                Result = result;
+                Title = title;
+                Text = text;
+            }
+        }
     }
 }

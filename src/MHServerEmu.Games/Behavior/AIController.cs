@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.Behavior
             if (!ignoreActivePower && Owner.IsExecutingPower)
             {
                 Power activePower = Owner.ActivePower;
-                if (activePower == null || activePower.IsChannelingPower == false) return;
+                if (activePower == null || activePower.IsChannelingPower() == false) return;
             }
 
             EventScheduler eventScheduler = Game.GameEventScheduler;

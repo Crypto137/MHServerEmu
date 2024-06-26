@@ -795,16 +795,15 @@ namespace MHServerEmu.Games.Entities
         {
             if (_switchAvatarEvent.IsValid) return false;
 
-            // Get swap out power proto
-            // TODO: Fix this when combo power assignment is working
-            var avatarSwapOutProto = GameDatabase.GlobalsPrototype.AvatarSwapOutPower.As<PowerPrototype>();
-            TimeSpan animationTime = Power.GetAnimationTime(avatarSwapOutProto, CurrentAvatar, null);
+            // Get swap out power for the current avatar
+            Power swapOutPower = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapOutPower);
+            if (swapOutPower == null) return Logger.WarnReturn(false, "BeginSwitchAvatar(): swapOutPower == null;");
 
             // Activate swap out power for the current avatar
-            CurrentAvatar.TEMP_SendActivatePowerMessage(avatarSwapOutProto.DataRef);
+            CurrentAvatar.TEMP_SendActivatePowerMessage(swapOutPower.PrototypeDataRef);
 
-            // Schedule avatar switch
-            ScheduleEntityEvent(_switchAvatarEvent, animationTime, avatarProtoRef);
+            // Schedule avatar switch for when the power ends
+            ScheduleEntityEvent(_switchAvatarEvent, swapOutPower.GetAnimationTime(), avatarProtoRef);
 
             return true;
         }

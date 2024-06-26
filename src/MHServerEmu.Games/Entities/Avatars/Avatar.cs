@@ -44,6 +44,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
 
         public bool IsUsingGamepadInput { get; set; } = false;
+        public PrototypeId CurrentTransformMode { get; private set; } = PrototypeId.Invalid;
 
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;

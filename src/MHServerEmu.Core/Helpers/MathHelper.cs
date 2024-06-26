@@ -32,6 +32,16 @@
             return bit;
         }
 
+        public static void BitSet(ref int value, int bitMask)
+        {
+            value |= bitMask;
+        }
+
+        public static bool BitTest(int value, int bitMask)
+        {
+            return (value & bitMask) != 0;
+        }
+
         public static int RoundToInt(float value) // TODO check where it used
         {
             if (value < 0.0f)

@@ -4,6 +4,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
@@ -195,8 +196,13 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in _conditionCollection)
                 sb.AppendLine($"{nameof(_conditionCollection)}[{kvp.Key}]: {kvp.Value}");
 
-            foreach (var kvp in _powerCollection)
-                sb.AppendLine($"{nameof(_powerCollection)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+            if (_powerCollection.PowerCount > 0)
+            {
+                sb.AppendLine($"{nameof(_powerCollection)}:");
+                foreach (var kvp in _powerCollection)
+                    sb.AppendLine(kvp.Value.ToString());
+                sb.AppendLine();
+            }
 
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
@@ -257,6 +263,83 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, "UnassignPower(): Failed to unassign power");
 
             return true;
+        }
+
+        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, in PowerActivationSettings powerSettings)
+        {
+            Power power = GetPower(powerRef);
+            if (power == null)
+            {
+                Logger.Warn($"Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {ToString()}");
+                return PowerUseResult.AbilityMissing;
+            }
+            return ActivatePower(power, powerSettings);
+        }
+
+        public virtual PowerUseResult ActivatePower(Power power, in PowerActivationSettings powerSettings)
+        {
+            return power.Activate(powerSettings);
+        }
+
+        public TimeSpan GetAbilityCooldownStartTime(PowerPrototype powerProto)
+        {
+            return Properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef];
+        }
+
+        public virtual TimeSpan GetAbilityCooldownTimeElapsed(PowerPrototype powerProto)
+        {
+            // Overriden in Avatar
+            return Game.CurrentTime - GetAbilityCooldownStartTime(powerProto);
+        }
+
+        public virtual TimeSpan GetAbilityCooldownTimeRemaining(PowerPrototype powerProto)
+        {
+            // Overriden in Agent
+            TimeSpan cooldownDurationForLastActivation = GetAbilityCooldownDurationUsedForLastActivation(powerProto);
+            TimeSpan cooldownTimeElapsed = Clock.Max(GetAbilityCooldownTimeElapsed(powerProto), TimeSpan.Zero);
+            return Clock.Max(cooldownDurationForLastActivation - cooldownTimeElapsed, TimeSpan.Zero);
+        }
+
+        public TimeSpan GetAbilityCooldownDuration(PowerPrototype powerProto)
+        {
+            Power power = GetPower(powerProto.DataRef);
+            
+            if (power != null)
+                return power.GetCooldownDuration();
+
+            if (powerProto.Properties == null) return Logger.WarnReturn(TimeSpan.Zero, "GetAbilityCooldownDuration(): powerProto.Properties == null");
+            return Power.GetCooldownDuration(powerProto, this, powerProto.Properties);
+        }
+
+        public TimeSpan GetAbilityCooldownDurationUsedForLastActivation(PowerPrototype powerProto)
+        {
+            TimeSpan powerCooldownDuration = TimeSpan.Zero;
+
+            if (Power.IsCooldownOnPlayer(powerProto))
+            {
+                Player powerOwnerPlayer = GetOwnerOfType<Player>();
+                if (powerOwnerPlayer != null)
+                    powerCooldownDuration = powerOwnerPlayer.Properties[PropertyEnum.PowerCooldownDuration, powerProto.DataRef];
+                else
+                    Logger.Warn("GetAbilityCooldownDurationUsedForLastActivation(): powerOwnerPlayer == null");
+            }
+            else
+            {
+                powerCooldownDuration = Properties[PropertyEnum.PowerCooldownDuration, powerProto.DataRef];
+            }
+
+            return powerCooldownDuration;
+        }
+
+        public bool IsPowerOnCooldown(PowerPrototype powerProto)
+        {
+            return GetAbilityCooldownTimeRemaining(powerProto) > TimeSpan.Zero;
+        }
+
+        public virtual TimeSpan GetPowerInterruptCooldown(PowerPrototype powerProto)
+        {
+            // Overriden in Agent and Avatar
+            return TimeSpan.Zero;
         }
 
         private void OnAllianceChanged(PrototypeId allianceRef)
@@ -943,29 +1026,6 @@ namespace MHServerEmu.Games.Entities
             return Locomotor.GetPathFlags(WorldEntityPrototype.NaviMethod);
         }
 
-        private Power GetActivePower()
-        {
-            if (ActivePowerRef != PrototypeId.Invalid)
-                return PowerCollection?.GetPower(ActivePowerRef);
-            return null;
-        }
-
-        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, in PowerActivationSettings powerSettings)
-        {
-            Power power = GetPower(powerRef);
-            if (power == null)
-            {
-                Logger.Warn($"Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {ToString()}");
-                return PowerUseResult.AbilityMissing;
-            }
-            return ActivatePower(power, powerSettings);
-        }
-
-        public virtual PowerUseResult ActivatePower(Power power, in PowerActivationSettings powerSettings)
-        {
-            return power.Activate(powerSettings);
-        }
-
         public virtual bool CanPowerTeleportToPosition(Vector3 position)
         {
             if (Region == null) return false;
@@ -1006,17 +1066,17 @@ namespace MHServerEmu.Games.Entities
             var activePower = ActivePower;
             if (activePower == null) return false;
 
-            if (activePower.IsPartOfAMovementPower)
+            if (activePower.IsPartOfAMovementPower())
                 return movementPreventionFlag == PowerMovementPreventionFlags.NonForced;
 
-            if (movementPreventionFlag == PowerMovementPreventionFlags.NonForced && activePower.PreventsNewMovementWhileActive)
+            if (movementPreventionFlag == PowerMovementPreventionFlags.NonForced && activePower.PreventsNewMovementWhileActive())
             {
-                if (activePower.IsChannelingPower == false) return true;
-                else if (activePower.IsNonCancellableChannelPower) return true;
+                if (activePower.IsChannelingPower() == false) return true;
+                else if (activePower.IsNonCancellableChannelPower()) return true;
             }
 
             if (movementPreventionFlag == PowerMovementPreventionFlags.Sync)
-                if (activePower.IsChannelingPower == false || activePower.IsCancelledOnMove)
+                if (activePower.IsChannelingPower() == false || activePower.IsCancelledOnMove())
                     return true;
 
             if (activePower.TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd))
@@ -1034,7 +1094,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"WorldEntity has ActivePowerRef set, but is missing the power in its power collection! Power: [{GameDatabase.GetPrototypeName(ActivePowerRef)}] WorldEntity: [{ToString()}]");
                 return false;
             }
-            return activePower.DisableOrientationWhileActive;
+            return activePower.DisableOrientationWhileActive();
         }
 
         public bool ActivePowerOrientsToTarget()
@@ -1044,7 +1104,7 @@ namespace MHServerEmu.Games.Entities
             var activePower = ActivePower;
             if (activePower == null) return false;
 
-            return activePower.ShouldOrientToTarget;
+            return activePower.ShouldOrientToTarget();
         }
 
         public float GetDistanceTo(WorldEntity other, bool calcRadius)
@@ -1411,6 +1471,13 @@ namespace MHServerEmu.Games.Entities
             Game.NetworkManager.SendMessageToInterested(activatePowerMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
             return true;
+        }
+
+        private Power GetActivePower()
+        {
+            if (ActivePowerRef != PrototypeId.Invalid)
+                return PowerCollection?.GetPower(ActivePowerRef);
+            return null;
         }
 
         protected class TEMP_SendActivatePowerMessageEvent : CallMethodEventParam1<Entity, PrototypeId>

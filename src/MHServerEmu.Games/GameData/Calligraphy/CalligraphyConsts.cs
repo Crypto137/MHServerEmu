@@ -69,6 +69,7 @@
     /// </summary>
     public static class HardcodedBlueprints
     {
+        public const BlueprintId Power                      = (BlueprintId)6670986634407775621;     // Powers/Blueprints/Power.defaults
         public const BlueprintId DiamondFormActivatePower   = (BlueprintId)18066325974134561036;    // Powers/Blueprints/Keywords/DiamondFormActivatePower.blueprint
         public const BlueprintId Mental                     = (BlueprintId)720980541349630335;      // Powers/Blueprints/Keywords/Mental.blueprint
         public const BlueprintId Item                       = (BlueprintId)10622579046198020830;    // Entity/Items/Item.blueprint
