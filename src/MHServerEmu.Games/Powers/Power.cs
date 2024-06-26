@@ -16,6 +16,8 @@ namespace MHServerEmu.Games.Powers
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private bool _isTeamUpPassivePowerWhileAway;
+        private SituationalPowerComponent _situationalComponent;
+        private KeywordsMask _keywordsMask = new();
 
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
 
@@ -31,7 +33,15 @@ namespace MHServerEmu.Games.Powers
         public float AnimSpeedCache { get; private set; } = -1f;
         public TimeSpan LastActivateGameTime { get; private set; }
 
-        public bool IsEnding { get; set; }
+        public bool IsSituationalPower { get => _situationalComponent != null; }
+
+        public int Rank { get => Properties[PropertyEnum.PowerRank]; }
+
+        public bool IsInActivation { get => _activationPhase == PowerActivationPhase.Active; }
+        public bool IsChanneling { get => _activationPhase == PowerActivationPhase.Channeling || _activationPhase == PowerActivationPhase.LoopEnding; }
+        public bool IsEnding { get => _activationPhase == PowerActivationPhase.MinTimeEnding || _activationPhase == PowerActivationPhase.LoopEnding; }
+        public bool IsCharging { get => _activationPhase == PowerActivationPhase.Charging; }
+        public bool IsActive { get => IsInActivation || IsToggledOn() || IsChanneling || IsCharging || IsEnding || _activationPhase == PowerActivationPhase.ChannelStarting; }
 
         public Power(Game game, PrototypeId prototypeDataRef)
         {
@@ -43,6 +53,11 @@ namespace MHServerEmu.Games.Powers
             GamepadSettingsPrototype = Prototype.GamepadSettings.As<GamepadSettingsPrototype>();
         }
 
+        public override string ToString()
+        {
+            return $"powerProtoRef={GameDatabase.GetPrototypeName(PrototypeDataRef)}, owner={Owner}";
+        }
+
         public bool Initialize(WorldEntity owner, bool isTeamUpPassivePowerWhileAway, PropertyCollection initializeProperties)
         {
             Owner = owner;
@@ -52,14 +67,46 @@ namespace MHServerEmu.Games.Powers
                 return Logger.WarnReturn(false, $"Initialize(): Prototype == null");
 
             GeneratePowerProperties(Properties, Prototype, initializeProperties, Owner);
-            // TODO: Power::createSituationalComponent()
+            CreateSituationalComponent();
 
             return true;
         }
 
-        public void OnAssign()
+        public bool OnAssign()
         {
-            // TODO
+            // Initialize situational component
+            if (_situationalComponent != null)
+            {
+                _situationalComponent.Initialize();
+                _situationalComponent.OnPowerAssigned();
+            }
+
+            // Initialize keywords
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "OnAssign(): powerProto == null");
+
+            _keywordsMask = Prototype.KeywordsMask.Copy<KeywordsMask>();
+
+            // Apply keyword changes from the owner avatar
+            WorldEntity owner = Owner;
+            if (owner is not Avatar)
+            {
+                owner = GetUltimateOwner();
+                if (owner == null || owner is not Avatar)
+                    return true;
+            }
+
+            foreach (var kvp in owner.Properties.IteratePropertyRange(PropertyEnum.PowerKeywordChange, powerProto.DataRef))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
+
+                if (kvp.Value == (int)TriBool.True)
+                    AddKeyword(keywordProtoRef);
+                else
+                    RemoveKeyword(keywordProtoRef);
+            }
+
+            return true;
         }
 
         public void OnOwnerExitedWorld()
@@ -121,9 +168,35 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        public override string ToString()
+        // Keywords
+
+        public bool AddKeyword(PrototypeId keywordProtoRef)
         {
-            return $"powerProtoRef={GameDatabase.GetPrototypeName(PrototypeDataRef)}, owner={Owner}";
+            var powerKeywordProto = GameDatabase.GetPrototype<PowerKeywordPrototype>(keywordProtoRef);
+            if (powerKeywordProto == null) return Logger.WarnReturn(false, "AddKeyword(): powerKeywordProto == null");
+
+            powerKeywordProto.GetBitMask(ref _keywordsMask);
+            return true;
+        }
+
+        public bool RemoveKeyword(PrototypeId keywordProtoRef)
+        {
+            var powerKeywordProto = GameDatabase.GetPrototype<PowerKeywordPrototype>(keywordProtoRef);
+            if (powerKeywordProto == null) return Logger.WarnReturn(false, "RemoveKeyword(): powerKeywordProto == null");
+
+            _keywordsMask.Reset(powerKeywordProto.GetBitIndex());
+            return true;
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+
+        public WorldEntity GetUltimateOwner()
+        {
+            // TODO
+            return Owner;
         }
 
         public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
@@ -204,6 +277,19 @@ namespace MHServerEmu.Games.Powers
                 PowerActivationPhase.LoopEnding => Prototype.MovementPreventChannelEnd,
                 _ => false,
             };
+        }
+
+        public bool IsToggledOn()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsToggledOn(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsToggledOn(): Owner == null");
+            return IsToggledOn(powerProto, Owner);
+        }
+
+        public static bool IsToggledOn(PowerPrototype powerProto, WorldEntity owner)
+        {
+            return owner.Properties[PropertyEnum.PowerToggleOn, powerProto.DataRef];
         }
 
         public TimeSpan GetCooldownTimeRemaining()
@@ -830,5 +916,19 @@ namespace MHServerEmu.Games.Powers
         }
 
         #endregion
+
+        private bool CreateSituationalComponent()
+        {
+            if (Game == null) return Logger.WarnReturn(false, "CreateSituationalComponent(): Game == null");
+            
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CreateSituationalComponent(): powerProto == null");
+
+            if (powerProto?.SituationalComponent?.SituationalTrigger == null)
+                return true;
+
+            _situationalComponent = new(Game, powerProto.SituationalComponent, this);
+            return true;
+        }
     }
 }
