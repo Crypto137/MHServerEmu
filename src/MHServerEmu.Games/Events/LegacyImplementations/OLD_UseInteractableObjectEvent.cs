@@ -30,53 +30,54 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             if (proto == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
                 return HandleBowlingBallItem();
 
-            ItemPrototype itemPrototype = GameDatabase.GetPrototype<ItemPrototype>(proto);
+            var itemProto = GameDatabase.GetPrototype<ItemPrototype>(proto);
 
-            if (itemPrototype?.ActionsTriggeredOnItemEvent?.Choices == null)
+            if (itemProto?.ActionsTriggeredOnItemEvent?.Choices == null)
                 return true;
 
-            if (itemPrototype.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll) // TODO : other pick method
+            if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll) // TODO : other pick method
             {
-                foreach (var choice in itemPrototype.ActionsTriggeredOnItemEvent.Choices)
+                foreach (var choice in itemProto.ActionsTriggeredOnItemEvent.Choices)
                 {
-                    ItemActionPrototype itemActionPrototype = choice as ItemActionPrototype;
-                    if (itemActionPrototype == null)
-                        continue;
-
-                    ExecuteAction(itemActionPrototype);
+                    if (choice is not ItemActionPrototype itemActionProto) continue;
+                    ExecuteAction(itemActionProto);
                 }
             }
 
             return true;
         }
 
-        private void ExecuteAction(ItemActionPrototype itemActionPrototype)
+        private void ExecuteAction(ItemActionPrototype itemActionProto)
         {
-            if (itemActionPrototype.TriggeringEvent != ItemEventType.OnUse)
-                return;
+            if (itemActionProto.TriggeringEvent != ItemEventType.OnUse) return;
 
-            ItemActionUsePowerPrototype itemActionUsePowerPrototype = itemActionPrototype as ItemActionUsePowerPrototype;
-            if (itemActionUsePowerPrototype != null)
-                UsePower(_player.CurrentAvatar, itemActionUsePowerPrototype.Power);
+            if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto)
+                UsePower(_player.CurrentAvatar, itemActionUsePowerProto.Power);
         }
 
-        private void UsePower(Avatar avatar, PrototypeId powerPrototypeId)
+        private void UsePower(Avatar avatar, PrototypeId powerRef)
         {
-            if (avatar.HasPowerInPowerCollection(powerPrototypeId) == false)
-                avatar.AssignPower(powerPrototypeId, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+            if (avatar.HasPowerInPowerCollection(powerRef) == false)
+                avatar.AssignPower(powerRef, new(0, avatar.CharacterLevel, avatar.CombatLevel));
 
-            Power power = avatar.GetPower(powerPrototypeId);
-            if (power == null)
-                return;
+            Power power = avatar.GetPower(powerRef);
+            if (power == null) return;
 
-            SummonPowerPrototype summonPowerPrototype = power.Prototype as SummonPowerPrototype;
-
-            if(summonPowerPrototype != null)
+            if (power.Prototype is SummonPowerPrototype summonPowerProto)
             {
-                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerPrototypeId])
-                    EntityHelper.DestroySummonFromPower(avatar, powerPrototypeId);
+                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
+                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
+                {
+                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
+                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
+                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
+                }
                 else
-                    EntityHelper.SummonEntityFromPower(avatar, powerPrototypeId);
+                {
+                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto);
+                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = true;
+                    avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
+                }
             }
         }
 

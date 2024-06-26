@@ -11,15 +11,9 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Events.LegacyImplementations;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Entities.Inventories;
 
 namespace MHServerEmu.Commands.Implementations
 {

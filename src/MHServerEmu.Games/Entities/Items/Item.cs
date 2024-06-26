@@ -3,9 +3,12 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Items
@@ -126,6 +129,36 @@ namespace MHServerEmu.Games.Entities.Items
             // TODO: Roll affixes
 
             return true;
+        }
+
+        public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        {
+            base.OnSelfRemovedFromOtherInventory(prevInvLoc);
+
+            // Destroy summoned pet
+            if (prevInvLoc.IsValid && prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.PetItem)
+            {
+                var itemProto = ItemPrototype;
+                if (itemProto?.ActionsTriggeredOnItemEvent?.Choices == null) return;
+                var itemActionProto = itemProto.ActionsTriggeredOnItemEvent.Choices[0];
+                if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto){
+                    var powerRef = itemActionUsePowerProto.Power;
+                    var avatar = Game.EntityManager.GetEntity<Avatar>(prevInvLoc.ContainerId);
+                    Power power = avatar?.GetPower(powerRef);
+                    if (power == null) return;
+                    if (power.Prototype is SummonPowerPrototype summonPowerProto)
+                    {
+                        PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
+                        if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
+                        {
+                            EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
+                            avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
+                            avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
+                        }
+                    }
+                }
+
+            }
         }
 
         private bool ApplyItemSpecProperties()
