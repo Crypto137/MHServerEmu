@@ -51,27 +51,24 @@ namespace MHServerEmu.Games.Powers
             return false;
         }
 
-        private void HandleTravelPower(PlayerConnection playerConnection, PrototypeId powerId)
+        private bool HandleTravelPower(PlayerConnection playerConnection, PrototypeId powerProtoRef)
         {
-            int delta = 65; // TODO: Sync server-client
-            int timeOffsetMS;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            switch (powerId)
-            {   // Power.AnimationContactTimePercent
-                case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
-                    timeOffsetMS = 210 - delta;
-                    break;
-                case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
-                    timeOffsetMS = 235 - delta;
-                    break;
-                default:
-                    timeOffsetMS = 100 - delta;
-                    break;
-            }
+            Power travelPower = avatar.GetPower(powerProtoRef);
+            if (travelPower == null)
+                return Logger.WarnReturn(false, "HandleTravelPower(): travelPower == null");
+
+            if (travelPower.IsTravelPower() == false)
+                return Logger.WarnReturn(false, $"HandleTravelPower(): {travelPower.Prototype} is not a travel power");
+
+            TimeSpan activationTime = travelPower.GetActivationTime();
 
             EventPointer<OLD_StartTravelEvent> eventPointer = new();
-            _game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.FromMilliseconds(timeOffsetMS));
-            eventPointer.Get().Initialize(playerConnection, powerId);
+            _game.GameEventScheduler.ScheduleEvent(eventPointer, activationTime);
+            eventPointer.Get().Initialize(playerConnection, travelPower.PrototypeDataRef);
+
+            return true;
         }
 
         #region Message Handling

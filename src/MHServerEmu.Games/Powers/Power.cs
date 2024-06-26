@@ -706,6 +706,28 @@ namespace MHServerEmu.Games.Powers
             return result;
         }
 
+        public float GetAnimContactTimePercent()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetAnimContactTimePercent(): powerProto == null");
+            return GetAnimContactTimePercent(powerProto, Owner);
+        }
+
+        public static float GetAnimContactTimePercent(PowerPrototype powerProto, WorldEntity owner)
+        {
+            if (owner == null) return Logger.WarnReturn(0f, "GetAnimContactTimePercent(): powerProto == null");
+
+            float powerContactPctWhenMoving = powerProto.Properties != null ? powerProto.Properties[PropertyEnum.PowerContactPctWhenMoving] : -1f;
+
+            if (powerContactPctWhenMoving >= 0f)
+            {
+                if (owner.Locomotor != null && owner.Locomotor.IsLocomoting)
+                    return powerContactPctWhenMoving;
+            }
+
+            return powerProto.GetContactTimePercent(owner.GetOriginalWorldAsset(), owner.GetEntityWorldAsset());
+        }
+
         public TimeSpan GetChannelStartTime()
         {
             PowerPrototype powerProto = Prototype;
@@ -810,6 +832,27 @@ namespace MHServerEmu.Games.Powers
         {
             float animSpeed = GetAnimSpeed(powerProto, owner, power);
             return animSpeed > 0f ? powerProto.ChargeTime / animSpeed : TimeSpan.Zero;  // Avoid division by 0 / negative
+        }
+
+        public TimeSpan GetActivationTime()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetActivationTime(): powerProto == null");
+
+            // Channeled powers
+            if (GetChannelLoopTime() > TimeSpan.Zero)
+            {
+                if (powerProto.IsRecurring == false)
+                    return GetChannelStartTime() * GetAnimContactTimePercent(powerProto, Owner);
+
+                return GetChannelStartTime() + (GetChannelLoopTime() * GetAnimContactTimePercent(powerProto, Owner));
+            }
+
+            // Non-channeled powers
+            float animSpeed = GetAnimSpeed();
+            float timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;     // Avoid division by 0 / negative
+            TimeSpan oneOffAnimContactTime = powerProto.GetOneOffAnimContactTime(Owner.GetOriginalWorldAsset(), Owner.GetEntityWorldAsset());
+            return GetChargingTime() + (oneOffAnimContactTime * timeMult);
         }
 
         public TimeSpan GetFullExecutionTime()

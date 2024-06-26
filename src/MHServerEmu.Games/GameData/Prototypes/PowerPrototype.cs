@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -251,7 +252,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             int animationTimeMS = AnimationTimeMS;
 
-            if (PowerUnrealOverrides == null)
+            if (PowerUnrealOverrides.IsNullOrEmpty())
                 return TimeSpan.FromMilliseconds(animationTimeMS);
 
             foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
@@ -262,8 +263,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (unrealAssetOverrideProto.AnimationTimeMS >= 0)
                     animationTimeMS = unrealAssetOverrideProto.AnimationTimeMS;
 
-                if (unrealAssetOverrideProto.ArtOnlyReplacements == null)
-                    continue;
+                if (unrealAssetOverrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
 
                 foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
                 {
@@ -272,10 +273,91 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                     if (replacementProto.AnimationTimeMS >= 0)
                         animationTimeMS = replacementProto.AnimationTimeMS;
+
+                    break;
                 }
+
+                break;
             }
 
             return TimeSpan.FromMilliseconds(animationTimeMS);
+        }
+
+        public float GetContactTimePercent(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            float contactTimePercent = AnimationContactTimePercent;
+
+            if (PowerUnrealOverrides.IsNullOrEmpty())
+                return contactTimePercent;
+
+            foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
+            {
+                if (unrealAssetOverrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                if (unrealAssetOverrideProto.AnimationContactTimePercent >= 0f)
+                    contactTimePercent = unrealAssetOverrideProto.AnimationContactTimePercent;
+
+                if (unrealAssetOverrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    if (replacementProto.AnimationContactTimePercent >= 0f)
+                        contactTimePercent = replacementProto.AnimationContactTimePercent;
+
+                    break;
+                }
+
+                break;
+            }
+
+            return contactTimePercent;
+        }
+
+        public TimeSpan GetOneOffAnimContactTime(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            TimeSpan animationTime = TimeSpan.FromMilliseconds(AnimationTimeMS);
+            float animationContactTimePercent = AnimationContactTimePercent;
+
+            if (PowerUnrealOverrides.IsNullOrEmpty())
+                return animationTime * animationContactTimePercent;
+
+            foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
+            {
+                if (unrealAssetOverrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                if (unrealAssetOverrideProto.AnimationTimeMS >= 0)
+                    animationTime = TimeSpan.FromMilliseconds(unrealAssetOverrideProto.AnimationTimeMS);
+
+                if (unrealAssetOverrideProto.AnimationContactTimePercent >= 0f)
+                    animationContactTimePercent = unrealAssetOverrideProto.AnimationContactTimePercent;
+
+                if (unrealAssetOverrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    if (replacementProto.AnimationTimeMS >= 0)
+                        animationTime = TimeSpan.FromMilliseconds(unrealAssetOverrideProto.AnimationTimeMS);
+
+                    if (replacementProto.AnimationContactTimePercent >= 0f)
+                        animationContactTimePercent = unrealAssetOverrideProto.AnimationContactTimePercent;
+
+                    break;
+                }
+
+                break;
+            }
+
+            return animationTime * animationContactTimePercent;
         }
 
         public TimeSpan GetCooldownDuration(PropertyCollection powerProperties, PropertyCollection ownerProperties)
