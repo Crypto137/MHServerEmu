@@ -452,9 +452,10 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
-            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
+            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies,
+            AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
-            Properties.OnEntityChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies);
+            Properties.OnEntityChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
             // TODO: InterestReferences
         }
 

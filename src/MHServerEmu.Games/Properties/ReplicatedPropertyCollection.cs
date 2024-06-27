@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Properties
@@ -56,9 +57,46 @@ namespace MHServerEmu.Games.Properties
         }
 
         public void OnEntityChangePlayerAOI(Player player, InterestTrackOperation operation,
-            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies)
+            AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies)
         {
+            // When an entity is added to AOI, its properties are serialized in the archive data.
+            // Previous interest policies in this case would be none, so we need to add policies
+            // from the archive to avoid sending the same data twice.
+            previousInterestPolicies |= archiveInterestPolicies;
+           
+            // Check if any interest policies have been added
+            AOINetworkPolicyValues addedInterestPolicies = newInterestPolicies & ~previousInterestPolicies;
+            if (addedInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                return;
 
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in this)
+            {
+                PropertyId id = kvp.Key;
+                PropertyValue value = kvp.Value;
+                PropertyInfo propertyInfo = propertyInfoTable.LookupPropertyInfo(id.Enum);
+                PropertyInfoPrototype propertyInfoProto = propertyInfo.Prototype;
+
+                // Skip properties that don't match the new interest policies
+                if ((propertyInfoProto.RepNetwork & addedInterestPolicies) == AOINetworkPolicyValues.AOIChannelNone)
+                    continue;
+
+                // Skip properties that were already known with previous interest policies
+                if ((propertyInfoProto.RepNetwork & previousInterestPolicies) != AOINetworkPolicyValues.AOIChannelNone)
+                    continue;
+
+                // Send newly applicable properties
+                Logger.Trace($"OnEntityChangePlayerAOI(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
+
+                player.SendMessage(NetMessageSetProperty.CreateBuilder()
+                    .SetReplicationId(ReplicationId)
+                    .SetPropertyId(id.Raw.ReverseBits())
+                    .SetValueBits(ConvertValueToBits(value, propertyInfo.DataType))
+                    .Build());
+
+                // NOTE: Properties that are no longer applicable are removed by the client on its own
+            }
         }
 
         public override bool RemoveProperty(PropertyId id)
