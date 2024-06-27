@@ -473,5 +473,96 @@ namespace MHServerEmu.Games.Network.Parsing
 
             return sb.ToString();
         }
+
+        #region Client Messages
+
+        [PrintMethod(typeof(NetMessageTryActivatePower))]
+        private static string PrintNetMessageTryActivatePower(IMessage message)
+        {
+            var tryActivatePower = (NetMessageTryActivatePower)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"idUserEntity: {tryActivatePower.IdUserEntity}");
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.PowerPrototypeId)}");
+
+            if (tryActivatePower.HasIdTargetEntity)
+                sb.AppendLine($"idTargetEntity: {tryActivatePower.IdTargetEntity}");
+
+            if (tryActivatePower.HasTargetPosition)
+                sb.AppendLine($"targetPosition: {new Vector3(tryActivatePower.TargetPosition)}");
+
+            if (tryActivatePower.HasMovementSpeed)
+                sb.AppendLine($"movementSpeed: {tryActivatePower.MovementSpeed}f");
+
+            if (tryActivatePower.HasMovementTimeMS)
+                sb.AppendLine($"movementTimeMS: {tryActivatePower.MovementTimeMS}");
+
+            if (tryActivatePower.HasPowerRandomSeed)
+                sb.AppendLine($"powerRandomSeed: {tryActivatePower.PowerRandomSeed}");
+
+            if (tryActivatePower.HasItemSourceId)
+                sb.AppendLine($"itemSourceId: {tryActivatePower.ItemSourceId}");
+
+            sb.AppendLine($"fxRandomSeed: {tryActivatePower.FxRandomSeed}");
+
+            if (tryActivatePower.HasTriggeringPowerPrototypeId)
+                sb.AppendLine($"triggeringPowerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.TriggeringPowerPrototypeId)}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessagePowerRelease))]
+        private static string PrintNetMessagePowerRelease(IMessage message)
+        {
+            var powerRelease = (NetMessagePowerRelease)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"idUserEntity: {powerRelease.IdUserEntity}");
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
+
+            if (powerRelease.HasIdTargetEntity)
+                sb.AppendLine($"idTargetEntity: {powerRelease.IdUserEntity}");
+
+            if (powerRelease.HasTargetPosition)
+                sb.AppendLine($"targetPosition: {new Vector3(powerRelease.TargetPosition)}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessageTryCancelPower))]
+        private static string PrintNetMessageTryCancelPower(IMessage message)
+        {
+            var tryCancelPower = (NetMessageTryCancelPower)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"idUserEntity: {tryCancelPower.IdUserEntity}");
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId)}");
+            sb.AppendLine($"endPowerFlags: {(EndPowerFlags)tryCancelPower.EndPowerFlags}");
+
+            return sb.ToString();
+        }
+
+        [PrintMethod(typeof(NetMessageContinuousPowerUpdateToServer))]
+        private static string PrintNetMessageContinuousPowerUpdateToServer(IMessage message)
+        {
+            var continuousPowerUpdate = (NetMessageContinuousPowerUpdateToServer)message;
+
+            StringBuilder sb = new();
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)continuousPowerUpdate.PowerPrototypeId)}");
+            sb.AppendLine($"avatarIndex: {continuousPowerUpdate.AvatarIndex}");
+
+            if (continuousPowerUpdate.HasIdTargetEntity)
+                sb.AppendLine($"idTargetEntity: {continuousPowerUpdate.IdTargetEntity}");
+
+            if (continuousPowerUpdate.HasTargetPosition)
+                sb.AppendLine($"targetPosition: {new Vector3(continuousPowerUpdate.TargetPosition)}");
+
+            if (continuousPowerUpdate.HasRandomSeed)
+                sb.AppendLine($"randomSeed: {continuousPowerUpdate.RandomSeed}");
+
+            return sb.ToString();
+        }
+
+        #endregion
     }
 }
