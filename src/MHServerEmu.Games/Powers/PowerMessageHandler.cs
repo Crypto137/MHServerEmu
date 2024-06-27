@@ -27,6 +27,8 @@ namespace MHServerEmu.Games.Powers
 
     public class NewPowerMessageHandler : IPowerMessageHandler
     {
+        private const bool OutputToLog = false;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly PlayerConnection _playerConnection;
@@ -56,34 +58,51 @@ namespace MHServerEmu.Games.Powers
             var tryActivatePower = message.As<NetMessageTryActivatePower>();
             if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
 
-            StringBuilder sb = new();
-            sb.AppendLine($"idUserEntity: {tryActivatePower.IdUserEntity}");
-            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.PowerPrototypeId)}");
+            if (OutputToLog)
+            {
+                StringBuilder sb = new();
+                sb.AppendLine($"idUserEntity: {tryActivatePower.IdUserEntity}");
+                sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.PowerPrototypeId)}");
 
-            if (tryActivatePower.HasIdTargetEntity)
-                sb.AppendLine($"idTargetEntity: {tryActivatePower.IdTargetEntity}");
+                if (tryActivatePower.HasIdTargetEntity)
+                    sb.AppendLine($"idTargetEntity: {tryActivatePower.IdTargetEntity}");
 
-            if (tryActivatePower.HasTargetPosition)
-                sb.AppendLine($"targetPosition: {new Vector3(tryActivatePower.TargetPosition)}");
+                if (tryActivatePower.HasTargetPosition)
+                    sb.AppendLine($"targetPosition: {new Vector3(tryActivatePower.TargetPosition)}");
 
-            if (tryActivatePower.HasMovementSpeed)
-                sb.AppendLine($"movementSpeed: {tryActivatePower.MovementSpeed}f");
+                if (tryActivatePower.HasMovementSpeed)
+                    sb.AppendLine($"movementSpeed: {tryActivatePower.MovementSpeed}f");
 
-            if (tryActivatePower.HasMovementTimeMS)
-                sb.AppendLine($"movementTimeMS: {tryActivatePower.MovementTimeMS}");
+                if (tryActivatePower.HasMovementTimeMS)
+                    sb.AppendLine($"movementTimeMS: {tryActivatePower.MovementTimeMS}");
 
-            if (tryActivatePower.HasPowerRandomSeed)
-                sb.AppendLine($"powerRandomSeed: {tryActivatePower.PowerRandomSeed}");
+                if (tryActivatePower.HasPowerRandomSeed)
+                    sb.AppendLine($"powerRandomSeed: {tryActivatePower.PowerRandomSeed}");
 
-            if (tryActivatePower.HasItemSourceId)
-                sb.AppendLine($"itemSourceId: {tryActivatePower.ItemSourceId}");
+                if (tryActivatePower.HasItemSourceId)
+                    sb.AppendLine($"itemSourceId: {tryActivatePower.ItemSourceId}");
 
-            sb.AppendLine($"fxRandomSeed: {tryActivatePower.FxRandomSeed}");
+                sb.AppendLine($"fxRandomSeed: {tryActivatePower.FxRandomSeed}");
 
-            if (tryActivatePower.HasTriggeringPowerPrototypeId)
-                sb.AppendLine($"triggeringPowerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.TriggeringPowerPrototypeId)}");
+                if (tryActivatePower.HasTriggeringPowerPrototypeId)
+                    sb.AppendLine($"triggeringPowerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.TriggeringPowerPrototypeId)}");
 
-            Logger.Debug($"OnTryActivatePower():\n{sb}");
+                Logger.Debug($"OnTryActivatePower():\n{sb}");
+            }
+
+            Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryActivatePower.IdUserEntity);
+
+            // These checks fail due to lag, so no need to log
+            if (avatar == null) return true;
+            if (avatar.IsInWorld == false) return true;
+
+            PrototypeId powerProtoRef = (PrototypeId)tryActivatePower.PowerPrototypeId;
+
+            // Build settings from the protobuf
+            PowerActivationSettings settings = new(avatar.RegionLocation.Position);
+            settings.ApplyProtobuf(tryActivatePower);
+
+            avatar.ActivatePower(powerProtoRef, in settings);
 
             return true;
         }
@@ -93,17 +112,20 @@ namespace MHServerEmu.Games.Powers
             var powerRelease = message.As<NetMessagePowerRelease>();
             if (powerRelease == null) return Logger.WarnReturn(false, $"OnPowerRelease(): Failed to retrieve message");
 
-            StringBuilder sb = new();
-            sb.AppendLine($"idUserEntity: {powerRelease.IdUserEntity}");
-            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
+            if (OutputToLog)
+            {
+                StringBuilder sb = new();
+                sb.AppendLine($"idUserEntity: {powerRelease.IdUserEntity}");
+                sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
 
-            if (powerRelease.HasIdTargetEntity)
-                sb.AppendLine($"idTargetEntity: {powerRelease.IdUserEntity}");
+                if (powerRelease.HasIdTargetEntity)
+                    sb.AppendLine($"idTargetEntity: {powerRelease.IdUserEntity}");
 
-            if (powerRelease.HasTargetPosition)
-                sb.AppendLine($"targetPosition: {new Vector3(powerRelease.TargetPosition)}");
+                if (powerRelease.HasTargetPosition)
+                    sb.AppendLine($"targetPosition: {new Vector3(powerRelease.TargetPosition)}");
 
-            Logger.Debug($"OnPowerRelease():\n{sb}");
+                Logger.Debug($"OnPowerRelease():\n{sb}");
+            }
 
             return true;
         }
@@ -113,12 +135,15 @@ namespace MHServerEmu.Games.Powers
             var tryCancelPower = message.As<NetMessageTryCancelPower>();
             if (tryCancelPower == null) return Logger.WarnReturn(false, $"OnTryCancelPower(): Failed to retrieve message");
 
-            StringBuilder sb = new();
-            sb.AppendLine($"idUserEntity: {tryCancelPower.IdUserEntity}");
-            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId)}");
-            sb.AppendLine($"endPowerFlags: {(EndPowerFlags)tryCancelPower.EndPowerFlags}");
+            if (OutputToLog)
+            {
+                StringBuilder sb = new();
+                sb.AppendLine($"idUserEntity: {tryCancelPower.IdUserEntity}");
+                sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId)}");
+                sb.AppendLine($"endPowerFlags: {(EndPowerFlags)tryCancelPower.EndPowerFlags}");
 
-            Logger.Debug($"OnTryCancelPower():\n{sb}");
+                Logger.Debug($"OnTryCancelPower():\n{sb}");
+            }
 
             return true;
         }
@@ -128,7 +153,8 @@ namespace MHServerEmu.Games.Powers
             var tryCancelActivePower = message.As<NetMessageTryCancelActivePower>();
             if (tryCancelActivePower == null) return Logger.WarnReturn(false, $"OnTryCancelActivePower(): Failed to retrieve message");
 
-            Logger.Debug($"OnTryCancelActivePower():\n{tryCancelActivePower}");
+            if (OutputToLog)
+                Logger.Debug($"OnTryCancelActivePower():\n{tryCancelActivePower}");
 
             return true;
         }
@@ -138,20 +164,23 @@ namespace MHServerEmu.Games.Powers
             var continuousPowerUpdate = message.As<NetMessageContinuousPowerUpdateToServer>();
             if (continuousPowerUpdate == null) return Logger.WarnReturn(false, $"OnContinuousPowerUpdate(): Failed to retrieve message");
 
-            StringBuilder sb = new();
-            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)continuousPowerUpdate.PowerPrototypeId)}");
-            sb.AppendLine($"avatarIndex: {continuousPowerUpdate.AvatarIndex}");
+            if (OutputToLog)
+            {
+                StringBuilder sb = new();
+                sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)continuousPowerUpdate.PowerPrototypeId)}");
+                sb.AppendLine($"avatarIndex: {continuousPowerUpdate.AvatarIndex}");
 
-            if (continuousPowerUpdate.HasIdTargetEntity)
-                sb.AppendLine($"idTargetEntity: {continuousPowerUpdate.IdTargetEntity}");
+                if (continuousPowerUpdate.HasIdTargetEntity)
+                    sb.AppendLine($"idTargetEntity: {continuousPowerUpdate.IdTargetEntity}");
 
-            if (continuousPowerUpdate.HasTargetPosition)
-                sb.AppendLine($"targetPosition: {new Vector3(continuousPowerUpdate.TargetPosition)}");
+                if (continuousPowerUpdate.HasTargetPosition)
+                    sb.AppendLine($"targetPosition: {new Vector3(continuousPowerUpdate.TargetPosition)}");
 
-            if (continuousPowerUpdate.HasRandomSeed)
-                sb.AppendLine($"randomSeed: {continuousPowerUpdate.RandomSeed}");
+                if (continuousPowerUpdate.HasRandomSeed)
+                    sb.AppendLine($"randomSeed: {continuousPowerUpdate.RandomSeed}");
 
-            Logger.Debug($"OnContinuousPowerUpdate():\n{sb}");
+                Logger.Debug($"OnContinuousPowerUpdate():\n{sb}");
+            }
 
             return true;
         }
@@ -161,7 +190,8 @@ namespace MHServerEmu.Games.Powers
             var cancelPendingAction = message.As<NetMessageCancelPendingAction>();
             if (cancelPendingAction == null) return Logger.WarnReturn(false, $"OnCancelPendingAction(): Failed to retrieve message");
 
-            Logger.Debug($"OnCancelPendingAction():\n{cancelPendingAction}");
+            if (OutputToLog)
+                Logger.Debug($"OnCancelPendingAction():\n{cancelPendingAction}");
 
             return true;
         }

@@ -238,9 +238,10 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        public PowerUseResult Activate(PowerActivationSettings powerSettings)
+        public PowerUseResult Activate(in PowerActivationSettings settings)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"Activate(): {Prototype}");
+            return PowerUseResult.Success;
         }
 
         public bool EndPower(EndPowerFlags flags)

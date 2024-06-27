@@ -137,35 +137,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private bool InitAI(EntitySettings settings)
-        {
-            var agentPrototype = AgentPrototype;
-            if (agentPrototype == null || Game == null || this is Avatar) return false;
-
-            var behaviorProfile = agentPrototype.BehaviorProfile;
-            if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
-            {
-                AIController = new(Game, this);
-                PropertyCollection collection = new ();
-                collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
-                SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec();
-                return AIController.Initialize(behaviorProfile, spec, collection);
-            }
-            return false;
-        }
-
-        private bool InitLocomotor(float height = 0.0f)
-        {
-            if (Locomotor != null)
-            {
-                AgentPrototype agentPrototype = AgentPrototype;
-                if (agentPrototype == null) return false;
-
-                Locomotor.Initialize(agentPrototype.Locomotion, this, height);
-                Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
-            }
-            return true;
-        }
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
@@ -189,16 +160,6 @@ namespace MHServerEmu.Games.Entities
                 AIController.OnAIEnteredWorld();
                 ActivateAI();
             }
-        }
-
-        private bool TestAI()
-        {
-            var behaviorProfile = AgentPrototype?.BehaviorProfile;
-            if (behaviorProfile == null) return false;
-            var brain = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(behaviorProfile.Brain);
-            if (brain == null) return false;
-            if (brain is ProceduralProfileVanityPetPrototype || brain is ProceduralProfileTeamUpPrototype) return true; // Pet and TeamUp only
-            return false;
         }
 
         public void ActivateAI()
@@ -312,21 +273,6 @@ namespace MHServerEmu.Games.Entities
                 startAction = AppendSelectorActions(actionSet);
             if (startAction == false && actionsTarget != PrototypeId.Invalid)
                 AppendOnStartActions(actionsTarget);
-        }
-
-        private bool AppendStartPower(PrototypeId startPowerRef)
-        {
-            if (startPowerRef == PrototypeId.Invalid) return false;
-            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-
-            Condition condition = new();
-            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
-            condition.StartTime = Clock.GameTime;
-            _conditionCollection.AddCondition(condition);
-
-            AssignPower(startPowerRef, new());
-            
-            return true;
         }
 
         public bool AppendOnStartActions(PrototypeId targetRef)
@@ -452,13 +398,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        protected override bool InitInventories(bool populateInventories)
-        {
-            // TODO
-            return base.InitInventories(populateInventories);
-        }
-
-        internal int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        public int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             return 0;
             // Not Implemented
@@ -635,18 +575,6 @@ namespace MHServerEmu.Games.Entities
             // switch result for client only
         }
 
-        private InteractionResult PreAttemptInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, InteractionMethod method)
-        {
-            var interactee = interacteeDesc.GetEntity<WorldEntity>(Game);
-            if (interactee != null)
-            {
-                // UpdateServerAvatarState client only
-                return interactee.AttemptInteractionBy(new EntityDesc(this), flags, method);
-            }
-            // IsRemoteValid client only
-            return InteractionResult.Failure;
-        }
-
         public bool StartThrowing(ulong entityId)
         {
             if (Properties[PropertyEnum.ThrowableOriginatorEntity] == entityId) return true;
@@ -691,12 +619,26 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public override PowerUseResult ActivatePower(Power power, in PowerActivationSettings powerSettings)
+        public Vector3 GetPositionNearAvatar(Avatar avatar)
         {
-            var result = base.ActivatePower(power, powerSettings);
+            Region region = avatar.Region;
+            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
+                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
+            return position;
+        }
+
+        protected override bool InitInventories(bool populateInventories)
+        {
+            // TODO
+            return base.InitInventories(populateInventories);
+        }
+
+        protected override PowerUseResult ActivatePower(Power power, in PowerActivationSettings settings)
+        {
+            var result = base.ActivatePower(power, settings);
             if (result != PowerUseResult.Success && result != PowerUseResult.ExtraActivationFailed)
             {
-                Logger.Warn($"Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
+                Logger.Warn($"ActivatePower(): Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
                 ActivePowerRef = PrototypeId.Invalid;
             }
             else if (power.IsExclusiveActivation())
@@ -704,18 +646,77 @@ namespace MHServerEmu.Games.Entities
                 if (IsInWorld)
                     ActivePowerRef = power.PrototypeDataRef;
                 else
-                    Logger.Warn($"Trying to set the active power for an Agent that is not in the world. " +
+                    Logger.Warn($"ActivatePower(): Trying to set the active power for an Agent that is not in the world. " +
                         $"Check to see if there's *anything* that can happen in the course of executing the power that can take them out of the world.\n Agent: {this}");
             }
             return result;
         }
 
-        public Vector3 GetPositionNearAvatar(Avatar avatar)
+        private bool AppendStartPower(PrototypeId startPowerRef)
         {
-            Region region = avatar.Region;
-            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
-                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
-            return position;
+            if (startPowerRef == PrototypeId.Invalid) return false;
+            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
+
+            Condition condition = new();
+            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
+            condition.StartTime = Clock.GameTime;
+            _conditionCollection.AddCondition(condition);
+
+            AssignPower(startPowerRef, new());
+
+            return true;
+        }
+
+        private InteractionResult PreAttemptInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, InteractionMethod method)
+        {
+            var interactee = interacteeDesc.GetEntity<WorldEntity>(Game);
+            if (interactee != null)
+            {
+                // UpdateServerAvatarState client only
+                return interactee.AttemptInteractionBy(new EntityDesc(this), flags, method);
+            }
+            // IsRemoteValid client only
+            return InteractionResult.Failure;
+        }
+
+        private bool TestAI()
+        {
+            var behaviorProfile = AgentPrototype?.BehaviorProfile;
+            if (behaviorProfile == null) return false;
+            var brain = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(behaviorProfile.Brain);
+            if (brain == null) return false;
+            if (brain is ProceduralProfileVanityPetPrototype || brain is ProceduralProfileTeamUpPrototype) return true; // Pet and TeamUp only
+            return false;
+        }
+
+        private bool InitAI(EntitySettings settings)
+        {
+            var agentPrototype = AgentPrototype;
+            if (agentPrototype == null || Game == null || this is Avatar) return false;
+
+            var behaviorProfile = agentPrototype.BehaviorProfile;
+            if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
+            {
+                AIController = new(Game, this);
+                PropertyCollection collection = new();
+                collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
+                SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec();
+                return AIController.Initialize(behaviorProfile, spec, collection);
+            }
+            return false;
+        }
+
+        private bool InitLocomotor(float height = 0.0f)
+        {
+            if (Locomotor != null)
+            {
+                AgentPrototype agentPrototype = AgentPrototype;
+                if (agentPrototype == null) return false;
+
+                Locomotor.Initialize(agentPrototype.Locomotion, this, height);
+                Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
+            }
+            return true;
         }
     }
 }

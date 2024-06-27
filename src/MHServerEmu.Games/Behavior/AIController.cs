@@ -344,9 +344,9 @@ namespace MHServerEmu.Games.Behavior
             Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
         }
 
-        public bool AttemptActivatePower(PrototypeId powerRef, ulong targetEntityId, Vector3 position)
+        public bool AttemptActivatePower(PrototypeId powerRef, ulong targetEntityId, Vector3 targetPosition)
         {            
-            var activateSettings = new PowerActivationSettings(targetEntityId, position, Owner.RegionLocation.Position);
+            var activateSettings = new PowerActivationSettings(targetEntityId, targetPosition, Owner.RegionLocation.Position);
             return Owner.ActivatePower(powerRef, activateSettings) == PowerUseResult.Success;
         }
 

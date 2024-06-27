@@ -265,20 +265,20 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, in PowerActivationSettings powerSettings)
+        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, in PowerActivationSettings settings)
         {
             Power power = GetPower(powerRef);
             if (power == null)
             {
-                Logger.Warn($"Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {ToString()}");
+                Logger.Warn($"ActivatePower(): Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {this}");
                 return PowerUseResult.AbilityMissing;
             }
-            return ActivatePower(power, powerSettings);
+            return ActivatePower(power, in settings);
         }
 
-        public virtual PowerUseResult ActivatePower(Power power, in PowerActivationSettings powerSettings)
+        protected virtual PowerUseResult ActivatePower(Power power, in PowerActivationSettings settings)
         {
-            return power.Activate(powerSettings);
+            return power.Activate(in settings);
         }
 
         public TimeSpan GetAbilityCooldownStartTime(PowerPrototype powerProto)
