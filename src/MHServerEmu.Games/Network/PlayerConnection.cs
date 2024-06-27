@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Network
         private readonly FrontendClient _frontendClient;
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
-        private readonly PowerMessageHandler _powerMessageHandler;
+        private readonly IPowerMessageHandler _powerMessageHandler;
 
         private EventPointer<OLD_FinishCellLoadingEvent> _finishCellLoadingEvent = new();
         private EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
@@ -71,7 +71,8 @@ namespace MHServerEmu.Games.Network
             Game = game;
             _frontendClient = frontendClient;
             _dbAccount = _frontendClient.Session.Account;
-            _powerMessageHandler = new(Game);
+            _powerMessageHandler = new OldPowerMessageHandler(this);
+            //_powerMessageHandler = new NewPowerMessageHandler(this);      // Uncomment to switch to the new power implementation
 
             InitializeFromDBAccount();
         }
@@ -338,6 +339,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
+                case ClientToGameServerMessage.NetMessageCancelPendingAction:
                     _powerMessageHandler.ReceiveMessage(this, message); break;
 
                 // Grouping Manager

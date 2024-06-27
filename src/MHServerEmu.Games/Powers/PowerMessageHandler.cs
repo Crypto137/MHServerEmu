@@ -15,25 +15,111 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Powers
 {
-    public class PowerMessageHandler
+    // NewPowerMessageHandler is the shiny new work-in-progress implementation of the power system
+    // OldPowerMessageHandler is a collection of old hacks we made to force some things to happen early on
+    // Eventually we are going to merge NewPowerMessageHandler with PlayerConnection and remove OldPowerMessageHandler completely
+
+    public interface IPowerMessageHandler
+    {
+        public void ReceiveMessage(PlayerConnection playerConnection, MailboxMessage message);
+    }
+
+    public class NewPowerMessageHandler : IPowerMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private readonly Game _game;
 
-        public PowerMessageHandler(Game game)
+        private readonly PlayerConnection _playerConnection;
+
+        public NewPowerMessageHandler(PlayerConnection playerConnection)
         {
-            _game = game;
+            _playerConnection = playerConnection;
         }
 
         public void ReceiveMessage(PlayerConnection playerConnection, MailboxMessage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageTryActivatePower:              OnTryActivatePower(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessagePowerRelease:                  OnPowerRelease(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessageTryCancelPower:                OnTryCancelPower(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessageTryCancelActivePower:          OnTryCancelActivePower(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer: OnContinuousPowerUpdate(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageTryActivatePower:              OnTryActivatePower(message); break;
+                case ClientToGameServerMessage.NetMessagePowerRelease:                  OnPowerRelease(message); break;
+                case ClientToGameServerMessage.NetMessageTryCancelPower:                OnTryCancelPower(message); break;
+                case ClientToGameServerMessage.NetMessageTryCancelActivePower:          OnTryCancelActivePower(message); break;
+                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer: OnContinuousPowerUpdate(message); break;
+
+                default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
+            }
+        }
+
+        private bool OnTryActivatePower(MailboxMessage message)
+        {
+            var tryActivatePower = message.As<NetMessageTryActivatePower>();
+            if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
+
+            Logger.Debug($"OnTryActivatePower():\n{tryActivatePower}");
+
+            return true;
+        }
+
+        private bool OnPowerRelease(MailboxMessage message)
+        {
+            var powerRelease = message.As<NetMessagePowerRelease>();
+            if (powerRelease == null) return Logger.WarnReturn(false, $"OnPowerRelease(): Failed to retrieve message");
+
+            Logger.Debug($"OnPowerRelease():\n{powerRelease}");
+
+            return true;
+        }
+
+        private bool OnTryCancelPower(MailboxMessage message)
+        {
+            var tryCancelPower = message.As<NetMessageTryCancelPower>();
+            if (tryCancelPower == null) return Logger.WarnReturn(false, $"OnTryCancelPower(): Failed to retrieve message");
+
+            Logger.Debug($"OnTryCancelPower():\n{tryCancelPower}");
+
+            return true;
+        }
+
+        private bool OnTryCancelActivePower(MailboxMessage message)
+        {
+            var tryCancelActivePower = message.As<NetMessageTryCancelActivePower>();
+            if (tryCancelActivePower == null) return Logger.WarnReturn(false, $"OnTryCancelActivePower(): Failed to retrieve message");
+
+            Logger.Debug($"OnTryCancelActivePower():\n{tryCancelActivePower}");
+
+            return true;
+        }
+
+        private bool OnContinuousPowerUpdate(MailboxMessage message)
+        {
+            var continuousPowerUpdate = message.As<NetMessageContinuousPowerUpdateToServer>();
+            if (continuousPowerUpdate == null) return Logger.WarnReturn(false, $"OnContinuousPowerUpdate(): Failed to retrieve message");
+
+            Logger.Debug($"OnContinuousPowerUpdate():\n{continuousPowerUpdate}");
+
+            return true;
+        }
+    }
+
+    public class OldPowerMessageHandler : IPowerMessageHandler
+    {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly PlayerConnection _playerConnection;
+
+        public OldPowerMessageHandler(PlayerConnection playerConnection)
+        {
+            _playerConnection = playerConnection;
+        }
+
+        public void ReceiveMessage(PlayerConnection playerConnection, MailboxMessage message)
+        {
+            switch ((ClientToGameServerMessage)message.Id)
+            {
+                case ClientToGameServerMessage.NetMessageTryActivatePower:              OnTryActivatePower(message); break;
+                case ClientToGameServerMessage.NetMessagePowerRelease:                  OnPowerRelease(message); break;
+                case ClientToGameServerMessage.NetMessageTryCancelPower:                OnTryCancelPower(message); break;
+                case ClientToGameServerMessage.NetMessageTryCancelActivePower:          OnTryCancelActivePower(message); break;
+                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer: OnContinuousPowerUpdate(message); break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -50,9 +136,9 @@ namespace MHServerEmu.Games.Powers
             return false;
         }
 
-        private bool HandleTravelPower(PlayerConnection playerConnection, PrototypeId powerProtoRef)
+        private bool HandleTravelPower(PrototypeId powerProtoRef)
         {
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
 
             Power travelPower = avatar.GetPower(powerProtoRef);
             if (travelPower == null)
@@ -64,15 +150,15 @@ namespace MHServerEmu.Games.Powers
             TimeSpan activationTime = travelPower.GetActivationTime();
 
             EventPointer<OLD_StartTravelEvent> eventPointer = new();
-            _game.GameEventScheduler.ScheduleEvent(eventPointer, activationTime);
-            eventPointer.Get().Initialize(playerConnection, travelPower.PrototypeDataRef);
+            avatar.Game.GameEventScheduler.ScheduleEvent(eventPointer, activationTime);
+            eventPointer.Get().Initialize(_playerConnection, travelPower.PrototypeDataRef);
 
             return true;
         }
 
         #region Message Handling
 
-        private bool OnTryActivatePower(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnTryActivatePower(MailboxMessage message)
         {
             var tryActivatePower = message.As<NetMessageTryActivatePower>();
             if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
@@ -81,12 +167,13 @@ namespace MHServerEmu.Games.Powers
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
 
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
+            Game game = avatar.Game;
 
             // Send this activation to other players
             ActivatePowerArchive activatePowerArchive = new();
             activatePowerArchive.Initialize(tryActivatePower, avatar.RegionLocation.Position);
-            _game.NetworkManager.SendMessageToInterested(activatePowerArchive.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
+            game.NetworkManager.SendMessageToInterested(activatePowerArchive.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
 
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
@@ -98,7 +185,7 @@ namespace MHServerEmu.Games.Powers
                 if (power == null) Logger.Warn("OnTryActivatePower(): power == null");
 
                 EventPointer<OLD_EndThrowingEvent> endThrowingPointer = new();
-                _game.GameEventScheduler.ScheduleEvent(endThrowingPointer, power.GetAnimationTime());
+                game.GameEventScheduler.ScheduleEvent(endThrowingPointer, power.GetAnimationTime());
                 endThrowingPointer.Get().Initialize(avatar, isCancelling);
 
                 return true;
@@ -108,29 +195,29 @@ namespace MHServerEmu.Games.Powers
                 if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.DiamondFormActivatePower))
                 {
                     EventPointer<OLD_DiamondFormActivateEvent> activateEventPointer = new();
-                    _game.GameEventScheduler.ScheduleEvent(activateEventPointer, TimeSpan.Zero);
-                    activateEventPointer.Get().PlayerConnection = playerConnection;
+                    game.GameEventScheduler.ScheduleEvent(activateEventPointer, TimeSpan.Zero);
+                    activateEventPointer.Get().PlayerConnection = _playerConnection;
                 }
                 else if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.Mental))
                 {
                     EventPointer<OLD_DiamondFormDeactivateEvent> deactivateEventPointer = new();
-                    _game.GameEventScheduler.ScheduleEvent(deactivateEventPointer, TimeSpan.Zero);
-                    deactivateEventPointer.Get().PlayerConnection = playerConnection;
+                    game.GameEventScheduler.ScheduleEvent(deactivateEventPointer, TimeSpan.Zero);
+                    deactivateEventPointer.Get().PlayerConnection = _playerConnection;
                 }
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
             {
                 EventPointer<OLD_StartMagikUltimate> startEventPointer = new();
-                _game.GameEventScheduler.ScheduleEvent(startEventPointer, TimeSpan.Zero);
-                startEventPointer.Get().Initialize(playerConnection);
+                game.GameEventScheduler.ScheduleEvent(startEventPointer, TimeSpan.Zero);
+                startEventPointer.Get().Initialize(_playerConnection);
 
                 EventPointer<OLD_EndMagikUltimateEvent> endEventPointer = new();
-                _game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
-                endEventPointer.Get().PlayerConnection = playerConnection;
+                game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
+                endEventPointer.Get().PlayerConnection = _playerConnection;
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
             {
-                Inventory inventory = playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
+                Inventory inventory = _playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
                 
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
                 if (bowlingBall == null) return false;
@@ -155,18 +242,18 @@ namespace MHServerEmu.Games.Powers
             results.Init(tryActivatePower);
             if (results.TargetEntityId > 0)
             {
-                _game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity);
-                TestHit(playerConnection, results.TargetEntityId, (int)results.DamagePhysical);
+                game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity);
+                TestHit(results.TargetEntityId, (int)results.DamagePhysical);
             }
 
             return true;
         }
 
-        private void TestHit(PlayerConnection playerConnection, ulong entityId, int damage)
+        private void TestHit(ulong entityId, int damage)
         {
             if (damage == 0) return;
             
-            var entity = playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            var entity = _playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
             if (entity == null) return;
 
             int health = entity.Properties[PropertyEnum.Health];
@@ -174,7 +261,7 @@ namespace MHServerEmu.Games.Powers
             if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])
             {
                 // TODO: Clean this up
-                playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
+                _playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
                     .SetIdEntity(entityId)
                     .SetKey(1)
                     .Build());
@@ -185,15 +272,15 @@ namespace MHServerEmu.Games.Powers
 
             if (newHealth == 0)
             {
-                entity.Kill(playerConnection.Player.CurrentAvatar.Id);
+                entity.Kill(_playerConnection.Player.CurrentAvatar.Id);
             }
             else if (entity.WorldEntityPrototype is AgentPrototype agentProto && agentProto.Locomotion.Immobile == false)
             {
-                entity.ChangeRegionPosition(null, new(Vector3.AngleYaw(entity.RegionLocation.Position, playerConnection.LastPosition), 0f, 0f));
+                entity.ChangeRegionPosition(null, new(Vector3.AngleYaw(entity.RegionLocation.Position, _playerConnection.LastPosition), 0f, 0f));
             }       
         }
 
-        private bool OnPowerRelease(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnPowerRelease(MailboxMessage message)
         {
             var powerRelease = message.As<NetMessagePowerRelease>();
             if (powerRelease == null) return Logger.WarnReturn(false, $"OnPowerRelease(): Failed to retrieve message");
@@ -202,7 +289,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool OnTryCancelPower(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnTryCancelPower(MailboxMessage message)
         {
             var tryCancelPower = message.As<NetMessageTryCancelPower>();
             if (tryCancelPower == null) return Logger.WarnReturn(false, $"OnTryCancelPower(): Failed to retrieve message");
@@ -213,7 +300,8 @@ namespace MHServerEmu.Games.Powers
             Logger.Trace(tryCancelPower.ToString());
 
             // Broadcast to other interested clients
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
+            Game game = avatar.Game;
 
             // NOTE: Although NetMessageCancelPower is not an archive, it uses power prototype enums
             ulong powerPrototypeEnum = (ulong)DataDirectory.Instance.GetPrototypeEnumValue<PowerPrototype>((PrototypeId)tryCancelPower.PowerPrototypeId);
@@ -223,25 +311,25 @@ namespace MHServerEmu.Games.Powers
                 .SetEndPowerFlags(tryCancelPower.EndPowerFlags)
                 .Build();
 
-            _game.NetworkManager.SendMessageToInterested(clientMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
+            game.NetworkManager.SendMessageToInterested(clientMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
 
             if (powerPrototypePath.Contains("TravelPower/"))
             {
                 EventPointer<OLD_EndTravelEvent> eventPointer = new();
-                _game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(playerConnection, (PrototypeId)tryCancelPower.PowerPrototypeId);
+                game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+                eventPointer.Get().Initialize(_playerConnection, (PrototypeId)tryCancelPower.PowerPrototypeId);
             }
 
             return true;
         }
 
-        private bool OnTryCancelActivePower(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnTryCancelActivePower(MailboxMessage message)
         {
             Logger.Trace("Received TryCancelActivePower");
             return true;
         }
 
-        private bool OnContinuousPowerUpdate(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnContinuousPowerUpdate(MailboxMessage message)
         {
             var continuousPowerUpdate = message.As<NetMessageContinuousPowerUpdateToServer>();
             if (continuousPowerUpdate == null) return Logger.WarnReturn(false, $"OnContinuousPowerUpdate(): Failed to retrieve message");
@@ -251,7 +339,8 @@ namespace MHServerEmu.Games.Powers
             Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
             // Logger.Trace(continuousPowerUpdate.ToString());
 
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            Avatar avatar = _playerConnection.Player.CurrentAvatar;
+            Game game = avatar.Game;
 
             // Broadcast to other interested clients
             var clientMessageBuilder = NetMessageContinuousPowerUpdateToClient.CreateBuilder()
@@ -267,11 +356,11 @@ namespace MHServerEmu.Games.Powers
             if (continuousPowerUpdate.HasRandomSeed)
                 clientMessageBuilder.SetRandomSeed(continuousPowerUpdate.RandomSeed);
 
-            _game.NetworkManager.SendMessageToInterested(clientMessageBuilder.Build(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
+            game.NetworkManager.SendMessageToInterested(clientMessageBuilder.Build(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
 
             // Handle travel
             if (powerPrototypePath.Contains("TravelPower/"))
-                HandleTravelPower(playerConnection, powerPrototypeId);
+                HandleTravelPower(powerPrototypeId);
 
             return true;
         }
