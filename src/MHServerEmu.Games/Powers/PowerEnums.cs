@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Powers
         ExitWorld           = 1 << 1,
         Unassign            = 1 << 2,
         Interrupting        = 1 << 3,
-        Flag4               = 1 << 4,
+        ClientRequest       = 1 << 4,
         Flag5               = 1 << 5,
         Flag6               = 1 << 6,
         Flag7               = 1 << 7,

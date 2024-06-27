@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
@@ -44,6 +45,7 @@ namespace MHServerEmu.Games.Powers
                 case ClientToGameServerMessage.NetMessageTryCancelPower:                OnTryCancelPower(message); break;
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:          OnTryCancelActivePower(message); break;
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer: OnContinuousPowerUpdate(message); break;
+                case ClientToGameServerMessage.NetMessageCancelPendingAction:           OnCancelPendingAction(message); break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -54,7 +56,34 @@ namespace MHServerEmu.Games.Powers
             var tryActivatePower = message.As<NetMessageTryActivatePower>();
             if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
 
-            Logger.Debug($"OnTryActivatePower():\n{tryActivatePower}");
+            StringBuilder sb = new();
+            sb.AppendLine($"idUserEntity: {tryActivatePower.IdUserEntity}");
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.PowerPrototypeId)}");
+
+            if (tryActivatePower.HasIdTargetEntity)
+                sb.AppendLine($"idTargetEntity: {tryActivatePower.IdTargetEntity}");
+
+            if (tryActivatePower.HasTargetPosition)
+                sb.AppendLine($"targetPosition: {new Vector3(tryActivatePower.TargetPosition)}");
+
+            if (tryActivatePower.HasMovementSpeed)
+                sb.AppendLine($"movementSpeed: {tryActivatePower.MovementSpeed}f");
+
+            if (tryActivatePower.HasMovementTimeMS)
+                sb.AppendLine($"movementTimeMS: {tryActivatePower.MovementTimeMS}");
+
+            if (tryActivatePower.HasPowerRandomSeed)
+                sb.AppendLine($"powerRandomSeed: {tryActivatePower.PowerRandomSeed}");
+
+            if (tryActivatePower.HasItemSourceId)
+                sb.AppendLine($"itemSourceId: {tryActivatePower.ItemSourceId}");
+
+            sb.AppendLine($"fxRandomSeed: {tryActivatePower.FxRandomSeed}");
+
+            if (tryActivatePower.HasTriggeringPowerPrototypeId)
+                sb.AppendLine($"triggeringPowerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryActivatePower.TriggeringPowerPrototypeId)}");
+
+            Logger.Debug($"OnTryActivatePower():\n{sb}");
 
             return true;
         }
@@ -64,7 +93,17 @@ namespace MHServerEmu.Games.Powers
             var powerRelease = message.As<NetMessagePowerRelease>();
             if (powerRelease == null) return Logger.WarnReturn(false, $"OnPowerRelease(): Failed to retrieve message");
 
-            Logger.Debug($"OnPowerRelease():\n{powerRelease}");
+            StringBuilder sb = new();
+            sb.AppendLine($"idUserEntity: {powerRelease.IdUserEntity}");
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
+
+            if (powerRelease.HasIdTargetEntity)
+                sb.AppendLine($"idTargetEntity: {powerRelease.IdUserEntity}");
+
+            if (powerRelease.HasTargetPosition)
+                sb.AppendLine($"targetPosition: {new Vector3(powerRelease.TargetPosition)}");
+
+            Logger.Debug($"OnPowerRelease():\n{sb}");
 
             return true;
         }
@@ -74,7 +113,12 @@ namespace MHServerEmu.Games.Powers
             var tryCancelPower = message.As<NetMessageTryCancelPower>();
             if (tryCancelPower == null) return Logger.WarnReturn(false, $"OnTryCancelPower(): Failed to retrieve message");
 
-            Logger.Debug($"OnTryCancelPower():\n{tryCancelPower}");
+            StringBuilder sb = new();
+            sb.AppendLine($"idUserEntity: {tryCancelPower.IdUserEntity}");
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId)}");
+            sb.AppendLine($"endPowerFlags: {(EndPowerFlags)tryCancelPower.EndPowerFlags}");
+
+            Logger.Debug($"OnTryCancelPower():\n{sb}");
 
             return true;
         }
@@ -94,7 +138,30 @@ namespace MHServerEmu.Games.Powers
             var continuousPowerUpdate = message.As<NetMessageContinuousPowerUpdateToServer>();
             if (continuousPowerUpdate == null) return Logger.WarnReturn(false, $"OnContinuousPowerUpdate(): Failed to retrieve message");
 
-            Logger.Debug($"OnContinuousPowerUpdate():\n{continuousPowerUpdate}");
+            StringBuilder sb = new();
+            sb.AppendLine($"powerPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)continuousPowerUpdate.PowerPrototypeId)}");
+            sb.AppendLine($"avatarIndex: {continuousPowerUpdate.AvatarIndex}");
+
+            if (continuousPowerUpdate.HasIdTargetEntity)
+                sb.AppendLine($"idTargetEntity: {continuousPowerUpdate.IdTargetEntity}");
+
+            if (continuousPowerUpdate.HasTargetPosition)
+                sb.AppendLine($"targetPosition: {new Vector3(continuousPowerUpdate.TargetPosition)}");
+
+            if (continuousPowerUpdate.HasRandomSeed)
+                sb.AppendLine($"randomSeed: {continuousPowerUpdate.RandomSeed}");
+
+            Logger.Debug($"OnContinuousPowerUpdate():\n{sb}");
+
+            return true;
+        }
+
+        private bool OnCancelPendingAction(MailboxMessage message)
+        {
+            var cancelPendingAction = message.As<NetMessageCancelPendingAction>();
+            if (cancelPendingAction == null) return Logger.WarnReturn(false, $"OnCancelPendingAction(): Failed to retrieve message");
+
+            Logger.Debug($"OnCancelPendingAction():\n{cancelPendingAction}");
 
             return true;
         }
