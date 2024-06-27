@@ -330,6 +330,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;
                 case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;
                 case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;
 
                 // Power Messages
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -337,7 +338,6 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     _powerMessageHandler.ReceiveMessage(this, message); break;
 
                 // Grouping Manager
@@ -899,6 +899,20 @@ namespace MHServerEmu.Games.Network
             if (changeCameraSettings == null) return Logger.WarnReturn(false, $"OnChangeCameraSettings(): Failed to retrieve message");
 
             AOI.InitializePlayerView((PrototypeId)changeCameraSettings.CameraSettings);
+            return true;
+        }
+
+        private bool OnAssignStolenPower(MailboxMessage message)
+        {
+            var assignStolenPower = message.As<NetMessageAssignStolenPower>();
+            if (assignStolenPower == null) return Logger.WarnReturn(false, $"OnAssignStolenPower(): Failed to retrieve message");
+
+            PrototypeId stealingPowerRef = (PrototypeId)assignStolenPower.StealingPowerProtoId;
+            PrototypeId stolenPowerRef = (PrototypeId)assignStolenPower.StolenPowerProtoId;
+
+            Avatar avatar = Player.CurrentAvatar;
+            avatar.Properties[PropertyEnum.AvatarMappedPower, stealingPowerRef] = stolenPowerRef;
+
             return true;
         }
 

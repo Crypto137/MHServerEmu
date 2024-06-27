@@ -34,7 +34,6 @@ namespace MHServerEmu.Games.Powers
                 case ClientToGameServerMessage.NetMessageTryCancelPower:                OnTryCancelPower(playerConnection, message); break;
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:          OnTryCancelActivePower(playerConnection, message); break;
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer: OnContinuousPowerUpdate(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessageAssignStolenPower:             OnAssignStolenPower(playerConnection, message); break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -273,20 +272,6 @@ namespace MHServerEmu.Games.Powers
             // Handle travel
             if (powerPrototypePath.Contains("TravelPower/"))
                 HandleTravelPower(playerConnection, powerPrototypeId);
-
-            return true;
-        }
-
-        private bool OnAssignStolenPower(PlayerConnection playerConnection, MailboxMessage message)
-        {
-            var assignStolenPower = message.As<NetMessageAssignStolenPower>();
-            if (assignStolenPower == null) return Logger.WarnReturn(false, $"OnAssignStolenPower(): Failed to retrieve message");
-
-            PrototypeId stealingPowerRef = (PrototypeId)assignStolenPower.StealingPowerProtoId;
-            PrototypeId stolenPowerRef = (PrototypeId)assignStolenPower.StolenPowerProtoId;
-
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
-            avatar.Properties[PropertyEnum.AvatarMappedPower, stealingPowerRef] = stolenPowerRef;
 
             return true;
         }
