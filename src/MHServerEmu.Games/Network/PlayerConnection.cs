@@ -144,11 +144,9 @@ namespace MHServerEmu.Games.Network
                 EntitySettings avatarSettings = new();
                 avatarSettings.EntityRef = avatarRef;
                 avatarSettings.InventoryLocation = new(Player.Id, avatarRef == lastCurrentAvatarRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
+                avatarSettings.DBAccount = _dbAccount;
 
-                Avatar avatar = (Avatar)Game.EntityManager.CreateEntity(avatarSettings);
-
-                avatar.SetPlayer(Player);
-                avatar.InitializeFromDBAccount(avatarRef, _dbAccount);
+                Game.EntityManager.CreateEntity(avatarSettings);
             }
 
             // Create team-up entities

@@ -645,9 +645,12 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
 
-            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay && entity is Avatar avatar && invLoc.Slot == 0)
+            if (entity is Avatar avatar)
             {
-                CurrentAvatar = avatar;
+                avatar.SetPlayer(this);
+
+                if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay && invLoc.Slot == 0)
+                    CurrentAvatar = avatar;
             }
         }
 
