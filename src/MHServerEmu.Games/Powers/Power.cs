@@ -110,12 +110,33 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public void OnUnassign()
+        {
+            _situationalComponent?.Shutdown();
+
+            EndPowerFlags endPowerFlags = EndPowerFlags.ExplicitCancel | EndPowerFlags.Unassign;
+            if (Owner.TestStatus(EntityStatus.ExitingWorld))
+                endPowerFlags |= EndPowerFlags.ExitWorld;
+
+            // Uncomment this when EndPower() is implemented
+            //EndPower(endPowerFlags);
+
+            Owner?.Properties.RemoveProperty(new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
+        }
+
+        public void OnOwnerEnteredWorld()
+        {
+            _situationalComponent?.Initialize();
+        }
+
         public void OnOwnerExitedWorld()
         {
+            _situationalComponent?.Shutdown();
         }
 
         public void OnOwnerCastSpeedChange()
         {
+            // Reset animation speed cache when owner cast speed changes
             AnimSpeedCache = -1f;
         }
 

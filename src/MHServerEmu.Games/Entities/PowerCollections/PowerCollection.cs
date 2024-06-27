@@ -193,6 +193,13 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             return true;
         }
 
+        public void OnOwnerEnteredWorld()
+        {
+            // Notify powers of the owner entering world
+            foreach (PowerCollectionRecord record in _powerDict.Values)
+                record.Power?.OnOwnerEnteredWorld();
+        }
+
         public void OnOwnerExitedWorld()
         {
             // Notify powers of the owner exiting world
@@ -218,6 +225,30 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 // Unassign power
                 UnassignPower(kvp.Value.PowerPrototypeRef, false);
             }
+        }
+
+        public void OnOwnerCastSpeedChange(PrototypeId keywordProtoRef)
+        {
+            // Filter by keyword if there is a valid ref
+            if (keywordProtoRef != PrototypeId.Invalid)
+            {
+                var keywordProto = GameDatabase.GetPrototype<PowerKeywordPrototype>(keywordProtoRef);
+                if (keywordProto != null)
+                {
+                    foreach (PowerCollectionRecord record in _powerDict.Values)
+                    {
+                        if (record.Power == null || record.Power.HasKeyword(keywordProto) == false)
+                            continue;
+
+                        record.Power.OnOwnerCastSpeedChange();
+                    }
+
+                    return;
+                }
+            }
+
+            foreach (PowerCollectionRecord record in _powerDict.Values)
+                record.Power?.OnOwnerCastSpeedChange();
         }
 
         private PowerCollectionRecord GetPowerRecordByRef(PrototypeId powerProtoRef)
@@ -596,7 +627,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
 
             if (_owner.IsDestroyed == false)
+            {
                 _owner.OnPowerUnassigned(power);
+                power.OnUnassign();
+            }
 
             UnassignTriggeredPowers(power);
         }

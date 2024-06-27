@@ -25,6 +25,11 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug($"Initialize(): {_power.Prototype}");
         }
 
+        public void Shutdown()
+        {
+
+        }
+
         public void OnPowerAssigned()
         {
 

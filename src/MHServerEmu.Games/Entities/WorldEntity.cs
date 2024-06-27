@@ -475,6 +475,8 @@ namespace MHServerEmu.Games.Entities
             if (CanInfluenceNavigationMesh())
                 EnableNavigationInfluence();
 
+            PowerCollection?.OnOwnerEnteredWorld();
+
             NotifyPlayers(true, settings);
         }
 
@@ -485,6 +487,58 @@ namespace MHServerEmu.Games.Entities
 
             switch (id.Enum)
             {
+                case PropertyEnum.CastSpeedDecrPct:
+                case PropertyEnum.CastSpeedIncrPct:
+                case PropertyEnum.CastSpeedMult:
+                    PowerCollection?.OnOwnerCastSpeedChange(PrototypeId.Invalid);
+                    break;
+
+                case PropertyEnum.CastSpeedIncrPctKwd:
+                case PropertyEnum.CastSpeedMultKwd:
+                    if (PowerCollection != null)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerKeywordRef);
+                        
+                        if (powerKeywordRef == PrototypeId.Invalid)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerKeywordRef == PrototypeId.Invalid");
+                            break;
+                        }
+
+                        PowerCollection.OnOwnerCastSpeedChange(powerKeywordRef);
+                    }
+
+                    break;
+
+                case PropertyEnum.CastSpeedIncrPctTab:
+                    if (PowerCollection != null)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerTabRef);
+                        
+                        if (powerTabRef == PrototypeId.Invalid)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerTabRef == PrototypeId.Invalid");
+                            break;
+                        }
+
+                        PowerCollection.OnOwnerCastSpeedChange(powerTabRef);
+                    }
+
+                    break;
+
+                case PropertyEnum.CastSpeedMultPower:
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                    
+                    if (powerProtoRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("OnPropertyChange(): powerProtoRef == PrototypeId.Invalid");
+                        break;
+                    }
+
+                    GetPower(powerProtoRef)?.OnOwnerCastSpeedChange();
+
+                    break;
+
                 case PropertyEnum.HealthMax:
                     Properties[PropertyEnum.HealthMaxOther] = newValue;
                     break;
