@@ -39,7 +39,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             WorldEntity target = ownerController.TargetEntity;
-            if (target != null && target.IsInWorld && agent.CanRotate)
+            if (target != null && target.IsInWorld && agent.CanRotate())
                 agent.OrientToward(target.RegionLocation.Position);
 
             if ((long)game.CurrentTime.TotalMilliseconds < blackboard.PropertyCollection[PropertyEnum.AIDelayCompletionTime])

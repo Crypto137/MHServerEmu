@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (agent == null) return false;
             var blackboard = ownerController.Blackboard;
 
-            if (agent.CanMove == false) return false;
+            if (agent.CanMove() == false) return false;
             var locomotor = agent.Locomotor;
             if (locomotor == null) return false;
 

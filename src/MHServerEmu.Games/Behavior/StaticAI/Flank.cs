@@ -300,7 +300,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (agent == null) return false;
 
             WorldEntity flankTarget = GetFlankTarget(ownerController, flankContext.FlankTo);
-            if (flankTarget == null || flankTarget.IsInWorld == false || agent.CanMove == false) return false;
+            if (flankTarget == null || flankTarget.IsInWorld == false || agent.CanMove() == false) return false;
 
             return true;
         }

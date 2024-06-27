@@ -260,7 +260,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (agent == null) return false;
             BehaviorSensorySystem senses = ownerController.Senses;
             if (senses.PotentialHostileTargetIds.Count == 0) return false;
-            if (agent.CanMove == false) return false;
+            if (agent.CanMove() == false) return false;
 
             return true;
         }

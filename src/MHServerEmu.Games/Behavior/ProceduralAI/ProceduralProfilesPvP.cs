@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         public static bool GetDestination(out Vector3 destination, Agent agent)
         {
             destination = Vector3.Zero;
-            if (agent == null || agent.CanMove == false || agent.IsInWorld == false) return false;
+            if (agent == null || agent.CanMove() == false || agent.IsInWorld == false) return false;
 
             Region region = agent.Region;
             AIController ownerController = agent.AIController;
@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 int group = collection[PropertyEnum.AIMoveToPathNodeSetGroup];
                 PathMethod method = (PathMethod)(int)collection[PropertyEnum.AIMoveToPathNodeSetMethod];
                 int node = collection[PropertyEnum.AIMoveToCurrentPathNodeIndex];
-                if (region.PathCache.IsLastNode(group, node, method) == false && agent.CanMove) return false;
+                if (region.PathCache.IsLastNode(group, node, method) == false && agent.CanMove()) return false;
 
                 locomotor.Stop();
                 return true;
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             destination = Vector3.Zero;
             targetId = 0;
-            if (agent == null || agent.CanMove == false || agent.IsInWorld == false) return false;
+            if (agent == null || agent.CanMove() == false || agent.IsInWorld == false) return false;
 
             AIController ownerController = agent.AIController;
             targetId = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID];

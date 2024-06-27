@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return false;
 
-            if (locomotor.HasPath && locomotor.IsPathComplete() == false || agent.CanMove == false)
+            if (locomotor.HasPath && locomotor.IsPathComplete() == false || agent.CanMove() == false)
                 return false;
 
             return true;

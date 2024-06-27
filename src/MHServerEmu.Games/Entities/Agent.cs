@@ -41,84 +41,7 @@ namespace MHServerEmu.Games.Entities
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
 
-        public override bool IsSummonedPet
-        {
-            get
-            {
-                if (this is Missile) return false;
-                if (IsTeamUpAgent) return true;
-                
-                PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];
-                if (powerRef != PrototypeId.Invalid)
-                {
-                    var powerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
-                    if (powerProto != null)
-                        return powerProto.IsPetSummoningPower();
-                }
-
-                return false;
-            }
-        }
-
-        public override bool CanRotate
-        {
-            get
-            {
-                Player ownerPlayer = GetOwnerOfType<Player>();
-                if ( IsInKnockback || IsInKnockdown || IsInKnockup 
-                    || IsImmobilized || IsImmobilizedByHitReact || IsSystemImmobilized 
-                    || IsStunned || IsMesmerized ||
-                    (ownerPlayer != null && (ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen))
-                    || NPCAmbientLock)
-                    return false;
-                return true;
-            }
-        }
-
-        public int PowerSpecIndexActive { get; internal set; }
-
-        // New
-        public override bool CanMove
-        {
-            get 
-            {
-                Player ownerPlayer = GetOwnerOfType<Player>();
-                if (base.CanMove == false || HasMovementPreventionStatus || IsSystemImmobilized 
-                    || (ownerPlayer != null && (ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)))
-                    return false;
-                
-                Power power = GetThrowablePower();
-                if (power != null && power.PrototypeDataRef != ActivePowerRef)
-                    return false;
-
-                return true; 
-            }
-        }
-
-        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
-        {
-            base.OnLocomotionStateChanged(oldState, newState);
-            if (IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
-            {
-                if((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))
-                {
-                    Vector3 currentPosition = RegionLocation.Position;
-                    Vector3 targetPosition = FloorToCenter(RegionLocation.ProjectToFloor(RegionLocation.Region, RegionLocation.Cell, currentPosition));
-                    ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
-                }
-            }
-        }
-
-        public bool HasPowerPreventionStatus
-            => IsInKnockback 
-            || IsInKnockdown 
-            || IsInKnockup 
-            || IsStunned 
-            || IsMesmerized 
-            || NPCAmbientLock 
-            || IsInPowerLock;
-
-        public AssetId OriginalWorldAsset { get; private set; }
+        public int PowerSpecIndexActive { get; set; }
 
         public Agent(Game game) : base(game) { }
 
@@ -137,164 +60,56 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public override void OnEnteredWorld(EntitySettings settings)
-        {
-            base.OnEnteredWorld(settings);
-            if (this is not Avatar)     // fix for avatar
-                RegionLocation.Cell.EnemySpawn(); // Calc Enemy
-            // ActivePowerRef = settings.PowerPrototype
-                        
-            if (TestAI() == false) return;
-            // If AI passed SetSimulated;
-            SetSimulated(true);
-            if (AIController != null) 
-            {
-                var behaviorProfile = AgentPrototype?.BehaviorProfile;
-                if (behaviorProfile == null) return;
-                AIController.Initialize(behaviorProfile, null, null);
-            }
-            else InitAI(settings);
+        #region World and Positioning
 
-            if (AIController != null)
-            {
-                AIController.OnAIEnteredWorld();
-                ActivateAI();
-            }
+        public override bool CanRotate()
+        {
+            Player ownerPlayer = GetOwnerOfType<Player>();
+            if (IsInKnockback || IsInKnockdown || IsInKnockup || IsImmobilized || IsImmobilizedByHitReact
+                || IsSystemImmobilized || IsStunned || IsMesmerized || NPCAmbientLock
+                || (ownerPlayer != null && (ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)))
+                return false;
+            return true;
         }
 
-        public void ActivateAI()
+        public override bool CanMove()
         {
-            if (AIController == null) return;
-            BehaviorBlackboard blackboard = AIController.Blackboard;
-            if (blackboard.PropertyCollection[PropertyEnum.AIStartsEnabled])
-                AIController.SetIsEnabled(true);
-            blackboard.SpawnOffset = (SpawnSpec != null) ? SpawnSpec.Transform.Translation : Vector3.Zero;
-            if (IsInWorld)
-                AIController.OnAIActivated();
-        }
+            Player ownerPlayer = GetOwnerOfType<Player>();
+            if (base.CanMove() == false || HasMovementPreventionStatus || IsSystemImmobilized
+                || (ownerPlayer != null && (ownerPlayer.IsFullscreenMoviePlaying || ownerPlayer.IsOnLoadingScreen)))
+                return false;
 
-        public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
-        {
-            // TODO other events
-
-            if (AIController != null)
-            {
-                AIController.OnAIKilled();
-                AIController.SetIsEnabled(false);
-            }
-
-            EndAllPowers(false);
-
-            Locomotor locomotor = Locomotor;
-            if (locomotor != null)
-            {
-                locomotor.Stop();
-                locomotor.SetMethod(LocomotorMethod.Default, 0.0f);
-            }
-
-            base.OnKilled(killer, killFlags, directKiller);
-        }
-
-        public void Think()
-        {
-            AIController?.Think();
-        }
-
-        public override void OnExitedWorld()
-        {
-            base.OnExitedWorld();
-            if (AIController != null) 
-            {
-                SetSimulated(false); // Put it here for test
-                AIController.OnAIExitedWorld();
-            }
-        }
-
-        public override void OnDeallocate()
-        {
-            AIController?.OnAIDeallocate();
-            base.OnDeallocate();
-        }
-
-        public override bool OnPowerAssigned(Power power)
-        {
-            if (base.OnPowerAssigned(power) == false) return false;
-
-            // Set rank for normal powers
-            if (power.IsNormalPower())
-            {
-                Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
-                Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
-            }
+            Power power = GetThrowablePower();
+            if (power != null && power.PrototypeDataRef != ActivePowerRef)
+                return false;
 
             return true;
         }
 
-        public override bool OnPowerUnassigned(Power power)
+        public Vector3 GetPositionNearAvatar(Avatar avatar)
         {
-            Properties.RemoveProperty(new(PropertyEnum.PowerRankBase, power.PrototypeDataRef));
-            Properties.RemoveProperty(new(PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef));
+            Region region = avatar.Region;
+            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
+                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
+            return position;
+        }
 
-            if (power.IsThrowablePower())
+        private bool InitLocomotor(float height = 0.0f)
+        {
+            if (Locomotor != null)
             {
-                // Return throwable entity to the world if throwing was cancelled
-                ulong throwableEntityId = Properties[PropertyEnum.ThrowableOriginatorEntity];
-                if (IsInWorld && throwableEntityId != 0)
-                {
-                    var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
-                    if (throwableEntity != null)
-                    {
-                        if (_throwableEntityLocation.IsValid())
-                        {
-                            throwableEntity.EnterWorld(_throwableEntityLocation.Region, _throwableEntityLocation.Position, _throwableEntityLocation.Orientation);
-                        }
-                        else
-                        {
-                            Logger.Warn("OnPowerUnassigned(): Invalid throwable entity location");
-                            throwableEntity.Destroy();
-                        } 
-                    }
-                }
+                AgentPrototype agentPrototype = AgentPrototype;
+                if (agentPrototype == null) return false;
 
-                // Clean up throwable entity data
-                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
-                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
-                _throwableEntityLocation.Region = null;  // this invalidates region location
+                Locomotor.Initialize(agentPrototype.Locomotion, this, height);
+                Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
             }
-
-            return base.OnPowerUnassigned(power);
+            return true;
         }
 
-        public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this
-        {
-            bool startAction = false;
+        #endregion
 
-            if (EntityActionComponent != null && EntityActionComponent.ActionTable.TryGetValue(EntitySelectorActionEventType.OnSimulated, out var actionSet))
-                startAction = AppendSelectorActions(actionSet);
-            if (startAction == false && actionsTarget != PrototypeId.Invalid)
-                AppendOnStartActions(actionsTarget);
-        }
-
-        public bool AppendOnStartActions(PrototypeId targetRef)
-        {
-            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
-                return AppendStartPower(action.PowerPrototype);
-            return false;
-        }
-
-        public bool AppendSelectorActions(HashSet<EntitySelectorActionPrototype> actions)
-        {
-            var action = actions.First();
-            if (action.AIOverrides.HasValue())
-            {
-                int index = Game.Random.Next(0, action.AIOverrides.Length);
-                var actionAIOverrideRef = action.AIOverrides[index];
-                if (actionAIOverrideRef == PrototypeId.Invalid) return false;
-                var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
-                if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
-            }
-            return false;
-        }
+        #region Powers
 
         public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
         {
@@ -332,72 +147,6 @@ namespace MHServerEmu.Games.Entities
             return Properties[PropertyEnum.PowerRankCurrentBest, powerRef];
         }
 
-        public void SetDormant(bool dormant)
-        {
-            if (IsDormant != dormant)
-            {
-                if (dormant == false)
-                {
-                    AgentPrototype prototype = AgentPrototype;
-                    if (prototype == null) return;
-                    if (prototype.WakeRandomStartMS > 0 && IsControlledEntity == false)
-                        ScheduleRandomWakeStart(prototype.WakeRandomStartMS);
-                    else
-                        Properties[PropertyEnum.Dormant] = dormant;
-                }
-                else
-                    Properties[PropertyEnum.Dormant] = dormant;
-            }
-        }
-
-        private void ScheduleRandomWakeStart(int wakeRandomStartMS)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void OnDramaticEntranceEnd()
-        {
-            base.OnDramaticEntranceEnd();
-            AIController?.OnAIDramaticEntranceEnd();
-        }
-
-        public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
-        {
-            // TODO
-            return InventoryResult.Success;     // Bypass property restrictions
-        }
-
-        public bool RevealEquipmentToOwner()
-        {
-            // Make sure this agent is owned by a player (only avatars and team-ups have equipment that needs to be made visible)
-            var player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "RevealEquipmentToOwner(): player == null");
-
-            AreaOfInterest aoi = player.PlayerConnection.AOI;
-
-            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
-            {
-                if (inventory.VisibleToOwner) continue;     // Skip inventories that are already visible
-                inventory.VisibleToOwner = true;
-
-                foreach (var entry in inventory)
-                {
-                    // Validate entity
-                    var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
-                    if (entity == null)
-                    {
-                        Logger.Warn("RevealEquipmentToOwner(): entity == null");
-                        continue;
-                    }
-
-                    // Update interest for it
-                    aoi.ConsiderEntity(entity);
-                }
-            }
-
-            return true;
-        }
-
         public int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             return 0;
@@ -417,7 +166,7 @@ namespace MHServerEmu.Games.Entities
 
             if (power.IsOwnerCenteredAOE() && (targetingProto.MovesToRangeOfPrimaryTarget == false || target == null))
                 return IsInPositionForPowerResult.Success;
-            
+
             Vector3 position = targetPosition;
             if (target != null && target.IsInWorld)
                 if (power.Prototype is MissilePowerPrototype)
@@ -440,18 +189,18 @@ namespace MHServerEmu.Games.Entities
 
             if (power.Prototype is SummonPowerPrototype summonPowerProto)
             {
-                var summonedProto = summonPowerProto.GetSummonEntity(0, OriginalWorldAsset);
+                var summonedProto = summonPowerProto.GetSummonEntity(0, GetOriginalWorldAsset());
                 if (summonedProto == null) return IsInPositionForPowerResult.Error;
 
                 var summonContext = summonPowerProto.GetSummonEntityContext(0);
                 if (summonContext == null) return IsInPositionForPowerResult.Error;
 
                 var bounds = new Bounds(summonedProto.Bounds, position);
-                
+
                 var pathFlags = Region.GetPathFlagsForEntity(summonedProto);
                 if (summonContext.PathFilterOverride != LocomotorMethod.None)
                     pathFlags = Locomotor.GetPathFlags(summonContext.PathFilterOverride);
-                
+
                 var region = Region;
                 if (region == null) return IsInPositionForPowerResult.Error;
                 if (summonContext.IgnoreBlockingOnSpawn == false && summonedProto.Bounds.CollisionType == BoundsCollisionType.Blocking)
@@ -469,20 +218,7 @@ namespace MHServerEmu.Games.Entities
             return IsInPositionForPowerResult.Success;
         }
 
-        private static bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
-        {
-            if (target != null && power.AlwaysTargetsMousePosition())
-            {
-                if (target.IsInWorld == false) return false;
-                return power.IsInRange(target, RangeCheckType.Activation);
-            }
-            else if (power.IsMelee())
-                return true;
-
-            return power.IsInRange(position, RangeCheckType.Activation);
-        }
-
-        public virtual PowerUseResult CanActivatePower(Power power, ulong targetId, Vector3 targetPosition, 
+        public virtual PowerUseResult CanActivatePower(Power power, ulong targetId, Vector3 targetPosition,
             PowerActivationSettingsFlags flags = PowerActivationSettingsFlags.None, ulong itemSourceId = 0)
         {
             var powerRef = power.PrototypeDataRef;
@@ -568,11 +304,15 @@ namespace MHServerEmu.Games.Entities
             return power.CanActivate(target, targetPosition, flags);
         }
 
-        public InteractionResult StartInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, bool inRange, InteractionMethod method)
+        public bool HasPowerPreventionStatus()
         {
-            if (interacteeDesc.IsValid == false) return InteractionResult.Failure;
-            return PreAttemptInteractionWith(interacteeDesc, flags, method);
-            // switch result for client only
+            return IsInKnockback
+            || IsInKnockdown
+            || IsInKnockup
+            || IsStunned
+            || IsMesmerized
+            || NPCAmbientLock
+            || IsInPowerLock;
         }
 
         public bool StartThrowing(ulong entityId)
@@ -619,20 +359,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public Vector3 GetPositionNearAvatar(Avatar avatar)
-        {
-            Region region = avatar.Region;
-            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
-                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
-            return position;
-        }
-
-        protected override bool InitInventories(bool populateInventories)
-        {
-            // TODO
-            return base.InitInventories(populateInventories);
-        }
-
         protected override PowerUseResult ActivatePower(Power power, in PowerActivationSettings settings)
         {
             var result = base.ActivatePower(power, settings);
@@ -652,19 +378,28 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
-        private bool AppendStartPower(PrototypeId startPowerRef)
+        private static bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
         {
-            if (startPowerRef == PrototypeId.Invalid) return false;
-            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
+            if (target != null && power.AlwaysTargetsMousePosition())
+            {
+                if (target.IsInWorld == false) return false;
+                return power.IsInRange(target, RangeCheckType.Activation);
+            }
+            else if (power.IsMelee())
+                return true;
 
-            Condition condition = new();
-            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
-            condition.StartTime = Clock.GameTime;
-            _conditionCollection.AddCondition(condition);
+            return power.IsInRange(position, RangeCheckType.Activation);
+        }
 
-            AssignPower(startPowerRef, new());
+        #endregion
 
-            return true;
+        #region Interaction
+
+        public InteractionResult StartInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, bool inRange, InteractionMethod method)
+        {
+            if (interacteeDesc.IsValid == false) return InteractionResult.Failure;
+            return PreAttemptInteractionWith(interacteeDesc, flags, method);
+            // switch result for client only
         }
 
         private InteractionResult PreAttemptInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, InteractionMethod method)
@@ -677,6 +412,91 @@ namespace MHServerEmu.Games.Entities
             }
             // IsRemoteValid client only
             return InteractionResult.Failure;
+        }
+
+        #endregion
+
+        #region Inventory
+
+        public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
+        {
+            // TODO
+            return InventoryResult.Success;     // Bypass property restrictions
+        }
+
+        public bool RevealEquipmentToOwner()
+        {
+            // Make sure this agent is owned by a player (only avatars and team-ups have equipment that needs to be made visible)
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "RevealEquipmentToOwner(): player == null");
+
+            AreaOfInterest aoi = player.PlayerConnection.AOI;
+
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                if (inventory.VisibleToOwner) continue;     // Skip inventories that are already visible
+                inventory.VisibleToOwner = true;
+
+                foreach (var entry in inventory)
+                {
+                    // Validate entity
+                    var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    if (entity == null)
+                    {
+                        Logger.Warn("RevealEquipmentToOwner(): entity == null");
+                        continue;
+                    }
+
+                    // Update interest for it
+                    aoi.ConsiderEntity(entity);
+                }
+            }
+
+            return true;
+        }
+
+        protected override bool InitInventories(bool populateInventories)
+        {
+            // TODO
+            return base.InitInventories(populateInventories);
+        }
+
+        #endregion
+
+        #region AI
+
+        public void ActivateAI()
+        {
+            if (AIController == null) return;
+            BehaviorBlackboard blackboard = AIController.Blackboard;
+            if (blackboard.PropertyCollection[PropertyEnum.AIStartsEnabled])
+                AIController.SetIsEnabled(true);
+            blackboard.SpawnOffset = (SpawnSpec != null) ? SpawnSpec.Transform.Translation : Vector3.Zero;
+            if (IsInWorld)
+                AIController.OnAIActivated();
+        }
+
+        public void Think()
+        {
+            AIController?.Think();
+        }
+
+        public void SetDormant(bool dormant)
+        {
+            if (IsDormant != dormant)
+            {
+                if (dormant == false)
+                {
+                    AgentPrototype prototype = AgentPrototype;
+                    if (prototype == null) return;
+                    if (prototype.WakeRandomStartMS > 0 && IsControlledEntity == false)
+                        ScheduleRandomWakeStart(prototype.WakeRandomStartMS);
+                    else
+                        Properties[PropertyEnum.Dormant] = dormant;
+                }
+                else
+                    Properties[PropertyEnum.Dormant] = dormant;
+            }
         }
 
         private bool TestAI()
@@ -706,16 +526,208 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        private bool InitLocomotor(float height = 0.0f)
+        private void ScheduleRandomWakeStart(int wakeRandomStartMS)
         {
-            if (Locomotor != null)
-            {
-                AgentPrototype agentPrototype = AgentPrototype;
-                if (agentPrototype == null) return false;
+            throw new NotImplementedException();
+        }
 
-                Locomotor.Initialize(agentPrototype.Locomotion, this, height);
-                Locomotor.SetGiveUpLimits(8.0f, TimeSpan.FromMilliseconds(250));
+        #endregion
+
+        #region Event Handlers
+
+        public override void OnEnteredWorld(EntitySettings settings)
+        {
+            base.OnEnteredWorld(settings);
+            if (this is not Avatar)     // fix for avatar
+                RegionLocation.Cell.EnemySpawn(); // Calc Enemy
+                                                  // ActivePowerRef = settings.PowerPrototype
+
+            if (TestAI() == false) return;
+            // If AI passed SetSimulated;
+            SetSimulated(true);
+            if (AIController != null)
+            {
+                var behaviorProfile = AgentPrototype?.BehaviorProfile;
+                if (behaviorProfile == null) return;
+                AIController.Initialize(behaviorProfile, null, null);
             }
+            else InitAI(settings);
+
+            if (AIController != null)
+            {
+                AIController.OnAIEnteredWorld();
+                ActivateAI();
+            }
+        }
+
+        public override void OnExitedWorld()
+        {
+            base.OnExitedWorld();
+            if (AIController != null)
+            {
+                SetSimulated(false); // Put it here for test
+                AIController.OnAIExitedWorld();
+            }
+        }
+
+        public override void OnDramaticEntranceEnd()
+        {
+            base.OnDramaticEntranceEnd();
+            AIController?.OnAIDramaticEntranceEnd();
+        }
+
+        public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            // TODO other events
+
+            if (AIController != null)
+            {
+                AIController.OnAIKilled();
+                AIController.SetIsEnabled(false);
+            }
+
+            EndAllPowers(false);
+
+            Locomotor locomotor = Locomotor;
+            if (locomotor != null)
+            {
+                locomotor.Stop();
+                locomotor.SetMethod(LocomotorMethod.Default, 0.0f);
+            }
+
+            base.OnKilled(killer, killFlags, directKiller);
+        }
+
+        public override void OnDeallocate()
+        {
+            AIController?.OnAIDeallocate();
+            base.OnDeallocate();
+        }
+
+        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        {
+            base.OnLocomotionStateChanged(oldState, newState);
+            if (IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+            {
+                if ((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))
+                {
+                    Vector3 currentPosition = RegionLocation.Position;
+                    Vector3 targetPosition = FloorToCenter(RegionLocation.ProjectToFloor(RegionLocation.Region, RegionLocation.Cell, currentPosition));
+                    ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
+                }
+            }
+        }
+
+        public override bool OnPowerAssigned(Power power)
+        {
+            if (base.OnPowerAssigned(power) == false) return false;
+
+            // Set rank for normal powers
+            if (power.IsNormalPower())
+            {
+                Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
+                Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
+            }
+
+            return true;
+        }
+
+        public override bool OnPowerUnassigned(Power power)
+        {
+            Properties.RemoveProperty(new(PropertyEnum.PowerRankBase, power.PrototypeDataRef));
+            Properties.RemoveProperty(new(PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef));
+
+            if (power.IsThrowablePower())
+            {
+                // Return throwable entity to the world if throwing was cancelled
+                ulong throwableEntityId = Properties[PropertyEnum.ThrowableOriginatorEntity];
+                if (IsInWorld && throwableEntityId != 0)
+                {
+                    var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
+                    if (throwableEntity != null)
+                    {
+                        if (_throwableEntityLocation.IsValid())
+                        {
+                            throwableEntity.EnterWorld(_throwableEntityLocation.Region, _throwableEntityLocation.Position, _throwableEntityLocation.Orientation);
+                        }
+                        else
+                        {
+                            Logger.Warn("OnPowerUnassigned(): Invalid throwable entity location");
+                            throwableEntity.Destroy();
+                        } 
+                    }
+                }
+
+                // Clean up throwable entity data
+                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
+                _throwableEntityLocation.Region = null;  // this invalidates region location
+            }
+
+            return base.OnPowerUnassigned(power);
+        }
+
+        #endregion
+
+        public override bool IsSummonedPet()
+        {
+            if (this is Missile) return false;
+            if (IsTeamUpAgent) return true;
+
+            PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];
+            if (powerRef != PrototypeId.Invalid)
+            {
+                var powerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
+                if (powerProto != null)
+                    return powerProto.IsPetSummoningPower();
+            }
+
+            return false;
+        }
+
+        public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this
+        {
+            bool startAction = false;
+
+            if (EntityActionComponent != null && EntityActionComponent.ActionTable.TryGetValue(EntitySelectorActionEventType.OnSimulated, out var actionSet))
+                startAction = AppendSelectorActions(actionSet);
+            if (startAction == false && actionsTarget != PrototypeId.Invalid)
+                AppendOnStartActions(actionsTarget);
+        }
+
+        public bool AppendOnStartActions(PrototypeId targetRef)
+        {
+            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
+                return AppendStartPower(action.PowerPrototype);
+            return false;
+        }
+
+        public bool AppendSelectorActions(HashSet<EntitySelectorActionPrototype> actions)
+        {
+            var action = actions.First();
+            if (action.AIOverrides.HasValue())
+            {
+                int index = Game.Random.Next(0, action.AIOverrides.Length);
+                var actionAIOverrideRef = action.AIOverrides[index];
+                if (actionAIOverrideRef == PrototypeId.Invalid) return false;
+                var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
+                if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
+            }
+            return false;
+        }
+
+        private bool AppendStartPower(PrototypeId startPowerRef)
+        {
+            if (startPowerRef == PrototypeId.Invalid) return false;
+            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
+
+            Condition condition = new();
+            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
+            condition.StartTime = Clock.GameTime;
+            _conditionCollection.AddCondition(condition);
+
+            AssignPower(startPowerRef, new());
+
             return true;
         }
     }

@@ -315,7 +315,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 HandleEnticerBehaviorResultStatus(game, blackboard, false);
             else
             {
-                if (OrientToEnticerOrientation && agent.CanRotate)
+                if (OrientToEnticerOrientation && agent.CanRotate())
                 {
                     Locomotor locomotor = agent.Locomotor;
                     if (locomotor != null)
@@ -588,7 +588,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Agent agent = ownerController.Owner;
             if (agent == null) return;
 
-            if (agent.CanMove == false || agent.IsExecutingPower) return;
+            if (agent.CanMove() == false || agent.IsExecutingPower) return;
 
             var collection = ownerController.Blackboard.PropertyCollection;
 

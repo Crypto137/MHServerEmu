@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Agent agent = ownerController.Owner;
             if (agent == null) return false;
 
-            if (agent.CanMove == false) return false;
+            if (agent.CanMove() == false) return false;
 
             return true;
         }

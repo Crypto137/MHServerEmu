@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿#pragma warning disable CS0162
+using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;

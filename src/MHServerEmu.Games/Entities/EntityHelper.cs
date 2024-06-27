@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Entities
 
         public static void DestroySummonerFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto)
         {
-            var summonerProto = summonPowerProto.GetSummonEntity(0, avatar.OriginalWorldAsset);
+            var summonerProto = summonPowerProto.GetSummonEntity(0, avatar.GetOriginalWorldAsset());
             Inventory summonedInventory = avatar.GetInventory(InventoryConvenienceLabel.Summoned);
             Agent summoner = summonedInventory.GetMatchingEntity(summonerProto.DataRef) as Agent;
             summoner?.Destroy();

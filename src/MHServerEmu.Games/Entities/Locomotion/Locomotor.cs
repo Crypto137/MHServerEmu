@@ -376,7 +376,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (IsEnabled == false) return;
 
             timeSeconds = (float)game.FixedTimeBetweenUpdates.TotalSeconds;
-            if (IsLooking && _owner.CanRotate)
+            if (IsLooking && _owner.CanRotate())
             {
                 bool rotated = DoRotationInPlace(timeSeconds, GetLookingGoalDir());
                 PushLocomotionStateChanges();
@@ -389,7 +389,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             }
 
             IsMoving = false;
-            if (_owner.CanMove && GetNextLocomotePosition(timeSeconds, out Vector3 movePosition))
+            if (_owner.CanMove() && GetNextLocomotePosition(timeSeconds, out Vector3 movePosition))
             {
                 Vector3 dir = movePosition - _owner.RegionLocation.Position;
                 if (!Vector3.IsNearZero(dir))
@@ -1244,7 +1244,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             
             if (_owner.Game.AdminCommandManager.TestAdminFlag(AdminFlags.LocomotionSync))
             {
-                if (_owner.IsInWorld && _owner.CanRotate && LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking))
+                if (_owner.IsInWorld && _owner.CanRotate() && LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLooking))
                 {
                     _generatedPath.Path.Init(_owner.Bounds.Radius, PathFlags, LocomotionState.PathNodes);
                     _generatedPath.PathResult = NaviPathResult.Success;
@@ -1254,7 +1254,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     _hasOrientationSyncState = true;
                     _syncOrientation = Orientation.FromDeltaVector(lookingDir);
                 }
-                else if (_owner.IsInWorld && _owner.CanMove && LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting))
+                else if (_owner.IsInWorld && _owner.CanMove() && LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting))
                 {
                     if (LocomotionState.LocomotionFlags.HasFlag(LocomotionFlags.MoveForward))
                     {

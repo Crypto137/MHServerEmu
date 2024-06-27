@@ -218,7 +218,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected static void HandleRotateToTarget(Agent agent, WorldEntity target)
         {
-            if (agent.CanRotate && target != null && target.IsInWorld)
+            if (agent.CanRotate() && target != null && target.IsInWorld)
             {
                 Locomotor locomotor = agent.Locomotor;
                 if (locomotor == null)

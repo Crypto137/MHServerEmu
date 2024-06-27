@@ -449,8 +449,8 @@ namespace MHServerEmu.Games.Network
                 AOI.Update(syncPosition);
 
             // Update locomotion state
-            bool canMove = avatar.CanMove;
-            bool canRotate = avatar.CanRotate;
+            bool canMove = avatar.CanMove();
+            bool canRotate = avatar.CanRotate();
             Vector3 position = avatar.RegionLocation.Position;
             Orientation orientation = avatar.RegionLocation.Orientation;
 

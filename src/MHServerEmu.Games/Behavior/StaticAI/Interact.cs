@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 if (blackboard.PropertyCollection.HasProperty(PropertyEnum.AIThrownObjectPickedUp))
                 {
                     WorldEntity target = ownerController.TargetEntity;
-                    if (agent.CanRotate && target != null && target.IsInWorld)
+                    if (agent.CanRotate() && target != null && target.IsInWorld)
                     {
                         Locomotor locomotor = agent.Locomotor;
                         if (locomotor == null)

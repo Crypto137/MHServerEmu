@@ -1430,7 +1430,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var collection = ownerController.Blackboard.PropertyCollection;
             var game = ownerController.Game;
 
-            if (agent.HasPowerPreventionStatus)
+            if (agent.HasPowerPreventionStatus())
             {
                 agent.Locomotor.Stop();
                 return;

@@ -194,94 +194,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             _abilityKeyMappingList.Add(abilityKeyMapping);
         }
 
-        public override void OnEnteredWorld(EntitySettings settings)
-        {
-            base.OnEnteredWorld(settings);
-            AssignDefaultAvatarPowers();
-            SetSimulated(false); // For AI
-        }
-
-        private bool AssignDefaultAvatarPowers()
-        {
-            Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "AssignHardcodedPowers(): player == null");
-
-            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
-            AvatarPrototype avatarPrototype = AvatarPrototype;
-
-            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
-
-            // Add game function powers (the order is the same as captured packets)
-            AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapInPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.ReturnToHubPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.ReturnToFieldPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.TeleportToPartyMemberPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.TeamUpSummonPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.PetTechVacuumPower, indexProps);
-            AssignPower(avatarPrototype.ResurrectOtherEntityPower, indexProps);
-            AssignPower(avatarPrototype.StatsPower, indexProps);
-            AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
-
-            // Progression table powers
-            foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
-                AssignPower(powerProgressionEntry.PowerAssignment.Ability, indexProps);
-
-            // Mapped powers (power replacements from talents)
-            // AvatarPrototype -> TalentGroups -> Talents -> Talent -> ActionsTriggeredOnPowerEvent -> PowerEventContext -> MappedPower
-            foreach (var talentGroup in avatarPrototype.TalentGroups)
-            {
-                foreach (var talentEntry in talentGroup.Talents)
-                {
-                    var talent = talentEntry.Talent.As<SpecializationPowerPrototype>();
-
-                    foreach (var powerEventAction in talent.ActionsTriggeredOnPowerEvent)
-                    {
-                        if (powerEventAction.PowerEventContext is PowerEventContextMapPowersPrototype mapPowerEvent)
-                        {
-                            foreach (MapPowerPrototype mapPower in mapPowerEvent.MappedPowers)
-                            {
-                                AssignPower(mapPower.MappedPower, indexProps);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Stolen powers for Rogue
-            if (avatarPrototype.DataRef == (PrototypeId)AvatarPrototypeId.Rogue)
-            {
-                foreach (PrototypeId stealablePowerInfoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<StealablePowerInfoPrototype>(PrototypeIterateFlags.NoAbstract))
-                {
-                    var stealablePowerInfo = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
-                    AssignPower(stealablePowerInfo.Power, indexProps);
-                }
-            }
-
-            // Travel
-            AssignPower(avatarPrototype.TravelPower, indexProps);
-
-            // Emotes
-            // Starting emotes
-            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
-            {
-                PrototypeId emoteProtoRef = emoteAssignment.Ability;
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
-
-            // Unlockable emotes
-            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
-            {
-                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
-
-            return true;
-        }
+        #region Powers
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
         {
@@ -375,27 +288,101 @@ namespace MHServerEmu.Games.Entities.Avatars
             return info.IsValid;
         }
 
-        public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)
+        public void ScheduleSwapInPower()
         {
-            if (getTempPoints)
-            {
-                long pointsSpent = Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
-                if (pointsSpent >= 0) return pointsSpent;
-            }
-
-            return Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
+            ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
         }
 
-        public int GetOmegaPointsSpentOnBonus(PrototypeId omegaBonusRef, bool getTempPoints)
+        public bool IsValidTargetForCurrentPower(WorldEntity target)
         {
-            if (getTempPoints)
+            throw new NotImplementedException();
+        }
+
+        private bool AssignDefaultAvatarPowers()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "AssignHardcodedPowers(): player == null");
+
+            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
+            AvatarPrototype avatarPrototype = AvatarPrototype;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+
+            // Add game function powers (the order is the same as captured packets)
+            AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapInPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.ReturnToHubPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.ReturnToFieldPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.TeleportToPartyMemberPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.TeamUpSummonPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.PetTechVacuumPower, indexProps);
+            AssignPower(avatarPrototype.ResurrectOtherEntityPower, indexProps);
+            AssignPower(avatarPrototype.StatsPower, indexProps);
+            AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
+
+            // Progression table powers
+            foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
+                AssignPower(powerProgressionEntry.PowerAssignment.Ability, indexProps);
+
+            // Mapped powers (power replacements from talents)
+            // AvatarPrototype -> TalentGroups -> Talents -> Talent -> ActionsTriggeredOnPowerEvent -> PowerEventContext -> MappedPower
+            foreach (var talentGroup in avatarPrototype.TalentGroups)
             {
-                int pointsSpent = Properties[PropertyEnum.OmegaSpecTemp, omegaBonusRef];
-                if (pointsSpent >= 0) return pointsSpent;
+                foreach (var talentEntry in talentGroup.Talents)
+                {
+                    var talent = talentEntry.Talent.As<SpecializationPowerPrototype>();
+
+                    foreach (var powerEventAction in talent.ActionsTriggeredOnPowerEvent)
+                    {
+                        if (powerEventAction.PowerEventContext is PowerEventContextMapPowersPrototype mapPowerEvent)
+                        {
+                            foreach (MapPowerPrototype mapPower in mapPowerEvent.MappedPowers)
+                            {
+                                AssignPower(mapPower.MappedPower, indexProps);
+                            }
+                        }
+                    }
+                }
             }
 
-            return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
+            // Stolen powers for Rogue
+            if (avatarPrototype.DataRef == (PrototypeId)AvatarPrototypeId.Rogue)
+            {
+                foreach (PrototypeId stealablePowerInfoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<StealablePowerInfoPrototype>(PrototypeIterateFlags.NoAbstract))
+                {
+                    var stealablePowerInfo = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
+                    AssignPower(stealablePowerInfo.Power, indexProps);
+                }
+            }
+
+            // Travel
+            AssignPower(avatarPrototype.TravelPower, indexProps);
+
+            // Emotes
+            // Starting emotes
+            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
+            {
+                PrototypeId emoteProtoRef = emoteAssignment.Ability;
+                if (GetPower(emoteProtoRef) != null) continue;
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            // Unlockable emotes
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
+                if (GetPower(emoteProtoRef) != null) continue;
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            return true;
         }
+
+        #endregion
+
+        #region Inventories
 
         public InventoryResult GetEquipmentInventoryAvailableStatus(PrototypeId invProtoRef)
         {
@@ -439,38 +426,35 @@ namespace MHServerEmu.Games.Entities.Avatars
             return success;
         }
 
-        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        #endregion
+
+        #region Omega and Infinity
+
+        public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)
         {
-            base.OnLocomotionStateChanged(oldState, newState);
-        }
-
-        public void ScheduleSwapInPower()
-        {
-            ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
-        }
-
-        protected override void BuildString(StringBuilder sb)
-        {
-            base.BuildString(sb);
-
-            sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
-            sb.AppendLine($"{nameof(_ownerPlayerDbId)}: 0x{OwnerPlayerDbId:X}");
-
-            if (_guildId != GuildMember.InvalidGuildId)
+            if (getTempPoints)
             {
-                sb.AppendLine($"{nameof(_guildId)}: {_guildId}");
-                sb.AppendLine($"{nameof(_guildName)}: {_guildName}");
-                sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
+                long pointsSpent = Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
+                if (pointsSpent >= 0) return pointsSpent;
             }
 
-            for (int i = 0; i < _abilityKeyMappingList.Count; i++)
-                sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
+            return Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
         }
 
-        internal bool IsValidTargetForCurrentPower(WorldEntity target)
+        public int GetOmegaPointsSpentOnBonus(PrototypeId omegaBonusRef, bool getTempPoints)
         {
-            throw new NotImplementedException();
+            if (getTempPoints)
+            {
+                int pointsSpent = Properties[PropertyEnum.OmegaSpecTemp, omegaBonusRef];
+                if (pointsSpent >= 0) return pointsSpent;
+            }
+
+            return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
         }
+
+        #endregion
+
+        #region Team-Ups
 
         public void SelectTeamUpAgent(PrototypeId teamUpProtoRef)
         {
@@ -497,7 +481,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             //Power power = GetPower(TeamUpPowerRef);
             //Properties[PropertyEnum.AvatarTeamUpDuration] = power.GetCooldownDuration();
             EntitySettings setting = new()
-            { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden };            
+            { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden };
             teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, setting);
             teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
         }
@@ -515,7 +499,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     .SetIdKillerEntity(0)
                     .SetKillFlags(0)
                     .Build();
-                Game.NetworkManager.SendMessageToInterested(killMessage, teamUp, AOINetworkPolicyValues.AOIChannelProximity);             
+                Game.NetworkManager.SendMessageToInterested(killMessage, teamUp, AOINetworkPolicyValues.AOIChannelProximity);
                 Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
                 Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
                 Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
@@ -543,6 +527,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player?.GetTeamUpAgent(teamUpProtoRef);
         }
 
+        #endregion
+
+        #region Event Handlers
+
+        public override void OnEnteredWorld(EntitySettings settings)
+        {
+            base.OnEnteredWorld(settings);
+            AssignDefaultAvatarPowers();
+            SetSimulated(false); // For AI
+        }
+
         public override void OnExitedWorld()
         {
             base.OnExitedWorld();
@@ -559,5 +554,29 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+        public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
+        {
+            base.OnLocomotionStateChanged(oldState, newState);
+        }
+
+        #endregion
+
+        protected override void BuildString(StringBuilder sb)
+        {
+            base.BuildString(sb);
+
+            sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
+            sb.AppendLine($"{nameof(_ownerPlayerDbId)}: 0x{OwnerPlayerDbId:X}");
+
+            if (_guildId != GuildMember.InvalidGuildId)
+            {
+                sb.AppendLine($"{nameof(_guildId)}: {_guildId}");
+                sb.AppendLine($"{nameof(_guildName)}: {_guildName}");
+                sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
+            }
+
+            for (int i = 0; i < _abilityKeyMappingList.Count; i++)
+                sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
+        }
     }
 }
