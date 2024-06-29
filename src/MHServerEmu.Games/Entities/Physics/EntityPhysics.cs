@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.Entities.Physics
     public class EntityPhysics
     {
         public WorldEntity Entity;
-        public int RegisteredPhysicsFrameId { get; set; }
+        public uint RegisteredPhysicsFrameId { get; set; }
         public int CollisionId { get; private set; }
         public SortedDictionary<ulong, OverlapEntityEntry> OverlappedEntities { get; private set; }
         public SortedSet<ulong> AttachedEntities { get; private set; }
@@ -60,9 +60,9 @@ namespace MHServerEmu.Games.Entities.Physics
         public bool IsTrackingOverlap()
         {
             if (Entity == null) return false;
-            return Entity.Bounds.CollisionType == BoundsCollisionType.Overlapping ||
-            (Entity.Locomotor != null && Entity.Locomotor.HasLocomotionNoEntityCollide) ||
-            Entity.IsInKnockback;
+            return Entity.Bounds.CollisionType == BoundsCollisionType.Overlapping
+                || (Entity.Locomotor != null && Entity.Locomotor.HasLocomotionNoEntityCollide)
+                || Entity.IsInKnockback;
         }
 
         public void OnPhysicsUpdateFinished()
@@ -138,6 +138,14 @@ namespace MHServerEmu.Games.Entities.Physics
                 AttachedEntities.Remove(physics.Entity.Id);
         }
 
+        public void AcquireCollisionId()
+        {
+            if (CollisionId != -1) return;
+            var region = Entity?.Region;
+            if (region != null)
+                CollisionId =   region.AcquireCollisionId();
+        }
+
         public void ReleaseCollisionId()
         {
             var region = Entity?.Region;
@@ -147,12 +155,13 @@ namespace MHServerEmu.Games.Entities.Physics
                 CollisionId = -1;
             }
         }
+
     }
 
     public class OverlapEntityEntry
     {
         public bool Overlapped;
-        public int Frame;
+        public uint Frame;
 
         public OverlapEntityEntry()
         {

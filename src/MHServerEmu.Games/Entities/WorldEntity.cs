@@ -233,12 +233,18 @@ namespace MHServerEmu.Games.Entities
             if (proto.ObjectiveInfo != null)
                 TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
 
+            SetStatus(EntityStatus.EnteringWorld, true);
+
             RegionLocation.Region = region;
+
+            Physics.AcquireCollisionId();
 
             if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
                 OnEnteredWorld(settings);
             else
                 ClearWorldLocation();
+
+            SetStatus(EntityStatus.EnteringWorld, false);
 
             return IsInWorld;
         }

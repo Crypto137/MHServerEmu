@@ -884,6 +884,7 @@ namespace MHServerEmu.Games.Regions
         {            
             return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
         }
+
         public int AcquireCollisionId()
         {
             int index = _collisionIds.FirstUnset();
