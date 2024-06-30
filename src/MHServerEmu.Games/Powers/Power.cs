@@ -4,6 +4,8 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -21,6 +23,12 @@ namespace MHServerEmu.Games.Powers
         private KeywordsMask _keywordsMask = new();
 
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
+
+        private readonly EventGroup _pendingEvents1 = new();
+        private readonly EventGroup _pendingEvents2 = new();    // end power, channeling
+        private readonly EventGroup _pendingPowerApplicationEvents = new();
+
+        private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
 
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
@@ -118,10 +126,12 @@ namespace MHServerEmu.Games.Powers
             if (Owner.TestStatus(EntityStatus.ExitingWorld))
                 endPowerFlags |= EndPowerFlags.ExitWorld;
 
-            // Uncomment this when EndPower() is implemented
-            //EndPower(endPowerFlags);
+            EndPower(endPowerFlags);
 
             Owner?.Properties.RemoveProperty(new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
+
+            // TODO: call this from PowerCollection
+            OnDeallocate();
         }
 
         public void OnOwnerEnteredWorld()
@@ -138,6 +148,13 @@ namespace MHServerEmu.Games.Powers
         {
             // Reset animation speed cache when owner cast speed changes
             AnimSpeedCache = -1f;
+        }
+
+        public void OnDeallocate()
+        {
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents1);
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents2);
+            Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
         }
 
         public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype powerProto, PropertyCollection initializeProperties, WorldEntity owner)
@@ -235,12 +252,19 @@ namespace MHServerEmu.Games.Powers
 
         public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
         {
-            throw new NotImplementedException();
+            return PowerUseResult.Success;
+            //throw new NotImplementedException();
         }
 
         public PowerUseResult Activate(in PowerActivationSettings settings)
         {
             Logger.Debug($"Activate(): {Prototype}");
+
+            PowerPrototype powerProto = Prototype;
+
+            if (GetActivationType() != PowerActivationType.Passive && powerProto.IsRecurring == false)
+                SchedulePowerEnd(in settings);
+
             return PowerUseResult.Success;
         }
 
@@ -280,27 +304,27 @@ namespace MHServerEmu.Games.Powers
         public static bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 powerUserPosition,
             AlliancePrototype userAllianceProto, bool needsLineOfSight)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool IsInRange(WorldEntity target, RangeCheckType checkType)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool IsInRange(Vector3 position, RangeCheckType activation)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         #region State Accessors
@@ -1089,7 +1113,7 @@ namespace MHServerEmu.Games.Powers
         private bool CreateSituationalComponent()
         {
             if (Game == null) return Logger.WarnReturn(false, "CreateSituationalComponent(): Game == null");
-            
+
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "CreateSituationalComponent(): powerProto == null");
 
@@ -1098,6 +1122,43 @@ namespace MHServerEmu.Games.Powers
 
             _situationalComponent = new(Game, powerProto.SituationalComponent, this);
             return true;
+        }
+
+        private bool SchedulePowerEnd(in PowerActivationSettings settings)
+        {
+            // TODO: Calculate power length
+            return SchedulePowerEnd(TimeSpan.FromMilliseconds(500));
+        }
+
+        private bool SchedulePowerEnd(TimeSpan delay, EndPowerFlags flags = EndPowerFlags.None, bool doNotReschedule = false)
+        {
+            PowerPrototype powerProto = Prototype;
+
+            if (powerProto.ActiveUntilCancelled == false || flags.HasFlag(EndPowerFlags.Flag6) || flags.HasFlag(EndPowerFlags.Flag7))
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+
+                if (_endPowerEvent.IsValid)
+                {
+                    if (doNotReschedule == false)
+                    {
+                        scheduler.RescheduleEvent(_endPowerEvent, delay);
+                        _endPowerEvent.Get().Initialize(this, flags);
+                    }
+
+                    return true;
+                }
+
+                scheduler.ScheduleEvent(_endPowerEvent, Clock.Max(delay, TimeSpan.FromMilliseconds(1)), _pendingEvents2);
+                _endPowerEvent.Get().Initialize(this, flags);
+            }
+
+            return true;
+        }
+
+        private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.EndPower(p1);
         }
     }
 }

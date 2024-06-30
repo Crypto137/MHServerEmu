@@ -103,9 +103,9 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsMovementAuthoritative { get => true; }
         public virtual bool CanBeRepulsed { get => Locomotor != null && Locomotor.IsMoving && !IsExecutingPower; }
         public virtual bool CanRepulseOthers { get => true; }
-        public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
         public PrototypeId ActivePowerRef { get; protected set; }
         public Power ActivePower { get => GetActivePower(); }
+        public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
 
         public Vector3 Forward { get => GetTransform().Col0; }
         public Vector3 GetUp { get => GetTransform().Col2; }

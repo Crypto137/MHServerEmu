@@ -5,15 +5,15 @@ namespace MHServerEmu.Games.Powers
     [Flags]
     public enum PowerActivationSettingsFlags
     {
-        None    = 0,
-        Flag0   = 1 << 0,
-        Flag1   = 1 << 1,
-        Flag2   = 1 << 2,
-        Flag3   = 1 << 3,
-        Flag4   = 1 << 4,
-        Flag5   = 1 << 5,
-        Flag6   = 1 << 6,
-        Flag7   = 1 << 7,
+        None        = 0,
+        Flag0       = 1 << 0,
+        Cancel      = 1 << 1,
+        Flag2       = 1 << 2,
+        Flag3       = 1 << 3,
+        Continuous  = 1 << 4,
+        Flag5       = 1 << 5,
+        Flag6       = 1 << 6,
+        Flag7       = 1 << 7,
     }
 
     [Flags]

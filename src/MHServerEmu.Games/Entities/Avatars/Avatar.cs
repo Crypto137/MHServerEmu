@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
@@ -140,7 +141,99 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void CheckContinuousPower()
         {
-            Logger.Debug($"CheckContinuousPower(): {GameDatabase.GetPrototypeName(_continuousPowerData.PowerProtoRef)}");
+            // We could make this a bit cleaner with just a little bit of goto... After all... why not? Why shouldn't I?
+            if (IsInWorld && _continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
+            {
+                ulong targetId = _continuousPowerData.TargetId;
+                Vector3 targetPosition = _continuousPowerData.TargetPosition;
+
+                Power continuousPower = GetPower(_continuousPowerData.PowerProtoRef);
+                if (continuousPower == null)
+                {
+                    Logger.Warn(string.Format(
+                        "CheckContinuousPower(): Could not find continuous power to activate after previous power end.\nAvatar: {0}\nPower proto:{1}",
+                        this,
+                        GameDatabase.GetPrototypeName(_continuousPowerData.PowerProtoRef)));
+                    return;
+                }
+
+                // We should either have no active power or the continuous powers needs to be recurring
+                if (IsExecutingPower == false || (ActivePowerRef == _continuousPowerData.PowerProtoRef && continuousPower.IsRecurring()))
+                {
+                    WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+                    bool targetIsValid = true;
+
+                    bool targetIsAvailable = target != null && target.IsInWorld && target.IsTargetable(this);
+                    if (continuousPower.NeedsTarget())
+                    {
+                        // The power needs a target and the specified target is not available
+                        if (targetIsAvailable == false)
+                            targetIsValid = false;
+                    }
+                    else if (targetId != InvalidId && targetIsAvailable == false)
+                    {
+                        // The power does not need a target, but it has one anyway, but it is not available
+                        targetIsValid = false;
+                    }
+
+                    if (targetIsValid)
+                    {
+                        if (target?.RegionLocation.IsValid() == true)
+                        {
+                            // Update target position
+                            switch (continuousPower.GetTargetingShape())
+                            {
+                                case TargetingShapeType.Self:
+                                case TargetingShapeType.SingleTarget:
+                                    targetPosition = target.RegionLocation.Position;
+                                    break;
+
+                                case TargetingShapeType.SkillShot:
+                                case TargetingShapeType.SkillShotAlongGround:
+                                    if (continuousPower.AlwaysTargetsMousePosition() == false)
+                                        targetPosition = target.RegionLocation.Position;
+                                    break;
+
+                                default:
+                                    if (continuousPower.AlwaysTargetsMousePosition() == false)
+                                        targetPosition = target.RegionLocation.ProjectToFloor();
+                                    break;
+                            }
+                        }
+
+                        if (continuousPower.IsActive && continuousPower.IsRecurring())
+                        {
+                            // Update target position for recurring powers
+                            _continuousPowerData.SetData(_continuousPowerData.PowerProtoRef, _continuousPowerData.TargetId,
+                                targetPosition, _continuousPowerData.SourceItemId);
+                        }
+                        else
+                        {
+                            // Activate the power again
+                            PowerActivationSettings settings = new(targetId, targetPosition, RegionLocation.Position);
+                            settings.PowerRandomSeed = _continuousPowerData.RandomSeed;
+                            settings.Flags |= PowerActivationSettingsFlags.Continuous;
+
+                            // Update random seed
+                            GRandom random = new((int)_continuousPowerData.RandomSeed);
+                            _continuousPowerData.RandomSeed = (uint)random.Next(0, 10000);
+
+                            // We omit ActivateContinuousPower(), continuousPower.UpdateContinuousPowerActivationSettings()
+                            // and onContinuousPowerResumed becaused they are not really needed on the server.
+
+                            PowerUseResult result = CanActivatePower(continuousPower, targetId, targetPosition);
+                            if (result == PowerUseResult.Success)
+                                ActivatePower(continuousPower, in settings);
+                            else
+                                Logger.Warn($"CheckContinuousPower(): Cannot activate continuous power ({result})");
+                        }
+                    }
+                }
+
+                // onContinuousPowerFailedActivate()
+            }
+
             if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
                 ScheduleRecheckContinuousPower(StandardContinuousPowerRecheckDelay);
         }
