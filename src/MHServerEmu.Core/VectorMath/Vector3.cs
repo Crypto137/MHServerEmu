@@ -155,7 +155,7 @@ namespace MHServerEmu.Core.VectorMath
         }
 
         public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(v1.To2D(), v2.To2D());
-        private static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
+        public static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
 
         public static Vector3 Flatten(Vector3 v, Axis axis)
         {

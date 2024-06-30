@@ -542,9 +542,11 @@ namespace MHServerEmu.Games.Entities
                 RegionLocation.Cell.EnemySpawn(); // Calc Enemy
                                                   // ActivePowerRef = settings.PowerPrototype
 
-            if (TestAI() == false) return;
-            // If AI passed SetSimulated;
             SetSimulated(true);
+
+            // AI
+            if (TestAI() == false) return;
+
             if (AIController != null)
             {
                 var behaviorProfile = AgentPrototype?.BehaviorProfile;
