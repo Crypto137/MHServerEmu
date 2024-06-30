@@ -4,6 +4,8 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -21,6 +23,12 @@ namespace MHServerEmu.Games.Powers
         private KeywordsMask _keywordsMask = new();
 
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
+
+        private readonly EventGroup _pendingEvents1 = new();
+        private readonly EventGroup _pendingEvents2 = new();    // end power, channeling
+        private readonly EventGroup _pendingPowerApplicationEvents = new();
+
+        private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
 
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
@@ -118,10 +126,12 @@ namespace MHServerEmu.Games.Powers
             if (Owner.TestStatus(EntityStatus.ExitingWorld))
                 endPowerFlags |= EndPowerFlags.ExitWorld;
 
-            // Uncomment this when EndPower() is implemented
-            //EndPower(endPowerFlags);
+            EndPower(endPowerFlags);
 
             Owner?.Properties.RemoveProperty(new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
+
+            // TODO: call this from PowerCollection
+            OnDeallocate();
         }
 
         public void OnOwnerEnteredWorld()
@@ -138,6 +148,13 @@ namespace MHServerEmu.Games.Powers
         {
             // Reset animation speed cache when owner cast speed changes
             AnimSpeedCache = -1f;
+        }
+
+        public void OnDeallocate()
+        {
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents1);
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents2);
+            Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
         }
 
         public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype powerProto, PropertyCollection initializeProperties, WorldEntity owner)
@@ -235,18 +252,32 @@ namespace MHServerEmu.Games.Powers
 
         public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
         {
-            throw new NotImplementedException();
+            return PowerUseResult.Success;
+            //throw new NotImplementedException();
         }
 
         public PowerUseResult Activate(in PowerActivationSettings settings)
         {
             Logger.Debug($"Activate(): {Prototype}");
+
+            PowerPrototype powerProto = Prototype;
+
+            if (GetActivationType() != PowerActivationType.Passive && powerProto.IsRecurring == false)
+                SchedulePowerEnd(in settings);
+
             return PowerUseResult.Success;
+        }
+
+        public void ReleasePower(in PowerActivationSettings settings)
+        {
+            Logger.Debug($"ReleasePower(): {Prototype}");
         }
 
         public bool EndPower(EndPowerFlags flags)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"EndPower(): {Prototype} (flags={flags})");
+            Owner?.OnPowerEnded(this, flags);
+            return true;
         }
 
         public bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,
@@ -262,7 +293,8 @@ namespace MHServerEmu.Games.Powers
 
         public bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
         {
-            throw new NotImplementedException();
+            resultPos = Vector3.Zero;
+            return true;
         }
 
         public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
@@ -273,27 +305,47 @@ namespace MHServerEmu.Games.Powers
         public static bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 powerUserPosition,
             AlliancePrototype userAllianceProto, bool needsLineOfSight)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool IsInRange(WorldEntity target, RangeCheckType checkType)
         {
-            throw new NotImplementedException();
+            if (target == null) return Logger.WarnReturn(false, "IsInRange(): target == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+
+            float range = GetRange();
+            Vector3 userPosition = Owner.RegionLocation.Position;
+            float userRadius = Owner.Bounds.Radius;
+            Vector3 targetPosition = target.RegionLocation.Position;
+            float targetRadius = target.Bounds.Radius;
+
+            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, checkType, targetRadius);
         }
 
-        public bool IsInRange(Vector3 position, RangeCheckType activation)
+        public bool IsInRange(Vector3 targetPosition, RangeCheckType checkType)
         {
-            throw new NotImplementedException();
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+
+            float range = GetRange();
+            Vector3 userPosition = Owner.RegionLocation.Position;
+            float userRadius = Owner.Bounds.Radius;
+
+            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, checkType, 0f);
         }
 
         #region State Accessors
@@ -646,6 +698,46 @@ namespace MHServerEmu.Games.Powers
         {
             if (Owner == null) return Logger.WarnReturn(0f, "GetApplicationRange(): Owner == null");
             return TargetsAOE() ? GetAOERadius() : GetRange();
+        }
+
+        public float GetProjectileSpeed(float distance)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetProjectileSpeed(): powerProto == null");
+            return GetProjectileSpeed(powerProto, Properties, Owner.Properties, distance);
+        }
+
+        public float GetProjectileSpeed(Vector3 userPosition, Vector3 targetPosition)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetProjectileSpeed(): powerProto == null");
+            return GetProjectileSpeed(powerProto, Properties, Owner.Properties, userPosition, targetPosition);
+        }
+
+        public static float GetProjectileSpeed(PowerPrototype powerProto, PropertyCollection powerProperties, PropertyCollection ownerProperties,
+            Vector3 userPosition, Vector3 targetPosition)
+        {
+            float distance = 0f;
+
+            if (powerProto.ProjectileTimeToImpactOverride > 0f)
+                distance = Vector3.Distance(userPosition, targetPosition);
+
+            return GetProjectileSpeed(powerProto, powerProperties, ownerProperties, distance);
+        }
+
+        public static float GetProjectileSpeed(PowerPrototype powerProto, PropertyCollection powerProperties, PropertyCollection ownerProperties, float distance)
+        {
+            float speed;
+
+            if (powerProto.ProjectileTimeToImpactOverride > 0f)
+                speed = distance / powerProto.ProjectileTimeToImpactOverride;
+            else
+                speed = powerProto.GetProjectilesSpeed(powerProperties, ownerProperties);
+
+            if (ownerProperties != null)
+                speed *= 1f + powerProperties[PropertyEnum.MissileSpeedBonus];
+
+            return speed;
         }
 
         public bool RequiresLineOfSight()
@@ -1082,7 +1174,7 @@ namespace MHServerEmu.Games.Powers
         private bool CreateSituationalComponent()
         {
             if (Game == null) return Logger.WarnReturn(false, "CreateSituationalComponent(): Game == null");
-            
+
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "CreateSituationalComponent(): powerProto == null");
 
@@ -1091,6 +1183,122 @@ namespace MHServerEmu.Games.Powers
 
             _situationalComponent = new(Game, powerProto.SituationalComponent, this);
             return true;
+        }
+
+        private static bool IsInRangeInternal(PowerPrototype powerProto, float range, Vector3 userPosition, float userRadius,
+            Vector3 targetPosition, RangeCheckType checkType, float targetRadius)
+        {
+            if (powerProto.Activation == PowerActivationType.Passive)
+                return true;
+
+            TargetingStylePrototype targetingPrototype = powerProto.GetTargetingStyle();
+            if (targetingPrototype == null) return Logger.WarnReturn(false, "IsInRangeInternal(): targetingPrototype == null");
+
+            if (targetingPrototype.TargetingShape == TargetingShapeType.Self)
+                return true;
+
+            if (powerProto.PowerCategory == PowerCategoryType.ProcEffect)
+                return true;
+
+            if (powerProto is MovementPowerPrototype movementPowerProto)
+            {
+                if (movementPowerProto.MoveToExactTargetLocation == false && targetingPrototype.NeedsTarget == false)
+                    return true;
+            }
+
+            // Distance to the edge of the target
+            float distance = Vector3.Distance2D(userPosition, targetPosition) - targetRadius;
+
+            // Why is this a separate thing and not baked into GetRange()?
+            if (checkType == RangeCheckType.Activation)
+                range -= powerProto.RangeActivationReduction;
+
+            // Range cannot be less than user radius. 5 appears to be additional padding
+            range = MathF.Max(userRadius, range) + 5f;
+
+            return (distance - range) <= 0f;
+        }
+
+        private bool CanBeUserCanceledNow()
+        {
+            return true;
+        }
+
+        private bool SchedulePowerEnd(in PowerActivationSettings settings)
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "SchedulePowerEnd(): Owner == null");
+
+            EndPowerFlags flags = EndPowerFlags.None;
+
+            if (Properties[PropertyEnum.PowerActiveUntilProjExpire])
+            {
+                if (Prototype is MissilePowerPrototype)
+                    return true;
+
+                float speed = GetProjectileSpeed(GetRange());
+                if (speed <= 0f) return Logger.WarnReturn(false, "SchedulePowerEnd(): speed <= 0f");
+
+                float distance = 2 * GetRange() * (1 + Properties[PropertyEnum.BounceCount]);
+                TimeSpan delay = TimeSpan.FromSeconds(distance / speed);
+
+                return SchedulePowerEnd(delay);
+            }
+
+            TimeSpan executionTime = GetFullExecutionTime() - GetChannelEndTime();
+
+            if (Prototype is MovementPowerPrototype movementPowerProto)
+            {
+                if (movementPowerProto.ConstantMoveTime == false && movementPowerProto.ChanneledMoveTime == false)
+                    executionTime += settings.MovementTime;
+            }
+
+            if (settings.Flags.HasFlag(PowerActivationSettingsFlags.Cancel) && CanBeUserCanceledNow())
+            {
+                TimeSpan activationTime = GetActivationTime();
+
+                float animSpeed = GetAnimSpeed();
+                float timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;
+
+                TimeSpan adjustedTime = activationTime + (Prototype.NoInterruptPostWindowTime * timeMult);
+                if (adjustedTime < executionTime)
+                {
+                    flags |= EndPowerFlags.ExplicitCancel;
+                    executionTime = adjustedTime;
+                }
+            }
+
+            return SchedulePowerEnd(executionTime, flags);
+        }
+
+        private bool SchedulePowerEnd(TimeSpan delay, EndPowerFlags flags = EndPowerFlags.None, bool doNotReschedule = false)
+        {
+            PowerPrototype powerProto = Prototype;
+
+            if (powerProto.ActiveUntilCancelled == false || flags.HasFlag(EndPowerFlags.Flag6) || flags.HasFlag(EndPowerFlags.Flag7))
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+
+                if (_endPowerEvent.IsValid)
+                {
+                    if (doNotReschedule == false)
+                    {
+                        scheduler.RescheduleEvent(_endPowerEvent, delay);
+                        _endPowerEvent.Get().Initialize(this, flags);
+                    }
+
+                    return true;
+                }
+
+                scheduler.ScheduleEvent(_endPowerEvent, delay > TimeSpan.Zero ? delay : TimeSpan.FromMilliseconds(1), _pendingEvents2);
+                _endPowerEvent.Get().Initialize(this, flags);
+            }
+
+            return true;
+        }
+
+        private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.EndPower(p1);
         }
     }
 }

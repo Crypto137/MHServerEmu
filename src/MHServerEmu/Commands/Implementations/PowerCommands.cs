@@ -6,6 +6,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 
@@ -57,7 +58,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Unassign(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help power assign' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help power unassign' to get help.";
 
             PrototypeId powerProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Power, @params[0], client);
             if (powerProtoRef == PrototypeId.Invalid) return string.Empty;
@@ -78,7 +79,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Activate(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help power assign' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help power activate' to get help.";
 
             PrototypeId powerProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Power, @params[0], client);
             if (powerProtoRef == PrototypeId.Invalid) return string.Empty;
@@ -93,6 +94,20 @@ namespace MHServerEmu.Commands.Implementations
             avatar.TEMP_SendActivatePowerMessage(power.PrototypeDataRef);
 
             return $"Activating power {GameDatabase.GetPrototypeName(powerProtoRef)}";
+        }
+
+        [Command("status", "Returns power status for the current avatar.\nUsage: power status", AccountUserLevel.Admin)]
+        public string Status(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            PrototypeId activePowerRef = avatar.ActivePowerRef;
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            return $"activePowerRef={GameDatabase.GetPrototypeName(activePowerRef)}, continuousPowerRef={GameDatabase.GetPrototypeName(continuousPowerRef)}";
         }
     }
 }

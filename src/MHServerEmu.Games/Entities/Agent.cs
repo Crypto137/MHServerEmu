@@ -380,7 +380,7 @@ namespace MHServerEmu.Games.Entities
 
         private static bool IsInRangeToActivatePower(Power power, WorldEntity target, Vector3 position)
         {
-            if (target != null && power.AlwaysTargetsMousePosition())
+            if (target != null && power.AlwaysTargetsMousePosition() == false)
             {
                 if (target.IsInWorld == false) return false;
                 return power.IsInRange(target, RangeCheckType.Activation);
@@ -542,9 +542,11 @@ namespace MHServerEmu.Games.Entities
                 RegionLocation.Cell.EnemySpawn(); // Calc Enemy
                                                   // ActivePowerRef = settings.PowerPrototype
 
-            if (TestAI() == false) return;
-            // If AI passed SetSimulated;
             SetSimulated(true);
+
+            // AI
+            if (TestAI() == false) return;
+
             if (AIController != null)
             {
                 var behaviorProfile = AgentPrototype?.BehaviorProfile;
@@ -665,6 +667,26 @@ namespace MHServerEmu.Games.Entities
             }
 
             return base.OnPowerUnassigned(power);
+        }
+
+        public override void OnPowerEnded(Power power, EndPowerFlags flags)
+        {
+            base.OnPowerEnded(power, flags);
+
+            PrototypeId powerProtoRef = power.PrototypeDataRef;
+
+            if (powerProtoRef == ActivePowerRef)
+            {
+                if (power.IsComboEffect())
+                {
+                    // TODO
+                }
+
+                ActivePowerRef = PrototypeId.Invalid;
+            }
+
+            if (AIController != null)
+                AIController.OnAIPowerEnded(power.PrototypeDataRef, flags);
         }
 
         #endregion

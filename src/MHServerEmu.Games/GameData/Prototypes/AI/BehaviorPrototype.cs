@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         internal bool Check(Agent aggressor, WorldEntity target)
         {
-            throw new NotImplementedException();
+            return false;   // TODO
         }
     }
 

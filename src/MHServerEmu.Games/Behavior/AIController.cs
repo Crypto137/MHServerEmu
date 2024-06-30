@@ -430,5 +430,9 @@ namespace MHServerEmu.Games.Behavior
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler?.CancelAllEvents(_pendingEvents);
         }
+
+        public void OnAIPowerEnded(PrototypeId powerProtoRef, EndPowerFlags flags)
+        {
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Powers
 
     public class NewPowerMessageHandler : IPowerMessageHandler
     {
-        private const bool OutputToLog = false;
+        private const bool VerboseOutputToLog = false;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -59,8 +59,10 @@ namespace MHServerEmu.Games.Powers
             var tryActivatePower = message.As<NetMessageTryActivatePower>();
             if (tryActivatePower == null) return Logger.WarnReturn(false, $"OnTryActivatePower(): Failed to retrieve message");
 
-            if (OutputToLog)
+            if (VerboseOutputToLog)
                 Logger.Debug($"OnTryActivatePower():\n{MessagePrinter.Print(tryActivatePower)}");
+            else
+                Logger.Trace("OnTryActivatePower()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryActivatePower.IdUserEntity);
 
@@ -84,9 +86,30 @@ namespace MHServerEmu.Games.Powers
             var powerRelease = message.As<NetMessagePowerRelease>();
             if (powerRelease == null) return Logger.WarnReturn(false, $"OnPowerRelease(): Failed to retrieve message");
 
-            if (OutputToLog)
+            if (VerboseOutputToLog)
                 Logger.Debug($"OnPowerRelease():\n{MessagePrinter.Print(powerRelease)}");
+            else
+                Logger.Trace("OnPowerRelease()");
 
+            Avatar avatar = _playerConnection.Player.GetActiveAvatarById(powerRelease.IdUserEntity);
+
+            // These checks fail due to lag, so no need to log
+            if (avatar == null) return true;
+            if (avatar.IsInWorld == false) return true;
+
+            PrototypeId powerProtoRef = (PrototypeId)powerRelease.PowerPrototypeId;
+            Power power = avatar.GetPower(powerProtoRef);
+            if (power == null) return Logger.WarnReturn(false, "OnPowerRelease(): power == null");
+
+            PowerActivationSettings settings = new(avatar.RegionLocation.Position);
+
+            if (powerRelease.HasIdTargetEntity)
+                settings.TargetEntityId = powerRelease.IdTargetEntity;
+
+            if (powerRelease.HasTargetPosition)
+                settings.TargetPosition = new(powerRelease.TargetPosition);
+
+            power.ReleasePower(settings);
             return true;
         }
 
@@ -95,8 +118,24 @@ namespace MHServerEmu.Games.Powers
             var tryCancelPower = message.As<NetMessageTryCancelPower>();
             if (tryCancelPower == null) return Logger.WarnReturn(false, $"OnTryCancelPower(): Failed to retrieve message");
 
-            if (OutputToLog)
+            if (VerboseOutputToLog)
                 Logger.Debug($"OnTryCancelPower():\n{MessagePrinter.Print(tryCancelPower)}");
+            else
+                Logger.Trace("OnTryCancelPower()");
+
+            Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryCancelPower.IdUserEntity);
+
+            // These checks fail due to lag, so no need to log
+            if (avatar == null) return true;
+            if (avatar.IsInWorld == false) return true;
+
+            PrototypeId powerProtoRef = (PrototypeId)tryCancelPower.PowerPrototypeId;
+            Power power = avatar.GetPower(powerProtoRef);
+            if (power == null) return Logger.WarnReturn(false, "OnTryCancelPower(): power == null");
+
+            EndPowerFlags flags = (EndPowerFlags)tryCancelPower.EndPowerFlags;
+            flags |= EndPowerFlags.ClientRequest;   // Always mark as a client request in case someone tries to cheat here
+            power.EndPower(flags);
 
             return true;
         }
@@ -106,9 +145,18 @@ namespace MHServerEmu.Games.Powers
             var tryCancelActivePower = message.As<NetMessageTryCancelActivePower>();
             if (tryCancelActivePower == null) return Logger.WarnReturn(false, $"OnTryCancelActivePower(): Failed to retrieve message");
 
-            if (OutputToLog)
+            if (VerboseOutputToLog)
                 Logger.Debug($"OnTryCancelActivePower():\n{MessagePrinter.Print(tryCancelActivePower)}");
+            else
+                Logger.Trace("OnTryCancelActivePower()");
 
+            Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryCancelActivePower.IdUserEntity);
+
+            // These checks fail due to lag, so no need to log
+            if (avatar == null) return true;
+            if (avatar.IsInWorld == false) return true;
+
+            avatar.ActivePower?.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.ClientRequest);
             return true;
         }
 
@@ -117,9 +165,20 @@ namespace MHServerEmu.Games.Powers
             var continuousPowerUpdate = message.As<NetMessageContinuousPowerUpdateToServer>();
             if (continuousPowerUpdate == null) return Logger.WarnReturn(false, $"OnContinuousPowerUpdate(): Failed to retrieve message");
 
-            if (OutputToLog)
+            if (VerboseOutputToLog)
                 Logger.Debug($"OnContinuousPowerUpdate():\n{MessagePrinter.Print(continuousPowerUpdate)}");
+            else
+                Logger.Trace("OnContinuousPowerUpdate()");
 
+            Avatar avatar = _playerConnection.Player.GetActiveAvatarByIndex(continuousPowerUpdate.AvatarIndex);
+            if (avatar == null) return true;
+
+            PrototypeId powerProtoRef = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
+            ulong targetId = continuousPowerUpdate.HasIdTargetEntity ? continuousPowerUpdate.IdTargetEntity : 0;
+            Vector3 targetPosition = continuousPowerUpdate.HasTargetPosition ? new(continuousPowerUpdate.TargetPosition) : Vector3.Zero;
+            uint randomSeed = continuousPowerUpdate.HasRandomSeed ? continuousPowerUpdate.RandomSeed : 0;
+
+            avatar.SetContinuousPower(powerProtoRef, targetId, targetPosition, randomSeed);
             return true;
         }
 
@@ -128,8 +187,14 @@ namespace MHServerEmu.Games.Powers
             var cancelPendingAction = message.As<NetMessageCancelPendingAction>();
             if (cancelPendingAction == null) return Logger.WarnReturn(false, $"OnCancelPendingAction(): Failed to retrieve message");
 
-            if (OutputToLog)
+            if (VerboseOutputToLog)
                 Logger.Debug($"OnCancelPendingAction():\n{MessagePrinter.Print(cancelPendingAction)}");
+            else
+                Logger.Trace("OnCancelPendingAction()");
+
+            Avatar avatar = _playerConnection.Player.GetActiveAvatarByIndex(cancelPendingAction.AvatarIndex);
+            if (avatar == null) return true;
+
 
             return true;
         }

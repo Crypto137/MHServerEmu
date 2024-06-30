@@ -3,13 +3,15 @@ using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,17 +19,17 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
-using static MHServerEmu.Games.Entities.Inventories.Inventory;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
     public class Avatar : Agent
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
 
-        private EventPointer<TEMP_SendActivatePowerMessageEvent> _swapInPowerEvent = new();
+        private readonly EventPointer<TEMP_SendActivatePowerMessageEvent> _swapInPowerEvent = new();
+        private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
 
         private ReplicatedVariable<string> _playerName = new(0, string.Empty);
         private ulong _ownerPlayerDbId;
@@ -36,6 +38,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
+
+        private readonly PendingPowerData _continuousPowerData = new();
+        private readonly PendingAction _pendingAction = new();
 
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Value; }
@@ -51,6 +56,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
+
+        public bool IsContinuouslyAttacking { get => _continuousPowerData.PowerProtoRef != PrototypeId.Invalid; }
+        public PrototypeId ContinuousPowerDataRef { get => _continuousPowerData.PowerProtoRef; }
+        public ulong ContinuousAttackTarget { get => _continuousPowerData.TargetId; }
+
+        public Power PendingPower { get => GetPower(_pendingAction.PowerProtoRef); }
+        public PrototypeId PendingPowerDataRef { get => _pendingAction.PowerProtoRef; }
+        public PendingActionState PendingActionState { get => _pendingAction.PendingActionState; }
 
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
 
@@ -92,7 +105,147 @@ namespace MHServerEmu.Games.Entities.Avatars
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
+        #region World and Positioning
+
+        public override bool CanMove()
+        {
+            if (base.CanMove() == false)
+                return IsInPendingActionState(PendingActionState.FindingLandingSpot);
+
+            return PendingActionState != PendingActionState.VariableActivation && PendingActionState != PendingActionState.AvatarSwitchInProgress;
+        }
+
+        #endregion
+
         #region Powers
+
+        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed)
+        {
+            _continuousPowerData.SetData(powerProtoRef, targetId, targetPosition, InvalidId);
+            _continuousPowerData.RandomSeed = randomSeed;
+
+            if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
+                ScheduleRecheckContinuousPower(StandardContinuousPowerRecheckDelay);
+        }
+
+        public void ClearContinuousPower()
+        {
+            _continuousPowerData.SetData(PrototypeId.Invalid, InvalidId, Vector3.Zero, InvalidId);
+            _continuousPowerData.RandomSeed = 0;
+
+            if (_recheckContinuousPowerEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_recheckContinuousPowerEvent);
+        }
+
+        public void CheckContinuousPower()
+        {
+            // We could make this a bit cleaner with just a little bit of goto... After all... why not? Why shouldn't I?
+            if (IsInWorld && _continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
+            {
+                ulong targetId = _continuousPowerData.TargetId;
+                Vector3 targetPosition = _continuousPowerData.TargetPosition;
+
+                Power continuousPower = GetPower(_continuousPowerData.PowerProtoRef);
+                if (continuousPower == null)
+                {
+                    Logger.Warn(string.Format(
+                        "CheckContinuousPower(): Could not find continuous power to activate after previous power end.\nAvatar: {0}\nPower proto:{1}",
+                        this,
+                        GameDatabase.GetPrototypeName(_continuousPowerData.PowerProtoRef)));
+                    return;
+                }
+
+                // We should either have no active power or the continuous powers needs to be recurring
+                if (IsExecutingPower == false || (ActivePowerRef == _continuousPowerData.PowerProtoRef && continuousPower.IsRecurring()))
+                {
+                    WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+                    bool targetIsValid = true;
+
+                    bool targetIsAvailable = target != null && target.IsInWorld && target.IsTargetable(this);
+                    if (continuousPower.NeedsTarget())
+                    {
+                        // The power needs a target and the specified target is not available
+                        if (targetIsAvailable == false)
+                            targetIsValid = false;
+                    }
+                    else if (targetId != InvalidId && targetIsAvailable == false)
+                    {
+                        // The power does not need a target, but it has one anyway, but it is not available
+                        targetIsValid = false;
+                    }
+
+                    if (targetIsValid)
+                    {
+                        if (target?.RegionLocation.IsValid() == true)
+                        {
+                            // Update target position
+                            switch (continuousPower.GetTargetingShape())
+                            {
+                                case TargetingShapeType.Self:
+                                case TargetingShapeType.SingleTarget:
+                                    targetPosition = target.RegionLocation.Position;
+                                    break;
+
+                                case TargetingShapeType.SkillShot:
+                                case TargetingShapeType.SkillShotAlongGround:
+                                    if (continuousPower.AlwaysTargetsMousePosition() == false)
+                                        targetPosition = target.RegionLocation.Position;
+                                    break;
+
+                                default:
+                                    if (continuousPower.AlwaysTargetsMousePosition() == false)
+                                        targetPosition = target.RegionLocation.ProjectToFloor();
+                                    break;
+                            }
+                        }
+
+                        if (continuousPower.IsActive && continuousPower.IsRecurring())
+                        {
+                            // Update target position for recurring powers
+                            _continuousPowerData.SetData(_continuousPowerData.PowerProtoRef, _continuousPowerData.TargetId,
+                                targetPosition, _continuousPowerData.SourceItemId);
+                        }
+                        else
+                        {
+                            // Activate the power again
+                            PowerActivationSettings settings = new(targetId, targetPosition, RegionLocation.Position);
+                            settings.PowerRandomSeed = _continuousPowerData.RandomSeed;
+                            settings.Flags |= PowerActivationSettingsFlags.Continuous;
+
+                            // Update random seed
+                            GRandom random = new((int)_continuousPowerData.RandomSeed);
+                            _continuousPowerData.RandomSeed = (uint)random.Next(0, 10000);
+
+                            // We omit ActivateContinuousPower(), continuousPower.UpdateContinuousPowerActivationSettings()
+                            // and onContinuousPowerResumed becaused they are not really needed on the server.
+
+                            PowerUseResult result = CanActivatePower(continuousPower, targetId, targetPosition);
+                            if (result == PowerUseResult.Success)
+                                ActivatePower(continuousPower, in settings);
+                            else
+                                Logger.Debug($"CheckContinuousPower(): result={result}");
+                        }
+                    }
+                }
+
+                // onContinuousPowerFailedActivate()
+            }
+
+            if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
+                ScheduleRecheckContinuousPower(StandardContinuousPowerRecheckDelay);
+        }
+
+        public bool IsInPendingActionState(PendingActionState pendingActionState)
+        {
+            return _pendingAction.PendingActionState == pendingActionState;
+        }
+
+        public void CancelPendingAction()
+        {
+            Logger.Debug("CancelPendingAction()");
+            _pendingAction.Clear();
+        }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
         {
@@ -186,14 +339,25 @@ namespace MHServerEmu.Games.Entities.Avatars
             return info.IsValid;
         }
 
+        public bool IsValidTargetForCurrentPower(WorldEntity target)
+        {
+            throw new NotImplementedException();
+        }
+
         public void ScheduleSwapInPower()
         {
             ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
         }
 
-        public bool IsValidTargetForCurrentPower(WorldEntity target)
+        private void ScheduleRecheckContinuousPower(TimeSpan delay)
         {
-            throw new NotImplementedException();
+            if (_recheckContinuousPowerEvent.IsValid)
+            {
+                Game.GameEventScheduler.RescheduleEvent(_recheckContinuousPowerEvent, delay);
+                return;
+            }
+
+            ScheduleEntityEvent(_recheckContinuousPowerEvent, delay);
         }
 
         private bool AssignDefaultAvatarPowers()
@@ -276,6 +440,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).CheckContinuousPower();
         }
 
         #endregion
@@ -433,7 +602,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
-            SetSimulated(false); // For AI
         }
 
         public override void OnExitedWorld()

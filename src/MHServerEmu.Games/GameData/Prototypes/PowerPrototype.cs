@@ -172,6 +172,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TimeSpan ChannelEndTime { get => TimeSpan.FromMilliseconds(ChannelEndTimeMS); }
         [DoNotCopy]
         public TimeSpan ChargeTime { get => TimeSpan.FromMilliseconds(ChargingTimeMS); }
+        [DoNotCopy]
+        public TimeSpan NoInterruptPreWindowTime { get => TimeSpan.FromMilliseconds(Math.Min(NoInterruptPreWindowMS, (int)(AnimationTimeMS * AnimationContactTimePercent))); }
+        [DoNotCopy]
+        public TimeSpan NoInterruptPostWindowTime { get => TimeSpan.FromMilliseconds(Math.Min(NoInterruptPostWindowMS, (int)(AnimationTimeMS * (1f - AnimationContactTimePercent)))); }
 
         public static PrototypeId RecursiveGetPowerRefOfPowerTypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
         {
@@ -234,6 +238,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? new());
 
             return Eval.RunFloat(Range, contextData);            
+        }
+
+        public float GetProjectilesSpeed(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? new());
+
+            return Eval.RunFloat(ProjectileSpeed, contextData);
         }
 
         public TimeSpan GetChannelLoopTime(PropertyCollection powerProperties, PropertyCollection ownerProperties)
