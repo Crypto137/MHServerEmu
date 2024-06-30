@@ -121,7 +121,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed)
         {
-            Logger.Debug($"SetContinuousPower(): {GameDatabase.GetPrototypeName(powerProtoRef)}");
             _continuousPowerData.SetData(powerProtoRef, targetId, targetPosition, InvalidId);
             _continuousPowerData.RandomSeed = randomSeed;
 
@@ -131,7 +130,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void ClearContinuousPower()
         {
-            Logger.Debug("ClearContinuousPower()");
             _continuousPowerData.SetData(PrototypeId.Invalid, InvalidId, Vector3.Zero, InvalidId);
             _continuousPowerData.RandomSeed = 0;
 
@@ -226,7 +224,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                             if (result == PowerUseResult.Success)
                                 ActivatePower(continuousPower, in settings);
                             else
-                                Logger.Warn($"CheckContinuousPower(): Cannot activate continuous power ({result})");
+                                Logger.Debug($"CheckContinuousPower(): result={result}");
                         }
                     }
                 }
@@ -604,7 +602,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
-            SetSimulated(false); // For AI
         }
 
         public override void OnExitedWorld()

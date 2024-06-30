@@ -320,12 +320,32 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsInRange(WorldEntity target, RangeCheckType checkType)
         {
-            return true;
+            if (target == null) return Logger.WarnReturn(false, "IsInRange(): target == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+
+            float range = GetRange();
+            Vector3 userPosition = Owner.RegionLocation.Position;
+            float userRadius = Owner.Bounds.Radius;
+            Vector3 targetPosition = target.RegionLocation.Position;
+            float targetRadius = target.Bounds.Radius;
+
+            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, checkType, targetRadius);
         }
 
-        public bool IsInRange(Vector3 position, RangeCheckType activation)
+        public bool IsInRange(Vector3 targetPosition, RangeCheckType checkType)
         {
-            return true;
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
+
+            float range = GetRange();
+            Vector3 userPosition = Owner.RegionLocation.Position;
+            float userRadius = Owner.Bounds.Radius;
+
+            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, checkType, 0f);
         }
 
         #region State Accessors
@@ -1165,6 +1185,40 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private static bool IsInRangeInternal(PowerPrototype powerProto, float range, Vector3 userPosition, float userRadius,
+            Vector3 targetPosition, RangeCheckType checkType, float targetRadius)
+        {
+            if (powerProto.Activation == PowerActivationType.Passive)
+                return true;
+
+            TargetingStylePrototype targetingPrototype = powerProto.GetTargetingStyle();
+            if (targetingPrototype == null) return Logger.WarnReturn(false, "IsInRangeInternal(): targetingPrototype == null");
+
+            if (targetingPrototype.TargetingShape == TargetingShapeType.Self)
+                return true;
+
+            if (powerProto.PowerCategory == PowerCategoryType.ProcEffect)
+                return true;
+
+            if (powerProto is MovementPowerPrototype movementPowerProto)
+            {
+                if (movementPowerProto.MoveToExactTargetLocation == false && targetingPrototype.NeedsTarget == false)
+                    return true;
+            }
+
+            // Distance to the edge of the target
+            float distance = Vector3.Distance2D(userPosition, targetPosition) - targetRadius;
+
+            // Why is this a separate thing and not baked into GetRange()?
+            if (checkType == RangeCheckType.Activation)
+                range -= powerProto.RangeActivationReduction;
+
+            // Range cannot be less than user radius. 5 appears to be additional padding
+            range = MathF.Max(userRadius, range) + 5f;
+
+            return (distance - range) <= 0f;
+        }
+
         private bool CanBeUserCanceledNow()
         {
             return true;
@@ -1213,7 +1267,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            Logger.Debug($"SchedulePowerEnd(): executionTime={executionTime.TotalMilliseconds}, flags={flags}");
             return SchedulePowerEnd(executionTime, flags);
         }
 
