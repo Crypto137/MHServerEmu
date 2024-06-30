@@ -237,6 +237,7 @@ namespace MHServerEmu.Games.Entities
                         ConditionEntityCounter[context.Key]++;
                         missionEvent = true;
                     }
+                    // Hardcoded part
                     if (targetAvatar) OLD_AvatarEnter(target as Avatar, missionRef, conditionProto);
                 }
 
@@ -264,6 +265,7 @@ namespace MHServerEmu.Games.Entities
                         ConditionEntityCounter[context.Key]--;
                         missionEvent = true;
                     }
+                    // Hardcoded part
                     if (targetAvatar) OLD_AvatarLeave(target as Avatar, missionRef, conditionProto);
                 }
 
@@ -276,12 +278,19 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        #region hardcoded
+
         public static MissionPrototypeId[] HotspotEnterKismetControllers = new MissionPrototypeId[]
         {
             MissionPrototypeId.RaftNPEVenomKismetController,
             MissionPrototypeId.RaftNPEElectroKismetController,
             MissionPrototypeId.RaftNPEGreenGoblinKismetController,
             MissionPrototypeId.RaftNPEJuggernautKismetController,
+            MissionPrototypeId.OpVultureKismetController, 
+            MissionPrototypeId.CH06BlobKismetController,
+            MissionPrototypeId.CH07MrSinisterKismetController,
+            MissionPrototypeId.CH07SabretoothKismetController,
+            //MissionPrototypeId.CH08MODOKSpawnKismetController, // Client blocked
         };
 
         public static MissionPrototypeId[] HotspotLeaveKismetControllers = new MissionPrototypeId[]
@@ -302,14 +311,32 @@ namespace MHServerEmu.Games.Entities
                     if (avatar.GetOwner() is not Player player) return;
                     if (mission.Objectives.IsNullOrEmpty()) return;
                     var objective = mission.Objectives[0];
-                    if (objective == null || objective.OnSuccessActions.IsNullOrEmpty()) return;
-                    var missionKismetSeq = objective.OnSuccessActions[0] as MissionActionPlayKismetSeqPrototype;
+                    if (MissionPrototypeId.CH08MODOKSpawnKismetController == (MissionPrototypeId)missionRef)
+                        objective = mission.Objectives[3];
+                    MissionActionPlayKismetSeqPrototype missionKismetSeq = null;
+                    if (objective != null && objective.OnSuccessActions.HasValue()) 
+                        missionKismetSeq = objective.OnSuccessActions[0] as MissionActionPlayKismetSeqPrototype;
+                    else if(mission.OnSuccessActions.HasValue()) 
+                        missionKismetSeq = mission.OnSuccessActions[0] as MissionActionPlayKismetSeqPrototype;
+                    if (missionKismetSeq == null) return;
                     var kismetSeq = missionKismetSeq.KismetSeqPrototype;
                     avatar.Properties[missionReset] = Region.Id;
+                    if (objective.InteractionsWhenActive.HasValue() && objective.InteractionsWhenActive[0] is EntityVisibilitySpecPrototype visibilitySpec)
+                        OLD_HideEntity(visibilitySpec);
                     player.PlayKismetSeq(kismetSeq);
                 }
                 // Logger.Warn($"AvatarEnter {avatar} {mission}");
             }
+        }
+
+        private void OLD_HideEntity(EntityVisibilitySpecPrototype visibilitySpec) 
+        {
+            HashSet<PrototypeId> refs = new();
+            visibilitySpec.EntityFilter.GetEntityDataRefs(refs);
+            if (visibilitySpec.Visible == false && refs.Count > 0)
+                foreach(var entity in RegionLocation.Cell.Entities)
+                    if (refs.Contains(entity.PrototypeDataRef))
+                        entity.Properties[PropertyEnum.Visible] = false;
         }
 
         private void OLD_AvatarLeave(Avatar avatar, PrototypeId missionRef, MissionConditionPrototype conditionProto)
@@ -334,6 +361,8 @@ namespace MHServerEmu.Games.Entities
                 // Logger.Warn($"AvatarLeave {avatar} {mission}");
             }
         }
+
+        #endregion
 
         private void HandleOverlapBegin_Player(Avatar avatar)
         {

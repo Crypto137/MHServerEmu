@@ -489,6 +489,11 @@ namespace MHServerEmu.Games.Missions
             RaftNPEVenomKismetController = 6265104569686237654,
             RaftNPEGreenGoblinKismetController = 8708148294014084157,
             RaftNPEQuinjetKismetController = 3549921242402792113,
+            OpVultureKismetController = 1433700762134324290,
+            CH06BlobKismetController = 8503609374989820818,
+            CH07MrSinisterKismetController = 10313743698614297996,
+            CH07SabretoothKismetController = 1519881959113893239,
+            CH08MODOKSpawnKismetController = 15291664867109315779,
         }
     }
 }

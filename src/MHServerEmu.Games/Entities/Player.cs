@@ -944,6 +944,20 @@ namespace MHServerEmu.Games.Entities
                 KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
                 SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
             }
+            else if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.OpDailyBugleVultureKismet)
+            {
+                // TODO trigger by MissionManager
+                foreach (var entity in CurrentAvatar.RegionLocation.Cell.Entities)
+                    if ((KismetBosses)entity.PrototypeDataRef == KismetBosses.EGD15GVulture)
+                        entity.Properties[PropertyEnum.Visible] = true;
+            }
+            else if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.SinisterEntrance)
+            {
+                // TODO trigger by MissionManager
+                foreach (var entity in CurrentAvatar.RegionLocation.Cell.Entities)
+                    if ((KismetBosses)entity.PrototypeDataRef == KismetBosses.MrSinisterCH7)
+                        entity.Properties[PropertyEnum.Visible] = true;
+            }
         }
 
         public override string ToString()
