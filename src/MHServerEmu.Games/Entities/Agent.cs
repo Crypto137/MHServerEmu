@@ -667,6 +667,26 @@ namespace MHServerEmu.Games.Entities
             return base.OnPowerUnassigned(power);
         }
 
+        public override void OnPowerEnded(Power power, EndPowerFlags flags)
+        {
+            base.OnPowerEnded(power, flags);
+
+            PrototypeId powerProtoRef = power.PrototypeDataRef;
+
+            if (powerProtoRef == ActivePowerRef)
+            {
+                if (power.IsComboEffect())
+                {
+                    // TODO
+                }
+
+                ActivePowerRef = PrototypeId.Invalid;
+            }
+
+            if (AIController != null)
+                AIController.OnAIPowerEnded(power.PrototypeDataRef, flags);
+        }
+
         #endregion
 
         public override bool IsSummonedPet()

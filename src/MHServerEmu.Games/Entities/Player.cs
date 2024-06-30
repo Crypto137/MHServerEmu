@@ -787,12 +787,14 @@ namespace MHServerEmu.Games.Entities
 
         public Avatar GetActiveAvatarById(ulong avatarEntityId)
         {
-            if (CurrentAvatar.Id == avatarEntityId)
-                return CurrentAvatar;
-
             // TODO: Secondary avatar for consoles?
+            return (CurrentAvatar.Id == avatarEntityId) ? CurrentAvatar : null;
+        }
 
-            return null;
+        public Avatar GetActiveAvatarByIndex(int index)
+        {
+            // TODO: Secondary avatar for consoles?
+            return (index == 0) ? CurrentAvatar : null;
         }
         
         public IEnumerable<Avatar> IterateAvatars()

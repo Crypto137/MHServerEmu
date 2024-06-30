@@ -244,9 +244,16 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
+        public void ReleasePower(in PowerActivationSettings settings)
+        {
+            Logger.Debug($"ReleasePower(): {Prototype}");
+        }
+
         public bool EndPower(EndPowerFlags flags)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"EndPower(): {Prototype} (flags={flags})");
+            Owner?.OnPowerEnded(this, flags);
+            return true;
         }
 
         public bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,

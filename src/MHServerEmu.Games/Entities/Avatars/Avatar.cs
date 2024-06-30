@@ -3,8 +3,8 @@ using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -17,9 +17,7 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
-using static MHServerEmu.Games.Entities.Inventories.Inventory;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -51,6 +49,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool IsMovementAuthoritative => false;
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
+
+        public bool IsContinuouslyAttacking { get; }
+        public PrototypeId ContinuousPowerDataRef { get; }
+        public ulong ContinuousAttackTarget { get; }
 
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
 
@@ -93,6 +95,20 @@ namespace MHServerEmu.Games.Entities.Avatars
         }
 
         #region Powers
+
+        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed)
+        {
+            Logger.Debug($"SetContinuousPower(): {GameDatabase.GetPrototypeName(powerProtoRef)}");
+        }
+
+        public void ClearContinuousPower()
+        {
+        }
+
+        public void CancelPendingAction()
+        {
+            Logger.Debug("CancelPendingAction()");
+        }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
         {
@@ -186,14 +202,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             return info.IsValid;
         }
 
-        public void ScheduleSwapInPower()
-        {
-            ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
-        }
-
         public bool IsValidTargetForCurrentPower(WorldEntity target)
         {
             throw new NotImplementedException();
+        }
+
+        public void ScheduleSwapInPower()
+        {
+            ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
         }
 
         private bool AssignDefaultAvatarPowers()
