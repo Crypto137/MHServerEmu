@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -24,8 +25,10 @@ namespace MHServerEmu.Games.Entities.Avatars
     public class Avatar : Agent
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
 
-        private EventPointer<TEMP_SendActivatePowerMessageEvent> _swapInPowerEvent = new();
+        private readonly EventPointer<TEMP_SendActivatePowerMessageEvent> _swapInPowerEvent = new();
+        private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
 
         private ReplicatedVariable<string> _playerName = new(0, string.Empty);
         private ulong _ownerPlayerDbId;
@@ -34,6 +37,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
+
+        private readonly PendingPowerData _continuousPowerData = new();
+        private readonly PendingAction _pendingAction = new();
 
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Value; }
@@ -50,9 +56,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override bool CanBeRepulsed => false;
         public override bool CanRepulseOthers => false;
 
-        public bool IsContinuouslyAttacking { get; }
-        public PrototypeId ContinuousPowerDataRef { get; }
-        public ulong ContinuousAttackTarget { get; }
+        public bool IsContinuouslyAttacking { get => _continuousPowerData.PowerProtoRef != PrototypeId.Invalid; }
+        public PrototypeId ContinuousPowerDataRef { get => _continuousPowerData.PowerProtoRef; }
+        public ulong ContinuousAttackTarget { get => _continuousPowerData.TargetId; }
+
+        public Power PendingPower { get => GetPower(_pendingAction.PowerProtoRef); }
+        public PrototypeId PendingPowerDataRef { get => _pendingAction.PowerProtoRef; }
+        public PendingActionState PendingActionState { get => _pendingAction.PendingActionState; }
 
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
 
@@ -94,20 +104,56 @@ namespace MHServerEmu.Games.Entities.Avatars
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
+        #region World and Positioning
+
+        public override bool CanMove()
+        {
+            if (base.CanMove() == false)
+                return IsInPendingActionState(PendingActionState.FindingLandingSpot);
+
+            return PendingActionState != PendingActionState.VariableActivation && PendingActionState != PendingActionState.AvatarSwitchInProgress;
+        }
+
+        #endregion
+
         #region Powers
 
         public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed)
         {
             Logger.Debug($"SetContinuousPower(): {GameDatabase.GetPrototypeName(powerProtoRef)}");
+            _continuousPowerData.SetData(powerProtoRef, targetId, targetPosition, InvalidId);
+            _continuousPowerData.RandomSeed = randomSeed;
+
+            if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
+                ScheduleRecheckContinuousPower(StandardContinuousPowerRecheckDelay);
         }
 
         public void ClearContinuousPower()
         {
+            Logger.Debug("ClearContinuousPower()");
+            _continuousPowerData.SetData(PrototypeId.Invalid, InvalidId, Vector3.Zero, InvalidId);
+            _continuousPowerData.RandomSeed = 0;
+
+            if (_recheckContinuousPowerEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_recheckContinuousPowerEvent);
+        }
+
+        public void CheckContinuousPower()
+        {
+            Logger.Debug($"CheckContinuousPower(): {GameDatabase.GetPrototypeName(_continuousPowerData.PowerProtoRef)}");
+            if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
+                ScheduleRecheckContinuousPower(StandardContinuousPowerRecheckDelay);
+        }
+
+        public bool IsInPendingActionState(PendingActionState pendingActionState)
+        {
+            return _pendingAction.PendingActionState == pendingActionState;
         }
 
         public void CancelPendingAction()
         {
             Logger.Debug("CancelPendingAction()");
+            _pendingAction.Clear();
         }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
@@ -212,6 +258,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
         }
 
+        private void ScheduleRecheckContinuousPower(TimeSpan delay)
+        {
+            if (_recheckContinuousPowerEvent.IsValid)
+            {
+                Game.GameEventScheduler.RescheduleEvent(_recheckContinuousPowerEvent, delay);
+                return;
+            }
+
+            ScheduleEntityEvent(_recheckContinuousPowerEvent, delay);
+        }
+
         private bool AssignDefaultAvatarPowers()
         {
             Player player = GetOwnerOfType<Player>();
@@ -292,6 +349,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).CheckContinuousPower();
         }
 
         #endregion
