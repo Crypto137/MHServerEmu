@@ -163,11 +163,11 @@ namespace MHServerEmu.Games.Generators.Population
             else if (metastate is MetaStateMissionSequencerPrototype missionSequencer)
             {
                 if (missionSequencer.Sequence.HasValue())
-                {
-                    var missionEntry = missionSequencer.Sequence.First();  
-                    Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
-                    AddRequiredObjects(missionEntry.PopulationObjects, missionEntry.PopulationAreaRestriction, null);
-                }
+                    foreach (var missionEntry in missionSequencer.Sequence)
+                    {
+                        Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
+                        AddRequiredObjects(missionEntry.PopulationObjects, missionEntry.PopulationAreaRestriction, null);
+                    }
             }
             else if (metastate is MetaStateWaveInstancePrototype waveInstance)
             {
@@ -178,7 +178,9 @@ namespace MHServerEmu.Games.Generators.Population
             else if (metastate is MetaStatePopulationMaintainPrototype popProto && popProto.PopulationObjects.HasValue())
             {               
                 Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
-                AddRequiredObjects(popProto.PopulationObjects, popProto.RestrictToAreas, popProto.RestrictToCells);
+                var areas = popProto.RestrictToAreas;
+                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
+                AddRequiredObjects(popProto.PopulationObjects, areas, popProto.RestrictToCells);
             }
         }
 

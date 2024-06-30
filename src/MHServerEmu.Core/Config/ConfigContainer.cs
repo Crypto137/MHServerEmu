@@ -5,12 +5,15 @@ namespace MHServerEmu.Core.Config
     /// <summary>
     /// Provides access to config values.
     /// </summary>
+    /// <remarks>
+    /// Classes that implement this should have the Config suffix in their names (e.g. FooConfig). Ini section and key names are derived from class and property names.
+    /// </remarks>
     public abstract class ConfigContainer
     {
         /// <summary>
-        /// Constructs a new instance of ConfigContainer and populates its property values using reflection.
+        /// Initializes this <see cref="ConfigContainer"/> instance from the provided <see cref="IniFile"/> using reflection.
         /// </summary>
-        public ConfigContainer(IniFile configFile)
+        internal void Initialize(IniFile configFile)
         {
             Type type = GetType();                                          // Use reflection to populate our config
             string section = type.Name.Replace("Config", string.Empty);     // Remove the Config suffix from the config class
@@ -20,30 +23,19 @@ namespace MHServerEmu.Core.Config
             {
                 if (property.IsDefined(typeof(ConfigIgnoreAttribute))) continue;   // Ignore specified properties
 
-                switch (Type.GetTypeCode(property.PropertyType))
+                object value = Type.GetTypeCode(property.PropertyType) switch
                 {
-                    case TypeCode.String:
-                        property.SetValue(this, configFile.ReadString(section, property.Name));
-                        break;
-                    case TypeCode.Boolean:
-                        property.SetValue(this, configFile.ReadBool(section, property.Name));
-                        break;
-                    case TypeCode.Int32:
-                        property.SetValue(this, configFile.ReadInt32(section, property.Name));
-                        break;
-                    case TypeCode.UInt32:
-                        property.SetValue(this, configFile.ReadUInt32(section, property.Name));
-                        break;
-                    case TypeCode.Int64:
-                        property.SetValue(this, configFile.ReadInt64(section, property.Name));
-                        break;
-                    case TypeCode.UInt64:
-                        property.SetValue(this, configFile.ReadUInt64(section, property.Name));
-                        break;
+                    TypeCode.String     => configFile.GetString(section, property.Name),
+                    TypeCode.Boolean    => configFile.GetBool(section, property.Name),
+                    TypeCode.Int32      => configFile.GetInt32(section, property.Name),
+                    TypeCode.UInt32     => configFile.GetUInt32(section, property.Name),
+                    TypeCode.Int64      => configFile.GetInt64(section, property.Name),
+                    TypeCode.UInt64     => configFile.GetUInt64(section, property.Name),
+                    _ => throw new NotImplementedException($"Value type {property.PropertyType} is not supported for config files."),
+                };
 
-                    default:
-                        throw new NotImplementedException($"Value type {property.PropertyType} is not supported for config files.");
-                }
+                if (value == null) continue;    // Skip assignment if we weren't able to get the value from config
+                property.SetValue(this, value);
             }
         }
     }

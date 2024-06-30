@@ -5,7 +5,9 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
@@ -26,7 +28,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -43,9 +45,26 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)TargetPrototypeId.CosmicDoopSectorSpaceStartTarget);
 
             return "Travel to Cosmic Doop Sector";
+        }
+    }
+
+    [CommandGroup("jail", "Travel to East Side: Detention Facility (old).", AccountUserLevel.User)]
+    public class JailCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Jail(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.UpperEastSideRegion, (PrototypeId)TargetPrototypeId.JailTarget);
+
+            return "Travel to East Side: Detention Facility (old)";
         }
     }
 
@@ -60,7 +79,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AsgardCowLevelRegion, (PrototypeId)TargetPrototypeId.AsgardCowLevelStartTarget);
 
             return "Travel to Bovineheim";
         }
@@ -77,7 +96,7 @@ namespace MHServerEmu.Commands
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.ClassifiedBovineSectorRegion, (PrototypeId)TargetPrototypeId.BovineSectorStartTarget);
 
             return "Travel to Classified Bovine Sector.";
         }
@@ -189,7 +208,6 @@ namespace MHServerEmu.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
-            if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
             {
@@ -306,7 +324,10 @@ namespace MHServerEmu.Commands
         public string Points(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (ConfigManager.GameOptions.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
+
+            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            if (config.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
+
             client.SendMessage(1, Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.OmegaPoints), 7500));
             return "Setting Omega points to 7500.";
         }

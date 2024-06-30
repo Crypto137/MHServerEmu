@@ -78,6 +78,8 @@ namespace MHServerEmu.Games.GameData
             Logger.Info("Initializing game database...");
             var stopwatch = Stopwatch.StartNew();
 
+            var config = ConfigManager.Instance.GetConfig<GameDataConfig>();
+
             // Initialize PrototypeClassManager
             PrototypeClassManager = new();
 
@@ -115,7 +117,7 @@ namespace MHServerEmu.Games.GameData
             // initializeKeywordPrototypes
 
             // Preload all prototypes if needed
-            if (ConfigManager.GameData.LoadAllPrototypes)
+            if (config.LoadAllPrototypes)
             {
                 var loadAllWatch = Stopwatch.StartNew();
 
