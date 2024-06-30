@@ -481,7 +481,14 @@ namespace MHServerEmu.Games.Missions
 
             PoliceVsShark = 9206170907141351562,
             CivTrappedUnderRhino = 12254878804928310140,
-            NamedEliteLizardMonkey = 1618332889826339901, 
+            NamedEliteLizardMonkey = 1618332889826339901,
+
+            // KismetController
+            RaftNPEJuggernautKismetController = 12317849348317127661,
+            RaftNPEElectroKismetController = 910214907513610911,
+            RaftNPEVenomKismetController = 6265104569686237654,
+            RaftNPEGreenGoblinKismetController = 8708148294014084157,
+            RaftNPEQuinjetKismetController = 3549921242402792113,
         }
     }
 }

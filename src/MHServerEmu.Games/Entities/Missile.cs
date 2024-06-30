@@ -12,6 +12,7 @@ namespace MHServerEmu.Games.Entities
         private MissileCreationContextPrototype _contextPrototype = null;
         public MissileCreationContextPrototype MissileCreationContextPrototype { get => _contextPrototype; }
         public Random Random { get; private set; }
+        public bool IsMovedIndependentlyOnClient { get; internal set; }
 
         public Missile(Game game) : base(game) 
         { 

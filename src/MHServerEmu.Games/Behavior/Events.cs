@@ -47,4 +47,28 @@ namespace MHServerEmu.Games.Behavior
     {
         public WorldEntity AggroEntity;
     }
+
+    public struct EntityEnteredMissionHotspotGameEvent
+    {
+        public WorldEntity Target;
+        public Hotspot Hotspot;
+
+        public EntityEnteredMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot)
+        {
+            Target = target;
+            Hotspot = hotspot;
+        }
+    }
+
+    public struct EntityLeftMissionHotspotGameEvent
+    {
+        public WorldEntity Target;
+        public Hotspot Hotspot;
+
+        public EntityLeftMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot)
+        {
+            Target = target;
+            Hotspot = hotspot;
+        }
+    }
 }

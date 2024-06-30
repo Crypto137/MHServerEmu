@@ -1457,6 +1457,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
+        public virtual void OnSkillshotReflected(Missile missile) { }
 
         #endregion
 

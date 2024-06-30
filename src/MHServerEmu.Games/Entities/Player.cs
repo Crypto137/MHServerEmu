@@ -943,9 +943,6 @@ namespace MHServerEmu.Games.Entities
                 // TODO trigger by hotspot
                 KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
                 SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-
-                kismetSeqRef = KismetSeqPrototypeId.RaftNPEJuggernautEscape;
-                SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
             }
         }
 

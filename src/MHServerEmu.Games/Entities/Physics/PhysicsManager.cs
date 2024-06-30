@@ -543,16 +543,19 @@ namespace MHServerEmu.Games.Entities.Physics
         private static void NotifyEntityCollision(WorldEntity who, WorldEntity whom, Vector3 whoPos)
         {
             who?.OnCollide(whom, whoPos);
+            // TODO EntityCollisionEvent
         }
 
         private static void NotifyEntityOverlapBegin(WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
             who?.OnOverlapBegin(whom, whoPos, whomPos);
+            // TODO EntityCollisionEvent
         }
 
         private static void NotifyEntityOverlapEnd(WorldEntity who, WorldEntity whom)
         {
             who?.OnOverlapEnd(whom);
+            // TODO EntityCollisionEvent
         }
 
         private void UpdateOverlapEntryHelper(EntityPhysics entityPhysics, WorldEntity otherEntity)
