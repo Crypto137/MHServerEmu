@@ -915,4 +915,11 @@ namespace MHServerEmu.Games.Navi
         HeightMap = 2,
         Failed = 3
     }
+
+    public enum PointOnLineResult
+    {
+        Failed,
+        Success,
+        Clipped
+    }
 }

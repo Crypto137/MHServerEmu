@@ -599,6 +599,65 @@ namespace MHServerEmu.Games.Navi
             return resultSweep;
         }
 
+        public PointOnLineResult FindPointOnLineToOccupy( ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
+            Bounds bounds, PathFlags pathFlags, BlockingCheckFlags blockFlags, bool skipTarget)
+        {
+            resultPosition = new(startPosition);
+
+            if (_region == null || !Vector3.IsFinite(startPosition) || !Vector3.IsFinite(desiredPosition))
+                return PointOnLineResult.Failed;
+
+            float radius = bounds.GetRadius();
+            if (radius <= 0.0f)
+            {
+                Logger.Debug("This implementation of FindPointOnLineToOccupy requires a radius.");
+                return PointOnLineResult.Failed;
+            }
+
+            maxRange += radius;
+            Vector3 targetVector = desiredPosition - startPosition;
+            Vector3.SafeNormalAndLength2D(targetVector, out Vector3 targetDirection, out float targetLength);
+            float targetDistance = Math.Min(targetLength, maxRange);
+            Vector3 targetPosition = startPosition + targetDirection * targetDistance;
+
+            Bounds checkBounds = new (bounds);
+            float stepSize = radius / 2.0f;
+            for (int step = 0; step < 250; step++)
+            {
+                float stepDistance = step * stepSize;
+                bool stepBack = targetDistance - stepDistance > -stepSize;
+                bool stepForward = skipTarget == false && targetDistance + stepDistance < maxRange + stepSize;
+
+                if (stepBack)
+                {
+                    float stepBackDistance = Math.Min(stepDistance, targetDistance);
+                    checkBounds.Center = targetPosition - targetDirection * stepBackDistance;
+                    if (_region.IsLocationClear(checkBounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity, blockFlags))
+                    {
+                        resultPosition = checkBounds.Center;
+                        return step == 0 ? PointOnLineResult.Success : PointOnLineResult.Clipped;
+                    }
+                }
+
+                if (stepForward)
+                {
+                    float stepForwardDistance = Math.Min(stepDistance, maxRange);
+                    checkBounds.Center = targetPosition + targetDirection * stepForwardDistance;
+                    if (_region.IsLocationClear(checkBounds, pathFlags, PositionCheckFlags.CanBeBlockedEntity, blockFlags))
+                    {
+                        resultPosition = checkBounds.Center;
+                        return step == 0 ? PointOnLineResult.Success : PointOnLineResult.Clipped;
+                    }
+                }
+
+                if (stepBack == false && stepForward == false)
+                    return PointOnLineResult.Failed;
+            }
+
+            Logger.Debug($"NaviMesh.FindPointOnLineToOccupy loop protection fired. maxRange={maxRange} radius={radius} startPosition={startPosition} desiredPosition={desiredPosition}");
+            return PointOnLineResult.Failed;
+        }
+
         private class MarkupState
         {
             public NaviTriangle Triangle { get; set; }

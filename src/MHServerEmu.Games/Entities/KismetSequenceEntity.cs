@@ -22,5 +22,16 @@
 
         Times01CaptainAmericaLanding = 4747023203178650586,
         BlackCatEntrance = 8978136788563137928,
+
+        OpDailyBugleVultureKismet = 1220067168446257579,
+        SinisterEntrance = 14150570950926210803,
+        MODOKEntrance = 11572904025750704166,
+    }
+
+    public enum KismetBosses : ulong
+    {
+        MrSinisterCH7 = 3864300700312212940,
+        ModokCH8 = 5492237232340800407,
+        EGD15GVulture = 9836389670859643314,
     }
 }

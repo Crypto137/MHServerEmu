@@ -121,6 +121,8 @@ namespace MHServerEmu.Games.Regions
         public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
         public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
         public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
+        public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
+        public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
 
         private BitList _collisionIds;
         private BitList _collisionBits;
@@ -884,6 +886,7 @@ namespace MHServerEmu.Games.Regions
         {            
             return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
         }
+
         public int AcquireCollisionId()
         {
             int index = _collisionIds.FirstUnset();

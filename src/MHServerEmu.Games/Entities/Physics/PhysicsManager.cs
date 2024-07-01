@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Entities.Physics
         private readonly List<ulong> _entitiesPendingResolve;
         private readonly List<ulong> _entitiesResolving;
         private bool _currentForceReadWriteState;
-        private int _physicsFrames;
+        private uint _physicsFrames;
 
         public PhysicsManager()
         {
@@ -99,11 +99,12 @@ namespace MHServerEmu.Games.Entities.Physics
             if (_game == null) return;
             RegionManager regionManager = _game.RegionManager;
             if (regionManager == null) return;
+            var entityManager = _game.EntityManager;
 
             foreach (var entityId in entitiesResolving)
             {
-                var worldEntity = _game.EntityManager.GetEntity<WorldEntity>(entityId);
-                if (worldEntity == null || worldEntity.TestStatus(EntityStatus.Destroyed) || !worldEntity.IsInWorld)  continue;
+                var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
+                if (worldEntity == null || worldEntity.TestStatus(EntityStatus.Destroyed) || worldEntity.IsInWorld == false)  continue;
 
                 var entityPhysics = worldEntity.Physics;
                 Vector3 externalForces = entityPhysics.GetExternalForces();
@@ -542,24 +543,26 @@ namespace MHServerEmu.Games.Entities.Physics
         private static void NotifyEntityCollision(WorldEntity who, WorldEntity whom, Vector3 whoPos)
         {
             who?.OnCollide(whom, whoPos);
+            // TODO EntityCollisionEvent
         }
 
         private static void NotifyEntityOverlapBegin(WorldEntity who, WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
             who?.OnOverlapBegin(whom, whoPos, whomPos);
+            // TODO EntityCollisionEvent
         }
 
         private static void NotifyEntityOverlapEnd(WorldEntity who, WorldEntity whom)
         {
             who?.OnOverlapEnd(whom);
+            // TODO EntityCollisionEvent
         }
 
         private void UpdateOverlapEntryHelper(EntityPhysics entityPhysics, WorldEntity otherEntity)
         {
-            OverlapEntityEntry overlappedEntity = new();
-            if (entityPhysics.OverlappedEntities.TryAdd(otherEntity.Id, overlappedEntity))
+            if (entityPhysics.OverlappedEntities.TryAdd(otherEntity.Id, new()))
                 RegisterEntityForPendingPhysicsResolve(entityPhysics.Entity);
-            overlappedEntity.Frame = _physicsFrames;
+            entityPhysics.OverlappedEntities[otherEntity.Id].Frame = _physicsFrames;
         }
 
         private static void ApplyRepulsionForces(WorldEntity entity, WorldEntity otherEntity)
