@@ -5,11 +5,11 @@ using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Core.VectorMath
 {
-    public class Vector3
+    public struct Vector3 : IEquatable<Vector3>
     {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public float X;
+        public float Y;
+        public float Z;
 
         public float this[int index]
         {
@@ -35,16 +35,6 @@ namespace MHServerEmu.Core.VectorMath
             X = 0.0f;
             Y = 0.0f;
             Z = 0.0f;
-        }
-
-        public Vector3(Vector3 vector)
-        {
-            if (vector != null)     // temp fix for multiplayer weirdness
-            {
-                X = vector.X;
-                Y = vector.Y;
-                Z = vector.Z;
-            }
         }
 
         public Vector3(Point3 point)
@@ -79,28 +69,14 @@ namespace MHServerEmu.Core.VectorMath
         public NetStructIPoint3 ToNetStructIPoint3() => NetStructIPoint3.CreateBuilder()
             .SetX((uint)MathF.Max(0f, X)).SetY((uint)MathF.Max(0f, Y)).SetZ((uint)MathF.Max(0f, Z)).Build();    // Use MathF.Max when converting to NetStructIPoint3 to prevent underflow
 
-        public void Set(Vector3 v)
-        {
-            X = v.X;
-            Y = v.Y;
-            Z = v.Z;
-        }
-
-        public void Set(float x, float y, float z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
-
         public static Vector3 operator +(Vector3 a, Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         public static Vector3 operator -(Vector3 a) => new(-a.X, -a.Y, -a.Z);
         public static Vector3 operator *(Vector3 v, float f) => new(v.X * f, v.Y * f, v.Z * f);
         public static Vector3 operator /(Vector3 v, float f) => new(v.X / f, v.Y / f, v.Z / f);
-        public static bool operator ==(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);
-        public static bool operator !=(Vector3 a, Vector3 b) => !(a == b);
-        public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y && a.Z > b.Z;
+        public static bool operator ==(Vector3 a, Vector3 b) => a.Equals(b);
+        public static bool operator !=(Vector3 a, Vector3 b) => !a.Equals(b);
+        public static bool operator >(Vector3 a, Vector3 b) => a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // MathF.Sqrt(LengthSqr(v))
         public static float LengthTest(Vector3 v) => IsNearZero(v) ? 0.0f : Length(v);
@@ -117,12 +93,13 @@ namespace MHServerEmu.Core.VectorMath
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj)) return true;
+            if (obj is not Vector3 other) return false;
+            return Equals(other);
+        }
 
-            Vector3 point = obj as Vector3;
-            if (point != null) return X == point.X && Y == point.Y && Z == point.Z;
-
-            return false;
+        public bool Equals(Vector3 other)
+        {
+            return X == other.X && Y == other.Y && Z == other.Z;
         }
 
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
@@ -164,7 +141,7 @@ namespace MHServerEmu.Core.VectorMath
                        axis == Axis.Z ? 0.0f : v.Z);
         }
 
-        public Vector3 To2D() => new(X, Y, 0.0f);
+        public readonly Vector3 To2D() => new(X, Y, 0.0f);
 
         public static Vector3 AbsPerElem(Vector3 vec)
         {
@@ -220,16 +197,16 @@ namespace MHServerEmu.Core.VectorMath
 
         public float MaxElem() => Math.Max(Z, Math.Max(X, Y));
 
-        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero = null)
+        public static Vector3 SafeNormalize2D(Vector3 v) => SafeNormalize2D(v, XAxis);
+        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero)
         {
-            if (zero == null) zero = XAxis;
             Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? zero : Normalize(vector2D);
         }
 
-        public static Vector3 SafeNormalize(Vector3 v, Vector3 zero = null)
+        public static Vector3 SafeNormalize(Vector3 v) => SafeNormalize(v, XAxis);
+        public static Vector3 SafeNormalize(Vector3 v, Vector3 zero)
         {
-            if (zero == null) zero = XAxis;
             return IsNearZero(v) ? zero : Normalize(v);
         }
 
@@ -262,7 +239,7 @@ namespace MHServerEmu.Core.VectorMath
 
         public static Vector3 Truncate(Vector3 v, float maxLength)
         {
-            Vector3 truncatedVector = new(v);
+            Vector3 truncatedVector = v;
             float length = Length(truncatedVector);
             if (length > maxLength)
                 truncatedVector = (truncatedVector / length) * maxLength;
@@ -270,13 +247,13 @@ namespace MHServerEmu.Core.VectorMath
             return truncatedVector;
         }
 
-        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 resultNormal, out float resultLength, Vector3 zero = null)
+        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 resultNormal, out float resultLength) => SafeNormalAndLength2D(v, out resultNormal, out resultLength, XAxis);
+        public static void SafeNormalAndLength2D(Vector3 v, out Vector3 resultNormal, out float resultLength, Vector3 zero)
         {
             Vector3 vector = v.To2D();
             if (IsNearZero(vector))
             {
-                if (zero == null) zero = XAxis;
-                resultNormal = new(zero);
+                resultNormal = zero;
                 resultLength = 0f;
             }
             else            
@@ -289,19 +266,19 @@ namespace MHServerEmu.Core.VectorMath
 
         // static vectors
 
-        public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
-        public static Vector3 XAxis { get => new(1.0f, 0.0f, 0.0f); }
-        public static Vector3 XAxisNeg { get => new(-1.0f, 0.0f, 0.0f); }
-        public static Vector3 YAxis { get => new(0.0f, 1.0f, 0.0f); }
-        public static Vector3 YAxisNeg { get => new(0.0f, -1.0f, 0.0f); }
-        public static Vector3 ZAxis { get => new(0.0f, 0.0f, 1.0f); }
-        public static Vector3 ZAxisNeg { get => new(0.0f, 0.0f, -1.0f); }
-        public static Vector3 Forward { get => XAxis; }
-        public static Vector3 Right { get => YAxis; }
-        public static Vector3 Up { get => ZAxis; }
-        public static Vector3 Back { get => XAxisNeg; }
-        public static Vector3 Left { get => YAxisNeg; }
-        public static Vector3 Down { get => ZAxisNeg; }
+        public static Vector3 Zero { get; } = new(0.0f, 0.0f, 0.0f);
+        public static Vector3 XAxis { get; } = new(1.0f, 0.0f, 0.0f);
+        public static Vector3 XAxisNeg { get; } = new(-1.0f, 0.0f, 0.0f);
+        public static Vector3 YAxis { get; } = new(0.0f, 1.0f, 0.0f); 
+        public static Vector3 YAxisNeg { get; } = new(0.0f, -1.0f, 0.0f); 
+        public static Vector3 ZAxis { get; } = new(0.0f, 0.0f, 1.0f); 
+        public static Vector3 ZAxisNeg { get; } = new(0.0f, 0.0f, -1.0f); 
+        public static Vector3 Forward { get; } = XAxis; 
+        public static Vector3 Right { get; } = YAxis; 
+        public static Vector3 Up { get; } = ZAxis; 
+        public static Vector3 Back { get; } = XAxisNeg; 
+        public static Vector3 Left { get; } = YAxisNeg; 
+        public static Vector3 Down { get; } = ZAxisNeg; 
 
     }
 

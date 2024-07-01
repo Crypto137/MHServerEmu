@@ -1156,7 +1156,7 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 CellSettings cellSettings = new()
                 {
-                    PositionInArea = new(position),
+                    PositionInArea = position,
                     CellRef = cellRef
                 };
                 return Area.AddCell(AllocateCellId(), cellSettings) != null;

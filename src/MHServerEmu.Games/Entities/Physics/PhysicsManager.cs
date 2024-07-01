@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Entities.Physics
                     if (locomotor == null) return false;
 
                     Vector3 newDesiredDestination = new();
-                    Vector3 normal = null;
+                    Vector3? normal = null;
                     locomotor.SweepFromTo(collidedDestination, collidedDestination + slidingVelocity2D, ref newDesiredDestination, ref normal);
 
                     Vector3 newVelocity = newDesiredDestination - collidedDestination;
@@ -337,9 +337,9 @@ namespace MHServerEmu.Games.Entities.Physics
                         Bounds otherBounds = otherEntity.EntityCollideBounds;
 
                         float time = 1.0f;
-                        Vector3 normal = Vector3.ZAxis;
-                        if (bounds.Sweep(otherBounds, Vector3.Zero, velocity, ref time, ref normal) == false) continue;
-
+                        Vector3? resultNormal = Vector3.ZAxis;
+                        if (bounds.Sweep(otherBounds, Vector3.Zero, velocity, ref time, ref resultNormal) == false) continue;
+                        Vector3 normal = resultNormal.Value;
                         velocity *= time;
                         EntityCollision entityCollision = new (otherEntity, time, location.Position + velocity, normal);
                         entityCollisionList.Add(entityCollision);
@@ -366,12 +366,12 @@ namespace MHServerEmu.Games.Entities.Physics
                 return true;
             }
 
-            Vector3 resultNormal = Vector3.ZAxis;
+            Vector3? resultNormal = Vector3.ZAxis;
             SweepResult sweepResult = locomotor.SweepTo(destination, ref resultPosition, ref resultNormal);
             if (sweepResult == SweepResult.Failed) return false;
             clipped = (sweepResult != SweepResult.Success);
 
-            Vector3 resultNormal2D = Vector3.SafeNormalize2D(resultNormal, Vector3.Zero);
+            Vector3 resultNormal2D = Vector3.SafeNormalize2D(resultNormal.Value, Vector3.Zero);
 
             if (locomotor.IsMissile)
                 resultPosition.Z = destination.Z;
@@ -393,7 +393,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 {
                     velocity2D += resultNormal2D * (-dot);
 
-                    Vector3 fromPosition = new(resultPosition);
+                    Vector3 fromPosition = resultPosition;
                     destination = resultPosition + velocity2D;
                     resultNormal = null;
                     sweepResult = locomotor.SweepFromTo(fromPosition, destination, ref resultPosition, ref resultNormal);

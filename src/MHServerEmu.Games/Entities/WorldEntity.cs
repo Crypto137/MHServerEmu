@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.Entities
             return Locomotor != null && Locomotor.GetCurrentSpeed() > 0.0f;
         }
 
-        public virtual bool ChangeRegionPosition(Vector3 position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        public virtual bool ChangeRegionPosition(Vector3? position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
             bool positionChanged = false;
             bool orientationChanged = false;
@@ -294,7 +294,7 @@ namespace MHServerEmu.Games.Entities
 
             if (position != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
             {
-                var result = RegionLocation.SetPosition(position);
+                var result = RegionLocation.SetPosition(position.Value);
 
                 if (result != RegionLocation.SetPositionResult.Success)     // onSetPositionFailure()
                     return Logger.WarnReturn(false, string.Format(
@@ -302,14 +302,14 @@ namespace MHServerEmu.Games.Entities
                         this, result, RegionLocation, position));
 
                 if (Bounds.Geometry != GeometryType.None)
-                    Bounds.Center = position;
+                    Bounds.Center = position.Value;
 
                 if (flags.HasFlag(ChangePositionFlags.PhysicsResolve) == false)
                     RegisterForPendingPhysicsResolve();
 
                 positionChanged = true;
                 // Old
-                Properties[PropertyEnum.MapPosition] = position;
+                Properties[PropertyEnum.MapPosition] = position.Value;
             }
 
             if (orientation != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Orientation != orientation))
@@ -354,7 +354,7 @@ namespace MHServerEmu.Games.Entities
                         .SetIdEntity(Id)
                         .SetFlags((uint)flags);
 
-                    if (position != null) entityPositionMessageBuilder.SetPosition(position.ToNetStructPoint3());
+                    if (position != null) entityPositionMessageBuilder.SetPosition(position.Value.ToNetStructPoint3());
                     if (orientation != null) entityPositionMessageBuilder.SetOrientation(orientation.ToNetStructPoint3());
 
                     networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
@@ -381,7 +381,7 @@ namespace MHServerEmu.Games.Entities
 
         public Vector3 FloorToCenter(Vector3 position)
         {
-            Vector3 resultPosition = new(position);
+            Vector3 resultPosition = position;
             if (Bounds.Geometry != GeometryType.None)
                 resultPosition.Z += Bounds.HalfHeight;
             // TODO Locomotor.GetCurrentFlyingHeight
@@ -708,7 +708,7 @@ namespace MHServerEmu.Games.Entities
 
         private Vector3 GetEyesPosition()
         {
-            Vector3 retPos = new(RegionLocation.Position);
+            Vector3 retPos = RegionLocation.Position;
             Bounds bounds = Bounds;
             retPos.Z += bounds.EyeHeight;
             return retPos;

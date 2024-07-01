@@ -15,7 +15,7 @@ namespace MHServerEmu.Core.Collisions
             Radius = radius;
         }
 
-        public bool Sweep(Vector3 velocity, Aabb bound, ref float resultTime, ref Vector3 resultNormal)
+        public bool Sweep(Vector3 velocity, Aabb bound, ref float resultTime, ref Vector3? resultNormal)
         {
             float posZ = Center.Z;
             float minZ = posZ - HalfHeight;

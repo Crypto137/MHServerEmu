@@ -55,8 +55,8 @@ namespace MHServerEmu.Games.Navi
             _radius = radius;
             _width = 2.0f * radius;
             _pathFlags = pathFlags;
-            _startPosition = new(startPosition);
-            _goalPosition = new(goalPosition);
+            _startPosition = startPosition;
+            _goalPosition = goalPosition;
             _pathGenerationFlags = pathGenerationFlags;
             _incompleteDistance = incompleteDistance;
             if (!_naviMesh.IsMeshValid)  
@@ -191,8 +191,8 @@ namespace MHServerEmu.Games.Navi
                             index0--;
 
                         Segment pathSegment = NaviPath.GetPathSegment(outPathNodes[index0], outPathNodes[index1]);
-                        Vector3 resultPosition = new();
-                        Vector3 resultNormal = null;
+                        Vector3? resultPosition = new();
+                        Vector3? resultNormal = null;
                         if (_pathGenerationFlags.HasFlag(PathGenerationFlags.IgnoreSweep) 
                             || _naviMesh.Sweep(pathSegment.Start, pathSegment.End, Math.Max(0.0f, _radius - 0.1f), _pathFlags,
                             ref resultPosition, ref resultNormal) == SweepResult.Success)
@@ -497,7 +497,7 @@ namespace MHServerEmu.Games.Navi
             Vector3 perpVect0 = perpVect * (radius + point0.InfluenceRadius);
             Vector3 perpVect1 = perpVect * (radius + point1.InfluenceRadius);
             
-            Vector3 offset0 = null;
+            Vector3 offset0 = default;
             switch (vertexSide0)
             {
                 case NaviSide.Point: offset0 = point0.Pos; break;
@@ -505,7 +505,7 @@ namespace MHServerEmu.Games.Navi
                 case NaviSide.Right: offset0 = point0.Pos - perpVect0; break;
             };
 
-            Vector3 offset1 = null;
+            Vector3 offset1 = default;
             switch (vertexSide1)
             {
                 case NaviSide.Point: offset1 = point1.Pos; break;

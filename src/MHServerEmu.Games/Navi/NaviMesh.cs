@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        public SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3 resultPosition, ref Vector3 resultNormal,
+        public SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3? resultPosition, ref Vector3? resultNormal,
             float padding = 0, HeightSweepType heightSweep = HeightSweepType.None, int maxHeight = short.MaxValue, int minHeight = short.MinValue, Entity owner = null)
         {
             NaviTriangle currentTriangle = NaviCdt.FindTriangleAtPoint(fromPosition);
@@ -602,7 +602,7 @@ namespace MHServerEmu.Games.Navi
         public PointOnLineResult FindPointOnLineToOccupy( ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
             Bounds bounds, PathFlags pathFlags, BlockingCheckFlags blockFlags, bool skipTarget)
         {
-            resultPosition = new(startPosition);
+            resultPosition = startPosition;
 
             if (_region == null || !Vector3.IsFinite(startPosition) || !Vector3.IsFinite(desiredPosition))
                 return PointOnLineResult.Failed;

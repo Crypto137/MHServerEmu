@@ -357,7 +357,7 @@ namespace MHServerEmu.Core.Tests.Serialization
             {
                 bool success = true;
 
-                Vector3 vectorToPack = new(testVector);
+                Vector3 vectorToPack = testVector;
                 success &= archive.Transfer(ref vectorToPack);
                 Assert.True(success);
 
@@ -429,7 +429,7 @@ namespace MHServerEmu.Core.Tests.Serialization
             {
                 bool success = true;
 
-                Vector3 vectorToPack = new(testVector);
+                Vector3 vectorToPack = testVector;
                 success &= archive.TransferVectorFixed(ref vectorToPack, precision);
                 Assert.True(success);
 

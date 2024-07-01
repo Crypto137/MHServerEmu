@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.Network
                 SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
             }
 
-            _lastUpdatePosition.Set(position);
+            _lastUpdatePosition = position;
         }
 
         /// <summary>

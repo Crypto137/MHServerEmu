@@ -279,7 +279,7 @@ namespace MHServerEmu.Games.Regions
             else
                 markerTransform = Transform3.BuildTransform(AreaOffset, Orientation.Zero) * markerTransform;
 
-            markerPosition = new (markerTransform.Translation);
+            markerPosition = markerTransform.Translation;
             markerOrientation = new (Orientation.FromTransform3(markerTransform));
         }
 
@@ -423,7 +423,7 @@ namespace MHServerEmu.Games.Regions
             return builder.Build();
         }
 
-        public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             if (CellProto != null && CellProto.InitializeSet.Markers.HasValue())
             {
@@ -434,7 +434,7 @@ namespace MHServerEmu.Games.Regions
                         PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                         if (dataRef == target.Entity)
                         {
-                            markerPos.Set(CalcMarkerPosition(marker.Position));
+                            markerPos = CalcMarkerPosition(marker.Position);
                             markerRot.Set(entityMarker.Rotation);
                             return true;
                         }

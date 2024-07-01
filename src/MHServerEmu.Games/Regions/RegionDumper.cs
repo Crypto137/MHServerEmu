@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Regions
                 regionDump.Add(areaKvp.Key, areaDump);
 
                 foreach (var cellKvp in areaKvp.Value.Cells)
-                    areaDump.Cells.Add(cellKvp.Key, new(cellKvp.Value.CellProto.ToString(), new(cellKvp.Value.AreaPosition)));
+                    areaDump.Cells.Add(cellKvp.Key, new(cellKvp.Value.CellProto.ToString(), cellKvp.Value.AreaPosition));
             }
 
             FileHelper.SerializeJson(Path.Combine(FileHelper.ServerRoot, "RegionDumps", $"{region.PrototypeName}_{region.RandomSeed}.json"),

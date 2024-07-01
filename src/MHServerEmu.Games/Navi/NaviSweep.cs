@@ -39,15 +39,15 @@ namespace MHServerEmu.Games.Navi
             _minHeight = minHeight;
         }
 
-        public SweepResult DoSweep(ref Vector3 resultPosition, ref Vector3 resultNormal, float padding)
+        public SweepResult DoSweep(ref Vector3? resultPosition, ref Vector3? resultNormal, float padding)
         {
             var result = PerformNaviMeshSweep(ref resultPosition, ref resultNormal, padding);
             if (result == SweepResult.Failed) return result;
 
             if (_heightSweep != HeightSweepType.None)
             {
-                Vector3 heightPosition = new(_dest);
-                if (result == SweepResult.Clipped) heightPosition.Set(resultPosition);
+                Vector3 heightPosition = _dest;
+                if (result == SweepResult.Clipped) heightPosition = resultPosition.Value;
 
                 var heightResult = PerformHeightSweep(_startLocation, heightPosition, ref resultPosition, ref resultNormal);
                 if (heightResult != SweepResult.Success) return heightResult;
@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Navi
             return result;
         }
 
-        private SweepResult PerformHeightSweep(Vector3 startPosition, Vector3 endPosition, ref Vector3 resultPosition, ref Vector3 resultNormal)
+        private SweepResult PerformHeightSweep(Vector3 startPosition, Vector3 endPosition, ref Vector3? resultPosition, ref Vector3? resultNormal)
         {
             if (_region == null || _radius < 0) return SweepResult.Failed;
 
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Navi
             Vector3 velocity = line.Direction.To2D();
             if (resultPosition != null && Vector3.IsNearZero(velocity))
             {
-                resultPosition.Set(line.Start);
+                resultPosition = line.Start;
                 return SweepResult.Success;
             }
 
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        private SweepResult PerformHeightMapLineSweep(Segment line, ref int height, ref Vector3 resultPosition, ref Vector3 resultNormal, ref float resultDist)
+        private SweepResult PerformHeightMapLineSweep(Segment line, ref int height, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
             if (_region == null) return SweepResult.Failed;
 
@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Navi
             }
             hitCells.Sort();
 
-            Segment nextLine = new(line);
+            Segment nextLine = line;
             for(int index = 0; index < hitCells.Count; index++)
             {  
                 int nextIndex = index + 1;
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.Success;
         }
 
-        private SweepResult PerformHeightMapLineSweepWithinCell(Segment line, Cell cell, ref int height, ref Vector3 resultPosition, ref Vector3 resultNormal, ref float resultDist)
+        private SweepResult PerformHeightMapLineSweepWithinCell(Segment line, Cell cell, ref int height, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
             if (cell == null) return SweepResult.Failed;
 
@@ -195,14 +195,14 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.Success;
         }
 
-        private SweepResult CheckHeightMapPair(int posX, int posY, bool swap, int sign, HeightMapPrototype heightMap, ref int height, Cell cell, Segment line, ref Vector3 resultPosition, ref Vector3 resultNormal, ref float resultDist)
+        private SweepResult CheckHeightMapPair(int posX, int posY, bool swap, int sign, HeightMapPrototype heightMap, ref int height, Cell cell, Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
             int[] x = new int[2];
             int[] y = new int[2];
             SweepResult[] pairResult = new SweepResult[2];
             float[] pairDistance = new float[2];
-            Vector3[] pairPosition = new Vector3[2];
-            Vector3[] pairNormal = new Vector3[2];
+            Vector3?[] pairPosition = new Vector3?[2];
+            Vector3?[] pairNormal = new Vector3?[2];
 
             x[0] = posX;
             y[0] = posY;
@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.HeightMap;
         }
 
-        private SweepResult CheckHeightMapAtPoint(int x, int y, HeightMapPrototype heightMap, ref int height, Cell cell, Segment ray, ref Vector3 resultPosition, ref Vector3 resultNormal, ref float resultDistance)
+        private SweepResult CheckHeightMapAtPoint(int x, int y, HeightMapPrototype heightMap, ref int height, Cell cell, Segment ray, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDistance)
         {
             if (cell == null) return SweepResult.Failed;
 
@@ -335,7 +335,7 @@ namespace MHServerEmu.Games.Navi
             return false;
         }
 
-        private SweepResult PerformHeightMapCircleSweep(Segment line, ref Vector3 resultPosition, ref Vector3 resultNormal)
+        private SweepResult PerformHeightMapCircleSweep(Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal)
         {
             if (_region == null) return SweepResult.Failed;
 
@@ -349,10 +349,14 @@ namespace MHServerEmu.Games.Navi
             {
                 HitCellInfo info = new (cell);
                 var cellBound = info.Cell.RegionBounds;
-                if (cellBound.ContainsXY(line.Start) == ContainmentType.Contains 
-                    || cellBound.ContainsXY(line.End) == ContainmentType.Contains 
-                    || cylinder.Sweep(velocity, cellBound, ref info.Time, ref info.Point))
+                Vector3? resultSweepNorm = info.Point;
+                if (cellBound.ContainsXY(line.Start) == ContainmentType.Contains
+                    || cellBound.ContainsXY(line.End) == ContainmentType.Contains
+                    || cylinder.Sweep(velocity, cellBound, ref info.Time, ref resultSweepNorm))
+                {
+                    info.Point = resultSweepNorm.Value;
                     hitCells.Add(info);
+                }
             }
 
             HashSet<HitHeightMapSquareInfo> heightMapHits = new ();
@@ -393,7 +397,10 @@ namespace MHServerEmu.Games.Navi
                 }
                 else
                 {
-                    if (cylinder.Sweep(velocity, hitInfo.Bounds, ref time, ref normal) && time >= 0.0f)
+                    Vector3? resultSweepNormal = normal;
+                    if (cylinder.Sweep(velocity, hitInfo.Bounds, ref time, ref resultSweepNormal) && time >= 0.0f)
+                    {
+                        normal = resultSweepNormal.Value;
                         if (Vector3.Dot2D(direction, normal) < 0)
                         {
                             result = SweepResult.HeightMap;
@@ -404,6 +411,7 @@ namespace MHServerEmu.Games.Navi
                                 minNormal = normal;
                             }
                         }
+                    }
                 }
             }
 
@@ -549,7 +557,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        private SweepResult PerformNaviMeshSweep(ref Vector3 resultPosition, ref Vector3 resultNormal, float padding)
+        private SweepResult PerformNaviMeshSweep(ref Vector3? resultPosition, ref Vector3? resultNormal, float padding)
         {
             if (!Vector3.IsFinite(_startLocation) || !Vector3.IsFinite(_dest)) return SweepResult.Failed;
             if (_startTriangle == null || _startTriangle.Contains(_startLocation) == false) return SweepResult.Failed;
@@ -639,7 +647,7 @@ namespace MHServerEmu.Games.Navi
                         if (distanceToIntersect < minDistance)
                         {
                             minDistance = distanceToIntersect;
-                            if (resultNormal is not null)
+                            if (resultNormal != null)
                                 resultNormal = Vector3.SafeNormalize2D((start2d + direction * distanceToIntersect) - point2D, Vector3.ZAxis);
                         }
                 }
@@ -650,11 +658,12 @@ namespace MHServerEmu.Games.Navi
             {
                 minDistance = Math.Max(minDistance - padding, 0.0f);
                 if (minDistance < Segment.Epsilon)
-                    resultPosition.Set(_startLocation);
+                    resultPosition = _startLocation;
                 else
                 {
-                    resultPosition = start2d + direction * minDistance;
-                    resultPosition.Z = Segment.Lerp(_startLocation.Z, _dest.Z, minDistance / magnitude);
+                    var position = start2d + direction * minDistance;
+                    position.Z = Segment.Lerp(_startLocation.Z, _dest.Z, minDistance / magnitude);
+                    resultPosition = position;
                 }
                 result = SweepResult.Clipped;
             }

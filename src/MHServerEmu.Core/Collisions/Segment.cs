@@ -3,12 +3,12 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Segment
+    public struct Segment
     {
-        public static readonly Segment Zero = new(Vector3.Zero, Vector3.Zero);
+        public static Segment Zero { get; } = new(Vector3.Zero, Vector3.Zero);
 
-        public Vector3 Start { get; set; }
-        public Vector3 End { get; set; }
+        public Vector3 Start;
+        public Vector3 End;
 
         public Segment()
         {
@@ -30,12 +30,6 @@ namespace MHServerEmu.Core.Collisions
 
         public Vector3 Direction => End - Start;
         public float Length =>  Vector3.Length(Direction);
-
-        public void Set(Segment segment)
-        {
-            Start.Set(segment.Start);
-            End.Set(segment.End);
-        }
 
         public const float Epsilon = 0.000001f;
 
@@ -259,7 +253,7 @@ namespace MHServerEmu.Core.Collisions
                     intersectPoint = rayStart.To2D() + rayDirection.To2D() * rayDistance;
                     return true;
                 }
-            intersectPoint = null;
+            intersectPoint = default;
             return false;
         }
 

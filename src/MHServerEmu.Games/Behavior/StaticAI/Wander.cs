@@ -100,8 +100,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 }
 
                 Vector3 wanderTo = wanderFrom + (Vector3.RandomUnitVector2D(random) * wanderRange);
-                Vector3 resultNorm = null;
-                locomotor.SweepFromTo(wanderFrom, new(wanderTo), ref wanderTo, ref resultNorm);
+                Vector3? resultNorm = null;
+                locomotor.SweepFromTo(wanderFrom, wanderTo, ref wanderTo, ref resultNorm);
 
                 bool isWalking = ownerController.GetDesiredIsWalkingState(wanderContext.MovementSpeed);
                 LocomotionOptions locomotionOptions = new() { PathGenerationFlags = Navi.PathGenerationFlags.IncompletedPath };

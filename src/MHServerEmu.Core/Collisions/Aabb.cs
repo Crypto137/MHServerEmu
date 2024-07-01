@@ -20,10 +20,11 @@ namespace MHServerEmu.Core.Collisions
             Min = min;
             Max = max;
         }
+
         public Aabb(Aabb bound)
         {
-            Min = new(bound.Min);
-            Max = new(bound.Max);
+            Min = bound.Min;
+            Max = bound.Max;
         }
 
         public Aabb(Vector3 center, float width, float length, float height)
@@ -54,14 +55,14 @@ namespace MHServerEmu.Core.Collisions
 
         public void Set(Aabb aabb)
         {
-            Min.Set(aabb.Min);
-            Max.Set(aabb.Max);
+            Min = aabb.Min;
+            Max = aabb.Max;
         }
 
         public void Set(Vector3 min, Vector3 max)
         {
-            Min.Set(min);
-            Max.Set(max);
+            Min = min;
+            Max = max;
         }
 
         public static Aabb operator +(Aabb aabb1, Aabb aabb2)
@@ -172,8 +173,8 @@ namespace MHServerEmu.Core.Collisions
 
         public void RoundToNearestInteger()
         {
-            Min.Set(MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
-            Max.Set(MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
+            Min = new (MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
+            Max = new (MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
         }
 
         public bool IntersectsXY(Vector3 point)
@@ -271,7 +272,7 @@ namespace MHServerEmu.Core.Collisions
                     if (point[i] < Min[i] || point[i] > Max[i])
                     {
                         time = 0.0f;
-                        intersectPoint = null;
+                        intersectPoint = default;
                         return false;
                     }
                 }
@@ -289,7 +290,7 @@ namespace MHServerEmu.Core.Collisions
                     if (tMin > tMax)
                     {
                         time = 0.0f;
-                        intersectPoint = null;
+                        intersectPoint = default;
                         return false;
                     }
                 }

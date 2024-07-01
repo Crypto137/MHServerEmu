@@ -286,7 +286,7 @@ namespace MHServerEmu.Games.Generators.Areas
                             CellSettings cellSettings = new()
                             {
                                 CellRef = genCell.CellRef,
-                                PositionInArea = new(genCell.Position),
+                                PositionInArea = genCell.Position,
                                 Seed = ++randomSeed,
                                 ConnectedCells = connectedCells,
                                 PopulationThemeOverrideRef = genCell.PopulationThemeOverrideRef
@@ -316,7 +316,7 @@ namespace MHServerEmu.Games.Generators.Areas
                             CellSettings cellSettings = new()
                             {
                                 CellRef = cellRef,
-                                PositionInArea = new(genCell.Position),
+                                PositionInArea = genCell.Position,
                                 Seed = ++randomSeed,
                                 ConnectedCells = connectedCells,
                                 PopulationThemeOverrideRef = genCell.PopulationThemeOverrideRef
@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 CellSettings cellSettings = new()
                 {
                     CellRef = cellRef,
-                    PositionInArea = new(position)
+                    PositionInArea = position
                 };
                 return Area.AddCell(AllocateCellId(), cellSettings) != null;
             }

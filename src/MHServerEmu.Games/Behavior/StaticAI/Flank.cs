@@ -190,7 +190,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             transform = Transform3.BuildTransform(Vector3.Zero, new Orientation(MathHelper.ToRadians(-flankingAngle), 0f, 0f));
             Vector3 directionInv = transform * targetDist;
 
-            Vector3 normOut = null;
+            Vector3? normOut = null;
             bool sideA = true;
             Vector3 sideAPos = Vector3.Zero;
             if (locomotor.SweepFromTo(targetPosition, targetPosition + direction * offsetMagnitude, ref sideAPos, ref normOut) == SweepResult.Failed)

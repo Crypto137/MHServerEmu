@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Generators.Population
                 MarkerSetPrototype markerSet = propGroup.Objects;
 
                 PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
-                Vector3 position = new(markerPrototype.Position);
+                Vector3 position = markerPrototype.Position;
                 position += randomOffset;
                 Orientation rotation = new(markerPrototype.Rotation);
                 rotation.Yaw += randomRotation;
