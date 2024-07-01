@@ -1209,9 +1209,11 @@ namespace MHServerEmu.Games.Powers
             // Distance to the edge of the target
             float distance = Vector3.Distance2D(userPosition, targetPosition) - targetRadius;
 
-            // Why is this a separate thing and not baked into GetRange()?
-            if (checkType == RangeCheckType.Activation)
-                range -= powerProto.RangeActivationReduction;
+            // RangeActivationReduction is not used in GetRange(), and according to PowerPrototype::validateTargetingSettings(),
+            // it has something to do with client-server synchronization. It's probably used to have the power activate on the
+            // client later to account for latency, so we do not need it on the server I think.
+            //if (checkType == RangeCheckType.Activation)
+            //    range -= powerProto.RangeActivationReduction;
 
             // Range cannot be less than user radius. 5 appears to be additional padding
             range = MathF.Max(userRadius, range) + 5f;

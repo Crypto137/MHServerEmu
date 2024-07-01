@@ -868,7 +868,7 @@ namespace MHServerEmu.Games.Entities
                     return PowerUseResult.BadTarget;
             }
 
-            if (powerProto.IsHighFlyingPower())
+            if (powerProto.IsHighFlyingPower)
             {
                 var naviMesh = region.NaviMesh;
                 var pathFlags = GetPathFlags();
