@@ -24,15 +24,15 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override Aabb PreGenerate(GRandom random)
         {
-            if (!GetPrototype(out var proto)) return null;
-            if (!CellSetRegistry.IsInitialized) return null;
+            if (!GetPrototype(out var proto)) return default;
+            if (!CellSetRegistry.IsInitialized) return default;
 
             Aabb cellBounds = CellSetRegistry.CellBounds;
-            if (!Segment.EpsilonTest(cellBounds.Width, cellBounds.Length)) return null;
+            if (!Segment.EpsilonTest(cellBounds.Width, cellBounds.Length)) return default;
             if (!Segment.EpsilonTest(cellBounds.Width, proto.CellSize))
             {
                 if (Log) Logger.Warn($"Cell Size Differs between Cellset and Area. Area: {Area}");
-                return null;
+                return default;
             }
 
             float сellsX = proto.CellsX;
@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
-        public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
+        public override bool GetPossibleConnections(ConnectionList connections, in Segment segment)
         {
             if (CellContainer == null) return false;
             connections.Clear();

@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Navi
             _modifyMeshPatchesProjZ = new();
         }
 
-        public void Initialize(Aabb bounds, float padding, Region region)
+        public void Initialize(in Aabb bounds, float padding, Region region)
         {
             Release();
             Bounds = bounds;
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Navi
             AddSuperQuad(Bounds, padding);
         }
 
-        private void AddSuperQuad(Aabb bounds, float padding)
+        private void AddSuperQuad(in Aabb bounds, float padding)
         {
             float xMin = bounds.Min.X - padding;
             float xMax = bounds.Max.X + padding;
@@ -441,7 +441,7 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        public float CalcSpawnableArea(Aabb bound)
+        public float CalcSpawnableArea(in Aabb bound)
         {
             float spawnableArea = 0.0f;
             var triangle = NaviCdt.FindTriangleAtPoint(bound.Center);

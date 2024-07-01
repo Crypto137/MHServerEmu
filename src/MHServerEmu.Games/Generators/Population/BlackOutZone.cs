@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Generators.Population
 
     public class BlackOutSpatialPartition : Quadtree<BlackOutZone>
     {
-        public BlackOutSpatialPartition(Aabb bound) : base(bound, 128.0f) { }
+        public BlackOutSpatialPartition(in Aabb bound) : base(bound, 128.0f) { }
 
         public override QuadtreeLocation<BlackOutZone> GetLocation(BlackOutZone element) => element.SpatialPartitionLocation;
         public override Aabb GetElementBounds(BlackOutZone element) => element.RegionBounds;

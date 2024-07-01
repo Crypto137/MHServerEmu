@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Cylinder2
+    public struct Cylinder2
     {
         public Vector3 Center;
         public float HalfHeight;
@@ -15,7 +15,7 @@ namespace MHServerEmu.Core.Collisions
             Radius = radius;
         }
 
-        public bool Sweep(Vector3 velocity, Aabb bound, ref float resultTime, ref Vector3? resultNormal)
+        public bool Sweep(in Vector3 velocity, in Aabb bound, ref float resultTime, ref Vector3? resultNormal)
         {
             float posZ = Center.Z;
             float minZ = posZ - HalfHeight;

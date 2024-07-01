@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return Area.AddCell(AllocateCellId(), cellSettings) != null;
         }
         
-        public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
+        public override bool GetPossibleConnections(ConnectionList connections, in Segment segment)
         {
             bool connected = false;
             connections.Clear();
@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (cellProto != null)
             {
-                bounds.Set(cellProto.BoundingBox);
+                bounds = cellProto.BoundingBox;
                 PreGenerated = true;
             }
 

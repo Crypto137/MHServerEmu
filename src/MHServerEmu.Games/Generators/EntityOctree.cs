@@ -47,9 +47,9 @@ namespace MHServerEmu.Games.Generators
         public int AvatarIteratorCount { get; protected set; }
         public int TotalElements { get; protected set; }
 
-        public EntityRegionSpatialPartition(Aabb bound, float minRadius = 64.0f)
+        public EntityRegionSpatialPartition(in Aabb bound, float minRadius = 64.0f)
         {
-            _bounds = new(bound);
+            _bounds = bound;
             _minRadius = minRadius;
             _staticSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.StaticPartition);
             _activeSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.ActivePartition);
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Generators
             return result;
         }
 
-        public static bool DoesSphereContainAvatar(Sphere sphere, Avatar avatar)
+        public static bool DoesSphereContainAvatar(in Sphere sphere, Avatar avatar)
         {
             if (avatar != null && sphere.Intersects(avatar.RegionLocation.Position)) return true;
             return false;
@@ -259,7 +259,7 @@ namespace MHServerEmu.Games.Generators
             private Sphere _volume;
             private int _current;
 
-            public RegionAvatarIterator(EntityRegionSpatialPartition spatialPartition, Sphere volume)
+            public RegionAvatarIterator(EntityRegionSpatialPartition spatialPartition, in Sphere volume)
             {
                 _spatialPartition = spatialPartition;
                 _volume = volume;
@@ -323,7 +323,7 @@ namespace MHServerEmu.Games.Generators
 
     public class WorldEntityRegionSpatialPartition : Quadtree<WorldEntity>
     {
-        public WorldEntityRegionSpatialPartition(Aabb bound, float minRadius, EntityRegionSPContextFlags flag) : base(bound, minRadius) 
+        public WorldEntityRegionSpatialPartition(in Aabb bound, float minRadius, EntityRegionSPContextFlags flag) : base(bound, minRadius) 
         {
             Flag = flag;
         }

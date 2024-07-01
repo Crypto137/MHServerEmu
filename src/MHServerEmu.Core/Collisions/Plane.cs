@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Plane
+    public struct Plane
     {
         public enum IntersectionType
         {
@@ -11,9 +11,8 @@ namespace MHServerEmu.Core.Collisions
             Intersect
         }
 
-        public Vector3 Normal { get; set; }
-        public float D { get; set; }
-
+        public Vector3 Normal;
+        public float D;
 
         public Plane(Vector3 normal, float d)
         {
@@ -33,7 +32,7 @@ namespace MHServerEmu.Core.Collisions
             D = Vector3.Dot(Normal, point);
         }
 
-        public IntersectionType Intersects(Aabb bound)
+        public IntersectionType Intersects(in Aabb bound)
         {
             IntersectionType[] intersection = new IntersectionType[8];
             Vector3[] corners = bound.GetCorners();
@@ -49,7 +48,7 @@ namespace MHServerEmu.Core.Collisions
             return intersection[0];
         }
 
-        public IntersectionType Intersects(Vector3 point)
+        public IntersectionType Intersects(in Vector3 point)
         {
             float distance = SignedDistanceToPoint(point);
             if (distance > 0.0f)
@@ -60,7 +59,7 @@ namespace MHServerEmu.Core.Collisions
                 return IntersectionType.Intersect;
         }
 
-        public float SignedDistanceToPoint(Vector3 point)
+        public float SignedDistanceToPoint(in Vector3 point)
         {
             return Vector3.Dot(point, Normal) - D;
         }

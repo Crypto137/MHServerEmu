@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
         private int _elementsCount;
         private float _minLoose;
 
-        public Quadtree(Aabb bound, float minRadius)
+        public Quadtree(in Aabb bound, float minRadius)
         {
             _bounds = bound;
             _minLoose = MathF.Max(minRadius * _loose, bound.Radius2D() * _loose / 16777216);
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             return Insert(Root, element, elementBounds, elementBounds.Center, elementRadius);
         }
 
-        private bool Insert(Node<T> node, T element, Aabb elementBounds, Vector3 elementCenter, float elementRadius)
+        private bool Insert(Node<T> node, T element, in Aabb elementBounds, in Vector3 elementCenter, float elementRadius)
         {
             if (node == null) return Logger.WarnReturn(false, "Insert(): node == null");
             QuadtreeLocation<T> location = GetLocation(element);
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
         public virtual QuadtreeLocation<T> GetLocation(T element) => default;
 
-        private Node<T> PushDown(Node<T> node, Vector2 center, int x, int y)
+        private Node<T> PushDown(Node<T> node, in Vector2 center, int x, int y)
         {
             int notAtTargetCount = node.Elements.Count - node.AtTargetLevelCount;
             if (notAtTargetCount >= 0 && notAtTargetCount >= _targetThreshold)
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             return null;
         }
 
-        private Aabb2 ConstructChildBounds(Node<T> node, Vector2 center, int x, int y)
+        private Aabb2 ConstructChildBounds(Node<T> node, in Vector2 center, int x, int y)
         {
             float childDiameter = node.LooseBounds.Width / 2.0f;
             float looseRadius = childDiameter / (_loose * 2.0f);
@@ -151,9 +151,9 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             return nodeRadius <= _minLoose || elementRadius >= nodeRadius * 0.5;
         }
 
-        public virtual Aabb GetElementBounds(T element) => null;
+        public virtual Aabb GetElementBounds(T element) => default;
 
-        private Node<T> AllocateNode(Aabb2 bound, Node<T> parent, int index = 0)
+        private Node<T> AllocateNode(in Aabb2 bound, Node<T> parent, int index = 0)
         {
             Node<T> child = new(this, parent, bound);
             if (parent != null)
@@ -394,7 +394,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
                 return false;
             }
 
-            private bool SetCurrentNode(CandidateNode node)
+            private bool SetCurrentNode(in CandidateNode node)
             {
                 var element = GetFirstElement(node);
                 if (element != null)
@@ -406,7 +406,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
                 return false;
             }
 
-            private QuadtreeLocation<T> GetFirstElement(CandidateNode node)
+            private QuadtreeLocation<T> GetFirstElement(in CandidateNode node)
             {
                 if (node.Contains)
                 {

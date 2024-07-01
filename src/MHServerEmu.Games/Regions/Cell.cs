@@ -582,7 +582,7 @@ namespace MHServerEmu.Games.Regions
 
     public class CellSpatialPartition : Quadtree<Cell>
     {
-        public CellSpatialPartition(Aabb bound) : base(bound, 128.0f) { }
+        public CellSpatialPartition(in Aabb bound) : base(bound, 128.0f) { }
 
         public override QuadtreeLocation<Cell> GetLocation(Cell element) => element.SpatialPartitionLocation;
         public override Aabb GetElementBounds(Cell element) => element.RegionBounds;

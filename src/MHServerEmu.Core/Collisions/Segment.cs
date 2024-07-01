@@ -16,16 +16,10 @@ namespace MHServerEmu.Core.Collisions
             End = Vector3.Zero;
         }
 
-        public Segment(Vector3 start, Vector3 end)
+        public Segment(in Vector3 start, in Vector3 end)
         {
             Start = start;
             End = end;
-        }
-
-        public Segment(Segment segment)
-        {
-            Start = segment.Start;
-            End = segment.End;
         }
 
         public Vector3 Direction => End - Start;
@@ -40,7 +34,7 @@ namespace MHServerEmu.Core.Collisions
 
         public static bool IsNearZero(float value, float epsilon = Epsilon) => EpsilonTest(value, 0.0f, epsilon);
 
-        public static float SegmentPointDistanceSq(Vector3 a, Vector3 b, Vector3 c)
+        public static float SegmentPointDistanceSq(in Vector3 a, in Vector3 b, in Vector3 c)
         {
             Vector3 ba = b - a;
             Vector3 ca = c - a;
@@ -53,12 +47,12 @@ namespace MHServerEmu.Core.Collisions
             return dotca - dotcb * (dotcb / dotba);
         }
 
-        public static float SegmentPointDistanceSq2D(Vector3 a, Vector3 b, Vector3 c)
+        public static float SegmentPointDistanceSq2D(in Vector3 a, in Vector3 b, in Vector3 c)
         {
             return SegmentPointDistanceSq(a.To2D(), b.To2D(), c.To2D());
         }
 
-        public static float SegmentPointDistance2D(Vector3 a, Vector3 b, Vector3 c)
+        public static float SegmentPointDistance2D(in Vector3 a, in Vector3 b, in Vector3 c)
         {
             return MathHelper.SquareRoot(SegmentPointDistanceSq2D(a, b, c));
         }
@@ -68,12 +62,12 @@ namespace MHServerEmu.Core.Collisions
             return v0.X * v1.Y - v0.Y * v1.X;
         }
 
-        public static float SegmentSegmentDistanceSq2D(Vector3 a1, Vector3 b1, Vector3 a2, Vector3 b2)
+        public static float SegmentSegmentDistanceSq2D(in Vector3 a1, in Vector3 b1, in Vector3 a2, in Vector3 b2)
         {
             return SegmentSegmentClosestPoint(a1.To2D(), b1.To2D(), a2.To2D(), b2.To2D(), out _, out _, out _, out _);
         }
 
-        public static Vector3 SegmentPointClosestPoint(Vector3 a, Vector3 b, Vector3 c)
+        public static Vector3 SegmentPointClosestPoint(in Vector3 a, in Vector3 b, in Vector3 c)
         {
             // Real-Time Collision Detection p.129 (ClosestPtPointSegment)
             Vector3 ab = b - a;
@@ -99,7 +93,7 @@ namespace MHServerEmu.Core.Collisions
             }
         }
 
-        public static float SegmentSegmentClosestPoint(Vector3 s1Start, Vector3 s1End, Vector3 s2Start, Vector3 s2End, out float s1Dist, out float s2Dist, out Vector3 point1, out Vector3 point2)
+        public static float SegmentSegmentClosestPoint(in Vector3 s1Start, in Vector3 s1End, in Vector3 s2Start, in Vector3 s2End, out float s1Dist, out float s2Dist, out Vector3 point1, out Vector3 point2)
         {
             // Based on Real-Time Collision Detection by Christer Ericson, pages 149-151 (ClosestPtSegmentSegment)
 
@@ -170,7 +164,7 @@ namespace MHServerEmu.Core.Collisions
             return Vector3.Dot(vector, vector);
         }
 
-        public static bool SegmentsIntersect2D(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+        public static bool SegmentsIntersect2D(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d)
         {
             // Real-Time Collision Detection p.152 (Test2DSegmentSegment)
             // Sign of areas correspond to which side of ab points c and d are
@@ -188,14 +182,14 @@ namespace MHServerEmu.Core.Collisions
             return false; // Segments not intersecting (or collinear)
         }
 
-        public static float SignedDoubleTriangleArea2D(Vector3 a, Vector3 b, Vector3 c)
+        public static float SignedDoubleTriangleArea2D(in Vector3 a, in Vector3 b, in Vector3 c)
         {   
             // Returns 2 times the signed triangle area. The result is positive if
             // abc is ccw, negative if abc is cw, zero if abc is degenerate.
             return Cross2D(b - a, c - a);
         }
 
-        public static bool LineLineIntersect2D(Vector3 line1Start, Vector3 line1End, Vector3 line2Start, Vector3 line2End, out Vector3 outPoint)
+        public static bool LineLineIntersect2D(in Vector3 line1Start, in Vector3 line1End, in Vector3 line2Start, in Vector3 line2End, out Vector3 outPoint)
         {
             Vector3 line1Dir = line1End - line1Start;
             float ax = line1Dir.X;
@@ -227,7 +221,7 @@ namespace MHServerEmu.Core.Collisions
                 return min;
         }
 
-        public static bool RayLineIntersect2D(Vector3 rayStart, Vector3 rayDirection, Vector3 lineStart, Vector3 lineDirection, out float rayDistance, out float lineDistance)
+        public static bool RayLineIntersect2D(in Vector3 rayStart, in Vector3 rayDirection, in Vector3 lineStart, in Vector3 lineDirection, out float rayDistance, out float lineDistance)
         {
             Vector3 perpLineDir = Vector3.Perp2D(lineDirection);
             Vector3 perpRayDir = Vector3.Perp2D(rayDirection);
@@ -245,7 +239,7 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
-        public static bool RaySegmentIntersect2D(Vector3 rayStart, Vector3 rayDirection, Vector3 segmentStart, Vector3 segmentDirection, out Vector3 intersectPoint)
+        public static bool RaySegmentIntersect2D(in Vector3 rayStart, in Vector3 rayDirection, in Vector3 segmentStart, in Vector3 segmentDirection, out Vector3 intersectPoint)
         {
             if (RayLineIntersect2D(rayStart, rayDirection, segmentStart, segmentDirection, out float rayDistance, out float lineDistance))
                 if (rayDistance >= 0.0f && lineDistance >= 0.0f && lineDistance <= 1.0f)
@@ -466,7 +460,7 @@ namespace MHServerEmu.Core.Collisions
             }
         }
 
-        public static float LinePointSide2D(Vector3 start, Vector3 end, Vector3 point)
+        public static float LinePointSide2D(in Vector3 start, in Vector3 end, in Vector3 point)
         {
             return Cross2D(start - end, point - end);
         }

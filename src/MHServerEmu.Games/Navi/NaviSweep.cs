@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        private SweepResult PerformHeightMapLineSweep(Segment line, ref int height, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
+        private SweepResult PerformHeightMapLineSweep(in Segment line, ref int height, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
             if (_region == null) return SweepResult.Failed;
 
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.Success;
         }
 
-        private SweepResult PerformHeightMapLineSweepWithinCell(Segment line, Cell cell, ref int height, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
+        private SweepResult PerformHeightMapLineSweepWithinCell(in Segment line, Cell cell, ref int height, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
             if (cell == null) return SweepResult.Failed;
 
@@ -195,7 +195,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.Success;
         }
 
-        private SweepResult CheckHeightMapPair(int posX, int posY, bool swap, int sign, HeightMapPrototype heightMap, ref int height, Cell cell, Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
+        private SweepResult CheckHeightMapPair(int posX, int posY, bool swap, int sign, HeightMapPrototype heightMap, ref int height, Cell cell, in Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
             int[] x = new int[2];
             int[] y = new int[2];
@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.HeightMap;
         }
 
-        private SweepResult CheckHeightMapAtPoint(int x, int y, HeightMapPrototype heightMap, ref int height, Cell cell, Segment ray, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDistance)
+        private SweepResult CheckHeightMapAtPoint(int x, int y, HeightMapPrototype heightMap, ref int height, Cell cell, in Segment ray, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDistance)
         {
             if (cell == null) return SweepResult.Failed;
 
@@ -335,7 +335,7 @@ namespace MHServerEmu.Games.Navi
             return false;
         }
 
-        private SweepResult PerformHeightMapCircleSweep(Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal)
+        private SweepResult PerformHeightMapCircleSweep(in Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal)
         {
             if (_region == null) return SweepResult.Failed;
 
@@ -424,7 +424,7 @@ namespace MHServerEmu.Games.Navi
             return result;
         }
 
-        private SweepResult PerformHeightMapCircleSweepWithinCell(Segment line, Cell cell, HashSet<HitHeightMapSquareInfo> heightMapHits)
+        private SweepResult PerformHeightMapCircleSweepWithinCell(in Segment line, Cell cell, HashSet<HitHeightMapSquareInfo> heightMapHits)
         {
             if (cell == null) return SweepResult.Failed;
 
@@ -498,7 +498,7 @@ namespace MHServerEmu.Games.Navi
             return SweepResult.Success;
         }
 
-        private static bool GridRenderLine2D(Segment line, float mapX, float mapY, GridRenderPredicate predicate)
+        private static bool GridRenderLine2D(in Segment line, float mapX, float mapY, GridRenderPredicate predicate)
         {
             float x0 = Math.Clamp(line.Start.X * mapX, 0.0f, mapX - 1);
             float y0 = Math.Clamp(line.Start.Y * mapY, 0.0f, mapY - 1);

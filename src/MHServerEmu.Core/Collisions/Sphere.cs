@@ -4,12 +4,12 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Sphere : IBounds
+    public struct Sphere : IBounds
     {
-        public Vector3 Center { get; }
-        public float Radius { get; }
+        public Vector3 Center;
+        public float Radius;
         public float RadiusSquared => Radius * Radius;
-        public static Sphere Zero => new(Vector3.Zero, 0.0f);
+        public static Sphere Zero { get; } = new(Vector3.Zero, 0.0f);
 
         public Sphere(Vector3 center, float radius)
         {
@@ -23,12 +23,12 @@ namespace MHServerEmu.Core.Collisions
                         new Vector3 (Center.X + Radius, Center.Y + Radius, Center.Z + Radius));
         }
 
-        public bool Intersects(Vector3 v)
+        public bool Intersects(in Vector3 v)
         {
             return Vector3.LengthSqr(Center - v) <= RadiusSquared;
         }
 
-        public ContainmentType Contains(Aabb2 bounds)
+        public ContainmentType Contains(in Aabb2 bounds)
         {
             float radius = Radius;
             Vector3 center = Center;
@@ -78,7 +78,7 @@ namespace MHServerEmu.Core.Collisions
             return maxSq <= radiusSq ? ContainmentType.Contains : ContainmentType.Intersects;
         }
 
-        public bool Intersects(Aabb bounds)
+        public bool Intersects(in Aabb bounds)
         {
             float sphereRadius = Radius;
             Vector3 center = Center;
@@ -103,27 +103,27 @@ namespace MHServerEmu.Core.Collisions
             return minSq < RadiusSquared;
         }
 
-        public bool Intersects(Obb obb)
+        public bool Intersects(in Obb obb)
         {
             return obb.Intersects(this);
         }
 
-        public bool Intersects(Sphere sphere)
+        public bool Intersects(in Sphere sphere)
         {
             return Vector3.Length(sphere.Center - Center) <= sphere.Radius + Radius;
         }
 
-        public bool Intersects(Capsule capsule)
+        public bool Intersects(in Capsule capsule)
         {
             return capsule.Intersects(this);
         }
 
-        public bool Intersects(Triangle triangle)
+        public bool Intersects(in Triangle triangle)
         {
             return triangle.Intersects(this);
         }
 
-        public bool Sweep(Aabb aabb, Vector3 velocity, ref float time)
+        public bool Sweep(in Aabb aabb, in Vector3 velocity, ref float time)
         {
             // Real-Time Collision Detection p.229 (IntersectMovingSphereAABB)
             // Compute the AABB resulting from expanding b by sphere radius r
@@ -171,7 +171,7 @@ namespace MHServerEmu.Core.Collisions
             return Capsule.IntersectsSegment(seg, SweepGetCorner(aabb, u ^ 7), SweepGetCorner(aabb, v), Radius, ref time);
         }
 
-        private static Vector3 SweepGetCorner(Aabb b, int n)
+        private static Vector3 SweepGetCorner(in Aabb b, int n)
         {
             // Support function that returns the AABB vertex with index n
             return new Vector3((n & 1) != 0 ? b.Max.X : b.Min.X,
@@ -179,7 +179,7 @@ namespace MHServerEmu.Core.Collisions
                                (n & 4) != 0 ? b.Max.Z : b.Min.Z);
         }
 
-        public bool Sweep(Obb obb, Vector3 velocity, ref float time)
+        public bool Sweep(in Obb obb, Vector3 velocity, ref float time)
         {
             Vector3 obbVelocity = obb.TransformVector(velocity);
             Vector3 center = obb.TransformPoint(Center);
@@ -188,12 +188,12 @@ namespace MHServerEmu.Core.Collisions
             return sphere.Sweep(aabb, obbVelocity, ref time);
         }
 
-        public bool Intersects(Segment seg, ref float time)
+        public bool Intersects(in Segment seg, ref float time)
         {
             return Intersects(seg, ref time, out _);
         }
 
-        public bool Intersects(Segment segment, ref float time, out Vector3 intersectionPoint)
+        public bool Intersects(in Segment segment, ref float time, out Vector3 intersectionPoint)
         {
             Vector3 direction = segment.Direction;
             float length = Vector3.Length(direction);
@@ -202,7 +202,7 @@ namespace MHServerEmu.Core.Collisions
             return IntersectsSegment(segment.Start, directionNorm, length, Center, Radius, out time, out intersectionPoint);
         }
 
-        public static bool IntersectsSegment(Vector3 start, Vector3 directionNorm, float length, Vector3 center, float radius, out float time, out Vector3 intersectionPoint)
+        public static bool IntersectsSegment(in Vector3 start, in Vector3 directionNorm, float length, in Vector3 center, float radius, out float time, out Vector3 intersectionPoint)
         {
             if (IntersectsRay(start, directionNorm, center, radius, out float rayDistance, out Vector3 rayPoint))
             {
@@ -222,7 +222,7 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
-        public static bool IntersectsRay(Vector3 start, Vector3 directionNorm, Vector3 center, float radius, out float rayDistance, out Vector3 rayPoint)
+        public static bool IntersectsRay(in Vector3 start, in Vector3 directionNorm, in Vector3 center, float radius, out float rayDistance, out Vector3 rayPoint)
         {
             if (IntersectsRay(start, directionNorm, center, radius, out rayDistance))
             {
@@ -235,7 +235,7 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
-        public static bool IntersectsRay(Vector3 start, Vector3 directionNorm, Vector3 center, float radius, out float rayDistance)
+        public static bool IntersectsRay(in Vector3 start, in Vector3 directionNorm, in Vector3 center, float radius, out float rayDistance)
         {
             // Real-Time Collision Detection p.178 (IntersectRaySphere)
             Vector3 dir = start - center;
@@ -262,7 +262,7 @@ namespace MHServerEmu.Core.Collisions
             return false;
         }
 
-        public static bool SweepSegment2d(Vector3 segmentStart, Vector3 segmentEnd, Vector3 sphereStart, float sphereRadius, Vector3 direction, float magnitude, ref float distanceToIntersect, SweepSegmentFlags segmentFlag)
+        public static bool SweepSegment2d(in Vector3 segmentStart, in Vector3 segmentEnd, in Vector3 sphereStart, float sphereRadius, in Vector3 direction, float magnitude, ref float distanceToIntersect, SweepSegmentFlags segmentFlag)
         {
             Vector3 segment = segmentEnd - segmentStart;
 
@@ -328,7 +328,7 @@ namespace MHServerEmu.Core.Collisions
             return sb.ToString();
         }
 
-        public bool Sweep(Sphere otherSphere, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, Axis axis = Axis.Invalid)
+        public bool Sweep(in Sphere otherSphere, in Vector3 otherVelocity, in Vector3 velocity, ref float resultTime, Axis axis = Axis.Invalid)
         {
             // Real-Time Collision Detection p.224 (TestMovingSphereSphere)
 

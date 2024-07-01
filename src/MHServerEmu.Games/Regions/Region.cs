@@ -316,8 +316,6 @@ namespace MHServerEmu.Games.Regions
 
             */
 
-            Bound ??= new Aabb(Vector3.Zero, Vector3.Zero);
-
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
             IsGenerated = true;
             return true;
@@ -370,7 +368,7 @@ namespace MHServerEmu.Games.Regions
             return bound;
         }
 
-        public void SetBound(Aabb boundingBox)
+        public void SetBound(in Aabb boundingBox)
         {
             if (boundingBox.Volume <= 0 || (boundingBox.Min == Bound.Min && boundingBox.Max == Bound.Max)) return;
 
@@ -380,7 +378,7 @@ namespace MHServerEmu.Games.Regions
             InitializeSpacialPartition(Bound);
         }
 
-        private bool InitializeSpacialPartition(Aabb bound)
+        private bool InitializeSpacialPartition(in Aabb bound)
         {
             if (EntitySpatialPartition != null || CellSpatialPartition != null) return false;
 
@@ -587,7 +585,7 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<WorldEntity>();
         }
 
-        public IEnumerable<Avatar> IterateAvatarsInVolume(Sphere bound)
+        public IEnumerable<Avatar> IterateAvatarsInVolume(in Sphere bound)
         {
             if (EntitySpatialPartition != null)
                 return EntitySpatialPartition.IterateAvatarsInVolume(bound);
@@ -707,13 +705,13 @@ namespace MHServerEmu.Games.Regions
             return markerFilter == filterRef;
         }
 
-        public IEnumerable<Area> IterateAreas(Aabb bound = null)
+        public IEnumerable<Area> IterateAreas(Aabb? bound = null)
         {
             List<Area> areasList = Areas.Values.ToList();
             foreach (Area area in areasList)
             {
                 //Area area = enumerator.Current.Value;
-                if (bound == null || area.RegionBounds.Intersects(bound))
+                if (bound == null || area.RegionBounds.Intersects(bound.Value))
                     yield return area;
             }
         }

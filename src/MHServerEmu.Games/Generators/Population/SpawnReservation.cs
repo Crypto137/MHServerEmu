@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.Generators.Population
 
     public class SpawnReservationSpatialPartition : Quadtree<SpawnReservation>
     {
-        public SpawnReservationSpatialPartition(Aabb bound) : base(bound, 128.0f) { }
+        public SpawnReservationSpatialPartition(in Aabb bound) : base(bound, 128.0f) { }
 
         public override QuadtreeLocation<SpawnReservation> GetLocation(SpawnReservation element) => element.SpatialPartitionLocation;
         public override Aabb GetElementBounds(SpawnReservation element) => element.RegionBounds;

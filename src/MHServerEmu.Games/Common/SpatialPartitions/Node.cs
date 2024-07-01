@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
         public LinkedList<QuadtreeLocation<T>> Elements = new(); // intr_circ_list
         public int AtTargetLevelCount;
 
-        public Node(Quadtree<T> tree, Node<T> parent, Aabb2 bounds)
+        public Node(Quadtree<T> tree, Node<T> parent, in Aabb2 bounds)
         {
             Tree = tree;
             Parent = parent;

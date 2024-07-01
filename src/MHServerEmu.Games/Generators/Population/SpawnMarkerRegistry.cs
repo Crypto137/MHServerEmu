@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Generators.Population
                 return Enumerable.Empty<SpawnReservation>();
         }
 
-        public void InitializeSpacialPartition(Aabb bound)
+        public void InitializeSpacialPartition(in Aabb bound)
         {
             if (_reservationOctree != null) return;
             _reservationOctree = new (bound);

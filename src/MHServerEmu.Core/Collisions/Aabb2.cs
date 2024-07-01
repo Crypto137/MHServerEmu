@@ -33,7 +33,7 @@ namespace MHServerEmu.Core.Collisions
             Max = new(center.X + radius, center.Y + radius);
         }
 
-        public bool FullyContainsXY(Aabb bounds)
+        public bool FullyContainsXY(in Aabb bounds)
         {
             return bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
                    bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y;
@@ -77,7 +77,7 @@ namespace MHServerEmu.Core.Collisions
 
         public Aabb2 Translate(Vector2 newPosition) => new(Min + newPosition, Max + newPosition);
 
-        public ContainmentType Contains(Aabb2 bounds)
+        public ContainmentType Contains(in Aabb2 bounds)
         {
             if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
                bounds.Min.Y > Max.Y || bounds.Max.Y < Min.Y)
@@ -92,7 +92,7 @@ namespace MHServerEmu.Core.Collisions
             return ContainmentType.Intersects;
         }
 
-        public bool Intersects(Aabb bounds)
+        public bool Intersects(in Aabb bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
                 Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y)
@@ -100,7 +100,7 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
-        public bool Intersects(Aabb2 bounds)
+        public bool Intersects(in Aabb2 bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
                 Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y)
@@ -108,7 +108,7 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
-        public bool IntersectsXY(Vector3 point)
+        public bool IntersectsXY(in Vector3 point)
         {
             if (Max.X < point.X || Min.X > point.X ||
                 Max.Y < point.Y || Min.Y > point.Y)

@@ -321,7 +321,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 return true;
         }
 
-        private static void SweepEntityCollideToDestinationHelper(WorldEntity entity, Aabb volume, Vector3 position, Vector3 destination, WorldEntity blockedEntity, out EntityCollision outCollision, List<EntityCollision> entityCollisionList)
+        private static void SweepEntityCollideToDestinationHelper(WorldEntity entity, in Aabb volume, Vector3 position, Vector3 destination, WorldEntity blockedEntity, out EntityCollision outCollision, List<EntityCollision> entityCollisionList)
         {
             Bounds bounds = entity.EntityCollideBounds;
             RegionLocation location = entity.RegionLocation;

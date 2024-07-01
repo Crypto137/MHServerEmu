@@ -4,7 +4,7 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Capsule
+    public struct Capsule
     {
         public Vector3 A;
         public Vector3 B;
@@ -17,11 +17,11 @@ namespace MHServerEmu.Core.Collisions
             Radius = radius;
         }
 
-        public static Capsule Zero => new(Vector3.Zero, Vector3.Zero, 0.0f);
+        public static Capsule Zero { get; } = new(Vector3.Zero, Vector3.Zero, 0.0f);
 
         public static bool IntersectsSegment(Segment seg, Vector3 sideA, Vector3 sideB, float radius, ref float time)
         {
-            bool SphereIntersects(Vector3 center, ref float time)
+            bool SphereIntersects(in Vector3 center, ref float time)
             {
                 var sphere = new Sphere(center, radius);
                 return sphere.Intersects(seg, ref time);
@@ -77,35 +77,35 @@ namespace MHServerEmu.Core.Collisions
             return time >= 0.0f && time <= 1.0f;
         }
 
-        public bool Intersects(Aabb aabb)
+        public bool Intersects(in Aabb aabb)
         {
             Sphere sphere = new(A, Radius);
             float f = 0.0f;
             return sphere.Sweep(aabb, B - A, ref f);
         }
 
-        public bool Intersects(Obb obb)
+        public bool Intersects(in Obb obb)
         {
             Sphere sphere = new(A, Radius);
             float f = 0.0f;
             return sphere.Sweep(obb, B - A, ref f);
         }
 
-        public bool Intersects(Sphere sphere)
+        public bool Intersects(in Sphere sphere)
         {
             float distanceSq = Segment.SegmentPointDistanceSq(A, B, sphere.Center);
             float radius = Radius + sphere.Radius;
             return distanceSq <= radius * radius;
         }
 
-        public bool Intersects(Capsule other)
+        public bool Intersects(in Capsule other)
         {
             float distanceSq = Segment.SegmentSegmentClosestPoint(A, B, other.A, other.B, out _, out _, out _, out _);
             float radius = Radius + other.Radius;
             return distanceSq <= radius * radius;
         }
 
-        public bool Intersects(Triangle triangle)
+        public bool Intersects(in Triangle triangle)
         {
             return triangle.TriangleIntersectsCircle2D(A, Radius);
         }

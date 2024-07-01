@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Navi
             _sectors = Array.Empty<NaviTriangle>();
         }
 
-        public void Create(Aabb bounds)
+        public void Create(in Aabb bounds)
         {
             Release();
             Bounds = bounds;

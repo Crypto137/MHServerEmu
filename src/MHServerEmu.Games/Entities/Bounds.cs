@@ -493,7 +493,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         // Fast way to make copies of Intersects than a confusing interface or slow dynamic
-        public bool Intersects(Obb bounds)
+        public bool Intersects(in Obb bounds)
         {
             switch (Geometry)
             {
@@ -511,7 +511,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Aabb bounds)
+        public bool Intersects(in Aabb bounds)
         {
             switch (Geometry)
             {
@@ -529,7 +529,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Capsule bounds)
+        public bool Intersects(in Capsule bounds)
         {
             switch (Geometry)
             {
@@ -547,7 +547,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Sphere bounds)
+        public bool Intersects(in Sphere bounds)
         {
             switch (Geometry)
             {
@@ -565,7 +565,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Triangle bounds)
+        public bool Intersects(in Triangle bounds)
         {
             switch (Geometry)
             {
@@ -728,7 +728,7 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        private static bool SweepVsStationaryAABB(Bounds bounds, Vector3 velocity, Aabb aabb, ref float resultTime, Vector3? resultNormal)
+        private static bool SweepVsStationaryAABB(Bounds bounds, Vector3 velocity, in Aabb aabb, ref float resultTime, Vector3? resultNormal)
         {
             switch (bounds.Geometry)
             {
@@ -756,7 +756,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool SweepVsStationaryOBB(Bounds bounds, Vector3 velocity, Obb obb, ref float resultTime, Vector3? resultNormal)
+        private static bool SweepVsStationaryOBB(Bounds bounds, Vector3 velocity, in Obb obb, ref float resultTime, Vector3? resultNormal)
         {
             Aabb aabb = new (obb.Center - obb.Extents, obb.Center + obb.Extents);
 

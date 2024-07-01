@@ -2,7 +2,7 @@
 {
     public interface IBounds
     {
-        ContainmentType Contains(Aabb2 bounds);
-        bool Intersects(Aabb bounds);
+        ContainmentType Contains(in Aabb2 bounds);
+        bool Intersects(in Aabb bounds);
     }
 }
