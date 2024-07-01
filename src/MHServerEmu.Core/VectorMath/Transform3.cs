@@ -2,12 +2,12 @@
 
 namespace MHServerEmu.Core.VectorMath
 {
-    public class Transform3
+    public struct Transform3
     {
-        public Vector3 Col0 { get; set; }
-        public Vector3 Col1 { get; set; }
-        public Vector3 Col2 { get; set; }
-        public Vector3 Col3 { get; set; }
+        public Vector3 Col0;
+        public Vector3 Col1;
+        public Vector3 Col2;
+        public Vector3 Col3;
 
         public Vector3 Translation { get => Col3; set => Col3 = value; }
 
@@ -21,7 +21,7 @@ namespace MHServerEmu.Core.VectorMath
             Col3 = transform.Col3;
         }
 
-        public Transform3(Vector3 _col0, Vector3 _col1, Vector3 _col2, Vector3 _col3)
+        public Transform3(in Vector3 _col0, in Vector3 _col1, in Vector3 _col2, in Vector3 _col3)
         {
             Col0 = _col0;
             Col1 = _col1;
@@ -35,19 +35,18 @@ namespace MHServerEmu.Core.VectorMath
                 Vector3.XAxis,
                 Vector3.YAxis,
                 Vector3.ZAxis,
-                new Vector3(0.0f)
+                Vector3.Zero
             );
         }
 
-
-        public static Transform3 BuildTransform(Vector3 translation, Orientation rotation)
+        public static Transform3 BuildTransform(in Vector3 translation, in Orientation rotation)
         {
             Transform3 transform = RotationZYX(new Vector3(-rotation.Roll, -rotation.Pitch, rotation.Yaw));
             transform.Translation = translation;
             return transform;
         }
 
-        public static Transform3 RotationZYX(Vector3 radiansXYZ)
+        public static Transform3 RotationZYX(in Vector3 radiansXYZ)
         {
             float sX, cX, sY, cY, sZ, cZ, tmp0, tmp1;
             sX = MathF.Sin(radiansXYZ.X);
@@ -63,7 +62,7 @@ namespace MHServerEmu.Core.VectorMath
                 new Vector3(cZ * cY, sZ * cY, -sY),
                 new Vector3(tmp0 * sX - sZ * cX, tmp1 * sX + cZ * cX, cY * sX),
                 new Vector3(tmp0 * cX + sZ * sX, tmp1 * cX - cZ * sX, cY * cX),
-                new Vector3(0.0f)
+                Vector3.Zero
             );
         }
 
@@ -80,7 +79,7 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
-        public static Transform3 operator *(Transform3 left, Transform3 right)
+        public static Transform3 operator *(in Transform3 left, in Transform3 right)
         {
             return new Transform3(
                 left * right.Col0,
@@ -90,7 +89,7 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
-        public static Vector3 operator *(Transform3 t, Vector3 v)
+        public static Vector3 operator *(in Transform3 t, in Vector3 v)
         {
             return new Vector3(
                 t.Col0.X * v.X + t.Col1.X * v.Y + t.Col2.X * v.Z,
@@ -99,7 +98,7 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
-        public static Aabb2 operator *(Transform3 t, Aabb2 b)
+        public static Aabb2 operator *(in Transform3 t, in Aabb2 b)
         {
             var points = b.GetPoints();
             var box = new Aabb2();
@@ -108,7 +107,7 @@ namespace MHServerEmu.Core.VectorMath
             return box;
         }
 
-        public static Point2 operator *(Transform3 t, Point2 p)
+        public static Point2 operator *(in Transform3 t, in Point2 p)
         {
             return new Point2(
                 t.Col0.X * p.X + t.Col1.X * p.Y + t.Col3.X,
@@ -116,7 +115,7 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
-        public static Point3 operator *(Transform3 t, Point3 p)
+        public static Point3 operator *(in Transform3 t, in Point3 p)
         {
             return new Point3(
                 t.Col0.X * p.X + t.Col1.X * p.Y + t.Col2.X * p.Z + t.Col3.X,

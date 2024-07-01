@@ -187,7 +187,7 @@ namespace MHServerEmu.Games.Navi
 
         private void MergeMeshConnections() {}
 
-        public bool ModifyMesh(Transform3 transform, NaviPatchPrototype patch, bool projZ)
+        public bool ModifyMesh(in Transform3 transform, NaviPatchPrototype patch, bool projZ)
         {
             if (patch.Points.IsNullOrEmpty()) return true;
 
@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Navi
             IsMarkupValid = false;
         }
 
-        public bool Stitch(NaviPatchPrototype patch, Transform3 transform)
+        public bool Stitch(NaviPatchPrototype patch, in Transform3 transform)
         {
             if (patch.Points.HasValue())
             {
@@ -383,7 +383,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        public bool StitchProjZ(NaviPatchPrototype patch, Transform3 transform)
+        public bool StitchProjZ(NaviPatchPrototype patch, in Transform3 transform)
         {
             if (patch.Points.HasValue())
             {

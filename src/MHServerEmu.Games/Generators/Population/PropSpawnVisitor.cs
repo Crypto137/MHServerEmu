@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Generators.Population
         private NaviMesh _naviMesh;
         private Transform3 _transform;
 
-        public NaviPropSpawnVisitor(NaviMesh naviMesh, Transform3 transform)
+        public NaviPropSpawnVisitor(NaviMesh naviMesh, in Transform3 transform)
         {
             _naviMesh = naviMesh;
             _transform = transform;
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Generators.Population
         private NaviMesh _naviMesh;
         private Transform3 _transform;
 
-        public NaviEncounterVisitor(NaviMesh naviMesh, Transform3 transform)
+        public NaviEncounterVisitor(NaviMesh naviMesh, in Transform3 transform)
         {
             _naviMesh = naviMesh;
             _transform = transform;

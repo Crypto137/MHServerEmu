@@ -67,27 +67,27 @@ namespace MHServerEmu.Core.VectorMath
 
         public NetStructPoint3 ToNetStructPoint3() => NetStructPoint3.CreateBuilder().SetX(X).SetY(Y).SetZ(Z).Build();
 
-        public static Vector3 operator +(Vector3 a, Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-        public static Vector3 operator -(Vector3 a, Vector3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-        public static Vector3 operator -(Vector3 a) => new(-a.X, -a.Y, -a.Z);
-        public static Vector3 operator *(Vector3 v, float f) => new(v.X * f, v.Y * f, v.Z * f);
-        public static Vector3 operator /(Vector3 v, float f) => new(v.X / f, v.Y / f, v.Z / f);
+        public static Vector3 operator +(in Vector3 a, in Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        public static Vector3 operator -(in Vector3 a, in Vector3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        public static Vector3 operator -(in Vector3 a) => new(-a.X, -a.Y, -a.Z);
+        public static Vector3 operator *(in Vector3 v, float f) => new(v.X * f, v.Y * f, v.Z * f);
+        public static Vector3 operator /(in Vector3 v, float f) => new(v.X / f, v.Y / f, v.Z / f);
         public static bool operator ==(Vector3 a, Vector3 b) => a.Equals(b);
         public static bool operator !=(Vector3 a, Vector3 b) => !a.Equals(b);
         public static bool operator >(Vector3 a, Vector3 b) => a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
-        public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // MathF.Sqrt(LengthSqr(v))
-        public static float LengthTest(Vector3 v) => IsNearZero(v) ? 0.0f : Length(v);
-        public static float Length2D(Vector3 v)
+        public static float Length(in Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z); // MathF.Sqrt(LengthSqr(v))
+        public static float LengthTest(in Vector3 v) => IsNearZero(v) ? 0.0f : Length(v);
+        public static float Length2D(in Vector3 v)
         {
             var v2d = v.To2D();
             return IsNearZero(v2d) ? 0.0f : Length(v2d);
         }
-        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon = Segment.Epsilon) => LengthSqr(v1 - v2) < epsilon;
-        public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
-        public static float LengthSquared2D(Vector3 v) => LengthSqr(v.To2D());
-        public static bool IsNearZero(Vector3 v, float epsilon = Segment.Epsilon) => LengthSqr(v) < epsilon;
-        public static bool IsNearZero2D(Vector3 v, float epsilon = Segment.Epsilon) => LengthSquared2D(v) < epsilon;
+        public static bool EpsilonSphereTest(in Vector3 v1, in Vector3 v2, float epsilon = Segment.Epsilon) => LengthSqr(v1 - v2) < epsilon;
+        public static float LengthSqr(in Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
+        public static float LengthSquared2D(in Vector3 v) => LengthSqr(v.To2D());
+        public static bool IsNearZero(in Vector3 v, float epsilon = Segment.Epsilon) => LengthSqr(v) < epsilon;
+        public static bool IsNearZero2D(in Vector3 v, float epsilon = Segment.Epsilon) => LengthSquared2D(v) < epsilon;
 
         public override bool Equals(object obj)
         {
@@ -103,20 +103,20 @@ namespace MHServerEmu.Core.VectorMath
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
         public string ToStringNames() => $"x:{X} y:{Y} z:{Z}";
         public override string ToString() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
-        public static float Dot(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
-        public static float Dot2D(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y;
-        public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new(b.X - a.X, b.Y - a.Y, 0.0f));
-        public static float DistanceSquared(Vector3 a, Vector3 b) => LengthSqr(b - a);
+        public static float Dot(in Vector3 v1, in Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
+        public static float Dot2D(in Vector3 v1, in Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y;
+        public static float DistanceSquared2D(in Vector3 a, in Vector3 b) => LengthSqr(new(b.X - a.X, b.Y - a.Y, 0.0f));
+        public static float DistanceSquared(in Vector3 a, in Vector3 b) => LengthSqr(b - a);
 
-        public static Vector3 Normalize2D(Vector3 v)
+        public static Vector3 Normalize2D(in Vector3 v)
         {
             Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? XAxis : Normalize(vector2D);
         }
 
-        public static Vector3 Normalize(Vector3 v) => v / Length(v);
+        public static Vector3 Normalize(in Vector3 v) => v / Length(v);
 
-        public static bool IsFinite(Vector3 v)
+        public static bool IsFinite(in Vector3 v)
         {
             return float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
         }
@@ -129,8 +129,8 @@ namespace MHServerEmu.Core.VectorMath
             return new(x, y, 0.0f);
         }
 
-        public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(v1.To2D(), v2.To2D());
-        public static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
+        public static float Distance2D(in Vector3 v1, in Vector3 v2) => Distance(v1.To2D(), v2.To2D());
+        public static float Distance(in Vector3 v1, in Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
 
         public static Vector3 Flatten(Vector3 v, Axis axis)
         {
@@ -141,7 +141,7 @@ namespace MHServerEmu.Core.VectorMath
 
         public readonly Vector3 To2D() => new(X, Y, 0.0f);
 
-        public static Vector3 AbsPerElem(Vector3 vec)
+        public static Vector3 AbsPerElem(in Vector3 vec)
         {
             return new Vector3(
                 MathF.Abs(vec.X),
@@ -175,7 +175,7 @@ namespace MHServerEmu.Core.VectorMath
             return magnitudes > 0.0f ? MathF.Acos(Math.Clamp(Dot2D(a, b) / magnitudes, -1.0f, 1.0f)) : 0.0f;
         }
 
-        public static Vector3 Cross(Vector3 v1, Vector3 v2)
+        public static Vector3 Cross(in Vector3 v1, in Vector3 v2)
         {
             return new Vector3(
                 v1.Y * v2.Z - v1.Z * v2.Y,
@@ -184,7 +184,7 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
-        public static float LengthSquared(Vector3 v) => LengthSqr(v);
+        public static float LengthSquared(in Vector3 v) => LengthSqr(v);
 
         public void RoundToNearestInteger()
         {
@@ -195,22 +195,22 @@ namespace MHServerEmu.Core.VectorMath
 
         public float MaxElem() => Math.Max(Z, Math.Max(X, Y));
 
-        public static Vector3 SafeNormalize2D(Vector3 v) => SafeNormalize2D(v, XAxis);
-        public static Vector3 SafeNormalize2D(Vector3 v, Vector3 zero)
+        public static Vector3 SafeNormalize2D(in Vector3 v) => SafeNormalize2D(v, XAxis);
+        public static Vector3 SafeNormalize2D(in Vector3 v, in Vector3 zero)
         {
             Vector3 vector2D = v.To2D();
             return IsNearZero(vector2D) ? zero : Normalize(vector2D);
         }
 
-        public static Vector3 SafeNormalize(Vector3 v) => SafeNormalize(v, XAxis);
-        public static Vector3 SafeNormalize(Vector3 v, Vector3 zero)
+        public static Vector3 SafeNormalize(in Vector3 v) => SafeNormalize(v, XAxis);
+        public static Vector3 SafeNormalize(in Vector3 v, in Vector3 zero)
         {
             return IsNearZero(v) ? zero : Normalize(v);
         }
 
-        public static Vector3 Perp2D(Vector3 v) => new(v.Y, -v.X, 0.0f);
+        public static Vector3 Perp2D(in Vector3 v) => new(v.Y, -v.X, 0.0f);
 
-        public static Vector3 MaxPerElem(Vector3 v0, Vector3 v2)
+        public static Vector3 MaxPerElem(in Vector3 v0, in Vector3 v2)
         {
             return new Vector3(
                 v0.X > v2.X ? v0.X : v2.X,
@@ -219,7 +219,7 @@ namespace MHServerEmu.Core.VectorMath
             );
         }
 
-        public static Vector3 MinPerElem(Vector3 v0, Vector3 v1)
+        public static Vector3 MinPerElem(in Vector3 v0, in Vector3 v1)
         {
             return new Vector3(
                 v0.X < v1.X ? v0.X : v1.X,

@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public void InstanceMarkerSet(MarkerSetPrototype markerSet, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions)
+        public void InstanceMarkerSet(MarkerSetPrototype markerSet, in Transform3 transform, MarkerSetOptions instanceMarkerSetOptions)
         {
             if (instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated | MarkerSetOptions.NoSpawnMissionAssociated)) return;
             if (markerSet.Markers.HasValue())
@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.Regions
                         SpawnMarker(marker, transform, instanceMarkerSetOptions);
         }
 
-        public void SpawnMarker(MarkerPrototype marker, Transform3 transform, MarkerSetOptions options)
+        public void SpawnMarker(MarkerPrototype marker, in Transform3 transform, MarkerSetOptions options)
         {
             if (marker is EntityMarkerPrototype entityMarker)
             {
@@ -216,13 +216,13 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private void SpawnBlackOutZone(EntityMarkerPrototype entityMarker, BlackOutZonePrototype blackOutZone, Transform3 transform, MarkerSetOptions options)
+        private void SpawnBlackOutZone(EntityMarkerPrototype entityMarker, BlackOutZonePrototype blackOutZone, in Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 position, out _);
             PopulationManager.SpawnBlackOutZone(position, blackOutZone.BlackOutRadius, PrototypeId.Invalid);
         }
 
-        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entityProto, Transform3 transform, MarkerSetOptions options)
+        public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entityProto, in Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
             if (RegionBounds.Intersects(entityPosition) == false) entityPosition.RoundToNearestInteger();
@@ -269,7 +269,7 @@ namespace MHServerEmu.Games.Regions
             Game.EntityManager.CreateEntity(settings);
         }
 
-        public void CalcMarkerTransform(EntityMarkerPrototype entityMarker, Transform3 transform, MarkerSetOptions options,
+        public void CalcMarkerTransform(EntityMarkerPrototype entityMarker, in Transform3 transform, MarkerSetOptions options,
             out Vector3 markerPosition, out Orientation markerOrientation)
         {
             Transform3 markerTransform = transform * Transform3.BuildTransform(entityMarker.Position, entityMarker.Rotation);

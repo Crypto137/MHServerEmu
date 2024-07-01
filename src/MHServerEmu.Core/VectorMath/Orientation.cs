@@ -74,12 +74,12 @@ namespace MHServerEmu.Core.VectorMath
             return new(MathF.Atan2(delta.Y, delta.X), 0.0f, 0.0f);
         }
 
-        public static Orientation FromTransform3(Transform3 transform)
+        public static Orientation FromTransform3(in Transform3 transform)
         {
             return FromDeltaVector2D(transform.Col0);
         }
 
-        public static Orientation FromDeltaVector(Vector3 delta)
+        public static Orientation FromDeltaVector(in Vector3 delta)
         {
             return new(MathF.Atan2(delta.Y, delta.X), MathF.Atan2(delta.Z, MathF.Sqrt(delta.X * delta.X + delta.Y * delta.Y)), 0.0f);
         }
