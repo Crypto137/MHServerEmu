@@ -161,6 +161,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
+
+        [DoNotCopy]
+        public float DamageTuningScore { get; private set; }
+
+        [DoNotCopy]
+        public bool HasRescheduleActivationEventWithInvalidPowerRef { get; private set; }
+        [DoNotCopy]
+        public bool LooksAtMousePosition { get; private set; }
+        [DoNotCopy]
+        public bool IsControlPower { get; private set; }
+        [DoNotCopy]
+        public bool IsStealingPower { get; private set; }
+        [DoNotCopy]
+        public virtual bool IsHighFlyingPower { get => false; }
+
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
 
@@ -190,8 +205,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return PrototypeId.Invalid;
         }
 
-        public virtual bool IsHighFlyingPower() => false;
-
         public override bool ApprovedForUse()
         {
             return GameDatabase.DesignStateOk(DesignState);
@@ -201,11 +214,101 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
-            // TODO
+            // Skip abstract prototypes
+            if (DataDirectory.Instance.PrototypeIsAbstract(DataRef))
+                return;
 
+            DamageTuningScore = PostProcessTuningScore();
+
+            RangeActivationReduction = Math.Abs(RangeActivationReduction);
+
+            if (ActionsTriggeredOnPowerEvent.HasValue())
+            {
+                foreach (PowerEventActionPrototype triggeredAction in ActionsTriggeredOnPowerEvent)
+                {
+                    // TODO: Populate lookup for power event actions
+                    
+                    if (triggeredAction.EventAction == PowerEventActionType.RescheduleActivationInSeconds && triggeredAction.Power == PrototypeId.Invalid)
+                        HasRescheduleActivationEventWithInvalidPowerRef = true;
+                }
+            }
+
+            // Apply condition effect properties to their conditions
+            if (ConditionEffects != null)
+            {
+                // Condition effects are applied to mixin conditions of this power prototype.
+                // First, we need to trigger mixin condition copy from parent if it did not happen already.
+                var mixinFieldInfo = GameDatabase.PrototypeClassManager.GetMixinFieldInfo(typeof(PowerPrototype), typeof(ConditionPrototype), PrototypeFieldType.ListMixin);
+                PrototypeMixinList conditionList = CalligraphySerializer.AcquireOwnedMixinList(this, mixinFieldInfo, true);
+
+                // Post-process mixin conditions
+                foreach (PrototypeMixinListItem item in conditionList)
+                {
+                    // We are fairly certain this list is going to have only condition prototypes.
+                    // And if it doesn't, we will know straight away due to this crashing horribly
+                    // and be able to fix it.
+                    var conditionPrototype = (ConditionPrototype)item.Prototype;
+                    conditionPrototype.PostProcess();
+
+                    // Force property collection initialization, but get rid of all properties copied from the parent.
+                    // TODO: Do we even need GetPropertyCollectionField()? It would probably be faster to just create a collection directly.
+                    // It may break Calligraphy things somehow though.
+                    PrototypePropertyCollection conditionProperties = CalligraphySerializer.GetPropertyCollectionField(conditionPrototype);
+                    conditionProperties.Clear();
+                }
+
+                // Apply condition effects to conditions
+
+                foreach (PrototypeMixinListItem effectItem in ConditionEffects)
+                {
+                    var effectPrototype = (ConditionEffectPrototype)effectItem.Prototype;
+                    bool foundCondition = false;
+
+                    // Look for the condition specified in the effect prototype
+                    foreach (PrototypeMixinListItem conditionItem in conditionList)
+                    {
+                        if (conditionItem.BlueprintCopyNum != effectPrototype.ConditionNum)
+                            continue;
+
+                        // Copy effect properties to the condition
+                        PrototypePropertyCollection effectProperties = effectPrototype.Properties;
+                        var conditionPrototype = (ConditionPrototype)conditionItem.Prototype;
+
+                        PrototypePropertyCollection conditionProperties = conditionPrototype.Properties;
+                        conditionProperties.FlattenCopyFrom(effectProperties, false);
+                        foundCondition = true;
+
+                        // Set mouse position flag
+                        if (conditionPrototype.Scope == ConditionScopeType.User && conditionProperties[PropertyEnum.LookAtMousePosition])
+                            LooksAtMousePosition = true;
+
+                        break;
+                    }
+
+                    if (foundCondition == false)
+                        Logger.Warn($"PostProcess(): Effect found with no matching condition in power {this}");
+                }
+
+            }
+
+            // Add indexes to mixin conditions
+            if (AppliesConditions != null)
+            {
+                foreach (PrototypeMixinListItem item in AppliesConditions)
+                {
+                    if (item.Prototype is ConditionPrototype conditionProto)
+                        conditionProto.BlueprintCopyNum = item.BlueprintCopyNum;
+                }
+            }
+
+            // Initialize keywords
             KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
-            // TODO 
+            KeywordGlobalsPrototype keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
+            IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype.As<KeywordPrototype>());
+            IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword.As<KeywordPrototype>());
+
+            // TODO: Live tuning
 
             // We don't use prototype data ref pointers, so we need to go through the game database
             // to get the prototype for the ref. This can be slow for lookups that happen often, so
@@ -384,6 +487,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int cooldownTimeMS = Eval.RunInt(CooldownTimeMS, contextData);
             return TimeSpan.FromMilliseconds(cooldownTimeMS);
         }
+
+        private float PostProcessTuningScore()
+        {
+            float score = DamageTuningArea * DamageTuningBuff1 * DamageTuningBuff2 * DamageTuningBuff3
+                * DamageTuningCooldown * DamageTuningDebuff1 * DamageTuningDebuff2 * DamageTuningDebuff3
+                * DamageTuningDmgBonusFreq * DamageTuningHardCC * DamageTuningMultiHit * DamageTuningAnimationDelay
+                * DamageTuningPowerTag1 * DamageTuningPowerTag2 * DamageTuningPowerTag3 * DamageTuningRangeRisk
+                * DamageTuningSoftCC * DamageTuningSummon * DamageTuningDuration * DamageTuningTriggerDelay
+                * DamageTuningDoTHotspot * DamageTuningHeroSpecific;
+
+            score *= DamageBaseTuningEnduranceCost * DamageBaseTuningEnduranceRatio + (DamageBaseTuningAnimTimeMS / 1000f);
+            return score;
+        }
     }
 
     public class MovementPowerPrototype : PowerPrototype
@@ -409,7 +525,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HighFlying { get; protected set; }
         public TeleportMethodType TeleportMethod { get; protected set; }
 
-        public override bool IsHighFlyingPower() => HighFlying;
+        [DoNotCopy]
+        public override bool IsHighFlyingPower { get => HighFlying; }
     }
 
     public class SpecializationPowerPrototype : PowerPrototype

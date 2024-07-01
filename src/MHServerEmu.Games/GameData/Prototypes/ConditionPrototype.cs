@@ -180,6 +180,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsHitReactCondition { get => Properties != null && Properties.HasProperty(PropertyEnum.HitReact); }
 
+        [DoNotCopy]
+        public int BlueprintCopyNum { get; set; }
+
         public override void PostProcess()
         {
             base.PostProcess();
