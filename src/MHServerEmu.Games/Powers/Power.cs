@@ -1,13 +1,16 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -16,6 +19,9 @@ namespace MHServerEmu.Games.Powers
 {
     public class Power
     {
+        private const float PowerPositionSweepPadding = Locomotor.MovementSweepPadding;
+        private const float PowerPositionSweepPaddingSquared = PowerPositionSweepPadding * PowerPositionSweepPadding;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private bool _isTeamUpPassivePowerWhileAway;
@@ -286,15 +292,55 @@ namespace MHServerEmu.Games.Powers
             throw new NotImplementedException();
         }
 
-        public PowerPositionSweepResult PowerPositionSweep(RegionLocation startLocation, Vector3 targetPosition, ulong targetEntityId, Vector3 resultPosition, bool forceDoNotPassTarget = false, float maxRangeOverride = 0f)
+        public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
+            out Vector3 resultPosition, bool forceDoNotMoveToExactTargetLocation = false, float rangeOverride = 0f)
         {
-            throw new NotImplementedException();
+            resultPosition = new(targetPosition);
+
+            if (Owner == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): Owner == null");
+
+            Region region = regionLocation.Region;
+            if (region == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): region == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): powerProto == null");
+            
+            if (powerProto is MovementPowerPrototype movementPowerProto)
+            {
+                if (movementPowerProto.PowerMovementPathPct > 0f || movementPowerProto.TeleportMethod != TeleportMethodType.None)
+                {
+                    Locomotor locomotor = Owner.Locomotor;
+                    if (locomotor == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): locomotor == null");
+
+                    bool doNotMoveToExactTargetLocation = forceDoNotMoveToExactTargetLocation || movementPowerProto.MoveToExactTargetLocation == false;
+                    float range = Segment.IsNearZero(rangeOverride) ? GetRange() : rangeOverride;
+
+                    PointOnLineResult result = region.NaviMesh.FindPointOnLineToOccupy(ref resultPosition, regionLocation.Position, targetPosition, range,
+                        Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
+
+                    return result switch
+                    {
+                        PointOnLineResult.Failed    => PowerPositionSweepResult.TargetPositionInvalid,
+                        PointOnLineResult.Clipped   => PowerPositionSweepResult.Clipped,
+                        PointOnLineResult.Success   => PowerPositionSweepResult.Success,
+                        _                           => PowerPositionSweepResult.Error,
+                    };
+                }
+            }
+
+            return PowerPositionSweepInternal(regionLocation, targetPosition, targetId, out resultPosition, false, false); ;
         }
 
-        public bool PowerLOSCheck(RegionLocation regionLocation, Vector3 position, ulong targetId, out Vector3 resultPos, bool lOSCheckAlongGround)
+        public bool PowerLOSCheck(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId, out Vector3 resultPosition, bool losCheckAlongGround)
         {
-            resultPos = Vector3.Zero;
-            return true;
+            PowerPositionSweepResult result = PowerPositionSweepInternal(regionLocation, targetPosition, targetId, out resultPosition, true, losCheckAlongGround);
+
+            Logger.Debug($"PowerLOSCheck(): {result}");
+
+            if (result == PowerPositionSweepResult.Clipped)
+                return Vector3.DistanceSquared(targetPosition, resultPosition) <= PowerPositionSweepPaddingSquared;
+
+            return result == PowerPositionSweepResult.Success;
         }
 
         public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
@@ -1219,6 +1265,178 @@ namespace MHServerEmu.Games.Powers
             range = MathF.Max(userRadius, range) + 5f;
 
             return (distance - range) <= 0f;
+        }
+
+        private PowerPositionSweepResult PowerPositionSweepInternal(RegionLocation regionLocation, Vector3 targetPosition,
+            ulong targetId, out Vector3 resultPosition, bool losCheck, bool losCheckAlongGround)
+        {
+            resultPosition = new(targetPosition);
+
+            if (Owner == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): Owner == null");
+
+            Region region = regionLocation.Region;
+            if (region == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): region == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): powerProto == null");
+
+            // This is used multiple times, so we do a cast for it now
+            MovementPowerPrototype movementPowerProto = powerProto as MovementPowerPrototype;
+
+            NaviMesh naviMesh = region.NaviMesh;
+
+            // Sweep settings
+            Vector3 fromPosition = new(regionLocation.Position);
+            Vector3 toPosition = new(targetPosition);
+            float sweepRadius = 0f;
+            PathFlags pathFlags = PathFlags.Power;
+            Vector3 resultNormal = null;
+            float padding = PowerPositionSweepPadding;
+            HeightSweepType heightSweepType = HeightSweepType.None;
+            int maximumHeight = short.MaxValue;
+            int minimumHeight = short.MinValue;
+
+            bool clipped = false;
+
+            // Determine sweep settings based for the power
+            if (losCheck == false && movementPowerProto != null)
+            {
+                Locomotor locomotor = Owner.Locomotor;
+                if (locomotor == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): locomotor == null");
+
+                bool doNotMoveToExactTargetLocation = movementPowerProto.MoveToExactTargetLocation == false;
+
+                PointOnLineResult pointOnLineResult = naviMesh.FindPointOnLineToOccupy(ref toPosition, fromPosition, toPosition, GetRange(),
+                    Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
+
+                if (pointOnLineResult == PointOnLineResult.Failed)
+                    return PowerPositionSweepResult.TargetPositionInvalid;
+
+                clipped = pointOnLineResult == PointOnLineResult.Clipped;
+                pathFlags = PathFlags.Walk;
+                int movementHeightBonus = movementPowerProto.MovementHeightBonus;
+
+                if (movementHeightBonus != 0 || locomotor.PathFlags.HasFlag(PathFlags.Fly))
+                {
+                    if (movementHeightBonus > 0)
+                        maximumHeight = (int)regionLocation.ProjectToFloor().Z + movementHeightBonus;
+                    else
+                        minimumHeight = (int)regionLocation.ProjectToFloor().Z + movementHeightBonus;
+
+                    pathFlags |= PathFlags.Fly;
+                    heightSweepType = HeightSweepType.Constraint;
+                }
+            }
+            else if (losCheckAlongGround)
+            {
+                pathFlags = PathFlags.Walk;
+            }
+            else if (losCheck)
+            {
+                maximumHeight = (int)MathF.Max(fromPosition.Z + Owner.Bounds.EyeHeight, targetPosition.Z);
+                heightSweepType = HeightSweepType.Constraint;
+            }
+
+            if (powerProto is MissilePowerPrototype missilePowerProto)
+            {
+                sweepRadius = missilePowerProto.MaximumMissileBoundsSphereRadius;
+            }
+            else if (powerProto is SummonPowerPrototype summonPowerProto && losCheck == false)
+            {
+                if (summonPowerProto.SummonEntityContexts == null)
+                    return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonPowerProto.SummonEntityContexts == null");
+
+                WorldEntityPrototype nonHotspotSummonEntityPrototype = null;
+                float maximumSphereRadius = 0f;
+
+                for (int i = 0; i < summonPowerProto.SummonEntityContexts.Length; i++)
+                {
+                    WorldEntityPrototype summonedPrototype = summonPowerProto.GetSummonEntity(i, Owner.GetOriginalWorldAsset());
+                    if (summonedPrototype == null)
+                        return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonedPrototype == null");
+
+                    if (summonedPrototype is not HotspotPrototype)
+                    {
+                        if (summonedPrototype.Bounds == null)
+                            return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonedPrototype.Bounds == null");
+
+                        float sphereRadius = summonedPrototype.Bounds.GetSphereRadius();
+                        if (sphereRadius > maximumSphereRadius)
+                        {
+                            maximumSphereRadius = sphereRadius;
+                            nonHotspotSummonEntityPrototype = summonedPrototype;
+                        }
+                    }
+                }
+
+                if (nonHotspotSummonEntityPrototype != null)
+                {
+                    Bounds bounds = new(nonHotspotSummonEntityPrototype.Bounds, targetPosition);
+                    pathFlags = Region.GetPathFlagsForEntity(nonHotspotSummonEntityPrototype);
+                    sweepRadius = bounds.Radius;
+                }
+            }
+
+            if (powerProto.HeightCheckPadding != 0f)
+            {
+                if (powerProto.HeightCheckPadding > 0f)
+                    maximumHeight = (int)(regionLocation.ProjectToFloor().Z + powerProto.HeightCheckPadding);
+                else
+                    minimumHeight = (int)(regionLocation.ProjectToFloor().Z + powerProto.HeightCheckPadding);
+
+                pathFlags |= PathFlags.Fly;
+                heightSweepType = HeightSweepType.Constraint;
+            }
+
+            // Do the first sweep
+            SweepResult sweepResult = naviMesh.Sweep(fromPosition, toPosition, sweepRadius, pathFlags, ref resultPosition,
+                ref resultNormal, padding, heightSweepType, maximumHeight, minimumHeight, Owner);
+
+            if (sweepResult == SweepResult.Failed)
+                return PowerPositionSweepResult.Error;
+
+            if (sweepResult == SweepResult.Success || sweepResult == SweepResult.Clipped)
+            {
+                if (losCheck)
+                {
+                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(fromPosition, toPosition, Owner, targetId,
+                        losCheck, sweepRadius + padding, ref resultPosition);
+
+                    if (firstHitEntity != null)
+                        sweepResult = SweepResult.Clipped;
+                }
+                else if (movementPowerProto != null && movementPowerProto.UserNoEntityCollide)
+                {
+                    int blockFlags = 1 << (int)BoundsMovementPowerBlockType.All;
+
+                    if (movementPowerProto.IsHighFlyingPower == false && movementPowerProto.MovementHeightBonus == 0)
+                        blockFlags |= 1 << (int)BoundsMovementPowerBlockType.Ground;
+
+                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(Owner.Bounds, resultPosition - fromPosition,
+                        ref resultPosition, new MovementPowerEntityCollideFunc(blockFlags));
+
+                    if (firstHitEntity != null)
+                        sweepResult = SweepResult.Clipped;
+                }
+            }
+
+            clipped |= sweepResult == SweepResult.Clipped;
+
+            // Do a second sweep if we need more than just LOS
+            if (losCheck == false && sweepResult == SweepResult.HeightMap && pathFlags.HasFlag(PathFlags.Fly))
+            {
+                pathFlags &= ~PathFlags.Fly;
+                sweepResult = naviMesh.Sweep(fromPosition, toPosition, sweepRadius, pathFlags, ref resultPosition,
+                    ref resultNormal, padding, heightSweepType, maximumHeight, minimumHeight, Owner);
+
+                if (sweepResult == SweepResult.Failed)
+                    return PowerPositionSweepResult.Error;
+
+                if (sweepResult == SweepResult.Clipped)
+                    return PowerPositionSweepResult.Clipped;
+            }
+
+            return clipped ? PowerPositionSweepResult.Clipped : PowerPositionSweepResult.Success;
         }
 
         private bool CanBeUserCanceledNow()

@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -527,6 +528,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public override bool IsHighFlyingPower { get => HighFlying; }
+
+        [DoNotCopy]
+        public BlockingCheckFlags BlockingCheckFlags { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            BlockingCheckFlags = BlockingCheckFlags.CheckAllMovementPowers;
+
+            if (IsHighFlyingPower == false && MovementHeightBonus <= 0f)
+                BlockingCheckFlags |= BlockingCheckFlags.CheckGroundMovementPowers;
+        }
     }
 
     public class SpecializationPowerPrototype : PowerPrototype

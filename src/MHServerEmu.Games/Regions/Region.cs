@@ -956,12 +956,21 @@ namespace MHServerEmu.Games.Regions
             var sweepResult = NaviMesh.Sweep(startPosition, targetPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
                 padding, HeightSweepType.Constraint, (int)maxHeight, short.MinValue, owner);
             if (sweepResult == SweepResult.Success)
-                return SweepToFirstHitEntity(startPosition, targetPosition, owner, targetEntityId, true, 0.0f, out _) == null; 
+            {
+                Vector3 resultHitPosition = null;
+                return SweepToFirstHitEntity(startPosition, targetPosition, owner, targetEntityId, true, 0.0f, ref resultHitPosition) == null;
+            }
             return false;
         }
 
-        private WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner, 
-            ulong targetEntityId, bool blocksLOS, float radiusOverride, out Vector3 resultHitPosition)
+        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3 resultHitPosition, T canBlock) where T: ICanBlock
+        {
+            bool CanBlockFunc(WorldEntity otherEntity) => canBlock.CanBlock(otherEntity);
+            return SweepToFirstHitEntity(sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
+        }
+
+        public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner, 
+            ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3 resultHitPosition)
         {
             Bounds sweepBounds = new ();
 
@@ -978,17 +987,16 @@ namespace MHServerEmu.Games.Regions
             Vector3 sweepVector = targetPosition - startPosition;
 
             bool CanBlockFunc(WorldEntity otherEntity) => CanBlockEntitySweep(otherEntity, owner, targetEntityId, blocksLOS);
-            return SweepToFirstHitEntity(sweepBounds, sweepVector, out resultHitPosition, CanBlockFunc);
+            return SweepToFirstHitEntity(sweepBounds, sweepVector, ref resultHitPosition, CanBlockFunc);
         }
 
-        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, out Vector3 resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
+        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3 resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
         {
             Vector3 sweepStart = sweepBounds.Center;
             Vector3 sweepEnd = sweepStart + sweepVelocity;
             float sweepRadius = sweepBounds.Radius;
             Aabb sweepBox = new Aabb(sweepStart, sweepRadius) + new Aabb(sweepEnd, sweepRadius);
 
-            resultHitPosition = null;
             var sweepVector2D = sweepVelocity.To2D();
             if (Vector3.IsNearZero(sweepVector2D)) return null;
             Vector3.SafeNormalAndLength2D(sweepVector2D, out Vector3 sweepNormal2D, out float sweepLength);
