@@ -457,7 +457,7 @@ namespace MHServerEmu.Games.Network
             }
 
             LastPosition = avatar.RegionLocation.Position;
-            LastOrientation = new(avatar.RegionLocation.Orientation);
+            LastOrientation = avatar.RegionLocation.Orientation;
 
             return true;
         }

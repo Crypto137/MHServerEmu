@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Population
             if (propGroup.NaviPatchSource.NaviPatch.Points.IsNullOrEmpty()) return; // skip
             PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
             Vector3 position = markerPrototype.Position + randomOffset;
-            Orientation rotation = new(markerPrototype.Rotation);
+            Orientation rotation = markerPrototype.Rotation;
             rotation.Yaw += randomRotation;
 
             var markerTransform = Transform3.BuildTransform(position, rotation);
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Generators.Population
                 PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
                 Vector3 position = markerPrototype.Position;
                 position += randomOffset;
-                Orientation rotation = new(markerPrototype.Rotation);
+                Orientation rotation = markerPrototype.Rotation;
                 rotation.Yaw += randomRotation;
 
                 Transform3 transform = Transform3.BuildTransform(position, rotation);

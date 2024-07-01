@@ -466,7 +466,7 @@ namespace MHServerEmu.Core.Tests.Serialization
             {
                 bool success = true;
 
-                Orientation orientationToPack = new(testOrientation);
+                Orientation orientationToPack = testOrientation;
                 success &= archive.TransferOrientationFixed(ref orientationToPack, yawOnly, precision);
                 Assert.True(success);
 

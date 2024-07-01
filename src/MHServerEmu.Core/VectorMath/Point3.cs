@@ -1,10 +1,10 @@
 ﻿namespace MHServerEmu.Core.VectorMath
 {
-    public class Point3
+    public struct Point3
     {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public float X;
+        public float Y;
+        public float Z;
 
         public Point3(float x, float y, float z)
         {

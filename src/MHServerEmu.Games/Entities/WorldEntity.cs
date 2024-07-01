@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.Entities
             return Locomotor != null && Locomotor.GetCurrentSpeed() > 0.0f;
         }
 
-        public virtual bool ChangeRegionPosition(Vector3? position, Orientation orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        public virtual bool ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
             bool positionChanged = false;
             bool orientationChanged = false;
@@ -314,15 +314,15 @@ namespace MHServerEmu.Games.Entities
 
             if (orientation != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Orientation != orientation))
             {
-                RegionLocation.Orientation = orientation;
+                RegionLocation.Orientation = orientation.Value;
 
                 if (Bounds.Geometry != GeometryType.None)
-                    Bounds.Orientation = orientation;
+                    Bounds.Orientation = orientation.Value;
                 if (Physics.HasAttachedEntities())
                     RegisterForPendingPhysicsResolve();
                 orientationChanged = true;
                 // Old
-                Properties[PropertyEnum.MapOrientation] = orientation.GetYawNormalized();
+                Properties[PropertyEnum.MapOrientation] = orientation.Value.GetYawNormalized();
             }
 
             if (Locomotor != null && flags.HasFlag(ChangePositionFlags.PhysicsResolve) == false)
@@ -355,7 +355,7 @@ namespace MHServerEmu.Games.Entities
                         .SetFlags((uint)flags);
 
                     if (position != null) entityPositionMessageBuilder.SetPosition(position.Value.ToNetStructPoint3());
-                    if (orientation != null) entityPositionMessageBuilder.SetOrientation(orientation.ToNetStructPoint3());
+                    if (orientation != null) entityPositionMessageBuilder.SetOrientation(orientation.Value.ToNetStructPoint3());
 
                     networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
                 }

@@ -726,7 +726,7 @@ namespace MHServerEmu.Games.Regions
             if (StartArea.PrototypeId == AreaPrototypeId.AvengersTowerHubArea)
             {
                 markerPos = new (1589.0f, -2.0f, 180.0f);
-                markerRot.Set(3.1415f, 0.0f, 0.0f);
+                markerRot = new (3.1415f, 0.0f, 0.0f);
                 return true;
             }
 
@@ -796,7 +796,7 @@ namespace MHServerEmu.Games.Regions
                 if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
                     Vector3 position = playerConnection.EntityToTeleport.RegionLocation.Position;
-                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.Orientation);
+                    Orientation orientation = playerConnection.EntityToTeleport.RegionLocation.Orientation;
                     if (playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(ref orientation, ref position);
                     playerConnection.StartPosition = position;

@@ -1092,7 +1092,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private static bool GetPointTo(Cell.Type direction, Point2 point, out Point2 pointTo)
         {
-            pointTo = new(point);
+            pointTo = point;
 
             switch (direction)
             {

@@ -77,32 +77,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
 
             Max = new(-1, -1);
-
             if (Entries.HasValue())
-            {
                 foreach (SuperCellEntryPrototype superCellEntry in Entries)
-                {
                     if (superCellEntry != null)
-                    {
-                        Max.X = Math.Max(Max.X, superCellEntry.X);
-                        Max.Y = Math.Max(Max.Y, superCellEntry.Y);
-                    }
-                }
-            }
+                        Max = new( Math.Max(Max.X, superCellEntry.X), Math.Max(Max.Y, superCellEntry.Y));
         }
 
         public bool ContainsCell(PrototypeId cellRef)
         {
             if (Entries.HasValue())
-            {
                 foreach (var entryProto in Entries)
-                {
                     if (entryProto != null && GameDatabase.GetDataRefByAsset(entryProto.Cell) == cellRef)
-                    {
                         return true;
-                    }
-                }
-            }
             return false;
         }
 

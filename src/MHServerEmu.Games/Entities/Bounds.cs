@@ -116,8 +116,8 @@ namespace MHServerEmu.Games.Entities
         {
             Geometry = bounds.Geometry;
             Center = bounds.Center;
-            _orientation = new(bounds._orientation);
-            _orientation_offset = new(bounds._orientation_offset);
+            _orientation = bounds._orientation;
+            _orientation_offset = bounds._orientation_offset;
             CollisionType = bounds.CollisionType;
             _params = bounds._params;
             Flags = bounds.Flags;

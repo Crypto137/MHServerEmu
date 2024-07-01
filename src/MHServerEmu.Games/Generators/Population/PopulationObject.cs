@@ -124,7 +124,7 @@ namespace MHServerEmu.Games.Generators.Population
 
                 case SpawnTargetType.Spawner:
                     Vector3 pos = Location.Position;
-                    Orientation rot = new(Location.Orientation);
+                    Orientation rot = Location.Orientation;
 
                     success = clusterGroup.PickPositionInSector(pos, rot, SpawnerProto.SpawnDistanceMin, SpawnerProto.SpawnDistanceMax);
                     if (success == false && SpawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))

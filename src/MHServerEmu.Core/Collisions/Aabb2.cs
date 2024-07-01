@@ -2,10 +2,10 @@
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Aabb2 : IBounds
+    public struct Aabb2 : IBounds
     {
-        public Vector2 Min { get; set; }
-        public Vector2 Max { get; set; }
+        public Vector2 Min;
+        public Vector2 Max;
 
         public Aabb2()
         {
@@ -68,10 +68,10 @@ namespace MHServerEmu.Core.Collisions
         {
             return new Point2[]
             {
-                new Point2(Min.X, Min.Y),
-                new Point2(Min.X, Max.Y),
-                new Point2(Max.X, Max.Y),
-                new Point2(Max.X, Min.Y)
+                new (Min.X, Min.Y),
+                new (Min.X, Max.Y),
+                new (Max.X, Max.Y),
+                new (Max.X, Min.Y)
             };
         }
 

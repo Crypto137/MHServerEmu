@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Regions
                 markerTransform = Transform3.BuildTransform(AreaOffset, Orientation.Zero) * markerTransform;
 
             markerPosition = markerTransform.Translation;
-            markerOrientation = new (Orientation.FromTransform3(markerTransform));
+            markerOrientation = Orientation.FromTransform3(markerTransform);
         }
 
         public static Type BuildTypeFromWalls(Walls walls)
@@ -435,7 +435,7 @@ namespace MHServerEmu.Games.Regions
                         if (dataRef == target.Entity)
                         {
                             markerPos = CalcMarkerPosition(marker.Position);
-                            markerRot.Set(entityMarker.Rotation);
+                            markerRot = entityMarker.Rotation;
                             return true;
                         }
                     }

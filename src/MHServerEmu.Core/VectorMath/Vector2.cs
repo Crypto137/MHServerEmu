@@ -2,10 +2,10 @@
 
 namespace MHServerEmu.Core.VectorMath
 {
-    public class Vector2
+    public struct Vector2 : IEquatable<Vector2>
     {
-        public float X { get; set; }
-        public float Y { get; set; }
+        public float X;
+        public float Y;
 
         public Vector2()
         {
@@ -19,31 +19,22 @@ namespace MHServerEmu.Core.VectorMath
             Y = y;
         }
 
-        public NetStructPoint2 ToNetStructPoint2() => NetStructPoint2.CreateBuilder().SetX(X).SetY(Y).Build();
-        public NetStructIPoint2 ToNetStructIPoint2() => NetStructIPoint2.CreateBuilder()
-            .SetX((uint)MathF.Max(0f, X)).SetY((uint)MathF.Max(0f, Y)).Build();     // Use MathF.Max when converting to NetStructIPoint2 to prevent underflow
-
-        public void Set(Vector2 v)
-        {
-            X = v.X;
-            Y = v.Y;
-        }
-
         public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
         public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
-        public static bool operator ==(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);
-        public static bool operator !=(Vector2 a, Vector2 b) => !(a == b);
-        public static bool operator >(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y;
+        public static bool operator ==(Vector2 a, Vector2 b) => a.Equals(b);
+        public static bool operator !=(Vector2 a, Vector2 b) => !a.Equals(b);
+        public static bool operator >(Vector2 a, Vector2 b) => a.X > b.X && a.Y > b.Y;
         public static bool operator <(Vector2 a, Vector2 b) => !(a > b);
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj)) return true;
+            if (obj is not Vector2 other) return false;
+            return Equals(other);
+        }
 
-            Vector2 point = obj as Vector2;
-            if (point != null) return X == point.X && Y == point.Y;
-
-            return false;
+        public bool Equals(Vector2 point)
+        {
+            return X == point.X && Y == point.Y;
         }
 
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode();

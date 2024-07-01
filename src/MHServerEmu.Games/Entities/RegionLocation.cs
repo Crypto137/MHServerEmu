@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Entities
         public void Set(RegionLocation other)
         {
             _position = other._position;
-            _orientation = new(other._orientation);
+            _orientation = other._orientation;
             _region = other._region;
             Cell = other.Cell;
         }
@@ -244,7 +244,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             Position = regionLocation.Position;
-            Orientation = new(regionLocation.Orientation);
+            Orientation = regionLocation.Orientation;
 
             return this;
         }
