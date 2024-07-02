@@ -825,7 +825,7 @@ namespace MHServerEmu.Games.Powers
             if (Owner == null) return Logger.WarnReturn(0f, "GetAOERadius(): Owner == null");
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(0f, "GetAOERadius(): powerProto == null");
-            return GetAOERadius();
+            return GetAOERadius(powerProto, Owner.Properties);
         }
 
         public static float GetAOERadius(PowerPrototype powerProto, PropertyCollection ownerProperties = null)
@@ -1901,7 +1901,7 @@ namespace MHServerEmu.Games.Powers
             if (flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
                 activatePower.PowerRandomSeed = settings.PowerRandomSeed;
 
-            Game.NetworkManager.SendMessageToInterested(activatePower.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity, true);
+            Game.NetworkManager.SendMessageToInterested(activatePower.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity, false);
         }
 
         private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
