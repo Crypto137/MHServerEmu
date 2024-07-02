@@ -433,6 +433,9 @@ namespace MHServerEmu.Games.Behavior
 
         public void OnAIPowerEnded(PrototypeId powerProtoRef, EndPowerFlags flags)
         {
+            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
+
+            // TODO Off PropertyEnum.AIThrowPower
         }
     }
 }

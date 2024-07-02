@@ -449,7 +449,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,
             int beamSweepCount, TimeSpan beamSweepTime, PowerPrototype powerProto, PropertyCollection properties)
         {
-            throw new NotImplementedException();
+            return false; // TODO implement
         }
 
         public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
