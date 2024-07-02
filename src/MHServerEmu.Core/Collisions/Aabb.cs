@@ -47,12 +47,6 @@ namespace MHServerEmu.Core.Collisions
         public float Volume => Width * Length * Height;
         public Vector3 Extents => (Max - Min) * 0.5f;
 
-        public void Set(Vector3 min, Vector3 max)
-        {
-            Min = min;
-            Max = max;
-        }
-
         public static Aabb operator +(in Aabb aabb1, in Aabb aabb2)
         {
             Vector3 newMin = new(

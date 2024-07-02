@@ -23,7 +23,7 @@ namespace MHServerEmu.Core.VectorMath
             Roll = roll;
         }
 
-        public static Orientation Zero { get; } = new();
+        public static Orientation Zero { get; } = new(0.0f, 0.0f, 0.0f);
 
         public float this[int index]
         {
