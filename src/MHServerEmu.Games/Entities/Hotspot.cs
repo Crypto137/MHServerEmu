@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missile(Missile missile, Vector3 missilePosition)
         {
-            Logger.Debug($"HandleOverlapBegin_Missile {this} {missile} {missilePosition}");
+            Logger.Trace($"HandleOverlapBegin_Missile {this} {missile} {missilePosition}");
             var hotspotProto = HotspotPrototype;
             if (hotspotProto == null) return;
 
@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Missile(Missile missile)
         {
-            Logger.Debug($"HandleOverlapEnd_Missile {this} {missile}");
+            Logger.Trace($"HandleOverlapEnd_Missile {this} {missile}");
             var hotspotProto = HotspotPrototype;
             if (hotspotProto == null) return;
 
@@ -224,7 +224,7 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missions(WorldEntity target)
         {
-            // Logger.Debug($"HandleOverlapBegin_Missions {this} {target}");
+            // Logger.Trace($"HandleOverlapBegin_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
             bool missionEvent = false;
             if (ConditionEntityCounter.Count > 0)
@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Missions(WorldEntity target)
         {
-            // Logger.Debug($"HandleOverlapEnd_Missions {this} {target}");
+            // Logger.Trace($"HandleOverlapEnd_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
             bool missionEvent = false;
             if (ConditionEntityCounter.Count > 0)
@@ -366,34 +366,34 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Player(Avatar avatar)
         {
-            // Logger.Warn($"HandleOverlapBegin_Player {this} {avatar}");
+            // Logger.Trace($"HandleOverlapBegin_Player {this} {avatar}");
 
             // TODO Unlock Waypoint Properties[PropertyEnum.WaypointHotspotUnlock]
         }
 
         private void HandleOverlapEnd_Player(Avatar avatar)
         {
-           // Logger.Warn($"HandleOverlapEnd_Player {this} {avatar}");
+            // Logger.Trace($"HandleOverlapEnd_Player {this} {avatar}");
         }
 
         private void HandleOverlapBegin_PowerEvent(WorldEntity whom)
         {
-            Logger.Warn($"HandleOverlapBegin_PowerEvent {this} {whom}");
+            Logger.Trace($"HandleOverlapBegin_PowerEvent {this} {whom}");
         }
 
         private void HandleOverlapEnd_PowerEvent(WorldEntity whom)
         {
-            Logger.Warn($"HandleOverlapEnd_PowerEvent {this} {whom}");
+            Logger.Trace($"HandleOverlapEnd_PowerEvent {this} {whom}");
         }
 
         private void HandleOverlapBegin_Powers(WorldEntity whom)
         {
-            Logger.Warn($"HandleOverlapBegin_Powers {this} {whom}");
+            Logger.Trace($"HandleOverlapBegin_Powers {this} {whom}");
         }
 
         private void HandleOverlapEnd_Powers(WorldEntity whom)
         {
-            Logger.Warn($"HandleOverlapEnd_Powers {this} {whom}");
+            Logger.Trace($"HandleOverlapEnd_Powers {this} {whom}");
         }
 
         private void MissionEntityTracker()
