@@ -11,6 +11,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -268,15 +269,17 @@ namespace MHServerEmu.Games.Powers
 
             PowerPrototype powerProto = Prototype;
 
+            //TEMP_SendActivatePowerMessage(in settings);
+
             if (GetActivationType() != PowerActivationType.Passive && powerProto.IsRecurring == false)
                 SchedulePowerEnd(in settings);
 
             return PowerUseResult.Success;
         }
 
-        public void ReleasePower(in PowerActivationSettings settings)
+        public void ReleaseVariableActivation(in PowerActivationSettings settings)
         {
-            Logger.Debug($"ReleasePower(): {Prototype}");
+            Logger.Debug($"ReleaseVariableActivation(): {Prototype}");
         }
 
         public bool EndPower(EndPowerFlags flags)
@@ -1579,6 +1582,60 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        private void TEMP_SendActivatePowerMessage(in PowerActivationSettings settings)
+        {
+            ActivatePowerMessageFlags flags = ActivatePowerMessageFlags.None;
+            if (settings.TargetEntityId == Owner.Id)
+                flags |= ActivatePowerMessageFlags.TargetIsUser;
+
+            if (settings.TriggeringPowerPrototypeRef != PrototypeId.Invalid)
+                flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef;
+
+            if (settings.TargetPosition == settings.UserPosition)
+                flags |= ActivatePowerMessageFlags.TargetPositionIsUserPosition;
+            else if (settings.TargetPosition != Vector3.Zero)
+                flags |= ActivatePowerMessageFlags.HasTargetPosition;
+
+            if (settings.MovementTime != TimeSpan.Zero)
+                flags |= ActivatePowerMessageFlags.HasMovementTime;
+
+            if (settings.VariableActivationTime != TimeSpan.Zero)
+                flags |= ActivatePowerMessageFlags.HasVariableActivationTime;
+
+            if (settings.PowerRandomSeed != 0)
+                flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
+
+            uint fxRandomSeed = settings.FXRandomSeed != 0 ? settings.FXRandomSeed : (uint)Game.Random.Next(1, 10000);
+            flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
+
+            ActivatePowerArchive activatePower = new()
+            {
+                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                Flags = flags,
+                UserEntityId = Owner.Id,
+                PowerPrototypeRef = PrototypeDataRef,
+                UserPosition = settings.UserPosition,
+                FXRandomSeed = fxRandomSeed
+            };
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
+                activatePower.TriggeringPowerPrototypeRef = settings.TriggeringPowerPrototypeRef;
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                activatePower.TargetPosition = settings.TargetPosition;
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
+                activatePower.MovementTime = settings.MovementTime;
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                activatePower.VariableActivationTime = settings.VariableActivationTime;
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                activatePower.PowerRandomSeed = settings.PowerRandomSeed;
+
+            Game.NetworkManager.SendMessageToInterested(activatePower.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity, true);
         }
 
         private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
