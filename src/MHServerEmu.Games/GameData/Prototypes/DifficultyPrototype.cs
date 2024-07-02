@@ -120,15 +120,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static bool InRange(PrototypeId value, PrototypeId min, PrototypeId max)
         {
+            if (min == PrototypeId.Invalid && max == PrototypeId.Invalid) return true;
+
             var valueProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(value);
             if (valueProto == null) return false;
+
             var minProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(min);
-            if (minProto == null || valueProto.Tier < minProto.Tier) return false;
-            else
-            {
-                var maxProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(max);
-                if (maxProto == null || valueProto.Tier > maxProto.Tier) return false;
-            }
+            if (minProto != null && valueProto.Tier < minProto.Tier) return false;
+            var maxProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(max);
+            if (maxProto != null && valueProto.Tier > maxProto.Tier) return false;
+
             return true;
         }
     }

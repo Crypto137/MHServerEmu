@@ -1774,7 +1774,7 @@ namespace MHServerEmu.Games.Powers
 
         private PowerUseResult ActivateInternal(in PowerActivationSettings settings)
         {
-            //TEMP_SendActivatePowerMessage(in settings);
+            TEMP_SendActivatePowerMessage(in settings);
             return PowerUseResult.Success;
         }
 
