@@ -29,12 +29,12 @@ namespace MHServerEmu.Games.Entities
     [Flags]
     public enum BlockingCheckFlags
     {
-        None = 0,
-        CheckSpawns = 1,
-        CheckGroundMovementPowers = 2,
-        CheckAllMovementPowers = 4,
-        CheckLanding = 8,
-        CheckSelf = 16, // ??
+        None                        = 0,
+        CheckSpawns                 = 1 << 0,
+        CheckGroundMovementPowers   = 1 << 1,
+        CheckAllMovementPowers      = 1 << 2,
+        CheckLanding                = 1 << 3,
+        CheckSelf                   = 1 << 4, // ??
     }
 
     [StructLayout(LayoutKind.Explicit)]

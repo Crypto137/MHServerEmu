@@ -219,19 +219,20 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool RemovePropertyRange(PropertyEnum propertyEnum)
         {
-            List<PropertyId> toRemoveList = new();
+            // NOTE: Our current PropertyList implementation supports removal during iteration.
+            // If that ever changes, use a temporary id stack here like the client does.
+            bool removedAny = false;
+
             foreach (var kvp in this)
             {
-                if (kvp.Key.Enum == propertyEnum)
-                    toRemoveList.Add(kvp.Key);
+                if (kvp.Key.Enum != propertyEnum)
+                    continue;
+
+                RemoveProperty(kvp.Key);
+                removedAny = true;
             }
 
-            if (toRemoveList.Count == 0) return false;
-
-            foreach (var propertyId in toRemoveList)
-                RemoveProperty(propertyId);
-
-            return true;
+            return removedAny;
         }
 
         /// <summary>
