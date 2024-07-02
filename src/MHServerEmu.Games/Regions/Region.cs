@@ -955,20 +955,20 @@ namespace MHServerEmu.Games.Regions
                 padding, HeightSweepType.Constraint, (int)maxHeight, short.MinValue, owner);
             if (sweepResult == SweepResult.Success)
             {
-                Vector3 resultHitPosition = null;
+                Vector3? resultHitPosition = null;
                 return SweepToFirstHitEntity(startPosition, targetPosition, owner, targetEntityId, true, 0.0f, ref resultHitPosition) == null;
             }
             return false;
         }
 
-        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3 resultHitPosition, T canBlock) where T: ICanBlock
+        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T: ICanBlock
         {
             bool CanBlockFunc(WorldEntity otherEntity) => canBlock.CanBlock(otherEntity);
             return SweepToFirstHitEntity(sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
         }
 
         public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner, 
-            ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3 resultHitPosition)
+            ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3? resultHitPosition)
         {
             Bounds sweepBounds = new ();
 
@@ -988,7 +988,7 @@ namespace MHServerEmu.Games.Regions
             return SweepToFirstHitEntity(sweepBounds, sweepVector, ref resultHitPosition, CanBlockFunc);
         }
 
-        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3 resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
+        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
         {
             Vector3 sweepStart = sweepBounds.Center;
             Vector3 sweepEnd = sweepStart + sweepVelocity;

@@ -291,7 +291,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 {
                     var targetEntityId = Entity.InvalidId;
                     if (targetWorldEntity != null) targetEntityId = targetWorldEntity.Id;
-                    if (movementPower.PowerPositionSweep(regionLocation, targetPositionForPower, targetEntityId, out Vector3 sweepPos) == PowerPositionSweepResult.Clipped)
+                    Vector3? sweepPosition = Vector3.Zero;
+                    if (movementPower.PowerPositionSweep(regionLocation, targetPositionForPower, targetEntityId, ref sweepPosition) == PowerPositionSweepResult.Clipped)
                         return PowerUseResult.OutOfPosition;
                 }
 

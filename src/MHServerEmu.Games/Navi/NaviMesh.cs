@@ -599,7 +599,7 @@ namespace MHServerEmu.Games.Navi
             return resultSweep;
         }
 
-        public PointOnLineResult FindPointOnLineToOccupy( ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
+        public PointOnLineResult FindPointOnLineToOccupy(ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
             Bounds bounds, PathFlags pathFlags, BlockingCheckFlags blockFlags, bool skipTarget)
         {
             resultPosition = startPosition;
