@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -268,13 +269,83 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug($"Activate(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "Activate(): powerProto == null");
 
-            //TEMP_SendActivatePowerMessage(in settings);
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+
+            // Set up variable activation time
+            if (powerProto.ExtraActivation != null)
+            {
+                if (powerProto.ExtraActivation is SecondaryActivateOnReleasePrototype secondaryActivation && secondaryActivation.MaxReleaseTimeMS > 0)
+                {
+                    int variableActivationTimeMS = Math.Min((int)settings.VariableActivationTime.TotalMilliseconds, secondaryActivation.MaxReleaseTimeMS);
+                    float variableActivationTimePct = variableActivationTimeMS / (float)Math.Max(secondaryActivation.MinReleaseTimeMS, secondaryActivation.MaxReleaseTimeMS);
+
+                    Properties[PropertyEnum.VariableActivationTimeMS] = TimeSpan.FromMilliseconds(variableActivationTimeMS);
+                    Properties[PropertyEnum.VariableActivationTimePct] = variableActivationTimePct;
+                }
+            }
+            else if (powerProto.PowerCategory == PowerCategoryType.ComboEffect && settings.VariableActivationTime > TimeSpan.Zero
+                && settings.TriggeringPowerPrototypeRef != PrototypeId.Invalid && Owner != null)
+            {
+                Power triggeringPower = Owner.GetPower(settings.TriggeringPowerPrototypeRef);
+                if (triggeringPower != null)
+                {
+                    Properties.CopyProperty(triggeringPower.Properties, PropertyEnum.VariableActivationTimeMS);
+                    Properties.CopyProperty(triggeringPower.Properties, PropertyEnum.VariableActivationTimeMS);
+                }
+            }
+
+            // Run all defined activation evals
+            if (powerProto.EvalOnActivate.HasValue())
+            {
+                // Initialize context data
+                EvalContextData contextData = new(Game);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
+                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
+                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var3, target);
+
+                if (Owner is Agent agent)
+                {
+                    AIController aiController = agent.AIController;
+                    if (aiController != null)
+                        contextData.SetVar_PropertyCollectionPtr(EvalContext.EntityBehaviorBlackboard, aiController.Blackboard.PropertyCollection);
+                }
+
+                Eval.InitTeamUpEvalContext(contextData, Owner);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Other, target != null ? target.Properties : new PropertyCollection());
+
+                if (RunActivateEval(contextData) == false)
+                    return Logger.WarnReturn(PowerUseResult.GenericError, $"Activate(): EvalOnActivate failed for Power: {this}.");
+            }
+
+            // Run power synergy eval if defined
+            if (powerProto.EvalPowerSynergies != null)
+            {
+                EvalContextData contextData = new(Game);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
+                contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
+                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
+                Eval.InitTeamUpEvalContext(contextData, Owner);
+
+                if (Eval.RunBool(powerProto.EvalPowerSynergies, contextData) == false)
+                    return Logger.WarnReturn(PowerUseResult.GenericError, $"Activate(): The EvalPowerSynergies Eval in a power failed:\nPower: [{this}]");
+            }
+
+            PowerUseResult result = ActivateInternal(in settings);
+            if (result != PowerUseResult.Success)
+                return result;
 
             if (GetActivationType() != PowerActivationType.Passive && powerProto.IsRecurring == false)
                 SchedulePowerEnd(in settings);
 
-            return PowerUseResult.Success;
+            _situationalComponent?.OnPowerActivated(target);
+
+            return result;
         }
 
         public void ReleaseVariableActivation(in PowerActivationSettings settings)
@@ -1509,7 +1580,32 @@ namespace MHServerEmu.Games.Powers
 
         private bool CanBeUserCanceledNow()
         {
+            // TODO
             return true;
+        }
+
+        private bool RunActivateEval(EvalContextData contextData)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "RunActivateEval(): powerProto == null");
+
+            bool success = true;
+
+            foreach (EvalPrototype evalProto in powerProto.EvalOnActivate)
+            {
+                bool evalSuccess = Eval.RunBool(evalProto, contextData);
+                success &= evalSuccess;
+                if (evalSuccess == false)
+                    Logger.Warn($"RunActivateEval(): The following EvalOnActivate Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
+            }
+
+            return success;
+        }
+
+        private PowerUseResult ActivateInternal(in PowerActivationSettings settings)
+        {
+            //TEMP_SendActivatePowerMessage(in settings);
+            return PowerUseResult.Success;
         }
 
         private bool SchedulePowerEnd(in PowerActivationSettings settings)

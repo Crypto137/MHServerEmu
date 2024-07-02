@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Powers
@@ -33,6 +34,11 @@ namespace MHServerEmu.Games.Powers
         public void OnPowerAssigned()
         {
 
+        }
+
+        public void OnPowerActivated(WorldEntity target)
+        {
+            Logger.Debug($"OnPowerActivated(): {_power.Prototype}");
         }
     }
 }
