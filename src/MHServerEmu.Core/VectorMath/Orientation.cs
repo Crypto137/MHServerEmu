@@ -3,11 +3,11 @@ using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Core.VectorMath
 {
-    public class Orientation : IEquatable<Orientation>
+    public struct Orientation : IEquatable<Orientation>
     {
-        public float Yaw { get; set; }
-        public float Pitch { get; set; }
-        public float Roll { get; set; }
+        public float Yaw;
+        public float Pitch;
+        public float Roll;
 
         public Orientation()
         {
@@ -23,28 +23,7 @@ namespace MHServerEmu.Core.VectorMath
             Roll = roll;
         }
 
-        public static Orientation Zero => new();
-
-        public Orientation(Orientation rot)
-        {
-            Yaw = rot.Yaw;
-            Pitch = rot.Pitch;
-            Roll = rot.Roll;
-        }
-
-        public void Set(Orientation rot)
-        {
-            Yaw = rot.Yaw;
-            Pitch = rot.Pitch;
-            Roll = rot.Roll;
-        }
-
-        public void Set(float yaw, float pich, float roll)
-        {
-            Yaw = yaw;
-            Pitch = pich;
-            Roll = roll;
-        }
+        public static Orientation Zero { get; } = new(0.0f, 0.0f, 0.0f);
 
         public float this[int index]
         {
@@ -69,21 +48,19 @@ namespace MHServerEmu.Core.VectorMath
 
         public static Orientation operator +(Orientation a, Orientation b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch, a.Roll + b.Roll);
         public static Orientation operator -(Orientation a, Orientation b) => new(a.Yaw - b.Yaw, a.Pitch - b.Pitch, a.Roll - b.Roll);
+        public static bool operator ==(Orientation left, Orientation right) => left.Equals(right);
+        public static bool operator !=(Orientation left, Orientation right) => !left.Equals(right);
 
         public override int GetHashCode() => (Yaw, Pitch, Roll).GetHashCode();
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj)) return true;
-            Orientation other = obj as Orientation;
-            if (other == null) return false;
-            return Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
+            if (obj is not Orientation other) return false;
+            return Equals(other);
         }
 
         public bool Equals(Orientation other)
         {
-            if (ReferenceEquals(this, other)) return true;
-            if (other == null) return false;
             return Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
         }
 
@@ -97,12 +74,12 @@ namespace MHServerEmu.Core.VectorMath
             return new(MathF.Atan2(delta.Y, delta.X), 0.0f, 0.0f);
         }
 
-        public static Orientation FromTransform3(Transform3 transform)
+        public static Orientation FromTransform3(in Transform3 transform)
         {
             return FromDeltaVector2D(transform.Col0);
         }
 
-        public static Orientation FromDeltaVector(Vector3 delta)
+        public static Orientation FromDeltaVector(in Vector3 delta)
         {
             return new(MathF.Atan2(delta.Y, delta.X), MathF.Atan2(delta.Z, MathF.Sqrt(delta.X * delta.X + delta.Y * delta.Y)), 0.0f);
         }
@@ -133,5 +110,6 @@ namespace MHServerEmu.Core.VectorMath
         public override string ToString() => $"({Yaw:0.00}, {Pitch:0.00}, {Roll:0.00})";
 
         public string ToStringNames() => $"yaw :{Yaw:0.00} pich:{Pitch:0.00} roll:{Roll:0.00}";
+
     }
 }

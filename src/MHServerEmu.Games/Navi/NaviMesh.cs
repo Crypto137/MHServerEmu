@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Navi
             _modifyMeshPatchesProjZ = new();
         }
 
-        public void Initialize(Aabb bounds, float padding, Region region)
+        public void Initialize(in Aabb bounds, float padding, Region region)
         {
             Release();
             Bounds = bounds;
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Navi
             AddSuperQuad(Bounds, padding);
         }
 
-        private void AddSuperQuad(Aabb bounds, float padding)
+        private void AddSuperQuad(in Aabb bounds, float padding)
         {
             float xMin = bounds.Min.X - padding;
             float xMax = bounds.Max.X + padding;
@@ -187,7 +187,7 @@ namespace MHServerEmu.Games.Navi
 
         private void MergeMeshConnections() {}
 
-        public bool ModifyMesh(Transform3 transform, NaviPatchPrototype patch, bool projZ)
+        public bool ModifyMesh(in Transform3 transform, NaviPatchPrototype patch, bool projZ)
         {
             if (patch.Points.IsNullOrEmpty()) return true;
 
@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Navi
             IsMarkupValid = false;
         }
 
-        public bool Stitch(NaviPatchPrototype patch, Transform3 transform)
+        public bool Stitch(NaviPatchPrototype patch, in Transform3 transform)
         {
             if (patch.Points.HasValue())
             {
@@ -383,7 +383,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        public bool StitchProjZ(NaviPatchPrototype patch, Transform3 transform)
+        public bool StitchProjZ(NaviPatchPrototype patch, in Transform3 transform)
         {
             if (patch.Points.HasValue())
             {
@@ -441,7 +441,7 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        public float CalcSpawnableArea(Aabb bound)
+        public float CalcSpawnableArea(in Aabb bound)
         {
             float spawnableArea = 0.0f;
             var triangle = NaviCdt.FindTriangleAtPoint(bound.Center);
@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.Navi
             return true;
         }
 
-        public SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3 resultPosition, ref Vector3 resultNormal,
+        public SweepResult Sweep(Vector3 fromPosition, Vector3 toPosition, float radius, PathFlags pathFlags, ref Vector3? resultPosition, ref Vector3? resultNormal,
             float padding = 0, HeightSweepType heightSweep = HeightSweepType.None, int maxHeight = short.MaxValue, int minHeight = short.MinValue, Entity owner = null)
         {
             NaviTriangle currentTriangle = NaviCdt.FindTriangleAtPoint(fromPosition);
@@ -599,10 +599,10 @@ namespace MHServerEmu.Games.Navi
             return resultSweep;
         }
 
-        public PointOnLineResult FindPointOnLineToOccupy( ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
+        public PointOnLineResult FindPointOnLineToOccupy(ref Vector3 resultPosition, Vector3 startPosition, Vector3 desiredPosition, float maxRange,
             Bounds bounds, PathFlags pathFlags, BlockingCheckFlags blockFlags, bool skipTarget)
         {
-            resultPosition = new(startPosition);
+            resultPosition = startPosition;
 
             if (_region == null || !Vector3.IsFinite(startPosition) || !Vector3.IsFinite(desiredPosition))
                 return PointOnLineResult.Failed;

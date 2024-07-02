@@ -456,8 +456,8 @@ namespace MHServerEmu.Games.Network
                 avatar.Locomotor.SetSyncState(newSyncState, position, orientation);
             }
 
-            LastPosition = new(avatar.RegionLocation.Position);
-            LastOrientation = new(avatar.RegionLocation.Orientation);
+            LastPosition = avatar.RegionLocation.Position;
+            LastOrientation = avatar.RegionLocation.Orientation;
 
             return true;
         }
@@ -670,10 +670,10 @@ namespace MHServerEmu.Games.Network
 
                 var teleportEntity = target.TransitionPrototype;
                 if (teleportEntity == null) return true;
-                Vector3 targetPos = new(target.RegionLocation.Position);
+                Vector3 targetPos = target.RegionLocation.Position;
                 Orientation targetRot = target.RegionLocation.Orientation;
 
-                teleportEntity.CalcSpawnOffset(targetRot, targetPos);
+                teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
 
                 Logger.Trace($"Teleporting to {targetPos}");
 

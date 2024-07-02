@@ -181,9 +181,10 @@ namespace MHServerEmu.Games.Entities
                 return IsInPositionForPowerResult.OutOfRange;
 
             if (power.RequiresLineOfSight())
-            {
+            {               
+                Vector3? resultPosition = new();
                 ulong targetId = (target != null ? target.Id : InvalidId);
-                if (power.PowerLOSCheck(RegionLocation, position, targetId, out _, power.LOSCheckAlongGround()) == false)
+                if (power.PowerLOSCheck(RegionLocation, position, targetId, ref resultPosition, power.LOSCheckAlongGround()) == false)
                     return IsInPositionForPowerResult.NoPowerLOS;
             }
 

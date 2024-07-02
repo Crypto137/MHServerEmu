@@ -171,9 +171,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 wanderFrom = position;
 
             Vector3 wanderTo = wanderFrom + (Vector3.RandomUnitVector2D(random) * random.NextFloat() * flockContext.WanderRadius);
-            Vector3 resultNorm = null;
-            locomotor.SweepFromTo(wanderFrom, new(wanderTo), ref wanderTo, ref resultNorm); // new for safe ref
-
+            Vector3? resultNorm = null;
+            locomotor.SweepFromTo(wanderFrom, wanderTo, ref wanderTo, ref resultNorm);
             if (locomotor.PathTo(wanderTo, new()) == false)
                 return StaticBehaviorReturnType.Failed;
 

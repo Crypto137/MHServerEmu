@@ -29,9 +29,9 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public virtual bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas) { return false; }
 
-        public virtual Aabb PreGenerate(GRandom random) { return null; }
+        public virtual Aabb PreGenerate(GRandom random) { return default; }
 
-        public virtual bool GetPossibleConnections(ConnectionList connections, Segment segment){ return false; }
+        public virtual bool GetPossibleConnections(ConnectionList connections, in Segment segment) { return false; }
 
         public uint AllocateCellId()
         {
@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return false;
         }
 
-        protected static bool GetConnectionPointOnSegment(out Vector3 connectionPoint, CellPrototype cellProto, Segment segment, Vector3 offset)
+        protected static bool GetConnectionPointOnSegment(out Vector3 connectionPoint, CellPrototype cellProto, in Segment segment, Vector3 offset)
         {
             connectionPoint = Vector3.Zero;
             if (cellProto == null) return false;

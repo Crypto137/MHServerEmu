@@ -154,7 +154,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             };
         }
 
-        public SweepResult SweepFromTo(Vector3 fromPosition, Vector3 toPosition, ref Vector3 resultPosition, ref Vector3 resultNormal, float padding = MovementSweepPadding)
+        public SweepResult SweepFromTo(Vector3 fromPosition, Vector3 toPosition, ref Vector3 resultPosition, ref Vector3? resultNormal, float padding = MovementSweepPadding)
         {
             if (_owner == null) return SweepResult.Failed;
             NaviMesh naviMesh = _owner.NaviMesh;
@@ -189,8 +189,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             }
 
             float radius = _owner.Bounds.Radius;
-            SweepResult sweepResult = naviMesh.Sweep(fromPosition, toPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
+            Vector3? sweepPosition = resultPosition;
+            SweepResult sweepResult = naviMesh.Sweep(fromPosition, toPosition, radius, pathFlags, ref sweepPosition, ref resultNormal,
                                                      padding, heightSweep, maxHeight, minHeight, _owner);
+            resultPosition = sweepPosition.Value;
             if (sweepResult != SweepResult.Failed)
             {
                 if (sweepResult == SweepResult.HeightMap && Vector3.IsNearZero2D(fromPosition - resultPosition))
@@ -198,8 +200,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     pathFlags &= ~PathFlags.Fly;
                     pathFlags |= PathFlags.Walk;
                     if (naviMesh.Contains(fromPosition, radius, new DefaultContainsPathFlagsCheck(pathFlags)))
-                        sweepResult = naviMesh.Sweep(fromPosition, toPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
+                    {
+                        sweepPosition = resultPosition;
+                        sweepResult = naviMesh.Sweep(fromPosition, toPosition, radius, pathFlags, ref sweepPosition, ref resultNormal,
                                                      padding, HeightSweepType.None, 0, 0, _owner);
+                        resultPosition = sweepPosition.Value;
+                    }
                 }
 
                 if (IsMissile)
@@ -239,34 +245,24 @@ namespace MHServerEmu.Games.Entities.Locomotion
             }
         }
 
-        public SweepResult SweepTo(Vector3 toPosition, ref Vector3 resultPosition, ref Vector3 resultNormal, float padding = MovementSweepPadding)
+        public SweepResult SweepTo(Vector3 toPosition, ref Vector3 resultPosition, ref Vector3? resultNormal, float padding = MovementSweepPadding)
         {
             if (_owner == null)
-            {
-                resultPosition = Vector3.Zero;
-                resultNormal = Vector3.Zero;
                 return SweepResult.Failed;
-            }
 
             if (IgnoresWorldCollision)
             {
                 Region region = _owner.Region;
                 if (region == null)
-                {
-                    resultPosition = Vector3.Zero;
-                    resultNormal = Vector3.Zero;
                     return SweepResult.Failed;
-                }
 
                 if (region.GetCellAtPosition(toPosition) == null)
                 {
                     resultPosition = _owner.RegionLocation.Position;
-                    resultNormal = Vector3.Zero;
                     return SweepResult.Clipped;
                 }
 
                 resultPosition = toPosition;
-                resultNormal = Vector3.Zero;
                 return SweepResult.Success;
             }
 
@@ -341,7 +337,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                         else
                                         {
                                             Vector3 resultPosition = Vector3.Zero;
-                                            Vector3 resultNormal = null;
+                                            Vector3? resultNormal = null;
                                             if (SweepTo(_syncPosition, ref resultPosition, ref resultNormal) == SweepResult.Success)
                                                 if (MoveTo(_syncPosition, locomotionOptions))
                                                     _syncSpeed = LocomotionState.BaseMoveSpeed * 1.5f;
@@ -462,7 +458,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 goalPosition = _generatedPath.Path.GetFinalPosition();
                 return true;
             }
-            goalPosition = null;
+            goalPosition = default;
             return false;
         }
 
@@ -473,7 +469,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 startPosition = _generatedPath.Path.GetStartPosition();
                 return true;
             }
-            startPosition = null;
+            startPosition = default;
             return false;
         }
 
@@ -653,7 +649,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
         private bool GetNextLocomotePosition(float timeSeconds, out Vector3 resultMovePosition)
         {
-            resultMovePosition = null;
+            resultMovePosition = default;
             if (_owner == null || _owner.Region == null || !IsEnabled) return false;
             if (RefreshCurrentPath() == false) return false;
             Vector3 currentPosition = _owner.RegionLocation.Position;
@@ -888,8 +884,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 bool movementImpeded = MovementImpeded;
                 if (pathSuccess && IsFollowingEntity && _generatedPath.Path.IsCurrentGoalNodeLastNode)
                 {
-                    Vector3 resultPosition = new(); 
-                    Vector3 normalResult = null;
+                    Vector3? resultPosition = new(); 
+                    Vector3? normalResult = null;
                     SweepResult sweepResult = _owner.NaviMesh.Sweep(_owner.RegionLocation.Position, _generatedPath.Path.GetFinalPosition(), _owner.Bounds.Radius, PathFlags, 
                         ref resultPosition, ref normalResult, MovementSweepPadding);
                     if (sweepResult != SweepResult.Success)
@@ -1296,8 +1292,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                                     if (_generatedPath.PathResult != NaviPathResult.Success)
                                     {
-                                        Vector3 resultPosition = null;
-                                        Vector3 resultNormal = null;
+                                        Vector3 resultPosition = default;
+                                        Vector3? resultNormal = null;
                                         if (SweepTo(syncPosition, ref resultPosition, ref resultNormal) == SweepResult.Success)
                                             _generatedPath.PathResult = _generatedPath.Path.GenerateSimpleMove(_owner.RegionLocation.Position, syncPosition, _owner.Bounds.Radius, PathFlags);
                                     }

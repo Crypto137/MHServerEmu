@@ -173,7 +173,7 @@ namespace MHServerEmu.Games.Generators.Areas
             CellSettings settings = new()
             {
                 CellRef = cellRef,
-                PositionInArea = new(positionInArea),
+                PositionInArea = positionInArea,
                 OverrideLocationName = locationName
             };
 
@@ -184,7 +184,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return cell;
         }
 
-        public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
+        public override bool GetPossibleConnections(ConnectionList connections, in Segment segment)
         {
             return false;
         }

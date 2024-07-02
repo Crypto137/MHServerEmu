@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Network
                     if (settings.SourceEntityId != Entity.InvalidId)
                         fieldFlags |= EntityCreateMessageFlags.HasSourceEntityId;
 
-                    if (settings.SourcePosition != null && settings.SourcePosition != Vector3.Zero)
+                    if (settings.SourcePosition != Vector3.Zero)
                         fieldFlags |= EntityCreateMessageFlags.HasSourcePosition;
 
                     if (settings.BoundsScaleOverride != 1f)

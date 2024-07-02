@@ -264,7 +264,7 @@ namespace MHServerEmu.Games.Generators.Population
                 return Enumerable.Empty<BlackOutZone>();
         }
 
-        public void InitializeSpacialPartition(Aabb bound)
+        public void InitializeSpacialPartition(in Aabb bound)
         {
             if (_blackOutSpatialPartition != null) return;
             _blackOutSpatialPartition = new (bound);

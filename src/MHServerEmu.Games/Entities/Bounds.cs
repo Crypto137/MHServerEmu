@@ -115,9 +115,9 @@ namespace MHServerEmu.Games.Entities
         public Bounds(Bounds bounds)
         {
             Geometry = bounds.Geometry;
-            Center = new(bounds.Center);
-            _orientation = new(bounds._orientation);
-            _orientation_offset = new(bounds._orientation_offset);
+            Center = bounds.Center;
+            _orientation = bounds._orientation;
+            _orientation_offset = bounds._orientation_offset;
             CollisionType = bounds.CollisionType;
             _params = bounds._params;
             Flags = bounds.Flags;
@@ -493,7 +493,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         // Fast way to make copies of Intersects than a confusing interface or slow dynamic
-        public bool Intersects(Obb bounds)
+        public bool Intersects(in Obb bounds)
         {
             switch (Geometry)
             {
@@ -511,7 +511,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Aabb bounds)
+        public bool Intersects(in Aabb bounds)
         {
             switch (Geometry)
             {
@@ -529,7 +529,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Capsule bounds)
+        public bool Intersects(in Capsule bounds)
         {
             switch (Geometry)
             {
@@ -547,7 +547,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Sphere bounds)
+        public bool Intersects(in Sphere bounds)
         {
             switch (Geometry)
             {
@@ -565,7 +565,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool Intersects(Triangle bounds)
+        public bool Intersects(in Triangle bounds)
         {
             switch (Geometry)
             {
@@ -654,7 +654,7 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public bool Sweep(Bounds other, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, ref Vector3 resultNormal)
+        public bool Sweep(Bounds other, Vector3 otherVelocity, Vector3 velocity, ref float resultTime, ref Vector3? resultNormal)
         {
             if (Geometry == GeometryType.Sphere && other.Geometry == GeometryType.Sphere)
             {
@@ -728,7 +728,7 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        private static bool SweepVsStationaryAABB(Bounds bounds, Vector3 velocity, Aabb aabb, ref float resultTime, Vector3 resultNormal)
+        private static bool SweepVsStationaryAABB(Bounds bounds, Vector3 velocity, in Aabb aabb, ref float resultTime, Vector3? resultNormal)
         {
             switch (bounds.Geometry)
             {
@@ -756,7 +756,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool SweepVsStationaryOBB(Bounds bounds, Vector3 velocity, Obb obb, ref float resultTime, Vector3 resultNormal)
+        private static bool SweepVsStationaryOBB(Bounds bounds, Vector3 velocity, in Obb obb, ref float resultTime, Vector3? resultNormal)
         {
             Aabb aabb = new (obb.Center - obb.Extents, obb.Center + obb.Extents);
 
@@ -769,7 +769,7 @@ namespace MHServerEmu.Games.Entities
                         Cylinder2 cylinder2 = new (oobCenter, bounds._params.CapsuleHalfHeight, bounds._params.CapsuleRadius);
                         bool result = cylinder2.Sweep(oobVelocity, aabb, ref resultTime, ref resultNormal);
                         if (result && resultNormal != null)
-                            resultNormal = obb.RotationMatrix * resultNormal;
+                            resultNormal = obb.RotationMatrix * resultNormal.Value;
                         return result;
                     }
                 case GeometryType.Sphere:
@@ -779,7 +779,7 @@ namespace MHServerEmu.Games.Entities
                         Cylinder2 cylinder2 = new (oobCenter, bounds._params.SphereRadius, bounds._params.SphereRadius);
                         bool result = cylinder2.Sweep(oobVelocity, aabb, ref resultTime, ref resultNormal);
                         if (result && resultNormal != null)
-                            resultNormal = obb.RotationMatrix * resultNormal;
+                            resultNormal = obb.RotationMatrix * resultNormal.Value;
                         return result;
                     }
                 case GeometryType.Triangle:

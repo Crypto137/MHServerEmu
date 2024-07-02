@@ -109,14 +109,14 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             transform = Transform3.BuildTransform(Vector3.Zero, new Orientation(MathHelper.ToRadians(-orbitContext.ThetaInDegrees), 0f, 0f));
             var directionInv = transform * distance;
 
-            Vector3 normOut = null;
+            Vector3? normOut = null;
             bool sideA = true;
-            Vector3 sideAPos = new ();
+            Vector3 sideAPos = Vector3.Zero;
             if (agentsLocomotor.SweepFromTo(position, targetsPosition + direction * length, ref sideAPos, ref normOut) == SweepResult.Failed)
                 sideA = false;
 
             bool sideB = true;
-            Vector3 sideBPos = new ();
+            Vector3 sideBPos = Vector3.Zero;
             if (agentsLocomotor.SweepFromTo(position, targetsPosition + directionInv * length, ref sideBPos, ref normOut) == SweepResult.Failed)
                 sideB = false;
 

@@ -3,10 +3,10 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Circle2
+    public struct Circle2
     {
-        public Vector3 Center { get; }
-        public float Radius { get; }
+        public Vector3 Center;
+        public float Radius;
 
         public Circle2(Vector3 center, float radius)
         {

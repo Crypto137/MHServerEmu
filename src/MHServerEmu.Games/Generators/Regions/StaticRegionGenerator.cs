@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Generators.Regions
         public static bool GenerateConnectionFromQueriedPoints(GRandom random, out Vector3 connection, Area areaA, Area areaB)
         {
             ConnectionList sharedConnections = new ();
-            connection = null;
+            connection = default;
 
             if (!GetSharedConnections(sharedConnections, areaA, areaB)) return false;
 

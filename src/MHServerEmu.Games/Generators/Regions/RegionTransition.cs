@@ -51,10 +51,10 @@ namespace MHServerEmu.Games.Generators.Regions
                 targetDest = targetDestination;
             }
 
-            if (targetDest != null && region.FindTargetPosition(targetPos, targetRot, targetDest))
+            if (targetDest != null && region.FindTargetPosition(ref targetPos, ref targetRot, targetDest))
             {
                 var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(targetRef);
-                if (teleportEntity != null && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(targetRot, targetPos);
+                if (teleportEntity != null && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
                 return true;
             }
             return false;

@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             return false;
         }
 
-        private static bool LoopHelper(in SelectEntityContext selectionContext, Aabb bounds, ref WorldEntity bestTargetSoFar, ref float bestValue)
+        private static bool LoopHelper(in SelectEntityContext selectionContext, in Aabb bounds, ref WorldEntity bestTargetSoFar, ref float bestValue)
         {
             if (selectionContext.OwnerController == null) return false;
             var ownersGame = selectionContext.OwnerController.Game;

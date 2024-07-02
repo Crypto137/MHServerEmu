@@ -316,8 +316,6 @@ namespace MHServerEmu.Games.Regions
 
             */
 
-            Bound ??= new Aabb(Vector3.Zero, Vector3.Zero);
-
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
             IsGenerated = true;
             return true;
@@ -370,7 +368,7 @@ namespace MHServerEmu.Games.Regions
             return bound;
         }
 
-        public void SetBound(Aabb boundingBox)
+        public void SetBound(in Aabb boundingBox)
         {
             if (boundingBox.Volume <= 0 || (boundingBox.Min == Bound.Min && boundingBox.Max == Bound.Max)) return;
 
@@ -380,7 +378,7 @@ namespace MHServerEmu.Games.Regions
             InitializeSpacialPartition(Bound);
         }
 
-        private bool InitializeSpacialPartition(Aabb bound)
+        private bool InitializeSpacialPartition(in Aabb bound)
         {
             if (EntitySpatialPartition != null || CellSpatialPartition != null) return false;
 
@@ -587,7 +585,7 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<WorldEntity>();
         }
 
-        public IEnumerable<Avatar> IterateAvatarsInVolume(Sphere bound)
+        public IEnumerable<Avatar> IterateAvatarsInVolume(in Sphere bound)
         {
             if (EntitySpatialPartition != null)
                 return EntitySpatialPartition.IterateAvatarsInVolume(bound);
@@ -707,26 +705,26 @@ namespace MHServerEmu.Games.Regions
             return markerFilter == filterRef;
         }
 
-        public IEnumerable<Area> IterateAreas(Aabb bound = null)
+        public IEnumerable<Area> IterateAreas(Aabb? bound = null)
         {
             List<Area> areasList = Areas.Values.ToList();
             foreach (Area area in areasList)
             {
                 //Area area = enumerator.Current.Value;
-                if (bound == null || area.RegionBounds.Intersects(bound))
+                if (bound == null || area.RegionBounds.Intersects(bound.Value))
                     yield return area;
             }
         }
 
-        public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             Area targetArea;
 
             // fix for AvengerTower
             if (StartArea.PrototypeId == AreaPrototypeId.AvengersTowerHubArea)
             {
-                markerPos.Set(1589.0f, -2.0f, 180.0f);
-                markerRot.Set(3.1415f, 0.0f, 0.0f);
+                markerPos = new (1589.0f, -2.0f, 180.0f);
+                markerRot = new (3.1415f, 0.0f, 0.0f);
                 return true;
             }
 
@@ -739,7 +737,7 @@ namespace MHServerEmu.Games.Regions
             {
                 targetArea = GetArea(areaRef);
                 if (targetArea != null) 
-                    found = targetArea.FindTargetPosition(markerPos, markerRot, target);
+                    found = targetArea.FindTargetPosition(ref markerPos, ref markerRot, target);
             }
 
             // Has the wrong areaRef
@@ -747,7 +745,7 @@ namespace MHServerEmu.Games.Regions
                 foreach (Area area in IterateAreas())
                 {
                     targetArea = area;
-                    if (targetArea.FindTargetPosition(markerPos, markerRot, target))
+                    if (targetArea.FindTargetPosition(ref markerPos, ref markerRot, target))
                         return true;
                 }
 
@@ -755,7 +753,7 @@ namespace MHServerEmu.Games.Regions
             if (found == false)
                 foreach (Cell cell in Cells)
                 {
-                    if (cell.FindTargetPosition(markerPos, markerRot, target))
+                    if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))
                         return true;
                 }
 
@@ -795,10 +793,10 @@ namespace MHServerEmu.Games.Regions
             {
                 if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
-                    Vector3 position = new(playerConnection.EntityToTeleport.RegionLocation.Position);
-                    Orientation orientation = new(playerConnection.EntityToTeleport.RegionLocation.Orientation);
+                    Vector3 position = playerConnection.EntityToTeleport.RegionLocation.Position;
+                    Orientation orientation = playerConnection.EntityToTeleport.RegionLocation.Orientation;
                     if (playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity
-                        && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
+                        && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(ref orientation, ref position);
                     playerConnection.StartPosition = position;
                     playerConnection.StartOrientation = orientation;
                     playerConnection.EntityToTeleport = null;
@@ -951,26 +949,26 @@ namespace MHServerEmu.Games.Regions
         {
             float maxHeight = Math.Max(startPosition.Z, targetPosition.Z);
             maxHeight += height;
-            Vector3 resultPosition = Vector3.Zero;
-            Vector3 resultNormal = null;
+            Vector3? resultPosition = Vector3.Zero;
+            Vector3? resultNormal = null;
             var sweepResult = NaviMesh.Sweep(startPosition, targetPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
                 padding, HeightSweepType.Constraint, (int)maxHeight, short.MinValue, owner);
             if (sweepResult == SweepResult.Success)
             {
-                Vector3 resultHitPosition = null;
+                Vector3? resultHitPosition = null;
                 return SweepToFirstHitEntity(startPosition, targetPosition, owner, targetEntityId, true, 0.0f, ref resultHitPosition) == null;
             }
             return false;
         }
 
-        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3 resultHitPosition, T canBlock) where T: ICanBlock
+        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T: ICanBlock
         {
             bool CanBlockFunc(WorldEntity otherEntity) => canBlock.CanBlock(otherEntity);
             return SweepToFirstHitEntity(sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
         }
 
         public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner, 
-            ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3 resultHitPosition)
+            ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3? resultHitPosition)
         {
             Bounds sweepBounds = new ();
 
@@ -990,7 +988,7 @@ namespace MHServerEmu.Games.Regions
             return SweepToFirstHitEntity(sweepBounds, sweepVector, ref resultHitPosition, CanBlockFunc);
         }
 
-        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3 resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
+        private WorldEntity SweepToFirstHitEntity(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, Func<WorldEntity, bool> canBlockFunc)
         {
             Vector3 sweepStart = sweepBounds.Center;
             Vector3 sweepEnd = sweepStart + sweepVelocity;
@@ -1009,7 +1007,7 @@ namespace MHServerEmu.Games.Regions
                 if (canBlockFunc(otherEntity))
                 {
                     float resultTime = 1.0f;
-                    Vector3 resultNormal = null;
+                    Vector3? resultNormal = null;
                     if (sweepBounds.Sweep(otherEntity.Bounds, Vector3.Zero, sweepVelocity, ref resultTime, ref resultNormal))
                     {
                         if (hitEntity != null)
@@ -1181,8 +1179,8 @@ namespace MHServerEmu.Games.Regions
                 {
                     if (posFlags.HasFlag(PositionCheckFlags.CanSweepTo) || posFlags.HasFlag(PositionCheckFlags.CanSweepRadius))
                     {
-                        Vector3 resultSweepPosition = new();
-                        Vector3 resultNorm = null;
+                        Vector3? resultSweepPosition = new();
+                        Vector3? resultNorm = null;
                         float radius = posFlags.HasFlag(PositionCheckFlags.CanSweepRadius) ? 0f : bounds.Radius;
                         SweepResult sweepResult = naviMesh.Sweep(point, resultPosition, radius, pathFlags, 
                             ref resultSweepPosition, ref resultNorm, 0f, heightSweep, maxSweepHeight);

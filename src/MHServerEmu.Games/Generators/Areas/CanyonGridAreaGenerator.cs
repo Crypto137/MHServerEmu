@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return 0;
         }
 
-        public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
+        public override bool GetPossibleConnections(ConnectionList connections, in Segment segment)
         {
             connections.Clear();
 

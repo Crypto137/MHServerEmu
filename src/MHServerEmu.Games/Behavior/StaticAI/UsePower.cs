@@ -291,7 +291,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 {
                     var targetEntityId = Entity.InvalidId;
                     if (targetWorldEntity != null) targetEntityId = targetWorldEntity.Id;
-                    if (movementPower.PowerPositionSweep(regionLocation, targetPositionForPower, targetEntityId, out Vector3 sweepPos) == PowerPositionSweepResult.Clipped)
+                    Vector3? sweepPosition = Vector3.Zero;
+                    if (movementPower.PowerPositionSweep(regionLocation, targetPositionForPower, targetEntityId, ref sweepPosition) == PowerPositionSweepResult.Clipped)
                         return PowerUseResult.OutOfPosition;
                 }
 
@@ -378,9 +379,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
         private static bool CheckAgentOrientation(Agent agent, Vector3 targetPosition, float orientationThreshold)
         {
-            Vector3 targetDirection2d = new(targetPosition - agent.RegionLocation.Position);
-            targetDirection2d.Z = 0f;
-
+            Vector3 targetDirection2d = (targetPosition - agent.RegionLocation.Position).To2D();
             if (Vector3.LengthSqr(targetDirection2d) == 0f) return false;
 
             targetDirection2d = Vector3.Normalize(targetDirection2d);

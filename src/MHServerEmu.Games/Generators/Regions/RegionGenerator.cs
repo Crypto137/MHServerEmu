@@ -109,8 +109,8 @@ namespace MHServerEmu.Games.Generators.Regions
                 float maxY = Math.Min(boundsA.Max.Y, boundsB.Max.Y);
                 float minY = Math.Max(boundsA.Min.Y, boundsB.Min.Y);
 
-                sharedEdge.Start.Set(x, minY, 0.0f);
-                sharedEdge.End.Set(x, maxY, 0.0f);
+                sharedEdge.Start = new (x, minY, 0.0f);
+                sharedEdge.End = new (x, maxY, 0.0f);
                 return true;
             }
             else if (Segment.EpsilonTest(boundsA.Max.Y, boundsB.Min.Y, 10.0f))
@@ -119,8 +119,8 @@ namespace MHServerEmu.Games.Generators.Regions
                 float maxX = Math.Min(boundsA.Max.X, boundsB.Max.X);
                 float minX = Math.Max(boundsA.Min.X, boundsB.Min.X);
 
-                sharedEdge.Start.Set(minX, y, 0.0f);
-                sharedEdge.End.Set(maxX, y, 0.0f);
+                sharedEdge.Start = new (minX, y, 0.0f);
+                sharedEdge.End = new (maxX, y, 0.0f);
                 return true;
             }
             else if (Segment.EpsilonTest(boundsA.Min.X, boundsB.Max.X, 10.0f))
@@ -129,8 +129,8 @@ namespace MHServerEmu.Games.Generators.Regions
                 float maxY = Math.Min(boundsA.Max.Y, boundsB.Max.Y);
                 float minY = Math.Max(boundsA.Min.Y, boundsB.Min.Y);
 
-                sharedEdge.Start.Set(x, minY, 0.0f);
-                sharedEdge.End.Set(x, maxY, 0.0f);
+                sharedEdge.Start = new (x, minY, 0.0f);
+                sharedEdge.End = new (x, maxY, 0.0f);
                 return true;
             }
             else if (Segment.EpsilonTest(boundsA.Min.Y, boundsB.Max.Y, 10.0f))
@@ -139,8 +139,8 @@ namespace MHServerEmu.Games.Generators.Regions
                 float maxX = Math.Min(boundsA.Max.X, boundsB.Max.X);
                 float minX = Math.Max(boundsA.Min.X, boundsB.Min.X);
 
-                sharedEdge.Start.Set(minX, y, 0.0f);
-                sharedEdge.End.Set(maxX, y, 0.0f);
+                sharedEdge.Start = new (minX, y, 0.0f);
+                sharedEdge.End = new (maxX, y, 0.0f);
                 return true;
             }
             return false;

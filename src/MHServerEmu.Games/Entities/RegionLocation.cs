@@ -58,13 +58,13 @@ namespace MHServerEmu.Games.Entities
 
         public void Set(RegionLocation other)
         {
-            _position = new(other._position);
-            _orientation = new(other._orientation);
+            _position = other._position;
+            _orientation = other._orientation;
             _region = other._region;
             Cell = other.Cell;
         }
 
-        public static Vector3 ProjectToFloor(Cell cell, Vector3 regionPos)
+        public static Vector3 ProjectToFloor(Cell cell, in Vector3 regionPos)
         {
             if (cell == null || cell.RegionBounds.IntersectsXY(regionPos) == false) return regionPos;
             var cellProto = cell.CellProto;
@@ -87,10 +87,8 @@ namespace MHServerEmu.Games.Entities
 
             if (height > short.MinValue)
             {
-                Vector3 resultPos = new(regionPos)
-                {
-                    Z = cell.RegionBounds.Center.Z + height
-                };
+                Vector3 resultPos = regionPos;
+                resultPos.Z = cell.RegionBounds.Center.Z + height;
                 return resultPos;
             }
             else
@@ -245,8 +243,8 @@ namespace MHServerEmu.Games.Entities
                 CellRef = PrototypeId.Invalid;
             }
 
-            Position = new(regionLocation.Position);
-            Orientation = new(regionLocation.Orientation);
+            Position = regionLocation.Position;
+            Orientation = regionLocation.Orientation;
 
             return this;
         }

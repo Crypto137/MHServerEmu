@@ -137,8 +137,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var position = owner.RegionLocation.Position;
 
             List<FleePath> pathResults = new ();
-            Vector3 resultNorm = null;
-            Vector3 resultPosition = new();
+            Vector3? resultNorm = null;
+            Vector3 resultPosition = Vector3.Zero;
             var sweepResult = locomotor.SweepFromTo(position, targetPosition, ref resultPosition, ref resultNorm); // debug for sweep On here
             var fleeDistance = Vector3.Distance2D(position, resultPosition);
 
@@ -177,9 +177,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 var dirSideA = Vector3.SafeNormalize2D(Vector3.AxisAngleRotate(direction, Vector3.ZAxis, MathHelper.ToRadians(angle)));
                 var dirSideB = Vector3.SafeNormalize2D(Vector3.AxisAngleRotate(direction, Vector3.ZAxis, MathHelper.ToRadians(-angle)));
 
-                Vector3 sideAPos = new();
-                Vector3 sideBPos = new();
-                Vector3 resultNorm = null;
+                Vector3 sideAPos = Vector3.Zero;
+                Vector3 sideBPos = Vector3.Zero;
+                Vector3? resultNorm = null;
                 var sweepSideA = locomotor.SweepFromTo(position, position + dirSideA * distance, ref sideAPos, ref resultNorm);
                 var sweepSideB = locomotor.SweepFromTo(position, position + dirSideB * distance, ref sideBPos, ref resultNorm);
 
@@ -235,8 +235,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var locomotionOptions = new LocomotionOptions
             { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
 
-            Vector3 resultNorm = null;
-            Vector3 resultPosition = new();
+            Vector3? resultNorm = null;
+            Vector3 resultPosition = Vector3.Zero;
             foreach (var ally in allies)
             {
                 var entity = ally.Entity;

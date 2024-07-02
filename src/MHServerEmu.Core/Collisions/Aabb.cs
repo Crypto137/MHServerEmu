@@ -3,10 +3,10 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Aabb : IBounds
+    public struct Aabb : IBounds
     {
-        public Vector3 Min { get; set; }
-        public Vector3 Max { get; set; }
+        public Vector3 Min;
+        public Vector3 Max;
 
         public float Width { get => Max.X - Min.X; }
         public float Length { get => Max.Y - Min.Y; }
@@ -19,11 +19,6 @@ namespace MHServerEmu.Core.Collisions
         {
             Min = min;
             Max = max;
-        }
-        public Aabb(Aabb bound)
-        {
-            Min = new(bound.Min);
-            Max = new(bound.Max);
         }
 
         public Aabb(Vector3 center, float width, float length, float height)
@@ -52,19 +47,7 @@ namespace MHServerEmu.Core.Collisions
         public float Volume => Width * Length * Height;
         public Vector3 Extents => (Max - Min) * 0.5f;
 
-        public void Set(Aabb aabb)
-        {
-            Min.Set(aabb.Min);
-            Max.Set(aabb.Max);
-        }
-
-        public void Set(Vector3 min, Vector3 max)
-        {
-            Min.Set(min);
-            Max.Set(max);
-        }
-
-        public static Aabb operator +(Aabb aabb1, Aabb aabb2)
+        public static Aabb operator +(in Aabb aabb1, in Aabb aabb2)
         {
             Vector3 newMin = new(
                 Math.Min(aabb1.Min.X, aabb2.Min.X),
@@ -81,7 +64,7 @@ namespace MHServerEmu.Core.Collisions
             return new Aabb(newMin, newMax);
         }
 
-        public static Aabb operator +(Aabb aabb, Vector3 point)
+        public static Aabb operator +(in Aabb aabb, in Vector3 point)
         {
             Vector3 newMin = new(Math.Min(aabb.Min.X, point.X),
                                     Math.Min(aabb.Min.Y, point.Y),
@@ -102,7 +85,7 @@ namespace MHServerEmu.Core.Collisions
             return new(Min - expandVec, Max + expandVec);
         }
 
-        public ContainmentType ContainsXY(Aabb bounds)
+        public ContainmentType ContainsXY(in Aabb bounds)
         {
             if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
                 bounds.Min.Y > Max.Y || bounds.Max.Y < Min.Y)
@@ -117,7 +100,7 @@ namespace MHServerEmu.Core.Collisions
             return ContainmentType.Intersects;
         }
 
-        public ContainmentType ContainsXY(Vector3 point)
+        public ContainmentType ContainsXY(in Vector3 point)
         {
             if (point.X > Max.X || point.X < Min.X ||
                 point.Y > Max.Y || point.Y < Min.Y)
@@ -126,7 +109,7 @@ namespace MHServerEmu.Core.Collisions
                 return ContainmentType.Contains;
         }
 
-        public ContainmentType Contains(Aabb2 bounds)
+        public ContainmentType Contains(in Aabb2 bounds)
         {
             if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
                 bounds.Min.Y > Max.Y || bounds.Max.Y < Min.Y)
@@ -141,7 +124,7 @@ namespace MHServerEmu.Core.Collisions
             return ContainmentType.Intersects;
         }
 
-        public ContainmentType ContainsXY(Aabb areaBounds, float epsilon)
+        public ContainmentType ContainsXY(in Aabb areaBounds, float epsilon)
         {
             Aabb expanded = Expand(epsilon);
             return expanded.ContainsXY(areaBounds);
@@ -172,11 +155,11 @@ namespace MHServerEmu.Core.Collisions
 
         public void RoundToNearestInteger()
         {
-            Min.Set(MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
-            Max.Set(MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
+            Min = new (MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
+            Max = new (MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
         }
 
-        public bool IntersectsXY(Vector3 point)
+        public bool IntersectsXY(in Vector3 point)
         {
             if (Max.X < point.X || Min.X > point.X ||
                 Max.Y < point.Y || Min.Y > point.Y)
@@ -184,7 +167,7 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
-        public bool Intersects(Vector3 point)
+        public bool Intersects(in Vector3 point)
         {
             if (Max.X < point.X || Min.X > point.X ||
                 Max.Y < point.Y || Min.Y > point.Y ||
@@ -193,7 +176,7 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
-        public bool Intersects(Aabb bounds)
+        public bool Intersects(in Aabb bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
                 Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y ||
@@ -202,27 +185,27 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
-        public bool Intersects(Capsule capsule)
+        public bool Intersects(in Capsule capsule)
         {
             return capsule.Intersects(this);
         }
 
-        public bool Intersects(Triangle triangle)
+        public bool Intersects(in Triangle triangle)
         {
             return triangle.Intersects(this);
         }
 
-        public bool Intersects(Sphere sphere)
+        public bool Intersects(in Sphere sphere)
         {
             return sphere.Intersects(this);
         }
 
-        public bool Intersects(Obb obb)
+        public bool Intersects(in Obb obb)
         {
             return obb.Intersects(this);
         }
 
-        public bool Intersects(Aabb2 bounds)
+        public bool Intersects(in Aabb2 bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
                 Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y)
@@ -233,7 +216,7 @@ namespace MHServerEmu.Core.Collisions
         public bool IsZero() => Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);
         public bool IsValid() => Min.X <= Max.X && Min.Y <= Max.Y && Min.Z <= Max.Z;
 
-        public bool FullyContains(Aabb bounds)
+        public bool FullyContains(in Aabb bounds)
         {
             return bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
                     bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y &&
@@ -258,7 +241,7 @@ namespace MHServerEmu.Core.Collisions
             return corners;
         }
 
-        public bool IntersectRay(Vector3 point, Vector3 velocity, ref float time, out Vector3 intersectPoint)
+        public bool IntersectRay(in Vector3 point, in Vector3 velocity, ref float time, out Vector3 intersectPoint)
         {
             // Real-Time Collision Detection p.180 (IntersectRayAABB)
             float tMin = 0.0f;              // set to -FLT_MAX to get first hit on line
@@ -271,7 +254,7 @@ namespace MHServerEmu.Core.Collisions
                     if (point[i] < Min[i] || point[i] > Max[i])
                     {
                         time = 0.0f;
-                        intersectPoint = null;
+                        intersectPoint = default;
                         return false;
                     }
                 }
@@ -289,7 +272,7 @@ namespace MHServerEmu.Core.Collisions
                     if (tMin > tMax)
                     {
                         time = 0.0f;
-                        intersectPoint = null;
+                        intersectPoint = default;
                         return false;
                     }
                 }

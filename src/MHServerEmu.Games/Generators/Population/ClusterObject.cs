@@ -784,7 +784,7 @@ namespace MHServerEmu.Games.Generators.Population
             return false;
         }
 
-        public bool PickPositionInBounds(Aabb bound)
+        public bool PickPositionInBounds(in Aabb bound)
         {
             if (Radius == 0 || bound.Width < Radius || bound.Length < Radius) return false;
 
