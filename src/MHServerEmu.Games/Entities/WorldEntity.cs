@@ -746,7 +746,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, in PowerActivationSettings settings)
+        public virtual PowerUseResult ActivatePower(PrototypeId powerRef, ref PowerActivationSettings settings)
         {
             Power power = GetPower(powerRef);
             if (power == null)
@@ -754,7 +754,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"ActivatePower(): Requested activation of power {GameDatabase.GetPrototypeName(powerRef)} but that power not found on {this}");
                 return PowerUseResult.AbilityMissing;
             }
-            return ActivatePower(power, in settings);
+            return ActivatePower(power, ref settings);
         }
 
         public void EndAllPowers(bool v)
@@ -836,6 +836,20 @@ namespace MHServerEmu.Games.Entities
             if (activePower == null) return false;
 
             return activePower.ShouldOrientToTarget();
+        }
+
+        public void OrientForPower(Power power, Vector3 targetPosition, Vector3 userPosition)
+        {
+            if (power.ShouldOrientToTarget() == false)
+                return;
+
+            if (power.GetTargetingShape() == TargetingShapeType.Self)
+                return;
+
+            if (Properties[PropertyEnum.LookAtMousePosition])
+                return;
+
+            OrientToward(targetPosition, userPosition, true, ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients);
         }
 
         public virtual PowerUseResult CanTriggerPower(PowerPrototype powerProto, Power power, PowerActivationSettingsFlags flags)
@@ -1007,9 +1021,9 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        protected virtual PowerUseResult ActivatePower(Power power, in PowerActivationSettings settings)
+        protected virtual PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
-            return power.Activate(in settings);
+            return power.Activate(ref settings);
         }
 
         private Power GetActivePower()

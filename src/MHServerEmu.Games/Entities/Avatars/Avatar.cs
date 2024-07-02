@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                             PowerUseResult result = CanActivatePower(continuousPower, targetId, targetPosition);
                             if (result == PowerUseResult.Success)
-                                ActivatePower(continuousPower, in settings);
+                                ActivatePower(continuousPower, ref settings);
                             else
                                 Logger.Debug($"CheckContinuousPower(): result={result}");
                         }

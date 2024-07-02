@@ -345,9 +345,9 @@ namespace MHServerEmu.Games.Behavior
         }
 
         public bool AttemptActivatePower(PrototypeId powerRef, ulong targetEntityId, Vector3 targetPosition)
-        {            
-            var activateSettings = new PowerActivationSettings(targetEntityId, targetPosition, Owner.RegionLocation.Position);
-            return Owner.ActivatePower(powerRef, activateSettings) == PowerUseResult.Success;
+        {
+            PowerActivationSettings activateSettings = new(targetEntityId, targetPosition, Owner.RegionLocation.Position);
+            return Owner.ActivatePower(powerRef, ref activateSettings) == PowerUseResult.Success;
         }
 
         public void OnAILeaderDeath()

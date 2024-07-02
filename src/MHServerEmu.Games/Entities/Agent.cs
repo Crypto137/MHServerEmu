@@ -360,9 +360,9 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        protected override PowerUseResult ActivatePower(Power power, in PowerActivationSettings settings)
+        protected override PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
-            var result = base.ActivatePower(power, settings);
+            var result = base.ActivatePower(power, ref settings);
             if (result != PowerUseResult.Success && result != PowerUseResult.ExtraActivationFailed)
             {
                 Logger.Warn($"ActivatePower(): Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");

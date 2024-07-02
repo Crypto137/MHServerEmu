@@ -48,6 +48,7 @@ namespace MHServerEmu.Games.Powers
         public PropertyCollection Properties { get; } = new();
 
         public float AnimSpeedCache { get; private set; } = -1f;
+        public bool WasLastActivateInterrupted { get; private set; }
         public TimeSpan LastActivateGameTime { get; private set; }
 
         public bool IsSituationalPower { get => _situationalComponent != null; }
@@ -264,7 +265,7 @@ namespace MHServerEmu.Games.Powers
             //throw new NotImplementedException();
         }
 
-        public PowerUseResult Activate(in PowerActivationSettings settings)
+        public PowerUseResult Activate(ref PowerActivationSettings settings)
         {
             Logger.Debug($"Activate(): {Prototype}");
 
@@ -336,9 +337,93 @@ namespace MHServerEmu.Games.Powers
                     return Logger.WarnReturn(PowerUseResult.GenericError, $"Activate(): The EvalPowerSynergies Eval in a power failed:\nPower: [{this}]");
             }
 
+            if (StopsMovementOnActivation())
+            {
+                if (Owner is Agent agent)
+                {
+                    Locomotor locomotor = agent.Locomotor;
+                    if (locomotor != null && (Owner.IsMovementAuthoritative || locomotor.IsSyncMoving))
+                        locomotor.Stop();
+                }
+            }
+
+            if (OrientsTowardsTargetWhileActive())
+            {
+                if (Owner is Agent agent)
+                    agent.OrientForPower(this, settings.TargetPosition, settings.UserPosition);
+            }
+
+            if (GetTargetingShape() == TargetingShapeType.Self)
+            {
+                settings.TargetEntityId = Owner.Id;
+            }
+            else if (GetTargetingShape() == TargetingShapeType.TeamUp)
+            {
+                if (Owner is Avatar avatar)
+                {
+                    Agent currentTeamUpAgent = avatar.CurrentTeamUpAgent;
+                    if (currentTeamUpAgent != null)
+                    {
+                        settings.TargetEntityId = currentTeamUpAgent.Id;
+                        settings.TargetPosition = currentTeamUpAgent.RegionLocation.Position;
+                    }
+                }
+            }
+
+            settings.InitialTargetPosition = settings.TargetPosition;
+            GenerateActualTargetPosition(settings.TargetEntityId, settings.InitialTargetPosition, out settings.TargetPosition, in settings);
+
+            MovementPowerPrototype movementPowerProto = FindPowerPrototype<MovementPowerPrototype>(powerProto);
+            if (movementPowerProto == null || movementPowerProto.TeleportMethod != TeleportMethodType.Teleport)
+                ComputePowerMovementSettings(movementPowerProto, ref settings);
+
+            if (Properties.HasProperty(PropertyEnum.PowerPeriodicActivation))
+            {
+                int activateAtCount = Properties[PropertyEnum.PowerPeriodicActivation];
+                int activationCount = Properties[PropertyEnum.PowerPeriodicActivationCount];
+
+                if (activateAtCount <= 0)
+                {
+                    return Logger.WarnReturn(PowerUseResult.GenericError,
+                        $"Activate(): Tried to activate Periodic Activation Power [{this}] but it has no periodic activation value specified!");
+                }
+
+                activationCount++;
+                if (activationCount < activateAtCount)
+                {
+                    Properties[PropertyEnum.PowerPeriodicActivationCount] = activateAtCount;
+                    return PowerUseResult.Success;
+                }
+                else
+                {
+                    Properties[PropertyEnum.PowerPeriodicActivationCount] = 0;
+                }
+            }
+
             PowerUseResult result = ActivateInternal(in settings);
             if (result != PowerUseResult.Success)
                 return result;
+
+            WasLastActivateInterrupted = false;
+
+            if (Owner != null && (Owner.IsDestroyed || Owner.IsInWorld == false))
+                return result;
+
+            if (Game == null) return Logger.WarnReturn(PowerUseResult.GenericError, "Activate(): Game == null");
+            LastActivateGameTime = Game.CurrentTime;
+
+            // We need to get target here again because activation settings may have changed since the beginning of this method
+            target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+            if (target != null && Owner.IsHostileTo(target))
+                Owner.Properties[PropertyEnum.LastHostileTargetID] = settings.TargetEntityId;
+
+            _activationPhase = PowerActivationPhase.Active;
+
+            if (GetChargingTime() > TimeSpan.Zero)
+                StartCharging();
+
+            if (GetTotalChannelingTime() > TimeSpan.Zero)
+                ScheduleChannelStart();
 
             if (GetActivationType() != PowerActivationType.Passive && powerProto.IsRecurring == false)
                 SchedulePowerEnd(in settings);
@@ -356,6 +441,7 @@ namespace MHServerEmu.Games.Powers
         public bool EndPower(EndPowerFlags flags)
         {
             Logger.Debug($"EndPower(): {Prototype} (flags={flags})");
+            _activationPhase = PowerActivationPhase.Inactive;
             Owner?.OnPowerEnded(this, flags);
             return true;
         }
@@ -481,6 +567,14 @@ namespace MHServerEmu.Games.Powers
                 PowerActivationPhase.LoopEnding => Prototype.MovementPreventChannelEnd,
                 _ => false,
             };
+        }
+
+        public bool StopsMovementOnActivation()
+        {
+            if (Owner is Avatar avatar && IsGamepadMeleeMoveIntoRangePower() && avatar.PendingActionState == PendingActionState.MovingToRange)
+                return false;
+
+            return Prototype != null && Prototype.MovementOrientToTargetOnActivate;
         }
 
         public bool IsToggledOn()
@@ -693,6 +787,11 @@ namespace MHServerEmu.Games.Powers
             return stylePrototype.DisableOrientationDuringPower;
         }
 
+        public bool OrientsTowardsTargetWhileActive()
+        {
+            return Prototype != null && Prototype.MovementOrientToTargetOnActivate;
+        }
+
         public bool TargetsAOE()
         {
             PowerPrototype powerProto = Prototype;
@@ -768,6 +867,11 @@ namespace MHServerEmu.Games.Powers
             TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
             if (reachProto == null) return Logger.WarnReturn(false, "IsMelee(): reachProto == null");
             return reachProto.Melee;
+        }
+
+        public bool IsGamepadMeleeMoveIntoRangePower()
+        {
+            return GamepadSettingsPrototype != null && GamepadSettingsPrototype.MeleeMoveIntoRange;
         }
 
         public float GetRange()
@@ -1356,7 +1460,40 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public static T FindPowerPrototype<T>(PowerPrototype powerProto) where T: PowerPrototype
+        {
+            if (powerProto == null) return Logger.WarnReturn<T>(null, "FindPowerPrototype(): powerProto == null");
+
+            if (powerProto is T typedPowerProto)
+                return typedPowerProto;
+
+            if (powerProto.ActionsTriggeredOnPowerEvent.HasValue())
+            {
+                foreach (PowerEventActionPrototype triggeredPowerEventProto in powerProto.ActionsTriggeredOnPowerEvent)
+                {
+                    if (triggeredPowerEventProto.EventAction != PowerEventActionType.UsePower)
+                        continue;
+
+                    if (triggeredPowerEventProto.Power == PrototypeId.Invalid)
+                        return Logger.WarnReturn<T>(null, $"FindPowerPrototype(): Infinite loop detected in {powerProto}!");
+
+                    typedPowerProto = FindPowerPrototype<T>(triggeredPowerEventProto.Power.As<PowerPrototype>());
+                    if (typedPowerProto != null)
+                        return typedPowerProto;
+                }
+            }
+
+            return null;
+        }
+
         #endregion
+
+        protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 initialTargetPosition, out Vector3 actualTargetPosition,
+            in PowerActivationSettings settings)
+        {
+            actualTargetPosition = initialTargetPosition;
+            //TODO
+        }
 
         private bool CreateSituationalComponent()
         {
@@ -1578,9 +1715,42 @@ namespace MHServerEmu.Games.Powers
             return clipped ? PowerPositionSweepResult.Clipped : PowerPositionSweepResult.Success;
         }
 
+        private void ComputePowerMovementSettings(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
+        {
+            if (movementPowerProto != null && movementPowerProto.TeleportMethod == TeleportMethodType.None)
+                GenerateMovementPathToTarget(movementPowerProto, ref settings);
+
+            ComputeTimeForPowerMovement(movementPowerProto, ref settings);
+        }
+
+        private void GenerateMovementPathToTarget(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
+        {
+            // TODO
+            Logger.Debug("GenerateMovementPathToTarget()");
+        }
+
+        private void ComputeTimeForPowerMovement(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
+        {
+            // TODO
+            Logger.Debug("ComputeTimeForPowerMovement()");
+        }
+
+        private void StartCharging()
+        {
+            // TODO
+            Logger.Debug("StartCharging()");
+        }
+
+        private void ScheduleChannelStart()
+        {
+            // TODO
+            Logger.Debug("ScheduleChannelStart()");
+        }
+
         private bool CanBeUserCanceledNow()
         {
             // TODO
+            Logger.Debug("CanBeUserCanceledNow()");
             return true;
         }
 

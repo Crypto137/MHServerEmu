@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Powers
         public ulong TargetEntityId = 0;
         public Vector3 TargetPosition = Vector3.Zero;
         public Vector3 UserPosition = Vector3.Zero;
+        public Vector3 InitialTargetPosition = Vector3.Zero;
 
         public float MovementSpeed = 0f;
         public TimeSpan MovementTime = TimeSpan.Zero;
