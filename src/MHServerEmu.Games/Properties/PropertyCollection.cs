@@ -236,6 +236,24 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Copies the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/> from the provided <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void CopyProperty(PropertyCollection source, PropertyId id)
+        {
+            if (source._aggregateList.GetPropertyValue(id, out PropertyValue value))
+                SetPropertyValue(id, value);
+        }
+
+        /// <summary>
+        /// Copies all properties with the specified <see cref="PropertyEnum"/> from the provided <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void CopyPropertyRange(PropertyCollection source, PropertyEnum propertyEnum)
+        {
+            foreach (var kvp in source.IteratePropertyRange(propertyEnum))
+                SetPropertyValue(kvp.Key, kvp.Value);
+        }
+
+        /// <summary>
         /// Returns the number of properties with non-default values in this <see cref="PropertyCollection"/> that use the specified <see cref="PropertyEnum"/>.
         /// </summary>
         public int NumPropertiesInRange(PropertyEnum propertyEnum)
