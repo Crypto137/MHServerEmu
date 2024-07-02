@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.GameData
     public static class GameDataExtensions
     {
         /// <summary>
-        /// Returns the <see cref="AssetType"/> that this <see cref="PrototypeId"/> refers to.
+        /// Returns the <see cref="AssetType"/> that this <see cref="AssetTypeId"/> refers to.
         /// </summary>
         public static AssetType AsAssetType(this AssetTypeId assetTypeId)
         {
@@ -38,6 +38,46 @@ namespace MHServerEmu.Games.GameData
         public static T As<T>(this PrototypeId prototypeId) where T: Prototype
         {
             return GameDatabase.GetPrototype<T>(prototypeId);
+        }
+
+        /// <summary>
+        /// Returns the name of this <see cref="AssetTypeId"/>.
+        /// </summary>
+        public static string GetName(this AssetTypeId assetTypeId)
+        {
+            return GameDatabase.GetAssetTypeName(assetTypeId);
+        }
+
+        /// <summary>
+        /// Returns the name of this <see cref="AssetId"/>.
+        /// </summary>
+        public static string GetName(this AssetId assetId)
+        {
+            return GameDatabase.GetAssetName(assetId);
+        }
+
+        /// <summary>
+        /// Returns the name of this <see cref="CurveId"/>.
+        /// </summary>
+        public static string GetName(this CurveId curveId)
+        {
+            return GameDatabase.GetCurveName(curveId);
+        }
+
+        /// <summary>
+        /// Returns the name of this <see cref="BlueprintId"/>.
+        /// </summary>
+        public static string GetName(this BlueprintId blueprintId)
+        {
+            return GameDatabase.GetBlueprintName(blueprintId);
+        }
+
+        /// <summary>
+        /// Returns the name of this <see cref="PrototypeId"/>.
+        /// </summary>
+        public static string GetName(this PrototypeId prototypeId)
+        {
+            return GameDatabase.GetPrototypeName(prototypeId);
         }
     }
 }
