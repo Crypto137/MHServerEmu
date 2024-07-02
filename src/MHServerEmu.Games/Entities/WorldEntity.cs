@@ -721,6 +721,7 @@ namespace MHServerEmu.Games.Entities
         public Power GetPower(PrototypeId powerProtoRef) => _powerCollection?.GetPower(powerProtoRef);
         public Power GetThrowablePower() => _powerCollection?.ThrowablePower;
         public Power GetThrowableCancelPower() => _powerCollection?.ThrowableCancelPower;
+        public virtual bool IsMelee() => false;
 
         public bool HasPowerInPowerCollection(PrototypeId powerProtoRef)
         {
@@ -1501,6 +1502,11 @@ namespace MHServerEmu.Games.Entities
         public bool IsCloneParent()
         {
             return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
+        }
+
+        public bool IsDestructible()
+        {
+            return HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword);
         }
 
         public override SimulateResult SetSimulated(bool simulated)
