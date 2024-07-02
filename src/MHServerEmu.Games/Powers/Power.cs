@@ -354,11 +354,6 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
-        {
-            return true;
-        }
-
         public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
         {
             return true;
@@ -1175,7 +1170,13 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsSecondActivateOnRelease()
         {
-            return false;
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsSecondActivateOnRelease(): powerProto == null");
+
+            if (powerProto.ExtraActivation == null)
+                return false;
+
+            return Prototype.ExtraActivation is SecondaryActivateOnReleasePrototype;
         }
 
         public bool IsContinuous()
@@ -1212,6 +1213,70 @@ namespace MHServerEmu.Games.Powers
                 return false;
 
             // After facing many challenges, we have reached the end and earned our right to be a continuous power
+            return true;
+        }
+
+        public bool CanBeUsedInRegion(Region region)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CanBeUsedInRegino(): powerProto == null");
+            return CanBeUsedInRegion(powerProto, Properties, region);
+        }
+
+        public static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
+        {
+            if (region == null) return false;
+            RegionPrototype regionPrototype = region.RegionPrototype;
+            if (regionPrototype == null) return Logger.WarnReturn(false, "CanBeUsedInRegion(): regionPrototype == null");
+
+            PropertyCollection properties = powerProperties ?? powerProto.Properties;
+
+            // Check power properties
+            if (powerProto.Activation != PowerActivationType.Passive && properties != null)
+            {
+                // Check if we can use the power in the current region type (town / public / private / etc)
+                if (properties[PropertyEnum.PowerUsePreventIn, (int)regionPrototype.Behavior])
+                    return false;
+
+                // Check keywords that prevent powers from being used in regions
+                foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.PowerUsePreventInRegionKwd))
+                {
+                    if (kvp.Value == false)
+                        continue;
+
+                    Property.FromParam(kvp.Key, 0, out PrototypeId regionKeywordRef);
+                    if (regionKeywordRef == PrototypeId.Invalid)
+                        Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUsePreventInRegionKwd!\n Power Prototype: {powerProto}");
+
+                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()))
+                        return false;
+                }
+
+                // Check keywords that are required for a power to be used in a region
+                foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.PowerUseRequiresRegionKwd))
+                {
+                    if (kvp.Value == false)
+                        continue;
+
+                    Property.FromParam(kvp.Key, 0, out PrototypeId regionKeywordRef);
+                    if (regionKeywordRef == PrototypeId.Invalid)
+                        Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUseRequiresRegionKwd!\n Power Prototype: {powerProto}");
+
+                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()) == false)
+                        return false;
+                }
+            }
+
+            // Check region keyword blacklist
+            if (regionPrototype.PowerKeywordBlacklist.HasValue() && powerProto.Keywords.HasValue())
+            {
+                foreach (PrototypeId powerKeywordRef in regionPrototype.PowerKeywordBlacklist)
+                {
+                    if (powerProto.HasKeyword(powerKeywordRef.As<KeywordPrototype>()))
+                        return false;
+                }
+            }
+
             return true;
         }
 
