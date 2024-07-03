@@ -765,5 +765,12 @@ namespace MHServerEmu.Games.Entities
 
             return true;
         }
+
+        public void DrawPath(PrototypeId orbRef)
+        {
+            if (Locomotor.HasPath)
+                foreach(var node in Locomotor.LocomotionState.PathNodes)
+                    EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
+        }
     }
 }

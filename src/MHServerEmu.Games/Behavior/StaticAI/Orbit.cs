@@ -6,6 +6,7 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
@@ -180,7 +181,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 PathGenerationFlags = PathGenerationFlags.IncompletedPath
             };
             if (agentsLocomotor.PathTo(sidePosition, locomotionOptions) == false) return false;
-
+            agent.DrawPath((PrototypeId)925659119519994384);
             return true;
         }
 
@@ -200,7 +201,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 PathGenerationFlags = PathGenerationFlags.IncompletedPath | PathGenerationFlags.IgnoreSweep
             };
             if (agentsLocomotor.PathTo(targetEntity.RegionLocation.Position, locomotionOptions) == false) return false;
-
+            agent.DrawPath((PrototypeId)925659119519994384);
             return true;
         }
 
