@@ -198,7 +198,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 {
                     if (powerContext.UseMainTargetForAOEActivation)
                     {
-                        if (power.IsTargetInAOE(targetWorldEntity, agent, regionLocation.Position, targetPosition, power.GetApplicationRange(), -1, TimeSpan.Zero, powerProto, agent.Properties))
+                        if (Power.IsTargetInAOE(targetWorldEntity, agent, regionLocation.Position, targetPosition, power.GetApplicationRange(), -1, TimeSpan.Zero, powerProto, agent.Properties))
                             return PowerUseResult.OutOfPosition;
                     }
                     else
