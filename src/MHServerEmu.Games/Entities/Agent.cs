@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Entities
                 var item = Game.EntityManager.GetEntity<Item>(itemSourceId);
                 if (item == null) return PowerUseResult.ItemUseRestricted;
 
-                var powerUse = flags.HasFlag(PowerActivationSettingsFlags.Flag7) == false;
+                var powerUse = flags.HasFlag(PowerActivationSettingsFlags.AutoActivate) == false;
                 if (powerRef == item.OnUsePower && item.CanUse(this, powerUse) == false)
                     return PowerUseResult.ItemUseRestricted;
             }

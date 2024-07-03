@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.Powers
             if (powerRelease.HasTargetPosition)
                 settings.TargetPosition = new(powerRelease.TargetPosition);
 
-            power.ReleaseVariableActivation(settings);
+            power.ReleaseVariableActivation(ref settings);
             return true;
         }
 

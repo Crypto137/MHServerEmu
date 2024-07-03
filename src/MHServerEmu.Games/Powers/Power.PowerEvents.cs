@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug("HandleTriggerPowerEventOnPowerPivot()");
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
-            settings.Flags |= PowerActivationSettingsFlags.Client;
+            settings.Flags |= PowerActivationSettingsFlags.ClientCombo;
             HandleTriggerPowerEvent(PowerEventType.OnPowerPivot, in settings);
         }
 

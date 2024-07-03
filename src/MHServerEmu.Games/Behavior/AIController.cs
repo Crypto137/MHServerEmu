@@ -347,6 +347,7 @@ namespace MHServerEmu.Games.Behavior
         public bool AttemptActivatePower(PrototypeId powerRef, ulong targetEntityId, Vector3 targetPosition)
         {
             PowerActivationSettings activateSettings = new(targetEntityId, targetPosition, Owner.RegionLocation.Position);
+            activateSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;     // Force send team-up powers to the owner's client
             return Owner.ActivatePower(powerRef, ref activateSettings) == PowerUseResult.Success;
         }
 
