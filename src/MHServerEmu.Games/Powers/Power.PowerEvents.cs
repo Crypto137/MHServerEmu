@@ -1,4 +1,11 @@
-﻿namespace MHServerEmu.Games.Powers
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
+
+namespace MHServerEmu.Games.Powers
 {
     public partial class Power
     {
@@ -8,7 +15,9 @@
 
         public void HandleTriggerPowerEventOnContactTime()              // 1
         {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnContactTime, in settings);
         }
 
         public void HandleTriggerPowerEventOnCriticalHit()              // 2
@@ -28,7 +37,9 @@
 
         public void HandleTriggerPowerEventOnPowerEnd()                 // 5
         {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnPowerEnd, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerHit()                 // 6
@@ -38,7 +49,7 @@
 
         public void HandleTriggerPowerEventOnPowerStart()               // 7
         {
-            PowerActivationSettings settings = LastActivationSettings;
+            PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerStart, in settings);
         }
@@ -110,32 +121,46 @@
 
         public void HandleTriggerPowerEventOnPowerPivot()               // 21
         {
-            // client-only?
+            // Client-only?
+            Logger.Debug("HandleTriggerPowerEventOnPowerPivot()");
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.Client;
+            HandleTriggerPowerEvent(PowerEventType.OnPowerPivot, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerToggleOn()            // 22
         {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOn, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerToggleOff()           // 23
         {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOff, in settings);
         }
 
-        public void HandleTriggerPowerEventOnPowerStopped()             // 24
+        public void HandleTriggerPowerEventOnPowerStopped(EndPowerFlags flags)             // 24
         {
-
+            // TODO: this one is more involved
+            Logger.Warn("HandleTriggerPowerEventOnPowerStopped(): Not implemented");
         }
 
         public void HandleTriggerPowerEventOnExtraActivationCooldown()  // 25
         {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnExtraActivationCooldown, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerLoopEnd()             // 26
         {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnPowerLoopEnd, in settings);
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerAssigned()      // 27
@@ -155,177 +180,353 @@
 
         public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()  // 30
         {
-
-        }
-
-        private void HandleTriggerPowerEvent(PowerEventType eventType, in PowerActivationSettings settings,
-            int param = 0, MathComparisonType comparisonType = MathComparisonType.Invalid)
-        {
-
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnOutOfRangeActivateMovementPower, in settings);
         }
 
         #endregion
+
+        private bool HandleTriggerPowerEvent(PowerEventType eventType, in PowerActivationSettings initialSettings,
+            int comparisonParam = 0, MathComparisonType comparisonType = MathComparisonType.Invalid)
+        {
+            if (CanTriggerPowerEventType(eventType, in initialSettings) == false)
+                return false;
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "HandleTriggerPowerEvent(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "HandleTriggerPowerEvent(): Owner == null");
+            if (Game == null) return Logger.WarnReturn(false, "HandleTriggerPowerEvent(): Game == null");
+
+            // Early return for powers that don't have any triggered actions
+            if (powerProto.ActionsTriggeredOnPowerEvent.IsNullOrEmpty())
+                return true;
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(initialSettings.TargetEntityId);
+            GRandom random = new((int)initialSettings.PowerRandomSeed);
+
+            // Check all actions defined for this event type
+            foreach (PowerEventActionPrototype triggeredPowerEvent in powerProto.ActionsTriggeredOnPowerEvent)
+            {
+                // Check event type / action combination
+                if (triggeredPowerEvent.PowerEvent == PowerEventType.None)
+                {
+                    Logger.Warn($"HandleTriggerPowerEvent(): This power contains a triggered power event action with a null event type \n[{this}]");
+                    continue;
+                }
+
+                PowerEventActionType actionType = triggeredPowerEvent.EventAction;
+
+                if (actionType == PowerEventActionType.None)
+                {
+                    Logger.Warn($"HandleTriggerPowerEvent(): This power contains a triggered power event action with a null action type\n[{this}]");
+                    continue;
+                }
+
+                if (eventType != triggeredPowerEvent.PowerEvent)
+                    continue;
+
+                if (CanTriggerPowerEventAction(eventType, actionType))
+                    continue;
+
+                // Copy settings and generate a new seed
+                PowerActivationSettings newSettings = initialSettings;
+                newSettings.PowerRandomSeed = (uint)random.Next(1, 10000);
+
+                // Run trigger chance check
+                float eventTriggerChance = triggeredPowerEvent.GetEventTriggerChance(Properties, Owner, target);
+                if (random.NextFloat() >= eventTriggerChance)
+                    continue;
+
+                // Run param comparison if needed
+                if (comparisonType != MathComparisonType.Invalid)
+                {
+                    float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
+                    switch (comparisonType)
+                    {
+                        case MathComparisonType.Equals:
+                            if (comparisonParam != eventParam)
+                                continue;
+                            break;
+
+                        case MathComparisonType.GreaterThan:
+                            if (comparisonParam <= eventParam)
+                                continue;
+                            break;
+
+                        case MathComparisonType.LessThan:
+                            if (comparisonParam >= eventParam)
+                                continue;
+                            break;
+                    }
+                }
+
+                // Do the action for this event
+                switch (actionType)
+                {
+                    case PowerEventActionType.BodySlide:                                    DoPowerEventActionBodyslide(); break;
+                    case PowerEventActionType.CancelScheduledActivation:
+                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionScheduleActivation(triggeredPowerEvent, in newSettings, actionType); break;
+                    case PowerEventActionType.ContextCallback:                              DoPowerEventActionContextCallback(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.DespawnTarget:                                DoPowerEventActionDespawnTarget(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.ChargesIncrement:                             DoPowerEventActionChargesIncrement(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.InteractFinish:                               DoPowerEventActionInteractFinish(); break;
+                    case PowerEventActionType.RestoreThrowable:                             DoPowerEventActionRestoreThrowable(in newSettings); break;
+                    case PowerEventActionType.RescheduleActivationInSeconds:
+                    case PowerEventActionType.ScheduleActivationAtPercent:
+                    case PowerEventActionType.ScheduleActivationInSeconds:                  DoPowerEventActionScheduleActivation(triggeredPowerEvent, in newSettings, actionType); break;
+                    case PowerEventActionType.ShowBannerMessage:                            DoPowerEventActionShowBannerMessage(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.SpawnLootTable:                               DoPowerEventActionSpawnLootTable(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.SwitchAvatar:                                 DoPowerEventActionSwitchAvatar(); break;
+                    case PowerEventActionType.ToggleOnPower:
+                    case PowerEventActionType.ToggleOffPower:                               DoPowerEventActionTogglePower(triggeredPowerEvent, in newSettings, actionType); break;
+                    case PowerEventActionType.TransformModeChange:                          DoPowerEventActionTransformModeChange(triggeredPowerEvent); break;
+                    case PowerEventActionType.TransformModeStart:                           DoPowerEventActionTransformModeStart(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.UsePower:                                     DoPowerEventActionUsePower(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.TeleportToPartyMember:                        DoPowerEventActionTeleportToPartyMember(); break;
+                    case PowerEventActionType.ControlAgentAI:                               DoPowerEventActionControlAgentAI(newSettings.TargetEntityId); break;
+                    case PowerEventActionType.RemoveAndKillControlledAgentsFromInv:         DoPowerEventActionRemoveAndKillControlledAgentsFromInv(); break;
+                    case PowerEventActionType.EndPower:                                     DoPowerEventActionEndPower(triggeredPowerEvent.Power, EndPowerFlags.ExplicitCancel | EndPowerFlags.PowerEventAction); break;
+                    case PowerEventActionType.CooldownStart:                                DoPowerEventActionCooldownStart(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.CooldownEnd:                                  DoPowerEventActionCooldownEnd(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.CooldownModifySecs:                           DoPowerEventActionCooldownModifySecs(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.CooldownModifyPct:                            DoPowerEventActionCooldownModifyPct(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.TeamUpAgentSummon:                            DoPowerEventActionTeamUpAgentSummon(triggeredPowerEvent); break;
+                    case PowerEventActionType.TeleportToRegion:                             DoPowerEventActionTeleportRegion(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.StealPower:                                   DoPowerEventActionStealPower(newSettings.TargetEntityId); break;
+                    case PowerEventActionType.PetItemDonate:                                DoPowerEventActionPetItemDonate(triggeredPowerEvent); break;
+                    case PowerEventActionType.MapPowers:                                    DoPowerEventActionMapPowers(triggeredPowerEvent); break;
+                    case PowerEventActionType.UnassignMappedPowers:                         DoPowerEventActionUnassignMappedPowers(triggeredPowerEvent); break;
+                    case PowerEventActionType.RemoveSummonedAgentsWithKeywords:             DoPowerEventActionRemoveSummonedAgentsWithKeywords(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.SpawnControlledAgentWithSummonDuration:       DoPowerEventActionSummonControlledAgentWithDuration(); break;
+                    case PowerEventActionType.LocalCoopEnd:                                 DoPowerEventActionLocalCoopEnd(); break;
+
+                    default: Logger.Warn($"HandleTriggerPowerEvent(): Power [{this}] contains a triggered event with an unsupported action"); break;
+                }
+            }
+
+            return true;
+        }
+
+        private bool CanTriggerPowerEventType(PowerEventType eventType, in PowerActivationSettings settings)
+        {
+            // TODO: Recheck this when we have a proper PowerEffectsPacket / PowerResults implementation
+            if (settings.PowerResults != null && settings.PowerResults.TargetEntityId != Entity.InvalidId)
+            {
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.PowerResults.TargetEntityId);
+                if (target != null && target.Properties[PropertyEnum.DontTriggerOtherPowerEvents, (int)eventType])
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool CanTriggerPowerEventAction(PowerEventType eventType, PowerEventActionType actionType)
+        {
+            if (actionType == PowerEventActionType.EndPower)
+            {
+                if (eventType != PowerEventType.OnPowerEnd && eventType != PowerEventType.OnPowerLoopEnd)
+                {
+                    return Logger.WarnReturn(false,
+                        $"CanTriggerPowerEventAction(): Power [{this}] contains an unsupported triggered event/action combination: event=[{eventType}] action=[{actionType}]");
+                }
+            }
+
+            return true;
+        }
 
         #region Event Actions
 
         // Please keep these ordered by PowerEventActionType enum value
 
-        private void DoPowerEventActionBodyslide()                  // 1
+        // 1
+        private void DoPowerEventActionBodyslide()
         {
             Logger.Warn($"DoPowerEventActionBodyslide(): Not implemented");
         }
 
-        private void DoPowerEventActionCancelScheduledActivation()  // 2, 3
+        // 2, 3
+        private void DoPowerEventActionCancelScheduledActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionCancelScheduledActivation(): Not implemented");
         }
 
-        private void DoPowerEventActionContextCallback()            // 4
+        // 4
+        private void DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionContextCallback(): Not implemented");
         }
 
-        private void DoPowerEventActionDespawnTarget()              // 5
+        // 5
+        private void DoPowerEventActionDespawnTarget(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionDespawnTarget(): Not implemented");
         }
 
-        private void DoPowerEventActionChargesIncrement()           // 6
+        // 6
+        private void DoPowerEventActionChargesIncrement(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionChargesIncrement(): Not implemented");
         }
 
-        private void DoPowerEventActionInteractFinish()             // 7
+        // 7
+        private void DoPowerEventActionInteractFinish()             
         {
             Logger.Warn($"DoPowerEventActionInteractFinish(): Not implemented");
         }
 
-        private void DoPowerEventActionRestoreThrowable()           // 9
+        // 9
+        private void DoPowerEventActionRestoreThrowable(in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionRestoreThrowable(): Not implemented");
         }
 
-        private void DoPowerEventActionScheduleActivation()         // 8, 10, 11
+        // 8, 10, 11
+        private void DoPowerEventActionScheduleActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
         {
             Logger.Warn($"DoPowerEventActionScheduleActivation(): Not implemented");
         }
 
-        private void DoPowerEventActionShowBannerMessage()          // 12
+        // 12
+        private void DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionShowBannerMessage(): Not implemented");
         }
 
-        private void DoPowerEventActionSpawnLootTable()             // 13
+        // 13
+        private void DoPowerEventActionSpawnLootTable(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionSpawnLootTable(): Not implemented");
         }
 
-        private void DoPowerEventActionSwitchAvatar()               // 14
+        // 14
+        private void DoPowerEventActionSwitchAvatar()
         {
             Logger.Warn($"DoPowerEventActionSwitchAvatar(): Not implemented");
         }
 
-        private void DoPowerEventActionTogglePower()                // 15, 16
+        // 15, 16
+        private void DoPowerEventActionTogglePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
         {
             Logger.Warn($"DoPowerEventActionTogglePower(): Not implemented");
         }
 
-        private void DoPowerEventActionTransformModeChange()        // 17
+        // 17
+        private void DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
         {
             Logger.Warn($"DoPowerEventActionTransformModeChange(): Not implemented");
         }
 
-        private void DoPowerEventActionTransformModeStart()         // 18
+        // 18
+        private void DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
         }
 
-        private void DoPowerEventActionUsePower()                   // 19
+        // 19
+        private void DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionUsePower(): Not implemented");
         }
 
-        private void DoPowerEventActionTeleportToPartyMember()      // 20
+        // 20
+        private void DoPowerEventActionTeleportToPartyMember()
         {
             Logger.Warn($"DoPowerEventActionTeleportToPartyMember(): Not implemented");
         }
 
-        private void DoPowerEventActionControlAgentAI()             // 21
+        // 21
+        private void DoPowerEventActionControlAgentAI(ulong targetId)
         {
             Logger.Warn($"DoPowerEventActionControlAgentAI(): Not implemented");
         }
 
-        private void DoPowerEventActionRemoveAndKillControlledAgentsFromInv()   // 22
+        // 22
+        private void DoPowerEventActionRemoveAndKillControlledAgentsFromInv()
         {
             Logger.Warn($"DoPowerEventActionRemoveAndKillControlledAgentsFromInv(): Not implemented");
         }
 
-        private void DoPowerEventActionEndPower()                   // 23
+        // 23
+        private void DoPowerEventActionEndPower(PrototypeId powerProtoRef, EndPowerFlags flags)
         {
             Logger.Warn($"DoPowerEventActionEndPower(): Not implemented");
         }
 
-        private void DoPowerEventActionCooldownStart()              // 24
+        // 24
+        private void DoPowerEventActionCooldownStart(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionCooldownStart(): Not implemented");
         }
 
-        private void DoPowerEventActionCooldownEnd()                // 25
+        // 25
+        private void DoPowerEventActionCooldownEnd(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionCooldownEnd(): Not implemented");
         }
 
-        private void DoPowerEventActionCooldownModifySecs()         // 26
+        // 26
+        private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionCooldownModifySecs(): Not implemented");
         }
 
-        private void DoPowerEventActionCooldownModifyPct()          // 27
+        // 27
+        private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionCooldownModifyPct(): Not implemented");
         }
 
-        private void DoPowerEventActionTeamUpAgentSummon()          // 28
+        // 28
+        private void DoPowerEventActionTeamUpAgentSummon(PowerEventActionPrototype triggeredPowerEvent)
         {
             Logger.Warn($"DoPowerEventActionTeamUpAgentSummon(): Not implemented");
         }
 
-        private void DoPowerEventActionTeleportRegion()             // 29
+        // 29
+        private void DoPowerEventActionTeleportRegion(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionTeleportRegion(): Not implemented");
         }
 
-        private void DoPowerEventActionStealPower()                 // 30
+        // 30
+        private void DoPowerEventActionStealPower(ulong targetId)
         {
             Logger.Warn($"DoPowerEventActionStealPower(): Not implemented");
         }
 
-        private void DoPowerEventActionPetItemDonate()              // 31
+        // 31
+        private void DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)
         {
             Logger.Warn($"DoPowerEventActionPetItemDonate(): Not implemented");
         }
 
-        private void DoPowerEventActionMapPowers()                  // 32
+        // 32
+        private void DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
             Logger.Warn($"DoPowerEventActionMapPowers(): Not implemented");
         }
 
-        private void DoPowerEventActionUnassignMappedPowers()       // 33
+        // 33
+        private void DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
             Logger.Warn($"DoPowerEventActionUnassignMappedPowers(): Not implemented");
         }
 
-        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords()   // 34
+        // 34
+        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Not implemented");
         }
 
-        private void DoPowerEventActionSummonControlledAgentWithDuration()  // 35
+        // 35
+        private void DoPowerEventActionSummonControlledAgentWithDuration()
         {
             Logger.Warn($"DoPowerEventActionSummonControlledAgentWithDuration(): Not implemented");
         }
 
-        private void DoPowerEventActionLocalCoopEnd()               // 36
+        // 36
+        private void DoPowerEventActionLocalCoopEnd()
         {
             Logger.Warn($"DoPowerEventActionLocalCoopEnd(): Not implemented");
         }

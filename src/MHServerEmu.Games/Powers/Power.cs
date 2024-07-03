@@ -32,6 +32,7 @@ namespace MHServerEmu.Games.Powers
         private KeywordsMask _keywordsMask = new();
 
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
+        private PowerActivationSettings _lastActivationSettings;
 
         private readonly EventGroup _pendingEvents1 = new();
         private readonly EventGroup _pendingEvents2 = new();    // end power, channeling
@@ -51,7 +52,7 @@ namespace MHServerEmu.Games.Powers
         public float AnimSpeedCache { get; private set; } = -1f;
         public bool WasLastActivateInterrupted { get; private set; }
         public TimeSpan LastActivateGameTime { get; private set; }
-        public PowerActivationSettings LastActivationSettings { get; private set; }
+        public PowerActivationSettings LastActivationSettings { get => _lastActivationSettings; }
 
         public bool IsSituationalPower { get => _situationalComponent != null; }
 
@@ -269,7 +270,7 @@ namespace MHServerEmu.Games.Powers
 
         public PowerUseResult Activate(ref PowerActivationSettings settings)
         {
-            Logger.Debug($"Activate(): {Prototype}");
+            Logger.Trace($"Activate(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "Activate(): powerProto == null");
@@ -442,15 +443,78 @@ namespace MHServerEmu.Games.Powers
 
         public bool EndPower(EndPowerFlags flags)
         {
-            Logger.Debug($"EndPower(): {Prototype} (flags={flags})");
+            Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
 
+            // Validate client cancel requests
+            if (flags.HasFlag(EndPowerFlags.ExplicitCancel) && flags.HasFlag(EndPowerFlags.ClientRequest)
+                && flags.HasFlag(EndPowerFlags.ExitWorld) == false && flags.HasFlag(EndPowerFlags.Unassign) == false
+                && flags.HasFlag(EndPowerFlags.Interrupting) == false && flags.HasFlag(EndPowerFlags.Force) == false)
+            {
+                _lastActivationSettings.Flags |= PowerActivationSettingsFlags.Cancel;
+                if (CanBeUserCanceledNow() == false)
+                    return false;
+            }
+
+            if (CanEndPower(flags) == false)
+                return false;
+
+            if (OnEndPowerCheckTooEarly(flags))
+            {
+                _activationPhase = PowerActivationPhase.MinTimeEnding;
+                return false;
+            }
+
+            if (OnEndPowerRemoveApplications(flags))
+                return false;
+
+            OnEndPowerCancelEvents(flags);
+            OnEndPowerCancelConditions();
+            OnEndPowerSendCancel(flags);
+
+            if (OnEndPowerCheckLoopEnd(flags))
+            {
+                HandleTriggerPowerEventOnPowerLoopEnd();
+                _activationPhase = PowerActivationPhase.LoopEnding;
+                return false;
+            }
+
+            EndPowerInternal(flags);
+
+            if (flags.HasFlag(EndPowerFlags.Interrupting))
+                WasLastActivateInterrupted = true;
+
+            bool wasActive = _activationPhase != PowerActivationPhase.Inactive;
             _activationPhase = PowerActivationPhase.Inactive;
 
-            Owner?.OnPowerEnded(this, flags);
+            if (IsToggledOn() && Owner?.IsInWorld == true)
+            {
+                // TODO
+            }
+
+            if (Owner == null) return Logger.WarnReturn(false, "EndPower(): Owner == null");
+            Owner.OnPowerEnded(this, flags);
+
+            if (wasActive)
+                HandleTriggerPowerEventOnPowerStopped(flags);
+
+            if (flags.HasFlag(EndPowerFlags.ExplicitCancel) == false && flags.HasFlag(EndPowerFlags.ExitWorld) == false
+                && flags.HasFlag(EndPowerFlags.Unassign) == false)
+            {
+                HandleTriggerPowerEventOnPowerEnd();
+            }
+
+            _lastActivationSettings = new();
+
+            Owner.ActivatePostPowerAction(this, flags);
 
             OnEndPowerConditionalRemove(flags);     // Remove one-offs, like throwables
 
             return true;
+        }
+
+        public void StartCooldown()
+        {
+            // TODO
         }
 
         public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
@@ -1567,7 +1631,7 @@ namespace MHServerEmu.Games.Powers
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): powerProto == null");
 
             // Make a copy of activation settings
-            LastActivationSettings = settings;
+            _lastActivationSettings = settings;
 
             // Trigger events (this relies on the copy of setting we just made)
             HandleTriggerPowerEventOnPowerStart();
@@ -1605,9 +1669,9 @@ namespace MHServerEmu.Games.Powers
 
         }
 
-        protected virtual void OnEndPowerCheckLoopEnd(EndPowerFlags flags)
+        protected virtual bool OnEndPowerCheckLoopEnd(EndPowerFlags flags)
         {
-
+            return false;
         }
 
         protected virtual void OnEndPowerConditionalRemove(EndPowerFlags flags)
@@ -1622,6 +1686,25 @@ namespace MHServerEmu.Games.Powers
         {
             actualTargetPosition = initialTargetPosition;
             //TODO
+        }
+
+        protected virtual bool SetToggleState(bool value, bool doNotStartCooldown = false)
+        {
+            if (IsToggled() == false) return Logger.WarnReturn(false, "SetToggleState(): Trying to toggle a power that isn't togglable!");
+
+            if (value)
+            {
+                HandleTriggerPowerEventOnPowerToggleOn();
+            }
+            else
+            {
+                HandleTriggerPowerEventOnPowerToggleOff();
+
+                if (doNotStartCooldown == false)
+                    StartCooldown();
+            }
+
+            return true;
         }
 
         private bool CreateSituationalComponent()

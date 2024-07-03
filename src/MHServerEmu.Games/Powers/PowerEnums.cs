@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Powers
         Flag3       = 1 << 3,
         Continuous  = 1 << 4,
         Flag5       = 1 << 5,
-        Flag6       = 1 << 6,
+        Client      = 1 << 6,
         Flag7       = 1 << 7,
     }
 

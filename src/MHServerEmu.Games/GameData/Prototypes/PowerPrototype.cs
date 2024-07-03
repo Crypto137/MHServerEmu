@@ -680,6 +680,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public bool HasEvalEventTriggerChance { get => EvalEventTriggerChance != null; }
+
+        public float GetEventTriggerChance(PropertyCollection powerProperties, WorldEntity owner, WorldEntity target)
+        {
+            if (EvalEventTriggerChance == null)
+                return 1f;
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, target);
+            Eval.InitTeamUpEvalContext(contextData, owner);
+
+            return Eval.RunFloat(EvalEventTriggerChance, contextData);
+        }
+
+        public float GetEventParam(PropertyCollection powerProperties, WorldEntity owner)
+        {
+            if (EvalEventParam == null)
+                return EventParam;
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+
+            return Eval.RunFloat(EvalEventParam, contextData);
+        }
     }
 
     public class SituationalTriggerPrototype : Prototype

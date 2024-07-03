@@ -980,6 +980,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public virtual void ActivatePostPowerAction(Power power, EndPowerFlags flags)
+        {
+            // NOTE: Overriden in avatar
+        }
+
         public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
         {
             if (_sendActivatePowerMessageEvent.IsValid) return false;
