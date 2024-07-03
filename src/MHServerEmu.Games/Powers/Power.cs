@@ -643,14 +643,14 @@ namespace MHServerEmu.Games.Powers
         public static bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 ownerPosition, Vector3 targetPosition, float radius,
             int beamSlice, TimeSpan totalSweepTime, PowerPrototype powerProto, PropertyCollection properties)
         {
-            Logger.Debug("IsTargetInAOE()");
+            //Logger.Debug("IsTargetInAOE()");
             var styleProto = powerProto.GetTargetingStyle();
             if (styleProto == null) return Logger.WarnReturn(false, $"IsTargetInAOE(): Unable to get the prototype for power. Prototype:{powerProto} ");
             Vector3 position = targetPosition;
             if (styleProto.AOESelfCentered && styleProto.RandomPositionRadius == 0)
                 position = ownerPosition + styleProto.GetOwnerOrientedPositionOffset(owner);
 
-            return styleProto.TargetingShape switch
+            bool result = styleProto.TargetingShape switch
             {
                 TargetingShapeType.ArcArea      => IsTargetInArc(target, owner, radius, position, targetPosition, powerProto, styleProto, properties),
                 TargetingShapeType.BeamSweep    => IsTargetInBeamSlice(target, owner, radius, position, targetPosition, beamSlice, totalSweepTime, powerProto, styleProto),
@@ -660,6 +660,8 @@ namespace MHServerEmu.Games.Powers
                 TargetingShapeType.WedgeArea    => IsTargetInWedge(target, owner, radius, position, targetPosition, powerProto, styleProto),
                 _ => Logger.WarnReturn(false, $"IsTargetInAOE(): Targeting shape ({styleProto.TargetingShape}) for this power hasn't been implemented! Prototype: {powerProto}"),
             };
+            Logger.Debug($"IsTargetInAOE() {styleProto.TargetingShape} {result}");
+            return result;
         }
 
         #region State Accessors
