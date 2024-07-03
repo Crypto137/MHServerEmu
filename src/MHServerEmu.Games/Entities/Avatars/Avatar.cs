@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -141,13 +142,47 @@ namespace MHServerEmu.Games.Entities.Avatars
             CheckContinuousPower();
         }
 
-        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed)
+        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed, bool notifyOwner = false)
         {
+            // Validate client input
+            Power power = GetPower(powerProtoRef);
+
+            if (powerProtoRef != PrototypeId.Invalid && power == null)
+                return;
+
+            if (power != null && ((power.IsContinuous() || power.IsRecurring()) == false))
+                return;
+
+            // Check if anything changed
+            bool noChanges = true;
+            noChanges &= powerProtoRef == _continuousPowerData.PowerProtoRef;
+            noChanges &= targetId == _continuousPowerData.TargetId;
+            noChanges &= targetId == InvalidId && Vector3.DistanceSquared2D(_continuousPowerData.TargetPosition, targetPosition) <= 16f;
+            if (noChanges)
+                return;
+
+            // Update data
             _continuousPowerData.SetData(powerProtoRef, targetId, targetPosition, InvalidId);
             _continuousPowerData.RandomSeed = randomSeed;
 
             if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid)
                 ScheduleRecheckContinuousPower(StandardContinuousPowerRecheckDelay);
+
+            // Notify clients
+            PlayerConnectionManager networkManager = Game.NetworkManager;
+            IEnumerable<PlayerConnection> interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, notifyOwner == false);
+            if (interestedClients.Any() == false) return;
+
+            // NOTE: Although NetMessageCancelPower is not an archive, it uses power prototype enums
+            var continuousPowerUpdateMessage = NetMessageContinuousPowerUpdateToClient.CreateBuilder()
+                .SetIdAvatar(Id)
+                .SetPowerPrototypeId((ulong)powerProtoRef)
+                .SetIdTargetEntity(targetId)
+                .SetTargetPosition(targetPosition.ToNetStructPoint3())
+                .SetRandomSeed(randomSeed)
+                .Build();
+
+            networkManager.SendMessageToMultiple(interestedClients, continuousPowerUpdateMessage);
         }
 
         public void ClearContinuousPower()

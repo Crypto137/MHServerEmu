@@ -10,20 +10,6 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
-    [Flags]
-    public enum ActivatePowerMessageFlags
-    {
-        None                            = 0,
-        TargetIsUser                    = 1 << 0,
-        HasTriggeringPowerPrototypeRef  = 1 << 1,
-        HasTargetPosition               = 1 << 2,
-        TargetPositionIsUserPosition    = 1 << 3,
-        HasMovementTime                 = 1 << 4,
-        HasVariableActivationTime       = 1 << 5,
-        HasPowerRandomSeed              = 1 << 6,
-        HasFXRandomSeed                 = 1 << 7
-    }
-
     // TODO: This probably belongs in Power
 
     public class ActivatePowerArchive : ISerialize

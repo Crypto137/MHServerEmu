@@ -38,6 +38,20 @@ namespace MHServerEmu.Games.Network
     }
 
     [Flags]
+    public enum ActivatePowerMessageFlags
+    {
+        None                            = 0,
+        TargetIsUser                    = 1 << 0,
+        HasTriggeringPowerPrototypeRef  = 1 << 1,
+        HasTargetPosition               = 1 << 2,
+        TargetPositionIsUserPosition    = 1 << 3,
+        HasMovementTime                 = 1 << 4,
+        HasVariableActivationTime       = 1 << 5,
+        HasPowerRandomSeed              = 1 << 6,
+        HasFXRandomSeed                 = 1 << 7
+    }
+
+    [Flags]
     public enum EnterGameWorldMessageFlags : uint
     {
         None = 0,
@@ -274,6 +288,96 @@ namespace MHServerEmu.Games.Network
             LocomotionState.SerializeTo(archive, newLocomotionState, fieldFlags);
 
             return NetMessageLocomotionStateUpdate.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
+        }
+
+        public static NetMessageActivatePower BuildActivatePowerMessage(Power power, in PowerActivationSettings settings)
+        {
+            // Build flags
+            ActivatePowerMessageFlags flags = ActivatePowerMessageFlags.None;
+
+            ulong userEntityId = power.Owner.Id;
+            if (settings.TargetEntityId == userEntityId)
+                flags |= ActivatePowerMessageFlags.TargetIsUser;
+
+            if (settings.TriggeringPowerPrototypeRef != PrototypeId.Invalid)
+                flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef;
+
+            if (settings.TargetPosition == settings.UserPosition)
+                flags |= ActivatePowerMessageFlags.TargetPositionIsUserPosition;
+            else if (settings.TargetPosition != Vector3.Zero)
+                flags |= ActivatePowerMessageFlags.HasTargetPosition;
+
+            if (settings.MovementTime != TimeSpan.Zero)
+                flags |= ActivatePowerMessageFlags.HasMovementTime;
+
+            if (settings.VariableActivationTime != TimeSpan.Zero)
+                flags |= ActivatePowerMessageFlags.HasVariableActivationTime;
+
+            if (settings.PowerRandomSeed != 0)
+                flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
+
+            // NOTE: FXRandomSeed is marked as required in the NetMessageTryActivatePower protobuf, so it should probably always be present
+            uint fxRandomSeed = settings.FXRandomSeed != 0 ? settings.FXRandomSeed : (uint)power.Game.Random.Next(1, 10000);
+            flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
+
+            // Serialize
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AOIChannelProximity);
+
+            uint flagsRaw = (uint)flags;
+            Serializer.Transfer(archive, ref flagsRaw);
+
+            // User and target entity ids
+            Serializer.Transfer(archive, ref userEntityId);
+            if (flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
+            {
+                ulong targetEntityId = settings.TargetEntityId;
+                Serializer.Transfer(archive, ref targetEntityId);
+            }
+
+            // Power prototype refs
+            PrototypeId powerProtoRef = power.PrototypeDataRef;
+            Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref powerProtoRef);
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
+            {
+                PrototypeId triggeringPowerProtoRef = settings.TriggeringPowerPrototypeRef;
+                Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref triggeringPowerProtoRef);
+            }
+
+            // Positions
+            Vector3 userPosition = settings.UserPosition;
+            Serializer.TransferVectorFixed(archive, ref userPosition, 2);
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+            {
+                Vector3 offset = settings.TargetPosition - userPosition;   // Target position is relative to user when encoded
+                Serializer.TransferVectorFixed(archive, ref offset, 2);
+            }
+
+            // Movement time for travel powers
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
+            {
+                uint movementTimeMS = (uint)settings.MovementTime.TotalMilliseconds;
+                Serializer.Transfer(archive, ref movementTimeMS);
+            }
+
+            // Variable activation time
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+            {
+                uint variableActivationTimeMS = (uint)settings.VariableActivationTime.TotalMilliseconds;
+                Serializer.Transfer(archive, ref variableActivationTimeMS);
+            }
+
+            // Random seeds for keeping server / client in sync
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+            {
+                uint powerRandomSeed = settings.PowerRandomSeed;
+                Serializer.Transfer(archive, ref powerRandomSeed);
+            }
+
+            if (flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                Serializer.Transfer(archive, ref fxRandomSeed);
+
+            return NetMessageActivatePower.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
         }
 
         /// <summary>

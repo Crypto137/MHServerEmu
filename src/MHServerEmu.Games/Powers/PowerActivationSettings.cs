@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Powers
 
         public PowerActivationSettingsFlags Flags = PowerActivationSettingsFlags.None;
         public TimeSpan VariableActivationTime = TimeSpan.Zero;
+        public bool VariableActivationRelease = false;
 
         public readonly TimeSpan CreationTime = Game.Current != null ? Game.Current.CurrentTime : Clock.GameTime;
 

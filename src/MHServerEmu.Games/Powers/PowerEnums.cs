@@ -5,15 +5,16 @@ namespace MHServerEmu.Games.Powers
     [Flags]
     public enum PowerActivationSettingsFlags
     {
-        None        = 0,
-        Flag0       = 1 << 0,
-        Cancel      = 1 << 1,
-        Flag2       = 1 << 2,
-        Flag3       = 1 << 3,
-        Continuous  = 1 << 4,
-        Flag5       = 1 << 5,
-        Client      = 1 << 6,
-        Flag7       = 1 << 7,
+        None                = 0,
+        NotifyOwner         = 1 << 0,   // unknown server-only flag, we currently use it to force send power activations to owner (e.g. team-up powers)
+        Cancel              = 1 << 1,
+        Server2             = 1 << 2,   // unknown server-only flag, currently unused
+        SkipRangeCheck      = 1 << 3,
+        Continuous          = 1 << 4,
+        ServerCombo         = 1 << 5,   // unknown server-only flag, probably the equivalent of flag6 for server-triggered combo powers
+        ClientCombo         = 1 << 6,
+        AutoActivate        = 1 << 7,
+        Item                = 1 << 8    // see Item::playerCanUsePowerAction()
     }
 
     [Flags]
