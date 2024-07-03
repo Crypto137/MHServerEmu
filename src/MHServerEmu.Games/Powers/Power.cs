@@ -442,8 +442,13 @@ namespace MHServerEmu.Games.Powers
         public bool EndPower(EndPowerFlags flags)
         {
             Logger.Debug($"EndPower(): {Prototype} (flags={flags})");
+
             _activationPhase = PowerActivationPhase.Inactive;
+
             Owner?.OnPowerEnded(this, flags);
+
+            OnEndPowerConditionalRemove(flags);     // Remove one-offs, like throwables
+
             return true;
         }
 
@@ -567,6 +572,224 @@ namespace MHServerEmu.Games.Powers
                 _ => Logger.WarnReturn(false, $"IsTargetInAOE(): Targeting shape ({styleProto.TargetingShape}) for this power hasn't been implemented! Prototype: {powerProto}"),
             };
         }
+
+        #region Trigger Power Events
+
+        public void HandleTriggerPowerEventOnPowerStart()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnPowerToggleOn()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnPowerToggleOff()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnContactTime()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnExtraActivationCooldown()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnPowerLoopEnd()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnPowerStopped()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnPowerEnd()
+        {
+
+        }
+
+        public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()
+        {
+
+        }
+
+        private void HandleTriggerPowerEvent()
+        {
+
+        }
+
+        // ---------------------
+        // Power event actions
+        // Please keep these ordered by PowerEventActionType enum value
+
+        private void DoPowerEventActionBodyslide()                  // 1
+        {
+            Logger.Warn($"DoPowerEventActionBodyslide(): Not implemented");
+        }
+
+        private void DoPowerEventActionCancelScheduledActivation()  // 2, 3
+        {
+            Logger.Warn($"DoPowerEventActionCancelScheduledActivation(): Not implemented");
+        }
+
+        private void DoPowerEventActionContextCallback()            // 4
+        {
+            Logger.Warn($"DoPowerEventActionContextCallback(): Not implemented");
+        }
+
+        private void DoPowerEventActionDespawnTarget()              // 5
+        {
+            Logger.Warn($"DoPowerEventActionDespawnTarget(): Not implemented");
+        }
+
+        private void DoPowerEventActionChargesIncrement()           // 6
+        {
+            Logger.Warn($"DoPowerEventActionChargesIncrement(): Not implemented");
+        }
+
+        private void DoPowerEventActionInteractFinish()             // 7
+        {
+            Logger.Warn($"DoPowerEventActionInteractFinish(): Not implemented");
+        }
+
+        private void DoPowerEventActionRestoreThrowable()           // 9
+        {
+            Logger.Warn($"DoPowerEventActionRestoreThrowable(): Not implemented");
+        }
+
+        private void DoPowerEventActionScheduleActivation()         // 8, 10, 11
+        {
+            Logger.Warn($"DoPowerEventActionScheduleActivation(): Not implemented");
+        }
+
+        private void DoPowerEventActionShowBannerMessage()          // 12
+        {
+            Logger.Warn($"DoPowerEventActionShowBannerMessage(): Not implemented");
+        }
+
+        private void DoPowerEventActionSpawnLootTable()             // 13
+        {
+            Logger.Warn($"DoPowerEventActionSpawnLootTable(): Not implemented");
+        }
+
+        private void DoPowerEventActionSwitchAvatar()               // 14
+        {
+            Logger.Warn($"DoPowerEventActionSwitchAvatar(): Not implemented");
+        }
+
+        private void DoPowerEventActionTogglePower()                // 15, 16
+        {
+            Logger.Warn($"DoPowerEventActionTogglePower(): Not implemented");
+        }
+
+        private void DoPowerEventActionTransformModeChange()        // 17
+        {
+            Logger.Warn($"DoPowerEventActionTransformModeChange(): Not implemented");
+        }
+
+        private void DoPowerEventActionTransformModeStart()         // 18
+        {
+            Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
+        }
+
+        private void DoPowerEventActionUsePower()                   // 19
+        {
+            Logger.Warn($"DoPowerEventActionUsePower(): Not implemented");
+        }
+
+        private void DoPowerEventActionTeleportToPartyMember()      // 20
+        {
+            Logger.Warn($"DoPowerEventActionTeleportToPartyMember(): Not implemented");
+        }
+
+        private void DoPowerEventActionControlAgentAI()             // 21
+        {
+            Logger.Warn($"DoPowerEventActionControlAgentAI(): Not implemented");
+        }
+
+        private void DoPowerEventActionRemoveAndKillControlledAgentsFromInv()   // 22
+        {
+            Logger.Warn($"DoPowerEventActionRemoveAndKillControlledAgentsFromInv(): Not implemented");
+        }
+
+        private void DoPowerEventActionEndPower()                   // 23
+        {
+            Logger.Warn($"DoPowerEventActionEndPower(): Not implemented");
+        }
+
+        private void DoPowerEventActionCooldownStart()              // 24
+        {
+            Logger.Warn($"DoPowerEventActionCooldownStart(): Not implemented");
+        }
+
+        private void DoPowerEventActionCooldownEnd()                // 25
+        {
+            Logger.Warn($"DoPowerEventActionCooldownEnd(): Not implemented");
+        }
+
+        private void DoPowerEventActionCooldownModifySecs()         // 26
+        {
+            Logger.Warn($"DoPowerEventActionCooldownModifySecs(): Not implemented");
+        }
+
+        private void DoPowerEventActionCooldownModifyPct()          // 27
+        {
+            Logger.Warn($"DoPowerEventActionCooldownModifyPct(): Not implemented");
+        }
+
+        private void DoPowerEventActionTeamUpAgentSummon()          // 28
+        {
+            Logger.Warn($"DoPowerEventActionTeamUpAgentSummon(): Not implemented");
+        }
+
+        private void DoPowerEventActionTeleportRegion()             // 29
+        {
+            Logger.Warn($"DoPowerEventActionTeleportRegion(): Not implemented");
+        }
+
+        private void DoPowerEventActionStealPower()                 // 30
+        {
+            Logger.Warn($"DoPowerEventActionStealPower(): Not implemented");
+        }
+
+        private void DoPowerEventActionPetItemDonate()              // 31
+        {
+            Logger.Warn($"DoPowerEventActionPetItemDonate(): Not implemented");
+        }
+
+        private void DoPowerEventActionMapPowers()                  // 32
+        {
+            Logger.Warn($"DoPowerEventActionMapPowers(): Not implemented");
+        }
+
+        private void DoPowerEventActionUnassignMappedPowers()       // 33
+        {
+            Logger.Warn($"DoPowerEventActionUnassignMappedPowers(): Not implemented");
+        }
+
+        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords()   // 34
+        {
+            Logger.Warn($"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Not implemented");
+        }
+
+        private void DoPowerEventActionSummonControlledAgentWithDuration()  // 35
+        {
+            Logger.Warn($"DoPowerEventActionSummonControlledAgentWithDuration(): Not implemented");
+        }
+
+        private void DoPowerEventActionLocalCoopEnd()               // 36
+        {
+            Logger.Warn($"DoPowerEventActionLocalCoopEnd(): Not implemented");
+        }
+
+        #endregion
 
         #region State Accessors
 
@@ -1553,6 +1776,54 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
+        protected PowerUseResult ActivateInternal(in PowerActivationSettings settings)
+        {
+            //TEMP_SendActivatePowerMessage(in settings);
+            return PowerUseResult.Success;
+        }
+
+        protected virtual void EndPowerInternal(EndPowerFlags flags)
+        {
+
+        }
+
+        protected virtual bool OnEndPowerCheckTooEarly(EndPowerFlags flags)
+        {
+            return false;
+        }
+
+        protected virtual bool OnEndPowerRemoveApplications(EndPowerFlags flags)
+        {
+            return false;
+        }
+
+        protected virtual void OnEndPowerCancelEvents(EndPowerFlags flags)
+        {
+
+        }
+
+        protected virtual void OnEndPowerCancelConditions()
+        {
+
+        }
+
+        protected virtual void OnEndPowerSendCancel(EndPowerFlags flags)
+        {
+
+        }
+
+        protected virtual void OnEndPowerCheckLoopEnd(EndPowerFlags flags)
+        {
+
+        }
+
+        protected virtual void OnEndPowerConditionalRemove(EndPowerFlags flags)
+        {
+            // Unassign one-off powers (e.g. throwables)
+            if (Prototype.RemovedOnUse && flags.HasFlag(EndPowerFlags.Unassign) == false)
+                Owner.UnassignPower(PrototypeDataRef);
+        }
+
         protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 initialTargetPosition, out Vector3 actualTargetPosition,
             in PowerActivationSettings settings)
         {
@@ -1937,6 +2208,12 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug("StartCharging()");
         }
 
+        private void StopCharging()
+        {
+            // TODO
+            Logger.Debug("StopCharging()");
+        }
+
         private void ScheduleChannelStart()
         {
             // TODO
@@ -1947,6 +2224,12 @@ namespace MHServerEmu.Games.Powers
         {
             // TODO
             Logger.Debug("CanBeUserCanceledNow()");
+            return true;
+        }
+
+        private bool CanEndPower(EndPowerFlags flags)
+        {
+            // TODO
             return true;
         }
 
@@ -1966,12 +2249,6 @@ namespace MHServerEmu.Games.Powers
             }
 
             return success;
-        }
-
-        private PowerUseResult ActivateInternal(in PowerActivationSettings settings)
-        {
-            //TEMP_SendActivatePowerMessage(in settings);
-            return PowerUseResult.Success;
         }
 
         private bool SchedulePowerEnd(in PowerActivationSettings settings)
