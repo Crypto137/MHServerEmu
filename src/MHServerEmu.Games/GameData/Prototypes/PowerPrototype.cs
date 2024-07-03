@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -821,6 +822,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RandomPositionRadius { get; protected set; }
         public bool DisableOrientationDuringPower { get; protected set; }
 
+        private Vector3 _positionOffset;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            _positionOffset = Vector3.Zero;
+            if (PositionOffset != null) _positionOffset = PositionOffset.ToVector3();
+        }
+
         public bool TargetsAOE()
         {
             return TargetingShape switch
@@ -833,6 +843,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 or TargetingShapeType.WedgeArea => true,
                 _ => false,
             };
+        }
+
+        public Vector3 GetOwnerOrientedPositionOffset(WorldEntity owner)
+        {
+            if (owner != null && owner.IsInWorld)
+                return Transform3.BuildTransform(Vector3.Zero, owner.Orientation) * _positionOffset;
+            return _positionOffset;
         }
     }
 

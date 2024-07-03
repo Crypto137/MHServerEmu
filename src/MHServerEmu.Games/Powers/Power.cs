@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -446,10 +447,209 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 userPos, Vector3 aimPos, float aoeRadius,
-            int beamSweepCount, TimeSpan beamSweepTime, PowerPrototype powerProto, PropertyCollection properties)
+        public static bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 ownerPosition, Vector3 targetPosition, float radius,
+            int beamSlice, TimeSpan totalSweepTime, PowerPrototype powerProto, PropertyCollection properties)
         {
-            return false; // TODO implement
+            var styleProto = powerProto.GetTargetingStyle();
+            if (styleProto == null) return Logger.WarnReturn(false, $"Unable to get the prototype for power. Prototype:{powerProto} ");
+            Vector3 position = targetPosition;
+            if (styleProto.AOESelfCentered && styleProto.RandomPositionRadius == 0)
+                position = ownerPosition + styleProto.GetOwnerOrientedPositionOffset(owner);
+
+            return styleProto.TargetingShape switch
+            {
+                TargetingShapeType.ArcArea => IsTargetInArc(target, owner, radius, position, targetPosition, powerProto, styleProto, properties),
+                TargetingShapeType.BeamSweep => IsTargetInBeamSlice(target, owner, radius, position, targetPosition, beamSlice, totalSweepTime, powerProto, styleProto),
+                TargetingShapeType.CapsuleArea => IsTargetInCapsule(target, owner, position, targetPosition, powerProto, styleProto, properties),
+                TargetingShapeType.CircleArea => IsTargetInCircle(target, radius, position),
+                TargetingShapeType.RingArea => IsTargetInRing(target, radius, position, powerProto, properties),
+                TargetingShapeType.WedgeArea => IsTargetInWedge(target, owner, radius, position, targetPosition, powerProto, styleProto),
+                _ => Logger.WarnReturn(false, $"Targeting shape ({styleProto.TargetingShape}) for this power hasn't been implemented! Prototype: {powerProto}"),
+            };
+        }
+
+        private static bool IsTargetInArc(WorldEntity target, WorldEntity owner, float radius, Vector3 position, Vector3 targetPosition,
+            PowerPrototype powerProto, TargetingStylePrototype styleProto, PropertyCollection properties)
+        {
+            return IsTargetInWedge(target, owner, radius, position, targetPosition, powerProto, styleProto)
+                && IsTargetInRing(target, radius, position, powerProto, properties);
+        }
+
+        private static bool IsTargetInBeamSlice(WorldEntity target, WorldEntity owner, float radius, Vector3 position, Vector3 targetPosition, 
+            int beamSlice, TimeSpan beamTime, PowerPrototype powerProto, TargetingStylePrototype styleProto)
+        {
+            float aoeAngle = GetAOEAngle(powerProto);
+            if (beamSlice >= 0)
+                GetBeamSweepSliceCheckData(powerProto, targetPosition, position, beamSlice, aoeAngle, beamTime, ref aoeAngle, ref targetPosition);
+            return IsTargetInWedge(target, owner, radius, position, targetPosition, powerProto, styleProto, aoeAngle);
+        }
+
+        private static void GetBeamSweepSliceCheckData(PowerPrototype powerProto, Vector3 targetPosition, Vector3 position, int beamSlice, 
+            float aoeAngle, TimeSpan totalSweepTime, ref float angleResult, ref Vector3 positionResult)
+        {
+            TimeSpan sweepUpdateRate = TimeSpan.FromMilliseconds((long)powerProto.Properties[PropertyEnum.AOESweepRateMS]);
+            if (sweepUpdateRate >= totalSweepTime)
+            {
+                Logger.Warn($"Trying to get targets for a BeamSweep power whose update rate is slower than the total sweep time!\n[{powerProto}]");
+                return;
+            }
+
+            float angleTime = Math.Min(aoeAngle, aoeAngle * (float)(sweepUpdateRate.TotalSeconds / totalSweepTime.TotalSeconds));
+            float totalAngle = angleTime * (beamSlice + 1);
+            float angleSliceCenter = -0.5f * aoeAngle;
+
+            if (totalAngle <= aoeAngle)
+            {
+                angleResult = angleTime;
+                angleSliceCenter += (angleTime / 2.0f) * ((2 * beamSlice) + 1);
+            }
+            else
+            {
+                float finalAngle = angleTime - (totalAngle - aoeAngle);
+                angleResult = finalAngle;
+                angleSliceCenter += (finalAngle / 2.0f) + (angleTime / 2.0f) * (2 * beamSlice);
+            }
+
+            float sweepDirection = powerProto.Properties[PropertyEnum.AOESweepDirectionCW] ? 1.0f : -1.0f;
+            angleSliceCenter *= sweepDirection;
+
+            Matrix3 rotMat = Matrix3.RotationZ(MathHelper.ToRadians(angleSliceCenter));
+            Vector3 toTargetPosition = targetPosition - position;
+
+            positionResult = position + rotMat * toTargetPosition;
+        }
+
+        public float GetAOEAngle()
+        {
+            var powerProto = Prototype;
+            if (powerProto == null) return 0.0f;
+            return GetAOEAngle(powerProto);
+        }
+
+        private static float GetAOEAngle(PowerPrototype powerProto)
+        {
+            var styleProto = powerProto.GetTargetingStyle();
+            if (styleProto == null) return 0.0f;
+
+            float aoeAngle;
+            if (styleProto.TargetingShape == TargetingShapeType.CircleArea)
+                aoeAngle = 360.0f;
+            else
+            {
+                aoeAngle = styleProto.AOEAngle switch
+                {
+                    AOEAngleType._0 => 0.0f,
+                    AOEAngleType._1 => 1.0f,
+                    AOEAngleType._10 => 10.0f,
+                    AOEAngleType._30 => 30.0f,
+                    AOEAngleType._45 => 45.0f,
+                    AOEAngleType._60 => 60.0f,
+                    AOEAngleType._90 => 90.0f,
+                    AOEAngleType._120 => 120.0f,
+                    AOEAngleType._180 => 180.0f,
+                    AOEAngleType._240 => 240.0f,
+                    AOEAngleType._300 => 300.0f,
+                    AOEAngleType._360 => 360.0f,
+                    _ => 0.0f
+                };
+            }
+
+            return aoeAngle;
+        }
+
+        private static bool IsTargetInCapsule(WorldEntity target, WorldEntity owner, Vector3 position, Vector3 targetPosition, 
+            PowerPrototype powerProto, TargetingStylePrototype styleProto, PropertyCollection properties)
+        {
+            float radius = GetTargetingWidth(powerProto, properties);
+            float length = GetAOERadius(powerProto, properties);
+            Vector3 direction = GetDirectionCheckData(styleProto, owner, position, targetPosition);
+            Vector3 endPosition = position + direction * length;
+            var capsule = new Capsule(position, endPosition, radius);
+            return target.Bounds.Intersects(capsule);
+        }
+
+        private static Vector3 GetDirectionCheckData(TargetingStylePrototype styleProto, WorldEntity owner, Vector3 position, Vector3 targetPosition)
+        {
+            Vector3 direction = (targetPosition - position).To2D();
+
+            if (owner != null && owner.IsInWorld && Vector3.LengthSqr(direction) < Segment.Epsilon)
+                direction = owner.Forward.To2D();
+
+            if (styleProto.OrientationOffset != 0.0f)
+            {
+                Transform3 transform = Transform3.BuildTransform(Vector3.Zero, new Orientation(MathHelper.ToRadians(styleProto.OrientationOffset), 0.0f, 0.0f));
+                direction = transform * direction;
+            }
+
+            return Vector3.Normalize(direction);
+        }
+
+        public float GetTargetingWidth()
+        {
+            if (Owner == null) return 0.0f;
+            var powerProto = Prototype;
+            if (powerProto == null) return 0.0f;
+            return GetTargetingWidth(powerProto, Properties);
+        }
+
+        private static float GetTargetingWidth(PowerPrototype powerProto, PropertyCollection properties)
+        {
+            var styleProto = powerProto.GetTargetingStyle();
+            if (styleProto == null) return 0.0f;
+            return styleProto.Width * GetAOESizePctModifier(powerProto, properties);
+        }
+
+        private static bool IsTargetInCircle(WorldEntity target, float radius, Vector3 position)
+        {
+            var sphere = new Sphere(position,  radius);
+            return target.Bounds.Intersects(sphere);
+        }
+
+        private static bool IsTargetInRing(WorldEntity target, float radius, Vector3 position, PowerPrototype powerProto, PropertyCollection properties)
+        {
+            if (IsTargetInCircle(target, radius, position))
+            {
+                float targetRadius = target.Bounds.Radius;
+                float width = GetTargetingWidth(powerProto, properties);
+                float ringRadius = radius - width;
+
+                Vector3 targetPosition = target.RegionLocation.Position;
+                Vector3 distance = position - targetPosition;
+                float targetDistance = Vector3.Length(distance);
+                return targetDistance + targetRadius > ringRadius;
+            }
+
+            return false;
+        }
+
+        private static bool IsTargetInWedge(WorldEntity target, WorldEntity owner, float radius, Vector3 position, Vector3 targetPosition, 
+            PowerPrototype powerProto, TargetingStylePrototype styleProto, float aoeAngle = 0.0f)
+        {
+            if (aoeAngle == 0.0f) aoeAngle = GetAOEAngle(powerProto);
+            if (aoeAngle <= 0.0f)
+                return Logger.WarnReturn(false, $"Trying to use a power with an invalid unsupported obtuse wedge angle! Prototype: {powerProto}");
+
+            float targetRadius = target.Bounds.Radius;
+            Vector3 targetPos = target.RegionLocation.Position;
+            Vector3 direction = GetDirectionCheckData(styleProto, owner, position, targetPosition);
+            Vector3 distance = targetPos - position;
+            float lengthSq = Vector3.LengthSquared2D(distance);
+            float radiusSq = MathHelper.Square(radius + targetRadius);
+            if (lengthSq > radiusSq) return false;
+
+            float halfAngle = MathHelper.ToRadians(aoeAngle / 2.0f);
+            float angle = Vector3.Angle2D(distance, direction);
+            if (angle < halfAngle) return true;
+
+            Vector3 vectorSide = Vector3.SafeNormalize2D(Vector3.Perp2D(distance)) * targetRadius;
+
+            float angleRight = Vector3.Angle2D(vectorSide + distance, direction);
+            if (angleRight < halfAngle) return true;
+
+            float angleLeft = Vector3.Angle2D(-vectorSide + distance, direction);
+            if (angleLeft < halfAngle) return true;
+
+            return false;
         }
 
         public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,

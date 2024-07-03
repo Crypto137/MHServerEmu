@@ -16,6 +16,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float X { get; protected set; }
         public float Y { get; protected set; }
+
+        public Vector3 ToVector3()
+        {
+            return new(X, Y, 0.0f);
+        }
     }
 
     public class Vector3Prototype : Prototype
