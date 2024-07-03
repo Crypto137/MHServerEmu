@@ -319,28 +319,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocomotorMethod LocomotorMethod { get; protected set; }
     }
 
-    public class MovementBehaviorPrototype : Prototype
-    {
-    }
-
-    public class StrafeTargetPrototype : MovementBehaviorPrototype
-    {
-        public float StrafeDistanceMult { get; protected set; }
-    }
-
-    public class RandomPositionAroundTargetPrototype : MovementBehaviorPrototype
-    {
-        public float StrafeAngle { get; protected set; }
-    }
-
-    public class FixedRotationPrototype : MovementBehaviorPrototype
-    {
-        public float RotationSpeed { get; protected set; }
-        public float PivotAngle { get; protected set; }
-        public int MaxPivotTimeMS { get; protected set; }
-        public float PostPivotAcceleration { get; protected set; }
-    }
-
     public class StackingBehaviorPrototype : Prototype
     {
         public StackingApplicationStyleType ApplicationStyle { get; protected set; }

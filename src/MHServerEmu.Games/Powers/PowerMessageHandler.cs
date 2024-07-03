@@ -61,8 +61,8 @@ namespace MHServerEmu.Games.Powers
 
             if (VerboseOutputToLog)
                 Logger.Debug($"OnTryActivatePower():\n{MessagePrinter.Print(tryActivatePower)}");
-            else
-                Logger.Trace("OnTryActivatePower()");
+            //else
+            //    Logger.Trace("OnTryActivatePower()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryActivatePower.IdUserEntity);
 
@@ -167,8 +167,8 @@ namespace MHServerEmu.Games.Powers
 
             if (VerboseOutputToLog)
                 Logger.Debug($"OnContinuousPowerUpdate():\n{MessagePrinter.Print(continuousPowerUpdate)}");
-            else
-                Logger.Trace("OnContinuousPowerUpdate()");
+            //else
+            //    Logger.Trace("OnContinuousPowerUpdate()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarByIndex(continuousPowerUpdate.AvatarIndex);
             if (avatar == null) return true;

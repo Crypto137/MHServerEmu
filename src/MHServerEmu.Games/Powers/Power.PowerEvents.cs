@@ -143,10 +143,55 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOff, in settings);
         }
 
-        public void HandleTriggerPowerEventOnPowerStopped(EndPowerFlags flags)             // 24
+        public bool HandleTriggerPowerEventOnPowerStopped(EndPowerFlags flags)             // 24
         {
-            // TODO: this one is more involved
-            Logger.Warn("HandleTriggerPowerEventOnPowerStopped(): Not implemented");
+            // This event's handling does its own thing
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "HandleTriggerPowerEventOnPowerStopped(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "HandleTriggerPowerEventOnPowerStopped(): Owner == null");
+            if (Game == null) return Logger.WarnReturn(false, "HandleTriggerPowerEventOnPowerStopped(): Game == null");
+
+            // Nothing to trigger
+            if (powerProto.ActionsTriggeredOnPowerEvent.IsNullOrEmpty())
+                return true;
+
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+
+            foreach (PowerEventActionPrototype triggeredPowerEvent in powerProto.ActionsTriggeredOnPowerEvent)
+            {
+                // Check event type / action combination
+                if (triggeredPowerEvent.PowerEvent == PowerEventType.None)
+                {
+                    Logger.Warn($"HandleTriggerPowerEventOnPowerStopped(): This power contains a triggered power event action with a null event type \n[{this}]");
+                    continue;
+                }
+
+                PowerEventActionType actionType = triggeredPowerEvent.EventAction;
+
+                if (actionType == PowerEventActionType.None)
+                {
+                    Logger.Warn($"HandleTriggerPowerEventOnPowerStopped(): This power contains a triggered power event action with a null action type\n[{this}]");
+                    continue;
+                }
+
+                if (triggeredPowerEvent.PowerEvent != PowerEventType.OnPowerStopped)
+                    continue;
+
+                switch (actionType)
+                {
+                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionCancelScheduledActivation(triggeredPowerEvent, in settings); break;
+                    case PowerEventActionType.EndPower:                                     DoPowerEventActionEndPower(triggeredPowerEvent.Power, flags); break;
+                    case PowerEventActionType.CooldownStart:                                DoPowerEventActionCooldownStart(triggeredPowerEvent, in settings); break;
+                    case PowerEventActionType.CooldownEnd:                                  DoPowerEventActionCooldownEnd(triggeredPowerEvent, in settings); break;
+                    case PowerEventActionType.CooldownModifySecs:                           DoPowerEventActionCooldownModifySecs(triggeredPowerEvent, in settings); break;
+                    case PowerEventActionType.CooldownModifyPct:                            DoPowerEventActionCooldownModifyPct(triggeredPowerEvent, in settings); break;
+
+                    default: Logger.Warn($"HandleTriggerPowerEventOnPowerStopped(): Power [{this}] contains a triggered event with an unsupported action"); break;
+                }
+            }
+
+            return true;
         }
 
         public void HandleTriggerPowerEventOnExtraActivationCooldown()  // 25
@@ -226,7 +271,7 @@ namespace MHServerEmu.Games.Powers
                 if (eventType != triggeredPowerEvent.PowerEvent)
                     continue;
 
-                if (CanTriggerPowerEventAction(eventType, actionType))
+                if (CanTriggerPowerEventAction(eventType, actionType) == false)
                     continue;
 
                 // Copy settings and generate a new seed
@@ -266,7 +311,7 @@ namespace MHServerEmu.Games.Powers
                 {
                     case PowerEventActionType.BodySlide:                                    DoPowerEventActionBodyslide(); break;
                     case PowerEventActionType.CancelScheduledActivation:
-                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionScheduleActivation(triggeredPowerEvent, in newSettings, actionType); break;
+                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionCancelScheduledActivation(triggeredPowerEvent, in newSettings); break;
                     case PowerEventActionType.ContextCallback:                              DoPowerEventActionContextCallback(triggeredPowerEvent, in newSettings); break;
                     case PowerEventActionType.DespawnTarget:                                DoPowerEventActionDespawnTarget(triggeredPowerEvent, in newSettings); break;
                     case PowerEventActionType.ChargesIncrement:                             DoPowerEventActionChargesIncrement(triggeredPowerEvent, in newSettings); break;
@@ -426,7 +471,7 @@ namespace MHServerEmu.Games.Powers
         // 19
         private void DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionUsePower(): Not implemented");
+            Logger.Warn($"DoPowerEventActionUsePower(): Not implemented ({triggeredPowerEvent.Power.GetName()})");
         }
 
         // 20
@@ -450,7 +495,7 @@ namespace MHServerEmu.Games.Powers
         // 23
         private void DoPowerEventActionEndPower(PrototypeId powerProtoRef, EndPowerFlags flags)
         {
-            Logger.Warn($"DoPowerEventActionEndPower(): Not implemented");
+            Logger.Warn($"DoPowerEventActionEndPower(): Not implemented (powerProtoRef={powerProtoRef.GetName()}, flags={flags})");
         }
 
         // 24
