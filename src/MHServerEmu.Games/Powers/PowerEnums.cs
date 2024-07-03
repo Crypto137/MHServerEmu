@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Powers
         Flag3       = 1 << 3,
         Continuous  = 1 << 4,
         Flag5       = 1 << 5,
-        Flag6       = 1 << 6,
+        Client      = 1 << 6,
         Flag7       = 1 << 7,
     }
 
@@ -25,9 +25,9 @@ namespace MHServerEmu.Games.Powers
         Unassign            = 1 << 2,
         Interrupting        = 1 << 3,
         ClientRequest       = 1 << 4,
-        Flag5               = 1 << 5,
-        Flag6               = 1 << 6,
-        Flag7               = 1 << 7,
+        NotEnoughEndurance  = 1 << 5,
+        ChanneledLoopEnd    = 1 << 6,
+        ChanneledMinTime    = 1 << 7,
         Force               = 1 << 8,
         PowerEventAction    = 1 << 9
     }
@@ -106,6 +106,15 @@ namespace MHServerEmu.Games.Powers
         ForceFailed = 25,
     }
 
+    // This is from Gazillion::Math, but it seems to be used only in Power
+    public enum MathComparisonType
+    {
+        Invalid,
+        Equals,
+        GreaterThan,
+        LessThan
+    }
+
     [AssetEnum((int)Physical)]
     public enum DamageType
     {
@@ -176,13 +185,9 @@ namespace MHServerEmu.Games.Powers
         OnCriticalHit = 2,
         OnHitKeyword = 3,
         OnPowerApply = 4,
-        OnPowerStopped = 24,
         OnPowerEnd = 5,
-        OnPowerLoopEnd = 26,
         OnPowerHit = 6,
         OnPowerStart = 7,
-        OnPowerToggleOn = 22,
-        OnPowerToggleOff = 23,
         OnProjectileHit = 8,
         OnStackCount = 9,
         OnTargetKill = 10,
@@ -196,8 +201,12 @@ namespace MHServerEmu.Games.Powers
         OnHotspotOverlapEnd = 18,
         OnRemoveCondition = 19,
         OnRemoveNegStatusEffect = 20,
-        OnExtraActivationCooldown = 25,
         OnPowerPivot = 21,
+        OnPowerToggleOn = 22,
+        OnPowerToggleOff = 23,
+        OnPowerStopped = 24,
+        OnExtraActivationCooldown = 25,
+        OnPowerLoopEnd = 26,
         OnSpecializationPowerAssigned = 27,
         OnSpecializationPowerUnassigned = 28,
         OnEntityControlled = 29,
@@ -212,30 +221,30 @@ namespace MHServerEmu.Games.Powers
         CancelScheduledActivation = 2,
         CancelScheduledActivationOnTriggeredPower = 3,
         ContextCallback = 4,
-        ControlAgentAI = 21,
-        CooldownEnd = 25,
-        CooldownModifySecs = 26,
-        CooldownModifyPct = 27,
-        CooldownStart = 24,
         DespawnTarget = 5,
-        EndPower = 23,
         ChargesIncrement = 6,
         InteractFinish = 7,
-        RemoveAndKillControlledAgentsFromInv = 22,
+        RescheduleActivationInSeconds = 8,
         RestoreThrowable = 9,
         ScheduleActivationAtPercent = 10,
         ScheduleActivationInSeconds = 11,
-        RescheduleActivationInSeconds = 8,
         ShowBannerMessage = 12,
         SpawnLootTable = 13,
         SwitchAvatar = 14,
         ToggleOnPower = 15,
         ToggleOffPower = 16,
-        TeamUpAgentSummon = 28,
-        TeleportToPartyMember = 20,
         TransformModeChange = 17,
         TransformModeStart = 18,
         UsePower = 19,
+        TeleportToPartyMember = 20,
+        ControlAgentAI = 21,
+        RemoveAndKillControlledAgentsFromInv = 22,
+        EndPower = 23,
+        CooldownStart = 24,
+        CooldownEnd = 25,
+        CooldownModifySecs = 26,
+        CooldownModifyPct = 27,
+        TeamUpAgentSummon = 28,
         TeleportToRegion = 29,
         StealPower = 30,
         PetItemDonate = 31,

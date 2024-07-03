@@ -119,6 +119,28 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Powers
 
+        public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
+        {
+            base.ActivatePostPowerAction(power, flags);
+
+            if (_continuousPowerData.PowerProtoRef == PrototypeId.Invalid)
+                return;
+
+            if (power.IsProcEffect() || power.IsItemPower())
+                return;
+
+            if (_continuousPowerData.PowerProtoRef == power.PrototypeDataRef && power.TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd))
+                return;
+
+            if (flags.HasFlag(EndPowerFlags.ExplicitCancel) && power.IsRecurring() == false)
+                return;
+
+            if (flags.HasFlag(EndPowerFlags.ExitWorld) || flags.HasFlag(EndPowerFlags.Unassign))
+                return;
+
+            CheckContinuousPower();
+        }
+
         public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed)
         {
             _continuousPowerData.SetData(powerProtoRef, targetId, targetPosition, InvalidId);

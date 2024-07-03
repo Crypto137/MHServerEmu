@@ -490,6 +490,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return TimeSpan.FromMilliseconds(cooldownTimeMS);
         }
 
+        public virtual void OnEndPower(Power power, WorldEntity owner)
+        {
+            // Overriden in MovementPowerPrototype
+        }
+
         private float PostProcessTuningScore()
         {
             float score = DamageTuningArea * DamageTuningBuff1 * DamageTuningBuff2 * DamageTuningBuff3
@@ -541,6 +546,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (IsHighFlyingPower == false && MovementHeightBonus <= 0f)
                 BlockingCheckFlags |= BlockingCheckFlags.CheckGroundMovementPowers;
+        }
+
+        public override void OnEndPower(Power power, WorldEntity owner)
+        {
+            if (owner != null && CustomBehavior != null)
+            {
+                PowerActivationSettings settings = power.LastActivationSettings;
+                WorldEntity target = owner.Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                MovementBehaviorPrototype.Context context = new(power, owner, target, settings.TargetPosition);
+                CustomBehavior.OnEndPower(in context);
+            }
+        }
+
+        public bool HasCustomBehaviorOfType<T>() where T: MovementBehaviorPrototype
+        {
+            return CustomBehavior is T;
         }
     }
 
@@ -680,6 +701,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public bool HasEvalEventTriggerChance { get => EvalEventTriggerChance != null; }
+
+        public float GetEventTriggerChance(PropertyCollection powerProperties, WorldEntity owner, WorldEntity target)
+        {
+            if (EvalEventTriggerChance == null)
+                return 1f;
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, target);
+            Eval.InitTeamUpEvalContext(contextData, owner);
+
+            return Eval.RunFloat(EvalEventTriggerChance, contextData);
+        }
+
+        public float GetEventParam(PropertyCollection powerProperties, WorldEntity owner)
+        {
+            if (EvalEventParam == null)
+                return EventParam;
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+
+            return Eval.RunFloat(EvalEventParam, contextData);
+        }
     }
 
     public class SituationalTriggerPrototype : Prototype
@@ -827,8 +876,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            _positionOffset = Vector3.Zero;
-            if (PositionOffset != null) _positionOffset = PositionOffset.ToVector3();
+            _positionOffset = PositionOffset != null ? PositionOffset.ToVector3() : Vector3.Zero;
         }
 
         public bool TargetsAOE()
