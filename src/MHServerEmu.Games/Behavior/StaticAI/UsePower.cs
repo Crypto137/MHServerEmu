@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             Agent agent = ownerController.Owner;
-            if (agent != null) return;
+            if (agent == null) return;
 
             if (state == StaticBehaviorReturnType.Interrupted && agent.IsExecutingPower)
             {
