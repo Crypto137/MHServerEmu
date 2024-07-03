@@ -20,7 +20,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
-    public class Power
+    public partial class Power
     {
         private const float PowerPositionSweepPadding = Locomotor.MovementSweepPadding;
         private const float PowerPositionSweepPaddingSquared = PowerPositionSweepPadding * PowerPositionSweepPadding;
@@ -51,6 +51,7 @@ namespace MHServerEmu.Games.Powers
         public float AnimSpeedCache { get; private set; } = -1f;
         public bool WasLastActivateInterrupted { get; private set; }
         public TimeSpan LastActivateGameTime { get; private set; }
+        public PowerActivationSettings LastActivationSettings { get; private set; }
 
         public bool IsSituationalPower { get => _situationalComponent != null; }
 
@@ -572,224 +573,6 @@ namespace MHServerEmu.Games.Powers
                 _ => Logger.WarnReturn(false, $"IsTargetInAOE(): Targeting shape ({styleProto.TargetingShape}) for this power hasn't been implemented! Prototype: {powerProto}"),
             };
         }
-
-        #region Trigger Power Events
-
-        public void HandleTriggerPowerEventOnPowerStart()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnPowerToggleOn()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnPowerToggleOff()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnContactTime()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnExtraActivationCooldown()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnPowerLoopEnd()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnPowerStopped()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnPowerEnd()
-        {
-
-        }
-
-        public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()
-        {
-
-        }
-
-        private void HandleTriggerPowerEvent()
-        {
-
-        }
-
-        // ---------------------
-        // Power event actions
-        // Please keep these ordered by PowerEventActionType enum value
-
-        private void DoPowerEventActionBodyslide()                  // 1
-        {
-            Logger.Warn($"DoPowerEventActionBodyslide(): Not implemented");
-        }
-
-        private void DoPowerEventActionCancelScheduledActivation()  // 2, 3
-        {
-            Logger.Warn($"DoPowerEventActionCancelScheduledActivation(): Not implemented");
-        }
-
-        private void DoPowerEventActionContextCallback()            // 4
-        {
-            Logger.Warn($"DoPowerEventActionContextCallback(): Not implemented");
-        }
-
-        private void DoPowerEventActionDespawnTarget()              // 5
-        {
-            Logger.Warn($"DoPowerEventActionDespawnTarget(): Not implemented");
-        }
-
-        private void DoPowerEventActionChargesIncrement()           // 6
-        {
-            Logger.Warn($"DoPowerEventActionChargesIncrement(): Not implemented");
-        }
-
-        private void DoPowerEventActionInteractFinish()             // 7
-        {
-            Logger.Warn($"DoPowerEventActionInteractFinish(): Not implemented");
-        }
-
-        private void DoPowerEventActionRestoreThrowable()           // 9
-        {
-            Logger.Warn($"DoPowerEventActionRestoreThrowable(): Not implemented");
-        }
-
-        private void DoPowerEventActionScheduleActivation()         // 8, 10, 11
-        {
-            Logger.Warn($"DoPowerEventActionScheduleActivation(): Not implemented");
-        }
-
-        private void DoPowerEventActionShowBannerMessage()          // 12
-        {
-            Logger.Warn($"DoPowerEventActionShowBannerMessage(): Not implemented");
-        }
-
-        private void DoPowerEventActionSpawnLootTable()             // 13
-        {
-            Logger.Warn($"DoPowerEventActionSpawnLootTable(): Not implemented");
-        }
-
-        private void DoPowerEventActionSwitchAvatar()               // 14
-        {
-            Logger.Warn($"DoPowerEventActionSwitchAvatar(): Not implemented");
-        }
-
-        private void DoPowerEventActionTogglePower()                // 15, 16
-        {
-            Logger.Warn($"DoPowerEventActionTogglePower(): Not implemented");
-        }
-
-        private void DoPowerEventActionTransformModeChange()        // 17
-        {
-            Logger.Warn($"DoPowerEventActionTransformModeChange(): Not implemented");
-        }
-
-        private void DoPowerEventActionTransformModeStart()         // 18
-        {
-            Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
-        }
-
-        private void DoPowerEventActionUsePower()                   // 19
-        {
-            Logger.Warn($"DoPowerEventActionUsePower(): Not implemented");
-        }
-
-        private void DoPowerEventActionTeleportToPartyMember()      // 20
-        {
-            Logger.Warn($"DoPowerEventActionTeleportToPartyMember(): Not implemented");
-        }
-
-        private void DoPowerEventActionControlAgentAI()             // 21
-        {
-            Logger.Warn($"DoPowerEventActionControlAgentAI(): Not implemented");
-        }
-
-        private void DoPowerEventActionRemoveAndKillControlledAgentsFromInv()   // 22
-        {
-            Logger.Warn($"DoPowerEventActionRemoveAndKillControlledAgentsFromInv(): Not implemented");
-        }
-
-        private void DoPowerEventActionEndPower()                   // 23
-        {
-            Logger.Warn($"DoPowerEventActionEndPower(): Not implemented");
-        }
-
-        private void DoPowerEventActionCooldownStart()              // 24
-        {
-            Logger.Warn($"DoPowerEventActionCooldownStart(): Not implemented");
-        }
-
-        private void DoPowerEventActionCooldownEnd()                // 25
-        {
-            Logger.Warn($"DoPowerEventActionCooldownEnd(): Not implemented");
-        }
-
-        private void DoPowerEventActionCooldownModifySecs()         // 26
-        {
-            Logger.Warn($"DoPowerEventActionCooldownModifySecs(): Not implemented");
-        }
-
-        private void DoPowerEventActionCooldownModifyPct()          // 27
-        {
-            Logger.Warn($"DoPowerEventActionCooldownModifyPct(): Not implemented");
-        }
-
-        private void DoPowerEventActionTeamUpAgentSummon()          // 28
-        {
-            Logger.Warn($"DoPowerEventActionTeamUpAgentSummon(): Not implemented");
-        }
-
-        private void DoPowerEventActionTeleportRegion()             // 29
-        {
-            Logger.Warn($"DoPowerEventActionTeleportRegion(): Not implemented");
-        }
-
-        private void DoPowerEventActionStealPower()                 // 30
-        {
-            Logger.Warn($"DoPowerEventActionStealPower(): Not implemented");
-        }
-
-        private void DoPowerEventActionPetItemDonate()              // 31
-        {
-            Logger.Warn($"DoPowerEventActionPetItemDonate(): Not implemented");
-        }
-
-        private void DoPowerEventActionMapPowers()                  // 32
-        {
-            Logger.Warn($"DoPowerEventActionMapPowers(): Not implemented");
-        }
-
-        private void DoPowerEventActionUnassignMappedPowers()       // 33
-        {
-            Logger.Warn($"DoPowerEventActionUnassignMappedPowers(): Not implemented");
-        }
-
-        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords()   // 34
-        {
-            Logger.Warn($"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Not implemented");
-        }
-
-        private void DoPowerEventActionSummonControlledAgentWithDuration()  // 35
-        {
-            Logger.Warn($"DoPowerEventActionSummonControlledAgentWithDuration(): Not implemented");
-        }
-
-        private void DoPowerEventActionLocalCoopEnd()               // 36
-        {
-            Logger.Warn($"DoPowerEventActionLocalCoopEnd(): Not implemented");
-        }
-
-        #endregion
 
         #region State Accessors
 
@@ -1779,6 +1562,16 @@ namespace MHServerEmu.Games.Powers
         protected PowerUseResult ActivateInternal(in PowerActivationSettings settings)
         {
             //TEMP_SendActivatePowerMessage(in settings);
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): powerProto == null");
+
+            // Make a copy of activation settings
+            LastActivationSettings = settings;
+
+            // Trigger events (this relies on the copy of setting we just made)
+            HandleTriggerPowerEventOnPowerStart();
+
             return PowerUseResult.Success;
         }
 

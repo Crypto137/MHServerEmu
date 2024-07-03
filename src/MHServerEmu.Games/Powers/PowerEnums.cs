@@ -106,6 +106,15 @@ namespace MHServerEmu.Games.Powers
         ForceFailed = 25,
     }
 
+    // This is from Gazillion::Math, but it seems to be used only in Power
+    public enum MathComparisonType
+    {
+        Invalid,
+        Equals,
+        GreaterThan,
+        LessThan
+    }
+
     [AssetEnum((int)Physical)]
     public enum DamageType
     {
@@ -176,13 +185,9 @@ namespace MHServerEmu.Games.Powers
         OnCriticalHit = 2,
         OnHitKeyword = 3,
         OnPowerApply = 4,
-        OnPowerStopped = 24,
         OnPowerEnd = 5,
-        OnPowerLoopEnd = 26,
         OnPowerHit = 6,
         OnPowerStart = 7,
-        OnPowerToggleOn = 22,
-        OnPowerToggleOff = 23,
         OnProjectileHit = 8,
         OnStackCount = 9,
         OnTargetKill = 10,
@@ -196,8 +201,12 @@ namespace MHServerEmu.Games.Powers
         OnHotspotOverlapEnd = 18,
         OnRemoveCondition = 19,
         OnRemoveNegStatusEffect = 20,
-        OnExtraActivationCooldown = 25,
         OnPowerPivot = 21,
+        OnPowerToggleOn = 22,
+        OnPowerToggleOff = 23,
+        OnPowerStopped = 24,
+        OnExtraActivationCooldown = 25,
+        OnPowerLoopEnd = 26,
         OnSpecializationPowerAssigned = 27,
         OnSpecializationPowerUnassigned = 28,
         OnEntityControlled = 29,
