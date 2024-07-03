@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -508,6 +509,17 @@ namespace MHServerEmu.Games.Entities
             if (brain == null) return false;
             if (brain is ProceduralProfileVanityPetPrototype || brain is ProceduralProfileTeamUpPrototype) return true; // Pet and TeamUp only
             return false;
+        }
+
+        public void AITestOn()
+        {
+            if (AIController == null && Properties.HasProperty(PropertyEnum.AICombatIdling) == false)
+            {
+                InitAI(null);
+                ActivateAI();
+                Properties[PropertyEnum.AICombatIdling] = true; // AI tried On
+            }
+            else Think();
         }
 
         private bool InitAI(EntitySettings settings)

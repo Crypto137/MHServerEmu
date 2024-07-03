@@ -1635,7 +1635,7 @@ namespace MHServerEmu.Games.Powers
 
         protected PowerUseResult ActivateInternal(in PowerActivationSettings settings)
         {
-            //TEMP_SendActivatePowerMessage(in settings);
+            TEMP_SendActivatePowerMessage(in settings);
 
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): powerProto == null");

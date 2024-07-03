@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -355,6 +356,8 @@ namespace MHServerEmu.Games.Powers
             
             var entity = _playerConnection.Game.EntityManager.GetEntity<WorldEntity>(entityId);
             if (entity == null) return;
+            if (entity is Agent agent) // On AI for hit enemy
+                agent.AITestOn();
 
             int health = entity.Properties[PropertyEnum.Health];
 
