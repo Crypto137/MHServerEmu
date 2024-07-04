@@ -5,6 +5,8 @@ using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Powers
 {
+    // Power data pipeline: PowerActivationSettings -> PowerApplication -> PowerPayload -> PowerResults
+
     public struct PowerActivationSettings
     {
         public ulong TargetEntityId = 0;
@@ -26,6 +28,7 @@ namespace MHServerEmu.Games.Powers
         public readonly TimeSpan CreationTime = Game.Current != null ? Game.Current.CurrentTime : Clock.GameTime;
 
         public PowerResults PowerResults = null;
+        public TimeSpan UnknownTimeSpan = TimeSpan.Zero;
 
         public PowerActivationSettings(ulong targetEntityId, Vector3 targetPosition, Vector3 userPosition)
         {

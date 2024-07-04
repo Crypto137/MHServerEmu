@@ -686,6 +686,12 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
+        public virtual bool CheckLandingSpot(Power power)
+        {
+            // TODO: Overrides in Agent and Avatar
+            return true;
+        }
+
         public bool LineOfSightTo(WorldEntity other, float radius = 0.0f, float padding = 0.0f, float height = 0.0f)
         {
             if (other == null) return false;
@@ -984,6 +990,17 @@ namespace MHServerEmu.Games.Entities
         public virtual void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
             // NOTE: Overriden in avatar
+        }
+
+        public virtual void UpdateRecurringPowerApplication(PowerApplication powerApplication, PrototypeId powerProtoRef)
+        {
+            // NOTE: Overriden in avatar
+        }
+
+        public virtual bool ShouldContinueRecurringPower(Power power, ref EndPowerFlags flags)
+        {
+            // NOTE: Overriden in avatar
+            return true;
         }
 
         public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)

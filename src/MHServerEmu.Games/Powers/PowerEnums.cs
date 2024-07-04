@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Powers
         ClientRequest       = 1 << 4,
         NotEnoughEndurance  = 1 << 5,
         ChanneledLoopEnd    = 1 << 6,
-        ChanneledMinTime    = 1 << 7,
+        WaitForMinTime      = 1 << 7,
         Force               = 1 << 8,
         PowerEventAction    = 1 << 9
     }
