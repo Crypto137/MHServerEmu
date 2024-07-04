@@ -181,7 +181,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 PathGenerationFlags = PathGenerationFlags.IncompletedPath
             };
             if (agentsLocomotor.PathTo(sidePosition, locomotionOptions) == false) return false;
-            agent.DrawPath((PrototypeId)925659119519994384);
+            agent.DrawPath(EntityHelper.TestOrb.BigRed);
             return true;
         }
 
@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 PathGenerationFlags = PathGenerationFlags.IncompletedPath | PathGenerationFlags.IgnoreSweep
             };
             if (agentsLocomotor.PathTo(targetEntity.RegionLocation.Position, locomotionOptions) == false) return false;
-            agent.DrawPath((PrototypeId)925659119519994384);
+            agent.DrawPath(EntityHelper.TestOrb.Red);
             return true;
         }
 

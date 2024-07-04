@@ -766,7 +766,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public void DrawPath(PrototypeId orbRef)
+        public void DrawPath(EntityHelper.TestOrb orbRef)
         {
             if (Locomotor.HasPath)
                 foreach(var node in Locomotor.LocomotionState.PathNodes)

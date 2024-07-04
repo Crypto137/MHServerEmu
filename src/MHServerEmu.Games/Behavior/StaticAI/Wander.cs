@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     locomotionOptions.Flags |= LocomotionFlags.IsWalking;
 
                 if (locomotor.PathTo(wanderTo, locomotionOptions) == false) return failResult;
-                agent.DrawPath((PrototypeId)9607833165236212779); 
+                agent.DrawPath(EntityHelper.TestOrb.Blue); 
             }
 
             return StaticBehaviorReturnType.Running;
