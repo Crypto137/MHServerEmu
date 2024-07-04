@@ -686,6 +686,12 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
+        public virtual bool CheckLandingSpot(Power power)
+        {
+            // TODO: Overrides in Agent and Avatar
+            return true;
+        }
+
         public bool LineOfSightTo(WorldEntity other, float radius = 0.0f, float padding = 0.0f, float height = 0.0f)
         {
             if (other == null) return false;

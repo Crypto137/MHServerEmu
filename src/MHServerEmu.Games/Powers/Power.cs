@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.Powers
         private readonly EventGroup _pendingActivationPhaseEvents = new();
         private readonly EventGroup _pendingPowerApplicationEvents = new();
 
+        private readonly EventPointer<StopChargingEvent> _stopChargingEvent = new();
         private readonly EventPointer<StartChannelingEvent> _startChannelingEvent = new();
         private readonly EventPointer<StopChannelingEvent> _stopChannelingEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
@@ -129,6 +130,9 @@ namespace MHServerEmu.Games.Powers
                 else
                     RemoveKeyword(keywordProtoRef);
             }
+
+            if (GetChargingTime() > TimeSpan.Zero)
+                Logger.Debug($"ChargingTime = {GetChargingTime()} ({this})");
 
             return true;
         }
@@ -539,19 +543,52 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        // NOTE: Charging and channeling methods need to be public because they are triggered by events
+        // NOTE: Charging and channeling methods need to be public because they interact with scheduled events
 
-        public void StartCharging()
+        public bool StartCharging()
         {
-            // TODO
             Logger.Debug("StartCharging()");
 
+            if (Owner == null) return Logger.WarnReturn(false, "StartCharging(): Owner == null");
+            if (Game == null) return Logger.WarnReturn(false, "StartCharging(): Game == null");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "StartCharging(): scheduler == null");
+
+            if (_stopChargingEvent.IsValid)
+                scheduler.CancelEvent(_stopChargingEvent);
+
+            TimeSpan chargeTime = GetChargingTime();
+            if (chargeTime <= TimeSpan.Zero) return Logger.WarnReturn(false, "StartCharging(): chargeTime <= TimeSpan.Zero");
+
+            _activationPhase = PowerActivationPhase.Charging;
+
+            scheduler.ScheduleEvent(_stopChargingEvent, chargeTime, _pendingActivationPhaseEvents);
+            _stopChargingEvent.Get().Initialize(this);
+
+            return true;
         }
 
-        public void StopCharging()
+        public bool StopCharging()
         {
-            // TODO
             Logger.Debug("StopCharging()");
+
+            if (Owner == null) return Logger.WarnReturn(false, "StopCharging(): Owner == null");
+
+            _activationPhase = PowerActivationPhase.Active;
+
+            // Cancel scheduled charge event if stopping early
+            if (_stopChargingEvent.IsValid)
+            {
+                if (Game == null) return Logger.WarnReturn(false, "StopCharging(): Game == null");
+
+                EventScheduler scheduler = Game.GameEventScheduler;
+                if (scheduler == null) return Logger.WarnReturn(false, "StopCharging(): scheduler == null");
+
+                scheduler.CancelEvent(_stopChargingEvent);
+            }
+
+            return true;
         }
 
         public bool StartChanneling()
@@ -920,6 +957,13 @@ namespace MHServerEmu.Games.Powers
         public static bool IsPartOfAMovementPower(PowerPrototype powerProto)
         {
             return powerProto is MovementPowerPrototype;
+        }
+
+        public bool IsHighFlyingPower()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsHighFlyingPower(): powerProto == null");
+            return powerProto.IsHighFlyingPower;
         }
 
         public bool IsChannelingPower()
@@ -1926,7 +1970,7 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual void OnEndChannelingPhase()
         {
-
+            // For overrides in MissilePower and SummonPower
         }
 
         protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 initialTargetPosition, out Vector3 actualTargetPosition,
@@ -2328,14 +2372,44 @@ namespace MHServerEmu.Games.Powers
 
         private bool CanBeUserCanceledNow()
         {
-            // TODO
-            Logger.Debug("CanBeUserCanceledNow()");
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CanBeUserCanceledNow(): powerProto == null");
+
+            if (IsCancelledOnRelease() || IsRecurring())
+                return true;
+
+            if (powerProto.CanBeInterrupted == false)
+                return false;
+
+            if (_endPowerEvent.IsValid && _endPowerEvent.Get().Flags.HasFlag(EndPowerFlags.ChanneledLoopEnd))
+                return false;
+
             return true;
         }
 
         private bool CanEndPower(EndPowerFlags flags)
         {
-            // TODO
+            if (Owner == null) return Logger.WarnReturn(true, "CanEndPower(): Owner == null");
+
+            if (flags.HasFlag(EndPowerFlags.Unassign) ||
+                flags.HasFlag(EndPowerFlags.Interrupting) ||
+                flags.HasFlag(EndPowerFlags.Force))
+            {
+                return true;
+            }
+
+            if (flags.HasFlag(EndPowerFlags.ExitWorld) && Owner.IsInWorld == false)
+                return true;
+
+            if (_activationPhase == PowerActivationPhase.Inactive)
+                return false;
+
+            if (_activationPhase == PowerActivationPhase.LoopEnding && flags.HasFlag(EndPowerFlags.ChanneledLoopEnd) == false)
+                return false;
+
+            if (IsHighFlyingPower() && Owner.CheckLandingSpot(this) == false)
+                return false;
+
             return true;
         }
 
@@ -2463,6 +2537,11 @@ namespace MHServerEmu.Games.Powers
             // TODO
 
             return true;
+        }
+
+        private class StopChargingEvent : CallMethodEvent<Power>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.StopCharging();
         }
 
         private class StartChannelingEvent : CallMethodEvent<Power>
