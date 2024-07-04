@@ -463,15 +463,41 @@ namespace MHServerEmu.Games.Powers
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
         {
-            Logger.Debug($"ApplyPower(): {Prototype}");
+            Logger.Trace($"ApplyPower(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "ApplyPower(): powerProto == null");
 
-            HandleTriggerPowerEventOnContactTime();
+            if (Game == null) return Logger.WarnReturn(false, "ApplyPower(): Game == null");
 
-            FinishApplyPower(powerApplication, powerProto, true);
-            return true;
+            // Check target
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
+            if (NeedsTarget() && (target == null || target.IsInWorld == false))
+                return FinishApplyPower(powerApplication, powerProto, false);
+
+            // Update target position if needed
+            if (powerProto.ResetTargetPositionAtContactTime && powerProto is not MovementPowerPrototype)
+            {
+                if (target?.IsInWorld == true)
+                    powerApplication.TargetPosition = TargetsAOE() ? target.RegionLocation.ProjectToFloor() : target.RegionLocation.Position;
+            }
+
+            // Update user position if needed
+            if (powerProto.ResetUserPositionAtContactTime)
+                powerApplication.UserPosition = TargetsAOE() ? Owner.RegionLocation.ProjectToFloor() : Owner.RegionLocation.Position;
+
+            // Update recurring application
+            if (powerProto.IsRecurring)
+                Owner.UpdateRecurringPowerApplication(powerApplication, PrototypeDataRef);
+
+            if (ApplyInternal(powerApplication) == false)
+                return FinishApplyPower(powerApplication, powerProto, false);
+
+            if (IsToggled() == false)
+                StartCooldown();
+
+            HandleTriggerPowerEventOnContactTime();
+            return FinishApplyPower(powerApplication, powerProto, true);
         }
 
         private bool FinishApplyPower(PowerApplication powerApplication, PowerPrototype powerProto, bool success)
@@ -687,6 +713,7 @@ namespace MHServerEmu.Games.Powers
         public void StartCooldown()
         {
             // TODO
+            //Logger.Debug("StartCooldown()");
         }
 
         public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
@@ -1973,8 +2000,73 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
-        protected bool ApplyInternal(PowerApplication application)
+        protected bool ApplyInternal(PowerApplication powerApplication)
         {
+            // NOTE: This is where powers actually do stuff
+            if (Prototype is MovementPowerPrototype movementPowerProto)
+            {
+                Locomotor locomotor = Owner.Locomotor;
+                if (locomotor == null) return Logger.WarnReturn(false, "ApplyInternal(): locomotor == null");
+
+                if (movementPowerProto.TeleportMethod == TeleportMethodType.Teleport)
+                {
+                    // Instantly teleport to the destination
+                    // TODO: executeTeleport()
+                    Owner.ChangeRegionPosition(powerApplication.TargetPosition, null,
+                        ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.Force);
+                }
+                else if (Owner.IsMovementAuthoritative)
+                {
+                    // Locomote to the destination
+                    // Avatars are not movement authoritative for the server, so this is for NPCs only
+                    if (movementPowerProto.IsHighFlyingPower)
+                    {
+                        locomotor.SetMethod(LocomotorMethod.HighFlying, powerApplication.MovementSpeed);
+                    }
+                    else
+                    {
+                        LocomotionOptions locomotionOptions = new()
+                        {
+                            Flags = LocomotionFlags.IsMovementPower | LocomotionFlags.SkipCurrentSpeedRate,
+                            BaseMoveSpeed = powerApplication.MovementSpeed,
+                            MoveHeight = movementPowerProto.MovementHeightBonus
+                        };
+
+                        if (movementPowerProto.UserNoEntityCollide || movementPowerProto.TeleportMethod == TeleportMethodType.Phase)
+                            locomotionOptions.Flags |= LocomotionFlags.LocomotionNoEntityCollide;
+
+                        if (movementPowerProto.TeleportMethod == TeleportMethodType.Phase)
+                            locomotionOptions.Flags |= LocomotionFlags.IgnoresWorldCollision;
+
+                        if (movementPowerProto.AllowOrientationChange == false)
+                            locomotionOptions.Flags |= LocomotionFlags.DisableOrientation;
+
+                        // NOTE: locomotor.FollowPath is client-only, so we just use 
+                        locomotor.MoveTo(powerApplication.TargetPosition, locomotionOptions);
+                    }
+                }
+            }
+
+            // Quick hack for showing damage numbers
+            if (powerApplication.TargetEntityId != Entity.InvalidId && powerApplication.TargetEntityId != Owner.Id)
+            {
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
+                if (Owner.IsHostileTo(target))
+                {
+                    PowerResults results = new()
+                    {
+                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                        MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
+                        PowerPrototypeRef = PrototypeDataRef,
+                        PowerOwnerEntityId = Owner.Id,
+                        TargetEntityId = powerApplication.TargetEntityId,
+                        DamagePhysical = (uint)Game.Random.Next(1, 100),
+                    };
+
+                    Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
+                }
+            }
+
             return true;
         }
 
@@ -2788,8 +2880,6 @@ namespace MHServerEmu.Games.Powers
             EventPointer<PowerApplyEvent> powerApplyEvent = new();
             scheduler.ScheduleEvent(powerApplyEvent, applicationDelay, _pendingPowerApplicationEvents);
             powerApplyEvent.Get().Initialize(this, powerApplication);
-
-            Logger.Debug($"SchedulePowerApplication(): {applicationDelay.TotalMilliseconds} ms");
 
             return true;
         }
