@@ -923,7 +923,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList; // new or link?
+                LocomotionState.PathNodes = new (_generatedPath.Path.PathNodeList); // new or link?
             }
             SetEnabled(success);
             return success;

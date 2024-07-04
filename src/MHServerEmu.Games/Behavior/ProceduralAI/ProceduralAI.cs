@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AICustomOverrideStateVal1);
             StopOwnerLocomotor();
             ProfilePtr tempOverride = GetOverrideByType(overrideType);
-            if (tempOverride.Profile == null) return;
+            if (tempOverride == null) return;
             if (tempOverride.Profile == profile)
             {
                 Logger.Warn($"Trying to override a profile with itself: {profile}");
@@ -251,7 +251,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             {
                 OverrideType.Full => _fullOverridePtr,
                 OverrideType.Partial => _partialOverridePtr,
-                _ => new ProfilePtr()
+                _ => null
             };
         }
 
@@ -337,7 +337,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         Partial
     }
 
-    public struct ProfilePtr
+    public class ProfilePtr
     {
         public ProceduralAIProfilePrototype Profile;
     }
