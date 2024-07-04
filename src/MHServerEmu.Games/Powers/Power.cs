@@ -6,7 +6,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
-using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -36,10 +35,12 @@ namespace MHServerEmu.Games.Powers
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
         private PowerActivationSettings _lastActivationSettings;
 
-        private readonly EventGroup _pendingEvents1 = new();
-        private readonly EventGroup _pendingEvents2 = new();    // end power, channeling
+        private readonly EventGroup _pendingEvents = new();
+        private readonly EventGroup _pendingActivationPhaseEvents = new();
         private readonly EventGroup _pendingPowerApplicationEvents = new();
 
+        private readonly EventPointer<StartChannelingEvent> _startChannelingEvent = new();
+        private readonly EventPointer<StopChannelingEvent> _stopChannelingEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
 
         public Game Game { get; }
@@ -166,8 +167,8 @@ namespace MHServerEmu.Games.Powers
 
         public void OnDeallocate()
         {
-            Game.GameEventScheduler.CancelAllEvents(_pendingEvents1);
-            Game.GameEventScheduler.CancelAllEvents(_pendingEvents2);
+            Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
+            Game.GameEventScheduler.CancelAllEvents(_pendingActivationPhaseEvents);
             Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
         }
 
@@ -534,6 +535,84 @@ namespace MHServerEmu.Games.Powers
             Owner.ActivatePostPowerAction(this, flags);
 
             OnEndPowerConditionalRemove(flags);     // Remove one-offs, like throwables
+
+            return true;
+        }
+
+        // NOTE: Charging and channeling methods need to be public because they are triggered by events
+
+        public void StartCharging()
+        {
+            // TODO
+            Logger.Debug("StartCharging()");
+
+        }
+
+        public void StopCharging()
+        {
+            // TODO
+            Logger.Debug("StopCharging()");
+        }
+
+        public bool StartChanneling()
+        {
+            Logger.Debug("StartChanneling()");
+
+            if (Owner == null) return Logger.WarnReturn(false, "StartChanneling(): Owner == null");
+            if (Game == null) return Logger.WarnReturn(false, "StartChanneling(): Game == null");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "StartChanneling(): scheduler == null");
+
+            TimeSpan channelTime = GetChannelLoopTime();
+            if (channelTime <= TimeSpan.Zero) return Logger.WarnReturn(false, "StartChanneling(): channelTime <= TimeSpan.Zero");
+
+            if (IsEnding)
+                return true;
+
+            // Start channeling
+            _activationPhase = PowerActivationPhase.Channeling;
+
+            if (Prototype?.MovementPreventChannelLoop == true)
+                Owner.Locomotor?.Stop();
+
+            // Update cancellation event
+            if (_stopChannelingEvent.IsValid)
+            {
+                scheduler.RescheduleEvent(_stopChannelingEvent, channelTime);
+                _stopChannelingEvent.Get().Initialize(this);
+            }
+            else
+            {
+                scheduler.ScheduleEvent(_stopChannelingEvent, channelTime, _pendingActivationPhaseEvents);
+                _stopChannelingEvent.Get().Initialize(this);
+            }
+
+            OnEndChannelingPhase();
+            return true;
+        }
+
+        public bool StopChanneling()
+        {
+            Logger.Debug("StopChanneling()");
+
+            if (Owner == null) return Logger.WarnReturn(false, "StopChanneling(): Owner == null");
+
+            if (_activationPhase != PowerActivationPhase.ChannelStarting && _activationPhase != PowerActivationPhase.Channeling
+                && _activationPhase != PowerActivationPhase.MinTimeEnding && _activationPhase != PowerActivationPhase.LoopEnding)
+            {
+                return Logger.WarnReturn(false,
+                    $"StopChanneling(): Tried to stop channeling power {this} that isn't channeling. Activation phase: {_activationPhase}. Power owner: [{Owner}] IsDead: {Owner.IsDead}");
+            }
+
+            if (Game == null) return Logger.WarnReturn(false, "StopChanneling(): Game == null");
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "StopChanneling(): scheduler == null");
+
+            if (_startChannelingEvent.IsValid)
+                scheduler.CancelEvent(_startChannelingEvent);
+
+            _activationPhase = PowerActivationPhase.Active;
 
             return true;
         }
@@ -1693,17 +1772,76 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual bool OnEndPowerCheckTooEarly(EndPowerFlags flags)
         {
+            // NOTE: The return value in this method is reversed (i.e. end power proceeds when this returns false)
+
+            // Check flags
+            if (flags.HasFlag(EndPowerFlags.ExitWorld) ||
+                flags.HasFlag(EndPowerFlags.Unassign) ||
+                flags.HasFlag(EndPowerFlags.Interrupting) ||
+                flags.HasFlag(EndPowerFlags.WaitForMinTime) ||
+                flags.HasFlag(EndPowerFlags.Force))
+            {
+                return false;
+            }
+
+            if (Game == null) return Logger.WarnReturn(true, "OnEndPowerCheckTooEarly(): Game == null");
+
+            TimeSpan timeSinceLastActivation = Game.CurrentTime - LastActivateGameTime;
+            TimeSpan channelMinTime = GetChannelMinTime();
+
+            if (channelMinTime > timeSinceLastActivation &&
+                (flags.HasFlag(EndPowerFlags.ExplicitCancel) || flags.HasFlag(EndPowerFlags.NotEnoughEndurance) || flags.HasFlag(EndPowerFlags.ClientRequest)))
+            {
+                _lastActivationSettings.Flags |= PowerActivationSettingsFlags.Cancel;
+                SchedulePowerEnd(channelMinTime - timeSinceLastActivation, flags | EndPowerFlags.WaitForMinTime);
+                return true;
+            }
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(true, "OnEndPowerCheckTooEarly(): powerProto == null");
+
+            TimeSpan activationTime = GetActivationTime();
+            float animSpeed = GetAnimSpeed();
+            float timeMult = animSpeed > 0f ? 1f / animSpeed : 0f;  // Avoid division by 0 / negative
+
+            // It appears the client here is doing imprecise millisecond-based checks, so we have to match it on the server.
+            // TODO: See if we things break if we get rid of this and just compare TimeSpans directly.
+            TimeSpan halfMillisecond = TimeSpan.FromTicks(5000);
+            TimeSpan preWindowTime = activationTime - (powerProto.NoInterruptPreWindowTime * timeMult) - halfMillisecond;
+            TimeSpan postWindowTime = activationTime + (powerProto.NoInterruptPostWindowTime * timeMult) + halfMillisecond;
+
+            long timeSinceLastActivationMS = (long)timeSinceLastActivation.TotalMilliseconds;
+            long preWindowTimeMS = (long)preWindowTime.TotalMilliseconds;
+            long postWindowTimeMS = (long)postWindowTime.TotalMilliseconds;
+
+            if (timeSinceLastActivationMS >= preWindowTimeMS && timeSinceLastActivationMS < postWindowTimeMS)
+            {
+                _lastActivationSettings.Flags |= PowerActivationSettingsFlags.Cancel;
+                TimeSpan endDelay = postWindowTime - timeSinceLastActivation;
+                SchedulePowerEnd(endDelay, flags | EndPowerFlags.WaitForMinTime);
+            }
+
             return false;
         }
 
         protected virtual bool OnEndPowerRemoveApplications(EndPowerFlags flags)
         {
+            // NOTE: The return value in this method is reversed (i.e. end power proceeds when this returns false)
             return false;
         }
 
-        protected virtual void OnEndPowerCancelEvents(EndPowerFlags flags)
+        protected virtual bool OnEndPowerCancelEvents(EndPowerFlags flags)
         {
+            if (IsCharging)
+                StopCharging();
 
+            if (Game == null) return Logger.WarnReturn(false, "OnEndPowerCancelEvents(): Game == null");
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "OnEndPowerCancelEvents(): scheduler == null");
+
+            scheduler.CancelAllEvents(_pendingActivationPhaseEvents);
+            CancelAllScheduledActivations();
+            return true;
         }
 
         protected virtual void OnEndPowerCancelConditions()
@@ -1742,7 +1880,41 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual bool OnEndPowerCheckLoopEnd(EndPowerFlags flags)
         {
-            return false;
+            // Check flags
+            if (flags.HasFlag(EndPowerFlags.ExitWorld) ||
+                flags.HasFlag(EndPowerFlags.Unassign) ||
+                flags.HasFlag(EndPowerFlags.Interrupting) ||
+                flags.HasFlag(EndPowerFlags.ChanneledLoopEnd) ||
+                flags.HasFlag(EndPowerFlags.Force))
+            {
+                return false;
+            }
+
+            // Check activation phase
+            if (_activationPhase == PowerActivationPhase.Inactive)
+                return false;
+
+            if (_activationPhase == PowerActivationPhase.ChannelStarting && IsTravelPower())
+                return false;
+
+            // Make sure channel end time is > 0
+            TimeSpan channelEndTime = GetChannelEndTime();
+            if (channelEndTime <= TimeSpan.Zero)
+                return false;
+
+            // Schedule end at the end of the loop
+            if (Prototype?.MovementPreventChannelEnd == true)
+                Owner?.Locomotor?.Stop();
+
+            if (_endPowerEvent.IsValid)
+            {
+                _endPowerEvent.Get().Flags |= EndPowerFlags.Force;
+                return Logger.WarnReturn(true,
+                    $"OnEndPowerCheckLoopEnd(): {this} is trying to schedule the loop end of the power but there is already an end scheduled.  Was the power set up properly?");
+            }
+
+            SchedulePowerEnd(channelEndTime, EndPowerFlags.ChanneledLoopEnd);
+            return true;
         }
 
         protected virtual void OnEndPowerConditionalRemove(EndPowerFlags flags)
@@ -1750,6 +1922,11 @@ namespace MHServerEmu.Games.Powers
             // Unassign one-off powers (e.g. throwables)
             if (Prototype.RemovedOnUse && flags.HasFlag(EndPowerFlags.Unassign) == false)
                 Owner.UnassignPower(PrototypeDataRef);
+        }
+
+        protected virtual void OnEndChannelingPhase()
+        {
+
         }
 
         protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 initialTargetPosition, out Vector3 actualTargetPosition,
@@ -2149,24 +2326,6 @@ namespace MHServerEmu.Games.Powers
             //Logger.Debug("ComputeTimeForPowerMovement()");
         }
 
-        private void StartCharging()
-        {
-            // TODO
-            Logger.Debug("StartCharging()");
-        }
-
-        private void StopCharging()
-        {
-            // TODO
-            Logger.Debug("StopCharging()");
-        }
-
-        private void ScheduleChannelStart()
-        {
-            // TODO
-            Logger.Debug("ScheduleChannelStart()");
-        }
-
         private bool CanBeUserCanceledNow()
         {
             // TODO
@@ -2196,6 +2355,33 @@ namespace MHServerEmu.Games.Powers
             }
 
             return success;
+        }
+
+        #region Scheduled Events
+
+        private bool ScheduleChannelStart()
+        {
+            Logger.Debug("ScheduleChannelStart()");
+
+            if (Owner == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Owner == null");
+            if (Game == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Game == null");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): scheduler == null");
+
+            if (_startChannelingEvent.IsValid)
+                scheduler.CancelEvent(_startChannelingEvent);
+
+            TimeSpan channelStartTime = GetChannelStartTime();
+            _activationPhase = PowerActivationPhase.ChannelStarting;
+
+            if (Prototype?.MovementPreventChannelStart == true)
+                Owner.Locomotor?.Stop();
+
+            scheduler.ScheduleEvent(_startChannelingEvent, channelStartTime, _pendingActivationPhaseEvents);
+            _startChannelingEvent.Get().Initialize(this);
+
+            return true;
         }
 
         private bool SchedulePowerEnd(in PowerActivationSettings settings)
@@ -2248,7 +2434,7 @@ namespace MHServerEmu.Games.Powers
         {
             PowerPrototype powerProto = Prototype;
 
-            if (powerProto.ActiveUntilCancelled == false || flags.HasFlag(EndPowerFlags.ChanneledLoopEnd) || flags.HasFlag(EndPowerFlags.ChanneledMinTime))
+            if (powerProto.ActiveUntilCancelled == false || flags.HasFlag(EndPowerFlags.ChanneledLoopEnd) || flags.HasFlag(EndPowerFlags.WaitForMinTime))
             {
                 EventScheduler scheduler = Game.GameEventScheduler;
 
@@ -2263,70 +2449,38 @@ namespace MHServerEmu.Games.Powers
                     return true;
                 }
 
-                scheduler.ScheduleEvent(_endPowerEvent, delay > TimeSpan.Zero ? delay : TimeSpan.FromMilliseconds(1), _pendingEvents2);
+                scheduler.ScheduleEvent(_endPowerEvent, delay > TimeSpan.Zero ? delay : TimeSpan.FromMilliseconds(1), _pendingActivationPhaseEvents);
                 _endPowerEvent.Get().Initialize(this, flags);
             }
 
             return true;
         }
 
-        private void TEMP_SendActivatePowerMessage(in PowerActivationSettings settings)
+        private bool CancelAllScheduledActivations()
         {
-            ActivatePowerMessageFlags flags = ActivatePowerMessageFlags.None;
-            if (settings.TargetEntityId == Owner.Id)
-                flags |= ActivatePowerMessageFlags.TargetIsUser;
+            if (Game == null) return Logger.WarnReturn(false, "CancelAllScheduledActivations(): Game == null");
 
-            if (settings.TriggeringPowerPrototypeRef != PrototypeId.Invalid)
-                flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef;
+            // TODO
 
-            if (settings.TargetPosition == settings.UserPosition)
-                flags |= ActivatePowerMessageFlags.TargetPositionIsUserPosition;
-            else if (settings.TargetPosition != Vector3.Zero)
-                flags |= ActivatePowerMessageFlags.HasTargetPosition;
+            return true;
+        }
 
-            if (settings.MovementTime != TimeSpan.Zero)
-                flags |= ActivatePowerMessageFlags.HasMovementTime;
+        private class StartChannelingEvent : CallMethodEvent<Power>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.StartChanneling();
+        }
 
-            if (settings.VariableActivationTime != TimeSpan.Zero)
-                flags |= ActivatePowerMessageFlags.HasVariableActivationTime;
-
-            if (settings.PowerRandomSeed != 0)
-                flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
-
-            uint fxRandomSeed = settings.FXRandomSeed != 0 ? settings.FXRandomSeed : (uint)Game.Random.Next(1, 10000);
-            flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
-
-            ActivatePowerArchive activatePower = new()
-            {
-                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                Flags = flags,
-                UserEntityId = Owner.Id,
-                PowerPrototypeRef = PrototypeDataRef,
-                UserPosition = settings.UserPosition,
-                FXRandomSeed = fxRandomSeed
-            };
-
-            if (flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
-                activatePower.TriggeringPowerPrototypeRef = settings.TriggeringPowerPrototypeRef;
-
-            if (flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
-                activatePower.TargetPosition = settings.TargetPosition;
-
-            if (flags.HasFlag(ActivatePowerMessageFlags.HasMovementTime))
-                activatePower.MovementTime = settings.MovementTime;
-
-            if (flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
-                activatePower.VariableActivationTime = settings.VariableActivationTime;
-
-            if (flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
-                activatePower.PowerRandomSeed = settings.PowerRandomSeed;
-
-            Game.NetworkManager.SendMessageToInterested(activatePower.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity, true);
+        private class StopChannelingEvent : CallMethodEvent<Power>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.StopChanneling();
         }
 
         private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
         {
+            public EndPowerFlags Flags { get => _param1; set => _param1 = value; }
             protected override CallbackDelegate GetCallback() => (t, p1) => t.EndPower(p1);
         }
+
+        #endregion
     }
 }
