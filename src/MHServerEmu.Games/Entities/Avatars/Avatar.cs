@@ -142,6 +142,66 @@ namespace MHServerEmu.Games.Entities.Avatars
             CheckContinuousPower();
         }
 
+        public override void UpdateRecurringPowerApplication(PowerApplication powerApplication, PrototypeId powerProtoRef)
+        {
+            base.UpdateRecurringPowerApplication(powerApplication, powerProtoRef);
+
+            // Update target from continuous power
+            if (powerProtoRef == _continuousPowerData.PowerProtoRef)
+            {
+                powerApplication.TargetEntityId = _continuousPowerData.TargetId;
+                powerApplication.TargetPosition = _continuousPowerData.TargetPosition;
+            }
+        }
+
+        public override bool ShouldContinueRecurringPower(Power power, ref EndPowerFlags flags)
+        {
+            if (base.ShouldContinueRecurringPower(power, ref flags) == false)
+                return false;
+
+            if (power == null) return Logger.WarnReturn(false, "ShouldContinueRecurringPower(): power == null");
+
+            AvatarPrototype avatarPrototype = AvatarPrototype;
+            if (avatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
+                return Logger.WarnReturn(false, "ShouldContinueRecurringPower(): avatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty()");
+
+            // Check endurance (mana) costs
+            foreach (PrototypeId primaryManaBehaviorProtoRef in avatarPrototype.PrimaryResourceBehaviors)
+            {
+                var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
+                if (primaryManaBehaviorProto == null)
+                {
+                    Logger.Warn("ShouldContinueRecurringPower(): primaryManaBehaviorProto == null");
+                    continue;
+                }
+
+                float endurance = Properties[PropertyEnum.Endurance, (int)primaryManaBehaviorProto.ManaType];
+                float enduranceCost = power.GetEnduranceCost(primaryManaBehaviorProto.ManaType, true);
+
+                if (endurance < enduranceCost)
+                {
+                    flags |= EndPowerFlags.ExplicitCancel;
+                    flags |= EndPowerFlags.NotEnoughEndurance;
+                    return false;
+                }
+            }
+
+            // Check if continuous power changed
+            if (ContinuousPowerDataRef != power.PrototypeDataRef)
+            {
+                TimeSpan timeSinceLastActivation = Game.CurrentTime - power.LastActivateGameTime;
+
+                if (power.GetChannelMinTime() > timeSinceLastActivation)
+                    return true;
+
+                flags |= EndPowerFlags.ExplicitCancel;
+                return false;
+            }
+
+            // Check power's CanTriggerEval
+            return power.CheckCanTriggerEval();
+        }
+
         public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed, bool notifyOwner = false)
         {
             // Validate client input

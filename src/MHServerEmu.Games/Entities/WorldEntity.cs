@@ -991,6 +991,17 @@ namespace MHServerEmu.Games.Entities
             // NOTE: Overriden in avatar
         }
 
+        public virtual void UpdateRecurringPowerApplication(PowerApplication powerApplication, PrototypeId powerProtoRef)
+        {
+            // NOTE: Overriden in avatar
+        }
+
+        public virtual bool ShouldContinueRecurringPower(Power power, ref EndPowerFlags flags)
+        {
+            // NOTE: Overriden in avatar
+            return true;
+        }
+
         public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
         {
             if (_sendActivatePowerMessageEvent.IsValid) return false;

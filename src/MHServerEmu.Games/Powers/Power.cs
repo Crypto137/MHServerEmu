@@ -131,8 +131,8 @@ namespace MHServerEmu.Games.Powers
                     RemoveKeyword(keywordProtoRef);
             }
 
-            if (GetChargingTime() > TimeSpan.Zero)
-                Logger.Debug($"ChargingTime = {GetChargingTime()} ({this})");
+            if (IsRecurring())
+                Logger.Debug($"IsRecurring - {Prototype}");
 
             return true;
         }
@@ -267,12 +267,6 @@ namespace MHServerEmu.Games.Powers
                 return null;
 
             return ultimateOwner;
-        }
-
-        public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
-        {
-            return PowerUseResult.Success;
-            //throw new NotImplementedException();
         }
 
         public PowerUseResult Activate(ref PowerActivationSettings settings)
@@ -471,9 +465,36 @@ namespace MHServerEmu.Games.Powers
         {
             Logger.Debug($"ApplyPower(): {Prototype}");
 
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "ApplyPower(): powerProto == null");
+
             HandleTriggerPowerEventOnContactTime();
 
+            FinishApplyPower(powerApplication, powerProto, true);
             return true;
+        }
+
+        private bool FinishApplyPower(PowerApplication powerApplication, PowerPrototype powerProto, bool success)
+        {
+            // Helper function for ApplyPower that either reschedules application or ends recurring powers
+            if (powerProto.IsRecurring == false)
+                return success;
+
+            EndPowerFlags flags = EndPowerFlags.None;
+
+            if (success && Owner.ShouldContinueRecurringPower(this, ref flags))
+            {
+                // Schedule a new application for the next loop
+                PowerApplication newApplication = new(powerApplication);
+                SchedulePowerApplication(newApplication, GetChannelLoopTime());
+            }
+            else
+            {
+                // End power
+                SchedulePowerEnd(TimeSpan.Zero, flags, true);
+            }
+
+            return success;
         }
 
         public bool EndPower(EndPowerFlags flags)
@@ -668,6 +689,31 @@ namespace MHServerEmu.Games.Powers
             // TODO
         }
 
+        public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
+        {
+            // TODO
+            return PowerUseResult.Success;
+        }
+
+        public bool CheckCanTriggerEval()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "powerProto == null");
+
+            if (powerProto.EvalCanTrigger == null)
+                return true;
+
+            if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+            contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
+
+            return Eval.RunBool(powerProto.EvalCanTrigger, contextData);
+        }
+
         public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
             ref Vector3? resultPosition, bool forceDoNotMoveToExactTargetLocation = false, float rangeOverride = 0f)
         {
@@ -824,6 +870,20 @@ namespace MHServerEmu.Games.Powers
         public static bool IsToggledOn(PowerPrototype powerProto, WorldEntity owner)
         {
             return owner.Properties[PropertyEnum.PowerToggleOn, powerProto.DataRef];
+        }
+
+        public float GetEnduranceCost(ManaType manaType, bool useSecondaryResource)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetEnduranceCost(): powerProto == null");
+            return GetEnduranceCost(Properties, manaType, powerProto, Owner, useSecondaryResource);
+        }
+
+        public static float GetEnduranceCost(PropertyCollection powerProperties, ManaType manaType, PowerPrototype powerProto, 
+            WorldEntity owner, bool useSecondaryResource)
+        {
+            // TODO
+            return 0f;
         }
 
         public bool HasEnduranceCostRecurring()
@@ -1983,6 +2043,20 @@ namespace MHServerEmu.Games.Powers
         protected virtual bool OnEndPowerRemoveApplications(EndPowerFlags flags)
         {
             // NOTE: The return value in this method is reversed (i.e. end power proceeds when this returns false)
+            if (flags.HasFlag(EndPowerFlags.ExplicitCancel) || flags.HasFlag(EndPowerFlags.Force)
+                || IsRecurring() || Properties[PropertyEnum.PowerActiveUntilProjExpire])
+            {
+                // Why are these verifies returning false and not true? Is this a bug?
+                if (Game == null) return Logger.WarnReturn(false, "OnEndPowerRemoveApplications(): Game == null");
+                if (Game.GameEventScheduler == null) return Logger.WarnReturn(false, "Game.GameEventScheduler == null");
+
+                Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
+            }
+            else if (_pendingActivationPhaseEvents.IsEmpty == false)
+            {
+                Logger.Warn($"OnEndPowerRemoveApplications(): _pendingPowerApplicationEvents is not empty! endPowerFlags=[{flags}] power=[{this}]");
+            }
+
             return false;
         }
 
