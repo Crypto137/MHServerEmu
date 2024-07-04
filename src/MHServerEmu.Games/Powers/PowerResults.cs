@@ -28,8 +28,8 @@ namespace MHServerEmu.Games.Powers
         HasTransferToEntityId       = 1 << 11
     }
 
-    // Inherits from PowerEffectsPacket class
-    // Related to PowerPayload?
+    // Power data pipeline: PowerActivationSettings -> PowerApplication -> PowerPayload -> PowerResults
+    // Should inherit from the PowerEffectsPacket class
     public class PowerResults : ISerialize
     {
         private static readonly Random Random = new();  // For testing, remove this later

@@ -467,6 +467,15 @@ namespace MHServerEmu.Games.Powers
             Activate(ref settings);
         }
 
+        public virtual bool ApplyPower(PowerApplication powerApplication)
+        {
+            Logger.Debug($"ApplyPower(): {Prototype}");
+
+            HandleTriggerPowerEventOnContactTime();
+
+            return true;
+        }
+
         public bool EndPower(EndPowerFlags flags)
         {
             Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
@@ -671,7 +680,7 @@ namespace MHServerEmu.Games.Powers
             if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): powerProto == null");
 
             resultPosition = targetPosition;
-            
+
             if (powerProto is MovementPowerPrototype movementPowerProto)
             {
                 if (movementPowerProto.PowerMovementPathPct > 0f || movementPowerProto.TeleportMethod != TeleportMethodType.None)
@@ -1851,7 +1860,62 @@ namespace MHServerEmu.Games.Powers
             // Trigger events (this relies on the copy of setting we just made)
             HandleTriggerPowerEventOnPowerStart();
 
+            // Get activation time to determine how much to wait before applying the power
+            TimeSpan activationTime = GetActivationTime();
+
+            // Copy settings data to a power application instance
+            PowerApplication powerApplication = new()
+            {
+                UserEntityId = Owner.Id,
+                UserPosition = settings.UserPosition,
+                MovementSpeed = settings.MovementSpeed,
+                MovementTime = settings.MovementTime,
+                VariableActivationTime = settings.VariableActivationTime,
+                PowerRandomSeed = settings.PowerRandomSeed,
+                FXRandomSeed = settings.FXRandomSeed,
+                ItemSourceId = settings.ItemSourceId,
+                SkipRangeCheck = settings.Flags.HasFlag(PowerActivationSettingsFlags.SkipRangeCheck)
+            };
+
+            if (GetTargetingShape() == TargetingShapeType.BeamSweep)
+                powerApplication.BeamSweepVar = 0;
+
+            if (IsProcEffect() == false)
+            {
+                if (Owner == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): Owner == null");
+                powerApplication.TargetEntityId = settings.TargetEntityId;
+                powerApplication.TargetPosition = settings.TargetPosition;
+            }
+            else
+            {
+                if (activationTime != TimeSpan.Zero)
+                {
+                    return Logger.WarnReturn(PowerUseResult.GenericError,
+                        $"ActivateInternal(): Power {this} is a proc effect, but it has an application delay of {activationTime.TotalMilliseconds} ms.");
+                }
+
+                WorldEntity target = null;
+                if (settings.TargetEntityId != Entity.InvalidId)
+                    target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+
+                if (FillOutProcEffectPowerApplication(target, in settings, powerApplication) == false)
+                    return PowerUseResult.GenericError;
+            }
+
+            powerApplication.UnknownTimeSpan = settings.UnknownTimeSpan;
+
+            // Schedule the application or apply it straight away
+            if (activationTime > TimeSpan.Zero)
+                SchedulePowerApplication(powerApplication, activationTime);
+            else
+                ApplyPower(powerApplication);
+
             return PowerUseResult.Success;
+        }
+
+        protected bool ApplyInternal(PowerApplication application)
+        {
+            return true;
         }
 
         protected virtual bool EndPowerInternal(EndPowerFlags flags)
@@ -2544,6 +2608,12 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool FillOutProcEffectPowerApplication(WorldEntity target, in PowerActivationSettings settings, PowerApplication powerApplication)
+        {
+            // TODO
+            return true;
+        }
+
         private bool CanBeUserCanceledNow()
         {
             PowerPrototype powerProto = Prototype;
@@ -2628,6 +2698,24 @@ namespace MHServerEmu.Games.Powers
 
             scheduler.ScheduleEvent(_startChannelingEvent, channelStartTime, _pendingActivationPhaseEvents);
             _startChannelingEvent.Get().Initialize(this);
+
+            return true;
+        }
+
+        private bool SchedulePowerApplication(PowerApplication powerApplication, TimeSpan applicationDelay)
+        {
+            if (powerApplication == null) return Logger.WarnReturn(false, "SchedulePowerApplication(): powerApplication == null");
+            if (applicationDelay <= TimeSpan.Zero) return Logger.WarnReturn(false, "SchedulePowerApplication(): applicationDelay <= TimeSpan.Zero");
+            if (Owner == null) return Logger.WarnReturn(false, "SchedulePowerApplication(): Owner == null");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "SchedulePowerApplication(): scheduler == null");
+
+            EventPointer<PowerApplyEvent> powerApplyEvent = new();
+            scheduler.ScheduleEvent(powerApplyEvent, applicationDelay, _pendingPowerApplicationEvents);
+            powerApplyEvent.Get().Initialize(this, powerApplication);
+
+            Logger.Debug($"SchedulePowerApplication(): {applicationDelay.TotalMilliseconds} ms");
 
             return true;
         }
@@ -2726,6 +2814,31 @@ namespace MHServerEmu.Games.Powers
         private class StopChannelingEvent : CallMethodEvent<Power>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.StopChanneling();
+        }
+
+        private class PowerApplyEvent : ScheduledEvent
+        {
+            private static readonly Logger Logger = LogManager.CreateLogger();
+
+            private Power _power;
+            private PowerApplication _powerApplication;
+
+            public void Initialize(Power power, PowerApplication powerApplication)
+            {
+                _power = power;
+                _powerApplication = powerApplication;
+            }
+
+            public override bool OnTriggered()
+            {
+                if (_power == null) return Logger.WarnReturn(false, "OnTriggered(): _power == null");
+                if (_powerApplication == null) return Logger.WarnReturn(false, "OnTriggered(): _powerApplication == null");
+
+                if (_power.Owner.IsSimulated)
+                    _power.ApplyPower(_powerApplication);
+
+                return true;
+            }
         }
 
         private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
