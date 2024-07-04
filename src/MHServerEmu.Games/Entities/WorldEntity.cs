@@ -1400,6 +1400,11 @@ namespace MHServerEmu.Games.Entities
                 case PropertyEnum.HealthMax:
                     Properties[PropertyEnum.HealthMaxOther] = newValue;
                     break;
+
+                case PropertyEnum.NoEntityCollide:
+                    _flags |= EntityFlags.NoCollide;
+                    // EnableNavigationInfluence DisableNavigationInfluence
+                    break;
             }
         }
 

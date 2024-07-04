@@ -146,6 +146,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
                         if (locomotor.PathToWaypoints(waypoints) == false)
                             locomotor.FollowEntity(flankTarget.Id, followRange);
+                        agent.DrawPath(EntityHelper.TestOrb.XRay);
                     }
                     else
                         return StaticBehaviorReturnType.Failed;

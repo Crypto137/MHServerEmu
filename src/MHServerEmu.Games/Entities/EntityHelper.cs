@@ -43,7 +43,8 @@ namespace MHServerEmu.Games.Entities
                 Lifespan = TimeSpan.FromSeconds(3),
                 Properties = new()
                 {
-                    [PropertyEnum.AIStartsEnabled] = false
+                    [PropertyEnum.AIStartsEnabled] = false,
+                    [PropertyEnum.NoEntityCollide] = true,
                 }
             };
             var game = region.Game;
