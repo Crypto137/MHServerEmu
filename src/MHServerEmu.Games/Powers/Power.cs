@@ -1209,6 +1209,54 @@ namespace MHServerEmu.Games.Powers
             return TargetsAOE() ? GetAOERadius() : GetRange();
         }
 
+        public float GetKnockbackDistance(WorldEntity target)
+        {
+            if (Owner == null) return Logger.WarnReturn(0f, "GetKnockbackDistance(): Owner == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "GetKnockbackDistance(): powerProto == null");
+
+            return GetKnockbackDistance(target, Owner.Id, powerProto, Properties);
+        }
+
+        public static float GetKnockbackDistance(WorldEntity target, ulong userId, PowerPrototype powerProto,
+            PropertyCollection powerProperties, Vector3 secondaryTargetPosition = default)
+        {
+            if (userId == Entity.InvalidId) return Logger.WarnReturn(0f, "GetKnockbackDistance(): userId == Entity.InvalidId");
+
+            Game game = target.Game;
+            if (game == null) return Logger.WarnReturn(0f, "GetKnockbackDistance(): game == null");
+
+            // Calculate knockback distance
+            float knockbackDistance = 0f;
+
+            if (powerProperties.HasProperty(PropertyEnum.KnockbackToSource))
+            {
+                WorldEntity user = game.EntityManager.GetEntity<WorldEntity>(userId);
+                if (user != null)
+                {
+                    float distanceToTarget = Vector3.Distance2D(target.RegionLocation.Position, user.RegionLocation.Position);
+                    float combinedRadiuses = target.Bounds.Radius + user.Bounds.Radius;
+                    knockbackDistance = -distanceToTarget + combinedRadiuses + powerProperties[PropertyEnum.KnockbackDistance];
+                }
+            }
+            else if (powerProto is MovementPowerPrototype movementPowerProto && movementPowerProto.MoveToSecondaryTarget)
+            {
+                float distanceToSecondaryTarget = Vector3.Distance2D(target.RegionLocation.Position, secondaryTargetPosition);
+                knockbackDistance = distanceToSecondaryTarget + powerProperties[PropertyEnum.KnockbackDistance];
+            }
+            else
+            {
+                knockbackDistance = powerProperties[PropertyEnum.KnockbackDistance];
+            }
+
+            // Apply knockback resist
+            if (target.Id != userId)
+                knockbackDistance *= Math.Clamp(1f - target.Properties[PropertyEnum.KnockbackResist], 0f, 1f);
+
+            return knockbackDistance;
+        }
+
         public float GetProjectileSpeed(float distance)
         {
             PowerPrototype powerProto = Prototype;
@@ -2360,14 +2408,140 @@ namespace MHServerEmu.Games.Powers
 
         private void GenerateMovementPathToTarget(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
         {
-            // TODO
-            Logger.Debug("GenerateMovementPathToTarget()");
+            Vector3? resultPosition = settings.TargetPosition;
+            RegionLocation regionLocation = new(Owner.RegionLocation);
+            regionLocation.SetPosition(settings.UserPosition);
+
+            PowerPositionSweepResult result = PowerPositionSweepInternal(regionLocation, settings.TargetPosition,
+                settings.TargetEntityId, ref resultPosition, false, false);
+
+            if (result == PowerPositionSweepResult.Clipped)
+            {
+                if (movementPowerProto.MoveFullDistance)
+                {
+                    Vector3.SafeNormalAndLength2D(resultPosition.Value - settings.UserPosition, out Vector3 resultNormal, out float resultLength);
+                    if (resultLength > 0f)
+                        resultPosition += resultNormal * Owner.Bounds.Radius * 0.5f;
+                }
+
+                // Update target position in the settings
+                settings.TargetPosition = RegionLocation.ProjectToFloor(Owner.Region, Owner.Cell, resultPosition.Value);
+            }
         }
 
-        private void ComputeTimeForPowerMovement(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
+        private bool ComputeTimeForPowerMovement(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
         {
-            // TODO
-            //Logger.Debug("ComputeTimeForPowerMovement()");
+            if (Owner == null) return Logger.WarnReturn(false, "ComputeTimeForPowerMovement(): Owner == null");
+
+            // Claer movement time for non-movement powers
+            if (movementPowerProto == null)
+            {
+                settings.MovementSpeed = 0f;
+                settings.MovementTime = TimeSpan.Zero;
+                return true;
+            }
+
+            // Calculate distance
+            float distance = 0f;
+            /* Paths are generated in client-only code, so the server most likely does not need this
+            if (settings.GeneratedPath != null)
+            {
+                distance = settings.GeneratedPath.Path.AccurateTotalDistance();
+                if (movementPowerProto.MoveFullDistance)
+                    distance = MathF.Max(distance, GetKnockbackDistance(Owner));
+            } */
+
+            if (movementPowerProto.TeleportMethod == TeleportMethodType.Phase)
+            {
+                float distanceToTarget = Vector3.Distance2D(settings.UserPosition, settings.TargetPosition);
+                distance = MathF.Max(movementPowerProto.MoveMinDistance, distanceToTarget);
+            }
+            else
+            {
+                if (movementPowerProto.UserNoEntityCollide || movementPowerProto.MoveFullDistance)
+                {
+                    float minDistance;
+                    if (movementPowerProto.NoCollideIncludesTarget == false && settings.TargetEntityId != Entity.InvalidId)
+                        minDistance = 0f;
+                    else if (movementPowerProto.MoveMinDistance > 0)
+                        minDistance = movementPowerProto.MoveMinDistance;
+                    else
+                        minDistance = GetKnockbackDistance(Owner);
+
+                    float distanceToTarget = Vector3.Distance2D(settings.UserPosition, settings.TargetPosition);
+
+                    distance = MathF.Max(minDistance, distanceToTarget);
+                }
+                else
+                {
+                    Region region = Owner.Region;
+                    if (region == null) return Logger.WarnReturn(false, "ComputeTimeForPowerMovement(): region == null");
+
+                    Vector3 targetPosition = settings.TargetPosition;   // Remember target position before sweeping
+                    Vector3? resultHitPosition = null;
+
+                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(settings.UserPosition, settings.TargetPosition, Owner,
+                        Entity.InvalidId, false, 0f, ref resultHitPosition);
+
+                    distance = Vector3.Distance2D(settings.UserPosition, targetPosition);
+                    if (firstHitEntity == null)
+                        distance = MathF.Max(movementPowerProto.MoveMinDistance, distance);
+                }
+            }
+
+            // Calculate movement speed override
+            float movementSpeedOverride = 0f;
+
+            Locomotor ownerLoco = Owner.Locomotor;
+            if (ownerLoco == null) return Logger.WarnReturn(false, "ComputeTimeForPowerMovement(): ownerLoco == null");
+
+            float defaultRunSpeed = ownerLoco.DefaultRunSpeed;
+
+            if (movementPowerProto.EvalUserMoveSpeed != null)
+            {
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+
+                EvalContextData contextData = new(Game);
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                contextData.SetVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
+                contextData.SetVar_Float(EvalContext.Var1, defaultRunSpeed);
+
+                movementSpeedOverride = Eval.RunFloat(movementPowerProto.EvalUserMoveSpeed, contextData);
+            }
+
+            if (Segment.IsNearZero(movementSpeedOverride))
+                movementSpeedOverride = defaultRunSpeed;
+
+            if (movementSpeedOverride <= 0f)
+                return Logger.WarnReturn(false, $"ComputeTimeForPowerMovement(): Movement power has no movement speed set - {movementPowerProto}");
+
+            // Set movement time fields in settings
+            if (movementPowerProto.IsHighFlyingPower)
+            {
+                settings.MovementSpeed = movementSpeedOverride;
+                settings.MovementTime = TimeSpan.Zero;
+            }
+            else if (movementPowerProto.ConstantMoveTime)
+            {
+                // Movement time here needs to be set first because it is used to calculate movement speed
+                settings.MovementTime = GetFullExecutionTime() - GetActivationTime();
+
+                float movementTimeSeconds = (float)settings.MovementTime.TotalSeconds;
+                settings.MovementSpeed = movementTimeSeconds > 0f ? distance / movementTimeSeconds : 0f;     // Avoid division by 0 / negative
+            }
+            else if (movementPowerProto.ChanneledMoveTime)
+            {
+                settings.MovementSpeed = movementSpeedOverride;
+                settings.MovementTime = GetFullExecutionTime() - GetActivationTime();
+            }
+            else
+            {
+                settings.MovementSpeed = movementSpeedOverride;
+                settings.MovementTime = TimeSpan.FromSeconds(distance / movementSpeedOverride);
+            }
+
+            return true;
         }
 
         private bool CanBeUserCanceledNow()
