@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Powers
             if (otherEntityBoundsProto == null)
                 return false;
 
-            return (1 << (int)otherEntityBoundsProto.BlocksMovementPowers) != 0;
+            return ((1 << (int)otherEntityBoundsProto.BlocksMovementPowers) & _blockTypeFlags) != 0;
         }
     }
 }
