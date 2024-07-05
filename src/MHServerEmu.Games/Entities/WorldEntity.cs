@@ -120,6 +120,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
         public bool IsGlobalEventVendor { get; internal set; }
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
+        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
 
         public WorldEntity(Game game) : base(game)
         {

@@ -2030,20 +2030,25 @@ namespace MHServerEmu.Games.Powers
                 //Logger.Debug($"targetList[{i}]: {target}");
 
                 // Quick hack for showing damage numbers
-                if (target != Owner && Owner.IsHostileTo(target))
-                {
-                    PowerResults results = new()
-                    {
-                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                        MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
-                        PowerPrototypeRef = PrototypeDataRef,
-                        PowerOwnerEntityId = Owner.Id,
-                        TargetEntityId = target.Id,
-                        DamagePhysical = (uint)Game.Random.Next(1, 100),
-                    };
 
-                    Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
-                }
+                // Skip powers that are not supposed to be dealing damage
+                if (Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Physical] == 0f &&
+                    Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Energy] == 0f &&
+                    Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Mental] == 0f)
+                    continue;
+
+                // Send power results
+                PowerResults results = new()
+                {
+                    ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
+                    PowerPrototypeRef = PrototypeDataRef,
+                    PowerOwnerEntityId = Owner.Id,
+                    TargetEntityId = target.Id,
+                    DamagePhysical = (uint)Game.Random.Next(1, 100),
+                };
+
+                Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
             return true;
