@@ -3,11 +3,13 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
@@ -792,13 +794,101 @@ namespace MHServerEmu.Games.Powers
             return result == PowerPositionSweepResult.Success;
         }
 
+        public bool GetTargets(List<WorldEntity> targetList, WorldEntity target, in Vector3 targetPosition, int randomSeed = 0, int beamSweepSlice = -1)
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "GetTargets(): Owner == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "GetTargets(): powerProto == null");
+
+            if (Owner.IsInWorld == false)
+                Logger.WarnReturn(false, $"GetTargets(): Entity {Owner} getting targets for power {this} is not in the world.");
+
+            return GetTargets(targetList, Game, powerProto, Owner.Properties, target, targetPosition, Owner.RegionLocation.Position,
+                GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
+        }
+
+        public static bool GetTargets(List<WorldEntity> targetList, Game game, PowerPrototype powerProto, PropertyCollection properties,
+            WorldEntity target, in Vector3 targetPosition, in Vector3 userPosition, float range, ulong regionId, ulong ownerId,
+            ulong ultimateOwnerId, AlliancePrototype userAllianceProto, int beamSweepSlice, TimeSpan executionTime, int randomSeed)
+        {
+            // Some more validation
+            if (game == null) return Logger.WarnReturn(false, "GetTargets(): game == null");
+
+            WorldEntity owner = game.EntityManager.GetEntity<WorldEntity>(ownerId);
+
+            TargetingStylePrototype targetingStyle = powerProto.GetTargetingStyle();
+            if (targetingStyle == null) return Logger.WarnReturn(false, "GetTargets(): targetingStyle == null");
+
+            TargetingReachPrototype targetingReach = powerProto.GetTargetingReach();
+            if (targetingReach == null) return Logger.WarnReturn(false, "GetTargets(): targetingReach == null");
+            
+            // Add targets based on targeting style / reach
+            if (targetingStyle.TargetingShape == TargetingShapeType.Self)
+            {
+                if (owner != null)
+                    targetList.Add(owner);
+            }
+            else if (targetingStyle.TargetingShape == TargetingShapeType.SingleTargetOwner)
+            {
+                WorldEntity ultimateOwner = ultimateOwnerId != ownerId ? game.EntityManager.GetEntity<WorldEntity>(ultimateOwnerId) : owner;
+                if (ultimateOwner != null)
+                {
+                    WorldEntity mostResponsiblePowerUser = ultimateOwner.GetMostResponsiblePowerUser<Agent>();
+                    if (mostResponsiblePowerUser != null)
+                        targetList.Add(mostResponsiblePowerUser);
+                }
+            }
+            else if (targetingStyle.TargetingShape == TargetingShapeType.TeamUp)
+            {
+                if (owner is Avatar avatar)
+                {
+                    Agent teamUpAgent = avatar.CurrentTeamUpAgent;
+                    if (teamUpAgent != null)
+                        targetList.Add(teamUpAgent);
+                }
+            }
+            else if (targetingReach.TargetsEntitiesInInventory != InventoryConvenienceLabel.None)
+            {
+                WorldEntity ultimateOwner = ultimateOwnerId != ownerId ? game.EntityManager.GetEntity<WorldEntity>(ultimateOwnerId) : owner;
+                if (ultimateOwner != null)
+                {
+                    WorldEntity mostResponsiblePowerUser = ultimateOwner.GetMostResponsiblePowerUser<Agent>();
+                    if (mostResponsiblePowerUser != null)
+                        GetTargetsFromInventory(targetList, game, mostResponsiblePowerUser, target, powerProto, userAllianceProto, targetingReach.TargetsEntitiesInInventory);
+                }
+            }
+            else if (targetingStyle.TargetingShape == TargetingShapeType.SingleTarget ||
+                targetingStyle.TargetingShape == TargetingShapeType.SingleTargetRandom)
+            {
+                if (target != null && IsValidTarget(powerProto, owner, userAllianceProto, target)
+                    && (properties[PropertyEnum.PayloadSkipRangeCheck] || IsInApplicationRange(target, userPosition, ownerId, range, powerProto)))
+                {
+                    targetList.Add(target);
+                }
+                else if (targetingStyle.NeedsTarget == false && targetingReach.Melee)
+                {
+                    GetValidMeleeTarget(targetList, powerProto, userAllianceProto, owner, targetPosition);
+                }
+            }
+            else if (TargetsAOE(powerProto))
+            {
+                GetAOETargets(targetList, game, powerProto, range, properties, target, owner, in targetPosition,
+                    in userPosition, regionId, ownerId, userAllianceProto, beamSweepSlice, executionTime, randomSeed);
+            }
+
+            return true;
+        }
+
         public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
         {
-            throw new NotImplementedException();
+            // TODO
+            return 0;
         }
 
         public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
         {
+            // TODO
             return true;
         }
 
@@ -841,14 +931,13 @@ namespace MHServerEmu.Games.Powers
         public static bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 ownerPosition, Vector3 targetPosition, float radius,
             int beamSlice, TimeSpan totalSweepTime, PowerPrototype powerProto, PropertyCollection properties)
         {
-            //Logger.Debug("IsTargetInAOE()");
             var styleProto = powerProto.GetTargetingStyle();
             if (styleProto == null) return Logger.WarnReturn(false, $"IsTargetInAOE(): Unable to get the prototype for power. Prototype:{powerProto} ");
             Vector3 position = targetPosition;
             if (styleProto.AOESelfCentered && styleProto.RandomPositionRadius == 0)
                 position = ownerPosition + styleProto.GetOwnerOrientedPositionOffset(owner);
 
-            bool result = styleProto.TargetingShape switch
+            return styleProto.TargetingShape switch
             {
                 TargetingShapeType.ArcArea      => IsTargetInArc(target, owner, radius, position, targetPosition, powerProto, styleProto, properties),
                 TargetingShapeType.BeamSweep    => IsTargetInBeamSlice(target, owner, radius, position, targetPosition, beamSlice, totalSweepTime, powerProto, styleProto),
@@ -858,8 +947,6 @@ namespace MHServerEmu.Games.Powers
                 TargetingShapeType.WedgeArea    => IsTargetInWedge(target, owner, radius, position, targetPosition, powerProto, styleProto),
                 _ => Logger.WarnReturn(false, $"IsTargetInAOE(): Targeting shape ({styleProto.TargetingShape}) for this power hasn't been implemented! Prototype: {powerProto}"),
             };
-            Logger.Debug($"IsTargetInAOE() {styleProto.TargetingShape} {result}");
-            return result;
         }
 
         #region State Accessors
@@ -2049,11 +2136,20 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // Quick hack for showing damage numbers
-            if (powerApplication.TargetEntityId != Entity.InvalidId && powerApplication.TargetEntityId != Owner.Id)
+            // Find targets for this power application
+            List<WorldEntity> targetList = new();
+            WorldEntity primaryTarget = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
+
+            GetTargets(targetList, primaryTarget, powerApplication.TargetPosition, (int)powerApplication.PowerRandomSeed);
+
+            for (int i = 0; i < targetList.Count; i++)
             {
-                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
-                if (Owner.IsHostileTo(target))
+                WorldEntity target = targetList[i];
+
+                //Logger.Debug($"targetList[{i}]: {target}");
+
+                // Quick hack for showing damage numbers
+                if (target != Owner && Owner.IsHostileTo(target))
                 {
                     PowerResults results = new()
                     {
@@ -2061,7 +2157,7 @@ namespace MHServerEmu.Games.Powers
                         MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
                         PowerPrototypeRef = PrototypeDataRef,
                         PowerOwnerEntityId = Owner.Id,
-                        TargetEntityId = powerApplication.TargetEntityId,
+                        TargetEntityId = target.Id,
                         DamagePhysical = (uint)Game.Random.Next(1, 100),
                     };
 
@@ -2327,6 +2423,24 @@ namespace MHServerEmu.Games.Powers
             range = MathF.Max(userRadius, range) + 5f;
 
             return (distance - range) <= 0f;
+        }
+
+        private static bool IsInApplicationRange(WorldEntity target, in Vector3 userPosition, ulong userEntityId, float range, PowerPrototype powerProto)
+        {
+            if (target == null) return Logger.WarnReturn(false, "IsInApplicationRange(): target == null");
+
+            float userRadius = 0f;
+            if (userEntityId != Entity.InvalidId)
+            {
+                WorldEntity user = target.Game.EntityManager.GetEntity<WorldEntity>(userEntityId);
+                if (user != null)
+                    userRadius = user.Bounds.Radius;
+            }
+
+            Vector3 targetPosition = target.RegionLocation.Position;
+            float targetRadius = target.Bounds.Radius;
+
+            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, RangeCheckType.Application, targetRadius);
         }
 
         private PowerPositionSweepResult PowerPositionSweepInternal(RegionLocation regionLocation, Vector3 targetPosition,
@@ -2628,6 +2742,145 @@ namespace MHServerEmu.Games.Powers
             }
 
             return Vector3.Normalize(direction);
+        }
+
+        private static bool GetAOETargets(List<WorldEntity> targetList, Game game, PowerPrototype powerProto, float radius, 
+            PropertyCollection properties, WorldEntity primaryTarget, WorldEntity owner, in Vector3 targetPosition, in Vector3 userPosition,
+            ulong regionId, ulong userEntityId, AlliancePrototype userAllianceProto, int beamSweepSlice, TimeSpan executionTime, int randomSeed)
+        {
+            //Logger.Debug($"GetAOETargets(): {powerProto}");
+
+            // Validation
+            if (game == null) return Logger.WarnReturn(false, "GetAOETargets(): game == null");
+            
+            TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
+            if (reachProto == null) return Logger.WarnReturn(false, "GetAOETargets(): reachProto == null");
+
+            TargetingStylePrototype styleProto = powerProto.GetTargetingStyle();
+            if (styleProto == null) return Logger.WarnReturn(false, "GetAOETargets(): styleProto == null");
+
+            // Get AOE position and direction
+            Vector3 aoePosition;
+            if (styleProto.AOESelfCentered && styleProto.RandomPositionRadius == 0)
+                aoePosition = userPosition + styleProto.GetOwnerOrientedPositionOffset(owner);
+            else
+                aoePosition = targetPosition;
+
+            Vector3 aoeDirection = GetDirectionCheckData(styleProto, owner, aoePosition, targetPosition);
+
+            // Get user
+            WorldEntity user = (owner?.Id == userEntityId) ? owner : game.EntityManager.GetEntity<WorldEntity>(userEntityId);
+
+            // Check primary target
+            if (primaryTarget != null &&
+                primaryTarget.IsInWorld &&                    
+                reachProto.ExcludesPrimaryTarget == false &&
+                ValidateAOETarget(primaryTarget, powerProto, user, userPosition, userAllianceProto, reachProto.RequiresLineOfSight) &&
+                IsTargetInAOE(primaryTarget, owner, userPosition, targetPosition, radius, beamSweepSlice, executionTime, powerProto, properties))
+            {
+                targetList.Add(primaryTarget);
+            }
+
+            // Check if need need to find only a single target and we found it
+            if (targetList.Count == 1 && powerProto.MaxAOETargets == 1)
+                return true;
+
+            // Get region
+            RegionManager regionManager = game.RegionManager;
+            if (regionManager == null) return Logger.WarnReturn(false, "GetAOETargets(): regionManager == null");
+            Region region = regionManager.GetRegion(regionId);
+            if (region == null) return Logger.WarnReturn(false, "GetAOETargets(): region == null");
+
+            // Look for potential targets in the AOE shape
+            List<WorldEntity> potentialTargetList = new(256);
+            GetPotentialTargetsInShape(region, radius, in aoePosition, in aoeDirection, powerProto, potentialTargetList);
+
+            // Set up random
+            if (reachProto.RandomAOETargets && randomSeed == 0)
+            {
+                return Logger.WarnReturn(false,
+                    "GetAOETargets(): A power has RandomAOETargets set true, but no random seed to do it with!\n Power: {powerProto}\n Owner: {owner}\n");
+            }
+
+            GRandom random = new(randomSeed);
+
+            // Validate potential targets
+            int index = 0;
+            while (GetNextTargetInAOE(potentialTargetList, ref index, reachProto.RandomAOETargets, random, out WorldEntity target) == true)
+            {
+                if (target == null)
+                {
+                    Logger.Warn($"GetAOETargets(): Invalid target in region! {region}");
+                    continue;
+                }
+
+                // Primary target should already be validated above
+                if (target == primaryTarget)
+                    continue;
+
+                if (ValidateAOETarget(target, powerProto, user, userPosition, userAllianceProto, reachProto.RequiresLineOfSight) == false)
+                    continue;
+
+                if (styleProto.TargetingShape == TargetingShapeType.CircleArea ||
+                    IsTargetInAOE(target, owner, aoePosition, targetPosition, radius, beamSweepSlice, executionTime, powerProto, properties))
+                {
+                    targetList.Add(target);
+
+                    // Break out if we don't need any more targets
+                    if (powerProto.MaxAOETargets > 0 && targetList.Count >= powerProto.MaxAOETargets)
+                        break;
+                }
+            }     
+
+            return true;
+        }
+
+        private static void GetPotentialTargetsInShape(Region region, float radius, in Vector3 position, in Vector3 direction,
+            PowerPrototype powerProto, List<WorldEntity> potentialTargetList)
+        {
+            if (GetTargetingShape(powerProto) == TargetingShapeType.WedgeArea)
+            {
+                // TODO: VectorMath::AABBFromWedge()
+                Logger.Warn("AABBFromWedge(): Not implemented");
+                return;
+            }
+
+            region.GetEntitiesInVolume(potentialTargetList, new Sphere(position, radius), new(Generators.EntityRegionSPContextFlags.ActivePartition));
+        }
+
+        private static bool GetNextTargetInAOE(List<WorldEntity> potentialTargetList, ref int index, bool pickRandom, GRandom random, out WorldEntity target)
+        {
+            target = null;
+
+            if (potentialTargetList.Count == 0 || index >= potentialTargetList.Count)
+                return false;
+
+            if (pickRandom)
+            {
+                // Pick a random element and remove it from the list if requested
+                int randomIndex = random.Next(0, potentialTargetList.Count - 1);
+                target = potentialTargetList[randomIndex];
+                potentialTargetList.RemoveAt(randomIndex);
+                return true;
+            }
+
+            target = potentialTargetList[index];
+            index++;
+            return true;
+        }
+
+        private static void GetTargetsFromInventory(List<WorldEntity> targetList, Game game, WorldEntity user, WorldEntity target,
+            PowerPrototype powerProto, AlliancePrototype userAllianceProto, InventoryConvenienceLabel inventoryConvenienceLabel)
+        {
+            // TODO
+            Logger.Debug($"GetTargetsFromInventory(): {inventoryConvenienceLabel}");
+        }
+
+        private static void GetValidMeleeTarget(List<WorldEntity> targetList, PowerPrototype powerProto, AlliancePrototype userAllianceProto,
+            WorldEntity owner, in Vector3 targetPosition)
+        {
+            // TODO
+            Logger.Debug("GetValidMeleeTarget()");
         }
 
         private void ComputePowerMovementSettings(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
