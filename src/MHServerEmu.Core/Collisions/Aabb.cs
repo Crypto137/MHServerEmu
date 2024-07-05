@@ -215,7 +215,7 @@ namespace MHServerEmu.Core.Collisions
 
         public static Aabb AabbFromWedge(in Vector3 point, in Vector3 direction, float angle, float radius)
         {
-            var wedgeDirection =  Vector3.SafeNormalize(direction) * radius;
+            var wedgeDirection = Vector3.SafeNormalize(direction) * radius;
             float halfAngle = MathHelper.ToRadians(angle / 2.0f);
 
             var circlePoint = wedgeDirection;
@@ -235,7 +235,7 @@ namespace MHServerEmu.Core.Collisions
 
             if (angle < 180.0f)
             {
-                Vector3[] points = { new (0, 0, 0), circlePoint, leftPoint, rightPoint };
+                Vector3[] points = { new(0, 0, 0), circlePoint, leftPoint, rightPoint };
                 return AabbFromPoints(points).Translate(point);
             }
             else
@@ -266,7 +266,6 @@ namespace MHServerEmu.Core.Collisions
 
             return new Aabb(min, max);
         }
-
 
         public bool IsZero() => Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);
         public bool IsValid() => Min.X <= Max.X && Min.Y <= Max.Y && Min.Z <= Max.Z;
