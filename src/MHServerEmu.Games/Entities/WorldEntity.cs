@@ -915,6 +915,16 @@ namespace MHServerEmu.Games.Entities
             return Region.NaviMesh.Contains(position, Bounds.GetRadius(), new DefaultContainsPathFlagsCheck(GetPathFlags()));
         }
 
+        public int GetPowerChargesAvailable(PrototypeId powerProtoRef)
+        {
+            return Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+        }
+
+        public int GetPowerChargesMax(PrototypeId powerProtoRef)
+        {
+            return Properties[PropertyEnum.PowerChargesMax, powerProtoRef];
+        }
+
         public TimeSpan GetAbilityCooldownStartTime(PowerPrototype powerProto)
         {
             return Properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef];

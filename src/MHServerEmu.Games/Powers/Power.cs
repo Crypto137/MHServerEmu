@@ -891,7 +891,7 @@ namespace MHServerEmu.Games.Powers
 
         public TimeSpan GetCooldownTimeRemaining()
         {
-            throw new NotImplementedException();
+            return TimeSpan.Zero;
         }
 
         #endregion
@@ -1796,6 +1796,11 @@ namespace MHServerEmu.Games.Powers
 
             // After facing many challenges, we have reached the end and earned our right to be a continuous power
             return true;
+        }
+
+        public bool IsUseableWhileDead()
+        {
+            return Prototype != null && Prototype.IsUseableWhileDead;
         }
 
         public bool CanBeUsedInRegion(Region region)
