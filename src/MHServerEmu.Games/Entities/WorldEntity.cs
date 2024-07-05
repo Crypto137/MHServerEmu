@@ -986,6 +986,17 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool IsAffectedByPowers()
+        {
+            if (IsAffectedByPowersInternal() == false)
+                return false;
+
+            if (Alliance == null)
+                return false;
+
+            return true;
+        }
+
         public virtual void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
             // NOTE: Overriden in avatar
