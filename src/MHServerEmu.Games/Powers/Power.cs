@@ -2840,8 +2840,11 @@ namespace MHServerEmu.Games.Powers
         {
             if (GetTargetingShape(powerProto) == TargetingShapeType.WedgeArea)
             {
-                // TODO: VectorMath::AABBFromWedge()
-                Logger.Warn("AABBFromWedge(): Not implemented");
+                Aabb aabb = Aabb.AabbFromWedge(position, direction, GetAOEAngle(powerProto), radius);
+                aabb.Max.Z = float.MaxValue;
+                aabb.Min.Z = -float.MaxValue;
+
+                region.GetEntitiesInVolume(potentialTargetList, aabb, new(Generators.EntityRegionSPContextFlags.ActivePartition));
                 return;
             }
 

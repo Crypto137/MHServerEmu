@@ -213,6 +213,60 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
+        public static Aabb AabbFromWedge(in Vector3 point, in Vector3 direction, float angle, float radius)
+        {
+            var wedgeDirection = Vector3.SafeNormalize(direction) * radius;
+            float halfAngle = MathHelper.ToRadians(angle / 2.0f);
+
+            var circlePoint = wedgeDirection;
+            if (Math.Abs(circlePoint.X) > Math.Abs(circlePoint.Y))
+            {
+                float axisX = circlePoint.X > 0.0f ? 1.0f : -1.0f;
+                circlePoint = Vector3.XAxis * (axisX * radius);
+            }
+            else
+            {
+                float axisY = circlePoint.Y > 0.0f ? 1.0f : -1.0f;
+                circlePoint = Vector3.YAxis * (axisY * radius);
+            }
+
+            var leftPoint = Vector3.AxisAngleRotate(wedgeDirection, Vector3.ZAxis, halfAngle);
+            var rightPoint = Vector3.AxisAngleRotate(wedgeDirection, Vector3.ZAxis, -halfAngle);
+
+            if (angle < 180.0f)
+            {
+                Vector3[] points = { new(0, 0, 0), circlePoint, leftPoint, rightPoint };
+                return AabbFromPoints(points).Translate(point);
+            }
+            else
+            {
+                var leftCirclePoint = Vector3.AxisAngleRotate(circlePoint, Vector3.ZAxis, MathHelper.PiOver2);
+                var rightCirclePoint = Vector3.AxisAngleRotate(circlePoint, Vector3.ZAxis, -MathHelper.PiOver2);
+
+                Vector3[] points = { circlePoint, leftPoint, rightPoint, leftCirclePoint, rightCirclePoint };
+                return AabbFromPoints(points).Translate(point);
+            }
+        }
+
+        public static Aabb AabbFromPoints(in Vector3[] points)
+        {
+            var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+
+            foreach (Vector3 point in points)
+            {
+                if (point.X > max.X) max.X = point.X;
+                if (point.Y > max.Y) max.Y = point.Y;
+                if (point.Z > max.Z) max.Z = point.Z;
+
+                if (point.X < min.X) min.X = point.X;
+                if (point.Y < min.Y) min.Y = point.Y;
+                if (point.Z < min.Z) min.Z = point.Z;
+            }
+
+            return new Aabb(min, max);
+        }
+
         public bool IsZero() => Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);
         public bool IsValid() => Min.X <= Max.X && Min.Y <= Max.Y && Min.Z <= Max.Z;
 
