@@ -15,7 +15,6 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -718,82 +717,6 @@ namespace MHServerEmu.Games.Powers
             //Logger.Debug("StartCooldown()");
         }
 
-        public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
-        {
-            // TODO
-            return PowerUseResult.Success;
-        }
-
-        public bool CheckCanTriggerEval()
-        {
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "powerProto == null");
-
-            if (powerProto.EvalCanTrigger == null)
-                return true;
-
-            if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
-
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
-            contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
-            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
-
-            return Eval.RunBool(powerProto.EvalCanTrigger, contextData);
-        }
-
-        public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
-            ref Vector3? resultPosition, bool forceDoNotMoveToExactTargetLocation = false, float rangeOverride = 0f)
-        {
-            if (Owner == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): Owner == null");
-
-            Region region = regionLocation.Region;
-            if (region == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): region == null");
-
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): powerProto == null");
-
-            resultPosition = targetPosition;
-
-            if (powerProto is MovementPowerPrototype movementPowerProto)
-            {
-                if (movementPowerProto.PowerMovementPathPct > 0f || movementPowerProto.TeleportMethod != TeleportMethodType.None)
-                {
-                    Locomotor locomotor = Owner.Locomotor;
-                    if (locomotor == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweep(): locomotor == null");
-
-                    bool doNotMoveToExactTargetLocation = forceDoNotMoveToExactTargetLocation || movementPowerProto.MoveToExactTargetLocation == false;
-                    float range = Segment.IsNearZero(rangeOverride) ? GetRange() : rangeOverride;
-
-                    Vector3 findPoint = resultPosition.Value;
-                    PointOnLineResult result = region.NaviMesh.FindPointOnLineToOccupy(ref findPoint, regionLocation.Position, targetPosition, range,
-                        Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
-                    resultPosition = findPoint;
-
-                    return result switch
-                    {
-                        PointOnLineResult.Failed    => PowerPositionSweepResult.TargetPositionInvalid,
-                        PointOnLineResult.Clipped   => PowerPositionSweepResult.Clipped,
-                        PointOnLineResult.Success   => PowerPositionSweepResult.Success,
-                        _                           => PowerPositionSweepResult.Error,
-                    };
-                }
-            }
-
-            return PowerPositionSweepInternal(regionLocation, targetPosition, targetId, ref resultPosition, false, false);
-        }
-
-        public bool PowerLOSCheck(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId, ref Vector3? resultPosition, bool losCheckAlongGround)
-        {
-            PowerPositionSweepResult result = PowerPositionSweepInternal(regionLocation, targetPosition, targetId, ref resultPosition, true, losCheckAlongGround);
-
-            if (result == PowerPositionSweepResult.Clipped)
-                return Vector3.DistanceSquared(targetPosition, resultPosition.Value) <= PowerPositionSweepPaddingSquared;
-
-            return result == PowerPositionSweepResult.Success;
-        }
-
         public bool GetTargets(List<WorldEntity> targetList, WorldEntity target, in Vector3 targetPosition, int randomSeed = 0, int beamSweepSlice = -1)
         {
             if (Owner == null) return Logger.WarnReturn(false, "GetTargets(): Owner == null");
@@ -880,54 +803,6 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
-        {
-            // TODO
-            return 0;
-        }
-
-        public static bool IsValidTarget(PowerPrototype powerProto, WorldEntity worldEntity1, AlliancePrototype alliance, WorldEntity worldEntity2)
-        {
-            // TODO
-            return true;
-        }
-
-        public bool IsInRange(WorldEntity target, RangeCheckType checkType)
-        {
-            if (target == null) return Logger.WarnReturn(false, "IsInRange(): target == null");
-
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
-            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
-
-            float range = GetRange();
-            Vector3 userPosition = Owner.RegionLocation.Position;
-            float userRadius = Owner.Bounds.Radius;
-            Vector3 targetPosition = target.RegionLocation.Position;
-            float targetRadius = target.Bounds.Radius;
-
-            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, checkType, targetRadius);
-        }
-
-        public bool IsInRange(Vector3 targetPosition, RangeCheckType checkType)
-        {
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
-            if (Owner == null) return Logger.WarnReturn(false, "IsInRange(): powerProto == null");
-
-            float range = GetRange();
-            Vector3 userPosition = Owner.RegionLocation.Position;
-            float userRadius = Owner.Bounds.Radius;
-
-            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, checkType, 0f);
-        }
-
-        public static bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 powerUserPosition,
-            AlliancePrototype userAllianceProto, bool needsLineOfSight)
-        {
-            return true;
-        }
-
         public static bool IsTargetInAOE(WorldEntity target, WorldEntity owner, Vector3 ownerPosition, Vector3 targetPosition, float radius,
             int beamSlice, TimeSpan totalSweepTime, PowerPrototype powerProto, PropertyCollection properties)
         {
@@ -947,6 +822,12 @@ namespace MHServerEmu.Games.Powers
                 TargetingShapeType.WedgeArea    => IsTargetInWedge(target, owner, radius, position, targetPosition, powerProto, styleProto),
                 _ => Logger.WarnReturn(false, $"IsTargetInAOE(): Targeting shape ({styleProto.TargetingShape}) for this power hasn't been implemented! Prototype: {powerProto}"),
             };
+        }
+
+        public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
+        {
+            // TODO
+            return 0;
         }
 
         #region State Accessors
@@ -972,7 +853,7 @@ namespace MHServerEmu.Games.Powers
             if (Owner is Avatar avatar && IsGamepadMeleeMoveIntoRangePower() && avatar.PendingActionState == PendingActionState.MovingToRange)
                 return false;
 
-            return Prototype != null && Prototype.MovementOrientToTargetOnActivate;
+            return Prototype != null && Prototype.MovementStopOnActivate;
         }
 
         public bool IsToggledOn()
@@ -2389,229 +2270,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private static bool IsInRangeInternal(PowerPrototype powerProto, float range, Vector3 userPosition, float userRadius,
-            Vector3 targetPosition, RangeCheckType checkType, float targetRadius)
-        {
-            if (powerProto.Activation == PowerActivationType.Passive)
-                return true;
-
-            TargetingStylePrototype targetingPrototype = powerProto.GetTargetingStyle();
-            if (targetingPrototype == null) return Logger.WarnReturn(false, "IsInRangeInternal(): targetingPrototype == null");
-
-            if (targetingPrototype.TargetingShape == TargetingShapeType.Self)
-                return true;
-
-            if (powerProto.PowerCategory == PowerCategoryType.ProcEffect)
-                return true;
-
-            if (powerProto is MovementPowerPrototype movementPowerProto)
-            {
-                if (movementPowerProto.MoveToExactTargetLocation == false && targetingPrototype.NeedsTarget == false)
-                    return true;
-            }
-
-            // Distance to the edge of the target
-            float distance = Vector3.Distance2D(userPosition, targetPosition) - targetRadius;
-
-            // RangeActivationReduction is not used in GetRange(), and according to PowerPrototype::validateTargetingSettings(),
-            // it has something to do with client-server synchronization. It's probably used to have the power activate on the
-            // client later to account for latency, so we do not need it on the server I think.
-            //if (checkType == RangeCheckType.Activation)
-            //    range -= powerProto.RangeActivationReduction;
-
-            // Range cannot be less than user radius. 5 appears to be additional padding
-            range = MathF.Max(userRadius, range) + 5f;
-
-            return (distance - range) <= 0f;
-        }
-
-        private static bool IsInApplicationRange(WorldEntity target, in Vector3 userPosition, ulong userEntityId, float range, PowerPrototype powerProto)
-        {
-            if (target == null) return Logger.WarnReturn(false, "IsInApplicationRange(): target == null");
-
-            float userRadius = 0f;
-            if (userEntityId != Entity.InvalidId)
-            {
-                WorldEntity user = target.Game.EntityManager.GetEntity<WorldEntity>(userEntityId);
-                if (user != null)
-                    userRadius = user.Bounds.Radius;
-            }
-
-            Vector3 targetPosition = target.RegionLocation.Position;
-            float targetRadius = target.Bounds.Radius;
-
-            return IsInRangeInternal(powerProto, range, userPosition, userRadius, targetPosition, RangeCheckType.Application, targetRadius);
-        }
-
-        private PowerPositionSweepResult PowerPositionSweepInternal(RegionLocation regionLocation, Vector3 targetPosition,
-            ulong targetId, ref Vector3? resultPosition, bool losCheck, bool losCheckAlongGround)
-        {
-            if (Owner == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): Owner == null");
-
-            Region region = regionLocation.Region;
-            if (region == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): region == null");
-
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): powerProto == null");
-
-            // This is used multiple times, so we do a cast for it now
-            MovementPowerPrototype movementPowerProto = powerProto as MovementPowerPrototype;
-
-            NaviMesh naviMesh = region.NaviMesh;
-
-            // Sweep settings
-            Vector3 fromPosition = regionLocation.Position;
-            Vector3 toPosition = targetPosition;
-            float sweepRadius = 0f;
-            PathFlags pathFlags = PathFlags.Power;
-            Vector3? resultNormal = null;
-            float padding = PowerPositionSweepPadding;
-            HeightSweepType heightSweepType = HeightSweepType.None;
-            int maximumHeight = short.MaxValue;
-            int minimumHeight = short.MinValue;
-
-            bool clipped = false;
-
-            // Determine sweep settings based for the power
-            if (losCheck == false && movementPowerProto != null)
-            {
-                Locomotor locomotor = Owner.Locomotor;
-                if (locomotor == null) return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): locomotor == null");
-
-                bool doNotMoveToExactTargetLocation = movementPowerProto.MoveToExactTargetLocation == false;
-
-                PointOnLineResult pointOnLineResult = naviMesh.FindPointOnLineToOccupy(ref toPosition, fromPosition, toPosition, GetRange(),
-                    Owner.Bounds, locomotor.PathFlags, movementPowerProto.BlockingCheckFlags, doNotMoveToExactTargetLocation);
-
-                if (pointOnLineResult == PointOnLineResult.Failed)
-                    return PowerPositionSweepResult.TargetPositionInvalid;
-
-                clipped = pointOnLineResult == PointOnLineResult.Clipped;
-                pathFlags = PathFlags.Walk;
-                int movementHeightBonus = movementPowerProto.MovementHeightBonus;
-
-                if (movementHeightBonus != 0 || locomotor.PathFlags.HasFlag(PathFlags.Fly))
-                {
-                    if (movementHeightBonus > 0)
-                        maximumHeight = (int)regionLocation.ProjectToFloor().Z + movementHeightBonus;
-                    else
-                        minimumHeight = (int)regionLocation.ProjectToFloor().Z + movementHeightBonus;
-
-                    pathFlags |= PathFlags.Fly;
-                    heightSweepType = HeightSweepType.Constraint;
-                }
-            }
-            else if (losCheckAlongGround)
-            {
-                pathFlags = PathFlags.Walk;
-            }
-            else if (losCheck)
-            {
-                maximumHeight = (int)MathF.Max(fromPosition.Z + Owner.Bounds.EyeHeight, targetPosition.Z);
-                heightSweepType = HeightSweepType.Constraint;
-            }
-
-            if (powerProto is MissilePowerPrototype missilePowerProto)
-            {
-                sweepRadius = missilePowerProto.MaximumMissileBoundsSphereRadius;
-            }
-            else if (powerProto is SummonPowerPrototype summonPowerProto && losCheck == false)
-            {
-                if (summonPowerProto.SummonEntityContexts == null)
-                    return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonPowerProto.SummonEntityContexts == null");
-
-                WorldEntityPrototype nonHotspotSummonEntityPrototype = null;
-                float maximumSphereRadius = 0f;
-
-                for (int i = 0; i < summonPowerProto.SummonEntityContexts.Length; i++)
-                {
-                    WorldEntityPrototype summonedPrototype = summonPowerProto.GetSummonEntity(i, Owner.GetOriginalWorldAsset());
-                    if (summonedPrototype == null)
-                        return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonedPrototype == null");
-
-                    if (summonedPrototype is not HotspotPrototype)
-                    {
-                        if (summonedPrototype.Bounds == null)
-                            return Logger.WarnReturn(PowerPositionSweepResult.Error, "PowerPositionSweepInternal(): summonedPrototype.Bounds == null");
-
-                        float sphereRadius = summonedPrototype.Bounds.GetSphereRadius();
-                        if (sphereRadius > maximumSphereRadius)
-                        {
-                            maximumSphereRadius = sphereRadius;
-                            nonHotspotSummonEntityPrototype = summonedPrototype;
-                        }
-                    }
-                }
-
-                if (nonHotspotSummonEntityPrototype != null)
-                {
-                    Bounds bounds = new(nonHotspotSummonEntityPrototype.Bounds, targetPosition);
-                    pathFlags = Region.GetPathFlagsForEntity(nonHotspotSummonEntityPrototype);
-                    sweepRadius = bounds.Radius;
-                }
-            }
-
-            if (powerProto.HeightCheckPadding != 0f)
-            {
-                if (powerProto.HeightCheckPadding > 0f)
-                    maximumHeight = (int)(regionLocation.ProjectToFloor().Z + powerProto.HeightCheckPadding);
-                else
-                    minimumHeight = (int)(regionLocation.ProjectToFloor().Z + powerProto.HeightCheckPadding);
-
-                pathFlags |= PathFlags.Fly;
-                heightSweepType = HeightSweepType.Constraint;
-            }
-
-            // Do the first sweep
-            SweepResult sweepResult = naviMesh.Sweep(fromPosition, toPosition, sweepRadius, pathFlags, ref resultPosition,
-                ref resultNormal, padding, heightSweepType, maximumHeight, minimumHeight, Owner);
-
-            if (sweepResult == SweepResult.Failed)
-                return PowerPositionSweepResult.Error;
-
-            if (sweepResult == SweepResult.Success || sweepResult == SweepResult.Clipped)
-            {
-                if (losCheck)
-                {
-                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(fromPosition, toPosition, Owner, targetId,
-                        losCheck, sweepRadius + padding, ref resultPosition);
-
-                    if (firstHitEntity != null)
-                        sweepResult = SweepResult.Clipped;
-                }
-                else if (movementPowerProto != null && movementPowerProto.UserNoEntityCollide)
-                {
-                    int blockFlags = 1 << (int)BoundsMovementPowerBlockType.All;
-
-                    if (movementPowerProto.IsHighFlyingPower == false && movementPowerProto.MovementHeightBonus == 0)
-                        blockFlags |= 1 << (int)BoundsMovementPowerBlockType.Ground;
-
-                    WorldEntity firstHitEntity = region.SweepToFirstHitEntity(Owner.Bounds, resultPosition.Value - fromPosition,
-                        ref resultPosition, new MovementPowerEntityCollideFunc(blockFlags));
-
-                    if (firstHitEntity != null)
-                        sweepResult = SweepResult.Clipped;
-                }
-            }
-
-            clipped |= sweepResult == SweepResult.Clipped;
-
-            // Do a second sweep if we need more than just LOS
-            if (losCheck == false && sweepResult == SweepResult.HeightMap && pathFlags.HasFlag(PathFlags.Fly))
-            {
-                pathFlags &= ~PathFlags.Fly;
-                sweepResult = naviMesh.Sweep(fromPosition, toPosition, sweepRadius, pathFlags, ref resultPosition,
-                    ref resultNormal, padding, heightSweepType, maximumHeight, minimumHeight, Owner);
-
-                if (sweepResult == SweepResult.Failed)
-                    return PowerPositionSweepResult.Error;
-
-                if (sweepResult == SweepResult.Clipped)
-                    return PowerPositionSweepResult.Clipped;
-            }
-
-            return clipped ? PowerPositionSweepResult.Clipped : PowerPositionSweepResult.Success;
-        }
+        #region AOE Calculations
 
         private static bool IsTargetInArc(WorldEntity target, WorldEntity owner, float radius, Vector3 position, Vector3 targetPosition,
             PowerPrototype powerProto, TargetingStylePrototype styleProto, PropertyCollection properties)
@@ -2872,6 +2531,8 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        #endregion
+
         private static void GetTargetsFromInventory(List<WorldEntity> targetList, Game game, WorldEntity user, WorldEntity target,
             PowerPrototype powerProto, AlliancePrototype userAllianceProto, InventoryConvenienceLabel inventoryConvenienceLabel)
         {
@@ -2879,11 +2540,34 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug($"GetTargetsFromInventory(): {inventoryConvenienceLabel}");
         }
 
-        private static void GetValidMeleeTarget(List<WorldEntity> targetList, PowerPrototype powerProto, AlliancePrototype userAllianceProto,
-            WorldEntity owner, in Vector3 targetPosition)
+        private static bool GetValidMeleeTarget(List<WorldEntity> targetList, PowerPrototype powerProto, AlliancePrototype userAllianceProto,
+            WorldEntity user, in Vector3 targetPosition)
         {
-            // TODO
             Logger.Debug("GetValidMeleeTarget()");
+
+            if (user == null)
+                return false; ;
+
+            Region region = user.Region;
+            if (region == null) return Logger.WarnReturn(false, "GetValidMeleeTarget(): region == null");
+
+            // Set up search volume
+            Vector3 userPosition = user.RegionLocation.Position;
+            float userRadius = user.Bounds.Radius;
+            Vector3 offset = Vector3.SafeNormalize2D(targetPosition - userPosition) * (userRadius + 25f);
+            Sphere sphere = new(userPosition + offset, 25f);
+
+            // Look for a target in the volume
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(sphere, new(Generators.EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (IsValidTarget(powerProto, user, userAllianceProto, target))
+                {
+                    targetList.Add(target);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void ComputePowerMovementSettings(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
@@ -3035,49 +2719,6 @@ namespace MHServerEmu.Games.Powers
         private bool FillOutProcEffectPowerApplication(WorldEntity target, in PowerActivationSettings settings, PowerApplication powerApplication)
         {
             // TODO
-            return true;
-        }
-
-        private bool CanBeUserCanceledNow()
-        {
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CanBeUserCanceledNow(): powerProto == null");
-
-            if (IsCancelledOnRelease() || IsRecurring())
-                return true;
-
-            if (powerProto.CanBeInterrupted == false)
-                return false;
-
-            if (_endPowerEvent.IsValid && _endPowerEvent.Get().Flags.HasFlag(EndPowerFlags.ChanneledLoopEnd))
-                return false;
-
-            return true;
-        }
-
-        private bool CanEndPower(EndPowerFlags flags)
-        {
-            if (Owner == null) return Logger.WarnReturn(true, "CanEndPower(): Owner == null");
-
-            if (flags.HasFlag(EndPowerFlags.Unassign) ||
-                flags.HasFlag(EndPowerFlags.Interrupting) ||
-                flags.HasFlag(EndPowerFlags.Force))
-            {
-                return true;
-            }
-
-            if (flags.HasFlag(EndPowerFlags.ExitWorld) && Owner.IsInWorld == false)
-                return true;
-
-            if (_activationPhase == PowerActivationPhase.Inactive)
-                return false;
-
-            if (_activationPhase == PowerActivationPhase.LoopEnding && flags.HasFlag(EndPowerFlags.ChanneledLoopEnd) == false)
-                return false;
-
-            if (IsHighFlyingPower() && Owner.CheckLandingSpot(this) == false)
-                return false;
-
             return true;
         }
 
