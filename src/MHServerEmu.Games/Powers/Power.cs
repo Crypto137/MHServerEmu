@@ -972,7 +972,7 @@ namespace MHServerEmu.Games.Powers
             if (Owner is Avatar avatar && IsGamepadMeleeMoveIntoRangePower() && avatar.PendingActionState == PendingActionState.MovingToRange)
                 return false;
 
-            return Prototype != null && Prototype.MovementOrientToTargetOnActivate;
+            return Prototype != null && Prototype.MovementStopOnActivate;
         }
 
         public bool IsToggledOn()
