@@ -367,26 +367,208 @@ namespace MHServerEmu.Games.Powers
         private static bool TargetMeetsAISpecificConstraints(WorldEntity target, ulong userEntityId, PowerPrototype powerProto,
             AlliancePrototype userAllianceProto, WorldEntity creator, WorldEntity ultimateCreator)
         {
-            // TODO
-            return true;
+            TargetingReachPrototype targetingReachProto = powerProto.GetTargetingReach();
+            if (targetingReachProto == null) return Logger.WarnReturn(false, "TargetMeetsAISpecificConstraints(): targetingReachProto == null");
+
+            // Check user / creator / ultimate creator
+            if (userEntityId == target.Id)
+                return targetingReachProto.WillTargetCaster;
+
+            if (creator != null && (creator.Id == target.Id))
+                return targetingReachProto.WillTargetCreator;
+
+            if (ultimateCreator != null && (ultimateCreator.Id == target.Id))
+                return targetingReachProto.WillTargetUltimateCreator;
+
+            // Check friendly / hostile / destructible
+            bool canTargetFriendly = false;
+            if (targetingReachProto.TargetsFriendly)
+                canTargetFriendly = userAllianceProto != null && userAllianceProto.IsFriendlyTo(target.Alliance);
+
+            bool canTargetEnemy = false;
+            if (targetingReachProto.TargetsEnemy)
+                canTargetEnemy = userAllianceProto != null && userAllianceProto.IsHostileTo(target.Alliance);
+
+            bool canTargetNonEnemies = false;
+            if (targetingReachProto.TargetsNonEnemies)
+                canTargetNonEnemies = userAllianceProto != null && userAllianceProto.IsHostileTo(target.Alliance);
+
+            bool canTargetDestructible = false;
+            if (targetingReachProto.TargetsDestructibles)
+                canTargetDestructible = target.IsDestructible;            
+
+            return canTargetFriendly || canTargetEnemy || canTargetNonEnemies || canTargetDestructible;
         }
 
         private static bool TargetMeetsPlayerSpecificConstraints(WorldEntity target, Avatar avatarCreator,
             TargetingReachPrototype targetingReach, Agent agentUser)
         {
-            // TODO
-            return true;
+            if (avatarCreator.Id == target.Id || (agentUser != null && agentUser.Id == target.Id))
+                return targetingReach.WillTargetCaster;
+
+            // Check player restrictions
+            ulong restrictedToPlayerGuid = target.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0)
+            {
+                Player player = avatarCreator.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false,
+                    $"TargetMeetsPlayerSpecificConstraints(): An avatar is trying to cast a power without an owning player!\nAvatar: [{avatarCreator}]");
+
+                if (player.DatabaseUniqueId != restrictedToPlayerGuid)
+                    return false;
+            }
+
+            // Check friendly / hostile / destructible restrictions
+            bool canTargetFriendly = false;
+            if (targetingReach.TargetsFriendly)
+            {
+                if (targetingReach.PartyOnly)
+                {
+                    ulong userPartyId = avatarCreator.PartyId;
+                    if (userPartyId != 0)
+                        canTargetFriendly = userPartyId == target.PartyId;
+                }
+                else
+                {
+                    canTargetFriendly = avatarCreator.IsFriendlyTo(target.Alliance);
+                }
+            }
+
+            bool canTargetEnemy = false;
+            if (targetingReach.TargetsEnemy)
+                canTargetEnemy = avatarCreator.IsHostileTo(target.Alliance);
+
+            bool canTargetDestructible = false;
+            if (targetingReach.TargetsDestructibles)
+                canTargetDestructible = target.IsDestructible;
+
+            return canTargetFriendly || canTargetEnemy || canTargetDestructible;
         }
 
         private static bool TargetPassesRestrictionEval(WorldEntity target, PowerPrototype powerProto, WorldEntity user)
         {
-            // TODO
-            return true;
+            if (powerProto.TargetRestrictionEval == null)
+                return true;
+
+            Logger.Debug("TargetPassesRestrictionEval()");
+
+            EvalContextData contextData = new(target.Game);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProto.Properties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, target.Properties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, user.Properties);
+            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, target);
+
+            return Eval.RunBool(powerProto.TargetRestrictionEval, contextData);
         }
 
         private static bool TargetMeetsRestrictionPropertyConstraints(WorldEntity target, PowerPrototype powerProto)
         {
-            // TODO
+            if (powerProto.Properties == null)
+                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): powerProto.Properties == null");
+
+            // Check TargetRestriction properties
+            foreach (var kvp in powerProto.Properties.IteratePropertyRange(PropertyEnum.TargetRestriction))
+            {
+                Property.FromParam(kvp.Key, 0, out int targetRestrictionTypeParam);
+
+                switch ((TargetRestrictionType)targetRestrictionTypeParam)
+                {
+                    case TargetRestrictionType.HealthGreaterThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthGreaterThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.HealthLessThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthLessThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.EnduranceGreaterThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.EnduranceGreaterThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.EnduranceLessThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.EnduranceLessThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.HealthOrEnduranceGreaterThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthOrEnduranceGreaterThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.HealthOrEnduranceLessThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthOrEnduranceLessThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.SecondaryResourceLessThanPercentage:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.SecondaryResourceLessThanPercentage");
+                        break;
+
+                    case TargetRestrictionType.HasKeyword:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HasKeyword");
+                        break;
+
+                    case TargetRestrictionType.DoesNotHaveKeyword:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.DoesNotHaveKeyword");
+                        break;
+
+                    case TargetRestrictionType.HasAI:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HasAI");
+                        break;
+
+                    case TargetRestrictionType.IsPrototypeOf:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.IsPrototypeOf");
+                        break;
+
+                    case TargetRestrictionType.HasProperty:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HasProperty");
+                        break;
+
+                    case TargetRestrictionType.DoesNotHaveProperty:
+                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.DoesNotHaveProperty");
+                        break;
+                }
+            }
+
+            // Check target rank exclusing / inclusion
+            bool hasTargetRankExclusion = powerProto.Properties.HasProperty(PropertyEnum.TargetRankExclusion);
+            bool hasTargetRankInclusion = powerProto.Properties.HasProperty(PropertyEnum.TargetRankInclusion);
+
+            if (hasTargetRankExclusion == false && hasTargetRankInclusion == false)
+                return true;
+
+            RankPrototype targetRankProto = target.GetRankPrototype();
+
+            if (hasTargetRankExclusion && targetRankProto != null)
+            {
+                foreach (var kvp in powerProto.Properties.IteratePropertyRange(PropertyEnum.TargetRankExclusion))
+                {
+                    Property.FromParam(kvp.Key, 0, out int rankParam);
+
+                    if (targetRankProto.Rank == (Rank)rankParam)
+                        return false;
+                }
+            }
+
+            if (hasTargetRankInclusion)
+            {
+                bool isIncluded = false;
+
+                if (targetRankProto != null)
+                {
+                    foreach (var kvp in powerProto.Properties.IteratePropertyRange(PropertyEnum.TargetRankInclusion))
+                    {
+                        Property.FromParam(kvp.Key, 0, out int rankParam);
+
+                        if (targetRankProto.Rank == (Rank)rankParam)
+                        {
+                            isIncluded = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isIncluded == false)
+                    return false;
+            }
+
             return true;
         }
 

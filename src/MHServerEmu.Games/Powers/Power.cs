@@ -2030,20 +2030,25 @@ namespace MHServerEmu.Games.Powers
                 //Logger.Debug($"targetList[{i}]: {target}");
 
                 // Quick hack for showing damage numbers
-                if (target != Owner && Owner.IsHostileTo(target))
-                {
-                    PowerResults results = new()
-                    {
-                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                        MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
-                        PowerPrototypeRef = PrototypeDataRef,
-                        PowerOwnerEntityId = Owner.Id,
-                        TargetEntityId = target.Id,
-                        DamagePhysical = (uint)Game.Random.Next(1, 100),
-                    };
 
-                    Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
-                }
+                // Skip powers that are not supposed to be dealing damage
+                if (Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Physical] == 0f &&
+                    Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Energy] == 0f &&
+                    Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Mental] == 0f)
+                    continue;
+
+                // Send power results
+                PowerResults results = new()
+                {
+                    ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
+                    PowerPrototypeRef = PrototypeDataRef,
+                    PowerOwnerEntityId = Owner.Id,
+                    TargetEntityId = target.Id,
+                    DamagePhysical = (uint)Game.Random.Next(1, 100),
+                };
+
+                Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
             return true;
@@ -2234,7 +2239,163 @@ namespace MHServerEmu.Games.Powers
             in PowerActivationSettings settings)
         {
             actualTargetPosition = initialTargetPosition;
-            //TODO
+
+            if (Game == null || Owner == null) return;
+            var style = TargetingStylePrototype;
+            if (style == null) return;
+
+            Vector3 ownerPosition = Owner.RegionLocation.Position;
+
+            if (Prototype is MovementPowerPrototype movementPowerProto)
+            {
+                var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+                if (movementPowerProto.CustomBehavior != null)
+                {
+                    var context = new MovementBehaviorPrototype.Context(this, Owner, target, initialTargetPosition);
+                    if (movementPowerProto.CustomBehavior.GenerateTargetPosition(context, ref actualTargetPosition)) return;
+                }
+
+                if (movementPowerProto.TeleportMethod == TeleportMethodType.Teleport && Owner.Properties.HasProperty(PropertyEnum.TeleportLockdown))
+                {
+                    actualTargetPosition = ownerPosition;
+                    return;
+                }
+
+                Vector3 direction = Vector3.Zero;
+
+                if (movementPowerProto.MoveToOppositeEdgeOfTarget && target != null)
+                {
+                    if (movementPowerProto.MoveToExactTargetLocation == false) return;
+
+                    Vector3 targetPosition = target.RegionLocation.Position;
+                    direction = targetPosition - ownerPosition;
+
+                    if (!Vector3.IsNearZero(direction))
+                    {
+                        direction = Vector3.Normalize(direction);
+                        float radius = target.Bounds.Radius + Owner.Bounds.Radius;
+                        actualTargetPosition = targetPosition + (direction * radius);
+                        actualTargetPosition += direction * movementPowerProto.AdditionalTargetPosOffset;
+                    }
+                    else
+                        actualTargetPosition = targetPosition;
+                }
+                else if (movementPowerProto.MoveToExactTargetLocation)
+                {
+                    if (movementPowerProto.MoveToSecondaryTarget)
+                    {
+                        if (target != null)
+                            direction = initialTargetPosition - target.RegionLocation.Position;
+                    }
+                    else
+                        direction = initialTargetPosition - ownerPosition;
+
+                    if (!Vector3.IsNearZero(direction))
+                    {
+                        direction = Vector3.Normalize(direction);
+
+                        if (target != null && Owner.IsMovementAuthoritative)
+                            actualTargetPosition -= direction * target.Bounds.Radius;
+
+                        Vector3 offset = direction * movementPowerProto.AdditionalTargetPosOffset;
+                        Vector3 offsetDirection = actualTargetPosition + offset - ownerPosition;
+
+                        if (!Vector3.IsNearZero(offsetDirection))
+                        {
+                            offsetDirection = Vector3.Normalize(offsetDirection);
+                            if (Vector3.Dot(direction, offsetDirection) >= 0f)
+                                actualTargetPosition += offset;
+                        }
+                    }
+                }
+                else if (movementPowerProto.MoveToExactTargetLocation == false)
+                {
+                    if (targetId == Owner.Id)
+                        direction = Owner.Forward;
+                    else
+                        direction = Vector3.SafeNormalize2D(initialTargetPosition - ownerPosition, Owner.Forward);
+
+                    actualTargetPosition = ownerPosition + direction * GetKnockbackDistance(Owner);
+                }
+
+                if (movementPowerProto.NoCollideIncludesTarget || targetId == Entity.InvalidId)
+                {
+                    float distanceSq = Vector3.DistanceSquared2D(ownerPosition, actualTargetPosition);
+                    if (distanceSq < MathHelper.Square(movementPowerProto.MoveMinDistance))
+                    {
+                        Vector3 direction2D = Vector3.Normalize2D(actualTargetPosition - ownerPosition);
+                        actualTargetPosition = ownerPosition + direction2D * movementPowerProto.MoveMinDistance;
+                    }
+                }
+
+                bool isBlocked = false;
+                float rangeOverride = 0.0f;
+                if (movementPowerProto.TeleportMethod != TeleportMethodType.None && !movementPowerProto.IgnoreTeleportBlockers)
+                {
+                    var region = Owner.Region;
+                    if (region == null) return;
+
+                    Vector3? collisionPosition = Vector3.Zero;
+                    Vector3 sweepVelocity = Vector3.Normalize(actualTargetPosition - ownerPosition) * GetRange();
+                    var firstHitEntity = region.SweepToFirstHitEntity(Owner.Bounds, sweepVelocity, ref collisionPosition,
+                        new MovementPowerEntityCollideFunc(1 << (int)BoundsMovementPowerBlockType.All));
+                    if (firstHitEntity != null)
+                    {
+                        rangeOverride = Vector3.Distance2D(ownerPosition, collisionPosition.Value);
+                        if (Vector3.DistanceSquared(collisionPosition.Value, ownerPosition) < Vector3.DistanceSquared(actualTargetPosition, ownerPosition))
+                        {
+                            isBlocked = true;
+                            actualTargetPosition = collisionPosition.Value;
+                        }
+                    }
+                }
+
+                if (style.RandomPositionRadius > 0)
+                {
+                    GRandom random = new((int)settings.PowerRandomSeed);
+                    actualTargetPosition += Vector3.RandomUnitVector2D(random) * (random.NextFloat() * style.RandomPositionRadius);
+                }
+
+                if (movementPowerProto.MoveFullDistance == false || movementPowerProto.TeleportMethod != TeleportMethodType.None)
+                {
+                    Vector3? resultPostion = actualTargetPosition;
+                    var result = PowerPositionSweep(Owner.RegionLocation, actualTargetPosition, targetId, ref resultPostion, isBlocked, rangeOverride);
+                    actualTargetPosition = resultPostion.Value;
+
+                    if (result == PowerPositionSweepResult.Error || result == PowerPositionSweepResult.TargetPositionInvalid)
+                    {
+                        Logger.Debug($"Movement power failed to sweep to target position. Using position {actualTargetPosition}, " +
+                            $"which may not be valid. Sweep result code: {result}\nPower: {ToString()}\nOwner: {Owner}\nRegionLocation: {Owner.RegionLocation}");
+
+                        actualTargetPosition = ownerPosition;
+                    }
+                    else
+                    {
+                        actualTargetPosition = RegionLocation.ProjectToFloor(Owner.Region, Owner.Cell, actualTargetPosition);
+                        if (movementPowerProto.TeleportMethod != TeleportMethodType.None)
+                            actualTargetPosition = Owner.FloorToCenter(actualTargetPosition);
+                    }
+                }
+            }
+            else
+            {
+                if (style.AOESelfCentered)
+                {
+                    if (style.TargetingShape == TargetingShapeType.CircleArea
+                        || (style.TargetingShape == TargetingShapeType.WedgeArea
+                        || style.TargetingShape == TargetingShapeType.ArcArea
+                        || style.TargetingShape == TargetingShapeType.BeamSweep)
+                        && Vector3.LengthSqr(initialTargetPosition - ownerPosition) < 400.0f)
+                        actualTargetPosition = ownerPosition;
+                }
+
+                if (style.RandomPositionRadius > 0)
+                {
+                    GRandom random = new((int)settings.PowerRandomSeed);
+                    actualTargetPosition += Vector3.RandomUnitVector2D(random) * (random.NextFloat() * style.RandomPositionRadius);
+                    actualTargetPosition = RegionLocation.ProjectToFloor(Owner.Region, Owner.Cell, actualTargetPosition);
+                }
+            }
         }
 
         protected virtual bool SetToggleState(bool value, bool doNotStartCooldown = false)
