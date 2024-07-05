@@ -1543,11 +1543,6 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
         }
 
-        public bool IsDestructible()
-        {
-            return HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword);
-        }
-
         public override SimulateResult SetSimulated(bool simulated)
         {
             var result = base.SetSimulated(simulated);

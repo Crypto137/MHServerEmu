@@ -564,7 +564,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (target is not WorldEntity targetWorldEntity) return false;
 
-            bool isDestructible = targetWorldEntity.IsDestructible();
+            bool isDestructible = targetWorldEntity.IsDestructible;
             return OperatorType switch
             {
                 ComparisonOperatorType.EqualTo => isDestructible,
