@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
@@ -469,61 +471,186 @@ namespace MHServerEmu.Games.Powers
             // Check TargetRestriction properties
             foreach (var kvp in powerProto.Properties.IteratePropertyRange(PropertyEnum.TargetRestriction))
             {
-                Property.FromParam(kvp.Key, 0, out int targetRestrictionTypeParam);
+                // NOTE: The client implemenetation uses param cache functionality of the PropertyList.
+                // If we run into performance issues, we should consider doing something similar.
 
-                switch ((TargetRestrictionType)targetRestrictionTypeParam)
+                Property.FromParam(kvp.Key, 0, out int targetRestrictionTypeParam);
+                var targetRestrictionType = (TargetRestrictionType)targetRestrictionTypeParam;
+
+                switch (targetRestrictionType)
                 {
                     case TargetRestrictionType.HealthGreaterThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthGreaterThanPercentage");
-                        break;
+                        {
+                            if (MathHelper.IsBelowOrEqual(target.Properties[PropertyEnum.Health], target.Properties[PropertyEnum.HealthMaxOther], kvp.Value))
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.HealthLessThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthLessThanPercentage");
-                        break;
+                        {
+                            if (MathHelper.IsAboveOrEqual(target.Properties[PropertyEnum.Health], target.Properties[PropertyEnum.HealthMaxOther], kvp.Value))
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.EnduranceGreaterThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.EnduranceGreaterThanPercentage");
-                        break;
+                        {
+                            bool pass = false;
+
+                            foreach (var targetKvp in target.Properties.IteratePropertyRange(PropertyEnum.Endurance))
+                            {
+                                Property.FromParam(targetKvp.Key, 0, out int manaType);
+
+                                if (targetKvp.Value.RawFloat > kvp.Value.RawFloat * target.Properties[PropertyEnum.EnduranceMaxOther, manaType])
+                                {
+                                    pass = true;
+                                    break;
+                                }
+                            }
+
+                            if (pass == false)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.EnduranceLessThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.EnduranceLessThanPercentage");
-                        break;
+                        {
+                            bool pass = false;
+
+                            foreach (var targetKvp in target.Properties.IteratePropertyRange(PropertyEnum.Endurance))
+                            {
+                                Property.FromParam(targetKvp.Key, 0, out int manaType);
+
+                                if (targetKvp.Value.RawFloat < kvp.Value.RawFloat * target.Properties[PropertyEnum.EnduranceMaxOther, manaType])
+                                {
+                                    pass = true;
+                                    break;
+                                }
+                            }
+
+                            if (pass == false)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.HealthOrEnduranceGreaterThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthOrEnduranceGreaterThanPercentage");
-                        break;
+                        {
+                            bool healthPass = false;
+                            bool endurancePass = false;
+
+                            foreach (var targetKvp in target.Properties.IteratePropertyRange(PropertyEnum.Endurance))
+                            {
+                                Property.FromParam(targetKvp.Key, 0, out int manaType);
+
+                                if (targetKvp.Value.RawFloat > kvp.Value.RawFloat * target.Properties[PropertyEnum.EnduranceMaxOther, manaType])
+                                {
+                                    endurancePass = true;
+                                    break;
+                                }
+                            }
+
+                            if (MathHelper.IsAbove(target.Properties[PropertyEnum.Health], target.Properties[PropertyEnum.HealthMaxOther], kvp.Value))
+                                healthPass = true;
+
+                            if (healthPass == false && endurancePass == false)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.HealthOrEnduranceLessThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HealthOrEnduranceLessThanPercentage");
-                        break;
+                        {
+                            bool healthPass = false;
+                            bool endurancePass = false;
+
+                            foreach (var targetKvp in target.Properties.IteratePropertyRange(PropertyEnum.Endurance))
+                            {
+                                Property.FromParam(targetKvp.Key, 0, out int manaType);
+
+                                if (targetKvp.Value.RawFloat < kvp.Value.RawFloat * target.Properties[PropertyEnum.EnduranceMaxOther, manaType])
+                                {
+                                    endurancePass = true;
+                                    break;
+                                }
+                            }
+
+                            if (MathHelper.IsBelow(target.Properties[PropertyEnum.Health], target.Properties[PropertyEnum.HealthMaxOther], kvp.Value))
+                                healthPass = true;
+
+                            if (healthPass == false && endurancePass == false)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.SecondaryResourceLessThanPercentage:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.SecondaryResourceLessThanPercentage");
-                        break;
+                        {
+                            if (target.Properties[PropertyEnum.SecondaryResource] >= kvp.Value.RawFloat * target.Properties[PropertyEnum.SecondaryResourceMax])
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.HasKeyword:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HasKeyword");
-                        break;
-
                     case TargetRestrictionType.DoesNotHaveKeyword:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.DoesNotHaveKeyword");
-                        break;
+                        {
+                            Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
+
+                            if (keywordProtoRef == PrototypeId.Invalid)
+                                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): keywordProtoRef == PrototypeId.Invalid");
+
+                            bool hasKeyword = (DataDirectory.Instance.PrototypeIsA<EntityKeywordPrototype>(keywordProtoRef) && target.HasKeyword(keywordProtoRef))
+                                || (DataDirectory.Instance.PrototypeIsA<PowerKeywordPrototype>(keywordProtoRef) && target.HasConditionWithKeyword(keywordProtoRef));
+
+                            if (targetRestrictionType == TargetRestrictionType.HasKeyword && hasKeyword == false)
+                                return false;
+                            else if (targetRestrictionType == TargetRestrictionType.DoesNotHaveKeyword && hasKeyword)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.HasAI:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HasAI");
-                        break;
+                        {
+                            if (target is not Agent agent || agent.AIController == null)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.IsPrototypeOf:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.IsPrototypeOf");
-                        break;
+                        {
+                            Property.FromParam(kvp.Key, 2, out PrototypeId entityRef);
+                            
+                            if (entityRef == PrototypeId.Invalid)
+                                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): entityRef == PrototypeId.Invalid");
+
+                            if (target.PrototypeDataRef != entityRef)
+                                return false;
+
+                            break;
+                        }
 
                     case TargetRestrictionType.HasProperty:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.HasProperty");
-                        break;
-
                     case TargetRestrictionType.DoesNotHaveProperty:
-                        Logger.Debug("TargetMeetsRestrictionPropertyConstraints: TargetRestrictionType.DoesNotHaveProperty");
-                        break;
+                        {
+                            Property.FromParam(kvp.Key, 3, out PrototypeId propertyInfoProtoRef);
+
+                            PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(propertyInfoProtoRef);
+                            if (propertyEnum == PropertyEnum.Invalid)
+                                return Logger.WarnReturn(false, "TargetMeetsRestrictionPropertyConstraints(): propertyEnum == PropertyEnum.Invalid");
+
+                            if (targetRestrictionType == TargetRestrictionType.HasProperty && target.Properties.HasProperty(propertyEnum) == false)
+                                return false;
+                            else if (targetRestrictionType == TargetRestrictionType.DoesNotHaveProperty && target.Properties.HasProperty(propertyEnum))
+                                return false;
+
+                            break;
+                        }
                 }
             }
 
