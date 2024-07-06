@@ -17,8 +17,65 @@ namespace MHServerEmu.Games.Powers
     {
         public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
         {
-            // TODO
+            if (IsToggledOn())
+                return PowerUseResult.Success;
+
+            if (IsOnExtraActivation())
+                return PowerUseResult.Success;
+
+            PowerUseResult canTriggerResult = CanTrigger(flags);
+            if (canTriggerResult != PowerUseResult.Success)
+                return canTriggerResult;
+
+            if (NeedsTarget() && IsValidTarget(target) == false)
+                return PowerUseResult.BadTarget;
+
             return PowerUseResult.Success;
+        }
+
+        public PowerUseResult CanTrigger(PowerActivationSettingsFlags flags)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTrigger(): powerProto == null");
+
+            // TODO: LiveTuning
+
+            if (Owner == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTrigger(): Owner == null");
+
+            if (Owner.IsDead && IsUseableWhileDead() == false)
+                return PowerUseResult.OwnerDead;
+
+            int powerChargesMax = Owner.GetPowerChargesMax(powerProto.DataRef);
+            if (powerChargesMax > 0)
+            {
+                if (Owner.GetPowerChargesAvailable(powerProto.DataRef) <= 0)
+                    return PowerUseResult.InsufficientCharges;
+            }
+            else if (GetCooldownTimeRemaining() > TimeSpan.Zero)
+            {
+                return PowerUseResult.Cooldown;
+            }
+
+            if (IsOnExtraActivation(powerProto, Owner))
+                return PowerUseResult.Success;
+
+            PowerUseResult ownerCanTriggerPowerResult = Owner.CanTriggerPower(powerProto, this, flags);
+            if (ownerCanTriggerPowerResult != PowerUseResult.Success)
+                return ownerCanTriggerPowerResult;
+
+            if (IsToggledOn(powerProto, Owner))
+                return PowerUseResult.Success;
+
+            if (CheckEnduranceCost() == false)
+                return PowerUseResult.InsufficientEndurance;
+
+            if (Properties[PropertyEnum.SecondaryResourceRequired] && CanUseSecondaryResourceEffects() == false)
+                return PowerUseResult.InsufficientSecondaryResource;
+
+            if (CheckCanTriggerEval() == false)
+                return PowerUseResult.RestrictiveCondition;
+
+            return PowerUseResult.Success;                
         }
 
         public bool CheckCanTriggerEval()
@@ -169,6 +226,22 @@ namespace MHServerEmu.Games.Powers
         public bool IsValidSituationalTarget(WorldEntity target)
         {
             return _situationalComponent != null;
+        }
+
+        public bool CanUseSecondaryResourceEffects()
+        {
+            WorldEntity ultimateOwner = GetUltimateOwner();
+
+            if (ultimateOwner == null)
+                return false;
+
+            return CanUseSecondaryResourceEffects(Properties, ultimateOwner.Properties);
+        }
+
+        public static bool CanUseSecondaryResourceEffects(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            // TODO
+            return true;
         }
 
         private static (bool, bool) IsValidTargetNoCasterEntityChecks(PowerPrototype powerProto, ulong userEntityId,
@@ -726,6 +799,7 @@ namespace MHServerEmu.Games.Powers
             // RangeActivationReduction is not used in GetRange(), and according to PowerPrototype::validateTargetingSettings(),
             // it has something to do with client-server synchronization. It's probably used to have the power activate on the
             // client later to account for latency, so we do not need it on the server I think.
+            // UPDATE: Not having this on causes activation desyncs when enemies are stationary and grouped together.
             //if (checkType == RangeCheckType.Activation)
             //    range -= powerProto.RangeActivationReduction;
 
@@ -921,6 +995,12 @@ namespace MHServerEmu.Games.Powers
             }
 
             return clipped ? PowerPositionSweepResult.Clipped : PowerPositionSweepResult.Success;
+        }
+
+        private bool CheckEnduranceCost()
+        {
+            // TODO
+            return true;
         }
 
         private bool CanBeUserCanceledNow()

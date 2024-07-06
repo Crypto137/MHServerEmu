@@ -891,7 +891,7 @@ namespace MHServerEmu.Games.Powers
 
         public TimeSpan GetCooldownTimeRemaining()
         {
-            throw new NotImplementedException();
+            return TimeSpan.Zero;
         }
 
         #endregion
@@ -1798,6 +1798,11 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public bool IsUseableWhileDead()
+        {
+            return Prototype != null && Prototype.IsUseableWhileDead;
+        }
+
         public bool CanBeUsedInRegion(Region region)
         {
             PowerPrototype powerProto = Prototype;
@@ -2030,24 +2035,40 @@ namespace MHServerEmu.Games.Powers
                 //Logger.Debug($"targetList[{i}]: {target}");
 
                 // Quick hack for showing damage numbers
-
-                // Skip powers that are not supposed to be dealing damage
-                if (Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Physical] == 0f &&
-                    Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Energy] == 0f &&
-                    Properties[PropertyEnum.DamageBasePerLevel, (int)DamageType.Mental] == 0f)
-                    continue;
-
-                // Send power results
+                // Create power results
                 PowerResults results = new()
                 {
                     ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasDamagePhysical,
+                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner,
                     PowerPrototypeRef = PrototypeDataRef,
                     PowerOwnerEntityId = Owner.Id,
-                    TargetEntityId = target.Id,
-                    DamagePhysical = (uint)Game.Random.Next(1, 100),
+                    TargetEntityId = target.Id
                 };
 
+                // Calculate damage
+                // TODO: Move this to PowerPayload
+                float damagePhysical = PowerPayloadHelper.CalculateDamage(this, DamageType.Physical);
+                if (damagePhysical >= 1f)
+                {
+                    results.DamagePhysical = (uint)damagePhysical;
+                    results.MessageFlags |= PowerResultMessageFlags.HasDamagePhysical;
+                }
+
+                float damageEnergy = PowerPayloadHelper.CalculateDamage(this, DamageType.Energy);
+                if (damageEnergy >= 1f)
+                {
+                    results.DamageEnergy = (uint)damageEnergy;
+                    results.MessageFlags |= PowerResultMessageFlags.HasDamageEnergy;
+                }
+
+                float damageMental = PowerPayloadHelper.CalculateDamage(this, DamageType.Mental);
+                if (damageMental >= 1f)
+                {
+                    results.DamageMental = (uint)damageMental;
+                    results.MessageFlags |= PowerResultMessageFlags.HasDamageMental;
+                }
+
+                // Send results
                 Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
