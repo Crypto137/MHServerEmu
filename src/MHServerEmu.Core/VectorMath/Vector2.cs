@@ -19,6 +19,12 @@ namespace MHServerEmu.Core.VectorMath
             Y = y;
         }
 
+        public Vector2(Vector3 vector) 
+        {
+            X = vector.X;
+            Y = vector.Y;
+        }
+
         public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
         public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
         public static bool operator ==(Vector2 a, Vector2 b) => a.Equals(b);

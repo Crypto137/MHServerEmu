@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Powers
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
         private PowerActivationSettings _lastActivationSettings;
 
-        private readonly EventGroup _pendingEvents = new();
+        protected EventGroup _pendingEvents = new();
         private readonly EventGroup _pendingActivationPhaseEvents = new();
         private readonly EventGroup _pendingPowerApplicationEvents = new();
 
@@ -170,7 +170,7 @@ namespace MHServerEmu.Games.Powers
             AnimSpeedCache = -1f;
         }
 
-        public void OnDeallocate()
+        public virtual void OnDeallocate()
         {
             Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
             Game.GameEventScheduler.CancelAllEvents(_pendingActivationPhaseEvents);
@@ -270,7 +270,7 @@ namespace MHServerEmu.Games.Powers
             return ultimateOwner;
         }
 
-        public PowerUseResult Activate(ref PowerActivationSettings settings)
+        public virtual PowerUseResult Activate(ref PowerActivationSettings settings)
         {
             Logger.Trace($"Activate(): {Prototype}");
 
@@ -1890,7 +1890,7 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
-        protected PowerUseResult ActivateInternal(in PowerActivationSettings settings)
+        protected virtual PowerUseResult ActivateInternal(in PowerActivationSettings settings)
         {
             // Send non-combo activations and combos triggered by the server
             if (IsComboEffect() == false || settings.Flags.HasFlag(PowerActivationSettingsFlags.ServerCombo))
@@ -1970,7 +1970,7 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
-        protected bool ApplyInternal(PowerApplication powerApplication)
+        protected virtual bool ApplyInternal(PowerApplication powerApplication)
         {
             // NOTE: This is where powers actually do stuff
             if (Prototype is MovementPowerPrototype movementPowerProto)
@@ -2944,7 +2944,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool SchedulePowerEnd(in PowerActivationSettings settings)
+        protected bool SchedulePowerEnd(in PowerActivationSettings settings)
         {
             if (Owner == null) return Logger.WarnReturn(false, "SchedulePowerEnd(): Owner == null");
 
@@ -2990,7 +2990,7 @@ namespace MHServerEmu.Games.Powers
             return SchedulePowerEnd(executionTime, flags);
         }
 
-        private bool SchedulePowerEnd(TimeSpan delay, EndPowerFlags flags = EndPowerFlags.None, bool doNotReschedule = false)
+        protected bool SchedulePowerEnd(TimeSpan delay, EndPowerFlags flags = EndPowerFlags.None, bool doNotReschedule = false)
         {
             PowerPrototype powerProto = Prototype;
 
