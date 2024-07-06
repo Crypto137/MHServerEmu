@@ -227,7 +227,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        // Keywords
+        #region Keywords
 
         public bool AddKeyword(PrototypeId keywordProtoRef)
         {
@@ -251,6 +251,26 @@ namespace MHServerEmu.Games.Powers
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
+
+        public static void AccumulateKeywordProperties(ref float value, PowerPrototype powerProto, PropertyCollection properties1,
+            PropertyCollection properties2, PropertyEnum propertyEnum)
+        {
+            foreach (var kvp in properties1.IteratePropertyRange(propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                if (keywordProtoRef == PrototypeId.Invalid) continue;
+
+                int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
+
+                if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
+                   powerKeywordChange == (int)TriBool.True)
+                {
+                    value += kvp.Value;
+                }
+            }
+        }
+
+        #endregion
 
         public WorldEntity GetUltimateOwner()
         {
@@ -1143,8 +1163,15 @@ namespace MHServerEmu.Games.Powers
 
         public static float GetAOESizePctModifier(PowerPrototype powerProto, PropertyCollection ownerProperties)
         {
-            // TODO
-            return 1f;
+            float aoeSizePctModifier = 1f;
+
+            if (ownerProperties != null)
+            {
+                aoeSizePctModifier += ownerProperties[PropertyEnum.AOESizePctModifier];
+                AccumulateKeywordProperties(ref aoeSizePctModifier, powerProto, ownerProperties, ownerProperties, PropertyEnum.AOESizePctModifierKeyword);
+            }
+
+            return MathF.Max(aoeSizePctModifier, 0.1f);  // 0.1f - smallest possible AoE size modifier
         }
 
         public float GetAOEAngle()
@@ -1255,7 +1282,11 @@ namespace MHServerEmu.Games.Powers
             if (ownerProperties != null && range > 0f && IsMelee(powerProto) == false && IsOwnerCenteredAOE(powerProto) == false)
             {
                 range += ownerProperties[PropertyEnum.RangeModifier];
-                // TODO: Power::AccumulateKeywordProperties<float>()
+
+                // Calculate and apply range multiplier
+                float rangeMult = 1f;
+                AccumulateKeywordProperties(ref rangeMult, powerProto, ownerProperties, ownerProperties, PropertyEnum.RangeModifierPctKeyword);
+                range *= rangeMult;
             }
 
             return range;
