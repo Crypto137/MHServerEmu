@@ -6,7 +6,6 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -119,6 +118,32 @@ namespace MHServerEmu.Games.Entities.Avatars
         #endregion
 
         #region Powers
+
+        public override bool OnPowerAssigned(Power power)
+        {
+            if (base.OnPowerAssigned(power) == false)
+                return false;
+
+            // Set charges to max if the assigned power uses charges
+            if (Properties.HasProperty(new PropertyId(PropertyEnum.PowerChargesMax, power.PrototypeDataRef)) == false)
+            {
+                GlobalsPrototype globalsPrototype = GameDatabase.GlobalsPrototype;
+                if (globalsPrototype == null) return Logger.WarnReturn(false, "OnPowerAssigned(): globalsPrototype == null");
+
+                int powerChargesMax = power.Properties[PropertyEnum.PowerChargesMax, globalsPrototype.PowerPrototype];
+                if (powerChargesMax > 0)
+                {
+                    PowerPrototype powerProto = power.Prototype;
+                    if (powerProto?.CooldownOnPlayer == true)
+                        Logger.Warn($"OnPowerAssigned(): CooldownOnPlayer not supported on power with charges.\n{power}");
+
+                    Properties[PropertyEnum.PowerChargesAvailable, power.PrototypeDataRef] = powerChargesMax;
+                    Properties[PropertyEnum.PowerChargesMax, power.PrototypeDataRef] = powerChargesMax;
+                }
+            }
+
+            return true;
+        }
 
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {

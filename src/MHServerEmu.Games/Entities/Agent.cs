@@ -323,6 +323,21 @@ namespace MHServerEmu.Games.Entities
             || IsInPowerLock;
         }
 
+        public override TimeSpan GetAbilityCooldownTimeRemaining(PowerPrototype powerProto)
+        {
+            if (AIController != null && powerProto.PowerCategory == PowerCategoryType.NormalPower)
+            {
+                Game game = Game;
+                if (game == null) return Logger.WarnReturn(TimeSpan.Zero, "GetAbilityCooldownTimeRemaining(): game == null");
+
+                PropertyCollection blackboardProperties = AIController.Blackboard.PropertyCollection;
+                long aiCooldownTime = blackboardProperties[PropertyEnum.AIProceduralPowerSpecificCDTime, powerProto.DataRef];
+                return TimeSpan.FromMilliseconds(aiCooldownTime) - game.CurrentTime;
+            }
+
+            return base.GetAbilityCooldownTimeRemaining(powerProto);
+        }
+
         public bool StartThrowing(ulong entityId)
         {
             if (Properties[PropertyEnum.ThrowableOriginatorEntity] == entityId) return true;

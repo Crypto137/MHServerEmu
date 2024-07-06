@@ -43,6 +43,8 @@ namespace MHServerEmu.Games.Powers
         private readonly EventPointer<StopChargingEvent> _stopChargingEvent = new();
         private readonly EventPointer<StartChannelingEvent> _startChannelingEvent = new();
         private readonly EventPointer<StopChannelingEvent> _stopChannelingEvent = new();
+        private readonly EventPointer<EndCooldownEvent> _endCooldownEvent = new();
+        private readonly EventPointer<PowerSubsequentActivationTimeoutEvent> _subsequentActivationTimeoutEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
 
         public Game Game { get; }
@@ -253,6 +255,24 @@ namespace MHServerEmu.Games.Powers
         }
 
         public static void AccumulateKeywordProperties(ref float value, PowerPrototype powerProto, PropertyCollection properties1,
+            PropertyCollection properties2, PropertyEnum propertyEnum)
+        {
+            foreach (var kvp in properties1.IteratePropertyRange(propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                if (keywordProtoRef == PrototypeId.Invalid) continue;
+
+                int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
+
+                if ((powerKeywordChange != (int)TriBool.False && powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>())) ||
+                   powerKeywordChange == (int)TriBool.True)
+                {
+                    value += kvp.Value;
+                }
+            }
+        }
+
+        public static void AccumulateKeywordProperties(ref long value, PowerPrototype powerProto, PropertyCollection properties1,
             PropertyCollection properties2, PropertyEnum propertyEnum)
         {
             foreach (var kvp in properties1.IteratePropertyRange(propertyEnum))
@@ -731,11 +751,153 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public void StartCooldown()
+        #region Cooldowns
+
+        public bool StartCooldown(TimeSpan cooldownDuration = default)
         {
-            // TODO
-            //Logger.Debug("StartCooldown()");
+            if (Owner == null) return Logger.WarnReturn(false, "StartCooldown(): Owner == null");
+
+            if (CanStartCooldowns() == false)
+                return false;
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "StartCooldown(): powerProto == null");
+
+            if (GetPowerCategory() == PowerCategoryType.NormalPower)
+            {
+                // AI cooldowns for normal powers have their own thing going on
+                if (Owner is Agent agentOwner && agentOwner.AIController != null)
+                {
+                    TimeSpan cooldownTime = agentOwner.Game.CurrentTime + cooldownDuration;
+                    PropertyCollection blackboardProperties = agentOwner.AIController.Blackboard.PropertyCollection;
+                    blackboardProperties[PropertyEnum.AIProceduralPowerSpecificCDTime, PrototypeDataRef] = (long)cooldownTime.TotalMilliseconds;
+                    return true;
+                }
+            }
+
+            // Fix for BUE 2
+            if (powerProto is MovementPowerPrototype && Game.CustomGameOptions.DisableMovementPowerChargeCost)
+                return true;
+
+            if (cooldownDuration == TimeSpan.Zero)
+            {
+                if (powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
+                {
+                    Owner.Properties.AdjustProperty(1, new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
+
+                    int numActivatesBeforeCooldown = extraActivateOnSubsequent.GetNumActivatesBeforeCooldown(Properties[PropertyEnum.PowerRank]);
+                    if (numActivatesBeforeCooldown > 1)
+                    {
+                        int powerActivationCount = Owner.Properties[PropertyEnum.PowerActivationCount, PrototypeDataRef];
+                        if (powerActivationCount < numActivatesBeforeCooldown)
+                            return true;
+
+                        // Cancel timeout and start cooldown after reaching the number of activations before cooldown
+                        Owner.Properties[PropertyEnum.PowerActivationCount, PrototypeDataRef] = 0;
+                        CancelExtraActivationTimeout();
+                        HandleTriggerPowerEventOnExtraActivationCooldown();
+                    }
+                }
+
+                if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0 && IsOnCooldown())
+                    return true;
+            }
+
+            PropertyCollection properties = Owner.Properties;
+            if (powerProto.CooldownOnPlayer)
+            {
+                Player player = Owner.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "StartCooldown(): player == null");
+                properties = player.Properties;
+            }
+
+            cooldownDuration = CalcCooldownDuration(powerProto, Owner, Properties, cooldownDuration);
+
+            if (cooldownDuration > TimeSpan.Zero)
+            {
+                properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef] = Game.Current.CurrentTime;
+                properties[PropertyEnum.PowerCooldownDuration, powerProto.DataRef] = cooldownDuration;
+
+                // Schedule cooldown end event that's going to replenish charges
+                EventScheduler scheduler = Game?.GameEventScheduler;
+                if (scheduler == null) return Logger.WarnReturn(false, "StartCooldown(): scheduler == null");
+
+                if (_endCooldownEvent.IsValid)
+                {
+                    scheduler.RescheduleEvent(_endCooldownEvent, cooldownDuration);
+                }
+                else
+                {
+                    scheduler.ScheduleEvent(_endCooldownEvent, cooldownDuration, _pendingEvents);
+                    _endCooldownEvent.Get().Initialize(this);
+                }
+
+                Logger.Debug($"StartCooldown(): {Prototype} - {cooldownDuration.TotalMilliseconds} ms");
+            }
+
+            return true;
         }
+
+        public void OnCooldownEndCallback()
+        {
+            if (ShouldReplenishCharges() == false)
+                return;
+
+            PrototypeId powerProtoRef = PrototypeDataRef;
+            Owner.Properties.AdjustProperty(1, new(PropertyEnum.PowerChargesAvailable, powerProtoRef));
+
+            if (Owner.GetPowerChargesAvailable(powerProtoRef) < Owner.GetPowerChargesMax(powerProtoRef))
+            {
+                StartCooldown();
+            }
+            else
+            {
+                Owner.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, powerProtoRef));
+                Owner.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDuration, powerProtoRef));
+            }
+        }
+
+        public bool ExtraActivateTimeoutCallback()
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "ExtraActivateTimeoutCallback(): Owner == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "ExtraActivateTimeoutCallback(): powerProto == null");
+
+            if (powerProto.ExtraActivation != null &&
+                powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
+            {
+                // Fast forward activation count to the end of the counter
+                int numActivatesBeforeCooldown = extraActivateOnSubsequent.GetNumActivatesBeforeCooldown(Properties[PropertyEnum.PowerRank]);
+                if (numActivatesBeforeCooldown > 1)
+                    Owner.Properties[PropertyEnum.PowerActivationCount, PrototypeDataRef] = numActivatesBeforeCooldown;
+            }
+
+            StartCooldown();
+            return true;
+        }
+
+        private bool ShouldReplenishCharges()
+        {
+            PrototypeId powerProtoRef = PrototypeDataRef;
+            int maxCharges = Owner.GetPowerChargesMax(powerProtoRef);
+
+            if (maxCharges <= 0)
+                return false;
+
+            int chargeCount = Owner.GetPowerChargesAvailable(powerProtoRef);
+
+            if (Owner.TestStatus(EntityStatus.EnteringWorld) == false &&
+                Owner.TestStatus(EntityStatus.ExitingWorld) == false &&
+                (chargeCount < 0 || chargeCount > maxCharges))
+            {
+                return Logger.WarnReturn(false, "ShouldReplenishCharges(): chargeCount < 0 || chargetCount > maxCharges");
+            }
+
+            return chargeCount < maxCharges;
+        }
+
+        #endregion
 
         public bool GetTargets(List<WorldEntity> targetList, WorldEntity target, in Vector3 targetPosition, int randomSeed = 0, int beamSweepSlice = -1)
         {
@@ -909,9 +1071,25 @@ namespace MHServerEmu.Games.Powers
             return false;
         }
 
+        public bool IsOnCooldown()
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "IsOnCooldown(): Owner == null");
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsOnCooldown(): powerProto == null");
+            return Owner.IsPowerOnCooldown(powerProto);
+        }
+
         public TimeSpan GetCooldownTimeRemaining()
         {
-            return TimeSpan.Zero;
+            if (Owner == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownTimeRemaining(): Owner == null");
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownTimeRemaining(): powerProto == null");
+            return GetCooldownTimeRemaining(powerProto, Owner);
+        }
+
+        public static TimeSpan GetCooldownTimeRemaining(PowerPrototype powerProto, WorldEntity owner)
+        {
+            return owner.GetAbilityCooldownTimeRemaining(powerProto);
         }
 
         #endregion
@@ -1676,12 +1854,30 @@ namespace MHServerEmu.Games.Powers
 
         public static TimeSpan CalcCooldownDuration(PowerPrototype powerProto, WorldEntity owner, PropertyCollection powerProperties, TimeSpan baseCooldown = default)
         {
-            if (baseCooldown == TimeSpan.Zero)
+            if (baseCooldown == default)
                 baseCooldown = powerProto.GetCooldownDuration(powerProperties, owner.Properties);
 
-            // TODO: apply modifiers
+            // Calculate cooldown modifier percentage
+            float cooldownModifierPct = owner.Properties[PropertyEnum.CooldownModifierPctGlobal];
+            cooldownModifierPct += owner.Properties[PropertyEnum.CooldownModifierPctForPower, powerProto.DataRef];
+            AccumulateKeywordProperties(ref cooldownModifierPct, powerProto, owner.Properties, owner.Properties, PropertyEnum.CooldownModifierPctForKeyword);
 
-            return baseCooldown;
+            // Calculate flat cooldown modifier
+            long flatCooldownModifierMS = owner.Properties[PropertyEnum.CooldownModifierPctForPower, powerProto.DataRef];
+            AccumulateKeywordProperties(ref flatCooldownModifierMS, powerProto, owner.Properties, owner.Properties, PropertyEnum.CooldownModifierMSForKeyword);
+            TimeSpan flatCooldownModifier = TimeSpan.FromMilliseconds(flatCooldownModifierMS);
+
+            // Calculate cooldown
+            TimeSpan cooldown = baseCooldown;
+            cooldown += flatCooldownModifier;               // Apply flat modifier to base
+            cooldown += cooldown * cooldownModifierPct;     // Apply percentage modifier
+
+            // Get interrupt cooldown and use it to override the value we calculated if its longer
+            TimeSpan interruptCooldown = owner.GetPowerInterruptCooldown(powerProto);
+            cooldown = Clock.Max(cooldown, interruptCooldown);
+
+            // Make we don't get a negative cooldown
+            return Clock.Max(cooldown, TimeSpan.Zero);
         }
 
         public static bool IsCooldownOnPlayer(PowerPrototype powerProto)
@@ -2265,6 +2461,13 @@ namespace MHServerEmu.Games.Powers
 
                 // Send results
                 Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
+            }
+
+            // Doctors hate him! BUE fixed with one simple trick
+            if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
+            {
+                if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
             }
 
             return true;
@@ -3160,6 +3363,43 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool ScheduleExtraActivationTimeout(ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
+        {
+            int timeoutLengthMS = extraActivateOnSubsequent.GetTimeoutLengthMS(Properties[PropertyEnum.PowerRank]);
+            
+            if (timeoutLengthMS == 0)
+                return true;
+
+            if (extraActivateOnSubsequent.ExtraActivateEffect == SubsequentActivateType.DestroySummonedEntity)
+            {
+                if (IsOnExtraActivation() == false)
+                    return Logger.WarnReturn(false, "ScheduleExtraActivationTimeout(): IsOnExtraActivation() == false");
+
+                if (_subsequentActivationTimeoutEvent.IsValid)
+                    return Logger.WarnReturn(false, "ScheduleExtraActivationTimeout(): _subsequentActivationTimeoutEvent.IsValid");
+            }
+
+            if (_subsequentActivationTimeoutEvent.IsValid == false)
+            {
+                EventScheduler scheduler = Game?.GameEventScheduler;
+                if (scheduler == null) return Logger.WarnReturn(false, "ScheduleExtraActivationTimeout(): scheduler == null");
+
+                scheduler.ScheduleEvent(_subsequentActivationTimeoutEvent, TimeSpan.FromMilliseconds(timeoutLengthMS), _pendingEvents);
+                _subsequentActivationTimeoutEvent.Get().Initialize(this);
+            }
+
+            return true;
+        }
+
+        private bool CancelExtraActivationTimeout()
+        {
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "CancelExtraActivationTimeout(): scheduler == null");
+
+            scheduler.CancelEvent(_subsequentActivationTimeoutEvent);
+            return true;
+        }
+
         private bool SchedulePowerEnd(in PowerActivationSettings settings)
         {
             if (Owner == null) return Logger.WarnReturn(false, "SchedulePowerEnd(): Owner == null");
@@ -3279,6 +3519,16 @@ namespace MHServerEmu.Games.Powers
 
                 return true;
             }
+        }
+
+        private class EndCooldownEvent : CallMethodEvent<Power>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.OnCooldownEndCallback();
+        }
+
+        private class PowerSubsequentActivationTimeoutEvent : CallMethodEvent<Power>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.ExtraActivateTimeoutCallback();
         }
 
         private class EndPowerEvent : CallMethodEventParam1<Power, EndPowerFlags>
