@@ -1895,6 +1895,44 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
+        #region Stat Calculations
+
+        public static float GetDamageRatingMult(float damageRating, PropertyCollection userProperties, WorldEntity target)
+        {
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(0f, "GetDamageRatingMult(): combatGlobals == null");
+
+            EvalPrototype damageRatingEval = combatGlobals.EvalDamageRatingFormula;
+            if (damageRatingEval == null) return Logger.WarnReturn(0f, "GetDamageRatingMult(): damageRatingEval == null");
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            contextData.SetVar_Float(EvalContext.Var1, damageRating);
+
+            return Eval.RunFloat(damageRatingEval, contextData);
+        }
+
+        public static float GetCritChance(PowerPrototype powerProto, PropertyCollection userProperties, WorldEntity target, int targetLevelOverride = -1)
+        {
+            // TODO
+            return 0f;
+        }
+
+        public static float GetSuperCritChance()
+        {
+            // TODO
+            return 0f;
+        }
+
+        public static float GetCritDamageMult()
+        {
+            // TODO
+            return 1f;
+        }
+
+        #endregion
+
         protected PowerUseResult ActivateInternal(in PowerActivationSettings settings)
         {
             // Send non-combo activations and combos triggered by the server
@@ -2047,21 +2085,21 @@ namespace MHServerEmu.Games.Powers
 
                 // Calculate damage
                 // TODO: Move this to PowerPayload
-                float damagePhysical = PowerPayloadHelper.CalculateDamage(this, DamageType.Physical);
+                float damagePhysical = PowerPayloadHelper.CalculateDamage(this, DamageType.Physical, Owner, target);
                 if (damagePhysical >= 1f)
                 {
                     results.DamagePhysical = (uint)damagePhysical;
                     results.MessageFlags |= PowerResultMessageFlags.HasDamagePhysical;
                 }
 
-                float damageEnergy = PowerPayloadHelper.CalculateDamage(this, DamageType.Energy);
+                float damageEnergy = PowerPayloadHelper.CalculateDamage(this, DamageType.Energy, Owner, target);
                 if (damageEnergy >= 1f)
                 {
                     results.DamageEnergy = (uint)damageEnergy;
                     results.MessageFlags |= PowerResultMessageFlags.HasDamageEnergy;
                 }
 
-                float damageMental = PowerPayloadHelper.CalculateDamage(this, DamageType.Mental);
+                float damageMental = PowerPayloadHelper.CalculateDamage(this, DamageType.Mental, Owner, target);
                 if (damageMental >= 1f)
                 {
                     results.DamageMental = (uint)damageMental;

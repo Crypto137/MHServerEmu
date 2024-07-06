@@ -111,6 +111,13 @@ namespace MHServerEmu.Games.Entities
 
         #region Powers
 
+        public virtual bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
+        {
+            KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
+            if (keywordPrototype == null) return Logger.WarnReturn(false, "HasPowerWithKeyword(): keywordPrototype == null");
+            return powerProto.HasKeyword(keywordPrototype);
+        }
+
         public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
         {
             if (IsTeamUpAgent)

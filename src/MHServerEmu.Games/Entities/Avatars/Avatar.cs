@@ -391,6 +391,22 @@ namespace MHServerEmu.Games.Entities.Avatars
             return PrototypeId.Invalid;
         }
 
+        public override bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
+        {
+            KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
+            if (keywordPrototype == null) return Logger.WarnReturn(false, "HasPowerWithKeyword(): keywordPrototype == null");
+
+            // Check if the assigned power has the specified keyword
+            Power power = GetPower(powerProto.DataRef);
+            if (power != null)
+                return power.HasKeyword(keywordPrototype);
+
+            // Check if there are any keyword override in our properties
+            int powerKeywordChange = Properties[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
+
+            return powerKeywordChange == (int)TriBool.True || (powerProto.HasKeyword(keywordPrototype) && powerKeywordChange != (int)TriBool.False);
+        }
+
         public override bool HasPowerInPowerProgression(PrototypeId powerRef)
         {
             if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)

@@ -1129,6 +1129,21 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        public float GetDamageRating(DamageType damageType)
+        {
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(0f, "GetDamageRating(): combatGlobal == null");
+
+            float damageRating = Properties[PropertyEnum.DamageRating];
+            damageRating += Properties[PropertyEnum.DamageRatingBonusHardcore] * combatGlobals.GetHardcoreAttenuationFactor(Properties);
+            damageRating += Properties[PropertyEnum.DamageRatingBonusMvmtSpeed] * MathF.Max(0f, BonusMovementSpeed);
+
+            if (damageType != DamageType.Any)
+                damageRating += Properties[PropertyEnum.DamageRatingBonusByType, (int)damageType];
+
+            return damageRating;
+        }
+
         public float GetCastSpeedPct(PowerPrototype powerProto)
         {
             float castSpeedPct = Properties[PropertyEnum.CastSpeedIncrPct] - Properties[PropertyEnum.CastSpeedDecrPct];
