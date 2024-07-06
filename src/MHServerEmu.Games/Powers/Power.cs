@@ -775,10 +775,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // Fix for BUE 2
-            if (powerProto is MovementPowerPrototype && Game.CustomGameOptions.DisableMovementPowerChargeCost)
-                return true;
-
             if (cooldownDuration == TimeSpan.Zero)
             {
                 if (powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
@@ -799,8 +795,12 @@ namespace MHServerEmu.Games.Powers
                     }
                 }
 
-                if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0 && IsOnCooldown())
-                    return true;
+                if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+                {
+                    // Fix for BUE 2
+                    if (IsOnCooldown() || (powerProto is MovementPowerPrototype && Game.CustomGameOptions.DisableMovementPowerChargeCost))
+                        return true;
+                }
             }
 
             PropertyCollection properties = Owner.Properties;
@@ -2463,10 +2463,10 @@ namespace MHServerEmu.Games.Powers
                 Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
-            // Doctors hate him! BUE fixed with one simple trick
-            if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
+            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
             {
-                if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+                // Doctors hate him! BUE fixed with one simple trick
+                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
                     Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
             }
 
