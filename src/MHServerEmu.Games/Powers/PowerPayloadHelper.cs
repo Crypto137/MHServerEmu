@@ -58,12 +58,18 @@ namespace MHServerEmu.Games.Powers
             // Get damage value within range and apply additional modifiers to it (e.g. crit and mitigation)
             float damage = power.Game.Random.NextFloat(minDamage, maxDamage);
 
+            // Check crit chance / super crit chance and apply damage multiplier if needed
+            // NOTE: This is inaccurate because we are calculating crit separately for each damage type.
+            // TODO: Fix this when we start using PowerPayload.
             if (CheckCritChance(power.Prototype, user, target))
             {
                 if (CheckSuperCritChance(power.Prototype, user, target))
                     flags |= PowerResultFlags.SuperCritical;
                 else
                     flags |= PowerResultFlags.Critical;
+
+                float critDamageMult = Power.GetCritDamageMult(user.Properties, target, flags.HasFlag(PowerResultFlags.SuperCritical));
+                damage *= critDamageMult;
             }
 
             return damage;

@@ -2045,10 +2045,41 @@ namespace MHServerEmu.Games.Powers
             return Eval.RunFloat(superCritEval, contextData);
         }
 
-        public static float GetCritDamageMult()
+        public static float GetCritDamageMult(PropertyCollection userProperties, WorldEntity target, bool isSuperCrit)
         {
-            // TODO
-            return 1f;
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(0f, "GetCritDamageMult(): combatGlobals == null");
+
+            EvalPrototype ratingEval = combatGlobals.EvalCritDamageRatingFormula;
+            if (ratingEval == null) return Logger.WarnReturn(0f, "GetCritDamageMult(): ratingEval == null");
+
+            // Start calculating crit damage mult
+            float critDamageMult = userProperties[PropertyEnum.CritDamageMult];
+            critDamageMult += userProperties[PropertyEnum.CritDamagePowerMultBonus];
+
+            if (isSuperCrit)
+            {
+                critDamageMult += userProperties[PropertyEnum.SuperCritDamageMult];
+                critDamageMult += userProperties[PropertyEnum.SuperCritDamagePowerMultBonus];
+            }
+
+            // Calculate crit damage rating
+            float critDamageRating = userProperties[PropertyEnum.CritDamageRating];
+
+            if (isSuperCrit)
+                critDamageRating += userProperties[PropertyEnum.SuperCritDamageRating];
+
+            // Run crit damage rating eval
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            contextData.SetVar_Float(EvalContext.Var1, critDamageRating);
+
+            float critDamageRatingBonus = Eval.RunFloat(ratingEval, contextData);
+
+            // TODO: target.IsInPvPMatch()
+
+            return critDamageMult + critDamageRatingBonus;
         }
 
         #endregion
