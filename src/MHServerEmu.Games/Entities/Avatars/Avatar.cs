@@ -820,6 +820,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
             Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
 
+            // Add base crit chance bonus to compensate for the lack of equipment
+            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
+            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
+
             // Stats
             foreach (PrototypeId entryId in avatarProto.StatProgressionTable)
             {

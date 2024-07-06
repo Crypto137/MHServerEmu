@@ -1944,16 +1944,105 @@ namespace MHServerEmu.Games.Powers
             return Eval.RunFloat(damageRatingEval, contextData);
         }
 
-        public static float GetCritChance(PowerPrototype powerProto, PropertyCollection userProperties, WorldEntity target, int targetLevelOverride = -1)
+        public static float GetCritChance(PowerPrototype powerProto, PropertyCollection userProperties, WorldEntity target,
+            ulong userEntityId, PrototypeId keywordProtoRef = PrototypeId.Invalid, int targetLevelOverride = -1)
         {
-            // TODO
-            return 0f;
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(0f, "GetCritChance(): combatGlobals == null");
+
+            EvalPrototype critEval = combatGlobals.EvalCritChanceFormula;
+            if (critEval == null) return Logger.WarnReturn(0f, "GetCritChance(): critEval == null");
+
+            // Start calculating crit rating for the user
+            float critRatingAdd = userProperties[PropertyEnum.CritRatingBonusAdd];
+            float critRatingMult = 1f + userProperties[PropertyEnum.CritRatingBonusMult];
+            float critChancePctAdd = userProperties[PropertyEnum.CritChancePctAdd];
+
+            // Apply power bonuses
+            critRatingAdd += userProperties[PropertyEnum.CritRatingPowerBonusAdd];
+            critRatingMult += userProperties[PropertyEnum.CritRatingPowerBonusMult];
+
+            // Apply targeted crit bonus
+            ulong targetedCritBonusId = target.Properties[PropertyEnum.TargetedCritBonusId];
+            if (userEntityId != Entity.InvalidId && targetedCritBonusId == userEntityId)
+                critRatingAdd += target.Properties[PropertyEnum.TargetedCritBonus];
+
+            // Apply keyword bonuses
+            if (powerProto != null)
+            {
+                AccumulateKeywordProperties(ref critRatingAdd, powerProto, userProperties, userProperties, PropertyEnum.CritRatingBonusAddPowerKeyword);
+                AccumulateKeywordProperties(ref critRatingMult, powerProto, userProperties, userProperties, PropertyEnum.CritRatingBonusMultPowerKeyword);
+                AccumulateKeywordProperties(ref critChancePctAdd, powerProto, userProperties, userProperties, PropertyEnum.CritChancePctAddPowerKeyword);
+            }
+            else if (keywordProtoRef != PrototypeId.Invalid)
+            {
+                critRatingAdd += userProperties[PropertyEnum.CritRatingBonusAddPowerKeyword, keywordProtoRef];
+                critRatingMult += userProperties[PropertyEnum.CritRatingBonusMultPowerKeyword, keywordProtoRef];
+                critChancePctAdd += userProperties[PropertyEnum.CritChancePctAddPowerKeyword, keywordProtoRef];
+            }
+
+            // Apply target keyword crit bonus
+            target.AccumulateKeywordProperties(PropertyEnum.CritRatingBonusVsTargetKeyword, userProperties, ref critRatingAdd);            
+
+            // Prepare int arguments for context data
+            int critRating = (int)(critRatingAdd * MathF.Max(critRatingMult, 0f));
+            int critChancePctAddInt = (int)MathF.Round(critChancePctAdd * 100f);
+            int userLevel = Math.Max(1, userProperties[PropertyEnum.CombatLevel]);
+            int targetLevel = targetLevelOverride >= 0 ? targetLevelOverride : target.CombatLevel;
+
+            // Run eval
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            contextData.SetVar_Int(EvalContext.Var1, critRating);
+            contextData.SetVar_Int(EvalContext.Var2, critChancePctAddInt);
+            contextData.SetVar_Int(EvalContext.Var3, userLevel);
+            contextData.SetVar_Int(EvalContext.Var4, targetLevel);
+
+            return Eval.RunFloat(critEval, contextData);
         }
 
-        public static float GetSuperCritChance()
+        public static float GetSuperCritChance(PowerPrototype powerProto, PropertyCollection userProperties, WorldEntity target, int targetLevelOverride = -1)
         {
-            // TODO
-            return 0f;
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(0f, "GetSuperCritChance(): combatGlobals == null");
+
+            EvalPrototype superCritEval = combatGlobals.EvalSuperCritChanceFormula;
+            if (superCritEval == null) return Logger.WarnReturn(0f, "GetSuperCritChance(): superCritEval == null");
+
+            // Start calculating super crit rating for the user
+            float superCritRatingAdd = userProperties[PropertyEnum.SuperCritRatingBonusAdd];
+            float superCritRatingMult = 1f + userProperties[PropertyEnum.SuperCritRatingBonusMult];
+            float superCritChancePctAdd = userProperties[PropertyEnum.SuperCritChancePctAdd];
+
+            // Apply power bonuses
+            superCritRatingAdd += userProperties[PropertyEnum.SuperCritRatingPowerBonusAdd];
+            superCritRatingMult += userProperties[PropertyEnum.SuperCritRatingPowerBonusMult];
+
+            // Apply power keyword bonuses
+            if (powerProto != null)
+            {
+                AccumulateKeywordProperties(ref superCritRatingAdd, powerProto, userProperties, userProperties, PropertyEnum.SuperCritRatingBonusAddPowerKeyword);
+                AccumulateKeywordProperties(ref superCritRatingMult, powerProto, userProperties, userProperties, PropertyEnum.SuperCritRatingBonusMultPowerKeyword);
+                AccumulateKeywordProperties(ref superCritChancePctAdd, powerProto, userProperties, userProperties, PropertyEnum.SuperCritChancePctAddPowerKwd);
+            }
+
+            // Prepare arguments for context data
+            float superCritRating = superCritRatingAdd * MathF.Max(superCritRatingMult, 0f);
+            int superCritChancePctAddInt = (int)MathF.Round(superCritChancePctAdd * 100f);
+            int userLevel = userProperties[PropertyEnum.CombatLevel];
+            int targetLevel = targetLevelOverride >= 0 ? targetLevelOverride : target.CombatLevel;
+
+            // Run eval
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            contextData.SetVar_Float(EvalContext.Var1, superCritRating);
+            contextData.SetVar_Int(EvalContext.Var2, superCritChancePctAddInt);
+            contextData.SetVar_Int(EvalContext.Var3, userLevel);
+            contextData.SetVar_Int(EvalContext.Var4, targetLevel);
+
+            return Eval.RunFloat(superCritEval, contextData);
         }
 
         public static float GetCritDamageMult()
@@ -2108,32 +2197,38 @@ namespace MHServerEmu.Games.Powers
                 PowerResults results = new()
                 {
                     ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner,
+                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasResultFlags,
                     PowerPrototypeRef = PrototypeDataRef,
                     PowerOwnerEntityId = Owner.Id,
                     TargetEntityId = target.Id
                 };
 
+                if (Owner.IsHostileTo(target))
+                    results.ResultFlags |= PowerResultFlags.Hostile;
+
                 // Calculate damage
                 // TODO: Move this to PowerPayload
-                float damagePhysical = PowerPayloadHelper.CalculateDamage(this, DamageType.Physical, Owner, target);
+                float damagePhysical = PowerPayloadHelper.CalculateDamage(this, DamageType.Physical, Owner, target, out PowerResultFlags physicalFlags);
                 if (damagePhysical >= 1f)
                 {
                     results.DamagePhysical = (uint)damagePhysical;
+                    results.ResultFlags |= physicalFlags;
                     results.MessageFlags |= PowerResultMessageFlags.HasDamagePhysical;
                 }
 
-                float damageEnergy = PowerPayloadHelper.CalculateDamage(this, DamageType.Energy, Owner, target);
+                float damageEnergy = PowerPayloadHelper.CalculateDamage(this, DamageType.Energy, Owner, target, out PowerResultFlags energyFlags);
                 if (damageEnergy >= 1f)
                 {
                     results.DamageEnergy = (uint)damageEnergy;
+                    results.ResultFlags |= energyFlags;
                     results.MessageFlags |= PowerResultMessageFlags.HasDamageEnergy;
                 }
 
-                float damageMental = PowerPayloadHelper.CalculateDamage(this, DamageType.Mental, Owner, target);
+                float damageMental = PowerPayloadHelper.CalculateDamage(this, DamageType.Mental, Owner, target, out PowerResultFlags mentalFlags);
                 if (damageMental >= 1f)
                 {
                     results.DamageMental = (uint)damageMental;
+                    results.ResultFlags |= mentalFlags;
                     results.MessageFlags |= PowerResultMessageFlags.HasDamageMental;
                 }
 

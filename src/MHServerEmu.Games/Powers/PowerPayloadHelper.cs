@@ -10,9 +10,10 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static float CalculateDamage(Power power, DamageType damageType, WorldEntity user, WorldEntity target)
+        public static float CalculateDamage(Power power, DamageType damageType, WorldEntity user, WorldEntity target, out PowerResultFlags flags)
         {
             // Current implementation is based on the DamageStats class from the client
+            flags = PowerResultFlags.None;
 
             PropertyCollection powerProperties = power.Properties;
 
@@ -32,9 +33,12 @@ namespace MHServerEmu.Games.Powers
             float minDamage = damageBase * damageTuningScore * (1f - variance);
             float maxDamage = damageBase * damageTuningScore * (1f + variance);
 
+            // No need to run bonus calculations if base damage is 0
+            if (maxDamage == 0f)
+                return 0f;
+
             // Calculate damage multiplier
             float damageMult = CalculateDamageMultiplier(power, damageType, user, target);
-            Logger.Debug($"CalculateDamage(): damageMult = {damageMult}f");
 
             // Apply scaling to base damage
             minDamage = MathF.Max(0f, minDamage * damageMult);
@@ -51,10 +55,21 @@ namespace MHServerEmu.Games.Powers
             minDamage += damageBaseUnmodified;
             maxDamage += damageBaseUnmodified;
 
-            return power.Game.Random.NextFloat(minDamage, maxDamage);
+            // Get damage value within range and apply additional modifiers to it (e.g. crit and mitigation)
+            float damage = power.Game.Random.NextFloat(minDamage, maxDamage);
+
+            if (CheckCritChance(power.Prototype, user, target))
+            {
+                if (CheckSuperCritChance(power.Prototype, user, target))
+                    flags |= PowerResultFlags.SuperCritical;
+                else
+                    flags |= PowerResultFlags.Critical;
+            }
+
+            return damage;
         }
 
-        public static float CalculateDamageMultiplier(Power power, DamageType damageType, WorldEntity user, WorldEntity target)
+        private static float CalculateDamageMultiplier(Power power, DamageType damageType, WorldEntity user, WorldEntity target)
         {
             PowerPrototype powerProto = power.Prototype;
             PropertyCollection powerProperties = power.Properties;
@@ -177,6 +192,22 @@ namespace MHServerEmu.Games.Powers
             }
 
             return damageMult * teamUpDamageScalar;
+        }
+
+        private static bool CheckCritChance(PowerPrototype powerProto, WorldEntity user, WorldEntity target)
+        {
+            // Skip power that can't crit
+            if (powerProto.CanCrit == false || powerProto.Activation == PowerActivationType.Passive)
+                return false;
+
+            float critChance = Power.GetCritChance(powerProto, user.Properties, target, user.Id);
+            return user.Game.Random.NextFloat() < critChance;
+        }
+
+        private static bool CheckSuperCritChance(PowerPrototype powerProto, WorldEntity user, WorldEntity target)
+        {
+            float superCritChance = Power.GetSuperCritChance(powerProto, user.Properties, target);
+            return user.Game.Random.NextFloat() < superCritChance;
         }
     }
 }

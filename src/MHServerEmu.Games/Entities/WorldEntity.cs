@@ -1626,6 +1626,18 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public void AccumulateKeywordProperties(PropertyEnum propertyEnum, PropertyCollection properties, ref float value)
+        {
+            foreach (var kvp in properties.IteratePropertyRange(propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                var keywordPrototype = keywordProtoRef.As<KeywordPrototype>();
+
+                if (HasKeyword(keywordPrototype) || HasConditionWithKeyword(keywordProtoRef))
+                    value += kvp.Value;
+            }
+        }
+
         public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
         {
             throw new NotImplementedException();
