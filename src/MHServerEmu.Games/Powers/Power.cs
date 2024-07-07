@@ -3113,11 +3113,56 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
-        private static void GetTargetsFromInventory(List<WorldEntity> targetList, Game game, WorldEntity user, WorldEntity target,
+        private static bool GetTargetsFromInventory(List<WorldEntity> targetList, Game game, WorldEntity owner, WorldEntity target,
             PowerPrototype powerProto, AlliancePrototype userAllianceProto, InventoryConvenienceLabel inventoryConvenienceLabel)
         {
-            // TODO
             Logger.Debug($"GetTargetsFromInventory(): {inventoryConvenienceLabel}");
+
+            if (game == null) return Logger.WarnReturn(false, "GetTargetsFromInventory(): game == null");
+            if (owner == null) return Logger.WarnReturn(false, "GetTargetsFromInventory(): owner == null");
+
+            // If this inventory is not available to the owner, we don't need to do anything
+            Inventory inventory = owner.GetInventory(inventoryConvenienceLabel);
+            if (inventory == null)
+                return true;
+
+            // If the power has only a single target and its null, we don't need to do anything
+            TargetingShapeType targetingShape = GetTargetingShape(powerProto);
+            if (targetingShape == TargetingShapeType.SingleTarget && target == null)
+                return true;
+
+            // Now we look for targets in the inventory
+            foreach (var entry in inventory)
+            {
+                WorldEntity entity = game.EntityManager.GetEntity<WorldEntity>(entry.Id);
+                if (entity == null)
+                {
+                    Logger.Warn("GetTargetsFromInventory(): entity == null");
+                    continue;
+                }
+
+                // Skip invalid targets
+                if (IsValidTarget(powerProto, owner, userAllianceProto, entity) == false)
+                    continue;
+
+                // When this power has only a single target we use this iteration to look just for this target
+                if (targetingShape == TargetingShapeType.SingleTarget)
+                {
+                    // The second condition here is weird, when does this happen?
+                    if (entity == target || (target == owner && inventory.Count == 1))
+                    {
+                        targetList.Add(entity);
+                        break;
+                    }
+
+                    continue;
+                }
+
+                // For other cases we just add all valid entities to the list
+                targetList.Add(entity);
+            }
+
+            return true;
         }
 
         private static bool GetValidMeleeTarget(List<WorldEntity> targetList, PowerPrototype powerProto, AlliancePrototype userAllianceProto,
