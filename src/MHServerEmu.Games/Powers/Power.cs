@@ -558,6 +558,21 @@ namespace MHServerEmu.Games.Powers
 
             if (Game == null) return Logger.WarnReturn(false, "ApplyPower(): Game == null");
 
+            // Toggle
+            if (IsToggled())
+            {
+                if (IsToggledOn())  // Toggle off
+                {
+                    SetToggleState(false, false);
+                    return true;
+                }
+                else                // Toggle on
+                {
+                    CancelTogglePowersInSameGroup();
+                    SetToggleState(true, false);
+                }
+            }
+
             // Check target
             WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
             if (NeedsTarget() && (target == null || target.IsInWorld == false))
@@ -2543,13 +2558,6 @@ namespace MHServerEmu.Games.Powers
                 travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
                 Owner.ConditionCollection.AddCondition(travelPowerCondition);
             }
-            else if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) == null)
-            {
-                // Emma Frost - Diamond Form
-                Condition diamondFormCondition = Owner.ConditionCollection.AllocateCondition();
-                diamondFormCondition.InitializeFromPowerMixinPrototype(111, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(diamondFormCondition);
-            }
             else if (PrototypeDataRef == (PrototypeId)5394038587225345882 && Owner.ConditionCollection.GetCondition(777) == null)
             {
                 // Magik - Ultimate
@@ -2665,17 +2673,12 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual void OnEndPowerCancelConditions()
         {
+            // HACK: Old condition hack for travel power vehicles
             if (IsTravelPower() && Prototype.AppliesConditions != null)
             {
                 // Bikes and other vehicles
                 if (Owner.ConditionCollection.GetCondition(666) != null)
                     Owner.ConditionCollection.RemoveCondition(666);
-            }
-            else if (PrototypeDataRef == (PrototypeId)17994345800984565974)
-            {
-                // Emma Frost - Diamond Form
-                if (Owner.ConditionCollection.GetCondition(111) != null)
-                    Owner.ConditionCollection.RemoveCondition(111);
             }
         }
 
@@ -2926,9 +2929,20 @@ namespace MHServerEmu.Games.Powers
         {
             if (IsToggled() == false) return Logger.WarnReturn(false, "SetToggleState(): Trying to toggle a power that isn't togglable!");
 
+            Owner.Properties[PropertyEnum.PowerToggleOn, PrototypeDataRef] = value;
+
             if (value)
             {
                 HandleTriggerPowerEventOnPowerToggleOn();
+
+                // HACK: Old condition hack for Emma Frost's Diamond Form
+                if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) == null)
+                {
+                    // Emma Frost - Diamond Form
+                    Condition diamondFormCondition = Owner.ConditionCollection.AllocateCondition();
+                    diamondFormCondition.InitializeFromPowerMixinPrototype(111, PrototypeDataRef, 0, TimeSpan.Zero);
+                    Owner.ConditionCollection.AddCondition(diamondFormCondition);
+                }
             }
             else
             {
@@ -2936,8 +2950,18 @@ namespace MHServerEmu.Games.Powers
 
                 if (doNotStartCooldown == false)
                     StartCooldown();
+
+                // HACK: Old condition hack for Emma Frost's Diamond Form
+                if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) != null)
+                    Owner.ConditionCollection.RemoveCondition(111);
             }
 
+            return true;
+        }
+
+        private bool CancelTogglePowersInSameGroup()
+        {
+            // TODO
             return true;
         }
 

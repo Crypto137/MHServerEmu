@@ -329,7 +329,7 @@ namespace MHServerEmu.Games.Powers
                     case PowerEventActionType.SpawnLootTable:                               DoPowerEventActionSpawnLootTable(triggeredPowerEvent, in newSettings); break;
                     case PowerEventActionType.SwitchAvatar:                                 DoPowerEventActionSwitchAvatar(); break;
                     case PowerEventActionType.ToggleOnPower:
-                    case PowerEventActionType.ToggleOffPower:                               DoPowerEventActionTogglePower(triggeredPowerEvent, in newSettings, actionType); break;
+                    case PowerEventActionType.ToggleOffPower:                               DoPowerEventActionTogglePower(triggeredPowerEvent, ref newSettings, actionType); break;
                     case PowerEventActionType.TransformModeChange:                          DoPowerEventActionTransformModeChange(triggeredPowerEvent); break;
                     case PowerEventActionType.TransformModeStart:                           DoPowerEventActionTransformModeStart(triggeredPowerEvent, in newSettings); break;
                     case PowerEventActionType.UsePower:                                     DoPowerEventActionUsePower(triggeredPowerEvent, in newSettings); break;
@@ -697,9 +697,24 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 15, 16
-        private void DoPowerEventActionTogglePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
+        private bool DoPowerEventActionTogglePower(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings, PowerEventActionType actionType)
         {
-            Logger.Warn($"DoPowerEventActionTogglePower(): Not implemented");
+            Logger.Debug($"DoPowerEventActionTogglePower(): {triggeredPowerEvent.Power.GetName()} - {actionType}");
+
+            Power triggeredPower = Owner?.GetPower(triggeredPowerEvent.Power);
+            if (triggeredPower == null) return Logger.WarnReturn(false, "DoPowerEventActionTogglePower(): triggeredPower == null");
+
+            // This is for toggled powers only
+            if (triggeredPower.IsToggled() == false) return false;
+
+            if ((triggeredPower.IsToggledOn() == false && actionType == PowerEventActionType.ToggleOnPower) ||
+                (triggeredPower.IsToggledOn() && actionType == PowerEventActionType.ToggleOffPower))
+            {
+                Owner.ActivatePower(triggeredPower.PrototypeDataRef, ref settings);
+                return true;
+            }
+
+            return false;
         }
 
         // 17

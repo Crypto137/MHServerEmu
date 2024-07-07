@@ -575,6 +575,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
+            // Assign hidden passive powers
+            if (avatarPrototype.HiddenPassivePowers.HasValue())
+            {
+                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
+                    AssignPower(abilityAssignmentProto.Ability, indexProps);
+            }
+
             // Travel
             AssignPower(avatarPrototype.TravelPower, indexProps);
 
