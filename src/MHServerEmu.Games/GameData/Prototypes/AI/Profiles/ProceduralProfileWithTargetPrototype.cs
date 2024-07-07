@@ -624,7 +624,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (locomotor.FollowEntityId != target.Id)
             {
                 locomotor.FollowEntity(target.Id, 0.0f);
-                locomotor.FollowEntityMissileReturnEvent.AddActionBack(ownerController.MissileReturnEvent);
+                locomotor.FollowEntityMissileEvent.AddActionBack(ownerController.MissileReturnEvent);
             }
 
         }
@@ -657,7 +657,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (target != null)
             {
                 locomotor.FollowEntity(targetId, 0.0f);
-                locomotor.FollowEntityMissileReturnEvent.AddActionFront(ownerController.MissileReturnEvent);
+                locomotor.FollowEntityMissileEvent.AddActionFront(ownerController.MissileReturnEvent);
             }
         }
     }

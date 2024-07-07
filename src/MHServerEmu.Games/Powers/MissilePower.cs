@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -287,12 +288,201 @@ namespace MHServerEmu.Games.Powers
 
         private void SetExtraProperties(PropertyCollection extraProperties, EntitySettings creationSettings, PowerApplication powerApplication, MissileCreationContextPrototype missileContext, int contextIndex, MissilePrototype missilePrototype)
         {
-            throw new NotImplementedException();
+            if (Owner == null || missileContext == null) return;
+            var ownerPosition = Owner.RegionLocation.Position;
+            var targetPosition = powerApplication.TargetPosition;
+
+            if (Owner is Missile)
+            {
+                extraProperties.CopyProperty(Owner.Properties, PropertyEnum.MissileCreatorId);
+                extraProperties.CopyProperty(Owner.Properties, PropertyEnum.PowerUserOverrideID);
+            }
+            else
+            {
+                extraProperties[PropertyEnum.MissileCreatorId] = Owner.Id;
+                extraProperties[PropertyEnum.MissileOwnedByPlayer] = Owner.CanBePlayerOwned();
+                extraProperties[PropertyEnum.PowerUserOverrideID] = Owner.Id;
+            }
+
+            float projectileSpeed = GetProjectileSpeed(ownerPosition, targetPosition);
+            float range = GetRange();
+
+            var powerProto = MissilePowerPrototype;
+            if (powerProto == null) return;
+
+            TransferMissilePierceChance(extraProperties);
+
+            if (powerProto.ExtraActivation != null)
+                if (powerProto.ExtraActivation is SecondaryActivateOnReleasePrototype secondary)
+                    if (secondary.RangeIncreasePerSecond != CurveId.Invalid)
+                    {
+                        var curve = GameDatabase.GetCurve(secondary.RangeIncreasePerSecond);
+                        if (curve == null) return;
+                        float timeRange = curve.GetAt(Rank);
+                        float activationTime = MathF.Min(
+                            (float)powerApplication.VariableActivationTime.TotalSeconds,
+                            (float)TimeSpan.FromMilliseconds(secondary.MaxReleaseTimeMS).TotalSeconds);
+                        range += timeRange * activationTime;
+                    }
+
+            extraProperties[PropertyEnum.MissileBaseMoveSpeed] = projectileSpeed;
+            extraProperties[PropertyEnum.MissileRange] = range;
+
+            if (missileContext.InfiniteLifespan == false)
+            {
+                int lifespanOverride = missileContext.LifespanOverrideMS;
+                if (lifespanOverride != 0)
+                    creationSettings.Lifespan = TimeSpan.FromMilliseconds(lifespanOverride);
+                else
+                {
+                    float lifespanMult = missilePrototype.Locomotion.RotationSpeed > 0 ? 1.5f : 1.0f;
+                    creationSettings.Lifespan = TimeSpan.FromSeconds(range / projectileSpeed) * lifespanMult + missilePrototype.GetSeekDelayTime();
+                }
+            }
+
+            if (missilePrototype.NaviMethod == LocomotorMethod.MissileSeeking)
+                extraProperties[PropertyEnum.MissileSeekTargetId] = powerApplication.TargetEntityId;
+
+            extraProperties[PropertyEnum.CreatorPowerPrototype] = PrototypeDataRef;
+            extraProperties[PropertyEnum.PowerRank] = Rank;
+
+            extraProperties.CopyProperty(Properties, PropertyEnum.CharacterLevel);
+            extraProperties.CopyProperty(Properties, PropertyEnum.CombatLevel);
+            extraProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
+
+            extraProperties[PropertyEnum.MissileAbsorbImmunity] = Properties[PropertyEnum.MissileAbsorbImmunity];
+            extraProperties[PropertyEnum.MissileBlockingHotspotImmunity] = Properties[PropertyEnum.MissileBlockingHotspotImmunity];
+            extraProperties[PropertyEnum.MissileReflectionImmunity] = Properties[PropertyEnum.MissileReflectionImmunity];
+            extraProperties[PropertyEnum.MovementSpeedChangeImmunity] = Properties[PropertyEnum.MovementSpeedChangeImmunity];
+
+            extraProperties.CopyProperty(Properties, PropertyEnum.PowerUsesReturningWeapon);
+
+            extraProperties[PropertyEnum.AllianceOverride] = Owner.Alliance.DataRef;
+
+            if (missileContext.InterpolateRotationSpeed) 
+                extraProperties[PropertyEnum.SpawnDistanceToTargetSqr] = Vector3.LengthSqr(targetPosition - ownerPosition);
+
+            extraProperties[PropertyEnum.DamagePctBonusDistanceFar] = Properties[PropertyEnum.DamagePctBonusDistanceFar];
+            extraProperties[PropertyEnum.DamagePctBonusDistanceClose] = Properties[PropertyEnum.DamagePctBonusDistanceClose];
+            extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultPowerCdKwd);
+
+            extraProperties[PropertyEnum.CreatorEntityAssetRefBase] = Owner.GetOriginalWorldAsset();
+            extraProperties[PropertyEnum.CreatorEntityAssetRefCurrent] = Owner.GetEntityWorldAsset();
+            extraProperties[PropertyEnum.CreatorRank] = Owner.Properties[PropertyEnum.Rank];
+
+            extraProperties[PropertyEnum.VariableActivationTimeMS] = powerApplication.VariableActivationTime;
+            extraProperties.CopyProperty(Properties, PropertyEnum.VariableActivationTimePct);
+
+            extraProperties.CopyProperty(Properties, PropertyEnum.CritDamageMult);
+            extraProperties.CopyProperty(Properties, PropertyEnum.CritDamageRating);
+            extraProperties.CopyProperty(Properties, PropertyEnum.CritDamagePowerMultBonus);
+            extraProperties.CopyProperty(Properties, PropertyEnum.CritRatingBonusAdd);
+            extraProperties.CopyProperty(Properties, PropertyEnum.CritRatingBonusMult);
+            extraProperties.CopyPropertyRange(Properties, PropertyEnum.CritRatingBonusMultPowerKeyword);
+
+            extraProperties.CopyProperty(Properties, PropertyEnum.SuperCritDamageMult);
+            extraProperties.CopyProperty(Properties, PropertyEnum.SuperCritDamageRating);
+            extraProperties.CopyProperty(Properties, PropertyEnum.SuperCritDamagePowerMultBonus);
+            extraProperties.CopyProperty(Properties, PropertyEnum.SuperCritRatingBonusAdd);
+            extraProperties.CopyProperty(Properties, PropertyEnum.SuperCritRatingBonusMult);
+            extraProperties.CopyPropertyRange(Properties, PropertyEnum.SuperCritRatingBonusMultPowerKeyword);
+
+            extraProperties[PropertyEnum.MissileContextIndex] = contextIndex;
+
+            if (powerApplication.PowerRandomSeed != 0)
+            {
+                int seed = (int)powerApplication.PowerRandomSeed * (contextIndex + 1) * 10;
+                extraProperties[PropertyEnum.MissileSeed] = seed;
+            }
+
+            extraProperties.CopyProperty(Properties, PropertyEnum.DamagePctBonus);
+            extraProperties.CopyProperty(Properties, PropertyEnum.DamageRating);
+            extraProperties.CopyProperty(Properties, PropertyEnum.DamageMult);
+            extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultForPower);
+            
+            // TODO Power.SerializePropertiesForPowerPayload
+        }
+
+        private void TransferMissilePierceChance(PropertyCollection extraProperties)
+        {
+            foreach (var kvp in Owner.Properties.IteratePropertyRange(PropertyEnum.MissilePierceChance))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordRef);
+                var propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.MissilePierceChance);
+                if (keywordRef == (PrototypeId)propInfo.GetParamPrototypeBlueprint(0) || HasKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keywordRef)))
+                {
+                    extraProperties[PropertyEnum.MissilePierceChance] = kvp.Value;
+                    break;
+                }
+            }
         }
 
         private bool CreateMissileInternal(EntitySettings creationSettings, MissileCreationContextPrototype missileContext, PowerApplication powerApplication, EntityManager entityManager)
         {
-            throw new NotImplementedException();
+            ulong regionId = creationSettings.RegionId;
+            if (missileContext == null) return false;
+            if (missileContext.IndependentClientMovement) 
+                creationSettings.RegionId = 0;
+
+            if (entityManager.CreateEntity(creationSettings) is not Missile missile) return false;
+
+            if (missileContext.IndependentClientMovement)
+            {
+                // TODO send missile to AOI without RegionId
+
+                // restore regionId
+                creationSettings.RegionId = regionId;
+                var region = Game.RegionManager.GetRegion(regionId);
+
+                // add entity to World
+                missile.EnterWorld(region, creationSettings.Position, creationSettings.Orientation, creationSettings);
+            }
+
+            var locomotor = missile.Locomotor;
+            if (locomotor == null) return false;
+
+            if (locomotor.Method == LocomotorMethod.MissileSeeking)
+            {
+                if (missileContext.IndependentClientMovement) return false;
+
+                var locomotionOptions = new LocomotionOptions { RepathDelay = TimeSpan.FromSeconds(0.5) };
+                if (missileContext.OneShot == false)
+                    locomotionOptions.Flags |= LocomotionFlags.LocomotionNoEntityCollide;
+
+                if (missile.AIController == null)
+                {
+                    ulong targetId = missile.Properties[PropertyEnum.MissileSeekTargetId];
+                    var target = entityManager.GetEntity<WorldEntity>(targetId);
+                    if (target != null && target.IsDead == false)
+                    {
+                        locomotor.FollowEntity(targetId, 0.0f, locomotionOptions);
+                        locomotor.FollowEntityMissileEvent.AddActionBack(missile.SeekTargetMissingEvent);
+                    }
+                    else
+                    {
+                        locomotor.MoveTo(powerApplication.TargetPosition, locomotionOptions);
+                    }
+                } 
+                else
+                {
+                    var style = TargetingStylePrototype;
+                    ulong targetId = powerApplication.TargetEntityId;
+                    if (targetId != Entity.InvalidId && (style.TargetingShape == TargetingShapeType.SingleTarget 
+                        || style.TargetingShape == TargetingShapeType.SingleTargetRandom))
+                    {
+                        var target = entityManager.GetEntity<WorldEntity>(targetId);
+                        if (target != null) 
+                            missile.AIController?.SetTargetEntity(target);
+                    }
+
+                    locomotor.MoveForward(locomotionOptions);
+                    var missileProto = missile.MissilePrototype;
+                    if (missileProto.GetSeekDelayTime() > TimeSpan.Zero)
+                        locomotor.SetMethod(LocomotorMethod.Default, missileProto.GetSeekDelaySpeed());
+                }
+            }
+
+            return true;
         }
 
         private static Vector3 CreationOffset(Vector3 direction, MissileCreationContextPrototype missileContext)

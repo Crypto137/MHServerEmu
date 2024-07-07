@@ -40,6 +40,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissilePrototype : AgentPrototype
     {
         public PrototypeId SendOrbToPowerUser { get; protected set; }
+
+        public TimeSpan GetSeekDelayTime()
+        {
+            if (BehaviorProfile != null && BehaviorProfile.Brain != PrototypeId.Invalid)
+            {
+                var profile = GameDatabase.GetPrototype<ProceduralProfileSeekingMissilePrototype>(BehaviorProfile.Brain);
+                if (profile != null) return TimeSpan.FromMilliseconds(profile.SeekDelayMS);
+            }
+            return TimeSpan.Zero;
+        }
+
+        public float GetSeekDelaySpeed()
+        {
+            if (BehaviorProfile != null && BehaviorProfile.Brain != PrototypeId.Invalid)
+            {
+                var profile = GameDatabase.GetPrototype<ProceduralProfileSeekingMissilePrototype>(BehaviorProfile.Brain);
+                if (profile != null) return profile.SeekDelaySpeed;
+            }
+            return 0;
+        }
     }
 
     public class MissilePowerContextPrototype : Prototype

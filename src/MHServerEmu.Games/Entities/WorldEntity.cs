@@ -206,7 +206,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public void Kill(WorldEntity killer, KillFlags killFlags = KillFlags.None, WorldEntity directKiller = null)
+        public void Kill(WorldEntity killer = null, KillFlags killFlags = KillFlags.None, WorldEntity directKiller = null)
         {
             throw new NotImplementedException();
             // OnKilled(killer, killFlags, directKiller);   
