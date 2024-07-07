@@ -565,8 +565,6 @@ namespace MHServerEmu.Games.Entities
                 RegionLocation.Cell.EnemySpawn(); // Calc Enemy
                                                   // ActivePowerRef = settings.PowerPrototype
 
-            SetSimulated(true);
-
             // AI
             if (TestAI() == false) return;
 
@@ -588,11 +586,7 @@ namespace MHServerEmu.Games.Entities
         public override void OnExitedWorld()
         {
             base.OnExitedWorld();
-            if (AIController != null)
-            {
-                SetSimulated(false); // Put it here for test
-                AIController.OnAIExitedWorld();
-            }
+            AIController?.OnAIExitedWorld();
         }
 
         public override void OnDramaticEntranceEnd()

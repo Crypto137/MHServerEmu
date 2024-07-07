@@ -1381,12 +1381,17 @@ namespace MHServerEmu.Games.Entities
             PowerCollection?.OnOwnerEnteredWorld();
 
             NotifyPlayers(true, settings);
+
+            // TODO: Simulate only world entities that have interest references
+            SetSimulated(true);
         }
 
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
             NotifyPlayers(false);
+
+            SetSimulated(false);
         }
 
         public virtual void OnDramaticEntranceEnd() { }

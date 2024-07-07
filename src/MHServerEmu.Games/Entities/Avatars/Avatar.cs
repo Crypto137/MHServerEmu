@@ -765,7 +765,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override void OnExitedWorld()
         {
             base.OnExitedWorld();
-            SetSimulated(false); // put it here for test
+
             if (CurrentTeamUpAgent != null) DismissTeamUpAgent();
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
             if (summonedInventory != null)
