@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -46,6 +47,8 @@ namespace MHServerEmu.Games.Powers
         private readonly EventPointer<EndCooldownEvent> _endCooldownEvent = new();
         private readonly EventPointer<PowerSubsequentActivationTimeoutEvent> _subsequentActivationTimeoutEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
+
+        private List<EventPointer<ScheduledActivateEvent>> _scheduledActivateEventList;     // Initialized on demand
 
         public Game Game { get; }
         public PrototypeId PrototypeDataRef { get; }
@@ -500,6 +503,31 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug($"ReleaseVariableActivation(): {Prototype}");
             settings.VariableActivationRelease = true;  // Mark power as release
             Activate(ref settings);
+        }
+
+        public bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        {
+            if (Game == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): Game == null");
+            if (_scheduledActivateEventList == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): _scheduledActivateEventList == null");
+            if (triggeredPowerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ScheduledActivateCallback(): triggeredPowerProtoRef == PrototypeId.Invalid");
+            if (triggeredPowerEvent == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): triggeredPowerEvent == null");
+            // null check for settings doesn't make sense for us
+            if (Owner == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): Owner == null");
+
+            if (Owner.IsInWorld == false)
+                return false;
+
+            if (Owner.IsDead)
+                return false;
+
+            PowerCollection powerCollection = Owner.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): powerCollection == null");
+
+            Power triggeredPower = powerCollection.GetPower(triggeredPowerProtoRef);
+            if (triggeredPower == null) return Logger.WarnReturn(false,
+                $"ScheduledActivateCallback(): Couldn't find the power to activate for a scheduled activation. Owner: {Owner}\nPower ref hash ID: {triggeredPowerProtoRef}");
+
+            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, in settings);
         }
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
@@ -3517,13 +3545,104 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool ScheduleScheduledActivation(TimeSpan delay, Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        {
+            if (Game == null) return Logger.WarnReturn(false, "ScheduleScheduledActivation(): Game == null");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "ScheduleScheduledActivation(): scheduler == null");
+
+            if (delay <= TimeSpan.Zero) return Logger.WarnReturn(false, "ScheduleScheduledActivation(): delay <= TimeSpan.Zero");
+
+            EventPointer<ScheduledActivateEvent> scheduledActivateEvent = new();
+            scheduler.ScheduleEvent(scheduledActivateEvent, delay, _pendingEvents);
+            scheduledActivateEvent.Get().Initialize(this, triggeredPower.PrototypeDataRef, triggeredPowerEvent, in settings);
+
+            // Initialize the event pointer list if this is the first scheduled activation for this power
+            _scheduledActivateEventList ??= new();
+            _scheduledActivateEventList.Add(scheduledActivateEvent);
+            
+            return true;
+        }
+
+        private bool CancelScheduledActivation(PrototypeId scheduledPowerProtoRef)
+        {
+            if (Game == null) return Logger.WarnReturn(false, "CancelScheduledActivation(): Game == null");
+            if (scheduledPowerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CancelScheduledActivation(): scheduledPowerProtoRef == PrototypeId.Invalid");
+
+            if (_scheduledActivateEventList == null)
+                return false;
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "CancelScheduledActivation(): scheduler == null");
+
+            // Use a standard for loop to be able to remove the event from the list when we find it
+            for (int i = 0; i < _scheduledActivateEventList.Count; i++)
+            {
+                EventPointer<ScheduledActivateEvent> activateEvent = _scheduledActivateEventList[i];
+                if (activateEvent.IsValid && activateEvent.Get().TriggeredPowerProtoRef == scheduledPowerProtoRef)
+                {
+                    scheduler.CancelEvent(activateEvent);
+                    _scheduledActivateEventList.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool CancelAllScheduledActivations()
         {
             if (Game == null) return Logger.WarnReturn(false, "CancelAllScheduledActivations(): Game == null");
 
-            // TODO
+            // Nothing to cancel if the list hasn't even been created
+            if (_scheduledActivateEventList == null)
+                return true;
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "CancelAllScheduledActivations(): scheduler == null");
+
+            foreach (EventPointer<ScheduledActivateEvent> activateEvent in _scheduledActivateEventList)
+                scheduler.CancelEvent(activateEvent);
+
+            _scheduledActivateEventList.Clear();
 
             return true;
+        }
+
+        private class ScheduledActivateEvent : TargetedScheduledEvent<Power>
+        {
+            private static readonly Logger Logger = LogManager.CreateLogger();
+
+            private PrototypeId _triggeredPowerProtoRef;
+            private PowerEventActionPrototype _triggeredPowerEvent;
+            private PowerActivationSettings _settings;
+            // TODO: We can avoid doing an extra copy of PowerActivationSettings by using a ref field when we upgrade to C# 11
+
+            public PrototypeId TriggeredPowerProtoRef { get => _triggeredPowerProtoRef; }
+
+            public void Initialize(Power power, PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+            {
+                _eventTarget = power;
+                _triggeredPowerProtoRef = triggeredPowerProtoRef;
+                _triggeredPowerEvent = triggeredPowerEvent;
+                _settings = settings;
+            }
+
+            public override bool OnTriggered()
+            {
+                if (_eventTarget == null) return Logger.WarnReturn(false, "OnTriggered(): _eventTarget == null");
+                if (_eventTarget.Game == null) return Logger.WarnReturn(false, "OnTriggered(): _eventTarget.Game == null");
+                _eventTarget.ScheduledActivateCallback(_triggeredPowerProtoRef, _triggeredPowerEvent, in _settings);
+                return true;
+            }
+
+            public override bool OnCancelled()
+            {
+                if (_eventTarget == null) return Logger.WarnReturn(false, "OnCancelled(): _eventTarget == null");
+                if (_eventTarget.Game == null) return Logger.WarnReturn(false, "OnCancelled(): _eventTarget.Game == null");
+                return true;
+            }
         }
 
         private class StopChargingEvent : CallMethodEvent<Power>

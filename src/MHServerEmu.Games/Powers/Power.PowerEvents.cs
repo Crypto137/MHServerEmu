@@ -380,6 +380,13 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        {
+            // Activate combo power - a power triggered by a power event action
+            Logger.Debug($"DoActivateComboPower(): {triggeredPower.Prototype}");
+            return true;
+        }
+
         #region Event Actions
 
         // Please keep these ordered by PowerEventActionType enum value
