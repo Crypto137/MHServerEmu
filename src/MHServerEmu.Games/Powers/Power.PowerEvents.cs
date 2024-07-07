@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -594,9 +595,14 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 9
-        private void DoPowerEventActionRestoreThrowable(in PowerActivationSettings settings)
+        private bool DoPowerEventActionRestoreThrowable(in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionRestoreThrowable(): Not implemented");
+            Logger.Trace($"DoPowerEventActionRestoreThrowable()");
+
+            if (Owner is not Agent agentOwner)
+                return Logger.WarnReturn(false, $"DoPowerEventActionRestoreThrowable(): Owner cannot throw");
+
+            return agentOwner.TryRestoreThrowable();
         }
 
         // 8, 10, 11

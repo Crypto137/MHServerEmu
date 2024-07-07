@@ -34,9 +34,6 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // TEMP: Store throwable entity's location here
-        private RegionLocation _throwableEntityLocation = new();
-
         public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
@@ -369,7 +366,6 @@ namespace MHServerEmu.Games.Entities
             // Record throwable entity in agent's properties
             Properties[PropertyEnum.ThrowableOriginatorEntity] = entityId;
             Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableEntity.GetEntityWorldAsset();
-            _throwableEntityLocation.Set(throwableEntity.RegionLocation);
 
             // Assign throwable powers
             PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
@@ -378,6 +374,37 @@ namespace MHServerEmu.Games.Entities
 
             // Remove the entity we are throwing from the world
             throwableEntity.ExitWorld();
+
+            return true;
+        }
+
+        public bool TryRestoreThrowable()
+        {
+            // Return throwable entity to the world if throwing was cancelled
+            ulong throwableEntityId = Properties[PropertyEnum.ThrowableOriginatorEntity];
+            if (IsInWorld && throwableEntityId != 0)
+            {
+                var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
+                if (throwableEntity != null && throwableEntity.IsInWorld == false)
+                {
+                    Region region = Game.RegionManager.GetRegion(throwableEntity.ExitWorldRegionLocation.RegionId);
+
+                    if (region != null)
+                    {
+                        Vector3 exitPosition = throwableEntity.ExitWorldRegionLocation.Position;
+                        Orientation exitOrientation = throwableEntity.ExitWorldRegionLocation.Orientation;
+                        throwableEntity.EnterWorld(region, exitPosition, exitOrientation);
+                    }
+                    else
+                    {
+                        throwableEntity.Destroy();
+                    }
+                }
+            }
+
+            // Clean up throwable entity data
+            Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+            Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
 
             return true;
         }
@@ -656,31 +683,20 @@ namespace MHServerEmu.Games.Entities
             Properties.RemoveProperty(new(PropertyEnum.PowerRankBase, power.PrototypeDataRef));
             Properties.RemoveProperty(new(PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef));
 
-            if (power.IsThrowablePower())
+            PowerCategoryType powerCategory = power.GetPowerCategory();
+            if (powerCategory == PowerCategoryType.ThrowablePower)
             {
-                // Return throwable entity to the world if throwing was cancelled
-                ulong throwableEntityId = Properties[PropertyEnum.ThrowableOriginatorEntity];
-                if (IsInWorld && throwableEntityId != 0)
-                {
-                    var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
-                    if (throwableEntity != null)
-                    {
-                        if (_throwableEntityLocation.IsValid())
-                        {
-                            throwableEntity.EnterWorld(_throwableEntityLocation.Region, _throwableEntityLocation.Position, _throwableEntityLocation.Orientation);
-                        }
-                        else
-                        {
-                            Logger.Warn("OnPowerUnassigned(): Invalid throwable entity location");
-                            throwableEntity.Destroy();
-                        } 
-                    }
-                }
+                TryRestoreThrowable();
 
-                // Clean up throwable entity data
-                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
-                Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
-                _throwableEntityLocation.Region = null;  // this invalidates region location
+                Power throwableCancelPower = GetThrowableCancelPower();
+                if (throwableCancelPower != null)
+                    UnassignPower(throwableCancelPower.PrototypeDataRef);
+            }
+            else if (powerCategory == PowerCategoryType.ThrowableCancelPower)
+            {
+                Power throwablePower = GetThrowablePower();
+                if (throwablePower != null)
+                    UnassignPower(throwablePower.PrototypeDataRef);
             }
 
             return base.OnPowerUnassigned(power);

@@ -17,6 +17,7 @@ using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -2529,14 +2530,14 @@ namespace MHServerEmu.Games.Powers
 
                 // TEST: Deal damage
                 // TODO: WorldEntity::ApplyPowerResults()
-                /*
+                
                 if (Owner is Avatar)
                 {
                     target.Properties[PropertyEnum.Health] -= (int)(damagePhysical + damageEnergy + damageMental);
                     if (target.Properties[PropertyEnum.Health] <= 0)
                         target.Kill(Owner.Id);
                 }
-                */
+                
 
                 // Send results
                 Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
@@ -2547,6 +2548,35 @@ namespace MHServerEmu.Games.Powers
                 // Doctors hate him! BUE fixed with one simple trick
                 if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
                     Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
+            }
+
+            if (IsThrowablePower())
+            {
+                // NOTE: Based on the old throwable hack, consider revising
+                ulong throwableEntityId = Owner.Properties[PropertyEnum.ThrowableOriginatorEntity];
+                if (throwableEntityId != 0)
+                {
+                    var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
+                    if (throwableEntity != null)
+                    {
+                        // Remember spawn spec to create a replacement
+                        SpawnSpec spawnSpec = throwableEntity.SpawnSpec;
+
+                        // Destroy throwable
+                        throwableEntity.Destroy();
+
+                        // Schedule the creation of a replacement entity
+                        if (spawnSpec != null)
+                        {
+                            EventPointer<TEMP_SpawnEntityEvent> spawnEntityEvent = new();
+                            Game.GameEventScheduler.ScheduleEvent(spawnEntityEvent, Game.CustomGameOptions.WorldEntityRespawnTime);
+                            spawnEntityEvent.Get().Initialize(spawnSpec);
+                        }
+                    }
+                }
+
+                Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+                Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
             }
 
             // HACK: Old conditions hacks
