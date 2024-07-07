@@ -1,11 +1,14 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -854,9 +857,47 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 31
-        private void DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionPetItemDonate(): Not implemented");
+            Logger.Trace($"DoPowerEventActionPetItemDonate()");
+
+            // We need the right context
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextPetDonateItemPrototype itemDonateContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): Incompatible power event context type");
+
+            // We need a player to give credits to
+            Player player = Owner.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): player == null");
+
+            // Region to search for items to vacuum
+            Region region = Owner.Region;
+            if (region == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): region == null");
+
+            // Find items to vacuum
+            Sphere vacuumVolume = new(Owner.RegionLocation.Position, itemDonateContext.Radius);
+            Stack<Item> vacuumStack = new();
+
+            foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (worldEntity is not Item item)
+                    continue;
+
+                // Push the item to the stack
+                vacuumStack.Push(item);
+            }
+
+            // TODO: Proper donation
+
+            // Destroy vacuumed items
+            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            while (vacuumStack.Count > 0)
+            {
+                Item item = vacuumStack.Pop();
+                player.Properties[PropertyEnum.Currency, creditsProtoRef] += item.GetSellPrice(player);
+                item.Destroy();
+            }
+
+            return true;
         }
 
         // 32
