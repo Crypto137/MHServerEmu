@@ -232,6 +232,24 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        public PowerIndexProperties GetIndexProperties()
+        {
+            return new(Properties[PropertyEnum.PowerRank],
+                       Properties[PropertyEnum.CharacterLevel],
+                       Properties[PropertyEnum.CombatLevel],
+                       Properties[PropertyEnum.ItemLevel],
+                       Properties[PropertyEnum.ItemVariation]);
+        }
+
+        public void RestampIndexProperties(in PowerIndexProperties indexProps)
+        {
+            Properties[PropertyEnum.PowerRank] = indexProps.PowerRank;
+            Properties[PropertyEnum.CharacterLevel] = indexProps.CharacterLevel;
+            Properties[PropertyEnum.CombatLevel] = indexProps.CombatLevel;
+            Properties[PropertyEnum.ItemLevel] = indexProps.ItemLevel;
+            Properties[PropertyEnum.ItemVariation] = indexProps.ItemVariation;
+        }
+
         #region Keywords
 
         public bool AddKeyword(PrototypeId keywordProtoRef)
@@ -435,8 +453,8 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            settings.InitialTargetPosition = settings.TargetPosition;
-            GenerateActualTargetPosition(settings.TargetEntityId, settings.InitialTargetPosition, out settings.TargetPosition, in settings);
+            settings.OriginalTargetPosition = settings.TargetPosition;
+            GenerateActualTargetPosition(settings.TargetEntityId, settings.OriginalTargetPosition, out settings.TargetPosition, in settings);
 
             MovementPowerPrototype movementPowerProto = FindPowerPrototype<MovementPowerPrototype>(powerProto);
             if (movementPowerProto == null || movementPowerProto.TeleportMethod != TeleportMethodType.Teleport)
@@ -938,7 +956,7 @@ namespace MHServerEmu.Games.Powers
                 Logger.WarnReturn(false, $"GetTargets(): Entity {Owner} getting targets for power {this} is not in the world.");
 
             return GetTargets(targetList, Game, powerProto, Owner.Properties, target, targetPosition, Owner.RegionLocation.Position,
-                GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
+                GetApplicationRange(), Owner.Region != null ? Owner.Region.Id : 0, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
         }
 
         public static bool GetTargets(List<WorldEntity> targetList, Game game, PowerPrototype powerProto, PropertyCollection properties,
@@ -2435,6 +2453,9 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            // Trigger application event
+            HandleTriggerPowerEventOnPowerApply();
+
             // Find targets for this power application
             List<WorldEntity> targetList = new();
             WorldEntity primaryTarget = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
@@ -2682,10 +2703,10 @@ namespace MHServerEmu.Games.Powers
             // For overrides in MissilePower and SummonPower
         }
 
-        protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 initialTargetPosition, out Vector3 actualTargetPosition,
+        protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 originalTargetPosition, out Vector3 actualTargetPosition,
             in PowerActivationSettings settings)
         {
-            actualTargetPosition = initialTargetPosition;
+            actualTargetPosition = originalTargetPosition;
 
             if (Game == null || Owner == null) return;
             var style = TargetingStylePrototype;
@@ -2698,7 +2719,7 @@ namespace MHServerEmu.Games.Powers
                 var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
                 if (movementPowerProto.CustomBehavior != null)
                 {
-                    var context = new MovementBehaviorPrototype.Context(this, Owner, target, initialTargetPosition);
+                    var context = new MovementBehaviorPrototype.Context(this, Owner, target, originalTargetPosition);
                     if (movementPowerProto.CustomBehavior.GenerateTargetPosition(context, ref actualTargetPosition)) return;
                 }
 
@@ -2732,10 +2753,10 @@ namespace MHServerEmu.Games.Powers
                     if (movementPowerProto.MoveToSecondaryTarget)
                     {
                         if (target != null)
-                            direction = initialTargetPosition - target.RegionLocation.Position;
+                            direction = originalTargetPosition - target.RegionLocation.Position;
                     }
                     else
-                        direction = initialTargetPosition - ownerPosition;
+                        direction = originalTargetPosition - ownerPosition;
 
                     if (!Vector3.IsNearZero(direction))
                     {
@@ -2760,7 +2781,7 @@ namespace MHServerEmu.Games.Powers
                     if (targetId == Owner.Id)
                         direction = Owner.Forward;
                     else
-                        direction = Vector3.SafeNormalize2D(initialTargetPosition - ownerPosition, Owner.Forward);
+                        direction = Vector3.SafeNormalize2D(originalTargetPosition - ownerPosition, Owner.Forward);
 
                     actualTargetPosition = ownerPosition + direction * GetKnockbackDistance(Owner);
                 }
@@ -2832,7 +2853,7 @@ namespace MHServerEmu.Games.Powers
                         || (style.TargetingShape == TargetingShapeType.WedgeArea
                         || style.TargetingShape == TargetingShapeType.ArcArea
                         || style.TargetingShape == TargetingShapeType.BeamSweep)
-                        && Vector3.LengthSqr(initialTargetPosition - ownerPosition) < 400.0f)
+                        && Vector3.LengthSqr(originalTargetPosition - ownerPosition) < 400.0f)
                         actualTargetPosition = ownerPosition;
                 }
 
@@ -3367,6 +3388,11 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        private void DoRandomTargetSelection(Power triggeredPower, in PowerActivationSettings settings)
+        {
+            // TODO
         }
 
         private bool FillOutProcEffectPowerApplication(WorldEntity target, in PowerActivationSettings settings, PowerApplication powerApplication)

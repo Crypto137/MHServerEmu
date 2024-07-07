@@ -1626,6 +1626,17 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public bool HasConditionWithAnyKeyword(IEnumerable<PrototypeId> keywordProtoRefs)
+        {
+            foreach (PrototypeId keywordProtoRef in keywordProtoRefs)
+            {
+                if (HasConditionWithKeyword(keywordProtoRef))
+                    return true;
+            }
+
+            return false;
+        }
+
         public void AccumulateKeywordProperties(PropertyEnum propertyEnum, PropertyCollection properties, ref float value)
         {
             foreach (var kvp in properties.IteratePropertyRange(propertyEnum))

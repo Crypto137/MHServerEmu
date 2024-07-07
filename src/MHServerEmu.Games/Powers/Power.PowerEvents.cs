@@ -1,6 +1,9 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -32,7 +35,9 @@ namespace MHServerEmu.Games.Powers
 
         public void HandleTriggerPowerEventOnPowerApply()               // 4
         {
-            // not present in the client
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            HandleTriggerPowerEvent(PowerEventType.OnPowerApply, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerEnd()                 // 5
@@ -380,11 +385,117 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings initialSettings)
         {
             // Activate combo power - a power triggered by a power event action
             Logger.Debug($"DoActivateComboPower(): {triggeredPower.Prototype}");
-            return true;
+
+            if (Owner == null) return Logger.WarnReturn(false, "DoActivateComboPower(): Owner == null");
+
+            if (Owner.IsSimulated == false)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoActivateComboPower(): Trying to activate a combo power, but the power user is not simulated!\nParent power: {this}\nCombo power: {triggeredPower}\nUser: {Owner}");
+            }
+
+            if (triggeredPower.GetPowerCategory() != PowerCategoryType.ComboEffect)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoActivateComboPower(): Power [{this}] specified a combo power that is not marked as a combo effect:\n[{triggeredPower}]");
+            }
+
+            // Copy index properties to the combo power
+            triggeredPower.RestampIndexProperties(GetIndexProperties());
+
+            // Copy settings
+            PowerActivationSettings settings = initialSettings;
+
+            // Check target
+            bool needsTarget = triggeredPower.NeedsTarget();
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+
+            if (target != null && target.IsInWorld && triggeredPowerEvent.UseTriggeringPowerTargetVerbatim == false)
+                settings.TargetPosition = target.RegionLocation.Position;    // Update target position if we have a valid target
+            else if (needsTarget)
+                return false;     // We need a target and we don't have a valid one, so we can't activate
+
+            // Clear target if we don't actually need one
+            if (needsTarget == false && triggeredPowerEvent.UseTriggeringPowerTargetVerbatim == false)
+                settings.TargetEntityId = Entity.InvalidId;
+
+            // Check if the target meets keyword requirements if there are any
+            if (target != null && triggeredPowerEvent.PowerEvent == PowerEventType.OnHitKeyword && triggeredPowerEvent.Keywords.HasValue())
+            {
+                if (target.HasConditionWithAnyKeyword(triggeredPowerEvent.Keywords) == false)
+                    return false;
+            }
+
+            if (Owner is Agent agentOwner)
+            {
+                // Agents have more things going on when they trigger combos
+
+                // Update user position
+                if (agentOwner.IsInWorld)
+                    settings.UserPosition = agentOwner.RegionLocation.Position;
+                
+                // Calculate AoE offset if needed
+                if (needsTarget == false && triggeredPowerEvent.PowerEventContext != null &&
+                    triggeredPowerEvent.PowerEventContext is PowerEventContextOffsetActivationAOEPrototype offsetActivationAoe)
+                {
+                    // Calculate direction of the offset
+                    Vector3 direction = Vector3.SafeNormalize2D(settings.TargetPosition - settings.UserPosition, agentOwner.Forward);
+                    Transform3 transform = Transform3.BuildTransform(Vector3.Zero, new(MathHelper.ToRadians(offsetActivationAoe.RotationOffsetDegrees), 0f, 0f));
+                    direction = transform * direction;
+
+                    // Apply offset
+                    settings.TargetPosition = direction * offsetActivationAoe.PositionOffsetMagnitude;
+                    if (offsetActivationAoe.UseIncomingTargetPosAsUserPos)
+                        settings.UserPosition = settings.TargetPosition;
+
+                    // Do a sweep
+                    RegionLocation sweepLocation = new(agentOwner.RegionLocation);
+                    sweepLocation.SetPosition(settings.UserPosition);
+
+                    Vector3? sweepPosition = settings.TargetPosition;
+                    PowerPositionSweep(sweepLocation, settings.TargetPosition, settings.TargetEntityId, ref sweepPosition);
+                    settings.TargetPosition = sweepPosition.Value;
+                }
+
+                // Update target position if needed
+                if (triggeredPowerEvent.UseTriggeringPowerTargetVerbatim == false)
+                {
+                    Vector3 originalTargetPosition = settings.TargetEntityId == Entity.InvalidId && triggeredPowerEvent.UseTriggerPowerOriginalTargetPos
+                        ? settings.OriginalTargetPosition
+                        : settings.TargetPosition;
+
+                    triggeredPower.GenerateActualTargetPosition(settings.TargetEntityId, originalTargetPosition, out settings.TargetPosition, in settings);
+                }
+
+                // Refresh FX random seed if needed
+                if (triggeredPowerEvent.ResetFXRandomSeed)
+                {
+                    if (Game == null) return Logger.WarnReturn(false, "DoActivateComboPower(): Game == null");
+                    settings.FXRandomSeed = (uint)Game.Random.Next(1, 10000);
+                }
+
+                // Try activating the combo
+                if (agentOwner.CanActivatePower(triggeredPower, settings.TargetEntityId, settings.TargetPosition) != PowerUseResult.Success)
+                    return false;
+
+                // Server should not activate client combos
+                if (settings.Flags.HasFlag(PowerActivationSettingsFlags.ClientCombo))
+                    return false;
+
+                return triggeredPower.Activate(ref settings) == PowerUseResult.Success;
+            }
+            else if (Owner is Hotspot)
+            {
+                // Just activate if our owner is a hotspot
+                return triggeredPower.Activate(ref settings) == PowerUseResult.Success;
+            }
+
+            return false;
         }
 
         #region Event Actions
@@ -476,9 +587,40 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 19
-        private void DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private bool DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionUsePower(): Not implemented ({triggeredPowerEvent.Power.GetName()})");
+            Logger.Trace($"DoPowerEventActionUsePower(): {triggeredPowerEvent.Power.GetName()}");
+
+            // Validate
+
+            if (Owner == null) return Logger.WarnReturn(false, "DoPowerEventActionUsePower(): Owner == null");
+
+            PowerCollection powerCollection = Owner.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, "DoPowerEventActionUsePower(): powerCollection == null");
+
+            if (triggeredPowerEvent.Power == PrototypeId.Invalid)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionUsePower(): Encountered a triggered power event with an invalid power ref:\n{triggeredPowerEvent}\n{this}");
+            }
+
+            if (triggeredPowerEvent.EventAction != PowerEventActionType.ScheduleActivationAtPercent &&
+                triggeredPowerEvent.EventAction != PowerEventActionType.ScheduleActivationInSeconds &&
+                triggeredPowerEvent.Power == PrototypeDataRef)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionUsePower(): PowerEventAction.Power with same PrototypeDataRef as containing Power. This will cause an infinite loop. Power Aborted:\n {this}\n {triggeredPowerEvent}");
+            }
+
+            Power triggeredPower = powerCollection.GetPower(triggeredPowerEvent.Power);
+            if (triggeredPower == null)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionUsePower(): Power [{this}] specifies a combo power triggered action, but that power could not be found in the power collection.");
+            }
+
+            // Activate
+            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, in settings);            
         }
 
         // 20
