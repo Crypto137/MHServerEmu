@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -2533,6 +2534,36 @@ namespace MHServerEmu.Games.Powers
                     Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
             }
 
+            // HACK: Old conditions hacks
+            // TODO: Proper power condition implementation
+            if (IsTravelPower() && Prototype.AppliesConditions != null && Owner.ConditionCollection.GetCondition(666) == null)
+            {
+                // Bikes and other vehicles
+                Condition travelPowerCondition = Owner.ConditionCollection.AllocateCondition();
+                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
+                Owner.ConditionCollection.AddCondition(travelPowerCondition);
+            }
+            else if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) == null)
+            {
+                // Emma Frost - Diamond Form
+                Condition diamondFormCondition = Owner.ConditionCollection.AllocateCondition();
+                diamondFormCondition.InitializeFromPowerMixinPrototype(111, PrototypeDataRef, 0, TimeSpan.Zero);
+                Owner.ConditionCollection.AddCondition(diamondFormCondition);
+            }
+            else if (PrototypeDataRef == (PrototypeId)5394038587225345882 && Owner.ConditionCollection.GetCondition(777) == null)
+            {
+                // Magik - Ultimate
+                Condition magikUltimateCondition = Owner.ConditionCollection.AllocateCondition();
+                magikUltimateCondition.InitializeFromPowerMixinPrototype(777, PrototypeDataRef, 0, TimeSpan.Zero);
+                Owner.ConditionCollection.AddCondition(magikUltimateCondition);
+
+                // Schedule condition end
+                Player player = Owner.GetOwnerOfType<Player>();
+                EventPointer<OLD_EndMagikUltimateEvent> endEventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
+                endEventPointer.Get().PlayerConnection = player.PlayerConnection;
+            }
+
             return true;
         }
 
@@ -2634,7 +2665,18 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual void OnEndPowerCancelConditions()
         {
-
+            if (IsTravelPower() && Prototype.AppliesConditions != null)
+            {
+                // Bikes and other vehicles
+                if (Owner.ConditionCollection.GetCondition(666) != null)
+                    Owner.ConditionCollection.RemoveCondition(666);
+            }
+            else if (PrototypeDataRef == (PrototypeId)17994345800984565974)
+            {
+                // Emma Frost - Diamond Form
+                if (Owner.ConditionCollection.GetCondition(111) != null)
+                    Owner.ConditionCollection.RemoveCondition(111);
+            }
         }
 
         protected virtual void OnEndPowerSendCancel(EndPowerFlags flags)
