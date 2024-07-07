@@ -563,9 +563,14 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 14
-        private void DoPowerEventActionSwitchAvatar()
+        private bool DoPowerEventActionSwitchAvatar()
         {
-            Logger.Warn($"DoPowerEventActionSwitchAvatar(): Not implemented");
+            Logger.Debug($"DoPowerEventActionSwitchAvatar()");
+
+            Player player = Owner.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSwitchAvatar(): player == null");
+            player.SwitchAvatar();
+            return true;
         }
 
         // 15, 16

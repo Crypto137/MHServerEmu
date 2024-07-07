@@ -818,23 +818,54 @@ namespace MHServerEmu.Games.Entities
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
         {
+            if (PlayerConnection.IsUsingNewPowerMessageHandler)
+            {
+                Power avatarSwapChannel = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower);
+
+                PowerActivationSettings settings = new(CurrentAvatar.Id, CurrentAvatar.RegionLocation.Position, CurrentAvatar.RegionLocation.Position);
+                settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
+                CurrentAvatar.ActivatePower(avatarSwapChannel.PrototypeDataRef, ref settings);
+
+                Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
+                Properties[PropertyEnum.AvatarSwitchPending, avatarProtoRef] = true;
+
+                return true;
+            }
+
             if (_switchAvatarEvent.IsValid) return false;
 
             // Get swap out power for the current avatar
             Power swapOutPower = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapOutPower);
             if (swapOutPower == null) return Logger.WarnReturn(false, "BeginSwitchAvatar(): swapOutPower == null;");
 
+            // Set pending switch
+            Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
+            Properties[PropertyEnum.AvatarSwitchPending, avatarProtoRef] = true;
+
             // Activate swap out power for the current avatar
             CurrentAvatar.TEMP_SendActivatePowerMessage(swapOutPower.PrototypeDataRef);
 
             // Schedule avatar switch for when the power ends
-            ScheduleEntityEvent(_switchAvatarEvent, swapOutPower.GetAnimationTime(), avatarProtoRef);
+            ScheduleEntityEvent(_switchAvatarEvent, swapOutPower.GetAnimationTime());
 
             return true;
         }
 
-        public bool SwitchAvatar(PrototypeId avatarProtoRef)
+        public bool SwitchAvatar()
         {
+            // Retrieve pending avatar proto ref recorded in properties
+            PrototypeId avatarProtoRef = PrototypeId.Invalid;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarSwitchPending))
+            {
+                Property.FromParam(kvp.Key, 0, out avatarProtoRef);
+                break;
+            }
+
+            if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SwitchAvatar(): Failed to find pending avatar switch");
+            Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
+
+            // Do the switch
             ulong lastCurrentAvatarId = CurrentAvatar != null ? CurrentAvatar.Id : InvalidId;
 
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
@@ -1041,9 +1072,9 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        private class SwitchAvatarEvent : CallMethodEventParam1<Entity, PrototypeId>
+        private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
-            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).SwitchAvatar(p1);
+            protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
         }
     }
 }

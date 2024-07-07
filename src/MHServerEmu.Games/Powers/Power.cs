@@ -956,7 +956,7 @@ namespace MHServerEmu.Games.Powers
                 Logger.WarnReturn(false, $"GetTargets(): Entity {Owner} getting targets for power {this} is not in the world.");
 
             return GetTargets(targetList, Game, powerProto, Owner.Properties, target, targetPosition, Owner.RegionLocation.Position,
-                GetApplicationRange(), Owner.Region != null ? Owner.Region.Id : 0, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
+                GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
         }
 
         public static bool GetTargets(List<WorldEntity> targetList, Game game, PowerPrototype powerProto, PropertyCollection properties,
@@ -2455,6 +2455,9 @@ namespace MHServerEmu.Games.Powers
 
             // Trigger application event
             HandleTriggerPowerEventOnPowerApply();
+
+            // Avatar may exit world as a result of the application of this power
+            if (Owner.IsInWorld == false) return true;
 
             // Find targets for this power application
             List<WorldEntity> targetList = new();
