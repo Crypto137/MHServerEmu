@@ -729,6 +729,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return Eval.RunFloat(EvalEventParam, contextData);
         }
+
+        public float GetEventParamNoEval()
+        {
+            return EventParam;
+        }
     }
 
     public class SituationalTriggerPrototype : Prototype

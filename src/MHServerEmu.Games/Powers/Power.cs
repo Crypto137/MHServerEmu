@@ -370,9 +370,9 @@ namespace MHServerEmu.Games.Powers
                 }
             }
             else if (powerProto.PowerCategory == PowerCategoryType.ComboEffect && settings.VariableActivationTime > TimeSpan.Zero
-                && settings.TriggeringPowerPrototypeRef != PrototypeId.Invalid && Owner != null)
+                && settings.TriggeringPowerRef != PrototypeId.Invalid && Owner != null)
             {
-                Power triggeringPower = Owner.GetPower(settings.TriggeringPowerPrototypeRef);
+                Power triggeringPower = Owner.GetPower(settings.TriggeringPowerRef);
                 if (triggeringPower != null)
                 {
                     Properties.CopyProperty(triggeringPower.Properties, PropertyEnum.VariableActivationTimeMS);
@@ -2511,6 +2511,17 @@ namespace MHServerEmu.Games.Powers
                     results.MessageFlags |= PowerResultMessageFlags.HasDamageMental;
                 }
 
+                // TEST: Deal damage
+                // TODO: WorldEntity::ApplyPowerResults()
+                /*
+                if (Owner is Avatar)
+                {
+                    target.Properties[PropertyEnum.Health] -= (int)(damagePhysical + damageEnergy + damageMental);
+                    if (target.Properties[PropertyEnum.Health] <= 0)
+                        target.Kill(Owner.Id);
+                }
+                */
+
                 // Send results
                 Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
             }
@@ -2599,7 +2610,7 @@ namespace MHServerEmu.Games.Powers
 
                 Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
             }
-            else if (_pendingActivationPhaseEvents.IsEmpty == false)
+            else if (_pendingPowerApplicationEvents.IsEmpty == false)
             {
                 Logger.Warn($"OnEndPowerRemoveApplications(): _pendingPowerApplicationEvents is not empty! endPowerFlags=[{flags}] power=[{this}]");
             }
@@ -3396,11 +3407,13 @@ namespace MHServerEmu.Games.Powers
         private void DoRandomTargetSelection(Power triggeredPower, in PowerActivationSettings settings)
         {
             // TODO
+            Logger.Debug("DoRandomTargetSelection()");
         }
 
         private bool FillOutProcEffectPowerApplication(WorldEntity target, in PowerActivationSettings settings, PowerApplication powerApplication)
         {
             // TODO
+            Logger.Debug("FillOutProcEffectPowerApplication()");
             return true;
         }
 

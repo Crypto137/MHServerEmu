@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Powers
         public uint PowerRandomSeed = 0;
         public ulong ItemSourceId = 0;
         public uint FXRandomSeed = 0;
-        public PrototypeId TriggeringPowerPrototypeRef = PrototypeId.Invalid;
+        public PrototypeId TriggeringPowerRef = PrototypeId.Invalid;
 
         public PowerActivationSettingsFlags Flags = PowerActivationSettingsFlags.None;
         public TimeSpan VariableActivationTime = TimeSpan.Zero;
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Powers
             FXRandomSeed = tryActivatePower.FxRandomSeed;
 
             if (tryActivatePower.HasTriggeringPowerPrototypeId)
-                TriggeringPowerPrototypeRef = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
+                TriggeringPowerRef = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
         }
     }
 }

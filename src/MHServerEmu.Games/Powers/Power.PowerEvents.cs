@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Powers
         public void HandleTriggerPowerEventOnContactTime()              // 1
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnContactTime, in settings);
         }
 
@@ -36,14 +36,14 @@ namespace MHServerEmu.Games.Powers
         public void HandleTriggerPowerEventOnPowerApply()               // 4
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerApply, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerEnd()                 // 5
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerEnd, in settings);
         }
 
@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Powers
         public void HandleTriggerPowerEventOnPowerStart()               // 7
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerStart, in settings);
         }
 
@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Powers
             // Client-only?
             Logger.Debug("HandleTriggerPowerEventOnPowerPivot()");
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             settings.Flags |= PowerActivationSettingsFlags.ClientCombo;
             HandleTriggerPowerEvent(PowerEventType.OnPowerPivot, in settings);
         }
@@ -137,14 +137,14 @@ namespace MHServerEmu.Games.Powers
         public void HandleTriggerPowerEventOnPowerToggleOn()            // 22
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOn, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerToggleOff()           // 23
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOff, in settings);
         }
 
@@ -161,7 +161,7 @@ namespace MHServerEmu.Games.Powers
                 return true;
 
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
             foreach (PowerEventActionPrototype triggeredPowerEvent in powerProto.ActionsTriggeredOnPowerEvent)
             {
@@ -202,14 +202,14 @@ namespace MHServerEmu.Games.Powers
         public void HandleTriggerPowerEventOnExtraActivationCooldown()  // 25
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnExtraActivationCooldown, in settings);
         }
 
         public void HandleTriggerPowerEventOnPowerLoopEnd()             // 26
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnPowerLoopEnd, in settings);
         }
 
@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Powers
         public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()  // 30
         {
             PowerActivationSettings settings = _lastActivationSettings;
-            settings.TriggeringPowerPrototypeRef = PrototypeDataRef;
+            settings.TriggeringPowerRef = PrototypeDataRef;
             HandleTriggerPowerEvent(PowerEventType.OnOutOfRangeActivateMovementPower, in settings);
         }
 
@@ -509,9 +509,64 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 2, 3
-        private void DoPowerEventActionCancelScheduledActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private bool DoPowerEventActionCancelScheduledActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionCancelScheduledActivation(): Not implemented");
+            Logger.Debug($"DoPowerEventActionCancelScheduledActivation(): {triggeredPowerEvent.Power.GetName()}");
+
+            if (triggeredPowerEvent.Power == PrototypeId.Invalid)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionCancelScheduledActivation(): Encountered a triggered power event with an invalid power ref:\n{triggeredPowerEvent}\n{this}");
+            }
+
+            PowerCollection powerCollection = Owner?.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, "DoPowerEventActionCancelScheduledActivation(): powerCollection == null");
+
+            Power triggeredPower = powerCollection.GetPower(triggeredPowerEvent.Power);
+            if (triggeredPower == null)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionCancelScheduledActivation(): Power [{triggeredPower}] specifies a nextPower, but that power could not be found in the power collection.");
+            }
+
+            if (settings.TriggeringPowerRef == PrototypeId.Invalid)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionCancelScheduledActivation(): Encountered a triggered power event with an invalid triggering power ref:\n{triggeredPowerEvent}\n{this}");
+            }
+
+            Power sourcePower = null;
+
+            switch (triggeredPowerEvent.EventAction)
+            {
+                case PowerEventActionType.CancelScheduledActivation:
+                    if (settings.TriggeringPowerRef == PrototypeId.Invalid)
+                    {
+                        return Logger.WarnReturn(false,
+                            $"DoPowerEventActionCancelScheduledActivation(): Encountered a triggered power event with an invalid triggering power ref:\n{triggeredPowerEvent}\n{this}");
+                    }
+
+                    sourcePower = powerCollection.GetPower(settings.TriggeringPowerRef);
+                    
+                    if (sourcePower == null)
+                    {
+                        return Logger.WarnReturn(false,
+                            "DoPowerEventActionCancelScheduledActivation(): Couldn't find the triggering power for a triggered power event in the power collection. " +
+                            $"Power: {this}\nTriggering power ref hash ID: {settings.TriggeringPowerRef}");
+                    }
+
+                    break;
+
+                case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:
+                    sourcePower = triggeredPower;
+                    break;
+
+                default:
+                    return Logger.WarnReturn(false,
+                        $"DoPowerEventActionCancelScheduledActivation(): Encountered a triggered power event with an unsupported cancel scheduled action type:\n{triggeredPowerEvent}\n{this}");
+            }
+
+            return sourcePower?.CancelScheduledActivation(triggeredPower.PrototypeDataRef) == true;
         }
 
         // 4
@@ -545,9 +600,77 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 8, 10, 11
-        private void DoPowerEventActionScheduleActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
+        private bool DoPowerEventActionScheduleActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
         {
-            Logger.Warn($"DoPowerEventActionScheduleActivation(): Not implemented");
+            Logger.Debug($"DoPowerEventActionScheduleActivation(): {triggeredPowerEvent.Power.GetName()}");
+
+            if (triggeredPowerEvent.Power == PrototypeId.Invalid && actionType != PowerEventActionType.RescheduleActivationInSeconds)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionScheduleActivation(): Encountered a triggered power event with an invalid power ref that is not a RescheduleActivationInSeconds event type :\n{triggeredPowerEvent}\n{this}");
+            }
+
+            if (Game == null) return Logger.WarnReturn(false, "DoPowerEventActionScheduleActivation(): Game == null");
+            if (Owner == null) return Logger.WarnReturn(false, "DoPowerEventActionScheduleActivation(): Owner == null");
+
+            PowerCollection powerCollection = Owner.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, "DoPowerEventActionScheduleActivation(): powerCollection == null");
+
+            Power triggeredPower = powerCollection.GetPower(triggeredPowerEvent.Power);
+            if (triggeredPower == null && actionType != PowerEventActionType.RescheduleActivationInSeconds)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionScheduleActivation(): Power [{this}] specifies a nextPower, but that power could not be found in the power collection.");
+            }
+
+            Power triggeringPower = powerCollection.GetPower(settings.TriggeringPowerRef);
+            if (triggeringPower == null)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionScheduleActivation(): Triggering power for power [{this}] could not be found in the power collection that does not set to RescheduleActivationInSeconds event type.");
+            }
+
+            TimeSpan delay = TimeSpan.Zero;
+            float eventParam;
+
+            switch (actionType)
+            {
+                case PowerEventActionType.ScheduleActivationInSeconds:
+                case PowerEventActionType.RescheduleActivationInSeconds:
+                    eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
+                    if (eventParam <= 0f)
+                    {
+                        return Logger.WarnReturn(false,
+                            $"DoPowerEventActionScheduleActivation(): Encountered a triggered power event with an invalid schedule time. EventParam must be greater than zero.\n{triggeredPowerEvent}\n{this}");
+                    }
+
+                    delay = TimeSpan.FromSeconds(eventParam);
+                    break;
+
+                case PowerEventActionType.ScheduleActivationAtPercent:
+                    eventParam = triggeredPowerEvent.GetEventParamNoEval();
+
+                    if (eventParam < 0f || eventParam > 1f)
+                    {
+                        return Logger.WarnReturn(false,
+                            $"DoPowerEventActionScheduleActivation(): Encountered a triggered power event with an invalid schedule percentage. " +
+                            $"EventParam was [{eventParam}f] and must be greater than zero and less than or equal to one.\n{triggeredPowerEvent}\n{this}");
+                    }
+
+                    delay = triggeringPower.GetFullExecutionTime() * eventParam;
+                    break;
+
+                default:
+                    Logger.Warn($"DoPowerEventActionScheduleActivation(): Encountered a triggered power event with an unsupported schedule action type:\n{triggeredPowerEvent}\n{this}");
+                    break;
+            }
+
+            Power powerToSchedule = actionType == PowerEventActionType.RescheduleActivationInSeconds ? triggeringPower : triggeredPower;
+
+            if (powerToSchedule == null)
+                return Logger.WarnReturn(false, $"DoPowerEventActionScheduleActivation(): Power to schedule power for activation from power [{this}] could not be found.");
+
+            return triggeringPower.ScheduleScheduledActivation(delay, powerToSchedule, triggeredPowerEvent, in settings);
         }
 
         // 12
@@ -594,7 +717,7 @@ namespace MHServerEmu.Games.Powers
         // 19
         private bool DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Trace($"DoPowerEventActionUsePower(): {triggeredPowerEvent.Power.GetName()}");
+            Logger.Debug($"DoPowerEventActionUsePower(): {triggeredPowerEvent.Power.GetName()}");
 
             // Validate
 
@@ -647,9 +770,24 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 23
-        private void DoPowerEventActionEndPower(PrototypeId powerProtoRef, EndPowerFlags flags)
+        private bool DoPowerEventActionEndPower(PrototypeId powerProtoRef, EndPowerFlags flags)
         {
-            Logger.Warn($"DoPowerEventActionEndPower(): Not implemented (powerProtoRef={powerProtoRef.GetName()}, flags={flags})");
+            Logger.Debug($"DoPowerEventActionEndPower(): powerProtoRef={powerProtoRef.GetName()}, flags={flags}");
+            
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"DoPowerEventActionEndPower(): Encountered a triggered power event with an invalid power ref!\n{this}");
+
+            if (powerProtoRef == PrototypeDataRef)
+            {
+                return Logger.WarnReturn(false,
+                    $"DoPowerEventActionEndPower(): Encountered a triggered power event action EndPower that is trying to end itself! Not performing the action.\n{this}");
+            }
+
+            PowerCollection powerCollection = Owner?.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, "DoPowerEventActionEndPower(): powerCollection == null");
+
+            Power triggeredPower = powerCollection.GetPower(powerProtoRef);
+            return triggeredPower != null && triggeredPower.EndPower(flags | EndPowerFlags.PowerEventAction);
         }
 
         // 24
