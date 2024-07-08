@@ -456,7 +456,7 @@ namespace MHServerEmu.Games.Powers
                     if (target != null && target.IsDead == false)
                     {
                         locomotor.FollowEntity(targetId, 0.0f, locomotionOptions);
-                        locomotor.FollowEntityMissileEvent.AddActionBack(missile.SeekTargetMissingEvent);
+                        locomotor.FollowEntityMissingEvent.AddActionBack(missile.SeekTargetMissingEvent);
                     }
                     else
                     {
