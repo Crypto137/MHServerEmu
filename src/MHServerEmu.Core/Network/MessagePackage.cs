@@ -1,4 +1,5 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Network
@@ -10,20 +11,14 @@ namespace MHServerEmu.Core.Network
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private int _cachedSize = -1;
+
         public Type Protocol { get; set; }
         public uint Id { get; }
         public byte[] Payload { get; }
+        public IMessage Message { get; }
         public TimeSpan GameTimeReceived { get; set; }
         public TimeSpan DateTimeReceived { get; set; }
-
-        /// <summary>
-        /// Constructs a new <see cref="MessagePackage"/> from raw data.
-        /// </summary>
-        public MessagePackage(uint id, byte[] payload)
-        {
-            Id = id;
-            Payload = payload;
-        }
 
         /// <summary>
         /// Constructs a new <see cref="MessagePackage"/> from an <see cref="IMessage"/>.
@@ -31,7 +26,7 @@ namespace MHServerEmu.Core.Network
         public MessagePackage(IMessage message)
         {
             (Protocol, Id) = ProtocolDispatchTable.Instance.GetMessageProtocolId(message);
-            Payload = message.ToByteArray();
+            Message = message;
         }
 
         /// <summary>
@@ -52,28 +47,44 @@ namespace MHServerEmu.Core.Network
             }
         }
 
-        /// <summary>
-        /// Encodes the <see cref="MessagePackage"/> to the provided <see cref="CodedOutputStream"/>.
-        /// </summary>
-        public void Encode(CodedOutputStream stream)
+        public int GetSize()
         {
-            stream.WriteRawVarint32(Id);
-            stream.WriteRawVarint32((uint)Payload.Length);
-            stream.WriteRawBytes(Payload);
+            if (Message == null) return Logger.WarnReturn(0, "ComputeMessageSize(): Message == null");
+
+            if (_cachedSize != -1) return _cachedSize;
+
+            int size = CodedOutputStream.ComputeRawVarint32Size(Id);
+            size += CodedOutputStream.ComputeRawVarint32Size((uint)Message.SerializedSize);
+            size += Message.SerializedSize;
+
+            _cachedSize = size;
+
+            return size;
         }
 
         /// <summary>
-        /// Serializes the <see cref="MessagePackage"/> instance to a byte array.
+        /// Encodes the <see cref="MessagePackage"/> to the provided <see cref="CodedOutputStream"/>.
         /// </summary>
-        public byte[] Serialize()
+        public bool WriteTo(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
+            if (Message == null)
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                Encode(cos);
-                cos.Flush();
-                return ms.ToArray();
+                // Fall back to the payload if we have one (e.g. when slicing packet dumps)
+                if (Payload.IsNullOrEmpty()) return Logger.WarnReturn(false, "WriteTo(): No data to write");
+
+                stream.WriteRawVarint32(Id);
+                stream.WriteRawVarint32((uint)Payload.Length);
+                stream.WriteRawBytes(Payload);
+
+                return true;
             }
+
+            // Write the IMessage directly to the output stream
+            stream.WriteRawVarint32(Id);
+            stream.WriteRawVarint32((uint)Message.SerializedSize);
+            Message.WriteTo(stream);
+
+            return true;
         }
 
         /// <summary>
@@ -82,6 +93,7 @@ namespace MHServerEmu.Core.Network
         public IMessage Deserialize()
         {
             if (Protocol == null) return Logger.WarnReturn<IMessage>(null, $"Deserialize(): Protocol == null");
+            if (Payload == null) return Logger.WarnReturn<IMessage>(null, $"Deserialize(): Payload == null");
 
             try
             {

@@ -21,7 +21,7 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public readonly struct MuxPacket : IPacket
     {
-        private const int HeaderLength = 6;
+        private const int HeaderSize = 6;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -114,48 +114,78 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Serializes this <see cref="MuxPacket"/> to a <see cref="byte"/> array.
+        /// Serializes this <see cref="MuxPacket"/> to an existing <see cref="byte"/> buffer.
         /// </summary>
-        public byte[] Serialize()
+        public int Serialize(byte[] buffer)
         {
-            byte[] bodyBuffer = SerializeBody();
-            int bodyLength = bodyBuffer.Length;
+            using (MemoryStream ms = new(buffer))
+                return Serialize(ms);
+        }
 
-            using (MemoryStream ms = new(HeaderLength + bodyLength))
-            using (BinaryWriter writer = new(ms))
+        /// <summary>
+        /// Serializes this <see cref="MuxPacket"/> to a <see cref="Stream"/>.
+        /// </summary>
+        public int Serialize(Stream stream)
+        {
+            int bodySize = 0;
+            if (IsDataPacket)
+            {
+                foreach (MessagePackage messagePackage in _messageList)
+                    bodySize += messagePackage.GetSize();
+
+                if ((HeaderSize + bodySize) >= TcpClientConnection.MaxPacketSize)
+                    return Logger.ErrorReturn(0, "Serialize(): Protobuf buffer overflow");
+            }
+
+            using (BinaryWriter writer = new(stream))
             {
                 writer.Write(MuxId);
-                writer.WriteUInt24(bodyLength);
+                writer.WriteUInt24(bodySize);
                 writer.Write((byte)Command);
 
-                // Write the body buffer only if there is something to write to avoid unnecessary overhead.
-                if (bodyLength > 0)
-                    writer.Write(bodyBuffer);
+                SerializeBody(stream);
+            }
 
-                // Flushing is not needed for the MemoryStream / BinaryWriter combo.
+            return HeaderSize + bodySize;
+        }
+
+        /// <summary>
+        /// Serializes this <see cref="MuxPacket"/> to a new <see cref="byte"/> array.
+        /// </summary>
+        public byte[] ToArray()
+        {
+            int bodySize = 0;
+            if (IsDataPacket)
+            {
+                foreach (MessagePackage messagePackage in _messageList)
+                    bodySize += messagePackage.GetSize();
+            }
+
+            using (MemoryStream ms = new(HeaderSize + bodySize))
+            {
+                Serialize(ms);
                 return ms.ToArray();
             }
         }
 
         /// <summary>
-        /// Serializes all messages contained in this <see cref="MuxPacket"/> to a <see cref="byte"/> array.
+        /// Serializes all messages contained in this <see cref="MuxPacket"/> to a <see cref="Stream"/>.
         /// </summary>
-        private byte[] SerializeBody()
+        private bool SerializeBody(Stream stream)
         {
+            // If this is not a data packet we don't need to write a body
             if (IsDataPacket == false)
-                return Array.Empty<byte>();
+                return false;
 
             if (_messageList.Count == 0)
-                return Logger.WarnReturn(Array.Empty<byte>(), "SerializeBody(): Data packet contains no messages");
+                return Logger.WarnReturn(false, "SerializeBody(): Data packet contains no messages");
 
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                foreach (MessagePackage message in _messageList)
-                    message.Encode(cos);
-                cos.Flush();
-                return ms.ToArray();
-            }
+            CodedOutputStream cos = CodedOutputStream.CreateInstance(stream);
+            foreach (MessagePackage message in _messageList)
+                message.WriteTo(cos);
+            cos.Flush();
+
+            return true;
         }
     }
 }

@@ -11,9 +11,13 @@ namespace MHServerEmu.Core.Network.Tcp
     /// </summary>
     public class TcpClientConnection
     {
+        // 640K ought to be enough for anybody
+        public const int MaxPacketSize = 1024 * 640;
+
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         private readonly TcpServer _server;
+        private readonly byte[] _packetBuffer = new byte[MaxPacketSize];
 
         public byte[] ReceiveBuffer { get; } = new byte[1024 * 8];
 
@@ -52,7 +56,7 @@ namespace MHServerEmu.Core.Network.Tcp
         #region Send Methods
 
         /// <summary>
-        /// Sends a data buffer over this connection.
+        /// Sends a <see cref="byte"/> buffer over this connection.
         /// </summary>
         public int Send(byte[] buffer, SocketFlags flags = SocketFlags.None)
         {
@@ -60,11 +64,16 @@ namespace MHServerEmu.Core.Network.Tcp
         }
 
         /// <summary>
-        /// Sends a packet over this connection.
+        /// Sends an <see cref="IPacket"/> over this connection.
         /// </summary>
         public int Send(IPacket packet, SocketFlags flags = SocketFlags.None)
         {
-            return Send(packet.Serialize(), flags);
+            // Keep this buffer thread-safe
+            lock (_packetBuffer)
+            {
+                int size = packet.Serialize(_packetBuffer);
+                return _server.Send(this, _packetBuffer, size, flags);
+            }
         }
 
         #endregion

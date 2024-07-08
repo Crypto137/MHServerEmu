@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Network.Parsing
                     MuxPacket packet = new(ms);
                     if (packet.IsDataPacket == false) continue;
 
-                    byte[] rawPacket = packet.Serialize();
+                    byte[] rawPacket = packet.ToArray();
                     File.WriteAllBytes(Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_raw.bin"), rawPacket);
                     packetCount++;
                 }
