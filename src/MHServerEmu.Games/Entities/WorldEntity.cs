@@ -210,13 +210,19 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            throw new NotImplementedException();
+            CancelScheduledLifespanExpireEvent();
+            // TODO Implement
+            Destroy();
         }
 
         public void Kill(WorldEntity killer = null, KillFlags killFlags = KillFlags.None, WorldEntity directKiller = null)
         {
-            throw new NotImplementedException();
-            // OnKilled(killer, killFlags, directKiller);   
+            // CancelKillEvent();
+
+            // TODO Implement
+
+            Properties[PropertyEnum.Health] = 0;
+            OnKilled(killer, killFlags, directKiller);   
         }
 
         public override void Destroy()
@@ -446,7 +452,7 @@ namespace MHServerEmu.Games.Entities
             Vector3 delta = point - origin;
             if (ignorePitch) delta.Z = 0.0f;
             if (Vector3.LengthSqr(delta) >= MathHelper.PositionSqTolerance)
-                return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == true;
+                return ChangeRegionPosition(null, Orientation.FromDeltaVector(delta), changeFlags) == ChangePositionResult.PositionChanged;
             return false;
         }
 
@@ -460,7 +466,6 @@ namespace MHServerEmu.Games.Entities
             else
                 ScheduleEntityEvent(_exitWorldEvent, time);
         }
-
 
         public Vector3 GetVectorFrom(WorldEntity other)
         {
@@ -773,7 +778,8 @@ namespace MHServerEmu.Games.Entities
 
         public void EndAllPowers(bool v)
         {
-            throw new NotImplementedException();
+            return;
+            // throw new NotImplementedException();
         }
 
         public T GetMostResponsiblePowerUser<T>(bool skipPet = false) where T : WorldEntity

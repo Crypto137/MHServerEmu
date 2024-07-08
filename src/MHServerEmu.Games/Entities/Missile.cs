@@ -145,6 +145,13 @@ namespace MHServerEmu.Games.Entities
             Kill();
         }
 
+        public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            NotifyCreatorPowerEnd();
+            // TODO PropertyEnum.CreatorPowerPrototype HandleTriggerPowerEvent PowerEventType.OnMissileKilled
+            base.OnKilled(killer, killFlags, directKiller);
+        }
+
         public override void OnLifespanExpired()
         {
             if (Game == null) return;

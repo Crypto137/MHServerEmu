@@ -718,7 +718,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                 int randomDegree = gravitatedContext.OnBounceRandomDegreeFromForward;
                                 if (randomDegree != 0)
                                 {
-                                    Random random = ownerAsMissile.Random;
+                                    var random = ownerAsMissile.Random;
                                     nextDirection = Vector3.AxisAngleRotate(nextDirection, Vector3.ZAxis, MathHelper.ToRadians(random.Next(-randomDegree, randomDegree)));
                                 }
                                 Vector3 axisVector = Vector3.SafeNormalize(Vector3.Cross(Vector3.Up, nextDirection));
