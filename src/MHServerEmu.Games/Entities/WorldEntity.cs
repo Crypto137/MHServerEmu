@@ -153,10 +153,11 @@ namespace MHServerEmu.Games.Entities
             // Override base health to make things more reasonable with the current damage implementation
             float healthBaseOverride = EntityHelper.GetHealthForWorldEntity(this);
             if (healthBaseOverride > 0f)
-            {
-                Properties[PropertyEnum.HealthBase] = healthBaseOverride;
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            }
+
+            //Properties[PropertyEnum.CharacterLevel] = 60;
+            //Properties[PropertyEnum.CombatLevel] = 60;
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);
@@ -1026,7 +1027,24 @@ namespace MHServerEmu.Games.Entities
 
         public bool ApplyPowerResults(PowerResults powerResults)
         {
-            Logger.Debug("ApplyPowerResults()");
+            // Send power results to clients
+            NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
+            Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            // Apply the results to this entity
+            // NOTE: A lot more things should happen here, but for now we just apply damage and check death
+            int health = Properties[PropertyEnum.Health];
+
+            float totalDamage = powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
+            totalDamage += powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
+            totalDamage += powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
+
+            health = (int)Math.Max(health - totalDamage, 0);
+            Properties[PropertyEnum.Health] = health;
+
+            if (health <= 0)
+                Kill(powerResults.PowerOwnerId);    // TODO: Proper kill
+
             return true;
         }
 

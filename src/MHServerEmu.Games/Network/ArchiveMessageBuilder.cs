@@ -52,6 +52,24 @@ namespace MHServerEmu.Games.Network
     }
 
     [Flags]
+    public enum PowerResultMessageFlags
+    {
+        None                        = 0,
+        NoPowerOwnerEntityId        = 1 << 0,
+        IsSelfTarget                = 1 << 1,
+        NoUltimateOwnerEntityId     = 1 << 2,
+        UltimateOwnerIsPowerOwner   = 1 << 3,
+        HasResultFlags              = 1 << 4,
+        HasPowerOwnerPosition       = 1 << 5,
+        HasDamagePhysical           = 1 << 6,
+        HasDamageEnergy             = 1 << 7,
+        HasDamageMental             = 1 << 8,
+        HasHealing                  = 1 << 9,
+        HasPowerAssetRefOverride    = 1 << 10,
+        HasTransferToEntityId       = 1 << 11
+    }
+
+    [Flags]
     public enum EnterGameWorldMessageFlags : uint
     {
         None = 0,
@@ -66,6 +84,9 @@ namespace MHServerEmu.Games.Network
     /// </summary>
     public static class ArchiveMessageBuilder
     {
+        /// <summary>
+        /// Builds <see cref="NetMessageEntityCreate"/> for the provided <see cref="Entity"/>.
+        /// </summary>
         public static NetMessageEntityCreate BuildEntityCreateMessage(Entity entity, AOINetworkPolicyValues interestPolicies, bool includeInvLoc, EntitySettings settings = null)
         {
             ByteString baseData = null;
@@ -250,6 +271,9 @@ namespace MHServerEmu.Games.Network
                 .Build();
         }
 
+        /// <summary>
+        /// Builds <see cref="NetMessageLocomotionStateUpdate"/> for the provided <see cref="WorldEntity"/>.
+        /// </summary>
         public static NetMessageLocomotionStateUpdate BuildLocomotionStateUpdateMessage(WorldEntity worldEntity, LocomotionState oldLocomotionState, LocomotionState newLocomotionState,
             bool withPathNodes)
         {
@@ -290,6 +314,9 @@ namespace MHServerEmu.Games.Network
             return NetMessageLocomotionStateUpdate.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
         }
 
+        /// <summary>
+        /// Builds <see cref="NetMessageActivatePower"/> for the provided <see cref="Power"/> and <see cref="PowerActivationSettings"/>.
+        /// </summary>
         public static NetMessageActivatePower BuildActivatePowerMessage(Power power, in PowerActivationSettings settings)
         {
             // Build flags
@@ -378,6 +405,113 @@ namespace MHServerEmu.Games.Network
                 Serializer.Transfer(archive, ref fxRandomSeed);
 
             return NetMessageActivatePower.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
+        }
+
+        /// <summary>
+        /// Builds <see cref="NetMessagePowerResult"/> for the provided <see cref="PowerResults"/>.
+        /// </summary>
+        public static NetMessagePowerResult BuildPowerResultMessage(PowerResults results)
+        {
+            // Get data from power results
+            PrototypeId powerProtoRef = results.PowerPrototype.DataRef;
+            ulong powerOwnerEntityId = results.PowerOwnerId;
+            ulong ultimateOwnerEntityId = results.UltimateOwnerId;
+            ulong targetEntityId = results.TargetId;
+
+            ulong resultFlagsRaw = (ulong)results.Flags;
+            uint damagePhysical = (uint)MathF.Ceiling(results.GetDamageForClient(DamageType.Physical));
+            uint damageEnergy = (uint)MathF.Ceiling(results.GetDamageForClient(DamageType.Energy));
+            uint damageMental = (uint)MathF.Ceiling(results.GetDamageForClient(DamageType.Mental));
+            uint healing = (uint)MathF.Ceiling(results.HealingForClient);
+
+            AssetId powerAssetRefOverride = results.PowerAssetRefOverride;
+            Vector3 powerOwnerPosition = results.PowerOwnerPosition;
+            ulong transferToEntityId = results.TransferToId;
+
+            // Build flags
+            PowerResultMessageFlags messageFlags = PowerResultMessageFlags.None;
+
+            if (powerOwnerEntityId == Entity.InvalidId)
+                messageFlags |= PowerResultMessageFlags.NoPowerOwnerEntityId;
+            else if (powerOwnerEntityId == targetEntityId)
+                messageFlags |= PowerResultMessageFlags.IsSelfTarget;
+
+            if (ultimateOwnerEntityId == Entity.InvalidId)
+                messageFlags |= PowerResultMessageFlags.NoUltimateOwnerEntityId;
+            else if (ultimateOwnerEntityId == powerOwnerEntityId)
+                messageFlags |= PowerResultMessageFlags.UltimateOwnerIsPowerOwner;
+
+            if (resultFlagsRaw != 0)
+                messageFlags |= PowerResultMessageFlags.HasResultFlags;
+
+            // Damage and healing
+            if (damagePhysical > 0)
+                messageFlags |= PowerResultMessageFlags.HasDamagePhysical;
+
+            if (damageEnergy > 0)
+                messageFlags |= PowerResultMessageFlags.HasDamageEnergy;
+
+            if (damageMental > 0)
+                messageFlags |= PowerResultMessageFlags.HasDamageMental;
+
+            if (healing > 0)
+                messageFlags |= PowerResultMessageFlags.HasHealing;
+
+            if (powerAssetRefOverride != AssetId.Invalid)
+                messageFlags |= PowerResultMessageFlags.HasPowerAssetRefOverride;
+
+            if (powerOwnerPosition != Vector3.Zero)
+                messageFlags |= PowerResultMessageFlags.HasPowerOwnerPosition;
+
+            if (transferToEntityId != Entity.InvalidId)
+                messageFlags |= PowerResultMessageFlags.HasTransferToEntityId;
+
+            // Serialize
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AOIChannelProximity);
+
+            uint messageFlagsRaw = (uint)messageFlags;
+            Serializer.Transfer(archive, ref messageFlagsRaw);
+
+            Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref powerProtoRef);
+            Serializer.Transfer(archive, ref targetEntityId);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.IsSelfTarget) == false &&
+                messageFlags.HasFlag(PowerResultMessageFlags.NoPowerOwnerEntityId) == false)
+            {
+                Serializer.Transfer(archive, ref powerOwnerEntityId);
+            }
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.UltimateOwnerIsPowerOwner) == false &&
+                messageFlags.HasFlag(PowerResultMessageFlags.NoUltimateOwnerEntityId) == false)
+            {
+                Serializer.Transfer(archive, ref ultimateOwnerEntityId);
+            }
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasResultFlags))
+                Serializer.Transfer(archive, ref resultFlagsRaw);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasDamagePhysical))
+                Serializer.Transfer(archive, ref damagePhysical);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasDamageEnergy))
+                Serializer.Transfer(archive, ref damageEnergy);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasDamageMental))
+                Serializer.Transfer(archive, ref damageMental);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasHealing))
+                Serializer.Transfer(archive, ref healing);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasPowerAssetRefOverride))
+                Serializer.Transfer(archive, ref powerAssetRefOverride);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasPowerOwnerPosition))
+                Serializer.TransferVectorFixed(archive, ref powerOwnerPosition, 2);
+
+            if (messageFlags.HasFlag(PowerResultMessageFlags.HasTransferToEntityId))
+                Serializer.Transfer(archive, ref transferToEntityId);
+
+            return NetMessagePowerResult.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
         }
 
         /// <summary>
@@ -483,6 +617,9 @@ namespace MHServerEmu.Games.Network
             return NetMessageAddCondition.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();
         }
 
+        /// <summary>
+        /// Builds <see cref="NetMessageUpdateMiniMap"/> for the provided <see cref="LowResMap"/>.
+        /// </summary>
         public static NetMessageUpdateMiniMap BuildUpdateMiniMapMessage(LowResMap lowResMap)
         {
             // NOTE: NetMessageUpdateMiniMap always uses the default policy values

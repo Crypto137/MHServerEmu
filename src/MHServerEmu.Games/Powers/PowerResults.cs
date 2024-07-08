@@ -14,8 +14,7 @@ namespace MHServerEmu.Games.Powers
         public float HealingForClient { get; private set; }
         public AssetId PowerAssetRefOverride { get; private set; }
         public PowerResultFlags Flags { get; set; }
-        public ulong TransferToEntityId { get; set; }
-
+        public ulong TransferToId { get; set; }
 
         public void Init(ulong powerOwnerId, ulong ultimateOwnerId, ulong targetId, Vector3 powerOwnerPosition,
             PowerPrototype powerProto, AssetId powerAssetRefOverride, bool isHostile)
@@ -39,6 +38,14 @@ namespace MHServerEmu.Games.Powers
             }
 
             return false;
+        }
+
+        public float GetDamageForClient(DamageType damageType)
+        {
+            if (damageType < DamageType.Physical || damageType >= DamageType.NumDamageTypes)
+                return 0f;
+
+            return _damageForClient[(int)damageType];
         }
 
         public float GetTotalDamageForClient()
