@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -121,6 +122,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsGlobalEventVendor { get; internal set; }
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
         public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
+        public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
 
         public WorldEntity(Game game) : base(game)
         {
@@ -150,13 +152,16 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            // Override base health to make things more reasonable with the current damage implementation
+            // HACK: Override base health to make things more reasonable with the current damage implementation
+            /*
             float healthBaseOverride = EntityHelper.GetHealthForWorldEntity(this);
             if (healthBaseOverride > 0f)
-            {
-                Properties[PropertyEnum.HealthBase] = healthBaseOverride;
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            }
+            */
+
+            Properties[PropertyEnum.CharacterLevel] = 60;
+            Properties[PropertyEnum.CombatLevel] = 60;
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);
@@ -203,13 +208,62 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            throw new NotImplementedException();
+            // HACK: LOOT
+            if (this is Agent agent)
+                Game.LootGenerator.DropRandomLoot(agent);
+
+            // HACK: Schedule respawn using SpawnSpec
+            if (SpawnSpec != null)
+            {
+                Logger.Debug($"Respawn scheduled for {this}");
+                EventPointer<TEMP_SpawnEntityEvent> eventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
+                eventPointer.Get().Initialize(SpawnSpec);
+            }
+
+            // HACK?: Set death state
+            _flags |= EntityFlags.IsDead;
+            Properties[PropertyEnum.IsDead] = true;
+            Properties[PropertyEnum.NoEntityCollide] = true;
+
+            // Send kill message to clients
+            var killMessage = NetMessageEntityKill.CreateBuilder()
+                .SetIdEntity(Id)
+                .SetIdKillerEntity(killer != null ? killer.Id : InvalidId)
+                .SetKillFlags((uint)killFlags)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            // Schedule destruction
+            int removeFromWorldTimerMS = WorldEntityPrototype.RemoveFromWorldTimerMS;
+            if (removeFromWorldTimerMS < 0)     // -1 means entities are not destroyed (e.g. avatars)
+                return;
+
+            TimeSpan removeFromWorldTimer = TimeSpan.FromMilliseconds(removeFromWorldTimerMS);
+
+            // Team-ups continue existing in player's inventory even after they are defeated because their unlocks are tied to their entities
+            if (IsTeamUpAgent)
+            {
+                if (removeFromWorldTimer == TimeSpan.Zero)
+                    ExitWorld();
+                else
+                    ScheduleExitWorldEvent(removeFromWorldTimer);
+
+                return;
+            }
+
+            // Other entities are destroyed 
+            if (removeFromWorldTimer == TimeSpan.Zero)
+                Destroy();
+            else
+                ScheduleDestroyEvent(removeFromWorldTimer);
         }
 
         public void Kill(WorldEntity killer, KillFlags killFlags = KillFlags.None, WorldEntity directKiller = null)
         {
-            throw new NotImplementedException();
-            // OnKilled(killer, killFlags, directKiller);   
+            Properties[PropertyEnum.Health] = 0;
+            OnKilled(killer, killFlags, directKiller);   
         }
 
         public override void Destroy()
@@ -221,9 +275,17 @@ namespace MHServerEmu.Games.Entities
             {
                 // CancelExitWorldEvent();
                 // CancelKillEvent();
-                // CancelDestroyEvent();
+                CancelDestroyEvent();
                 base.Destroy();
             }
+        }
+
+        public override bool ScheduleDestroyEvent(TimeSpan delay)
+        {
+            if (IsDestroyProtectedEntity)
+                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Trying to schedule destruction of a destroy-protected entity {this}");
+
+            return base.ScheduleDestroyEvent(delay);
         }
 
         #region World and Positioning
@@ -767,7 +829,7 @@ namespace MHServerEmu.Games.Entities
 
         public void EndAllPowers(bool v)
         {
-            throw new NotImplementedException();
+            // TODO
         }
 
         public T GetMostResponsiblePowerUser<T>(bool skipPet = false) where T : WorldEntity
@@ -1027,7 +1089,41 @@ namespace MHServerEmu.Games.Entities
 
         public bool ApplyPowerResults(PowerResults powerResults)
         {
-            Logger.Debug("ApplyPowerResults()");
+            // Send power results to clients
+            NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
+            Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            // Do not apply damage to avatars and team-ups... yet
+            // Do this after sending the message so that the client can play hit effects anyway
+            if (this is Avatar || (this is Agent agent && agent.IsTeamUpAgent))
+                return true;
+
+            // Apply the results to this entity
+            // NOTE: A lot more things should happen here, but for now we just apply damage and check death
+            int health = Properties[PropertyEnum.Health];
+
+            float totalDamage = powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
+            totalDamage += powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
+            totalDamage += powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
+
+            health = (int)Math.Max(health - totalDamage, 0);
+
+            // Kill
+            WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+
+            if (health <= 0)
+            {
+                Kill(powerUser, KillFlags.None, null);
+            }
+            else
+            {
+                Properties[PropertyEnum.Health] = health;
+
+                // HACK: Rotate towards the power user
+                if (totalDamage > 0f && powerUser is Avatar && this is Agent && Locomotor != null)
+                    ChangeRegionPosition(null, new(Vector3.AngleYaw(RegionLocation.Position, powerUser.RegionLocation.Position), 0f, 0f));
+            }
+
             return true;
         }
 

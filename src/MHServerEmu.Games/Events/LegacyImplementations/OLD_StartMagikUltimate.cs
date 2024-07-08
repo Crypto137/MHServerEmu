@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             // Create and add a condition for the ultimate
             magikUltimateCondition = avatar.ConditionCollection.AllocateCondition();
-            magikUltimateCondition.InitializeFromPowerMixinPrototype(777, (PrototypeId)PowerPrototypes.Magik.Ultimate, 0, TimeSpan.FromMilliseconds(20000));
+            magikUltimateCondition.InitializeFromPowerMixinPrototype(777, (PrototypeId)OLD_PowerPrototypes.Magik.Ultimate, 0, TimeSpan.FromMilliseconds(20000));
             avatar.ConditionCollection.AddCondition(magikUltimateCondition);
 
             return true;

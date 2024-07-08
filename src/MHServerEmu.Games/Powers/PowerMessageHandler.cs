@@ -121,8 +121,8 @@ namespace MHServerEmu.Games.Powers
 
             if (VerboseOutputToLog)
                 Logger.Debug($"OnTryCancelPower():\n{MessagePrinter.Print(tryCancelPower)}");
-            else
-                Logger.Trace("OnTryCancelPower()");
+            //else
+            //    Logger.Trace("OnTryCancelPower()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryCancelPower.IdUserEntity);
 
@@ -190,8 +190,8 @@ namespace MHServerEmu.Games.Powers
 
             if (VerboseOutputToLog)
                 Logger.Debug($"OnCancelPendingAction():\n{MessagePrinter.Print(cancelPendingAction)}");
-            else
-                Logger.Trace("OnCancelPendingAction()");
+            //else
+            //    Logger.Trace("OnCancelPendingAction()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarByIndex(cancelPendingAction.AvatarIndex);
             if (avatar == null) return true;
@@ -306,7 +306,7 @@ namespace MHServerEmu.Games.Powers
                     deactivateEventPointer.Get().PlayerConnection = _playerConnection;
                 }
             }
-            else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
+            else if (tryActivatePower.PowerPrototypeId == (ulong)OLD_PowerPrototypes.Magik.Ultimate)
             {
                 EventPointer<OLD_StartMagikUltimate> startEventPointer = new();
                 game.GameEventScheduler.ScheduleEvent(startEventPointer, TimeSpan.Zero);
@@ -316,7 +316,7 @@ namespace MHServerEmu.Games.Powers
                 game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
                 endEventPointer.Get().PlayerConnection = _playerConnection;
             }
-            else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
+            else if (tryActivatePower.PowerPrototypeId == (ulong)OLD_PowerPrototypes.Items.BowlingBallItemPower)
             {
                 Inventory inventory = _playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
                 

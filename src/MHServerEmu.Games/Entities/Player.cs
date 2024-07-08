@@ -217,8 +217,8 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototypeRef] = 60;
 
                 // Unlock extra emotes
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)PowerPrototypes.UnlockableEmote.EmoteCongrats] = true;    // Powers/Emotes/EmoteCongrats.prototype
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)PowerPrototypes.UnlockableEmote.EmoteDance] = true;       // Powers/Emotes/EmoteDance.prototype
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
             }
 
             foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))

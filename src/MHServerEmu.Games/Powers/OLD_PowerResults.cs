@@ -10,24 +10,6 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
-    [Flags]
-    public enum PowerResultMessageFlags
-    {
-        None                        = 0,
-        NoPowerOwnerEntityId        = 1 << 0,
-        IsSelfTarget                = 1 << 1,
-        NoUltimateOwnerEntityId     = 1 << 2,
-        UltimateOwnerIsPowerOwner   = 1 << 3,
-        HasResultFlags              = 1 << 4,
-        HasPowerOwnerPosition       = 1 << 5,
-        HasDamagePhysical           = 1 << 6,
-        HasDamageEnergy             = 1 << 7,
-        HasDamageMental             = 1 << 8,
-        HasHealing                  = 1 << 9,
-        HasPowerAssetRefOverride    = 1 << 10,
-        HasTransferToEntityId       = 1 << 11
-    }
-
     // Power data pipeline: PowerActivationSettings -> PowerApplication -> PowerPayload -> PowerResults
     // Should inherit from the PowerEffectsPacket class
     public class OLD_PowerResults : ISerialize

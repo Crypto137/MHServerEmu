@@ -102,6 +102,7 @@ namespace MHServerEmu.Games.Entities
 
         private readonly InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
         private readonly EventPointer<ScheduledLifespanEvent> _scheduledLifespanEvent = new();
+        private readonly EventPointer<ScheduledDestroyEvent> _scheduledDestroyEvent = new();
 
         protected EntityFlags _flags;
 
@@ -356,6 +357,45 @@ namespace MHServerEmu.Games.Entities
             Game?.EntityManager?.DestroyEntity(this);
         }
 
+        public virtual bool ScheduleDestroyEvent(TimeSpan delay)
+        {
+            if (TestStatus(EntityStatus.PendingDestroy))
+                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already pending destroy");
+
+            if (TestStatus(EntityStatus.Destroyed))
+                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already destroyed");
+
+            if (_scheduledDestroyEvent.IsValid)
+            {
+                if (_scheduledDestroyEvent.Get().FireTime > (Game.CurrentTime + delay))
+                    Game?.GameEventScheduler?.RescheduleEvent(_scheduledDestroyEvent, delay);
+            }
+            else
+            {
+                ScheduleEntityEvent(_scheduledDestroyEvent, delay);
+            }
+
+            return true;
+        }
+
+        public void CancelDestroyEvent()
+        {
+            if (_scheduledDestroyEvent.IsValid)
+                Game?.GameEventScheduler?.CancelEvent(_scheduledDestroyEvent);
+        }
+
+        public bool ScheduledDestroyCallback()
+        {
+            if (TestStatus(EntityStatus.PendingDestroy))
+                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already pending destroy");
+
+            if (TestStatus(EntityStatus.Destroyed))
+                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already destroyed");
+
+            Destroy();
+            return true;
+        }
+
         public bool DestroyContained()
         {
             if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
@@ -379,7 +419,7 @@ namespace MHServerEmu.Games.Entities
 
         #region Death Hack
 
-        private class RespawnEvent : CallMethodEvent<Entity>
+        protected class RespawnEvent : CallMethodEvent<Entity>
             { protected override CallbackDelegate GetCallback() => t => t.Respawn(); }
 
         public void Kill(ulong killerId)
@@ -895,6 +935,11 @@ namespace MHServerEmu.Games.Entities
         private class ScheduledLifespanEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.OnLifespanExpired();
+        }
+
+        private class ScheduledDestroyEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.ScheduledDestroyCallback();
         }
     }
 }

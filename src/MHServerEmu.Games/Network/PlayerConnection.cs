@@ -72,8 +72,8 @@ namespace MHServerEmu.Games.Network
             Game = game;
             _frontendClient = frontendClient;
             _dbAccount = _frontendClient.Session.Account;
-            _powerMessageHandler = new OldPowerMessageHandler(this);
-            //_powerMessageHandler = new NewPowerMessageHandler(this);      // Uncomment to switch to the new power implementation
+            //_powerMessageHandler = new OldPowerMessageHandler(this);
+            _powerMessageHandler = new NewPowerMessageHandler(this);      // Uncomment to switch to the new power implementation
 
             InitializeFromDBAccount();
         }

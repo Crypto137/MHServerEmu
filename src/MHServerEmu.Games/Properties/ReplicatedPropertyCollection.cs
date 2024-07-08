@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Properties
             if (interestedClients.Any() == false) return;
 
             // Send update to interested
-            Logger.Trace($"MarkPropertyChanged(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
+            //Logger.Trace($"MarkPropertyChanged(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
             var setPropertyMessage = NetMessageSetProperty.CreateBuilder()
                 .SetReplicationId(ReplicationId)
                 .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Properties
             if (interestedClients.Any() == false) return;
 
             // Send update to interested
-            Logger.Trace($"MarkPropertyRemoved(): [{ReplicationId}] {id}");
+            //Logger.Trace($"MarkPropertyRemoved(): [{ReplicationId}] {id}");
             var removePropertyMessage = NetMessageRemoveProperty.CreateBuilder()
                 .SetReplicationId(ReplicationId)
                 .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageRemoveProperty all bits are reversed rather than bytes

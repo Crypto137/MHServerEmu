@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             switch (_powerId)
             {
-                case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.GhostRiderRide:
                     Condition ghostRiderRideCondition = avatar.ConditionCollection.GetCondition(666);
                     if (ghostRiderRideCondition != null)
                         if (ghostRiderRideCondition != null) return Logger.WarnReturn(false, "OnTriggered(): ghostRiderRideCondition != null");
@@ -42,18 +42,18 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
                     // Assign the hotspot power to the avatar
                     PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
-                    avatar.AssignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
+                    avatar.AssignPower((PrototypeId)OLD_PowerPrototypes.GhostRider.RideBikeHotspotsEnd, indexProps);
 
                     break;
 
-                case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
-                case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
-                case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
-                case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
-                case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
-                case (PrototypeId)PowerPrototypes.Travel.BladeRide:
-                case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
-                case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.WolverineRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.DeadpoolRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.NickFuryRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.CyclopsRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.BlackWidowRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.BladeRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.AntmanFlight:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.ThingFlight:
                     Condition rideCondition = avatar.ConditionCollection.GetCondition(667);
                     if (rideCondition != null) return Logger.WarnReturn(false, "OnTriggered(): rideCondition != null");
 

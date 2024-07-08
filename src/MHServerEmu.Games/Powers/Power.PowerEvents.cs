@@ -4,6 +4,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
@@ -839,9 +840,15 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 28
-        private void DoPowerEventActionTeamUpAgentSummon(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionTeamUpAgentSummon(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionTeamUpAgentSummon(): Not implemented");
+            Logger.Debug($"DoPowerEventActionTeamUpAgentSummon()");
+
+            if (Owner is not Avatar avatar)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTeamUpAgentSummon(): A non-avatar entity {Owner} is trying to summon a team-up agent");
+
+            avatar.SummonTeamUpAgent();
+            return true;
         }
 
         // 29
@@ -890,12 +897,18 @@ namespace MHServerEmu.Games.Powers
 
             // Destroy vacuumed items
             PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            uint creditsToAdd = 0;
+
             while (vacuumStack.Count > 0)
             {
                 Item item = vacuumStack.Pop();
-                player.Properties[PropertyEnum.Currency, creditsProtoRef] += item.GetSellPrice(player);
+                creditsToAdd += item.GetSellPrice(player);
                 item.Destroy();
             }
+
+            // Add credits for all vacuumed items
+            if (creditsToAdd > 0)
+                player.Properties[PropertyEnum.Currency, creditsProtoRef] += creditsToAdd;
 
             return true;
         }
