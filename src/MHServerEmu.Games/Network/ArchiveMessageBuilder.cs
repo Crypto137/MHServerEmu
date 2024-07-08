@@ -299,7 +299,7 @@ namespace MHServerEmu.Games.Network
             if (settings.TargetEntityId == userEntityId)
                 flags |= ActivatePowerMessageFlags.TargetIsUser;
 
-            if (settings.TriggeringPowerPrototypeRef != PrototypeId.Invalid)
+            if (settings.TriggeringPowerRef != PrototypeId.Invalid)
                 flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef;
 
             if (settings.TargetPosition == settings.UserPosition)
@@ -339,7 +339,7 @@ namespace MHServerEmu.Games.Network
             Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref powerProtoRef);
             if (flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef))
             {
-                PrototypeId triggeringPowerProtoRef = settings.TriggeringPowerPrototypeRef;
+                PrototypeId triggeringPowerProtoRef = settings.TriggeringPowerRef;
                 Serializer.TransferPrototypeEnum<PowerPrototype>(archive, ref triggeringPowerProtoRef);
             }
 

@@ -63,7 +63,7 @@ namespace MHServerEmu.Core.Network.Tcp
             _isListening = true;
 
             // Start accepting connections
-            Task.Run(async () => await AcceptConnections());
+            Task.Run(async () => await AcceptConnectionsAsync());
 
             return true;
         }
@@ -120,15 +120,23 @@ namespace MHServerEmu.Core.Network.Tcp
         }
 
         /// <summary>
-        /// Sends a data buffer over the provided client connection.
+        /// Sends data over the provided <see cref="TcpClientConnection">.
         /// </summary>
         public int Send(TcpClientConnection connection, byte[] buffer, SocketFlags flags)
+        {
+            return Send(connection, buffer, buffer.Length, flags);
+        }
+
+        /// <summary>
+        /// Sends data over the provided <see cref="TcpClientConnection">.
+        /// </summary>
+        public int Send(TcpClientConnection connection, byte[] buffer, int size, SocketFlags flags)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             int bytesSentTotal = 0;
-            int bytesRemaining = buffer.Length;
+            int bytesRemaining = size;
 
             try
             {
@@ -177,9 +185,9 @@ namespace MHServerEmu.Core.Network.Tcp
         }
 
         /// <summary>
-        /// Accepts incoming client connections.
+        /// Accepts incoming client connections asynchronously.
         /// </summary>
-        private async Task AcceptConnections()
+        private async Task AcceptConnectionsAsync()
         {
             while (true)
             {
@@ -194,17 +202,17 @@ namespace MHServerEmu.Core.Network.Tcp
                     OnClientConnected(connection);
 
                     // Begin receiving data from our new connection
-                    _ = Task.Run(async () => await ReceiveData(connection));
+                    _ = Task.Run(async () => await ReceiveDataAsync(connection));
                 }
                 catch (TaskCanceledException) { return; }
-                catch (Exception e) { Logger.DebugException(e, nameof(AcceptConnections)); }
+                catch (Exception e) { Logger.DebugException(e, nameof(AcceptConnectionsAsync)); }
             }
         }
 
         /// <summary>
-        /// Receives data from a client connection.
+        /// Receives data from a <see cref="TcpClientConnection"/> asynchronously.
         /// </summary>
-        private async Task ReceiveData(TcpClientConnection connection)
+        private async Task ReceiveDataAsync(TcpClientConnection connection)
         {
             while (true)
             {
@@ -237,7 +245,7 @@ namespace MHServerEmu.Core.Network.Tcp
                 catch (TaskCanceledException) { return; }
                 catch (Exception e)
                 {
-                    Logger.DebugException(e, nameof(ReceiveData));
+                    Logger.DebugException(e, nameof(ReceiveDataAsync));
                     return;
                 }
             }

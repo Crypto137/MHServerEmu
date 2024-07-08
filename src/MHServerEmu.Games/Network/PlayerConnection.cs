@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.Network
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
         private readonly IPowerMessageHandler _powerMessageHandler;
+        public bool IsUsingNewPowerMessageHandler { get => _powerMessageHandler is NewPowerMessageHandler; }    // temp
 
         private EventPointer<OLD_FinishCellLoadingEvent> _finishCellLoadingEvent = new();
         private EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();

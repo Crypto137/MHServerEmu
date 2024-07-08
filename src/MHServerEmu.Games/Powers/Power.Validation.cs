@@ -1003,6 +1003,21 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool CanStartCooldowns()
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
+
+            if (Owner.GetPowerChargesMax(PrototypeDataRef) <= 0)
+            {
+                if (_endCooldownEvent.IsValid == false)
+                    return true;
+
+                return IsOnCooldown() == false;
+            }
+
+            return true;
+        }
+
         private bool CanBeUserCanceledNow()
         {
             PowerPrototype powerProto = Prototype;

@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -828,6 +829,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float TravelPowerMaxSpeed { get; protected set; }
         public PrototypeId TUSynergyBonusPerLvl { get; protected set; }
         public PrototypeId TUSynergyBonusPerMaxLvlTU { get; protected set; }
+
+        public float GetHardcoreAttenuationFactor(PropertyCollection properties)
+        {
+            int numberOfDeaths = properties[PropertyEnum.NumberOfDeaths];
+            return Math.Clamp(1f - (PowerDmgBonusHardcoreAttenuation * numberOfDeaths), 0f, 1f);
+        }
     }
 
     public class VendorXPCapInfoPrototype : Prototype
