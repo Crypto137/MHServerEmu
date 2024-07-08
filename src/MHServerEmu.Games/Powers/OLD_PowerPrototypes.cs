@@ -1,7 +1,7 @@
 ﻿namespace MHServerEmu.Games.Powers
 {
     // REMOVEME
-    public static class PowerPrototypes
+    public static class OLD_PowerPrototypes
     {
         public enum UnlockableEmote : ulong
         {

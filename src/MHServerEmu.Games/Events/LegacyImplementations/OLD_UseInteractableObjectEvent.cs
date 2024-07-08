@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
         private bool HandleBowlingBallItem()
         {
             var bowlingBallProtoRef = (PrototypeId)7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
-            var itemPower = (PrototypeId)PowerPrototypes.Items.BowlingBallItemPower; // BowlingBallItemPower
+            var itemPower = (PrototypeId)OLD_PowerPrototypes.Items.BowlingBallItemPower; // BowlingBallItemPower
                                                                                      // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
 
             // Destroy bowling balls that are already present in the player general inventory

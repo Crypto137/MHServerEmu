@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Powers
                     deactivateEventPointer.Get().PlayerConnection = _playerConnection;
                 }
             }
-            else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
+            else if (tryActivatePower.PowerPrototypeId == (ulong)OLD_PowerPrototypes.Magik.Ultimate)
             {
                 EventPointer<OLD_StartMagikUltimate> startEventPointer = new();
                 game.GameEventScheduler.ScheduleEvent(startEventPointer, TimeSpan.Zero);
@@ -315,7 +315,7 @@ namespace MHServerEmu.Games.Powers
                 game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
                 endEventPointer.Get().PlayerConnection = _playerConnection;
             }
-            else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
+            else if (tryActivatePower.PowerPrototypeId == (ulong)OLD_PowerPrototypes.Items.BowlingBallItemPower)
             {
                 Inventory inventory = _playerConnection.Player.GetInventory(InventoryConvenienceLabel.General);
                 
