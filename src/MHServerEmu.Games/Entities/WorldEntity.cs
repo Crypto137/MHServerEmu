@@ -152,13 +152,15 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            // Override base health to make things more reasonable with the current damage implementation
+            // HACK: Override base health to make things more reasonable with the current damage implementation
+            /*
             float healthBaseOverride = EntityHelper.GetHealthForWorldEntity(this);
             if (healthBaseOverride > 0f)
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            */
 
-            //Properties[PropertyEnum.CharacterLevel] = 60;
-            //Properties[PropertyEnum.CombatLevel] = 60;
+            Properties[PropertyEnum.CharacterLevel] = 60;
+            Properties[PropertyEnum.CombatLevel] = 60;
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
 
             if (proto.Bounds != null)
@@ -1106,14 +1108,19 @@ namespace MHServerEmu.Games.Entities
             health = (int)Math.Max(health - totalDamage, 0);
 
             // Kill
+            WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+
             if (health <= 0)
             {
-                WorldEntity killer = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
-                Kill(killer, KillFlags.None, null);
+                Kill(powerUser, KillFlags.None, null);
             }
             else
             {
                 Properties[PropertyEnum.Health] = health;
+
+                // HACK: Rotate towards the power user
+                if (totalDamage > 0f && powerUser is Avatar && this is Agent && Locomotor != null)
+                    ChangeRegionPosition(null, new(Vector3.AngleYaw(RegionLocation.Position, powerUser.RegionLocation.Position), 0f, 0f));
             }
 
             return true;
