@@ -45,6 +45,22 @@ namespace MHServerEmu.Core.Collisions
             return Vector3.Normalize(Vector3.Cross(edge1, edge2));
         }
 
+        public bool Intersects(in Vector3 point)
+        {
+            Vector3 v0 = Points[0] - point;
+            Vector3 v1 = Points[1] - point;
+            Vector3 v2 = Points[2] - point;
+
+            Vector3 c0 = Vector3.Cross(v1, v2);
+            Vector3 c1 = Vector3.Cross(v2, v0);
+            if (Vector3.Dot(c0, c1) < 0.0f) return false;
+
+            Vector3 c2 = Vector3.Cross(v0, v1);
+            if (Vector3.Dot(c0, c2) < 0.0f) return false;
+
+            return true;
+        }
+
         public bool Intersects(in Aabb other)
         {
             Vector3 c = other.Center;
