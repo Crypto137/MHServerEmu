@@ -897,12 +897,18 @@ namespace MHServerEmu.Games.Powers
 
             // Destroy vacuumed items
             PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            uint creditsToAdd = 0;
+
             while (vacuumStack.Count > 0)
             {
                 Item item = vacuumStack.Pop();
-                player.Properties[PropertyEnum.Currency, creditsProtoRef] += item.GetSellPrice(player);
+                creditsToAdd += item.GetSellPrice(player);
                 item.Destroy();
             }
+
+            // Add credits for all vacuumed items
+            if (creditsToAdd > 0)
+                player.Properties[PropertyEnum.Currency, creditsProtoRef] += creditsToAdd;
 
             return true;
         }
