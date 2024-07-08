@@ -120,8 +120,8 @@ namespace MHServerEmu.Games.Powers
 
             if (VerboseOutputToLog)
                 Logger.Debug($"OnTryCancelPower():\n{MessagePrinter.Print(tryCancelPower)}");
-            else
-                Logger.Trace("OnTryCancelPower()");
+            //else
+            //    Logger.Trace("OnTryCancelPower()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarById(tryCancelPower.IdUserEntity);
 
@@ -189,8 +189,8 @@ namespace MHServerEmu.Games.Powers
 
             if (VerboseOutputToLog)
                 Logger.Debug($"OnCancelPendingAction():\n{MessagePrinter.Print(cancelPendingAction)}");
-            else
-                Logger.Trace("OnCancelPendingAction()");
+            //else
+            //    Logger.Trace("OnCancelPendingAction()");
 
             Avatar avatar = _playerConnection.Player.GetActiveAvatarByIndex(cancelPendingAction.AvatarIndex);
             if (avatar == null) return true;

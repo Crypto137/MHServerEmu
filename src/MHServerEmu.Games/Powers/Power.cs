@@ -552,7 +552,7 @@ namespace MHServerEmu.Games.Powers
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
         {
-            Logger.Trace($"ApplyPower(): {Prototype}");
+            //Logger.Trace($"ApplyPower(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "ApplyPower(): powerProto == null");
@@ -629,7 +629,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool EndPower(EndPowerFlags flags)
         {
-            Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
+            //Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
 
             // Validate client cancel requests
             if (flags.HasFlag(EndPowerFlags.ExplicitCancel) && flags.HasFlag(EndPowerFlags.ClientRequest)
