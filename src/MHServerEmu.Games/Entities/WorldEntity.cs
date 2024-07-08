@@ -1120,8 +1120,11 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.Health] = health;
 
                 // HACK: Rotate towards the power user
-                if (totalDamage > 0f && powerUser is Avatar && this is Agent && Locomotor != null)
+                if (totalDamage > 0f && powerUser is Avatar && this is Agent aiAgent && Locomotor != null)
+                {
+                    aiAgent.AITestOn();
                     ChangeRegionPosition(null, new(Vector3.AngleYaw(RegionLocation.Position, powerUser.RegionLocation.Position), 0f, 0f));
+                }
             }
 
             return true;
@@ -1764,12 +1767,15 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"CanEntityActionTrigger {eventType}");
+            return false;
+            // throw new NotImplementedException();
         }
 
         public void TriggerEntityActionEvent(EntitySelectorActionEventType actionType)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"TriggerEntityActionEvent {actionType}");
+            // throw new NotImplementedException();
         }
 
         protected override void BuildString(StringBuilder sb)
