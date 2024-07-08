@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Powers
 {
     // TODO: This probably belongs in Power
 
-    public class ActivatePowerArchive : ISerialize
+    public class OLD_ActivatePowerArchive : ISerialize
     {
         private AOINetworkPolicyValues _replicationPolicy;
         private ActivatePowerMessageFlags _flags;
@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Powers
         public uint PowerRandomSeed { get => _powerRandomSeed; set => _powerRandomSeed = value; }
         public uint FXRandomSeed { get => _fxRandomSeed; set => _fxRandomSeed = value; }
 
-        public ActivatePowerArchive() { }
+        public OLD_ActivatePowerArchive() { }
 
         public void Initialize(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
         {

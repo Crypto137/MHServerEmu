@@ -853,7 +853,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
             Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
 
-            // Add base crit chance bonus to compensate for the lack of equipment
+            // Add base stats to compensate for the lack of equipment
+            Properties[PropertyEnum.DamageRating] = 2500f;
+            Properties[PropertyEnum.DamagePctBonusVsBosses] = 4f;
+            Properties[PropertyEnum.Defense, (int)DamageType.Any] = 15000f;
+            Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
             Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
             Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
 

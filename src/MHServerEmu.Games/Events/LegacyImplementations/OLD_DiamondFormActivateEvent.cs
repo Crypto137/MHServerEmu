@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             // Create and add a condition for the diamond form
             diamondFormCondition = avatar.ConditionCollection.AllocateCondition();
-            diamondFormCondition.InitializeFromPowerMixinPrototype(111, (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition, 0, TimeSpan.Zero, true, costumeAsset);
+            diamondFormCondition.InitializeFromPowerMixinPrototype(111, (PrototypeId)OLD_PowerPrototypes.EmmaFrost.DiamondFormCondition, 0, TimeSpan.Zero, true, costumeAsset);
             avatar.ConditionCollection.AddCondition(diamondFormCondition);
 
             return true;

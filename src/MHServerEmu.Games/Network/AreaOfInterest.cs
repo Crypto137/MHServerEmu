@@ -593,8 +593,13 @@ namespace MHServerEmu.Games.Network
             if (player.IsInGame == false)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
-            // Filter out missiles that are simulated by the client on its own
             AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
+
+            // Do not add dead entities to AOI that weren't there already
+            if (entity.IsDead && currentInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            // Filter out missiles that are simulated by the client on its own
             if (currentInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelClientIndependent))
                 return AOINetworkPolicyValues.AOIChannelClientIndependent;
 
@@ -612,7 +617,7 @@ namespace MHServerEmu.Games.Network
             if (entity is WorldEntity worldEntity)
             {
                 // Validate that the entity's location is valid on the client before including it in the proximity channel
-                if (worldEntity.IsInWorld && worldEntity.IsDead == false && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false
+                if (worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false
                     && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
                 {
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;

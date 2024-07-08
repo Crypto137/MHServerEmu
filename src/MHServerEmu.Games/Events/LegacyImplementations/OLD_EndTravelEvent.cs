@@ -26,25 +26,25 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
 
             switch (_powerId)
             {
-                case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.GhostRiderRide:
                     if (avatar.ConditionCollection.GetCondition(666) == null) return false;
 
                     Logger.Trace($"EventEnd GhostRiderRide");
 
                     // Remove the ride condition and unassign bike hotspots power
                     avatar.ConditionCollection.RemoveCondition(666);
-                    avatar.UnassignPower((PrototypeId)PowerPrototypes.GhostRider.RideBikeHotspotsEnd);
+                    avatar.UnassignPower((PrototypeId)OLD_PowerPrototypes.GhostRider.RideBikeHotspotsEnd);
 
                     break;
 
-                case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
-                case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
-                case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
-                case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
-                case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
-                case (PrototypeId)PowerPrototypes.Travel.BladeRide:
-                case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
-                case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.WolverineRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.DeadpoolRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.NickFuryRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.CyclopsRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.BlackWidowRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.BladeRide:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.AntmanFlight:
+                case (PrototypeId)OLD_PowerPrototypes.Travel.ThingFlight:
                     if (avatar.ConditionCollection.GetCondition(667) == null) return false;
 
                     Logger.Trace($"EventEnd Ride");

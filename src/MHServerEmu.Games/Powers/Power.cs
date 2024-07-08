@@ -552,7 +552,7 @@ namespace MHServerEmu.Games.Powers
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
         {
-            Logger.Trace($"ApplyPower(): {Prototype}");
+            //Logger.Trace($"ApplyPower(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "ApplyPower(): powerProto == null");
@@ -629,7 +629,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool EndPower(EndPowerFlags flags)
         {
-            Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
+            //Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
 
             // Validate client cancel requests
             if (flags.HasFlag(EndPowerFlags.ExplicitCancel) && flags.HasFlag(EndPowerFlags.ClientRequest)
@@ -2488,59 +2488,13 @@ namespace MHServerEmu.Games.Powers
 
                 //Logger.Debug($"targetList[{i}]: {target}");
 
-                // Quick hack for showing damage numbers
-                // Create power results
-                PowerResults results = new()
-                {
-                    ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                    MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasResultFlags,
-                    PowerPrototypeRef = PrototypeDataRef,
-                    PowerOwnerEntityId = Owner.Id,
-                    TargetEntityId = target.Id
-                };
+                // Create a payload and calculate results
+                PowerPayload payload = new();
+                payload.Init(powerApplication.UserEntityId, GetUltimateOwner().Id, powerApplication.TargetEntityId, powerApplication.UserPosition, Prototype);
 
-                if (Owner.IsHostileTo(target))
-                    results.ResultFlags |= PowerResultFlags.Hostile;
-
-                // Calculate damage
-                // TODO: Move this to PowerPayload
-                float damagePhysical = PowerPayloadHelper.CalculateDamage(this, DamageType.Physical, Owner, target, out PowerResultFlags physicalFlags);
-                if (damagePhysical >= 1f)
-                {
-                    results.DamagePhysical = (uint)damagePhysical;
-                    results.ResultFlags |= physicalFlags;
-                    results.MessageFlags |= PowerResultMessageFlags.HasDamagePhysical;
-                }
-
-                float damageEnergy = PowerPayloadHelper.CalculateDamage(this, DamageType.Energy, Owner, target, out PowerResultFlags energyFlags);
-                if (damageEnergy >= 1f)
-                {
-                    results.DamageEnergy = (uint)damageEnergy;
-                    results.ResultFlags |= energyFlags;
-                    results.MessageFlags |= PowerResultMessageFlags.HasDamageEnergy;
-                }
-
-                float damageMental = PowerPayloadHelper.CalculateDamage(this, DamageType.Mental, Owner, target, out PowerResultFlags mentalFlags);
-                if (damageMental >= 1f)
-                {
-                    results.DamageMental = (uint)damageMental;
-                    results.ResultFlags |= mentalFlags;
-                    results.MessageFlags |= PowerResultMessageFlags.HasDamageMental;
-                }
-
-                // TEST: Deal damage
-                // TODO: WorldEntity::ApplyPowerResults()
-                
-                if (Owner is Avatar)
-                {
-                    target.Properties[PropertyEnum.Health] -= (int)(damagePhysical + damageEnergy + damageMental);
-                    if (target.Properties[PropertyEnum.Health] <= 0)
-                        target.Kill(Owner.Id);
-                }
-                
-
-                // Send results
-                Game.NetworkManager.SendMessageToInterested(results.ToProtobuf(), Owner, AOINetworkPolicyValues.AOIChannelProximity);
+                // Apply results to the target
+                PowerResults results = payload.GenerateResults(this, Owner, target);
+                target.ApplyPowerResults(results);
             }
 
             if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
