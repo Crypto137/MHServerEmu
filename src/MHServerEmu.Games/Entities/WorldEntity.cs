@@ -216,7 +216,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             // HACK: LOOT
-            if (this is Agent agent)
+            if (this is Agent agent && agent is not Missile)
                 Game.LootGenerator.DropRandomLoot(agent);
 
             // HACK: Schedule respawn using SpawnSpec
