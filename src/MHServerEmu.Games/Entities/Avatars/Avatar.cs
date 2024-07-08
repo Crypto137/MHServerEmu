@@ -73,7 +73,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.Initialize(settings);
 
-            InitializeFromDBAccount(settings.DBAccount);
+            if (settings.DBAccount != null)
+                InitializeFromDBAccount(settings.DBAccount);
 
             return true;
         }
