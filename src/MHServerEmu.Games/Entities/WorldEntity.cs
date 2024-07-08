@@ -56,6 +56,13 @@ namespace MHServerEmu.Games.Entities
         EnterWorld          = 1 << 10,
     }
 
+    public enum ChangePositionResult
+    {
+        InvalidPosition,
+        PositionChanged,
+        NotChanged,
+    }
+
     public class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -240,7 +247,7 @@ namespace MHServerEmu.Games.Entities
 
             Physics.AcquireCollisionId();
 
-            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI))
+            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI) == ChangePositionResult.PositionChanged)
                 OnEnteredWorld(settings);
             else
                 ClearWorldLocation();
@@ -284,21 +291,21 @@ namespace MHServerEmu.Games.Entities
             return Locomotor != null && Locomotor.GetCurrentSpeed() > 0.0f;
         }
 
-        public virtual bool ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        public virtual ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
             bool positionChanged = false;
             bool orientationChanged = false;
 
             RegionLocation preChangeLocation = new(RegionLocation);
             Region region = Game.RegionManager.GetRegion(preChangeLocation.RegionId);
-            if (region == null) return false;
+            if (region == null) return ChangePositionResult.NotChanged;
 
-            if (position != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
+            if (position.HasValue && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
             {
                 var result = RegionLocation.SetPosition(position.Value);
 
                 if (result != RegionLocation.SetPositionResult.Success)     // onSetPositionFailure()
-                    return Logger.WarnReturn(false, string.Format(
+                    return Logger.WarnReturn(ChangePositionResult.NotChanged, string.Format(
                         "ChangeRegionPosition(): Failed to set entity new position (Moved out of world)\n\tEntity: {0}\n\tResult: {1}\n\tPrev Loc: {2}\n\tNew Pos: {3}",
                         this, result, RegionLocation, position));
 
@@ -313,7 +320,7 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.MapPosition] = position.Value;
             }
 
-            if (orientation != null && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Orientation != orientation))
+            if (orientation.HasValue && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Orientation != orientation))
             {
                 RegionLocation.Orientation = orientation.Value;
 
@@ -335,7 +342,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (positionChanged == false && orientationChanged == false)
-                return false;
+                return ChangePositionResult.NotChanged;
 
             UpdateRegionBounds(); // Add to Quadtree
             SendLocationChangeEvents(preChangeLocation, RegionLocation, flags);
@@ -355,8 +362,8 @@ namespace MHServerEmu.Games.Entities
                         .SetIdEntity(Id)
                         .SetFlags((uint)flags);
 
-                    if (position != null) entityPositionMessageBuilder.SetPosition(position.Value.ToNetStructPoint3());
-                    if (orientation != null) entityPositionMessageBuilder.SetOrientation(orientation.Value.ToNetStructPoint3());
+                    if (position.HasValue) entityPositionMessageBuilder.SetPosition(position.Value.ToNetStructPoint3());
+                    if (orientation.HasValue) entityPositionMessageBuilder.SetOrientation(orientation.Value.ToNetStructPoint3());
 
                     networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
                 }
@@ -368,7 +375,7 @@ namespace MHServerEmu.Games.Entities
                 NotifyPlayers(true);
             }
 
-            return true;
+            return ChangePositionResult.PositionChanged;
         }
 
         public RegionLocation ClearWorldLocation()
@@ -1640,6 +1647,19 @@ namespace MHServerEmu.Games.Entities
             }
 
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
+        }
+
+        public static bool CheckWithinAngle(in Vector3 targetPosition, in Vector3 targetForward, in Vector3 position, float angle)
+        {
+            if (angle > 0)
+            {
+                Vector3 distance = Vector3.SafeNormalize(position - targetPosition);
+                float targetForwardDot = Vector3.Dot(targetForward, distance);
+                float checkAngle = MathHelper.ToDegrees(MathF.Acos(targetForwardDot)) * 2;
+                if (checkAngle < angle)
+                    return true;
+            }
+            return false;
         }
     }
 }
