@@ -2490,7 +2490,7 @@ namespace MHServerEmu.Games.Powers
 
                 // Quick hack for showing damage numbers
                 // Create power results
-                PowerResults results = new()
+                OLD_PowerResults results = new()
                 {
                     ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                     MessageFlags = PowerResultMessageFlags.UltimateOwnerIsPowerOwner | PowerResultMessageFlags.HasResultFlags,

@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.Powers
             Game game = avatar.Game;
 
             // Send this activation to other players
-            ActivatePowerArchive activatePowerArchive = new();
+            OLD_ActivatePowerArchive activatePowerArchive = new();
             activatePowerArchive.Initialize(tryActivatePower, avatar.RegionLocation.Position);
             game.NetworkManager.SendMessageToInterested(activatePowerArchive.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity, true);
 
@@ -338,7 +338,7 @@ namespace MHServerEmu.Games.Powers
 
             //Logger.Trace(tryActivatePower.ToString());
 
-            PowerResults results = new();
+            OLD_PowerResults results = new();
             results.Init(tryActivatePower);
             if (results.TargetEntityId > 0)
             {

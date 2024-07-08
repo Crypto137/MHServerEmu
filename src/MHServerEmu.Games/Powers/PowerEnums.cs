@@ -119,10 +119,11 @@ namespace MHServerEmu.Games.Powers
     [AssetEnum((int)Physical)]
     public enum DamageType
     {
-        Physical = 0,
-        Energy = 1,
-        Mental = 2,
-        Any = 4,
+        Physical,
+        Energy,
+        Mental,
+        NumDamageTypes,
+        Any
     }
 
     [AssetEnum((int)MoveIntoRange)]

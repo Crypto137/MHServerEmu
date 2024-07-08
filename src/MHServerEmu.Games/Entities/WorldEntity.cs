@@ -1024,6 +1024,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool ApplyPowerResults(PowerResults powerResults)
+        {
+            Logger.Debug("ApplyPowerResults()");
+            return true;
+        }
+
         public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
         {
             if (_sendActivatePowerMessageEvent.IsValid) return false;
@@ -1037,7 +1043,7 @@ namespace MHServerEmu.Games.Entities
 
             Logger.Trace($"Activating {GameDatabase.GetPrototypeName(powerProtoRef)} for {this}");
 
-            ActivatePowerArchive activatePower = new()
+            OLD_ActivatePowerArchive activatePower = new()
             {
                 Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
                 ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
