@@ -265,6 +265,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public virtual void OnInteractEnded(AIController ownerController, ProceduralInteractContextPrototype proceduralInteractContext) { }
     }
 
     public class ProceduralProfileFearOverridePrototype : ProceduralProfileWithTargetPrototype
