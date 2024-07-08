@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
-        public PowerUseResult CanTrigger(PowerActivationSettingsFlags flags)
+        public PowerUseResult CanTrigger(PowerActivationSettingsFlags flags = PowerActivationSettingsFlags.None)
         {
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTrigger(): powerProto == null");
