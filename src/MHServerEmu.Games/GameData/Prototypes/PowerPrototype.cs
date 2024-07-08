@@ -729,6 +729,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return Eval.RunFloat(EvalEventParam, contextData);
         }
+
+        public float GetEventParamNoEval()
+        {
+            return EventParam;
+        }
     }
 
     public class SituationalTriggerPrototype : Prototype
@@ -947,9 +952,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ExtraActivateOnSubsequentPrototype : ExtraActivatePrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public CurveId NumActivatesBeforeCooldown { get; protected set; }
         public CurveId TimeoutLengthMS { get; protected set; }
         public SubsequentActivateType ExtraActivateEffect { get; protected set; }
+
+        public int GetNumActivatesBeforeCooldown(int powerRank)
+        {
+            if (NumActivatesBeforeCooldown == CurveId.Invalid)
+                return 0;
+
+            if (powerRank < 0) return Logger.WarnReturn(0, "GetNumActivatesBeforeCooldown(): powerRank < 0");
+
+            Curve curve = CurveDirectory.Instance.GetCurve(NumActivatesBeforeCooldown);
+            if (curve == null) return Logger.WarnReturn(0, "GetNumActivatesBeforeCooldown(): curve == null");
+
+            return (int)MathF.Floor(curve.GetAt(powerRank));
+        }
+
+        public int GetTimeoutLengthMS(int powerRank)
+        {
+            if (TimeoutLengthMS == CurveId.Invalid)
+                return 0;
+
+            if (powerRank < 0) return Logger.WarnReturn(0, "GetTimeoutLengthMS(): powerRank < 0");
+
+            Curve curve = CurveDirectory.Instance.GetCurve(TimeoutLengthMS);
+            if (curve == null) return Logger.WarnReturn(0, "GetTimeoutLengthMS(): curve == null");
+
+            return (int)MathF.Floor(curve.GetAt(powerRank));
+        }
     }
 
     public class ExtraActivateCycleToPowerPrototype : ExtraActivatePrototype

@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
             avatar.AssignPower(world.PreInteractPower, indexProps);
 
-            ActivatePowerArchive activatePower = new()
+            OLD_ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                 Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,

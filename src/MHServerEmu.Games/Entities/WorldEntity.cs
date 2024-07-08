@@ -916,6 +916,16 @@ namespace MHServerEmu.Games.Entities
             return Region.NaviMesh.Contains(position, Bounds.GetRadius(), new DefaultContainsPathFlagsCheck(GetPathFlags()));
         }
 
+        public int GetPowerChargesAvailable(PrototypeId powerProtoRef)
+        {
+            return Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+        }
+
+        public int GetPowerChargesMax(PrototypeId powerProtoRef)
+        {
+            return Properties[PropertyEnum.PowerChargesMax, powerProtoRef];
+        }
+
         public TimeSpan GetAbilityCooldownStartTime(PowerPrototype powerProto)
         {
             return Properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef];
@@ -1015,6 +1025,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool ApplyPowerResults(PowerResults powerResults)
+        {
+            Logger.Debug("ApplyPowerResults()");
+            return true;
+        }
+
         public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
         {
             if (_sendActivatePowerMessageEvent.IsValid) return false;
@@ -1028,7 +1044,7 @@ namespace MHServerEmu.Games.Entities
 
             Logger.Trace($"Activating {GameDatabase.GetPrototypeName(powerProtoRef)} for {this}");
 
-            ActivatePowerArchive activatePower = new()
+            OLD_ActivatePowerArchive activatePower = new()
             {
                 Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
                 ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
@@ -1118,6 +1134,21 @@ namespace MHServerEmu.Games.Entities
         public float GetDamageReductionPct(float defenseRating, WorldEntity worldEntity, PowerPrototype powerProto)
         {
             throw new NotImplementedException();
+        }
+
+        public float GetDamageRating(DamageType damageType)
+        {
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(0f, "GetDamageRating(): combatGlobal == null");
+
+            float damageRating = Properties[PropertyEnum.DamageRating];
+            damageRating += Properties[PropertyEnum.DamageRatingBonusHardcore] * combatGlobals.GetHardcoreAttenuationFactor(Properties);
+            damageRating += Properties[PropertyEnum.DamageRatingBonusMvmtSpeed] * MathF.Max(0f, BonusMovementSpeed);
+
+            if (damageType != DamageType.Any)
+                damageRating += Properties[PropertyEnum.DamageRatingBonusByType, (int)damageType];
+
+            return damageRating;
         }
 
         public float GetCastSpeedPct(PowerPrototype powerProto)
@@ -1357,12 +1388,17 @@ namespace MHServerEmu.Games.Entities
             PowerCollection?.OnOwnerEnteredWorld();
 
             NotifyPlayers(true, settings);
+
+            // TODO: Simulate only world entities that have interest references
+            SetSimulated(true);
         }
 
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
             NotifyPlayers(false);
+
+            SetSimulated(false);
         }
 
         public virtual void OnDramaticEntranceEnd() { }
@@ -1605,6 +1641,29 @@ namespace MHServerEmu.Games.Entities
                 return keywordsMask[keyword];
             }
             return false;
+        }
+
+        public bool HasConditionWithAnyKeyword(IEnumerable<PrototypeId> keywordProtoRefs)
+        {
+            foreach (PrototypeId keywordProtoRef in keywordProtoRefs)
+            {
+                if (HasConditionWithKeyword(keywordProtoRef))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public void AccumulateKeywordProperties(PropertyEnum propertyEnum, PropertyCollection properties, ref float value)
+        {
+            foreach (var kvp in properties.IteratePropertyRange(propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                var keywordPrototype = keywordProtoRef.As<KeywordPrototype>();
+
+                if (HasKeyword(keywordPrototype) || HasConditionWithKeyword(keywordProtoRef))
+                    value += kvp.Value;
+            }
         }
 
         public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)

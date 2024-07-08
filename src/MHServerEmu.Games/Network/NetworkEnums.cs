@@ -13,12 +13,12 @@
         AOIChannel4             = 1 << 4,   // Doesn't seem to be set in any of our data
         AOIChannelDiscovery     = 1 << 5,
         AOIChannelClientOnly    = 1 << 6,
-        AOIChannel7             = 1 << 7,   // The highest set channel flag we've seen
+        AOIChannelClientIndependent  = 1 << 7,   // Missiles
 
         // From the constructor for ArchiveMessageHandler, 0xEF (all channels except 4)
         // Appears in AddConditionArchive and MiniMapArchive
         DefaultPolicy           = AOIChannelProximity | AOIChannelParty | AOIChannelOwner | AOIChannelTrader
-                                | AOIChannelDiscovery | AOIChannelClientOnly | AOIChannel7
+                                | AOIChannelDiscovery | AOIChannelClientOnly | AOIChannelClientIndependent
     }
 
     public enum InterestTrackOperation

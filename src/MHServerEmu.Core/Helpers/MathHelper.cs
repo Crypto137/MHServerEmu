@@ -63,6 +63,21 @@
             return value <= (maxValue * thresholdPct);
         }
 
+        public static bool IsBelow(long value, long maxValue, float thresholdPct)
+        {
+            return value < (maxValue * thresholdPct);
+        }
+
+        public static bool IsAboveOrEqual(long value, long maxValue, float thresholdPct)
+        {
+            return value >= (maxValue * thresholdPct);
+        }
+
+        public static bool IsAbove(long value, long maxValue, float thresholdPct)
+        {
+            return value > (maxValue * thresholdPct);
+        }
+
         public static float Ratio(long value, long maxValue)
         {
             return value / (float)maxValue;

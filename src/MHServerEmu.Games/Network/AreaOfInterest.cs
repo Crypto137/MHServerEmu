@@ -149,6 +149,19 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        public void SetEntityInterestPolicies(Entity entity, AOINetworkPolicyValues interestPolicies)
+        {
+            // TODO: Proper implementation
+            if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus))
+            {
+                interestStatus.LastUpdateFrame = _currentFrame;
+                interestStatus.InterestPolicies = interestPolicies;
+                return;
+            }
+
+            _trackedEntities[entity.Id] = new(_currentFrame, interestPolicies);
+        }
+
         public void SetRegion(Region region)
         {
             // TEMP
@@ -580,6 +593,11 @@ namespace MHServerEmu.Games.Network
             if (player.IsInGame == false)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
+            // Filter out missiles that are simulated by the client on its own
+            AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
+            if (currentInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelClientIndependent))
+                return AOINetworkPolicyValues.AOIChannelClientIndependent;
+
             // Skip entities in "on-person" inventories that are invisible to the client
             // (e.g. equipment for discovered avatars owned by other players that are not in proximity)
             Inventory inventory = entity.InventoryLocation.GetInventory();
@@ -590,7 +608,6 @@ namespace MHServerEmu.Games.Network
             //      Add more filters here
 
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
-            AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
 
             if (entity is WorldEntity worldEntity)
             {

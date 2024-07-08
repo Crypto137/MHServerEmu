@@ -12,14 +12,14 @@ namespace MHServerEmu.Games.Powers
         public ulong TargetEntityId = 0;
         public Vector3 TargetPosition = Vector3.Zero;
         public Vector3 UserPosition = Vector3.Zero;
-        public Vector3 InitialTargetPosition = Vector3.Zero;
+        public Vector3 OriginalTargetPosition = Vector3.Zero;
 
         public float MovementSpeed = 0f;
         public TimeSpan MovementTime = TimeSpan.Zero;
         public uint PowerRandomSeed = 0;
         public ulong ItemSourceId = 0;
         public uint FXRandomSeed = 0;
-        public PrototypeId TriggeringPowerPrototypeRef = PrototypeId.Invalid;
+        public PrototypeId TriggeringPowerRef = PrototypeId.Invalid;
 
         public PowerActivationSettingsFlags Flags = PowerActivationSettingsFlags.None;
         public TimeSpan VariableActivationTime = TimeSpan.Zero;
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Powers
 
         public readonly TimeSpan CreationTime = Game.Current != null ? Game.Current.CurrentTime : Clock.GameTime;
 
-        public PowerResults PowerResults = null;
+        public OLD_PowerResults PowerResults = null;
         public TimeSpan UnknownTimeSpan = TimeSpan.Zero;
 
         public PowerActivationSettings(ulong targetEntityId, Vector3 targetPosition, Vector3 userPosition)
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Powers
             FXRandomSeed = tryActivatePower.FxRandomSeed;
 
             if (tryActivatePower.HasTriggeringPowerPrototypeId)
-                TriggeringPowerPrototypeRef = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
+                TriggeringPowerRef = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
         }
     }
 }
