@@ -233,7 +233,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (powerRef == PrototypeId.Invalid) return null;
             Power power = GetPower(powerRef);
-            if (power != null)
+            if (power == null)
             {
                 PowerIndexProperties indexProps = new(Properties[PropertyEnum.PowerRank], CharacterLevel, CombatLevel, 
                     Properties[PropertyEnum.ItemLevel], Properties[PropertyEnum.ItemVariation]);
