@@ -828,9 +828,9 @@ namespace MHServerEmu.Games.Regions
             throw new NotImplementedException();
         }
 
-        internal PrototypeId GetDifficultyTierRef()
+        public PrototypeId GetDifficultyTierRef()
         {
-            throw new NotImplementedException();
+            return (PrototypeId)DifficultyTier.Normal; // TODO PropertyCollection[PropertyEnum.DifficultyTier];
         }
 
         public void Visited()
@@ -1251,6 +1251,36 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
+            return true;
+        }
+
+        public Aabb2 GetAabb2() => new(Bound);
+
+        public bool ProjectBoundsIntoRegion(ref Bounds bounds, in Vector3 direction)
+        {
+            Point2[] points = GetAabb2().Expand(-bounds.GetRadius()).GetPoints();
+
+            float minDistance = float.MaxValue;
+            Vector3 closestPoint = Vector3.Zero;
+
+            for (int i = 0; i < 4; i++)
+            {
+                var point1 = new Vector3(points[i].X, points[i].Y, 0.0f);
+                var point2 = new Vector3(points[(i + 1) % 4].X, points[(i + 1) % 4].Y, 0.0f);
+
+                if (Segment.RaySegmentIntersect2D(bounds.Center, direction, point1, point2 - point1, out Vector3 intersectPoint))
+                {
+                    float distance = Vector3.Distance(intersectPoint, bounds.Center);
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        closestPoint = intersectPoint;
+                    }
+                }
+            }
+            if (minDistance == float.MaxValue) return false;
+
+            bounds.Center = new Vector3(closestPoint.X, closestPoint.Y, bounds.Center.Z);
             return true;
         }
     }

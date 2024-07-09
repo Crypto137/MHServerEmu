@@ -149,17 +149,20 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        public void SetEntityInterestPolicies(Entity entity, AOINetworkPolicyValues interestPolicies)
+        /// <summary>
+        /// Adds a new <see cref="Entity"/> to this <see cref="AreaOfInterest"/> that is created and simulated by the client independently (e.g. missiles).
+        /// </summary>
+        public bool AddClientIndependentEntity(Entity entity)
         {
-            // TODO: Proper implementation
-            if (_trackedEntities.TryGetValue(entity.Id, out EntityInterestStatus interestStatus))
-            {
-                interestStatus.LastUpdateFrame = _currentFrame;
-                interestStatus.InterestPolicies = interestPolicies;
-                return;
-            }
+            // NOTE: If we encounter any other client-independent entities, add them here
+            if (entity is not Missile)
+                Logger.WarnReturn(false, $"AddClientIndependentEntity(): Attempting to add a non-missile client indepedent entity {entity}");
 
-            _trackedEntities[entity.Id] = new(_currentFrame, interestPolicies);
+            if (_trackedEntities.ContainsKey(entity.Id))
+                Logger.WarnReturn(false, $"AddClientIndependentEntity(): Attempting to add a client independent entity {entity} that is already tracked by this AOI");
+
+            _trackedEntities[entity.Id] = new(_currentFrame, AOINetworkPolicyValues.AOIChannelClientIndependent);
+            return true;
         }
 
         public void SetRegion(Region region)
@@ -432,15 +435,23 @@ namespace MHServerEmu.Games.Network
 
         private void RemoveEntity(Entity entity)
         {
-            // Remove
-            _trackedEntities.Remove(entity.Id);
+            // Get current itnerest policies
+            AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
 
             // Notify the client of a hierarchy update for avatars
             if (entity is Avatar avatar && avatar.IsInWorld)
                 SendMessage(NetMessageFullInWorldHierarchyUpdateBegin.CreateBuilder().SetIdEntity(avatar.Id).Build());
 
+            // Remove
+            _trackedEntities.Remove(entity.Id);
+
             // Update contained entities
             ConsiderContainedEntities(entity, InterestTrackOperation.Remove);
+
+            // If this is a client-independent entity, the client will take care of its cleanup
+            // on its own, and we don't need to send an explicit destroy message.
+            if (currentInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelClientIndependent))
+                return;
 
             // Notify client
             SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Id).Build());

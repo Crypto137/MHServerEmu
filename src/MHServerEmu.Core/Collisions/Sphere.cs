@@ -28,6 +28,14 @@ namespace MHServerEmu.Core.Collisions
             return Vector3.LengthSqr(Center - v) <= RadiusSquared;
         }
 
+        public ContainmentType Contains(in Vector3 point)
+        {
+            if (Vector3.LengthSqr(Center - point) <= RadiusSquared)
+                return ContainmentType.Contains;
+            else
+                return ContainmentType.Disjoint;
+        }
+
         public ContainmentType Contains(in Aabb2 bounds)
         {
             float radius = Radius;

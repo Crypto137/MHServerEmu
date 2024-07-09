@@ -262,6 +262,25 @@ namespace MHServerEmu.Core.VectorMath
             }
         }
 
+        public static Vector3 NextVector3(GRandom random, Vector3 vector, Vector3 variance)
+        {
+            Vector3 halfVaiance = variance / 2.0f;
+            return new Vector3(
+                random.NextFloat(vector.X - halfVaiance.X, vector.X + halfVaiance.X),
+                random.NextFloat(vector.Y - halfVaiance.Y, vector.Y + halfVaiance.Y),
+                random.NextFloat(vector.Z - halfVaiance.Z, vector.Z + halfVaiance.Z)
+            );
+        }
+
+        public static Vector3 ToRadians(Vector3 angle)
+        {
+            return new Vector3(
+                MathHelper.ToRadians(angle.X),
+                MathHelper.ToRadians(angle.Y),
+                MathHelper.ToRadians(angle.Z)
+            );
+        }
+
         // static vectors
 
         public static Vector3 Zero { get; } = new(0.0f, 0.0f, 0.0f);

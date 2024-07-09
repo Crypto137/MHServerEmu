@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityPrototype Prototype { get; private set; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
-        public AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
+        public virtual AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
         public PrototypeId PrototypeDataRef { get; private set; }
 
         public InventoryCollection InventoryCollection { get; } = new();
@@ -266,6 +266,8 @@ namespace MHServerEmu.Games.Entities
         {
             return Properties.SerializeWithDefault(archive, Prototype?.Properties);
         }
+
+        public virtual bool ApplyInitialReplicationState(ref EntitySettings settings) => true;
 
         public void TEMP_ReplacePrototype(PrototypeId prototypeRef)
         {
@@ -505,7 +507,7 @@ namespace MHServerEmu.Games.Entities
 
         }
 
-        public void OnLifespanExpired()
+        public virtual void OnLifespanExpired()
         {
             Destroy();
         }
@@ -555,6 +557,11 @@ namespace MHServerEmu.Games.Entities
                 case PropertyEnum.MissionPrototype:
                     if (newValue) _flags |= EntityFlags.HasMissionPrototype;
                     else _flags &= ~EntityFlags.HasMissionPrototype;
+                    break;
+
+                case PropertyEnum.PowerUserOverrideID:
+                    if (newValue) _flags |= EntityFlags.PowerUserOverrideId;
+                    else _flags &= ~EntityFlags.PowerUserOverrideId;
                     break;
             }
         }
@@ -876,6 +883,18 @@ namespace MHServerEmu.Games.Entities
                 ScheduleEntityEvent(_scheduledLifespanEvent, lifespan);
 
             TotalLifespan = lifespan;
+        }
+
+        public void ScaleRemainingLifespan(float scaleFactor)
+        {
+            if (scaleFactor < 0.0f) return;
+            if (_scheduledLifespanEvent.IsValid)
+            {
+                Game game = Game;
+                if (game == null) return;
+                TimeSpan remainingLifespan = _scheduledLifespanEvent.Get().FireTime - game.CurrentTime;
+                ResetLifespan(remainingLifespan * scaleFactor);
+            }
         }
 
         public void CancelScheduledLifespanExpireEvent()
