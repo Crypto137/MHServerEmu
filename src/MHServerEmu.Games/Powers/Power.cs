@@ -2491,7 +2491,8 @@ namespace MHServerEmu.Games.Powers
 
                 // Create a payload and calculate results
                 PowerPayload payload = new();
-                payload.Init(powerApplication.UserEntityId, GetUltimateOwner().Id, powerApplication.TargetEntityId, powerApplication.UserPosition, Prototype);
+                WorldEntity ultimateOwner = GetUltimateOwner();
+                payload.Init(powerApplication.UserEntityId, ultimateOwner != null ? ultimateOwner.Id : 0, powerApplication.TargetEntityId, powerApplication.UserPosition, Prototype);
 
                 // Apply results to the target
                 PowerResults results = payload.GenerateResults(this, Owner, target);
