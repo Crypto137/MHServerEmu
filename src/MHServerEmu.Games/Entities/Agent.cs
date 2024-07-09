@@ -552,6 +552,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool TestAI()
         {
+            if (this is Missile) return true;
             var behaviorProfile = AgentPrototype?.BehaviorProfile;
             if (behaviorProfile == null) return false;
             var brain = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(behaviorProfile.Brain);

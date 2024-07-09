@@ -20,6 +20,25 @@
             Col2 = col2;
         }
 
+        public static Matrix3 Rotation(float radians, Vector3 vector)
+        {
+            float x, y, z, s, c, oneMinusC, xy, yz, zx;
+            s = MathF.Sin(radians);
+            c = MathF.Cos(radians);
+            x = vector.X;
+            y = vector.Y;
+            z = vector.Z;
+            xy = (x * y);
+            yz = (y * z);
+            zx = (z * x);
+            oneMinusC = (1.0f - c);
+            return new Matrix3(
+                new Vector3(((x * x) * oneMinusC) + c, (xy * oneMinusC) + (z * s), (zx * oneMinusC) - (y * s)),
+                new Vector3((xy * oneMinusC) - (z * s), ((y * y) * oneMinusC) + c, (yz * oneMinusC) + (x * s)),
+                new Vector3((zx * oneMinusC) + (y * s), (yz * oneMinusC) - (x * s), ((z * z) * oneMinusC) + c)
+            );
+        }
+
         public static Matrix3 RotationZYX(in Vector3 radiansXYZ)
         {
             float sX = MathF.Sin(radiansXYZ.X);

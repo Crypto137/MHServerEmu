@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Orientation agentOrientation = agent.Orientation;
                 Vector3 spawnPoint = blackboard.SpawnPoint;
 
-                if (agent.ChangeRegionPosition(spawnPoint, agentOrientation) == false)
+                if (agent.ChangeRegionPosition(spawnPoint, agentOrientation) != ChangePositionResult.PositionChanged)
                 {
                     Logger.Warn($"[{agent}] tried to leash teleport but was unsuccessful at position {spawnPoint} with region id {agent.Region.Id}.");
                     return failResult;
@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Vector3 assistedPosition = assistedEntity.RegionLocation.Position;
 
                 if (agent.CanPowerTeleportToPosition(assistedPosition) == false) return failResult;
-                if (agent.ChangeRegionPosition(assistedPosition, assitedOrientation, ChangePositionFlags.Teleport) == false)
+                if (agent.ChangeRegionPosition(assistedPosition, assitedOrientation, ChangePositionFlags.Teleport) != ChangePositionResult.PositionChanged)
                     return Logger.WarnReturn(failResult, $"[{agent}] tried to teleport to assisted entity position but was unsuccessful at position {assistedPosition} with region id {agent.Region.Id}.");
             }
 
