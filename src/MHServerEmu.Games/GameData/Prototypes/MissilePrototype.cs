@@ -1,4 +1,7 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -40,6 +43,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissilePrototype : AgentPrototype
     {
         public PrototypeId SendOrbToPowerUser { get; protected set; }
+
+        public TimeSpan GetSeekDelayTime()
+        {
+            if (BehaviorProfile != null && BehaviorProfile.Brain != PrototypeId.Invalid)
+            {
+                var profile = GameDatabase.GetPrototype<ProceduralProfileSeekingMissilePrototype>(BehaviorProfile.Brain);
+                if (profile != null) return TimeSpan.FromMilliseconds(profile.SeekDelayMS);
+            }
+            return TimeSpan.Zero;
+        }
+
+        public float GetSeekDelaySpeed()
+        {
+            if (BehaviorProfile != null && BehaviorProfile.Brain != PrototypeId.Invalid)
+            {
+                var profile = GameDatabase.GetPrototype<ProceduralProfileSeekingMissilePrototype>(BehaviorProfile.Brain);
+                if (profile != null) return profile.SeekDelaySpeed;
+            }
+            return 0;
+        }
     }
 
     public class MissilePowerContextPrototype : Prototype
@@ -47,6 +70,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Power { get; protected set; }
         public MissilePowerActivationEventType MissilePowerActivationEvent { get; protected set; }
         public EvalPrototype EvalPctChanceToActivate { get; protected set; }
+
+        public float GetPercentChanceToActivate(PropertyCollection properties)
+        {
+            float pctChanceToActivate = 1.0f;
+            if (EvalPctChanceToActivate != null)
+            {
+                EvalContextData data = new();
+                data.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+                pctChanceToActivate = Eval.RunFloat(EvalPctChanceToActivate, data);
+            }
+            return pctChanceToActivate;
+        }
     }
 
     public class GravitatedMissileContextPrototype : Prototype

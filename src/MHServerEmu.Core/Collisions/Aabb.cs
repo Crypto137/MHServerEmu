@@ -109,6 +109,16 @@ namespace MHServerEmu.Core.Collisions
                 return ContainmentType.Contains;
         }
 
+        public ContainmentType Contains(in Vector3 point)
+        {
+            if (point.X > Max.X || point.X < Min.X ||
+                point.Y > Max.Y || point.Y < Min.Y ||
+                point.Z > Max.Z || point.Z < Min.Z)
+                return ContainmentType.Disjoint;
+            else
+                return ContainmentType.Contains;
+        }
+
         public ContainmentType Contains(in Aabb2 bounds)
         {
             if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||

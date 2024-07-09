@@ -35,6 +35,13 @@ namespace MHServerEmu.Core.Collisions
             return new Aabb(Center - oobVector, Center + oobVector);
         }
 
+        public ContainmentType Contains(in Vector3 point)
+        {
+            Aabb aabb = new(Center - Extents, Center + Extents);
+            Vector3 transformPoint = TransformPoint(point);
+            return aabb.Contains(transformPoint);
+        }
+
         public bool Intersects(in Aabb aabb)
         {
             return ToAabb().Intersects(aabb);

@@ -156,6 +156,13 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
+        public bool IsOverlappingEntity(ulong entityId)
+        {
+            if (Entity == null || Entity.Game == null) return false;
+            if (OverlappedEntities.TryGetValue(entityId, out var overlappedEntity))
+                return overlappedEntity.Overlapped;
+            return false;
+        }
     }
 
     public class OverlapEntityEntry

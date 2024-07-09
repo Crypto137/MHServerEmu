@@ -267,6 +267,8 @@ namespace MHServerEmu.Games.Entities
             return Properties.SerializeWithDefault(archive, Prototype?.Properties);
         }
 
+        public virtual bool ApplyInitialReplicationState(ref EntitySettings settings) => true;
+
         public void TEMP_ReplacePrototype(PrototypeId prototypeRef)
         {
             // Temp method for hacks that replace entity prototype after creation - use with caution and remove this later
@@ -505,7 +507,7 @@ namespace MHServerEmu.Games.Entities
 
         }
 
-        public void OnLifespanExpired()
+        public virtual void OnLifespanExpired()
         {
             Destroy();
         }
@@ -876,6 +878,18 @@ namespace MHServerEmu.Games.Entities
                 ScheduleEntityEvent(_scheduledLifespanEvent, lifespan);
 
             TotalLifespan = lifespan;
+        }
+
+        public void ScaleRemainingLifespan(float scaleFactor)
+        {
+            if (scaleFactor < 0.0f) return;
+            if (_scheduledLifespanEvent.IsValid)
+            {
+                Game game = Game;
+                if (game == null) return;
+                TimeSpan remainingLifespan = _scheduledLifespanEvent.Get().FireTime - game.CurrentTime;
+                ResetLifespan(remainingLifespan * scaleFactor);
+            }
         }
 
         public void CancelScheduledLifespanExpireEvent()

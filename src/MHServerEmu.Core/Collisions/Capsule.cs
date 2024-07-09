@@ -110,6 +110,12 @@ namespace MHServerEmu.Core.Collisions
             return triangle.TriangleIntersectsCircle2D(A, Radius);
         }
 
+        public bool Contains(in Vector3 point)
+        {
+            float distanceSq = Segment.SegmentPointDistanceSq(A, B, point);
+            return distanceSq <= Radius * Radius;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();

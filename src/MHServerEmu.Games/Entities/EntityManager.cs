@@ -131,6 +131,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn("CreateEntity(): Archive data is provided, but persistent archives are not yet implemented!");
 
             // TODO: Apply replication state
+            entity.ApplyInitialReplicationState(ref settings);
 
             // Finish deserialization
             entity.SetStatus(EntityStatus.HasArchiveData, false);

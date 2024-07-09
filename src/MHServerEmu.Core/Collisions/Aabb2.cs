@@ -13,6 +13,12 @@ namespace MHServerEmu.Core.Collisions
             Max = new Vector2();
         }
 
+        public Aabb2(in Aabb other)
+        {
+            Min = new Vector2(other.Min);
+            Max = new Vector2(other.Max);
+        }
+
         public Aabb2(Vector3 center, float diameter)
         {
             float radius = diameter * 0.5f;

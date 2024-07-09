@@ -469,6 +469,29 @@ namespace MHServerEmu.Games.Entities
                 && (entityBounds.CollisionType == BoundsCollisionType.Blocking || otherBlocking);
         }
 
+        public bool Contains(in Vector3 point)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB:
+                    return ToObb().Contains(point) == ContainmentType.Contains;
+                case GeometryType.AABB:
+                    return ToAabb().Contains(point) == ContainmentType.Contains;
+                case GeometryType.Capsule:
+                    return ToCapsule().Contains(point);
+                case GeometryType.Sphere:
+                    return ToSphere().Contains(point) == ContainmentType.Contains;
+                case GeometryType.Triangle:
+                    return ToTriangle2D().Intersects(point);
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    return triangles[0].Intersects(point) || triangles[1].Intersects(point);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}");
+                    return false;
+            }
+        }
+
         public bool Intersects(Bounds other)
         {
             switch (other.Geometry)

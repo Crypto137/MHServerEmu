@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public Event FollowEntityGiveUpEvent { get; private set; }
-        public Event FollowEntityMissileReturnEvent { get; private set; }
+        public Event FollowEntityMissingEvent { get; private set; }
 
         public const float ReachedPathPointEpsilon = 2.0f;
         public const float MovementSweepPadding = 0.5f;
@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public Locomotor()
         {
             FollowEntityGiveUpEvent = new();
-            FollowEntityMissileReturnEvent = new();
+            FollowEntityMissingEvent = new();
             LocomotionState = new();
             _lastLocomotionState = new();
             _defaultMethod = LocomotorMethod.None;
@@ -718,7 +718,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                                 int randomDegree = gravitatedContext.OnBounceRandomDegreeFromForward;
                                 if (randomDegree != 0)
                                 {
-                                    Random random = ownerAsMissile.Random;
+                                    var random = ownerAsMissile.Random;
                                     nextDirection = Vector3.AxisAngleRotate(nextDirection, Vector3.ZAxis, MathHelper.ToRadians(random.Next(-randomDegree, randomDegree)));
                                 }
                                 Vector3 axisVector = Vector3.SafeNormalize(Vector3.Cross(Vector3.Up, nextDirection));
@@ -841,7 +841,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     }
                     else
                     {
-                        FollowEntityMissileReturnEvent.Invoke();
+                        FollowEntityMissingEvent.Invoke();
                         Stop();
                         if (IsSeekingMissile && _owner.IsInWorld)
                         {
@@ -1077,7 +1077,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         private void UnregisterFollowEvents()
         {
             FollowEntityGiveUpEvent.UnregisterCallbacks();
-            FollowEntityMissileReturnEvent.UnregisterCallbacks();
+            FollowEntityMissingEvent.UnregisterCallbacks();
         }
 
         public bool MoveTo(Vector3 position, LocomotionOptions options)
