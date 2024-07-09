@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Powers
                     EvalContextData contextData = new(Game);
                     contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
                     contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
                     contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
 
                     contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, contextData);
