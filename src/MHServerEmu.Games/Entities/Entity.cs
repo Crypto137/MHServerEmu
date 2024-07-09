@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityPrototype Prototype { get; private set; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
-        public AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
+        public virtual AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
         public PrototypeId PrototypeDataRef { get; private set; }
 
         public InventoryCollection InventoryCollection { get; } = new();
