@@ -572,6 +572,19 @@ namespace MHServerEmu.Games.Entities
             else Think();
         }
 
+        public override SimulateResult SetSimulated(bool simulated)
+        {
+            SimulateResult result = base.SetSimulated(simulated);
+
+            if (result == SimulateResult.Set) // On AI
+                if (this is not Avatar 
+                    || IsTeamUpAgent == false 
+                    || IsControlledEntity == false )
+                    Think();
+
+            return result;
+        }
+
         public void InitAIOverride(ProceduralAIProfilePrototype profile, PropertyCollection collection)
         {
             if (profile == null || Game == null || collection == null) return;
@@ -617,7 +630,7 @@ namespace MHServerEmu.Games.Entities
                                                   // ActivePowerRef = settings.PowerPrototype
 
             // AI
-            if (TestAI() == false) return;
+            // if (TestAI() == false) return;
 
             if (AIController != null)
             {
@@ -829,6 +842,7 @@ namespace MHServerEmu.Games.Entities
 
         public void DrawPath(EntityHelper.TestOrb orbRef)
         {
+            if (EntityHelper.DebugOrb == false) return;
             if (Locomotor.HasPath)
                 foreach(var node in Locomotor.LocomotionState.PathNodes)
                     EntityHelper.CrateOrb(orbRef, node.Vertex, Region);

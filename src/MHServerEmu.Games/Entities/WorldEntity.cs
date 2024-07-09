@@ -1143,13 +1143,13 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 Properties[PropertyEnum.Health] = health;
-
+                /*
                 if (totalDamage > 0f && this is Agent aiAgent) aiAgent.AITestOn();
                 // HACK: Rotate towards the power user
                 if (totalDamage > 0f && powerUser is Avatar && Locomotor != null)
                 {
                     ChangeRegionPosition(null, new(Vector3.AngleYaw(RegionLocation.Position, powerUser.RegionLocation.Position), 0f, 0f));
-                }
+                }*/
             }
 
             return true;

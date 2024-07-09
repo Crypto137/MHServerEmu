@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Entities
     public static class EntityHelper
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        
+        public static readonly bool DebugOrb = false;
 
         public enum TestOrb : ulong
         {
@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.Entities
 
         public static Agent CrateOrb(TestOrb orbProto, Vector3 position, Region region)
         {
-            return null;
+            if (DebugOrb == false) return null;
             var settings = new EntitySettings
             {
                 EntityRef = (PrototypeId)orbProto,
