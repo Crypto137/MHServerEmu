@@ -179,7 +179,8 @@ namespace MHServerEmu.Games.Network
             foreach (var kvp in _trackedEntities)
             {
                 Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
-                SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+                if (entity != null)
+                    SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
             }
 
             _currentFrame = 0;

@@ -427,7 +427,7 @@ namespace MHServerEmu.Games.Entities
                 foreach (ulong playerId in InterestReferences.PlayerIds)
                 {
                     Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                    player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+                    player?.PlayerConnection.AOI.ConsiderEntity(this, settings);
                 }
             }
         }
