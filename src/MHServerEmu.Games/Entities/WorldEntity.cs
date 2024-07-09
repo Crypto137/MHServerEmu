@@ -1526,6 +1526,12 @@ namespace MHServerEmu.Games.Entities
             UpdateSimulationState();
         }
 
+        public override void OnDeallocate()
+        {
+            base.OnDeallocate();
+            PowerCollection?.OnOwnerDeallocate();
+        }
+
         public virtual void OnDramaticEntranceEnd() { }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)

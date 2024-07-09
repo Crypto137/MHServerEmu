@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly SortedDictionary<PrototypeId, PowerCollectionRecord> _powerDict = new();
+        private readonly Stack<Power> _condemnedPowers = new();
         private readonly WorldEntity _owner;
  
         public Power ThrowablePower { get; private set; }
@@ -158,6 +159,15 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             return UnassignPowerInternal(powerProtoRef, sendPowerUnassignToClients);
         }
 
+        public void DeleteCondemnedPowers()
+        {
+            while (_condemnedPowers.Count > 0)
+            {
+                Power condemnedPower = _condemnedPowers.Pop();
+                condemnedPower.OnDeallocate();
+            }
+        }
+
         /// <summary>
         /// Sends all assigned powers to the provided <see cref="Player"/>.
         /// </summary>
@@ -249,6 +259,14 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             foreach (PowerCollectionRecord record in _powerDict.Values)
                 record.Power?.OnOwnerCastSpeedChange();
+        }
+
+        public void OnOwnerDeallocate()
+        {
+            foreach (var kvp in _powerDict)
+                kvp.Value.Power.OnDeallocate();
+
+            DeleteCondemnedPowers();
         }
 
         private PowerCollectionRecord GetPowerRecordByRef(PrototypeId powerProtoRef)
@@ -572,7 +590,8 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             {
                 FinishUnassignPower(powerRecord.Power);
 
-                // TODO: EntityManager::RegisterEntityForCondemnedPowerDeletion()
+                _owner.Game.EntityManager.RegisterEntityForCondemnedPowerDeletion(_owner.Id);
+                _condemnedPowers.Push(powerRecord.Power);
 
                 DestroyPowerRecord(powerRecord.PowerPrototypeRef);
             }

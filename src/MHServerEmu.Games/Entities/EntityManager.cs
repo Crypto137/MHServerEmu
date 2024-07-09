@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 
@@ -37,6 +38,7 @@ namespace MHServerEmu.Games.Entities
         private readonly Dictionary<ulong, Entity> _entityDict = new();
         private readonly Dictionary<ulong, Entity> _entityDbGuidDict = new();
         private readonly HashSet<Player> _players = new();
+        private readonly HashSet<ulong> _entitiesPendingCondemnedPowerDeletion = new();
         private readonly LinkedList<ulong> _entitiesPendingDestruction = new();     // NOTE: Change this to a regular List<ulong> if this causes GC issues
 
         private ulong _nextEntityId = 1;
@@ -288,6 +290,11 @@ namespace MHServerEmu.Games.Entities
             return playerRemoved;
         }
 
+        public void RegisterEntityForCondemnedPowerDeletion(ulong entityId)
+        {
+            _entitiesPendingCondemnedPowerDeletion.Add(entityId);
+        }
+
         public T GetEntity<T>(ulong entityId, GetEntityFlags flags = GetEntityFlags.None) where T : Entity
         {
             if (entityId == Entity.InvalidId) return null;
@@ -356,7 +363,7 @@ namespace MHServerEmu.Games.Entities
 
         public void ProcessDeferredLists()
         {
-            // TODO: ProcessCondemnedPowerList()
+            ProcessCondemnedPowerList();
             ProcessDestroyed();
         }
 
@@ -396,6 +403,32 @@ namespace MHServerEmu.Games.Entities
         {
             if (entity == null) return false;
             return entity.TestStatus(EntityStatus.Destroyed) == flags.HasFlag(GetEntityFlags.DestroyedOnly);
+        }
+
+        private void ProcessCondemnedPowerList()
+        {
+            foreach (ulong entityId in _entitiesPendingCondemnedPowerDeletion)
+            {
+                if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
+                    continue;
+
+                if (entity is not WorldEntity worldEntity)
+                {
+                    Logger.Warn("ProcessCondemnedPowerList(): entity is not WorldEntity");
+                    continue;
+                }
+
+                PowerCollection powerCollection = worldEntity.PowerCollection;
+                if (powerCollection == null)
+                {
+                    Logger.Warn("ProcessCondemnedPowerList(): powerCollection == null");
+                    continue;
+                }
+
+                powerCollection.DeleteCondemnedPowers();
+            }
+
+            _entitiesPendingCondemnedPowerDeletion.Clear();
         }
 
         private bool ProcessDestroyed()

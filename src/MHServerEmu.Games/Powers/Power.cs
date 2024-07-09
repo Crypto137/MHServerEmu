@@ -156,9 +156,6 @@ namespace MHServerEmu.Games.Powers
             EndPower(endPowerFlags);
 
             Owner?.Properties.RemoveProperty(new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
-
-            // TODO: call this from PowerCollection
-            OnDeallocate();
         }
 
         public void OnOwnerEnteredWorld()
