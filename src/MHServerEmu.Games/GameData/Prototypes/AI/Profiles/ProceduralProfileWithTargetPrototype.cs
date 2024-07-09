@@ -622,7 +622,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     return; 
             }
 
-            if (locomotor.FollowEntityId != target.Id)
+            ulong targetId = target != null ? target.Id : 0;
+            if (locomotor.FollowEntityId != targetId)
             {
                 locomotor.FollowEntity(target.Id, 0.0f);
                 locomotor.FollowEntityMissingEvent.AddActionBack(ownerController.MissileReturnEvent);
@@ -680,14 +681,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
 
-            ulong targetId = target.Id;
             if (target != null)
             {
+                ulong targetId = target.Id;
                 if (locomotor.FollowEntityId != targetId)
                 {
                     locomotor.FollowEntity(targetId, 0.0f);
                     target.Properties[PropertyEnum.FocusTargetedOnByID] = agent.Id;
-                    ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = target.Id;
+                    ownerController.Blackboard.PropertyCollection[PropertyEnum.AIFocusTargetingID] = targetId;
                 }
             }
         }
