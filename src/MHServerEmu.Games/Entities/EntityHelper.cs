@@ -34,6 +34,7 @@ namespace MHServerEmu.Games.Entities
 
         public static Agent CrateOrb(TestOrb orbProto, Vector3 position, Region region)
         {
+            return null;
             var settings = new EntitySettings
             {
                 EntityRef = (PrototypeId)orbProto,
