@@ -147,6 +147,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathETA] = (long)locomotor.GetCurrentETA().TotalMilliseconds;
                 blackboard.PropertyCollection[PropertyEnum.AILastMoveToIncompletePathTime] = (long)game.CurrentTime.TotalMilliseconds;
             }
+
+            agent.DrawPath(EntityHelper.TestOrb.Greeen);
         }
 
         public StaticBehaviorReturnType Update(in IStateContext context)

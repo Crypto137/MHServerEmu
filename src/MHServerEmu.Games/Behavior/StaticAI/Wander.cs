@@ -3,6 +3,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
@@ -110,6 +111,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     locomotionOptions.Flags |= LocomotionFlags.IsWalking;
 
                 if (locomotor.PathTo(wanderTo, locomotionOptions) == false) return failResult;
+                agent.DrawPath(EntityHelper.TestOrb.Blue); 
             }
 
             return StaticBehaviorReturnType.Running;

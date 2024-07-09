@@ -300,6 +300,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+        public virtual void OnPowerEnded(AIController ownerController, ProceduralUseAffixPowerContextPrototype powerContext) { }
+
     }
 
     public class ProceduralProfileStationaryTurretPrototype : ProceduralProfileWithAttackPrototype

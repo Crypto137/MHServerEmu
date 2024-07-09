@@ -22,6 +22,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
 namespace MHServerEmu.Games.Regions

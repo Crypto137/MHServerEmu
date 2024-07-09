@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -27,8 +28,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralContextPrototype : Prototype
     {
-        public virtual void OnStart(AIController owningController, ProceduralAIProfilePrototype procedurealProfile) { }
-        public virtual void OnEnd(AIController owningController, ProceduralAIProfilePrototype procedurealProfile) { }
+        protected static readonly Logger Logger = LogManager.CreateLogger();
+        public virtual void OnStart(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile) { }
+        public virtual void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile) { }
     }
 
     public class ProceduralUsePowerContextSwitchTargetPrototype : Prototype
@@ -54,12 +56,59 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
         }
+
+        public override void OnStart(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
+        {
+            if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
+            attackProto.OnPowerStarted(ownerController, this);
+        }
+
+        public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
+        {
+            if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
+
+            attackProto.OnPowerEnded(ownerController, this);
+            if (PowerContext == null || PowerContext.Power == PrototypeId.Invalid) return;
+
+            var collection = ownerController.Blackboard.PropertyCollection;
+            var game = ownerController.Game;
+            if (game == null) return;
+
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
+            long cooldownTime = currentTime + game.Random.Next(MinCooldownMS, MaxCooldownMS);
+            collection[PropertyEnum.AIProceduralPowerSpecificCDTime, PowerContext.Power] = cooldownTime;
+        }
     }
 
     public class ProceduralUseAffixPowerContextPrototype : ProceduralContextPrototype
     {
         public UseAffixPowerContextPrototype AffixContext { get; protected set; }
         public int PickWeight { get; protected set; }
+
+        public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
+        {
+            if (proceduralProfile is not ProceduralProfileWithAttackPrototype attackProto) return;
+
+            attackProto.OnPowerEnded(ownerController, this);
+
+            var agent = ownerController.Owner;
+            if (agent == null) return;
+
+            var blackboard = ownerController.Blackboard;
+            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(blackboard.PropertyCollection[PropertyEnum.AIAffixPowerToActivate]);
+
+            if (powerProto == null)
+            {
+                Logger.Warn($"Unable to set cooldown time for affix power on entity! Entity: {agent}");
+                return;
+            }
+
+            var game = ownerController.Game;
+            if (game == null) return;
+
+            var cooldownTime = game.CurrentTime + agent.GetAbilityCooldownDuration(powerProto);
+            blackboard.PropertyCollection[PropertyEnum.AIProceduralPowerSpecificCDTime, powerProto.DataRef] = (long)cooldownTime.TotalMilliseconds; 
+        }
     }
 
     public class ProceduralFlankContextPrototype : ProceduralContextPrototype
@@ -67,11 +116,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxFlankCooldownMS { get; protected set; }
         public int MinFlankCooldownMS { get; protected set; }
         public FlankContextPrototype FlankContext { get; protected set; }
+
+        public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
+        {
+            var blackboard = ownerController.Blackboard;
+            var game = ownerController.Game;
+            if (game == null) return;
+
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
+            long nextFlankTime = currentTime + game.Random.Next(MinFlankCooldownMS, MaxFlankCooldownMS);
+            blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime] = nextFlankTime;
+        }
     }
 
     public class ProceduralInteractContextPrototype : ProceduralContextPrototype
     {
         public InteractContextPrototype InteractContext { get; protected set; }
+
+        public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
+        {
+            if (proceduralProfile is not ProceduralProfileWithTargetPrototype attackProto) return;
+            attackProto.OnInteractEnded(ownerController, this);
+        }
     }
 
     public class ProceduralFleeContextPrototype : ProceduralContextPrototype
@@ -79,6 +145,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxFleeCooldownMS { get; protected set; }
         public int MinFleeCooldownMS { get; protected set; }
         public FleeContextPrototype FleeContext { get; protected set; }
+
+        public override void OnEnd(AIController ownerController, ProceduralAIProfilePrototype proceduralProfile)
+        {
+            var blackboard = ownerController.Blackboard;
+            var game = ownerController.Game;
+            if (game == null) return;
+
+            long currentTime = (long)game.CurrentTime.TotalMilliseconds;
+            long nextFleeTime = currentTime + game.Random.Next(MinFleeCooldownMS, MaxFleeCooldownMS);
+            blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime] = nextFleeTime;
+        }
     }
 
     public class ProceduralSyncAttackContextPrototype : Prototype

@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -560,6 +561,41 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public void AITestOn()
+        {
+            if (AIController == null && Properties.HasProperty(PropertyEnum.AICombatIdling) == false)
+            {
+                InitAI(null);
+                ActivateAI();
+                Properties[PropertyEnum.AICombatIdling] = true; // AI tried On
+            }
+            else Think();
+        }
+
+        public override SimulateResult SetSimulated(bool simulated)
+        {
+            SimulateResult result = base.SetSimulated(simulated);
+
+            if (result == SimulateResult.Set) // On AI
+                if (this is not Avatar 
+                    || IsTeamUpAgent == false 
+                    || IsControlledEntity == false )
+                    Think();
+
+            return result;
+        }
+
+        public void InitAIOverride(ProceduralAIProfilePrototype profile, PropertyCollection collection)
+        {
+            if (profile == null || Game == null || collection == null) return;
+            collection[PropertyEnum.AIFullOverride] = profile.DataRef;
+            AIController = new(Game, this);
+            var behaviorProfile = AgentPrototype?.BehaviorProfile;
+            if (behaviorProfile == null || behaviorProfile.Brain == PrototypeId.Invalid) return;
+            AIController.OnInitAIOverride(behaviorProfile, collection);
+            AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+        }
+
         private bool InitAI(EntitySettings settings)
         {
             var agentPrototype = AgentPrototype;
@@ -594,7 +630,7 @@ namespace MHServerEmu.Games.Entities
                                                   // ActivePowerRef = settings.PowerPrototype
 
             // AI
-            if (TestAI() == false) return;
+            // if (TestAI() == false) return;
 
             if (AIController != null)
             {
@@ -609,6 +645,23 @@ namespace MHServerEmu.Games.Entities
                 AIController.OnAIEnteredWorld();
                 ActivateAI();
             }
+            /*
+            if (IsSimulated && Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
+            {
+                PrototypeId startPower = Properties[PropertyEnum.AIPowerOnSpawn];
+                if (startPower != PrototypeId.Invalid)
+                {
+                    PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                    AssignPower(startPower, indexProps);
+                    var position = RegionLocation.Position;
+                    var powerSettings = new PowerActivationSettings(Id, position, position)
+                    { Flags = PowerActivationSettingsFlags.NotifyOwner };
+                    ActivatePower(startPower, ref powerSettings);
+                }
+            }
+
+            if (AIController == null)
+                EntityActionComponent?.InitActionBrain();*/
         }
 
         public override void OnExitedWorld()
@@ -785,6 +838,14 @@ namespace MHServerEmu.Games.Entities
             AssignPower(startPowerRef, new());
 
             return true;
+        }
+
+        public void DrawPath(EntityHelper.TestOrb orbRef)
+        {
+            if (EntityHelper.DebugOrb == false) return;
+            if (Locomotor.HasPath)
+                foreach(var node in Locomotor.LocomotionState.PathNodes)
+                    EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
         }
     }
 }

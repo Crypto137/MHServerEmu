@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public void End(AIController ownerController, StaticBehaviorReturnType state)
         {
             Agent agent = ownerController.Owner;
-            if (agent != null) return;
+            if (agent == null) return;
 
             if (state == StaticBehaviorReturnType.Interrupted && agent.IsExecutingPower)
             {
@@ -198,7 +198,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 {
                     if (powerContext.UseMainTargetForAOEActivation)
                     {
-                        if (Power.IsTargetInAOE(targetWorldEntity, agent, regionLocation.Position, targetPosition, power.GetApplicationRange(), -1, TimeSpan.Zero, powerProto, agent.Properties))
+                        if (Power.IsTargetInAOE(targetWorldEntity, agent, regionLocation.Position, targetPosition, 
+                            power.GetApplicationRange(), -1, TimeSpan.Zero, powerProto, agent.Properties) == false)
                             return PowerUseResult.OutOfPosition;
                     }
                     else

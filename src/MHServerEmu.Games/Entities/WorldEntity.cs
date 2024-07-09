@@ -815,6 +815,7 @@ namespace MHServerEmu.Games.Entities
         public Power GetPower(PrototypeId powerProtoRef) => _powerCollection?.GetPower(powerProtoRef);
         public Power GetThrowablePower() => _powerCollection?.ThrowablePower;
         public Power GetThrowableCancelPower() => _powerCollection?.ThrowableCancelPower;
+        public virtual bool IsMelee() => false;
 
         public bool HasPowerInPowerCollection(PrototypeId powerProtoRef)
         {
@@ -1142,10 +1143,13 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 Properties[PropertyEnum.Health] = health;
-
+                /*
+                if (totalDamage > 0f && this is Agent aiAgent) aiAgent.AITestOn();
                 // HACK: Rotate towards the power user
-                if (totalDamage > 0f && powerUser is Avatar && this is Agent && Locomotor != null)
+                if (totalDamage > 0f && powerUser is Avatar && Locomotor != null)
+                {
                     ChangeRegionPosition(null, new(Vector3.AngleYaw(RegionLocation.Position, powerUser.RegionLocation.Position), 0f, 0f));
+                }*/
             }
 
             return true;
@@ -1596,6 +1600,11 @@ namespace MHServerEmu.Games.Entities
                 case PropertyEnum.HealthMax:
                     Properties[PropertyEnum.HealthMaxOther] = newValue;
                     break;
+
+                case PropertyEnum.NoEntityCollide:
+                    _flags |= EntityFlags.NoCollide;
+                    // EnableNavigationInfluence DisableNavigationInfluence
+                    break;
             }
         }
 
@@ -1794,12 +1803,15 @@ namespace MHServerEmu.Games.Entities
 
         public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"CanEntityActionTrigger {eventType}");
+            return false;
+            // throw new NotImplementedException();
         }
 
         public void TriggerEntityActionEvent(EntitySelectorActionEventType actionType)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"TriggerEntityActionEvent {actionType}");
+            // throw new NotImplementedException();
         }
 
         protected override void BuildString(StringBuilder sb)

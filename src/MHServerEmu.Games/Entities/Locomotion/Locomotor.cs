@@ -923,7 +923,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList; // new or link?
+                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
             }
             SetEnabled(success);
             return success;
@@ -1084,15 +1084,15 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             if (!Vector3.IsFinite(position)) return false;
             ResetState();
-            GeneratedPath generatedPath = new ();
-            generatedPath.PathResult = generatedPath.Path.GenerateSimpleMove(_owner.RegionLocation.Position, position, _owner.Bounds.GetRadius(), PathFlags);
-            bool success = generatedPath.PathResult == NaviPathResult.Success;
+
+            _generatedPath.PathResult = _generatedPath.Path.GenerateSimpleMove(_owner.RegionLocation.Position, position, _owner.Bounds.GetRadius(), PathFlags);
+            bool success = _generatedPath.PathResult == NaviPathResult.Success;
             if (success)
             {
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting | LocomotionFlags.MoveTo;
-                LocomotionState.PathNodes = generatedPath.Path.PathNodeList;
+                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
             }
             SetEnabled(success);
             return success;
@@ -1130,13 +1130,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 Vector3 direction = Vector3.Normalize(position - ownerPosition);
                 if (!Vector3.IsNearZero(direction - _owner.Forward))
                 {
-                    GeneratedPath genPath = new();
-                    genPath.PathResult = genPath.Path.GenerateSimpleMove(ownerPosition, position, _owner.Bounds.GetRadius(), PathFlags);
-                    bool success = (genPath.PathResult == NaviPathResult.Success);
+                    _generatedPath.PathResult = _generatedPath.Path.GenerateSimpleMove(ownerPosition, position, _owner.Bounds.GetRadius(), PathFlags);
+                    bool success = (_generatedPath.PathResult == NaviPathResult.Success);
                     if (success)
                     {
                         LocomotionState.LocomotionFlags |= LocomotionFlags.IsLooking;
-                        LocomotionState.PathNodes = genPath.Path.PathNodeList;
+                        LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
                     }
                     SetEnabled(success);
                 }

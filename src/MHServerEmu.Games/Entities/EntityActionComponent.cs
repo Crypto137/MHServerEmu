@@ -1,4 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
@@ -37,9 +40,47 @@ namespace MHServerEmu.Games.Entities
                 }
                 actionSet.Add(action);
             }
+
             RequiresBrain |= action.RequiresBrain;
+            // if (Owner.IsInWorld) InitActionBrain();
+
             if (HasInteractOption())
                 Owner.Properties[PropertyEnum.EntSelActHasInteractOption] = true;
+        }
+
+        public void InitActionBrain()
+        {
+            if (RequiresBrain == false) return;
+            if (Owner is not Agent agent || agent is Avatar || agent.IsControlledEntity) return;
+            AIController controller = agent.AIController;
+            if (controller != null) return;
+
+            var selectorProto = agent.SpawnSpec?.EntitySelectorProto;
+            PrototypeId brainRef;
+            if (selectorProto != null)
+                brainRef = selectorProto.DefaultBrainOnSimulated;
+            else
+                brainRef = GameDatabase.AIGlobalsPrototype.DefaultSimpleNpcBrain;
+            var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
+            if (brain is not ProceduralAIProfilePrototype profile) return;
+
+            PropertyCollection collection = new ();
+            collection[PropertyEnum.AICustomThinkRateMS] = 1000;
+            if (selectorProto != null) {
+                collection[PropertyEnum.AIAggroRangeAlly] = selectorProto.DefaultAggroRangeAlly;
+                collection[PropertyEnum.AIAggroRangeHostile] = selectorProto.DefaultAggroRangeHostile;
+                collection[PropertyEnum.AIProximityRangeOverride] = selectorProto.DefaultProximityRangeHostile;
+            }
+
+            agent.InitAIOverride(profile, collection);
+
+            if (Owner.IsSimulated)
+                Trigger(EntitySelectorActionEventType.OnSimulated);
+        }
+
+        public void Trigger(EntitySelectorActionEventType eventType)
+        {
+            throw new NotImplementedException();
         }
 
         private bool HasInteractOption()
