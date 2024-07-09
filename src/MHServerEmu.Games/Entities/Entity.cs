@@ -558,6 +558,11 @@ namespace MHServerEmu.Games.Entities
                     if (newValue) _flags |= EntityFlags.HasMissionPrototype;
                     else _flags &= ~EntityFlags.HasMissionPrototype;
                     break;
+
+                case PropertyEnum.PowerUserOverrideID:
+                    if (newValue) _flags |= EntityFlags.PowerUserOverrideId;
+                    else _flags &= ~EntityFlags.PowerUserOverrideId;
+                    break;
             }
         }
 
