@@ -58,6 +58,13 @@ namespace MHServerEmu.Games.Behavior
             return true;
         }
 
+        public void OnInitAIOverride(BehaviorProfilePrototype profile, PropertyCollection collection)
+        {
+            Initialize(profile, null, collection);
+            SetIsEnabled(true);
+            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(0));
+        }
+
         public bool IsOwnerValid()
         {
             if (Owner == null 
