@@ -10,6 +10,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -38,6 +39,11 @@ namespace MHServerEmu.Games.Entities
         private TimeSpan _lastSizeUpdateTime;
 
         private EventPointer<PendingKillCallback> _pendingKillEvent = new();
+
+        public override AOINetworkPolicyValues CompatibleReplicationChannels
+        {
+            get => base.CompatibleReplicationChannels | (IsMovedIndependentlyOnClient ? AOINetworkPolicyValues.AOIChannelClientIndependent : 0);
+        }
 
         public Missile(Game game) : base(game) 
         {
@@ -692,12 +698,12 @@ namespace MHServerEmu.Games.Entities
                         FXRandomSeed = (uint)Properties[PropertyEnum.VariationSeed]
                     };
 
-                    ActivateMissilePower(power, powerSettings, target);
+                    ActivateMissilePower(power, ref powerSettings, target);
                 }
             }
         }
 
-        private PowerUseResult ActivateMissilePower(Power power, PowerActivationSettings powerSettings, WorldEntity target)
+        private PowerUseResult ActivateMissilePower(Power power, ref PowerActivationSettings powerSettings, WorldEntity target)
         {
             return ActivatePower(power, ref powerSettings);
         }

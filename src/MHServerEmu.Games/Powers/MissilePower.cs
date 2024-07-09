@@ -9,6 +9,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -18,18 +19,20 @@ namespace MHServerEmu.Games.Powers
     public class MissilePower : Power
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly GRandom _random = new();
+        private readonly HashSet<Player> _interestedPlayers = new();
+        private readonly EventPointer<CreateMissileDelayedEvent> _createMissileEvent = new();
+
+        protected TimeSpan CreationDelay { get => TimeSpan.FromMilliseconds((long)Properties[PropertyEnum.MissileCreationDelay]); }
+
         public MissilePowerPrototype MissilePowerPrototype { get => Prototype as MissilePowerPrototype; }       
         public int TotalNumberOfMissilesCreated { get; private set; }
         public int MissileCountPerCreationEvent { get => Properties[PropertyEnum.MissileCountPerCreationEvent]; }
         public int MaxNumberOfMissilesToCreateTotal { get => Properties[PropertyEnum.MissileCreationCountTotal]; }
-        protected TimeSpan CreationDelay { get => TimeSpan.FromMilliseconds((long)Properties[PropertyEnum.MissileCreationDelay]); }
-
-        private readonly GRandom _random;
-        private readonly EventPointer<CreateMissileDelayedEvent> _createMissileEvent = new();
 
         public MissilePower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
-            _random = new();
             TotalNumberOfMissilesCreated = 0;
         }
 
@@ -41,7 +44,12 @@ namespace MHServerEmu.Games.Powers
 
         public override PowerUseResult Activate(ref PowerActivationSettings settings)
         {
-            // TODO Get and Sort clients for AOI
+            // Remember players that were aware of the owner when we activated this power.
+            // These are the players that receive NetMessageActivatePower and create the
+            // missile on their own, including the player who used the power in the first place.
+            _interestedPlayers.Clear();
+            foreach (Player player in Game.NetworkManager.GetInterestedPlayers(Owner, AOINetworkPolicyValues.AOIChannelProximity))
+                _interestedPlayers.Add(player);
 
             CancelCreationDelayEvent();
             return base.Activate(ref settings);
@@ -56,8 +64,20 @@ namespace MHServerEmu.Games.Powers
 
         protected override bool ApplyInternal(PowerApplication powerApplication)
         {
-            // TODO check Interested clients from AOI
+            // Remove interested players who became no longer interested between activation and application of this power
+            HashSet<Player> currentlyInterestedPlayers = new();
 
+            foreach (Player player in Game.NetworkManager.GetInterestedPlayers(Owner, AOINetworkPolicyValues.AOIChannelProximity))
+                currentlyInterestedPlayers.Add(player);
+
+            // NOTE: It should be safe to remove from a HashSet<T> during iteration as of .NET 6
+            foreach (Player player in _interestedPlayers)
+            {
+                if (currentlyInterestedPlayers.Contains(player) == false)
+                    _interestedPlayers.Remove(player);
+            }
+
+            // Do the application
             if (base.ApplyInternal(powerApplication) == false) return false;
 
             var prototype = MissilePowerPrototype;
@@ -140,7 +160,7 @@ namespace MHServerEmu.Games.Powers
                     EvalContextData contextData = new(Game);
                     contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
                     contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
                     contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
 
                     contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, contextData);
@@ -421,6 +441,9 @@ namespace MHServerEmu.Games.Powers
         {
             ulong regionId = creationSettings.RegionId;
             if (missileContext == null) return false;
+
+            // Clear region id so that client-independent missiles don't enter the world automatically
+            // before we get the chance to set their replication channel to client-independent.
             if (missileContext.IndependentClientMovement) 
                 creationSettings.RegionId = 0;
 
@@ -428,13 +451,19 @@ namespace MHServerEmu.Games.Powers
 
             if (missileContext.IndependentClientMovement)
             {
-                // TODO send missile to AOI without RegionId
+                // Add client independent replication channel to the missile manually for all players who
+                // were interested in the owner during the activation.
+                foreach (Player player in _interestedPlayers)
+                {
+                    AreaOfInterest aoi = player.PlayerConnection.AOI;
+                    aoi.AddClientIndependentEntity(missile);
+                }
 
-                // restore regionId
+                // Restore regionId
                 creationSettings.RegionId = regionId;
                 var region = Game.RegionManager.GetRegion(regionId);
 
-                // add entity to World
+                // Add the missile to the world
                 missile.EnterWorld(region, creationSettings.Position, creationSettings.Orientation, creationSettings);
             }
 
