@@ -176,6 +176,9 @@ namespace MHServerEmu.Games.Powers
 
         public virtual void OnDeallocate()
         {
+            if (_activationPhase != PowerActivationPhase.Inactive)
+                Logger.Warn($"The following Power is being destructed while still in an ActivationPhase other than Inactive!\nPower: [{this}]\nOwner: [{Owner}]");
+
             Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
             Game.GameEventScheduler.CancelAllEvents(_pendingActivationPhaseEvents);
             Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
