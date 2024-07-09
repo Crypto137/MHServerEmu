@@ -3,6 +3,8 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
@@ -52,6 +54,18 @@ namespace MHServerEmu.Commands.Implementations
             playerConnection.AOI.Update(playerConnection.LastPosition, true);
 
             return "AOI updated.";
+        }
+
+        [Command("refs", "Prints interest references for the current player.\nUsage: aoi refs", AccountUserLevel.Admin)]
+        public string Refs(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+            Avatar avatar = player.CurrentAvatar;
+
+            return $"Interest References\n(Player) {player.InterestReferences}\n(Avatar) {avatar.InterestReferences}";
         }
     }
 }

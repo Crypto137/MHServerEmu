@@ -127,6 +127,8 @@ namespace MHServerEmu.Games.Entities
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
+        public InterestReferences InterestReferences { get; } = new();
+
         #region Flag Properties
 
         public virtual bool IsDormant { get => _flags.HasFlag(EntityFlags.Dormant); }
@@ -498,7 +500,10 @@ namespace MHServerEmu.Games.Entities
             AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
             Properties.OnEntityChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
-            // TODO: InterestReferences
+
+            AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
+            AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
+            //InterestReferences.Track(this, player.Id, operation, gainedPolicies, lostPolicies);
         }
 
         public virtual void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
