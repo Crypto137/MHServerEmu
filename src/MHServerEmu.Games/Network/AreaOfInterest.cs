@@ -161,7 +161,7 @@ namespace MHServerEmu.Games.Network
             if (_trackedEntities.ContainsKey(entity.Id))
                 Logger.WarnReturn(false, $"AddClientIndependentEntity(): Attempting to add a client independent entity {entity} that is already tracked by this AOI");
 
-            _trackedEntities[entity.Id] = new(_currentFrame, AOINetworkPolicyValues.AOIChannelClientIndependent);
+            SetEntityInterestPolicies(entity, InterestTrackOperation.Add, AOINetworkPolicyValues.AOIChannelClientIndependent);
             return true;
         }
 
