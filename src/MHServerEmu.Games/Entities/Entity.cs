@@ -503,7 +503,7 @@ namespace MHServerEmu.Games.Entities
 
             AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
             AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
-            //InterestReferences.Track(this, player.Id, operation, gainedPolicies, lostPolicies);
+            InterestReferences.Track(this, player.Id, operation, gainedPolicies, lostPolicies);
         }
 
         public virtual void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
