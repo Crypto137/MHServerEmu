@@ -87,14 +87,14 @@ namespace MHServerEmu.Games.Entities
             populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
         }
 
-        internal void Trigger(EntityTriggerEnum trigger)
+        public void Trigger(EntityTriggerEnum trigger)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"Trigger(): {this}");
         }
 
-        internal void KillSummonedInventory()
+        public void KillSummonedInventory()
         {
-            throw new NotImplementedException();
+            Logger.Debug($"KillSummonedInventory(): {this}");
         }
     }
 }
