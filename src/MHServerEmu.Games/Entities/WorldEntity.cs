@@ -347,6 +347,21 @@ namespace MHServerEmu.Games.Entities
                 SetStatus(EntityStatus.ExitingWorld, false);
         }
 
+        public SimulateResult UpdateSimulationState()
+        {
+            // Never simulate when not in the world
+            if (IsInWorld == false)
+                return SetSimulated(false);
+
+            // Simulate if the prototype is flagged as always simulated
+            if (WorldEntityPrototype?.AlwaysSimulated == true)
+                return SetSimulated(true);
+
+            // Simulate is there are any player interested in this world entity
+            return SetSimulated(InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelProximity) ||
+                                InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelClientIndependent));
+        }
+
         public virtual bool CanRotate()
         {
             return true;
@@ -438,7 +453,7 @@ namespace MHServerEmu.Games.Entities
             if (Cell != null && flags.HasFlag(ChangePositionFlags.SkipAOI) == false)
             {
                 // TODO: Notify if distance is far enough, similar to AOI updates
-                NotifyPlayers(true);
+                UpdateInterestPolicies(true);
             }
 
             return ChangePositionResult.PositionChanged;
@@ -1485,6 +1500,12 @@ namespace MHServerEmu.Games.Entities
 
         #region Event Handlers
 
+        public override void OnChangePlayerAOI(Player player, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
+        {
+            base.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
+            UpdateSimulationState();
+        }
+
         public virtual void OnEnteredWorld(EntitySettings settings)
         {
             if (CanInfluenceNavigationMesh())
@@ -1492,18 +1513,17 @@ namespace MHServerEmu.Games.Entities
 
             PowerCollection?.OnOwnerEnteredWorld();
 
-            NotifyPlayers(true, settings);
+            UpdateInterestPolicies(true, settings);
 
-            // TODO: Simulate only world entities that have interest references
-            SetSimulated(true);
+            UpdateSimulationState();
         }
 
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
-            NotifyPlayers(false);
+            UpdateInterestPolicies(false);
 
-            SetSimulated(false);
+            UpdateSimulationState();
         }
 
         public virtual void OnDramaticEntranceEnd() { }

@@ -300,7 +300,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInGame) return;
 
             SetStatus(EntityStatus.InGame, true);
-            NotifyPlayers(true);
+            UpdateInterestPolicies(true);
 
             // Put all inventory entities into the game as well
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -316,7 +316,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void ExitGame()
         {
             SetStatus(EntityStatus.InGame, false);
-            NotifyPlayers(false);
+            UpdateInterestPolicies(false);
 
             // Remove contained entities
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -412,11 +412,24 @@ namespace MHServerEmu.Games.Entities
 
         #region AOI
 
-        public void NotifyPlayers(bool notifyAllPlayers, EntitySettings settings = null)
+        public void UpdateInterestPolicies(bool updateForAllPlayers, EntitySettings settings = null)
         {
-            // TODO: Use InterestReferences to filter to just players who are already interested in this entity
-            foreach (Player player in new PlayerIterator(Game))
-                player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+            if (updateForAllPlayers)
+            {
+                // Update interest policies for all players in the game (slow).
+                foreach (Player player in new PlayerIterator(Game))
+                    player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+            }
+            else
+            {
+                // Update only players who are already interested in this entity.
+                // This is what should be used to remove entities if possible.
+                foreach (ulong playerId in InterestReferences.PlayerIds)
+                {
+                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                    player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+                }
+            }
         }
 
         #endregion
