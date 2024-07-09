@@ -633,7 +633,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             }
             */
 
-            entity.NotifyPlayers(true, settings);
+            entity.UpdateInterestPolicies(true, settings);
 
             return true;
         }
@@ -649,7 +649,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             if (entity == null) return Logger.WarnReturn(false, "PostRemove(): entity == null");
 
             entity.OnSelfRemovedFromOtherInventory(prevInvLoc);
-            entity.NotifyPlayers(true);
+            entity.UpdateInterestPolicies(true);
 
             return true;
         }

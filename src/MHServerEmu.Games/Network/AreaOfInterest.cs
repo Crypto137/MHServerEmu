@@ -161,7 +161,7 @@ namespace MHServerEmu.Games.Network
             if (_trackedEntities.ContainsKey(entity.Id))
                 Logger.WarnReturn(false, $"AddClientIndependentEntity(): Attempting to add a client independent entity {entity} that is already tracked by this AOI");
 
-            _trackedEntities[entity.Id] = new(_currentFrame, AOINetworkPolicyValues.AOIChannelClientIndependent);
+            SetEntityInterestPolicies(entity, InterestTrackOperation.Add, AOINetworkPolicyValues.AOIChannelClientIndependent);
             return true;
         }
 
@@ -175,7 +175,13 @@ namespace MHServerEmu.Games.Network
         {
             _trackedAreas.Clear();
             _trackedCells.Clear();
-            _trackedEntities.Clear();
+
+            foreach (var kvp in _trackedEntities)
+            {
+                Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
+                if (entity != null)
+                    SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+            }
 
             _currentFrame = 0;
             CellsInRegion = 0;
@@ -415,7 +421,7 @@ namespace MHServerEmu.Games.Network
 
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
         {
-            _trackedEntities.Add(entity.Id, new(_currentFrame, interestPolicies));
+            SetEntityInterestPolicies(entity, InterestTrackOperation.Add, interestPolicies, interestPolicies);
 
             // Check inventory for visibility
             Inventory inventory = entity.InventoryLocation.GetInventory();
@@ -443,7 +449,7 @@ namespace MHServerEmu.Games.Network
                 SendMessage(NetMessageFullInWorldHierarchyUpdateBegin.CreateBuilder().SetIdEntity(avatar.Id).Build());
 
             // Remove
-            _trackedEntities.Remove(entity.Id);
+            SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
 
             // Update contained entities
             ConsiderContainedEntities(entity, InterestTrackOperation.Remove);
@@ -585,6 +591,35 @@ namespace MHServerEmu.Games.Network
                 return AOINetworkPolicyValues.AOIChannelNone;
 
             return interestStatus.InterestPolicies;
+        }
+
+        private bool SetEntityInterestPolicies(Entity entity, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone,
+            AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
+        {
+            AOINetworkPolicyValues previousInterestPolicies = GetCurrentInterestPolicies(entity.Id);
+
+            if (operation == InterestTrackOperation.Add)
+            {
+                if (newInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                    return Logger.WarnReturn(false, $"SetEntityInterestPolicies(): Attempting to add entity {entity} with not interest policies specified");
+
+                _trackedEntities[entity.Id] = new(_currentFrame, newInterestPolicies);
+            }
+            else if (operation == InterestTrackOperation.Remove)
+            {
+                if (_trackedEntities.Remove(entity.Id) == false)
+                    return Logger.WarnReturn(false, $"SetEntityInterestPolicies(): Attempting to remove entity {entity} that is not tracked by this AOI");
+            }
+            else
+            {
+                return Logger.WarnReturn(false, $"SetEntityInterestPolicies(): Incompatible operation {operation} for entity {entity}");
+            }
+
+            // Call AOI event handlers on the entity
+            Player player = _playerConnection.Player;
+            entity.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
+            entity.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
+            return true;
         }
 
         /// <summary>

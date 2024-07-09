@@ -127,6 +127,8 @@ namespace MHServerEmu.Games.Entities
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
 
+        public InterestReferences InterestReferences { get; } = new();
+
         #region Flag Properties
 
         public virtual bool IsDormant { get => _flags.HasFlag(EntityFlags.Dormant); }
@@ -298,7 +300,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInGame) return;
 
             SetStatus(EntityStatus.InGame, true);
-            NotifyPlayers(true);
+            UpdateInterestPolicies(true);
 
             // Put all inventory entities into the game as well
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -314,7 +316,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void ExitGame()
         {
             SetStatus(EntityStatus.InGame, false);
-            NotifyPlayers(false);
+            UpdateInterestPolicies(false);
 
             // Remove contained entities
             foreach (Inventory inventory in new InventoryIterator(this))
@@ -410,11 +412,24 @@ namespace MHServerEmu.Games.Entities
 
         #region AOI
 
-        public void NotifyPlayers(bool notifyAllPlayers, EntitySettings settings = null)
+        public void UpdateInterestPolicies(bool updateForAllPlayers, EntitySettings settings = null)
         {
-            // TODO: Use InterestReferences to filter to just players who are already interested in this entity
-            foreach (Player player in new PlayerIterator(Game))
-                player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+            if (updateForAllPlayers)
+            {
+                // Update interest policies for all players in the game (slow).
+                foreach (Player player in new PlayerIterator(Game))
+                    player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+            }
+            else
+            {
+                // Update only players who are already interested in this entity.
+                // This is what should be used to remove entities if possible.
+                foreach (ulong playerId in InterestReferences.PlayerIds)
+                {
+                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                    player?.PlayerConnection.AOI.ConsiderEntity(this, settings);
+                }
+            }
         }
 
         #endregion
@@ -498,7 +513,10 @@ namespace MHServerEmu.Games.Entities
             AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
             Properties.OnEntityChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
-            // TODO: InterestReferences
+
+            AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
+            AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
+            InterestReferences.Track(this, player.Id, operation, gainedPolicies, lostPolicies);
         }
 
         public virtual void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
