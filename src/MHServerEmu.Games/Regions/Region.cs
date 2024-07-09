@@ -828,9 +828,9 @@ namespace MHServerEmu.Games.Regions
             throw new NotImplementedException();
         }
 
-        internal PrototypeId GetDifficultyTierRef()
+        public PrototypeId GetDifficultyTierRef()
         {
-            throw new NotImplementedException();
+            return (PrototypeId)DifficultyTier.Normal; // TODO PropertyCollection[PropertyEnum.DifficultyTier];
         }
 
         public void Visited()
