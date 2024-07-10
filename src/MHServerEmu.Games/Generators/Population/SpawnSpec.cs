@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -10,6 +11,8 @@ namespace MHServerEmu.Games.Generators.Population
 {
     public class SpawnSpec
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public ulong Id { get; }
         public SpawnGroup Group { get; set; }
         public PrototypeId EntityRef { get; set; }
@@ -45,16 +48,19 @@ namespace MHServerEmu.Games.Generators.Population
             Properties = new();
         }
 
-        public void Spawn()
+        public bool Spawn()
         {
-            if (Group == null) return;
+            if (Group == null) return false;
             Transform3 transform = Group.Transform * Transform;
             Vector3 position = transform.Translation;
             Orientation orientation = transform.Orientation;
 
             Region region = Group.PopulationManager.Region;
             Game game = region.Game;
+
             Cell cell = region.GetCellAtPosition(position);
+            if (cell == null) return Logger.WarnReturn(false, "Spawn(): cell == null");
+
             Area area = cell.Area;
 
             EntitySettings settings = new();
@@ -91,6 +97,7 @@ namespace MHServerEmu.Games.Generators.Population
             settings.SpawnSpec = this;
 
             ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;
+            return true;
         }
 
         public static bool? SnapToFloorConvert(bool overrideSnapToFloor, bool overrideSnapToFloorValue)
