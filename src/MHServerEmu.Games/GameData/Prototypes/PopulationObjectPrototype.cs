@@ -5,7 +5,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
-using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Populations;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {

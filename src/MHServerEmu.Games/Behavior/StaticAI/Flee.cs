@@ -6,7 +6,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Games.Generators;
 using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Games.Behavior.StaticAI

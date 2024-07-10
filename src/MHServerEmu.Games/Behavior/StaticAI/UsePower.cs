@@ -7,7 +7,6 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Games.Generators;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Entities.Locomotion;

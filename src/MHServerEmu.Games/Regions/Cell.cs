@@ -10,8 +10,8 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
-using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions

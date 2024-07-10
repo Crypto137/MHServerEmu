@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Games.Generators.Population;
+﻿using MHServerEmu.Games.Populations;
 
 namespace MHServerEmu.Games.Events.LegacyImplementations
 {

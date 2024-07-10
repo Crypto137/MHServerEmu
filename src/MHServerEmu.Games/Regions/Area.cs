@@ -5,13 +5,13 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.DRAG;
+using MHServerEmu.Games.DRAG.Generators.Areas;
+using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators;
-using MHServerEmu.Games.Generators.Areas;
-using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.Generators.Regions;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions

@@ -2,9 +2,9 @@
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities

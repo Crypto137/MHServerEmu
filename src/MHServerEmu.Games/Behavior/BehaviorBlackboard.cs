@@ -3,7 +3,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Behavior

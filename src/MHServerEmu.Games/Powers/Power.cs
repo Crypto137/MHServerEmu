@@ -17,8 +17,8 @@ using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -3197,11 +3197,11 @@ namespace MHServerEmu.Games.Powers
                 aabb.Max.Z = float.MaxValue;
                 aabb.Min.Z = -float.MaxValue;
 
-                region.GetEntitiesInVolume(potentialTargetList, aabb, new(Generators.EntityRegionSPContextFlags.ActivePartition));
+                region.GetEntitiesInVolume(potentialTargetList, aabb, new(EntityRegionSPContextFlags.ActivePartition));
                 return;
             }
 
-            region.GetEntitiesInVolume(potentialTargetList, new Sphere(position, radius), new(Generators.EntityRegionSPContextFlags.ActivePartition));
+            region.GetEntitiesInVolume(potentialTargetList, new Sphere(position, radius), new(EntityRegionSPContextFlags.ActivePartition));
         }
 
         private static bool GetNextTargetInAOE(List<WorldEntity> potentialTargetList, ref int index, bool pickRandom, GRandom random, out WorldEntity target)
@@ -3297,7 +3297,7 @@ namespace MHServerEmu.Games.Powers
             Sphere sphere = new(userPosition + offset, 25f);
 
             // Look for a target in the volume
-            foreach (WorldEntity target in region.IterateEntitiesInVolume(sphere, new(Generators.EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity target in region.IterateEntitiesInVolume(sphere, new(EntityRegionSPContextFlags.ActivePartition)))
             {
                 if (IsValidTarget(powerProto, user, userAllianceProto, target))
                 {

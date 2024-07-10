@@ -8,7 +8,6 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {

@@ -7,7 +7,6 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Tables;
-using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
