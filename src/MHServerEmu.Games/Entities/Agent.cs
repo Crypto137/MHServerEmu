@@ -613,11 +613,6 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        private void ScheduleRandomWakeStart(int wakeRandomStartMS)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region Event Handlers
@@ -847,5 +842,14 @@ namespace MHServerEmu.Games.Entities
                 foreach(var node in Locomotor.LocomotionState.PathNodes)
                     EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
         }
+
+        #region Scheduled Events
+
+        private void ScheduleRandomWakeStart(int wakeRandomStartMS)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

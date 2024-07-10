@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -101,6 +100,9 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly InvasiveListNodeCollection<Entity> _entityListNodes = new(3);
+
+        private readonly EventGroup _pendingEvents = new();
+
         private readonly EventPointer<ScheduledLifespanEvent> _scheduledLifespanEvent = new();
         private readonly EventPointer<ScheduledDestroyEvent> _scheduledDestroyEvent = new();
 
@@ -109,9 +111,10 @@ namespace MHServerEmu.Games.Entities
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
 
-        public ulong RegionId { get; set; } = 0;
-        public Game Game { get; set; } 
+        public Game Game { get; set; }
         public EntityStatus Status { get; set; }
+        public bool IsInGame { get => TestStatus(EntityStatus.InGame); }
+        public bool IsDestroyed { get => TestStatus(EntityStatus.Destroyed); }
 
         public ReplicatedPropertyCollection Properties { get; set; }
 
@@ -119,15 +122,20 @@ namespace MHServerEmu.Games.Entities
         public virtual ulong PartyId { get { var ownerPlayer = GetOwnerOfType<Player>(); return ownerPlayer != null ? ownerPlayer.PartyId : 0; } }
 
         public EntityPrototype Prototype { get; private set; }
-        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
-        public virtual AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
         public PrototypeId PrototypeDataRef { get; private set; }
+        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
+
+        public virtual AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
+        public InterestReferences InterestReferences { get; } = new();
 
         public InventoryCollection InventoryCollection { get; } = new();
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
+        public bool IsRootOwner { get => OwnerId == 0; }
 
-        public InterestReferences InterestReferences { get; } = new();
+        public TimeSpan TotalLifespan { get; private set; }
+
+        public ulong RegionId { get; set; } = 0;    // REMOVEME: non-world entities should not have a region
 
         #region Flag Properties
 
@@ -186,15 +194,8 @@ namespace MHServerEmu.Games.Entities
 
         public int CurrentStackSize { get => Properties[PropertyEnum.InventoryStackCount]; }
         public int MaxStackSize { get => Properties[PropertyEnum.InventoryStackSizeMax]; }
-        public bool IsRootOwner { get => OwnerId == 0; }
-        public bool IsInGame { get => TestStatus(EntityStatus.InGame); }
-        public bool IsDestroyed { get => TestStatus(EntityStatus.Destroyed); }
 
         #endregion
-
-        public TimeSpan TotalLifespan { get; private set; }
-
-        private EventGroup _pendingEvents = new();
 
         public Entity(Game game)
         {
@@ -207,7 +208,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual bool Initialize(EntitySettings settings)
-        {   
+        {
             if (Game == null) return Logger.WarnReturn(false, "Initialize(): Game == null");
 
             Id = settings.Id;
@@ -231,10 +232,10 @@ namespace MHServerEmu.Games.Entities
 
             // We use IPropertyChangeWatcher implementation as a replacement for multiple inheritance
             Attach(Properties);
-            
+
             if (Prototype.Properties != null)
-                Properties.FlattenCopyFrom(Prototype.Properties, true); 
-            
+                Properties.FlattenCopyFrom(Prototype.Properties, true);
+
             if (settings.Properties != null)
                 Properties.FlattenCopyFrom(settings.Properties, false);
 
@@ -346,7 +347,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsSimulated != simulated)
             {
-                if (simulated == true &&  (this is not WorldEntity worldEntity || worldEntity.IsInWorld == false))
+                if (simulated == true && (this is not WorldEntity worldEntity || worldEntity.IsInWorld == false))
                     Logger.Debug($"SetSimulated(): An entity must be in the world to be simulated {ToString()}");
                 ModifyCollectionMembership(EntityCollection.Simulated, simulated);
                 return simulated ? SimulateResult.Set : SimulateResult.Clear;
@@ -357,47 +358,8 @@ namespace MHServerEmu.Games.Entities
         public virtual void Destroy()
         {
             CancelScheduledLifespanExpireEvent();
-            //CancelDestroyEvent();
+            CancelDestroyEvent();
             Game?.EntityManager?.DestroyEntity(this);
-        }
-
-        public virtual bool ScheduleDestroyEvent(TimeSpan delay)
-        {
-            if (TestStatus(EntityStatus.PendingDestroy))
-                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already pending destroy");
-
-            if (TestStatus(EntityStatus.Destroyed))
-                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already destroyed");
-
-            if (_scheduledDestroyEvent.IsValid)
-            {
-                if (_scheduledDestroyEvent.Get().FireTime > (Game.CurrentTime + delay))
-                    Game?.GameEventScheduler?.RescheduleEvent(_scheduledDestroyEvent, delay);
-            }
-            else
-            {
-                ScheduleEntityEvent(_scheduledDestroyEvent, delay);
-            }
-
-            return true;
-        }
-
-        public void CancelDestroyEvent()
-        {
-            if (_scheduledDestroyEvent.IsValid)
-                Game?.GameEventScheduler?.CancelEvent(_scheduledDestroyEvent);
-        }
-
-        public bool ScheduledDestroyCallback()
-        {
-            if (TestStatus(EntityStatus.PendingDestroy))
-                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already pending destroy");
-
-            if (TestStatus(EntityStatus.Destroyed))
-                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already destroyed");
-
-            Destroy();
-            return true;
         }
 
         public bool DestroyContained()
@@ -408,6 +370,11 @@ namespace MHServerEmu.Games.Entities
                 inventory.DestroyContained();
 
             return true;
+        }
+
+        public bool IsAPrototype(PrototypeId protoRef)
+        {
+            return GameDatabase.DataDirectory.PrototypeIsAPrototype(PrototypeDataRef, protoRef);
         }
 
         #region AOI
@@ -433,11 +400,6 @@ namespace MHServerEmu.Games.Entities
         }
 
         #endregion
-
-        public bool IsAPrototype(PrototypeId protoRef)
-        {
-            return GameDatabase.DataDirectory.PrototypeIsAPrototype(PrototypeDataRef, protoRef);
-        }
 
         #region Event Handlers
 
@@ -788,10 +750,10 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (TestStatus(EntityStatus.Destroyed))
                         return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add destroyed entity {ToString()} to collection {collection}");
-                     
+
                     if (IsInGame == false)
                         return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of game entity {ToString()} to collection {collection}");
-      
+
                     if (this is WorldEntity worldEntity && worldEntity.IsInWorld == false)
                         return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of world entity {ToString()} to collection {collection}");
                 }
@@ -861,6 +823,11 @@ namespace MHServerEmu.Games.Entities
             TotalLifespan = lifespan;
         }
 
+        public void CancelScheduledLifespanExpireEvent()
+        {
+            Game.GameEventScheduler.CancelEvent(_scheduledLifespanEvent);
+        }
+
         public void ScaleRemainingLifespan(float scaleFactor)
         {
             if (scaleFactor < 0.0f) return;
@@ -871,11 +838,6 @@ namespace MHServerEmu.Games.Entities
                 TimeSpan remainingLifespan = _scheduledLifespanEvent.Get().FireTime - game.CurrentTime;
                 ResetLifespan(remainingLifespan * scaleFactor);
             }
-        }
-
-        public void CancelScheduledLifespanExpireEvent()
-        {
-            Game.GameEventScheduler.CancelEvent(_scheduledLifespanEvent);
         }
 
         public TimeSpan GetRemainingLifespan()
@@ -935,6 +897,47 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Scheduled Events
+
+        public virtual bool ScheduleDestroyEvent(TimeSpan delay)
+        {
+            if (TestStatus(EntityStatus.PendingDestroy))
+                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already pending destroy");
+
+            if (TestStatus(EntityStatus.Destroyed))
+                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Entity {this} is already destroyed");
+
+            if (_scheduledDestroyEvent.IsValid)
+            {
+                if (_scheduledDestroyEvent.Get().FireTime > (Game.CurrentTime + delay))
+                    Game?.GameEventScheduler?.RescheduleEvent(_scheduledDestroyEvent, delay);
+            }
+            else
+            {
+                ScheduleEntityEvent(_scheduledDestroyEvent, delay);
+            }
+
+            return true;
+        }
+
+        public void CancelDestroyEvent()
+        {
+            if (_scheduledDestroyEvent.IsValid)
+                Game?.GameEventScheduler?.CancelEvent(_scheduledDestroyEvent);
+        }
+
+        public bool ScheduledDestroyCallback()
+        {
+            if (TestStatus(EntityStatus.PendingDestroy))
+                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already pending destroy");
+
+            if (TestStatus(EntityStatus.Destroyed))
+                return Logger.WarnReturn(false, $"ScheduledDestroyCallback(): Entity {this} is already destroyed");
+
+            Destroy();
+            return true;
+        }
+
         private class ScheduledLifespanEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.OnLifespanExpired();
@@ -944,5 +947,7 @@ namespace MHServerEmu.Games.Entities
         {
             protected override CallbackDelegate GetCallback() => (t) => t.ScheduledDestroyCallback();
         }
+
+        #endregion
     }
 }

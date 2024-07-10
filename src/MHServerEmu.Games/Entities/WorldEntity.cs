@@ -64,11 +64,11 @@ namespace MHServerEmu.Games.Entities
         NotChanged,
     }
 
-    public class WorldEntity : Entity
+    public partial class WorldEntity : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
+        private readonly EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
 
         private AlliancePrototype _allianceProto;
         private Transform3 _transform = Transform3.Identity();
@@ -281,14 +281,6 @@ namespace MHServerEmu.Games.Entities
                 CancelDestroyEvent();
                 base.Destroy();
             }
-        }
-
-        public override bool ScheduleDestroyEvent(TimeSpan delay)
-        {
-            if (IsDestroyProtectedEntity)
-                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Trying to schedule destruction of a destroy-protected entity {this}");
-
-            return base.ScheduleDestroyEvent(delay);
         }
 
         #region World and Positioning
@@ -527,17 +519,6 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public void ScheduleExitWorldEvent(TimeSpan time)
-        {
-            if (_exitWorldEvent.IsValid)
-            {
-                if (_exitWorldEvent.Get().FireTime > Game.CurrentTime + time)
-                    Game.GameEventScheduler.RescheduleEvent(_exitWorldEvent, time);
-            }
-            else
-                ScheduleEntityEvent(_exitWorldEvent, time);
-        }
-
         public Vector3 GetVectorFrom(WorldEntity other)
         {
             if (other == null) return Vector3.Zero;
@@ -566,11 +547,6 @@ namespace MHServerEmu.Games.Entities
 
             if (oldLocation.Cell != newLocation.Cell)
                 OnCellChanged(oldLocation, newLocation, flags);
-        }
-
-        protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>
-        {
-            protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.ExitWorld();
         }
 
         #endregion
@@ -1806,5 +1782,33 @@ namespace MHServerEmu.Games.Entities
             }
             return false;
         }
+
+        #region Scheduled Events
+
+        public override bool ScheduleDestroyEvent(TimeSpan delay)
+        {
+            if (IsDestroyProtectedEntity)
+                return Logger.WarnReturn(false, $"ScheduleDestroyEvent(): Trying to schedule destruction of a destroy-protected entity {this}");
+
+            return base.ScheduleDestroyEvent(delay);
+        }
+
+        public void ScheduleExitWorldEvent(TimeSpan time)
+        {
+            if (_exitWorldEvent.IsValid)
+            {
+                if (_exitWorldEvent.Get().FireTime > Game.CurrentTime + time)
+                    Game.GameEventScheduler.RescheduleEvent(_exitWorldEvent, time);
+            }
+            else
+                ScheduleEntityEvent(_exitWorldEvent, time);
+        }
+
+        protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.ExitWorld();
+        }
+
+        #endregion
     }
 }
