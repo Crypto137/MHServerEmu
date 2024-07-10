@@ -2552,10 +2552,9 @@ namespace MHServerEmu.Games.Powers
                 Owner.ConditionCollection.AddCondition(magikUltimateCondition);
 
                 // Schedule condition end
-                Player player = Owner.GetOwnerOfType<Player>();
-                EventPointer<OLD_EndMagikUltimateEvent> endEventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(endEventPointer, TimeSpan.FromSeconds(20));
-                endEventPointer.Get().PlayerConnection = player.PlayerConnection;
+                EventPointer<TEMP_RemoveConditionEvent> removeConditionEvent = new();
+                Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
+                removeConditionEvent.Get().Initialize(Owner.Id, 777);
             }
 
             return true;
