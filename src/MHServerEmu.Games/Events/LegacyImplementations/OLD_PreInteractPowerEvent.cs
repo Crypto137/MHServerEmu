@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
@@ -28,26 +27,17 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             Avatar avatar = _playerConnection.Player.CurrentAvatar;
             var world = _interactObject.Prototype as WorldEntityPrototype;
             if (world == null) return false;
-            var preInteractPower = world.PreInteractPower;
-            if (preInteractPower == PrototypeId.Invalid) return false;
-            Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preInteractPower)}");
+            var preInteractPowerRef = world.PreInteractPower;
+            if (preInteractPowerRef == PrototypeId.Invalid) return false;
+            Logger.Trace($"OnPreInteractPower {preInteractPowerRef.GetName()}");
 
             PowerIndexProperties indexProps = new(0, avatar.CharacterLevel, avatar.CombatLevel);
-            avatar.AssignPower(world.PreInteractPower, indexProps);
+            Power preInteractPower = avatar.AssignPower(preInteractPowerRef, indexProps);
 
-            OLD_ActivatePowerArchive activatePower = new()
-            {
-                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
-                Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeRef | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
-                UserEntityId = avatar.Id,
-                TargetEntityId = 0,
-                PowerPrototypeRef = preInteractPower,
-                UserPosition = avatar.RegionLocation.Position,
-                PowerRandomSeed = 2222,
-                FXRandomSeed = 2222
-            };
+            PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
+            settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
+            avatar.ActivatePower(preInteractPowerRef, ref settings);
 
-            avatar.Game.NetworkManager.SendMessageToInterested(activatePower.ToProtobuf(), avatar, AOINetworkPolicyValues.AOIChannelProximity);
             return true;
         }
     }

@@ -434,48 +434,6 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Death Hack
-
-        protected class RespawnEvent : CallMethodEvent<Entity>
-            { protected override CallbackDelegate GetCallback() => t => t.Respawn(); }
-
-        public void Kill(ulong killerId)
-        {
-            _flags |= EntityFlags.IsDead;
-            Properties[PropertyEnum.IsDead] = true;
-            Properties[PropertyEnum.NoEntityCollide] = true;
-
-            var killMessage = NetMessageEntityKill.CreateBuilder()
-                .SetIdEntity(Id)
-                .SetIdKillerEntity(killerId)
-                .SetKillFlags(0)
-                .Build();
-
-            Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
-
-            EventPointer<RespawnEvent> eventPointer = new();
-            Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
-            eventPointer.Get().Initialize(this);
-
-            // LOOT
-            if (this is Agent agent)
-                Game.LootGenerator.DropRandomLoot(agent);
-        }
-
-        public void Respawn()
-        {
-            Logger.Debug($"Respawn(): {this}");
-
-            ExitGame();
-            _flags &= ~EntityFlags.IsDead;
-            Properties[PropertyEnum.IsDead] = false;
-            Properties[PropertyEnum.NoEntityCollide] = false;
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            EnterGame();
-        }
-
-        #endregion
-
         public bool IsAPrototype(PrototypeId protoRef)
         {
             return GameDatabase.DataDirectory.PrototypeIsAPrototype(PrototypeDataRef, protoRef);
@@ -965,6 +923,14 @@ namespace MHServerEmu.Games.Entities
             if (scheduler == null) return;
             scheduler.ScheduleEvent(eventPointer, lifespan, _pendingEvents);
             eventPointer.Get().Initialize(this, param1, param2, param3);
+        }
+
+        public void ScheduleEntityEventCustom<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
+            where TEvent : TargetedScheduledEvent<Entity>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
         }
 
         #endregion

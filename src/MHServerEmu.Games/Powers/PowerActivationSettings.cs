@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Powers
 
         public readonly TimeSpan CreationTime = Game.Current != null ? Game.Current.CurrentTime : Clock.GameTime;
 
-        public OLD_PowerResults PowerResults = null;
+        public PowerResults PowerResults = null;
         public TimeSpan UnknownTimeSpan = TimeSpan.Zero;
 
         public PowerActivationSettings(ulong targetEntityId, Vector3 targetPosition, Vector3 userPosition)

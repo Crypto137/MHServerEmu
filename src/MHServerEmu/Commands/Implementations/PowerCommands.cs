@@ -75,27 +75,6 @@ namespace MHServerEmu.Commands.Implementations
             return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} unassigned from the current avatar";
         }
 
-        [Command("activate", "Activates the specified power assigned to the current avatar.\nUsage: power activate [pattern]", AccountUserLevel.Admin)]
-        public string Activate(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help power activate' to get help.";
-
-            PrototypeId powerProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Power, @params[0], client);
-            if (powerProtoRef == PrototypeId.Invalid) return string.Empty;
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
-
-            Power power = avatar.GetPower(powerProtoRef);
-            if (power == null)
-                return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} is not assigned to the current avatar";
-
-            avatar.TEMP_SendActivatePowerMessage(power.PrototypeDataRef);
-
-            return $"Activating power {GameDatabase.GetPrototypeName(powerProtoRef)}";
-        }
-
         [Command("status", "Returns power status for the current avatar.\nUsage: power status", AccountUserLevel.Admin)]
         public string Status(string[] @params, FrontendClient client)
         {

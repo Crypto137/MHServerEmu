@@ -87,19 +87,12 @@ namespace MHServerEmu.Commands.Implementations
                 case AvatarPrototypeId.Thor:
                     const PrototypeId dancePowerRef = (PrototypeId)773103106671775187;  // Powers/Emotes/EmoteDance.prototype
 
-                    if (playerConnection.IsUsingNewPowerMessageHandler)
-                    {
-                        Power dancePower = avatar.GetPower(dancePowerRef);
-                        if (dancePower == null) return "Dance power is not assigned to the current avatar.";
+                    Power dancePower = avatar.GetPower(dancePowerRef);
+                    if (dancePower == null) return "Dance power is not assigned to the current avatar.";
 
-                        PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
-                        settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
-                        avatar.ActivatePower(dancePowerRef, ref settings);
-                    }
-                    else
-                    {
-                        avatar.TEMP_SendActivatePowerMessage(dancePowerRef);  
-                    }
+                    PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
+                    settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
+                    avatar.ActivatePower(dancePowerRef, ref settings);
 
                     return $"{avatarPrototypeId} begins to dance";
                 default:

@@ -559,7 +559,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
 
-                    Logger.Trace($"AssignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
+                    //Logger.Trace($"AssignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
 
                     if (AssignPower(triggeredPowerRef, indexProps, powerProtoRef, false) == null)
                         return Logger.WarnReturn(false, "AssignTriggeredPowers(): AssignPower() == null");
@@ -757,7 +757,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                     if (triggeredPowerRef == powerProtoRef)
                         continue;
 
-                    Logger.Trace($"UnassignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
+                    //Logger.Trace($"UnassignTriggeredPowers(): {GameDatabase.GetPrototypeName(triggeredPowerRef)} for {powerProto}");
 
                     UnassignPower(triggeredPowerRef, false);
                 }

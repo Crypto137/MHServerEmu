@@ -818,35 +818,15 @@ namespace MHServerEmu.Games.Entities
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
         {
-            if (PlayerConnection.IsUsingNewPowerMessageHandler)
-            {
-                Power avatarSwapChannel = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower);
+            Power avatarSwapChannel = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower);
+            if (avatarSwapChannel == null) return Logger.WarnReturn(false, "BeginSwitchAvatar(): avatarSwapChannel == null");
 
-                PowerActivationSettings settings = new(CurrentAvatar.Id, CurrentAvatar.RegionLocation.Position, CurrentAvatar.RegionLocation.Position);
-                settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
-                CurrentAvatar.ActivatePower(avatarSwapChannel.PrototypeDataRef, ref settings);
+            PowerActivationSettings settings = new(CurrentAvatar.Id, CurrentAvatar.RegionLocation.Position, CurrentAvatar.RegionLocation.Position);
+            settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
+            CurrentAvatar.ActivatePower(avatarSwapChannel.PrototypeDataRef, ref settings);
 
-                Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
-                Properties[PropertyEnum.AvatarSwitchPending, avatarProtoRef] = true;
-
-                return true;
-            }
-
-            if (_switchAvatarEvent.IsValid) return false;
-
-            // Get swap out power for the current avatar
-            Power swapOutPower = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapOutPower);
-            if (swapOutPower == null) return Logger.WarnReturn(false, "BeginSwitchAvatar(): swapOutPower == null;");
-
-            // Set pending switch
             Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
             Properties[PropertyEnum.AvatarSwitchPending, avatarProtoRef] = true;
-
-            // Activate swap out power for the current avatar
-            CurrentAvatar.TEMP_SendActivatePowerMessage(swapOutPower.PrototypeDataRef);
-
-            // Schedule avatar switch for when the power ends
-            ScheduleEntityEvent(_switchAvatarEvent, swapOutPower.GetAnimationTime());
 
             return true;
         }

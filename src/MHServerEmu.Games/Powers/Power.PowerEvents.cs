@@ -366,9 +366,9 @@ namespace MHServerEmu.Games.Powers
         private bool CanTriggerPowerEventType(PowerEventType eventType, in PowerActivationSettings settings)
         {
             // TODO: Recheck this when we have a proper PowerEffectsPacket / PowerResults implementation
-            if (settings.PowerResults != null && settings.PowerResults.TargetEntityId != Entity.InvalidId)
+            if (settings.PowerResults != null && settings.PowerResults.TargetId != Entity.InvalidId)
             {
-                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.PowerResults.TargetEntityId);
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.PowerResults.TargetId);
                 if (target != null && target.Properties[PropertyEnum.DontTriggerOtherPowerEvents, (int)eventType])
                     return false;
             }

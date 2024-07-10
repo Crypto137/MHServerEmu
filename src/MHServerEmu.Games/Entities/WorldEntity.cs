@@ -68,7 +68,6 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private EventPointer<TEMP_SendActivatePowerMessageEvent> _sendActivatePowerMessageEvent = new();
         private EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
 
         private AlliancePrototype _allianceProto;
@@ -158,13 +157,6 @@ namespace MHServerEmu.Games.Entities
 
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
-
-            // HACK: Override base health to make things more reasonable with the current damage implementation
-            /*
-            float healthBaseOverride = EntityHelper.GetHealthForWorldEntity(this);
-            if (healthBaseOverride > 0f)
-                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            */
 
             Properties[PropertyEnum.CharacterLevel] = 60;
             Properties[PropertyEnum.CombatLevel] = 60;
@@ -1159,38 +1151,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool TEMP_ScheduleSendActivatePowerMessage(PrototypeId powerProtoRef, TimeSpan timeOffset)
-        {
-            if (_sendActivatePowerMessageEvent.IsValid) return false;
-            ScheduleEntityEvent(_sendActivatePowerMessageEvent, timeOffset, powerProtoRef);
-            return true;
-        }
-
-        public bool TEMP_SendActivatePowerMessage(PrototypeId powerProtoRef)
-        {
-            if (IsInWorld == false) return false;
-
-            Logger.Trace($"Activating {GameDatabase.GetPrototypeName(powerProtoRef)} for {this}");
-
-            OLD_ActivatePowerArchive activatePower = new()
-            {
-                Flags = ActivatePowerMessageFlags.TargetIsUser | ActivatePowerMessageFlags.HasTargetPosition |
-                ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasFXRandomSeed |
-                ActivatePowerMessageFlags.HasPowerRandomSeed,
-
-                PowerPrototypeRef = powerProtoRef,
-                UserEntityId = Id,
-                TargetPosition = RegionLocation.Position,
-                FXRandomSeed = (uint)Game.Random.Next(),
-                PowerRandomSeed = (uint)Game.Random.Next()
-            };
-
-            var activatePowerMessage = NetMessageActivatePower.CreateBuilder().SetArchiveData(activatePower.ToByteString()).Build();
-            Game.NetworkManager.SendMessageToInterested(activatePowerMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
-
-            return true;
-        }
-
         public string PowerCollectionToString()
         {
             StringBuilder sb = new();
@@ -1226,11 +1186,6 @@ namespace MHServerEmu.Games.Entities
                 || IsInWorld == false || IsSimulated == false
                 || IsDormant || IsUnaffectable || IsHotspot) return false;
             return true;
-        }
-
-        protected class TEMP_SendActivatePowerMessageEvent : CallMethodEventParam1<Entity, PrototypeId>
-        {
-            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).TEMP_SendActivatePowerMessage(p1);
         }
 
         #endregion

@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
 
-        private readonly EventPointer<TEMP_SendActivatePowerMessageEvent> _swapInPowerEvent = new();
+        private readonly EventPointer<ActivateSwapInPowerEvent> _activateSwapInPowerEvent = new();
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
 
         private ReplicatedVariable<string> _playerName = new(0, string.Empty);
@@ -505,7 +505,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void ScheduleSwapInPower()
         {
-            ScheduleEntityEvent(_swapInPowerEvent, TimeSpan.FromMilliseconds(700), GameDatabase.GlobalsPrototype.AvatarSwapInPower);
+            ScheduleEntityEventCustom(_activateSwapInPowerEvent, TimeSpan.FromMilliseconds(700));
+            _activateSwapInPowerEvent.Get().Initialize(this);
         }
 
         private void ScheduleRecheckContinuousPower(TimeSpan delay)
@@ -611,6 +612,25 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).CheckContinuousPower();
+        }
+
+        private class ActivateSwapInPowerEvent : TargetedScheduledEvent<Entity>
+        {
+            public void Initialize(Avatar avatar)
+            {
+                _eventTarget = avatar;
+            }
+
+            public override bool OnTriggered()
+            {
+                Avatar avatar = (Avatar)_eventTarget;
+                PrototypeId swapInPowerRef = GameDatabase.GlobalsPrototype.AvatarSwapInPower;
+
+                PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
+                settings.Flags = PowerActivationSettingsFlags.NotifyOwner;
+
+                return avatar.ActivatePower(swapInPowerRef, ref settings) == PowerUseResult.Success;
+            }
         }
 
         #endregion

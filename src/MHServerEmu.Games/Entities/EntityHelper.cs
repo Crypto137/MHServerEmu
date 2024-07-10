@@ -162,31 +162,6 @@ namespace MHServerEmu.Games.Entities
 
         }
 
-        #region HardCodeRank
-
-        public static float GetHealthForWorldEntity(WorldEntity worldEntity)
-        {
-            WorldEntityPrototype worldEntityProto = worldEntity.WorldEntityPrototype;
-
-            if (worldEntityProto is PropPrototype)
-                return 200f;
-
-            if (worldEntityProto is SpawnerPrototype || worldEntityProto is HotspotPrototype)
-                return 0f;
-
-            switch (worldEntity.GetRankPrototype().Rank)
-            {
-                case Rank.Popcorn:  return 600f;
-                case Rank.Champion: return 800f;
-                case Rank.Elite:    return 1000f;
-                case Rank.MiniBoss: return 1500f;
-                case Rank.Boss:     return 2000f;
-                default:            return 1000f;
-            }
-        }
-
-        #endregion
-
         private static PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
         {
             WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
