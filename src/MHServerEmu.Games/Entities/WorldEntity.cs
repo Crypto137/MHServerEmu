@@ -357,6 +357,10 @@ namespace MHServerEmu.Games.Entities
             if (WorldEntityPrototype?.AlwaysSimulated == true)
                 return SetSimulated(true);
 
+            // Fix for team-up AI getting disabled when they get stuck and you run away too far from them
+            if (IsTeamUpAgent)
+                return SetSimulated(true);
+
             // Simulate is there are any player interested in this world entity
             return SetSimulated(InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelProximity) ||
                                 InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelClientIndependent));
