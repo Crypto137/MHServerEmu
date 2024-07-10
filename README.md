@@ -12,23 +12,21 @@ We post development progress reports on our [blog](https://crypto137.github.io/M
 
 ## Features
 
-MHServerEmu is in early stages of development. Currently it features:
+MHServerEmu is in active development. Currently it features:
 
-- Client-server network protocol implementation.
+- Playing as any hero with all of their costumes available in version 1.52.
 
-- Basic multiplayer functionality: handling multiple clients, remote connections, chat.
+- Basic combat mechanics: using powers, dealing direct damage to enemies. More complex powers, such as those that rely on debuff effects or summoned allies, are currently not implemented.
 
-- Implementation of the proprietary static game data management system used by the game.
+- AI system for non-playable characters, such as enemies and team-ups.
 
-- Fully-featured implementation of DRAG (dynamic random area generator).
+- Fully-featured implementation of DRAG (dynamic random area generator) with procedural enemy population spawning.
 
-- Spawning of entities, including NPCs, enemies, and interactable objects, across the entire game.
+- Rudimentary loot system: items drop from enemies, and you can pick them up, but they currently do not have stats, and there is no implementation for loot tables.
 
-- Hero and costume selection.
+- Early version of the account system that saves some of your progress, such as your applied costumes and powers slotted in your action bars. Currently most data does not persist when you relog or transition between regions.
 
-- Rudimentary implementation of hero powers.
-
-- Account system with simple web API for registering new accounts.
+- Multiplayer functionality: you can see and interact with other players connected to the same server. Currently there is no instancing, and all regions are shared by all players.
 
 ## Setup
 
