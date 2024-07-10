@@ -625,7 +625,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             ulong targetId = target != null ? target.Id : 0;
             if (locomotor.FollowEntityId != targetId)
             {
-                locomotor.FollowEntity(target.Id, 0.0f);
+                locomotor.FollowEntity(targetId, 0.0f);
                 locomotor.FollowEntityMissingEvent.AddActionBack(ownerController.MissileReturnEvent);
             }
 
@@ -655,10 +655,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
 
-            ulong targetId = target.Id;
             if (target != null)
             {
-                locomotor.FollowEntity(targetId, 0.0f);
+                locomotor.FollowEntity(target.Id, 0.0f);
                 locomotor.FollowEntityMissingEvent.AddActionFront(ownerController.MissileReturnEvent);
             }
         }
