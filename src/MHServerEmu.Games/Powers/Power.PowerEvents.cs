@@ -507,9 +507,16 @@ namespace MHServerEmu.Games.Powers
         // Please keep these ordered by PowerEventActionType enum value
 
         // 1
-        private void DoPowerEventActionBodyslide()
+        private bool DoPowerEventActionBodyslide()
         {
-            Logger.Warn($"DoPowerEventActionBodyslide(): Not implemented");
+            Logger.Trace($"DoPowerEventActionBodyslide(): Owner={Owner}");
+
+            Player player = Owner.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): player == null");
+
+            Game.MovePlayerToRegion(player.PlayerConnection, (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion,
+                (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
+            return true;
         }
 
         // 2, 3
