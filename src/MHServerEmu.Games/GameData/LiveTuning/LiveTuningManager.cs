@@ -67,9 +67,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
-        public bool CopyLiveTuningData(LiveTuningData target)
+        public bool CopyLiveTuningData(LiveTuningData other)
         {
-            if (target.ChangeNum == _lastUpdateChangeNum)
+            if (other.ChangeNum == _lastUpdateChangeNum)
                 return false;
 
             lock (_liveTuningData)
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 if (_liveTuningData.ChangeNum != _lastUpdateChangeNum)
                     Logger.Warn("CopyLiveTuningData(): _liveTuningData.ChangeNum != _lastUpdateChangeNum");
 
-                _liveTuningData.Copy(target);
+                _liveTuningData.Copy(other);
                 return true;
             }
         }
