@@ -205,6 +205,8 @@ namespace MHServerEmu.Games.Entities
         public void LoadFromDBAccount(DBAccount account)
         {
             // Adjust properties
+            Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits] = account.Player.Credits;
+
             foreach (var accountAvatar in account.Avatars.Values)
             {
                 var avatarPrototypeRef = (PrototypeId)accountAvatar.RawPrototype;
@@ -339,6 +341,8 @@ namespace MHServerEmu.Games.Entities
         public void SaveToDBAccount(DBAccount account)
         {
             account.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
+
+            account.Player.Credits = Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits];
 
             foreach (Avatar avatar in IterateAvatars())
             {
