@@ -84,62 +84,194 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public static float GetLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveGlobalTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveGlobalTuningVar(tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveGlobalTuningVar(tuningVarEnum);
+            }
         }
 
         public static float GetLiveAreaTuningVar(AreaPrototype areaProto, AreaTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveAreaTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveAreaTuningVar(areaProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveAreaTuningVar(areaProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveWorldEntityTuningVar(WorldEntityPrototype worldEntityProto, WorldEntityTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveWorldEntityTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveWorldEntityTuningVar(worldEntityProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveWorldEntityTuningVar(worldEntityProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveAvatarTuningVar(AvatarPrototype avatarProto, AvatarEntityTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveAvatarTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveAvatarTuningVar(avatarProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveAvatarTuningVar(avatarProto, tuningVarEnum);
+            }
         }
 
         public static float GetLivePopObjTuningVar(PopulationObjectPrototype popObjProto, PopObjTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLivePopObjTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLivePopObjTuningVar(popObjProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLivePopObjTuningVar(popObjProto, tuningVarEnum);
+            }
         }
 
         public static float GetLivePowerTuningVar(PowerPrototype powerProto, PowerTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLivePowerTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLivePowerTuningVar(powerProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLivePowerTuningVar(powerProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveRegionTuningVar(RegionPrototype regionProto, RegionTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveRegionTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveRegionTuningVar(regionProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveRegionTuningVar(regionProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveLootTableTuningVar(LootTablePrototype lootTableProto, LootTableTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveLootTableTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveLootTableTuningVar(lootTableProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveLootTableTuningVar(lootTableProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveMissionTuningVar(MissionPrototype missionProto, MissionTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveMissionTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveMissionTuningVar(missionProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveMissionTuningVar(missionProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveConditionTuningVar(ConditionPrototype conditionProto, ConditionTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveConditionTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveConditionTuningVar(conditionProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveConditionTuningVar(conditionProto, tuningVarEnum);
+            }
         }
 
         public static float GetLivePublicEventTuningVar(PublicEventPrototype publicEventProto, PublicEventTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLivePublicEventTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLivePublicEventTuningVar(publicEventProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLivePublicEventTuningVar(publicEventProto, tuningVarEnum);
+            }
         }
 
         public static float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
         {
-            return 0f;
+            Game game = Game.Current;
+            if (game != null)
+            {
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(LiveTuningData.DefaultTuningVarValue, "GetLiveMetricsFrequencyTuningVar(): liveTuningData == null");
+                return liveTuningData.GetLiveMetricsFrequencyTuningVar(metricsFrequencyProto, tuningVarEnum);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveMetricsFrequencyTuningVar(metricsFrequencyProto, tuningVarEnum);
+            }
         }
 
         // TODO
