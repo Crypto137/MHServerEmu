@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (archive.IsPacking)
             {
                 // TODO: archive.IsPersistent
-                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                 {
                     numberOfRecords = 0;
                     if (powerCollection != null)
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             else
             {
                 // TODO: archive.IsPersistent
-                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                     success &= Serializer.Transfer(archive, ref numberOfRecords);
             }
 
