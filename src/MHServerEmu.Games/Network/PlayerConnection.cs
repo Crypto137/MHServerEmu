@@ -648,6 +648,11 @@ namespace MHServerEmu.Games.Network
             if (item == null || Player.Owns(item))
                 return true;
 
+            // Do not allow to pick up items belonging to other players
+            ulong restrictedToPlayerGuid = item.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != Player.DatabaseUniqueId)
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player {Player} is attempting to pick up item {item} restricted to player 0x{restrictedToPlayerGuid:X}");
+
             // Add item to the player's inventory
             Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
             if (inventory == null) return Logger.WarnReturn(false, "OnPickupInteraction(): inventory == null");
@@ -662,7 +667,8 @@ namespace MHServerEmu.Games.Network
             // Cancel lifespan expiration for the picked up item
             item.CancelScheduledLifespanExpireEvent();
 
-            // TODO: Remove RestrictedToPlayerGuid property once we have personal loot
+            // Remove instanced loot restriction
+            item.Properties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
 
             return true;
         }

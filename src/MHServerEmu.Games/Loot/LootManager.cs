@@ -8,6 +8,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
@@ -112,7 +113,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates and drops a new <see cref="Item"/> near the provided source <see cref="WorldEntity"/>. 
         /// </summary>
-        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef, float maxDistanceFromSource)
+        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
         {
             if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
                 return Logger.WarnReturn<Item>(null, $"DropItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
@@ -130,6 +131,13 @@ namespace MHServerEmu.Games.Loot
             settings.SourcePosition = source.RegionLocation.Position;
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
             settings.ItemSpec = CreateItemSpec(itemProtoRef);
+
+            if (restrictedToPlayerGuid != 0)
+            {
+                PropertyCollection properties = new();
+                properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
+                settings.Properties = properties;
+            }
 
             Item item = Game.EntityManager.CreateEntity(settings) as Item;
             if (item == null) return Logger.WarnReturn(item, "DropItem(): item == null");
@@ -163,7 +171,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Drops random loot from the provided source <see cref="WorldEntity"/>.
         /// </summary>
-        public void DropRandomLoot(WorldEntity source)
+        public void DropRandomLoot(WorldEntity source, Player player)
         {
             int lootRating = source.GetRankPrototype().Rank switch
             {
@@ -177,24 +185,27 @@ namespace MHServerEmu.Games.Loot
 
             float maxDistanceFromSource = 75f + 25f * lootRating;
 
+            // Instance the loot if we have a player provided and instanced loot is not disabled by server config
+            ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
+
             // Drop a bunch of common items
             for (int i = 0; i < lootRating; i++)
-                DropItem(source, _commonMetaPicker.Pick().Pick(), maxDistanceFromSource);
+                DropItem(source, _commonMetaPicker.Pick().Pick(), maxDistanceFromSource, restrictedToPlayerGuid);
 
             // Occasionally drop an uncommon item
             for (int i = 0; i < lootRating; i++)
             {
                 if (Game.Random.NextFloat() <= 0.33f)
-                    DropItem(source, _uncommonMetaPicker.Pick().Pick(), maxDistanceFromSource);
+                    DropItem(source, _uncommonMetaPicker.Pick().Pick(), maxDistanceFromSource, restrictedToPlayerGuid);
             }
 
             // Eternity splinter
             if (Game.Random.NextFloat() <= 0.10f * lootRating)
-                DropItem(source, (PrototypeId)11087194553833821680, maxDistanceFromSource);
+                DropItem(source, (PrototypeId)11087194553833821680, maxDistanceFromSource, restrictedToPlayerGuid);
 
             // Rare 1% drops
             if (Game.Random.NextFloat() <= 0.01f)
-                DropItem(source, _rareMetaPicker.Pick().Pick(), maxDistanceFromSource);
+                DropItem(source, _rareMetaPicker.Pick().Pick(), maxDistanceFromSource, restrictedToPlayerGuid);
         }
     }
 }
