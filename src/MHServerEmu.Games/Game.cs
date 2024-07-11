@@ -58,7 +58,7 @@ namespace MHServerEmu.Games
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
-        public LootGenerator LootGenerator { get; }
+        public LootManager LootManager { get; }
 
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
         public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }
@@ -88,7 +88,7 @@ namespace MHServerEmu.Games
             NetworkManager = new(this);
             RegionManager = new();
             EntityManager = new(this);
-            LootGenerator = new(this);
+            LootManager = new(this);
 
             Random = new();
 

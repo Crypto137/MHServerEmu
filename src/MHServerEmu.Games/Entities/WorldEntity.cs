@@ -208,7 +208,7 @@ namespace MHServerEmu.Games.Entities
         {
             // HACK: LOOT
             if (this is Agent agent && agent is not Missile)
-                Game.LootGenerator.DropRandomLoot(agent);
+                Game.LootManager.DropRandomLoot(agent);
 
             // HACK: Schedule respawn using SpawnSpec
             if (SpawnSpec != null)

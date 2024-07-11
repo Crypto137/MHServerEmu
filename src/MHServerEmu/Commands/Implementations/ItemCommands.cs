@@ -30,7 +30,7 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            LootGenerator lootGenerator = playerConnection.Game.LootGenerator;
+            LootManager lootGenerator = playerConnection.Game.LootManager;
             
             for (int i = 0; i < count; i++)
             {
@@ -53,7 +53,7 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
-            LootGenerator lootGenerator = playerConnection.Game.LootGenerator;
+            LootManager lootGenerator = playerConnection.Game.LootManager;
             var item = lootGenerator.GiveItem(player, itemProtoRef);
             Logger.Debug($"GiveItem(): {item} to {player}");
 

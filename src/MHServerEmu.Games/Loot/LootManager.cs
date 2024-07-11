@@ -12,7 +12,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class LootGenerator
+    public class LootManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Loot
 
         public Game Game { get; }
 
-        public LootGenerator(Game game)
+        public LootManager(Game game)
         {
             Game = game;
 
