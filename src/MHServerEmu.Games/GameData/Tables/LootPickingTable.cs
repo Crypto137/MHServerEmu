@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -15,6 +16,8 @@ namespace MHServerEmu.Games.GameData.Tables
         private readonly Dictionary<AssetId, List<AffixPrototype>> _affixKeywordDict = new();
 
         private readonly Dictionary<PrototypeId, List<AffixPrototype>> _affixCategoryDict = new();
+
+        private readonly Dictionary<LootPickingPair, List<PickerElement>> _pickerDict = new();
 
         public LootPickingTable()
         {
@@ -86,9 +89,83 @@ namespace MHServerEmu.Games.GameData.Tables
             return affixList;
         }
 
-        public void GetConcreteLootPicker(Picker<Prototype> picker, PrototypeId prototypeDataRef, AgentPrototype agentProto)
+        public void GetConcreteLootPicker(Picker<Prototype> pickerToFill, PrototypeId lootTypeProtoRef, AgentPrototype agentProto)
         {
-            throw new NotImplementedException();
+            PrototypeId agentProtoRef = agentProto != null ? agentProto.DataRef : PrototypeId.Invalid;
+            LootPickingPair key = new(lootTypeProtoRef, agentProtoRef);
+
+            List<PickerElement> pickerElementList;
+
+            // See if we already have picker data for this combination
+            lock (_pickerDict)
+                _pickerDict.TryGetValue(key, out pickerElementList);
+
+            // Generate picker data if we don't have it already
+            if (pickerElementList == null)
+            {
+                pickerElementList = new();
+                BlueprintId itemBlueprintRef = DataDirectory.Instance.GetPrototypeBlueprintDataRef(lootTypeProtoRef);
+
+                // Iterate all items that use the item ref's blueprint
+                foreach (PrototypeId lootProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy(itemBlueprintRef, PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    Prototype lootProto = GameDatabase.GetPrototype<Prototype>(lootProtoRef);
+                    int weight = 100;   // 100 is the default weight
+
+                    // What we are picking may not be an item (orbs and stuff?)
+                    if (lootProto is ItemPrototype itemProto)
+                    {
+                        // Skip items that have a 0 weight multiplier
+                        if (Segment.IsNearZero(itemProto.LootDropWeightMultiplier))
+                            continue;
+
+                        // NOTE: agentProto based skip happens only if there is no custom drop weight multiplier, is this correct?
+                        if (Segment.EpsilonTest(itemProto.LootDropWeightMultiplier, 1f) == false)
+                            weight = Math.Max(1, (int)(itemProto.LootDropWeightMultiplier * weight));
+                        else if (agentProto != null && itemProto.IsDroppableForAgent(agentProto) == false)
+                            continue;
+                    }
+
+                    pickerElementList.Add(new(lootProto, weight));
+                }
+
+                pickerElementList.Sort((a, b) => b.Weight.CompareTo(a.Weight));
+
+                lock (_pickerDict)
+                {
+                    // Check to make sure the list for this combination wasn't added by another game thread
+                    if (_pickerDict.ContainsKey(key) == false)
+                        _pickerDict.Add(key, pickerElementList);
+                }
+            }
+
+            // Fill the output picker
+            foreach (PickerElement element in pickerElementList)
+                pickerToFill.Add(element.Prototype, element.Weight);
+        }
+
+        private readonly struct LootPickingPair
+        {
+            public readonly PrototypeId LootProtoRef;
+            public readonly PrototypeId AgentProtoRef;
+
+            public LootPickingPair(PrototypeId lootProtoRef, PrototypeId agentProtoRef)
+            {
+                LootProtoRef = lootProtoRef;
+                AgentProtoRef = agentProtoRef;
+            }
+        }
+
+        private readonly struct PickerElement
+        {
+            public readonly Prototype Prototype;
+            public readonly int Weight;
+
+            public PickerElement(Prototype prototype, int weight)
+            {
+                Prototype = prototype;
+                Weight = weight;
+            }
         }
     }
 }

@@ -21,6 +21,9 @@
         public long RawWaypoint { get; set; }
         public int AOIVolume { get; set; }
 
+        // Additional data not saved to the database, but persisted between regions
+        public long Credits { get; set; }
+
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;

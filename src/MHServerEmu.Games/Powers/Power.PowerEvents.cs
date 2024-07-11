@@ -888,6 +888,11 @@ namespace MHServerEmu.Games.Powers
                 if (worldEntity is not Item item)
                     continue;
 
+                // Check if this is an item restricted to a player (instanced loot)
+                ulong restrictedToPlayerGuid = item.Properties[PropertyEnum.RestrictedToPlayerGuid];
+                if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != player.DatabaseUniqueId)
+                    continue;
+
                 // Push the item to the stack
                 vacuumStack.Push(item);
             }

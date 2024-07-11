@@ -156,7 +156,7 @@ namespace MHServerEmu.Billing
             else if (GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(itemProtoRef))
             {
                 // Give the player the item they are trying to "buy"
-                player.Game.LootGenerator.GiveItem(player, itemProtoRef);
+                player.Game.LootManager.GiveItem(player, itemProtoRef);
             }
             else
             {

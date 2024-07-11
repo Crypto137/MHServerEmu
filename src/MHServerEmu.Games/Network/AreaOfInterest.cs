@@ -12,6 +12,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
 
@@ -654,6 +655,11 @@ namespace MHServerEmu.Games.Network
             Inventory inventory = entity.InventoryLocation.GetInventory();
             AOINetworkPolicyValues inventoryInterestPolicies = GetInventoryInterestPolicies(inventory);
             if (inventory != null && inventory.Prototype.OnPersonLocation && inventoryInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            // Skip entities that are restricted to a specific player (e.g. instanced loot)
+            ulong restrictedToPlayerGuid = entity.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != player.DatabaseUniqueId)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
             //      Add more filters here
