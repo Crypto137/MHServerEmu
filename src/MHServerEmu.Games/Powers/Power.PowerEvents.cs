@@ -502,6 +502,41 @@ namespace MHServerEmu.Games.Powers
             return false;
         }
 
+        private bool GetPowersToOperateOnForPowerEvent(WorldEntity owner, PowerEventActionPrototype triggeredPowerEvent,
+            in PowerActivationSettings settings, List<Power> outputList)
+        {
+            WorldEntity cooldownPowerOwner = owner;
+
+            PowerEventContextPrototype contextProto = triggeredPowerEvent.PowerEventContext;
+            if (contextProto is PowerEventContextCooldownChangePrototype cooldownChangeContextProto &&
+                cooldownChangeContextProto.TargetsOwner == false)
+            {
+                cooldownPowerOwner = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+
+                if (cooldownPowerOwner == null)
+                {
+                    return Logger.WarnReturn(false,
+                        $"GetPowersToOperateOnForPowerEvent(): Cooldown power event action has TargetsOwner=false but no target found. " +
+                        $"targetEntityId=[{settings.TargetEntityId}] triggeringPower=[{settings.TriggeringPowerRef.GetName()}]");
+                }
+            }
+
+            PowerCollection powerCollection = cooldownPowerOwner.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, $"GetPowersToOperateOnForPowerEvent(): powerCollection == null");
+
+            if (triggeredPowerEvent.Power != PrototypeId.Invalid)
+            {
+                Power power = powerCollection.GetPower(triggeredPowerEvent.Power);
+                if (power != null)
+                    outputList.Add(power);
+            }
+
+            if (triggeredPowerEvent.Keywords.HasValue())
+                outputList.AddRange(powerCollection.GetPowersMatchingAnyKeyword(triggeredPowerEvent.Keywords));
+
+            return outputList.Count > 0;
+        }
+
         #region Event Actions
 
         // Please keep these ordered by PowerEventActionType enum value
@@ -824,13 +859,47 @@ namespace MHServerEmu.Games.Powers
         // 24
         private void DoPowerEventActionCooldownStart(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionCooldownStart(): Not implemented");
+            //Logger.Debug($"DoPowerEventActionCooldownStart()");
+
+            if (settings.Flags.HasFlag(PowerActivationSettingsFlags.AutoActivate))
+                return;
+
+            List<Power> powersToOperateOnList = new();
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            {
+                TimeSpan cooldownDuration = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
+                foreach (Power power in powersToOperateOnList)
+                {
+                    if (power == null)
+                    {
+                        Logger.Warn("DoPowerEventActionCooldownStart(): power == null");
+                        continue;
+                    }
+
+                    power.StartCooldown(cooldownDuration);
+                }
+            }
         }
 
         // 25
         private void DoPowerEventActionCooldownEnd(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionCooldownEnd(): Not implemented");
+            //Logger.Debug($"DoPowerEventActionCooldownEnd()");
+
+            List<Power> powersToOperateOnList = new();
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            {
+                foreach (Power power in powersToOperateOnList)
+                {
+                    if (power == null)
+                    {
+                        Logger.Warn("DoPowerEventActionCooldownEnd(): power == null");
+                        continue;
+                    }
+
+                    power.EndCooldown();
+                }
+            }
         }
 
         // 26

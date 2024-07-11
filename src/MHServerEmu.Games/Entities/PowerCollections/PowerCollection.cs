@@ -132,6 +132,24 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             return record.Power;
         }
 
+        public IEnumerable<Power> GetPowersMatchingAnyKeyword(IEnumerable<PrototypeId> powerKeywordRefs)
+        {
+            foreach (PowerCollectionRecord record in _powerDict.Values)
+            {
+                Power power = record.Power;
+                if (power == null) continue;
+
+                foreach (PrototypeId powerKeywordProtoRef in powerKeywordRefs)
+                {
+                    if (power.HasKeyword(powerKeywordProtoRef.As<KeywordPrototype>()))
+                    {
+                        yield return power;
+                        break;
+                    }
+                }
+            }
+        }
+
         public bool ContainsPower(PrototypeId powerProtoRef) => GetPowerRecordByRef(powerProtoRef) != null;
 
         public bool ContainsPowerProgressionPower(PrototypeId powerProtoRef)

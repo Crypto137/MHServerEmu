@@ -902,20 +902,56 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool EndCooldown()
+        {
+            if (Owner == null) return Logger.WarnReturn(false, $"EndCooldown(): Owner == null");
+
+            if (CanEndCooldowns() == false)
+                return false;
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, $"EndCooldown(): powerProto == null");
+
+            PropertyCollection properties = Owner.Properties;
+            if (powerProto.CooldownOnPlayer)
+            {
+                Player player = Owner.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, $"EndCooldown(): player == null");
+                properties = player.Properties;
+            }
+
+            properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, PrototypeDataRef));
+            properties.RemoveProperty(new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
+
+            if (_endCooldownEvent.IsValid)
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+                if (scheduler == null) return Logger.WarnReturn(false, "EndCooldown(): scheduler == null");
+                scheduler.CancelEvent(_endCooldownEvent);
+            }
+
+            OnCooldownEndCallback();
+            return true;
+        }
+
         public void OnCooldownEndCallback()
         {
+            // This callback is only for replenishing power charges
             if (ShouldReplenishCharges() == false)
                 return;
 
+            // Replenish a charge
             PrototypeId powerProtoRef = PrototypeDataRef;
             Owner.Properties.AdjustProperty(1, new(PropertyEnum.PowerChargesAvailable, powerProtoRef));
 
             if (Owner.GetPowerChargesAvailable(powerProtoRef) < Owner.GetPowerChargesMax(powerProtoRef))
             {
+                // Restart the cooldown to continue replenishing charges if we are still below cap
                 StartCooldown();
             }
             else
             {
+                // Remove the cooldown if we are done replenishing charges
                 Owner.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, powerProtoRef));
                 Owner.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDuration, powerProtoRef));
             }
