@@ -905,13 +905,47 @@ namespace MHServerEmu.Games.Powers
         // 26
         private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionCooldownModifySecs(): Not implemented");
+            Logger.Debug($"DoPowerEventActionCooldownModifySecs()");
+
+            List<Power> powersToOperateOnList = new();
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            {
+                TimeSpan offset = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
+
+                foreach (Power power in powersToOperateOnList)
+                {
+                    if (power == null)
+                    {
+                        Logger.Warn("DoPowerEventActionCooldownModifySecs(): power == null");
+                        continue;
+                    }
+
+                    power.ModifyCooldown(offset);
+                }
+            }
         }
 
         // 27
         private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionCooldownModifyPct(): Not implemented");
+            Logger.Debug($"DoPowerEventActionCooldownModifyPct()");
+
+            List<Power> powersToOperateOnList = new();
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            {
+                float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
+
+                foreach (Power power in powersToOperateOnList)
+                {
+                    if (power == null)
+                    {
+                        Logger.Warn("DoPowerEventActionCooldownModifyPct(): power == null");
+                        continue;
+                    }
+
+                    power.ModifyCooldownByPercentage(eventParam);
+                }
+            }
         }
 
         // 28

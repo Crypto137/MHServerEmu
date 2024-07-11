@@ -934,6 +934,71 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool ModifyCooldown(TimeSpan offset)
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "ModifyCooldown(): Owner == null");
+
+            if (CanModifyCooldowns() == false)
+                return false;
+
+            if (IsOnCooldown() == false)
+                return false;
+
+            if (Owner is Agent agent && agent.AIController != null)
+            {
+                PropertyCollection blackboardProperties = agent.AIController.Blackboard.PropertyCollection;
+                blackboardProperties.AdjustProperty((long)offset.TotalMilliseconds, new(PropertyEnum.AIProceduralPowerSpecificCDTime, PrototypeDataRef));
+                return true;
+            }
+
+            PropertyCollection properties = Owner.Properties;
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "ModifyCooldown(): powerProto == null");
+
+            if (powerProto.CooldownOnPlayer)
+            {
+                Player player = Owner.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, $"ModifyCooldown(): player == null");
+
+                properties = player.Properties;
+            }
+
+            properties.AdjustProperty((long)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
+
+            // Reschedule cooldown end event
+            if (_endCooldownEvent.IsValid)
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+                if (scheduler == null) return Logger.WarnReturn(false, $"ModifyCooldown(): scheduler == null");
+
+                TimeSpan delay = _endCooldownEvent.Get().FireTime - Game.CurrentTime + offset;
+                Clock.Max(delay, TimeSpan.Zero);
+                scheduler.RescheduleEvent(_endCooldownEvent, delay);
+            }
+
+            return true;
+        }
+
+        private bool ModifyCooldownByPercentage(float value)
+        {
+            if (Owner == null) return Logger.WarnReturn(false, "ModifyCooldownByPercentage(): Owner == null");
+
+            if (CanModifyCooldowns() == false)
+                return false;
+
+            if (IsOnCooldown() == false)
+                return false;
+
+            value = MathF.Max(value, -1f);
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, $"ModifyCooldownBYPercentage(): powerProto == null");
+
+            TimeSpan cooldownTimeRemaining = Owner.GetAbilityCooldownTimeRemaining(powerProto);
+            return ModifyCooldown(cooldownTimeRemaining * value);
+        }
+
         public void OnCooldownEndCallback()
         {
             // This callback is only for replenishing power charges
