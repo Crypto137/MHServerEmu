@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -109,6 +110,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             int expirationTimeMS = Eval.RunInt(EvalExpirationTimeMS, contextData);
             return TimeSpan.FromMilliseconds(expirationTimeMS);
+        }
+
+        public bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            if (EquipRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (EquipRestrictionPrototype restrictionProto in EquipRestrictions)
+            {
+                if (restrictionProto.IsEquippableByAgent(agentProto) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool IsDroppableForAgent(AgentPrototype agentProto)
+        {
+            return IsUsableByAgent(agentProto);
         }
     }
 
@@ -252,16 +272,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EquipRestrictionPrototype : Prototype
     {
+        public virtual bool IsEquippableByAgent(AgentPrototype agentProto)
+        {
+            return true;
+        }
     }
 
     public class EquipRestrictionSuperteamPrototype : EquipRestrictionPrototype
     {
         public PrototypeId SuperteamEquippableBy { get; protected set; }
+
+        public override bool IsEquippableByAgent(AgentPrototype agentProto)
+        {
+            if (base.IsEquippableByAgent(agentProto) == false)
+                return false;
+
+            if (agentProto is not AvatarPrototype avatarProto)
+                return true;
+
+            return avatarProto.IsMemberOfSuperteam(SuperteamEquippableBy);
+        }
     }
 
     public class EquipRestrictionAgentPrototype : EquipRestrictionPrototype
     {
         public PrototypeId Agent { get; protected set; }
+
+        public override bool IsEquippableByAgent(AgentPrototype agentProto)
+        {
+            if (base.IsEquippableByAgent(agentProto) == false)
+                return false;
+
+            if (agentProto == null || Agent == PrototypeId.Invalid)
+                return true;
+
+            return agentProto.DataRef == Agent;
+        }
     }
 
     public class ItemTooltipPropertyBlockSettingsPrototype : Prototype
