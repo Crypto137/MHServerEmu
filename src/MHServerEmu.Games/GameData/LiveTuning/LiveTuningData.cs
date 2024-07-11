@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
@@ -8,42 +7,36 @@ namespace MHServerEmu.Games.GameData.LiveTuning
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly List<LiveTuningSetting> _settingList;
+        public int ChangeNum { get; set; } = 0;
 
-        public int Count { get => _settingList.Count; }
-
-        /// <summary>
-        /// Initializes a new empty LiveTuningData instance.
-        /// </summary>
         public LiveTuningData()
         {
-            _settingList = new();
+
         }
 
-        /// <summary>
-        /// Initializes a new LiveTuningData instance from the specified JSON file.
-        /// </summary>
-        public LiveTuningData(string jsonPath)
+        public void ResetToDefaults()
         {
-            _settingList = FileHelper.DeserializeJson<List<LiveTuningSetting>>(jsonPath);
-            foreach (var setting in _settingList)
-                Logger.Trace(setting.ToString());
-        }
-        
-        /// <summary>
-        /// Generates an update message from the current live tuning data.
-        /// </summary>
-        public NetMessageLiveTuningUpdate ToNetMessageLiveTuningUpdate()
-        {
-            return NetMessageLiveTuningUpdate.CreateBuilder()
-                .AddRangeTuningTypeKeyValueSettings(_settingList.Select(setting => setting.ToNetStructProtoEnumValue()))
-                .Build();
+
         }
 
-        public void PrintTuningVars()
+        public void Copy(LiveTuningData target)
         {
-            foreach (LiveTuningSetting setting in _settingList)
-                Logger.Trace(setting.ToString());
+
+        }
+
+        public void UpdateLiveTuningVar(PrototypeId tuningVarProtoRef, int tuningVarEnum, float tuningVarValue)
+        {
+
+        }
+
+        public void UpdateLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum, float tuningVarValue)
+        {
+
+        }
+
+        public NetMessageLiveTuningUpdate GetLiveTuningUpdate()
+        {
+            return NetMessageLiveTuningUpdate.DefaultInstance;
         }
     }
 }
