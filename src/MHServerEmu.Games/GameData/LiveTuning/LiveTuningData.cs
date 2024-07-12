@@ -111,7 +111,11 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
             ClearLootGroups();
 
-            // TODO: Copy loot groups
+            foreach (var kvp in other._lootGroupDict)
+            {
+                List<WorldEntityPrototype> lootGroupCopy = new(kvp.Value);
+                _lootGroupDict.Add(kvp.Key, lootGroupCopy);
+            }
 
             ChangeNum = other.ChangeNum;
             _updateProtobufOutOfDate = true;
