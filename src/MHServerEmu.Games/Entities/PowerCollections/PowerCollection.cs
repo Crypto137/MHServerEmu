@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (archive.IsPacking)
             {
                 // TODO: archive.IsPersistent
-                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                 {
                     numberOfRecords = 0;
                     if (powerCollection != null)
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             else
             {
                 // TODO: archive.IsPersistent
-                if (archive.IsReplication && archive.GetReplicationPolicyEnum().HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                if (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelProximity))
                     success &= Serializer.Transfer(archive, ref numberOfRecords);
             }
 
@@ -130,6 +130,24 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 return null;
 
             return record.Power;
+        }
+
+        public IEnumerable<Power> GetPowersMatchingAnyKeyword(IEnumerable<PrototypeId> powerKeywordRefs)
+        {
+            foreach (PowerCollectionRecord record in _powerDict.Values)
+            {
+                Power power = record.Power;
+                if (power == null) continue;
+
+                foreach (PrototypeId powerKeywordProtoRef in powerKeywordRefs)
+                {
+                    if (power.HasKeyword(powerKeywordProtoRef.As<KeywordPrototype>()))
+                    {
+                        yield return power;
+                        break;
+                    }
+                }
+            }
         }
 
         public bool ContainsPower(PrototypeId powerProtoRef) => GetPowerRecordByRef(powerProtoRef) != null;

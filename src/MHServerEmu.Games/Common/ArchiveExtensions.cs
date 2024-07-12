@@ -12,5 +12,10 @@ namespace MHServerEmu.Games.Common
         {
             return (AOINetworkPolicyValues)archive.ReplicationPolicy;
         }
+
+        public static bool HasReplicationPolicy(this Archive archive, AOINetworkPolicyValues replicationPolicy)
+        {
+            return ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(replicationPolicy);
+        }
     }
 }

@@ -153,28 +153,31 @@ namespace MHServerEmu.Games.Entities
             success &= Serializer.Transfer(archive, ref _missionManager);
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
-            // archive.IsTransient
-            success &= Serializer.Transfer(archive, ref _shardId);
-            success &= Serializer.Transfer(archive, ref _playerName);
-            success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
-            success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
-            success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
-            success &= Serializer.Transfer(archive, ref _matchQueueStatus);
-            success &= Serializer.Transfer(archive, ref _emailVerified);
-            success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
+            if (archive.IsTransient)
+            {
+                success &= Serializer.Transfer(archive, ref _shardId);
+                success &= Serializer.Transfer(archive, ref _playerName);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
+                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+                success &= Serializer.Transfer(archive, ref _matchQueueStatus);
+                success &= Serializer.Transfer(archive, ref _emailVerified);
+                success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
 
-            // archive.IsReplication
-            success &= Serializer.Transfer(archive, ref _partyId);
-            success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+                if (archive.IsReplication)
+                {
+                    success &= Serializer.Transfer(archive, ref _partyId);
+                    success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
 
-            // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
-            string emptyString = string.Empty;
-            success &= Serializer.Transfer(archive, ref emptyString);
-            if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
+                    // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
+                    string emptyString = string.Empty;
+                    success &= Serializer.Transfer(archive, ref emptyString);
+                    if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
+                }
+            }
 
-            //bool hasCommunityData = archive.IsPersistent || archive.IsMigration
-            //    || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner));
-            bool hasCommunityData = true;
+            bool hasCommunityData = archive.IsPersistent || archive.IsMigration ||
+                (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner));
             success &= Serializer.Transfer(archive, ref hasCommunityData);
             if (hasCommunityData)
                 success &= Serializer.Transfer(archive, ref _community);
@@ -186,13 +189,13 @@ namespace MHServerEmu.Games.Entities
 
             success &= Serializer.Transfer(archive, ref _unlockedInventoryList);
 
-            //if (archive.IsMigration || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
-            success &= Serializer.Transfer(archive, ref _badges);
+            if (archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
+                success &= Serializer.Transfer(archive, ref _badges);
 
             success &= Serializer.Transfer(archive, ref _gameplayOptions);
 
-            //if (archive.IsMigration || (archive.IsReplication && ((AOINetworkPolicyValues)archive.ReplicationPolicy).HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
-            success &= Serializer.Transfer(archive, ref _achievementState);
+            if (archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
+                success &= Serializer.Transfer(archive, ref _achievementState);
 
             success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
 

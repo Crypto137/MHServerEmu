@@ -909,7 +909,21 @@ namespace MHServerEmu.Games.Network
             var returnToHub = message.As<NetMessageReturnToHub>();
             if (returnToHub == null) return Logger.WarnReturn(false, $"OnReturnToHub(): Failed to retrieve message");
 
-            Game.MovePlayerToRegion(this, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "OnReturnToHub(): avatar == null");
+
+            Region region = avatar.Region;
+            if (region == null) return Logger.WarnReturn(false, "OnReturnToHub(): region == null");
+
+            // TODO: Use region.GetBodysliderPowerRef()
+
+            if (region.RegionPrototype.Behavior == RegionBehaviorAsset.Town)
+                return Logger.WarnReturn(false, $"OnReturnToHub(): Returning from hubs via bodysliding is not yet implemented");
+
+            PrototypeId bodysliderPowerRef = GameDatabase.GlobalsPrototype.ReturnToHubPower;
+            PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
+
+            avatar.ActivatePower(bodysliderPowerRef, ref settings);
             return true;
         }
 

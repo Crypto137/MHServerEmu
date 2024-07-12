@@ -1017,6 +1017,16 @@ namespace MHServerEmu.Games.Powers
 
             return true;
         }
+        
+        private bool CanEndCooldowns()
+        {
+            return true;
+        }
+
+        private bool CanModifyCooldowns()
+        {
+            return true;
+        }
 
         private bool CanBeUserCanceledNow()
         {
