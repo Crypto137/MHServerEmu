@@ -645,7 +645,9 @@ namespace MHServerEmu.Games.Entities
                 ActivateAI();
             }
             
-            if (IsSimulated && Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
+            // Activate StartAnimation from missionRef
+            // TODO change when Mission Action will work
+            if (/*IsSimulated &&*/ Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
             {
                 PrototypeId startPower = Properties[PropertyEnum.AIPowerOnSpawn];
                 if (startPower != PrototypeId.Invalid)
@@ -951,50 +953,17 @@ namespace MHServerEmu.Games.Entities
             return PowerUseResult.Success;
         }
 
-        public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this
+        // TODO ActivatePerformPower in MissionActionEntityPerformPowerPrototype
+        public override void AppendStartAction_OLD(PrototypeId actionsTarget) 
         {
-            bool startAction = false;
+            if (EntityActionComponent != null || actionsTarget == PrototypeId.Invalid) return;
 
-            if (EntityActionComponent != null && EntityActionComponent.ActionTable.TryGetValue(EntitySelectorActionEventType.OnSimulated, out var actionSet))
-                startAction = AppendSelectorActions(actionSet);
-            if (startAction == false && actionsTarget != PrototypeId.Invalid)
-                AppendOnStartActions(actionsTarget);
-        }
-
-        public bool AppendOnStartActions(PrototypeId targetRef)
-        {
-            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, targetRef, out MissionActionEntityPerformPowerPrototype action))
-                return AppendStartPower(action.PowerPrototype);
-            return false;
-        }
-
-        public bool AppendSelectorActions(HashSet<EntitySelectorActionPrototype> actions)
-        {
-            var action = actions.First();
-            if (action.AIOverrides.HasValue())
+            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, actionsTarget, out MissionActionEntityPerformPowerPrototype action))
             {
-                int index = Game.Random.Next(0, action.AIOverrides.Length);
-                var actionAIOverrideRef = action.AIOverrides[index];
-                if (actionAIOverrideRef == PrototypeId.Invalid) return false;
-                var actionAIOverride = actionAIOverrideRef.As<EntityActionAIOverridePrototype>();
-                if (actionAIOverride != null) return AppendStartPower(actionAIOverride.Power);
+                PrototypeId startPowerRef = action.PowerPrototype;
+                if (startPowerRef == PrototypeId.Invalid) return;
+                Properties[PropertyEnum.AIPowerOnSpawn] = startPowerRef;              
             }
-            return false;
-        }
-
-        private bool AppendStartPower(PrototypeId startPowerRef)
-        {
-            if (startPowerRef == PrototypeId.Invalid) return false;
-            //Console.WriteLine($"[{Id}]{GameDatabase.GetPrototypeName(startPowerRef)}");
-
-            Condition condition = new();
-            condition.InitializeFromPowerMixinPrototype(1, startPowerRef, 0, TimeSpan.Zero);
-            condition.StartTime = Clock.GameTime;
-            _conditionCollection.AddCondition(condition);
-
-            AssignPower(startPowerRef, new());
-
-            return true;
         }
 
         public void DrawPath(EntityHelper.TestOrb orbRef)
