@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Dialog;
@@ -450,6 +451,48 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         return;
                     }
             }
+        }
+
+        public EntityActionOverheadTextPrototype PickOverheadText(GRandom random)
+        {
+            if (OverheadTexts.IsNullOrEmpty() && OverheadTextsList.IsNullOrEmpty()) return null;
+
+            Picker<EntityActionOverheadTextPrototype> picker = new(random);
+            if (OverheadTexts.HasValue())
+            {
+                foreach (var overheadTextRef in OverheadTexts)
+                {
+                    var overheadText = overheadTextRef.As<EntityActionOverheadTextPrototype>();
+                    picker.Add(overheadText, overheadText.Weight);
+                }
+            }
+            else if (AIOverridesList.HasValue())
+            {
+                foreach (var overheadText in OverheadTextsList)
+                    picker.Add(overheadText, overheadText.Weight);
+            }
+            return picker.Pick();
+        }
+
+        public EntityActionAIOverridePrototype PickAIOverride(GRandom random)
+        {
+            if (AIOverrides.IsNullOrEmpty() && AIOverridesList.IsNullOrEmpty()) return null;
+
+            Picker<EntityActionAIOverridePrototype> picker = new(random);
+            if (AIOverrides.HasValue())
+            {
+                foreach (var brainRef in AIOverrides) 
+                {
+                    var brain = brainRef.As<EntityActionAIOverridePrototype>();
+                    picker.Add(brain, brain.Weight);
+                }                   
+            } 
+            else if (AIOverridesList.HasValue())
+            {
+                foreach (var brain in AIOverridesList)
+                    picker.Add(brain, brain.Weight);
+            }
+            return picker.Pick();
         }
     }
 
