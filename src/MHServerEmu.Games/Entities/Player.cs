@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.Entities
                 .Build());
 
             SendMessage(NetMessageServerVersion.CreateBuilder().SetVersion(Game.Version).Build());
-            SendMessage(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
+            SendMessage(Game.LiveTuningData.GetLiveTuningUpdate());
 
             SendMessage(NetMessageLocalPlayer.CreateBuilder()
                 .SetLocalPlayerEntityId(Id)

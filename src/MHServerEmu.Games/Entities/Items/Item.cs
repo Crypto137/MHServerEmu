@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -82,7 +83,7 @@ namespace MHServerEmu.Games.Entities.Items
         {
             if (player == null) return Logger.WarnReturn(0u, "GetVendorBaseXPGain(): player == null");
             float xpGain = GetSellPrice(player);
-            // TODO: Apply LiveTuningManager multiplier
+            xpGain *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorXPGain);
             return (uint)xpGain;
         }
 

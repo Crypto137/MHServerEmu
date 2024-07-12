@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -183,6 +184,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public int BlueprintCopyNum { get; set; }
 
+        [DoNotCopy]
+        public int ConditionPrototypeEnumValue { get; private set; }
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -198,6 +202,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (CancelOnPowerUsePost)           CancelOnFlags |= ConditionCancelOnFlags.OnPowerUsePost;
             if (CancelOnTransfer)               CancelOnFlags |= ConditionCancelOnFlags.OnTransfer;
             if (CancelOnIntraRegionTeleport)    CancelOnFlags |= ConditionCancelOnFlags.OnIntraRegionTeleport;
+
+            ConditionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetConditionBlueprintDataRef());
 
             // TODO: more stuff
         }

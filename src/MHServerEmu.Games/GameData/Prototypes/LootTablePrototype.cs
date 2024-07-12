@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
+using System.Xml.Linq;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -103,6 +105,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootNodePrototype[] Choices { get; protected set; }
         public LocaleStringId MissionLogRewardsText { get; protected set; }
         public bool LiveTuningDefaultEnabled { get; protected set; }
+
+        [DoNotCopy]
+        public int LootTablePrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            NoDropPercent = Math.Clamp(NoDropPercent, 0f, 1f);
+
+            LootTablePrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetLootTableBlueprintDataRef());
+        }
     }
 
     public class LootTableAssignmentPrototype : Prototype

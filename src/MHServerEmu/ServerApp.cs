@@ -184,7 +184,7 @@ namespace MHServerEmu
             return PakFileSystem.Instance.Initialize()
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
-                && LiveTuningManager.IsInitialized
+                && LiveTuningManager.Instance.Initialize()
                 && AccountManager.Initialize(SQLiteDBManager.Instance);     // TODO: Multiple IDBManager implementations
         }
     }
