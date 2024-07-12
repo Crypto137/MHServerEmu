@@ -8,7 +8,23 @@ namespace MHServerEmu.Games.Loot
         Success = 1,
         Failure = 2,
         PartialSuccess = 3,
-    };
+    }
+
+    [AssetEnum((int)None)]
+    [Flags]
+    public enum LootContext
+    {
+        None                = 0,
+        AchievementReward   = 1 << 0,
+        LeaderboardReward   = 1 << 1,
+        CashShop            = 1 << 2,
+        Crafting            = 1 << 3,
+        Drop                = 1 << 4,
+        Initialization      = 1 << 5,
+        Vendor              = 1 << 6,
+        MissionReward       = 1 << 7,
+        MysteryChest        = 1 << 8,
+    }
 
     [AssetEnum]
     public enum LootEventType   // Loot/LootDropEventType.type

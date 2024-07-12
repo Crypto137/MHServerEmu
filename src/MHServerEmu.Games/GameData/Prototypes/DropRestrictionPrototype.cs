@@ -1,28 +1,7 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)None)]
-    [Flags]
-    public enum LootContext
-    {
-        None = 0,
-        AchievementReward = 1,
-        LeaderboardReward = 2,
-        CashShop = 4,
-        Crafting = 8,
-        Drop = 16,
-        Initialization = 32,
-        Vendor = 64,
-        MissionReward = 128,
-        MysteryChest = 256,
-    }
-
-    #endregion
-
     public class DropRestrictionPrototype : Prototype
     {
     }
