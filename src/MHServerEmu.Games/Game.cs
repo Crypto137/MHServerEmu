@@ -112,6 +112,7 @@ namespace MHServerEmu.Games
             success &= EntityManager.Initialize();
 
             LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);
+            LiveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
 
             return success;
         }

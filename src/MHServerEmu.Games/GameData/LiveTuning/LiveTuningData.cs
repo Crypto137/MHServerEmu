@@ -170,8 +170,150 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public NetMessageLiveTuningUpdate GetLiveTuningUpdate()
         {
-            // TODO
-            return NetMessageLiveTuningUpdate.DefaultInstance;
+            // If our cached protobuf is up to date, we don't need to do anything
+            if (_updateProtobufOutOfDate == false)
+                return _updateProtobuf;
+
+            // Generate a new protobuf if the one we have is out of date
+            var updateBuilder = NetMessageLiveTuningUpdate.CreateBuilder();
+            DataDirectory dataDirectory = DataDirectory.Instance;
+
+            // NOTE: In the client there are bit array filters for each tuning var category (see LiveTuningData::initClientWhitelistBits()),
+            // but most of them just enable the whole category, so we are going to just do all the relevant checks in here instead to simplify things a little.
+
+            // Global
+            for (int i = 0; i < (int)GlobalTuningVar.eGTV_NumGlobalTuningVars; i++)
+            {
+                float tuningVarValue = GetLiveGlobalTuningVar((GlobalTuningVar)i);
+                if (tuningVarValue == DefaultTuningVarValue)
+                    continue;
+
+                updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
+                    .SetTuningVarProtoId((ulong)PrototypeId.Invalid)
+                    .SetTuningVarEnum(i)
+                    .SetTuningVarValue(tuningVarValue));
+            }
+
+            // Power
+            BlueprintId powerBlueprintRef = GetPowerBlueprintDataRef();
+
+            for (int i = 0; i < _perPowerTuningVars.Count; i++)
+            {
+                PrototypeId powerProtoRef = dataDirectory.GetPrototypeFromEnumValue(i, powerBlueprintRef);
+                if (powerProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                for (int j = 0; j < (int)PowerTuningVar.ePTV_NumPowerTuningVars; j++)
+                {
+                    float tuningVarValue = GetLivePowerTuningVar(i, (PowerTuningVar)j);
+                    if (tuningVarValue == DefaultTuningVarValue)
+                        continue;
+
+                    updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
+                        .SetTuningVarProtoId((ulong)powerProtoRef)
+                        .SetTuningVarEnum(j)
+                        .SetTuningVarValue(tuningVarValue));
+                }
+            }
+
+            // Region
+            BlueprintId regionBlueprintRef = GetRegionBlueprintDataRef();
+
+            for (int i = 0; i < _perRegionTuningVars.Count; i++)
+            {
+                PrototypeId regionProtoRef = dataDirectory.GetPrototypeFromEnumValue(i, regionBlueprintRef);
+                if (regionProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                for (int j = 0; j < (int)RegionTuningVar.eRTV_NumRegionTuningVars; j++)
+                {
+                    float tuningVarValue = GetLiveRegionTuningVar(i, (RegionTuningVar)j);
+                    if (tuningVarValue == DefaultTuningVarValue)
+                        continue;
+
+                    updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
+                        .SetTuningVarProtoId((ulong)regionProtoRef)
+                        .SetTuningVarEnum(j)
+                        .SetTuningVarValue(tuningVarValue));
+                }
+            }
+
+            // Public Event
+            BlueprintId publicEventBlueprintRef = GetPublicEventBlueprintDataRef();
+
+            for (int i = 0; i < _perPublicEventTuningVars.Count; i++)
+            {
+                PrototypeId publicEventProtoRef = dataDirectory.GetPrototypeFromEnumValue(i, publicEventBlueprintRef);
+                if (publicEventProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                for (int j = 0; j < (int)PublicEventTuningVar.ePETV_NumPublicEventTuningVars; j++)
+                {
+                    float tuningVarValue = GetLivePublicEventTuningVar(i, (PublicEventTuningVar)j);
+                    if (tuningVarValue == DefaultTuningVarValue)
+                        continue;
+
+                    updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
+                        .SetTuningVarProtoId((ulong)publicEventProtoRef)
+                        .SetTuningVarEnum(j)
+                        .SetTuningVarValue(tuningVarValue));
+                }
+            }
+
+            // World Entity
+            BlueprintId worldEntityBlueprintRef = GetWorldEntityBlueprintDataRef();
+
+            for (int i = 0; i < _perWorldEntityTuningVars.Count; i++)
+            {
+                PrototypeId worldEntityProtoRef = dataDirectory.GetPrototypeFromEnumValue(i, worldEntityBlueprintRef);
+                if (worldEntityProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                for (int j = 0; j < (int)WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars; j++)
+                {
+                    // Only these two world entity tuning vars are sent to the client
+                    if (j != (int)WorldEntityTuningVar.eWETV_Enabled && j != (int)WorldEntityTuningVar.eWETV_Visible)
+                        continue;
+
+                    float tuningVarValue = GetLiveWorldEntityTuningVar(i, (WorldEntityTuningVar)j);
+                    if (tuningVarValue == DefaultTuningVarValue)
+                        continue;
+
+                    updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
+                        .SetTuningVarProtoId((ulong)worldEntityProtoRef)
+                        .SetTuningVarEnum(j)
+                        .SetTuningVarValue(tuningVarValue));
+                }
+            }
+
+            // Avatar
+            BlueprintId avatarBlueprintRef = GetWorldEntityBlueprintDataRef();
+
+            for (int i = 0; i < _perAvatarTuningVars.Count; i++)
+            {
+                PrototypeId avatarProtoRef = dataDirectory.GetPrototypeFromEnumValue(i, avatarBlueprintRef);
+                if (avatarProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                for (int j = 0; j < (int)AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars; j++)
+                {
+                    float tuningVarValue = GetLiveAvatarTuningVar(i, (AvatarEntityTuningVar)j);
+                    if (tuningVarValue == DefaultTuningVarValue)
+                        continue;
+
+                    updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
+                        .SetTuningVarProtoId((ulong)avatarProtoRef)
+                        .SetTuningVarEnum(j)
+                        .SetTuningVarValue(tuningVarValue));
+                }
+            }
+
+            _updateProtobuf = updateBuilder.Build();
+            _updateProtobufOutOfDate = false;
+
+            Logger.Info($"Generated live tuning update for change num {ChangeNum}");
+
+            return _updateProtobuf;
         }
 
         private void UpdateLiveLootGroup(WorldEntityPrototype worldEntityProto, float value)
@@ -196,7 +338,17 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return DefaultTuningVarValue;
         }
 
+        private float GetLiveAreaTuningVar(int areaEnumVal, AreaTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
         public float GetLiveLootTableTuningVar(LootTablePrototype lootTableProto, LootTableTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
+        private float GetLiveLootTableTuningVar(int lootTableEnumVal, LootTableTuningVar tuningVarEnum)
         {
             return DefaultTuningVarValue;
         }
@@ -206,7 +358,17 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return DefaultTuningVarValue;
         }
 
+        private float GetLiveMissionTuningVar(int missionEnumVal, MissionTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
         public float GetLiveWorldEntityTuningVar(WorldEntityPrototype worldEntityProto, WorldEntityTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
+        private float GetLiveWorldEntityTuningVar(int worldEntityEnumVal, WorldEntityTuningVar tuningVarEnum)
         {
             return DefaultTuningVarValue;
         }
@@ -216,7 +378,17 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return DefaultTuningVarValue;
         }
 
+        private float GetLivePopObjTuningVar(int popObjEnumVal, PopObjTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
         public float GetLivePowerTuningVar(PowerPrototype powerProto, PowerTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
+        private float GetLivePowerTuningVar(int powerEnumVal, PowerTuningVar tuningVarEnum)
         {
             return DefaultTuningVarValue;
         }
@@ -226,7 +398,17 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return DefaultTuningVarValue;
         }
 
+        private float GetLiveRegionTuningVar(int regionEnumVal, RegionTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
         public float GetLiveAvatarTuningVar(AvatarPrototype avatarProto, AvatarEntityTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
+        private float GetLiveAvatarTuningVar(int avatarEnumVal, AvatarEntityTuningVar tuningVarEnum)
         {
             return DefaultTuningVarValue;
         }
@@ -236,12 +418,27 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return DefaultTuningVarValue;
         }
 
+        private float GetLiveConditionTuningVar(int conditionEnumVal, ConditionTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
         public float GetLivePublicEventTuningVar(PublicEventPrototype publicEventProto, PublicEventTuningVar tuningVarEnum)
         {
             return DefaultTuningVarValue;
         }
 
+        private float GetLivePublicEventTuningVar(int publicEventEnumVal, PublicEventTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
         public float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
+        {
+            return DefaultTuningVarValue;
+        }
+
+        private float GetLiveMetricsFrequencyTuningVar(int metricsFrequencyEnumVal, MetricsFrequencyTuningVar tuningVarEnum)
         {
             return DefaultTuningVarValue;
         }
