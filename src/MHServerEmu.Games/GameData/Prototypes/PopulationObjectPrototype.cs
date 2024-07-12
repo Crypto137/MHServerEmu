@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Populations;
 
@@ -29,6 +30,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool UseMarkerOrientation { get; protected set; }
         public PrototypeId UsePopulationMarker { get; protected set; }
         public PrototypeId CleanUpPolicy { get; protected set; }
+
+        [DoNotCopy]
+        public int PopulationObjectPrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            PopulationObjectPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPopulationObjectBlueprintDataRef());
+        }
 
         public virtual void BuildCluster(ClusterGroup group, ClusterObjectFlag flags)
         {

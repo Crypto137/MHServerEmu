@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -99,6 +100,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return false;
 
             return _ownedDynamicFields.Contains(fieldData);
+        }
+
+        public int GetEnumValueFromBlueprint(BlueprintId blueprintId)
+        {
+            // Fall back to parent prototype for RHStructs
+            PrototypeId protoRef = DataRef == PrototypeId.Invalid ? ParentDataRef : DataRef;
+
+            if (protoRef == PrototypeId.Invalid)
+                return 0;
+
+            DataOrigin dataOrigin = DataDirectory.Instance.GetDataOrigin(protoRef);
+            if (dataOrigin != DataOrigin.Calligraphy && dataOrigin != DataOrigin.Dynamic)
+                return 0;
+
+            Blueprint blueprint = DataDirectory.Instance.GetBlueprint(blueprintId);
+            if (blueprint == null) return Logger.WarnReturn(0, "GetEnumValueFromBlueprint(): blueprint == null");
+
+            return blueprint.GetPrototypeEnumValue(protoRef);
         }
 
         public override string ToString() => DataRef != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(DataRef) : base.ToString();

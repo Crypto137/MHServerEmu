@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PartyFilterRulePrototype : Prototype
     {
@@ -39,5 +42,15 @@
         public LocaleStringId Name { get; protected set; }
         public PrototypeId[] Teams { get; protected set; }
         public AssetId PanelName { get; protected set; }
+
+        [DoNotCopy]
+        public int PublicEventPrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            PublicEventPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPublicEventBlueprintDataRef());
+        }
+
     }
 }

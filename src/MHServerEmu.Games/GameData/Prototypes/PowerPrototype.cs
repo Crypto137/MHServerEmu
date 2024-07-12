@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -194,6 +195,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public TimeSpan NoInterruptPostWindowTime { get => TimeSpan.FromMilliseconds(Math.Min(NoInterruptPostWindowMS, (int)(AnimationTimeMS * (1f - AnimationContactTimePercent)))); }
 
+        [DoNotCopy]
+        public int PowerPrototypeEnumValue { get; private set; }
+
         public static PrototypeId RecursiveGetPowerRefOfPowerTypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
         {
             PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
@@ -310,7 +314,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype.As<KeywordPrototype>());
             IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword.As<KeywordPrototype>());
 
-            // TODO: Live tuning
+            PowerPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPowerBlueprintDataRef());
 
             // We don't use prototype data ref pointers, so we need to go through the game database
             // to get the prototype for the ref. This can be slow for lookups that happen often, so

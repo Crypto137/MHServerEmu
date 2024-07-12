@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 
@@ -61,7 +62,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Logger.Warn("GetNoStackSellPrice(): globalItemSellPriceMultiplier < 0f");
             }
 
-            // TODO: floatPrice *= LiveTuningManager::GetLiveGlobalTuningVar()
+            floatPrice *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorSellPrice);
 
             return (int)floatPrice;
         }

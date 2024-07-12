@@ -294,6 +294,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public List<InteractionData> KeywordsInteractionData { get; protected set; }
 
+        [DoNotCopy]
+        public int WorldEntityPrototypeEnumValue { get; private set; }
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -303,8 +306,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
             isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
 
-            //if (DataRef != GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)13337309842336122384))
-            //    worldEntityPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetWorldEntityBlueprintDataRef());
+            // NOTE: This is a hack straight from the client, do not change
+            if (DataRef != (PrototypeId)DataDirectory.Instance.GetBlueprintDataRefByGuid((BlueprintGuid)13337309842336122384))  // Entity/PowerAgnostic.blueprint
+                WorldEntityPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetWorldEntityBlueprintDataRef());
         }
 
         public override bool ApprovedForUse()

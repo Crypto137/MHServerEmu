@@ -2,6 +2,7 @@
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -56,6 +57,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public PrototypeId UltimatePowerRef { get; private set; } = PrototypeId.Invalid;
 
+        [DoNotCopy]
+        public int AvatarPrototypeEnumValue { get; private set; }
+
         public override bool ApprovedForUse()
         {
             if (base.ApprovedForUse() == false) return false;
@@ -106,7 +110,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // TODO: SynergyTable
             // TODO: StealablePowersAllowed
-            // TODO: Gazillion::LiveTuningData::GetAvatarBlueprintDataRef(), Gazillion::Prototype::GetEnumValueFromBlueprint()
+
+            AvatarPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAvatarBlueprintDataRef());
         }
 
         /// <summary>

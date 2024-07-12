@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
@@ -142,6 +143,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
 
+        [DoNotCopy]
+        public int RegionPrototypeEnumValue { get; private set; }
+
         private KeywordsMask _keywordsMask;
 
         public static bool Equivalent(RegionPrototype regionA, RegionPrototype regionB)
@@ -193,6 +197,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
 
             _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            RegionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetRegionBlueprintDataRef());
 
             // TODO others
         }

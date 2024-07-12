@@ -352,6 +352,33 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns the <see cref="BlueprintId"/> of the <see cref="Blueprint"/> that the specified <see cref="BlueprintGuid"/> refers to.
+        /// </summary>
+        public BlueprintId GetBlueprintDataRefByGuid(BlueprintGuid blueprintGuid)
+        {
+            if (blueprintGuid == BlueprintGuid.Invalid)
+                return BlueprintId.Invalid;
+
+            // Guid found
+            if (_blueprintGuidToDataRefDict.TryGetValue(blueprintGuid, out BlueprintId blueprintId))
+                return blueprintId;
+
+            // Guid not found, we need a replacement
+            ulong oldGuid = (ulong)blueprintGuid;
+            ulong newGuid = 0;
+
+            // Loop until we get all potential replacements (if a replacement was replaced)
+            while (GetGuidReplacement(oldGuid, ref newGuid))
+                oldGuid = newGuid;
+
+            if (_blueprintGuidToDataRefDict.TryGetValue((BlueprintGuid)newGuid, out blueprintId))
+                return blueprintId;
+
+            // Replacement didn't work either
+            return BlueprintId.Invalid;
+        }
+
+        /// <summary>
         /// Returns the <see cref="BlueprintId"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
         /// </summary>
         public BlueprintId GetPrototypeBlueprintDataRef(PrototypeId prototypeId)
