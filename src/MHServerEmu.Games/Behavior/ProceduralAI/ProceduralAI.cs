@@ -329,6 +329,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             _proceduralPtr.Profile?.OnMissileReturnEvent(_owningController);
         }
+
+        public void OnSetSimulated(bool simulated)
+        {
+            _proceduralPtr.Profile?.OnSetSimulated(_owningController, simulated);
+        }
     }
 
     public enum OverrideType

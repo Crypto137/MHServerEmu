@@ -575,11 +575,16 @@ namespace MHServerEmu.Games.Entities
         {
             SimulateResult result = base.SetSimulated(simulated);
 
-            if (result == SimulateResult.Set) // On AI
-                if (this is not Avatar 
-                    || IsTeamUpAgent == false 
-                    || IsControlledEntity == false )
-                    Think();
+            AIController?.OnAISetSimulated(simulated);
+
+            if (result == SimulateResult.Set)
+            {
+                TriggerEntityActionEvent(EntitySelectorActionEventType.OnSimulated);
+            }
+            else if (result == SimulateResult.Clear)
+            {
+                EntityActionComponent?.RestartPendingActions();
+            }
 
             return result;
         }
@@ -590,7 +595,7 @@ namespace MHServerEmu.Games.Entities
             collection[PropertyEnum.AIFullOverride] = profile.DataRef;
             AIController = new(Game, this);
             var behaviorProfile = AgentPrototype?.BehaviorProfile;
-            if (behaviorProfile == null || behaviorProfile.Brain == PrototypeId.Invalid) return;
+            if (behaviorProfile == null) return;
             AIController.OnInitAIOverride(behaviorProfile, collection);
             AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
         }
@@ -639,7 +644,7 @@ namespace MHServerEmu.Games.Entities
                 AIController.OnAIEnteredWorld();
                 ActivateAI();
             }
-            /*
+            
             if (IsSimulated && Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
             {
                 PrototypeId startPower = Properties[PropertyEnum.AIPowerOnSpawn];
@@ -655,7 +660,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (AIController == null)
-                EntityActionComponent?.InitActionBrain();*/
+                EntityActionComponent?.InitActionBrain();
         }
 
         public override void OnExitedWorld()
@@ -786,6 +791,154 @@ namespace MHServerEmu.Games.Entities
             }
 
             return false;
+        }
+
+        public override bool ProcessEntityAction(EntitySelectorActionPrototype action)
+        {
+            if (IsControlledEntity || EntityActionComponent == null) return false;
+
+            // TODO action.SpawnerTrigger
+
+            if (action.AttributeActions.HasValue())
+                foreach (var attr in action.AttributeActions)
+                    switch (attr)
+                    {
+                        case EntitySelectorAttributeActions.DisableInteractions:
+                            Properties[PropertyEnum.EntSelActInteractOptDisabled] = true; break;
+                        case EntitySelectorAttributeActions.EnableInteractions:
+                            Properties[PropertyEnum.EntSelActInteractOptDisabled] = false; break;
+                    }
+
+            var aiOverride = action.PickAIOverride(Game.Random);
+            if (aiOverride != null && aiOverride.SelectorReferencedPowerRemove)
+            {
+                foreach (var powerRef in EntityActionComponent.PerformPowers)
+                    UnassignPower(powerRef);
+                EntityActionComponent.PerformPowers.Clear();
+                
+                // clear aggro range ?
+                if (AIController != null)
+                {
+                    var collection = AIController.Blackboard.PropertyCollection;
+                    collection.RemoveProperty(PropertyEnum.AIAggroRangeAlly);
+                    collection.RemoveProperty(PropertyEnum.AIAggroRangeHostile);
+                    collection.RemoveProperty(PropertyEnum.AIProximityRangeOverride);
+                }
+            }
+
+            if (IsInWorld)
+            {
+                var overheadText = action.PickOverheadText(Game.Random);
+                if (overheadText != null)
+                    ShowOverheadText(overheadText.Text, (float)TimeSpan.FromMilliseconds(overheadText.Duration).TotalSeconds);
+
+                if (aiOverride != null)
+                {
+                    var powerRef = aiOverride.Power;
+                    if (powerRef != PrototypeId.Invalid)
+                    {
+                        if (aiOverride.PowerRemove)
+                        {
+                            UnassignPower(powerRef);
+                            EntityActionComponent.PerformPowers.Remove(powerRef);
+                        }
+                        else
+                        {
+                            var result = ActivatePerformPower(powerRef);
+                            if (result == PowerUseResult.Success)
+                                EntityActionComponent.PerformPowers.Add(powerRef);
+                            else
+                                Logger.Warn($"ProcessEntityAction ActivatePerformPower [{powerRef}] = {result}");
+                            if (result == PowerUseResult.OwnerNotSimulated) return false;
+                        }
+                    }
+                    if (aiOverride.BrainRemove)
+                    {
+                        AIController?.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+                        Properties.RemoveProperty(PropertyEnum.AllianceOverride);
+                    }
+                }
+
+                if (action.AllianceOverride != PrototypeId.Invalid)
+                    Properties[PropertyEnum.AllianceOverride] = action.AllianceOverride;
+            }
+
+            if (aiOverride != null)
+            {
+                // override AI
+
+                var brainRef = aiOverride.Brain;
+                if (brainRef == PrototypeId.Invalid) return false;
+
+                if (AIController == null)
+                {
+                    var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
+                    if (brain is not ProceduralAIProfilePrototype profile) return false;
+                    InitAIOverride(profile, new());
+                    if (AIController == null) return false;
+                }
+                else
+                    AIController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = brainRef;
+
+                var collection = AIController.Blackboard.PropertyCollection;
+                if (collection != null) 
+                {
+                    // set aggro range
+                    if (aiOverride.AIAggroRangeOverrideAlly > 0)
+                        collection[PropertyEnum.AIAggroRangeAlly] = (float)aiOverride.AIAggroRangeOverrideAlly;
+                    if (aiOverride.AIAggroRangeOverrideEnemy > 0)
+                        collection[PropertyEnum.AIAggroRangeHostile] = (float)aiOverride.AIAggroRangeOverrideEnemy;
+                    if (aiOverride.AIProximityRangeOverride > 0)
+                        collection[PropertyEnum.AIProximityRangeOverride] = (float)aiOverride.AIProximityRangeOverride;
+                }
+
+                if (aiOverride.LifespanMS > -1)
+                {
+                    var lifespan = GetRemainingLifespan();
+                    var reset = TimeSpan.FromMilliseconds(aiOverride.LifespanMS);
+                    if (lifespan == TimeSpan.Zero || reset < lifespan)
+                        ResetLifespan(reset);
+                }  
+                
+                // TODO aiOverride.LifespanEndPower              
+            }
+
+            // TODO action.Rewards
+            // TODO action.BroadcastEvent
+
+            return true;
+        }
+
+        private PowerUseResult ActivatePerformPower(PrototypeId powerRef)
+        {
+            if (this is Avatar) return PowerUseResult.GenericError;
+            if (powerRef == PrototypeId.Invalid) return PowerUseResult.AbilityMissing;
+
+            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return PowerUseResult.GenericError;
+
+            if (HasPowerInPowerCollection(powerRef) == false)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                var power = AssignPower(powerRef, indexProps);
+                if (power == null) return PowerUseResult.GenericError;
+            }
+
+            if (powerProto.Activation != PowerActivationType.Passive)
+            {
+                var power = GetPower(powerRef);
+                if (power == null) return PowerUseResult.AbilityMissing;
+
+                if (powerProto.IsToggled && power.IsToggledOn()) return PowerUseResult.Success;
+                var result = CanActivatePower(power, InvalidId, Vector3.Zero);
+                if (result != PowerUseResult.Success) return result;
+
+                PowerActivationSettings powerSettings = new(Id, Vector3.Zero, RegionLocation.Position);
+                powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                return ActivatePower(powerRef, ref powerSettings);
+            }
+
+            return PowerUseResult.Success;
         }
 
         public override void AppendStartAction(PrototypeId actionsTarget) // TODO rewrite this

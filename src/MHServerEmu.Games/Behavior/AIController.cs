@@ -445,5 +445,11 @@ namespace MHServerEmu.Games.Behavior
 
             // TODO Off PropertyEnum.AIThrowPower
         }
+
+        public void OnAISetSimulated(bool simulated)
+        {
+            SetIsEnabled(simulated);
+            Brain?.OnSetSimulated(simulated);
+        }
     }
 }

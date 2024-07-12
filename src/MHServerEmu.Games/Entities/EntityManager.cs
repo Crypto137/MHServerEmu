@@ -233,7 +233,7 @@ namespace MHServerEmu.Games.Entities
                     worldEntity.EnterWorld(region, position, settings.Orientation, settings);
 
                     // custom StartAction - this needs to happen after the entity enters world
-                    worldEntity.AppendStartAction(settings.ActionsTarget);
+                    // worldEntity.AppendStartAction(settings.ActionsTarget);
                 }
             }
 
