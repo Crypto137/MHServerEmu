@@ -2657,6 +2657,13 @@ namespace MHServerEmu.Games.Powers
                 Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
                 removeConditionEvent.Get().Initialize(Owner.Id, 777);
             }
+            else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
+            {
+                // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
+                Condition ambientNpcCondition = Owner.ConditionCollection.AllocateCondition();
+                ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
+                Owner.ConditionCollection.AddCondition(ambientNpcCondition);
+            }
 
             return true;
         }
@@ -2765,6 +2772,12 @@ namespace MHServerEmu.Games.Powers
                 // Bikes and other vehicles
                 if (Owner.ConditionCollection.GetCondition(666) != null)
                     Owner.ConditionCollection.RemoveCondition(666);
+            }
+            else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
+            {
+                // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
+                if (Owner.ConditionCollection.GetCondition(999) != null)
+                    Owner.ConditionCollection.RemoveCondition(999);
             }
         }
 
