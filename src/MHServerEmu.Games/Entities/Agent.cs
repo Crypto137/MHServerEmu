@@ -715,6 +715,16 @@ namespace MHServerEmu.Games.Entities
                     ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
                 }
             }
+            if (oldState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting) ^ newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting))
+            {
+                if (IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+                {
+                    // HACK: off start animation
+                    var startCondition = ConditionCollection.GetCondition(999);
+                    if (startCondition != null)
+                        UnassignPower(startCondition.CreatorPowerPrototypeRef);
+                }
+            }
         }
 
         public override bool OnPowerAssigned(Power power)
@@ -817,13 +827,13 @@ namespace MHServerEmu.Games.Entities
                 EntityActionComponent.PerformPowers.Clear();
                 
                 // clear aggro range ?
-                if (AIController != null)
+                /*if (AIController != null)
                 {
                     var collection = AIController.Blackboard.PropertyCollection;
                     collection.RemoveProperty(PropertyEnum.AIAggroRangeAlly);
                     collection.RemoveProperty(PropertyEnum.AIAggroRangeHostile);
                     collection.RemoveProperty(PropertyEnum.AIProximityRangeOverride);
-                }
+                }*/
             }
 
             if (IsInWorld)
