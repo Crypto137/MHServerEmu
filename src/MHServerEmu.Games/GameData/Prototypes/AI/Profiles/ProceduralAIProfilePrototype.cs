@@ -180,6 +180,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnPlayerInteractEvent(AIController ownerController, in PlayerInteractGameEvent interactEvent) { }
         public virtual void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent) { }
         public virtual void OnMissileReturnEvent(AIController ownerController) { }
+        public virtual void OnSetSimulated(AIController ownerController, bool simulated) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
@@ -544,6 +545,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Agent ownerAgent = ownerController.Owner;
             if (ownerAgent == null || target.IsInWorld == false) return false;
 
+            bool check = true;
             if (attributeList.HasValue())
                 foreach (AIEntityAttributePrototype attrib in attributeList)
                 {
@@ -551,7 +553,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (attrib.Check(ownerAgent, target)) return true;
                 }
 
-            return false;
+            return check;
         }
     }
 

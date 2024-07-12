@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Locomotor locomotor = agent.Locomotor;
                 if (locomotor == null)
                 {
-                    ProceduralAI.Logger.Warn($"Agent [{agent}] does not have a locomotor and should not be calling this function");
+                    // ProceduralAI.Logger.Warn($"Agent [{agent}] does not have a locomotor and should not be calling this function");
                     return;
                 }
                 locomotor.LookAt(target.RegionLocation.Position);

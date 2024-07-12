@@ -220,6 +220,7 @@ namespace MHServerEmu.Games.Entities
             if (entity is WorldEntity worldEntity)
             {
                 worldEntity.RegisterActions(settings.Actions);
+                worldEntity.AppendStartAction_OLD(settings.ActionsTarget); // TODO move to missionAction
 
                 if (settings.RegionId != 0)
                 {
@@ -230,10 +231,8 @@ namespace MHServerEmu.Games.Entities
                         position = RegionLocation.ProjectToFloor(region, position);
                         position = worldEntity.FloorToCenter(position);
                     }
-                    worldEntity.EnterWorld(region, position, settings.Orientation, settings);
 
-                    // custom StartAction - this needs to happen after the entity enters world
-                    worldEntity.AppendStartAction(settings.ActionsTarget);
+                    worldEntity.EnterWorld(region, position, settings.Orientation, settings);
                 }
             }
 

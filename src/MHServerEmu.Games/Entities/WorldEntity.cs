@@ -241,6 +241,8 @@ namespace MHServerEmu.Games.Entities
 
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
+            EntityActionComponent?.CancelAll();
+
             // Schedule destruction
             int removeFromWorldTimerMS = WorldEntityPrototype.RemoveFromWorldTimerMS;
             if (removeFromWorldTimerMS < 0)     // -1 means entities are not destroyed (e.g. avatars)
@@ -1673,6 +1675,8 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        #region Actions
+
         public void RegisterActions(List<EntitySelectorActionPrototype> actions)
         {
             if (actions == null) return;
@@ -1680,7 +1684,7 @@ namespace MHServerEmu.Games.Entities
             EntityActionComponent.Register(actions);
         }
 
-        public virtual void AppendStartAction(PrototypeId actionsTarget) { }
+        public virtual void AppendStartAction_OLD(PrototypeId actionsTarget) { }
 
         public ScriptRoleKeyEnum GetScriptRoleKey()
         {
@@ -1689,6 +1693,71 @@ namespace MHServerEmu.Games.Entities
             else
                 return (ScriptRoleKeyEnum)(uint)Properties[PropertyEnum.ScriptRoleKey];
         }
+
+        public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
+        {
+            if (EntityActionComponent != null)
+                return EntityActionComponent.CanTrigger(eventType);
+            return false;
+        }
+
+        public void TriggerEntityActionEvent(EntitySelectorActionEventType actionType)
+        {
+            if (EntityActionComponent != null)
+            {
+                // Logger.Trace($"TriggerEntityActionEvent {PrototypeName} {actionType}");
+                EntityActionComponent.Trigger(actionType);
+            }
+        }
+
+        public virtual bool ProcessEntityAction(EntitySelectorActionPrototype action)
+        {
+            if (IsControlledEntity || EntityActionComponent == null || IsInWorld == false) return false;
+
+            // TODO action.SpawnerTrigger
+
+            var aiOverride = action.PickAIOverride(Game.Random);
+            if (aiOverride != null)
+            {
+                var powerRef = aiOverride.Power;
+                if (powerRef != PrototypeId.Invalid)
+                {
+                    if (aiOverride.PowerRemove)
+                    {
+                        UnassignPower(powerRef);
+                        EntityActionComponent.PerformPowers.Remove(powerRef);
+                    }
+                    else
+                    {
+                        PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                        AssignPower(powerRef, indexProps);
+
+                        PowerActivationSettings powerSettings = new(Id, Vector3.Zero, RegionLocation.Position);
+                        powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                        var result = ActivatePower(powerRef, ref powerSettings);
+                        if (result == PowerUseResult.Success)
+                            EntityActionComponent.PerformPowers.Add(powerRef);
+                        else
+                            return Logger.WarnReturn(false, $"ProcessEntityAction ActivatePower [{powerRef}] = {result}");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public void ShowOverheadText(LocaleStringId idText, float duration)
+        {
+            var message = NetMessageShowOverheadText.CreateBuilder()
+                .SetIdAgent(Id)
+                .SetIdText((ulong)idText)
+                .SetDuration(duration)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        #endregion
 
         public bool HasKeyword(PrototypeId keyword)
         {
@@ -1741,19 +1810,6 @@ namespace MHServerEmu.Games.Entities
                 if (HasKeyword(keywordPrototype) || HasConditionWithKeyword(keywordProtoRef))
                     value += kvp.Value;
             }
-        }
-
-        public bool CanEntityActionTrigger(EntitySelectorActionEventType eventType)
-        {
-            Logger.Debug($"CanEntityActionTrigger {eventType}");
-            return false;
-            // throw new NotImplementedException();
-        }
-
-        public void TriggerEntityActionEvent(EntitySelectorActionEventType actionType)
-        {
-            Logger.Debug($"TriggerEntityActionEvent {actionType}");
-            // throw new NotImplementedException();
         }
 
         protected override void BuildString(StringBuilder sb)

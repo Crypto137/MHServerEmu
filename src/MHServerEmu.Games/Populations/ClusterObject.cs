@@ -978,6 +978,7 @@ namespace MHServerEmu.Games.Populations
             spec.EntityRef = EntityRef;
             spec.Transform = Transform3.BuildTransform(offsetPos, rot);
             spec.SnapToFloor = SnapToFloor;
+            spec.EntitySelectorProto = EntitySelectorProto;
             if (EntityProto != null)
                 spec.AppendActions(EntityProto.EntitySelectorActions);
             if (EntitySelectorProto != null)
