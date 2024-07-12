@@ -3,10 +3,36 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
+
+    [AssetEnum((int)None)]
+    public enum AffixPosition
+    {
+        None = 0,
+        Prefix = 1,
+        Suffix = 2,
+        Visual = 3,
+        Cosmic = 5,
+        Unique = 6,
+        Ultimate = 4,
+        Blessing = 7,
+        Runeword = 8,
+        TeamUp = 9,
+        Metadata = 10,
+        PetTech1 = 11,
+        PetTech2 = 12,
+        PetTech3 = 13,
+        PetTech4 = 14,
+        PetTech5 = 15,
+        RegionAffix = 16,
+        Socket1 = 17,
+        Socket2 = 18,
+        Socket3 = 19,
+    }
 
     [AssetEnum((int)Fail)]
     public enum DuplicateHandlingBehavior
@@ -59,21 +85,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Player,
         GroupBoss,
         TeamUp,
-    }
-
-    [AssetEnum((int)None)]
-    public enum LootDropEventType
-    {
-        None = 0,
-        OnInteractedWith = 3,
-        OnHealthBelowPct = 2,
-        OnHealthBelowPctHit = 1,
-        OnKilled = 4,
-        OnKilledChampion = 5,
-        OnKilledElite = 6,
-        OnKilledMiniBoss = 7,
-        OnHit = 8,
-        OnDamagedForPctHealth = 9,
     }
 
     [AssetEnum((int)Default)]
