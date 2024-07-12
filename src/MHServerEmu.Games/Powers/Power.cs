@@ -2582,7 +2582,15 @@ namespace MHServerEmu.Games.Powers
             List<WorldEntity> targetList = new();
             WorldEntity primaryTarget = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
 
-            GetTargets(targetList, primaryTarget, powerApplication.TargetPosition, (int)powerApplication.PowerRandomSeed);
+            // NOTE: Due to how physics work, user may no longer be where they were when collision / combo / proc activated.
+            // In these cases we use pass in application position for validation checks to work.
+            PowerPrototype powerProto = Prototype;
+            Vector3 userPosition = IsMissileEffect() || IsComboEffect() || IsProcEffect()
+                ? powerApplication.UserPosition
+                : Owner.RegionLocation.Position;
+
+            GetTargets(targetList, Game, powerProto, Owner.Properties, primaryTarget, powerApplication.TargetPosition, userPosition,
+                GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, -1, GetFullExecutionTime(), 0);
 
             for (int i = 0; i < targetList.Count; i++)
             {
