@@ -1,9 +1,8 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
-using System;
-using System.Collections.Generic;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -363,9 +362,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool IsLiveTuningEnabled()
         {
-            // Not yet implemented
-            // TODO check mission
-            return true;
+            return LiveTuningManager.GetLiveMissionTuningVar(this, MissionTuningVar.eMTV_Enabled) != 0f;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
