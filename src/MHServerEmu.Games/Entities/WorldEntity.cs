@@ -1705,7 +1705,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (EntityActionComponent != null)
             {
-                Logger.Trace($"TriggerEntityActionEvent {PrototypeName} {actionType}");
+                // Logger.Trace($"TriggerEntityActionEvent {PrototypeName} {actionType}");
                 EntityActionComponent.Trigger(actionType);
             }
         }

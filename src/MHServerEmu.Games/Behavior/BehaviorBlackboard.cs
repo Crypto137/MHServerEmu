@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
@@ -8,8 +9,10 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Behavior
 {
-    public class BehaviorBlackboard
+    public class BehaviorBlackboard: IPropertyChangeWatcher
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private Agent _owner; 
         public PropertyCollection PropertyCollection { get; private set; }
         public Vector3 SpawnPoint { get; set; }
@@ -25,6 +28,7 @@ namespace MHServerEmu.Games.Behavior
         {
             _owner = owner;
             PropertyCollection = new ();
+            Attach(PropertyCollection);
             SpawnPoint = Vector3.Zero;
             SpawnOffset = Vector3.Zero;
             UsePowerTargetPos = Vector3.Zero;
@@ -52,6 +56,27 @@ namespace MHServerEmu.Games.Behavior
                 PropertyCollection.FlattenCopyFrom(profile.Properties, false);
             if (collection != null)
                 PropertyCollection.FlattenCopyFrom(collection, false);
+        }
+
+        public void Attach(PropertyCollection propertyCollection)
+        {
+            if (propertyCollection != PropertyCollection)
+            {
+                Logger.Warn("Attach(): Entities can attach only to their own property collection");
+                return;
+            }
+            PropertyCollection.AttachWatcher(this);
+        }
+
+        public void Detach(bool removeFromAttachedCollection)
+        {
+            if (removeFromAttachedCollection)
+                PropertyCollection.DetachWatcher(this);
+        }
+
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+             _owner.AIController?.Brain?.OnPropertyChange(id, newValue, oldValue, flags);
         }
 
         public void AddCustomPower(PrototypeId powerRef, Vector3 targetPos, ulong targetId)
