@@ -2657,13 +2657,6 @@ namespace MHServerEmu.Games.Powers
                 Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
                 removeConditionEvent.Get().Initialize(Owner.Id, 777);
             }
-            else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
-            {
-                // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
-                Condition ambientNpcCondition = Owner.ConditionCollection.AllocateCondition();
-                ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(ambientNpcCondition);
-            }
 
             return true;
         }
@@ -2772,12 +2765,6 @@ namespace MHServerEmu.Games.Powers
                 // Bikes and other vehicles
                 if (Owner.ConditionCollection.GetCondition(666) != null)
                     Owner.ConditionCollection.RemoveCondition(666);
-            }
-            else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
-            {
-                // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
-                if (Owner.ConditionCollection.GetCondition(999) != null)
-                    Owner.ConditionCollection.RemoveCondition(999);
             }
         }
 
@@ -3034,13 +3021,21 @@ namespace MHServerEmu.Games.Powers
             {
                 HandleTriggerPowerEventOnPowerToggleOn();
 
-                // HACK: Old condition hack for Emma Frost's Diamond Form
+                // HACK: Visual condition hacks for toggled powers
                 if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) == null)
                 {
                     // Emma Frost - Diamond Form
                     Condition diamondFormCondition = Owner.ConditionCollection.AllocateCondition();
                     diamondFormCondition.InitializeFromPowerMixinPrototype(111, PrototypeDataRef, 0, TimeSpan.Zero);
                     Owner.ConditionCollection.AddCondition(diamondFormCondition);
+                }
+                else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
+                {
+                    // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
+                    Condition ambientNpcCondition = Owner.ConditionCollection.AllocateCondition();
+                    ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
+                    ambientNpcCondition.StartTime = Game.CurrentTime;
+                    Owner.ConditionCollection.AddCondition(ambientNpcCondition);
                 }
             }
             else
@@ -3052,7 +3047,14 @@ namespace MHServerEmu.Games.Powers
 
                 // HACK: Old condition hack for Emma Frost's Diamond Form
                 if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) != null)
+                {
                     Owner.ConditionCollection.RemoveCondition(111);
+                }
+                else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595) &&
+                    Owner.ConditionCollection.GetCondition(999) != null)
+                {
+                    Owner.ConditionCollection.RemoveCondition(999);
+                }
             }
 
             return true;
