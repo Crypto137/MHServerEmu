@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly TuningVarArray _globalTuningVars = new((int)GlobalTuningVar.eGTV_NumGlobalTuningVars);
+
         private List<TuningVarArray> _perAreaTuningVars;
         private List<TuningVarArray> _perLootTableTuningVars;
         private List<TuningVarArray> _perMissionTuningVars;
@@ -22,6 +23,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         private List<TuningVarArray> _perConditionTuningVars;
         private List<TuningVarArray> _perPublicEventTuningVars;
         private List<TuningVarArray> _perMetricsFrequencyTuningVars;
+
+        private readonly Dictionary<int, List<WorldEntityPrototype>> _lootGroupDict = new();
 
         private NetMessageLiveTuningUpdate _updateProtobuf = NetMessageLiveTuningUpdate.DefaultInstance;
         private bool _updateProtobufOutOfDate = false;
@@ -316,14 +319,68 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return _updateProtobuf;
         }
 
+        public bool GetLiveLootGroup(int lootGroupNum, out IEnumerable<WorldEntityPrototype> lootGroup)
+        {
+            bool found = _lootGroupDict.TryGetValue(lootGroupNum, out List<WorldEntityPrototype> worldEntityProtoList);
+            lootGroup = worldEntityProtoList;
+            return found;
+        }
+
         private void UpdateLiveLootGroup(WorldEntityPrototype worldEntityProto, float value)
         {
-            // TODO
+            int worldEntityEnumVal = worldEntityProto.WorldEntityPrototypeEnumValue;
+            int currentLootGroupNum = (int)_perWorldEntityTuningVars[worldEntityEnumVal][(int)WorldEntityTuningVar.eWETV_LootGroupNum];
+            int newLootGroupNum = (int)value;
+            
+            // No need to update loot group
+            if (newLootGroupNum == currentLootGroupNum)
+                return;
+
+            // Remove from the current group if its not default value
+            // NOTE: Switch to using HashSet here to improve removal performance if needed
+            if (currentLootGroupNum != DefaultTuningVarValue)
+            {
+                if (_lootGroupDict.TryGetValue(currentLootGroupNum, out List<WorldEntityPrototype> lootGroup))
+                    lootGroup.Remove(worldEntityProto);
+            }
+
+            // Add to the new group if its not default value
+            if (newLootGroupNum != DefaultTuningVarValue)
+            {
+                if (_lootGroupDict.TryGetValue(newLootGroupNum, out List<WorldEntityPrototype> lootGroup) == false)
+                {
+                    lootGroup = new();
+                    _lootGroupDict.Add(newLootGroupNum, lootGroup);
+                }
+
+                lootGroup.Add(worldEntityProto);
+            }
         }
 
         private void ClearLootGroups()
         {
-            // TODO
+            _lootGroupDict.Clear();
+        }
+
+        public static string GetLiveTuningVarEnumName(int tuningVarEnum, PrototypeId tuningVarProtoRef = PrototypeId.Invalid)
+        {
+            if (tuningVarProtoRef == PrototypeId.Invalid) return ((GlobalTuningVar)tuningVarEnum).ToString();
+
+            Prototype prototype = GameDatabase.GetPrototype<Prototype>(tuningVarProtoRef);
+
+            if (prototype is AvatarPrototype) return ((AvatarEntityTuningVar)tuningVarEnum).ToString();
+            if (prototype is WorldEntityPrototype) return ((WorldEntityTuningVar)tuningVarEnum).ToString();
+            if (prototype is PowerPrototype) return ((PowerTuningVar)tuningVarEnum).ToString();
+            if (prototype is AreaPrototype) return ((AreaTuningVar)tuningVarEnum).ToString();
+            if (prototype is RegionPrototype) return ((RegionTuningVar)tuningVarEnum).ToString();
+            if (prototype is PopulationObjectPrototype) return ((PopObjTuningVar)tuningVarEnum).ToString();
+            if (prototype is MissionPrototype) return ((MissionTuningVar)tuningVarEnum).ToString();
+            if (prototype is LootTablePrototype) return ((LootTableTuningVar)tuningVarEnum).ToString();
+            if (prototype is ConditionPrototype) return ((ConditionTuningVar)tuningVarEnum).ToString();
+            if (prototype is PublicEventPrototype) return ((PublicEventTuningVar)tuningVarEnum).ToString();
+            if (prototype is MetricsFrequencyPrototype) return ((MetricsFrequencyTuningVar)tuningVarEnum).ToString();
+
+            return tuningVarEnum.ToString();
         }
 
         #region Tuning Var Accesors

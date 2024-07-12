@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                         }
 
                         _liveTuningData.UpdateLiveTuningVar(tuningVarProtoRef, tuningVarEnum, tuningVarValue);
-                        Logger.Trace($"Updated Live Tuning Setting on this GIS.  Prototype: {tuningVarProtoRef.GetName()}  Enumeration: {GetEnumName(tuningVarEnum, tuningVarProtoRef)} Value: {tuningVarValue}");
+                        Logger.Trace($"Updated Live Tuning Setting on this GIS.  Prototype: {tuningVarProtoRef.GetName()}  Enumeration: {LiveTuningData.GetLiveTuningVarEnumName(tuningVarEnum, tuningVarProtoRef)} Value: {tuningVarValue}");
                     }
                     else
                     {
@@ -274,27 +274,22 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
-        // TODO
-        // public static void GetLiveLootGroup()
-
-        private static string GetEnumName(int tuningVarEnum, PrototypeId tuningVarProtoRef = PrototypeId.Invalid)
+        public static bool GetLiveLootGroup(int lootGroupNum, out IEnumerable<WorldEntityPrototype> lootGroup)
         {
-            Prototype prototype = GameDatabase.GetPrototype<Prototype>(tuningVarProtoRef);
-            return prototype switch
+            lootGroup = Array.Empty<WorldEntityPrototype>();
+
+            Game game = Game.Current;
+            if (game != null)
             {
-                AreaPrototype               => ((AreaTuningVar)tuningVarEnum).ToString(),
-                AvatarPrototype             => ((AvatarEntityTuningVar)tuningVarEnum).ToString(),
-                WorldEntityPrototype        => ((WorldEntityTuningVar)tuningVarEnum).ToString(),
-                PopulationObjectPrototype   => ((PopObjTuningVar)tuningVarEnum).ToString(),
-                PowerPrototype              => ((PowerTuningVar)tuningVarEnum).ToString(),
-                RegionPrototype             => ((RegionTuningVar)tuningVarEnum).ToString(),
-                LootTablePrototype          => ((LootTableTuningVar)tuningVarEnum).ToString(),
-                MissionPrototype            => ((MissionTuningVar)tuningVarEnum).ToString(),
-                ConditionPrototype          => ((ConditionTuningVar)tuningVarEnum).ToString(),
-                PublicEventPrototype        => ((PublicEventTuningVar)tuningVarEnum).ToString(),
-                MetricsFrequencyPrototype   => ((MetricsFrequencyTuningVar)tuningVarEnum).ToString(),
-                _                           => tuningVarEnum.ToString()
-            }; ;
+                LiveTuningData liveTuningData = game.LiveTuningData;
+                if (liveTuningData == null) return Logger.WarnReturn(false, "GetLiveLootGroup(): liveTuningData == null");
+                return liveTuningData.GetLiveLootGroup(lootGroupNum, out lootGroup);
+            }
+            else
+            {
+                lock (Instance._liveTuningData)
+                    return Instance._liveTuningData.GetLiveLootGroup(lootGroupNum, out lootGroup);
+            }
         }
     }
 }
