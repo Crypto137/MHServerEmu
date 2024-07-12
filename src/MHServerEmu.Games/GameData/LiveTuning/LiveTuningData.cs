@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
-using System.Diagnostics;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {
@@ -70,21 +69,108 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public void Copy(LiveTuningData other)
         {
+            if (ChangeNum == other.ChangeNum) return;
 
+            _globalTuningVars.Copy(other._globalTuningVars);
+
+            for (int i = 0; i < _perAreaTuningVars.Count; i++)
+                _perAreaTuningVars[i].Copy(other._perAreaTuningVars[i]);
+
+            for (int i = 0; i < _perLootTableTuningVars.Count; i++)
+                _perLootTableTuningVars[i].Copy(other._perLootTableTuningVars[i]);
+
+            for (int i = 0; i < _perMissionTuningVars.Count; i++)
+                _perMissionTuningVars[i].Copy(other._perMissionTuningVars[i]);
+
+            for (int i = 0; i < _perWorldEntityTuningVars.Count; i++)
+                _perWorldEntityTuningVars[i].Copy(other._perWorldEntityTuningVars[i]);
+
+            for (int i = 0; i < _perPopObjTuningVars.Count; i++)
+                _perPopObjTuningVars[i].Copy(other._perPopObjTuningVars[i]);
+
+            for (int i = 0; i < _perPowerTuningVars.Count; i++)
+                _perPowerTuningVars[i].Copy(other._perPowerTuningVars[i]);
+
+            for (int i = 0; i < _perRegionTuningVars.Count; i++)
+                _perRegionTuningVars[i].Copy(other._perRegionTuningVars[i]);
+
+            for (int i = 0; i < _perAvatarTuningVars.Count; i++)
+                _perAvatarTuningVars[i].Copy(other._perAvatarTuningVars[i]);
+
+            for (int i = 0; i < _perConditionTuningVars.Count; i++)
+                _perConditionTuningVars[i].Copy(other._perConditionTuningVars[i]);
+
+            for (int i = 0; i < _perPublicEventTuningVars.Count; i++)
+                _perPublicEventTuningVars[i].Copy(other._perPublicEventTuningVars[i]);
+
+            for (int i = 0; i < _perMetricsFrequencyTuningVars.Count; i++)
+                _perMetricsFrequencyTuningVars[i].Copy(other._perMetricsFrequencyTuningVars[i]);
+
+            ClearLootGroups();
+
+            // TODO: Copy loot groups
+
+            ChangeNum = other.ChangeNum;
+            _updateProtobufOutOfDate = true;
         }
 
-        public void UpdateLiveTuningVar(PrototypeId tuningVarProtoRef, int tuningVarEnum, float tuningVarValue)
+        public bool UpdateLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum, float tuningVarValue)
         {
+            if (tuningVarEnum < 0 || tuningVarEnum >= GlobalTuningVar.eGTV_NumGlobalTuningVars)
+                return Logger.WarnReturn(false, "UpdateLiveGlobalTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= GlobalTuningVar.eGTV_NumGlobalTuningVars");
 
+            _globalTuningVars[(int)tuningVarEnum] = tuningVarValue;
+            _updateProtobufOutOfDate = true;
+
+            return true;
         }
 
-        public void UpdateLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum, float tuningVarValue)
+        public bool UpdateLiveTuningVar(PrototypeId tuningVarProtoRef, int tuningVarEnum, float tuningVarValue)
         {
+            if (tuningVarProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "UpdateLiveTuningVar(): tuningVarProtoRef == PrototypeId.Invalid");
 
+            Prototype prototype = GameDatabase.GetPrototype<Prototype>(tuningVarProtoRef);
+
+            if (prototype is AvatarPrototype)
+                return UpdateLiveAvatarTuningVar(tuningVarProtoRef, (AvatarEntityTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is WorldEntityPrototype)
+                return UpdateLiveWorldEntityTuningVar(tuningVarProtoRef, (WorldEntityTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is PowerPrototype)
+                return UpdateLivePowerTuningVar(tuningVarProtoRef, (PowerTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is AreaPrototype)
+                return UpdateLiveAreaTuningVar(tuningVarProtoRef, (AreaTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is RegionPrototype)
+                return UpdateLiveRegionTuningVar(tuningVarProtoRef, (RegionTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is PopulationObjectPrototype)
+                return UpdateLivePopObjTuningVar(tuningVarProtoRef, (PopObjTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is MissionPrototype)
+                return UpdateLiveMissionTuningVar(tuningVarProtoRef, (MissionTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is LootTablePrototype)
+                return UpdateLiveLootTableTuningVar(tuningVarProtoRef, (LootTableTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is ConditionPrototype)
+                return UpdateLiveConditionTuningVar(tuningVarProtoRef, (ConditionTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is PublicEventPrototype)
+                return UpdateLivePublicEventTuningVar(tuningVarProtoRef, (PublicEventTuningVar)tuningVarEnum, tuningVarValue);
+
+            if (prototype is MetricsFrequencyPrototype)
+                return UpdateLiveMetricsFrequencyTuningVar(tuningVarProtoRef, (MetricsFrequencyTuningVar)tuningVarEnum, tuningVarValue);
+
+            return false;
         }
 
         public NetMessageLiveTuningUpdate GetLiveTuningUpdate()
         {
+            // TODO
             return NetMessageLiveTuningUpdate.DefaultInstance;
         }
 
@@ -451,6 +537,97 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             for (int i = 0; i < numMetricsFrequencyPrototypes; i++)
                 _perMetricsFrequencyTuningVars.Add(new TuningVarArray((int)MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars));
 
+            return true;
+        }
+
+        #endregion
+
+        #region Tuning Var Update Methods
+
+        private bool UpdateLiveAvatarTuningVar(PrototypeId avatarProtoRef, AvatarEntityTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            if (tuningVarEnum < 0 || tuningVarEnum >= AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars)
+                return Logger.WarnReturn(false, $"UpdateLiveAvatarTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars");
+
+            if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, $"UpdateLiveAvatarTuningVar(): avatarProtoRef == PrototypeId.Invalid");
+
+            BlueprintId avatarBlueprintRef = GetAvatarBlueprintDataRef();
+            if (avatarBlueprintRef == BlueprintId.Invalid) return Logger.WarnReturn(false, $"UpdateLiveAvatarTuningVar(): avatarBlueprintRef == BlueprintId.Invalid");
+
+            int avatarEnumVal = DataDirectory.Instance.GetPrototypeEnumValue(avatarProtoRef, avatarBlueprintRef);
+            if (avatarEnumVal < 0 || avatarEnumVal >= _perAvatarTuningVars.Count)
+                return Logger.WarnReturn(false, $"UpdateLiveAvatarTuningVar(): avatarEnumVal < 0 || avatarEnumVal >= _perAvatarTuningVars.Count");
+
+            _perAvatarTuningVars[avatarEnumVal][(int)tuningVarEnum] = tuningVarValue;
+            _updateProtobufOutOfDate = true;
+
+            return true;
+        }
+
+        private bool UpdateLiveWorldEntityTuningVar(PrototypeId worldEntityProtoRef, WorldEntityTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            if (tuningVarEnum < 0 || tuningVarEnum >= WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars)
+                return Logger.WarnReturn(false, $"UpdateLiveWorldEntityTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars");
+
+            WorldEntityPrototype worldEntityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(worldEntityProtoRef);
+            if (worldEntityProto == null) return Logger.WarnReturn(false, "UpdateLiveWorldEntityTuningVar(): worldEntityProto == null");
+
+            int worldEntityEnumVal = worldEntityProto.WorldEntityPrototypeEnumValue;
+
+            if (tuningVarEnum == WorldEntityTuningVar.eWETV_LootGroupNum)
+                UpdateLiveLootGroup(worldEntityProto, tuningVarValue);
+
+            if (worldEntityEnumVal < 0 || worldEntityEnumVal >= _perWorldEntityTuningVars.Count)
+                return Logger.WarnReturn(false, $"UpdateLiveWorldEntityTuningVar(): worldEntityEnumVal < 0 || worldEntityEnumVal >= _perWorldEntityTuningVars.Count");
+
+            _perWorldEntityTuningVars[worldEntityEnumVal][(int)tuningVarEnum] = tuningVarValue;
+            // No update protobuf invalidation?
+
+            return true;
+        }
+
+        private bool UpdateLivePowerTuningVar(PrototypeId tuningVarProtoRef, PowerTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLiveAreaTuningVar(PrototypeId tuningVarProtoRef, AreaTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLiveRegionTuningVar(PrototypeId tuningVarProtoRef, RegionTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLivePopObjTuningVar(PrototypeId tuningVarProtoRef, PopObjTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLiveMissionTuningVar(PrototypeId tuningVarProtoRef, MissionTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLiveLootTableTuningVar(PrototypeId tuningVarProtoRef, LootTableTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLiveConditionTuningVar(PrototypeId tuningVarProtoRef, ConditionTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLivePublicEventTuningVar(PrototypeId tuningVarProtoRef, PublicEventTuningVar tuningVarEnum, float tuningVarValue)
+        {
+            return true;
+        }
+
+        private bool UpdateLiveMetricsFrequencyTuningVar(PrototypeId tuningVarProtoRef, MetricsFrequencyTuningVar tuningVarEnum, float tuningVarValue)
+        {
             return true;
         }
 
