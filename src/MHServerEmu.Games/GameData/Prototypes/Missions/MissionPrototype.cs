@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
 using System;
 using System.Collections.Generic;
@@ -344,6 +345,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public List<MissionConditionPrototype> HotspotConditionList { get; private set; }
 
+        [DoNotCopy]
+        public int MissionPrototypeEnumValue { get; private set; }
+
         private readonly SortedSet<PrototypeId> PopulationRegions = new();
         private readonly SortedSet<PrototypeId> PopulationAreas = new();
         private KeywordsMask _keywordsMask;
@@ -401,6 +405,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             HasMissionLogRewards = GetHasMissionLogRewards();*/
             
             PopulatePopulationForZoneLookups(PopulationRegions, PopulationAreas);
+
+            MissionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetMissionBlueprintDataRef());
         }
 
         private bool GetHasMissionLogRewards()

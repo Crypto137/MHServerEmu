@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -42,11 +43,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
 
+        [DoNotCopy]
+        public int AreaPrototypeEnumValue { get; private set; }
+
         public override void PostProcess()
         {
             base.PostProcess();
 
-            // TODO GetEnumValueFromBlueprint
+            AreaPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAreaBlueprintDataRef());
 
             KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
         }

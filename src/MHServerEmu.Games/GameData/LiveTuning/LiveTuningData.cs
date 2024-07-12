@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                         continue;
 
                     updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-                        .SetTuningVarProtoId((ulong)powerProtoRef)
+                        .SetTuningVarProtoId((ulong)dataDirectory.GetPrototypeGuid(powerProtoRef))
                         .SetTuningVarEnum(j)
                         .SetTuningVarValue(tuningVarValue));
                 }
@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                         continue;
 
                     updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-                        .SetTuningVarProtoId((ulong)regionProtoRef)
+                        .SetTuningVarProtoId((ulong)dataDirectory.GetPrototypeGuid(regionProtoRef))
                         .SetTuningVarEnum(j)
                         .SetTuningVarValue(tuningVarValue));
                 }
@@ -254,7 +254,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                         continue;
 
                     updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-                        .SetTuningVarProtoId((ulong)publicEventProtoRef)
+                        .SetTuningVarProtoId((ulong)dataDirectory.GetPrototypeGuid(publicEventProtoRef))
                         .SetTuningVarEnum(j)
                         .SetTuningVarValue(tuningVarValue));
                 }
@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                         continue;
 
                     updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-                        .SetTuningVarProtoId((ulong)worldEntityProtoRef)
+                        .SetTuningVarProtoId((ulong)dataDirectory.GetPrototypeGuid(worldEntityProtoRef))
                         .SetTuningVarEnum(j)
                         .SetTuningVarValue(tuningVarValue));
                 }
@@ -302,7 +302,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                         continue;
 
                     updateBuilder.AddTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-                        .SetTuningVarProtoId((ulong)avatarProtoRef)
+                        .SetTuningVarProtoId((ulong)dataDirectory.GetPrototypeGuid(avatarProtoRef))
                         .SetTuningVarEnum(j)
                         .SetTuningVarValue(tuningVarValue));
                 }
@@ -330,117 +330,201 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public float GetLiveGlobalTuningVar(GlobalTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
+            if (tuningVarEnum < 0 || tuningVarEnum >= GlobalTuningVar.eGTV_NumGlobalTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveGlobalTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= GlobalTuningVar.eGTV_NumGlobalTuningVars");
+
+            return _globalTuningVars[(int)tuningVarEnum];
         }
 
         public float GetLiveAreaTuningVar(AreaPrototype areaProto, AreaTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= AreaTuningVar.eATV_NumAreaTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveAreaTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= AreaTuningVar.eATV_NumAreaTuningVars");
 
-        private float GetLiveAreaTuningVar(int areaEnumVal, AreaTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int areaEnumVal = areaProto.AreaPrototypeEnumValue;
+            if (areaEnumVal < 0 || areaEnumVal >= _perAreaTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveAreaTuningVar(): areaEnumVal < 0 || areaEnumVal >= _perAreaTuningVars.Count");
+
+            return _perAreaTuningVars[areaEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveLootTableTuningVar(LootTablePrototype lootTableProto, LootTableTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= LootTableTuningVar.eLTTV_NumLootTableTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveLootTableTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= LootTableTuningVar.eLTTV_NumLootTableTuningVars");
 
-        private float GetLiveLootTableTuningVar(int lootTableEnumVal, LootTableTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int lootTableEnumVal = lootTableProto.LootTablePrototypeEnumValue;
+            if (lootTableEnumVal < 0 || lootTableEnumVal >= _perLootTableTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveLootTableTuningVar(): lootTableEnumVal < 0 || lootTableEnumVal >= _perLootTableTuningVars.Count");
+
+            return _perLootTableTuningVars[lootTableEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveMissionTuningVar(MissionPrototype missionProto, MissionTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= MissionTuningVar.eMTV_NumMissionTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveMissionTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= MissionTuningVar.eMTV_NumMissionTuningVars");
 
-        private float GetLiveMissionTuningVar(int missionEnumVal, MissionTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int missionEnumVal = missionProto.MissionPrototypeEnumValue;
+            if (missionEnumVal < 0 || missionEnumVal >= _perMissionTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveLootTableTuningVar(): missionEnumVal < 0 || missionEnumVal >= _perMissionTuningVars.Count");
+
+            return _perMissionTuningVars[missionEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveWorldEntityTuningVar(WorldEntityPrototype worldEntityProto, WorldEntityTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveWorldEntityTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars");
 
-        private float GetLiveWorldEntityTuningVar(int worldEntityEnumVal, WorldEntityTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int worldEntityEnumVal = worldEntityProto.WorldEntityPrototypeEnumValue;
+            if (worldEntityEnumVal < 0 || worldEntityEnumVal >= _perWorldEntityTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveWorldEntityTuningVar(): worldEntityEnumVal < 0 || worldEntityEnumVal >= _perWorldEntityTuningVars.Count");
+
+            return _perWorldEntityTuningVars[worldEntityEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLivePopObjTuningVar(PopulationObjectPrototype popObjProto, PopObjTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= PopObjTuningVar.ePOTV_NumPopulationObjectTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePopObjTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= PopObjTuningVar.ePOTV_NumPopulationObjectTuningVars");
 
-        private float GetLivePopObjTuningVar(int popObjEnumVal, PopObjTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int popObjEnumVal = popObjProto.PopulationObjectPrototypeEnumValue;
+            if (popObjEnumVal < 0 || popObjEnumVal >= _perPopObjTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePopObjTuningVar(): popObjEnumVal < 0 || popObjEnumVal >= _perPopObjTuningVars.Count");
+
+            return _perPopObjTuningVars[popObjEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLivePowerTuningVar(PowerPrototype powerProto, PowerTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= PowerTuningVar.ePTV_NumPowerTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePowerTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= PowerTuningVar.ePTV_NumPowerTuningVars");
 
-        private float GetLivePowerTuningVar(int powerEnumVal, PowerTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int powerEnumVal = powerProto.PowerPrototypeEnumValue;
+            if (powerEnumVal < 0 || powerEnumVal >= _perPowerTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePowerTuningVar(): powerEnumVal < 0 || powerEnumVal >= _perPowerTuningVars.Count");
+
+            return _perPowerTuningVars[powerEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveRegionTuningVar(RegionPrototype regionProto, RegionTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= RegionTuningVar.eRTV_NumRegionTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveRegionTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= RegionTuningVar.eRTV_NumRegionTuningVars");
 
-        private float GetLiveRegionTuningVar(int regionEnumVal, RegionTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int regionEnumVal = regionProto.RegionPrototypeEnumValue;
+            if (regionEnumVal < 0 || regionEnumVal >= _perRegionTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveRegionTuningVar(): regionEnumVal < 0 || regionEnumVal >= _perRegionTuningVars.Count");
+
+            return _perRegionTuningVars[regionEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveAvatarTuningVar(AvatarPrototype avatarProto, AvatarEntityTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveAvatarTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars");
 
-        private float GetLiveAvatarTuningVar(int avatarEnumVal, AvatarEntityTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int avatarEnumVal = avatarProto.AvatarPrototypeEnumValue;
+            if (avatarEnumVal < 0 || avatarEnumVal >= _perAvatarTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveAvatarTuningVar(): avatarEnumVal < 0 || avatarEnumVal >= _perAvatarTuningVars.Count");
+
+            return _perAvatarTuningVars[avatarEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveConditionTuningVar(ConditionPrototype conditionProto, ConditionTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= ConditionTuningVar.eCTV_NumConditionTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveConditionTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= ConditionTuningVar.eCTV_NumConditionTuningVars");
 
-        private float GetLiveConditionTuningVar(int conditionEnumVal, ConditionTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int conditionEnumVal = conditionProto.ConditionPrototypeEnumValue;
+            if (conditionEnumVal < 0 || conditionEnumVal >= _perConditionTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveConditionTuningVar(): conditionEnumVal < 0 || conditionEnumVal >= _perConditionTuningVars.Count");
+
+            return _perConditionTuningVars[conditionEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLivePublicEventTuningVar(PublicEventPrototype publicEventProto, PublicEventTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
-        }
+            if (tuningVarEnum < 0 || tuningVarEnum >= PublicEventTuningVar.ePETV_NumPublicEventTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= PublicEventTuningVar.ePETV_NumPublicEventTuningVars");
 
-        private float GetLivePublicEventTuningVar(int publicEventEnumVal, PublicEventTuningVar tuningVarEnum)
-        {
-            return DefaultTuningVarValue;
+            int publicEventEnumVal = publicEventProto.PublicEventPrototypeEnumValue;
+            if (publicEventEnumVal < 0 || publicEventEnumVal >= _perPublicEventTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): publicEventEnumVal < 0 || publicEventEnumVal >= _perPublicEventTuningVars.Count");
+
+            return _perPublicEventTuningVars[publicEventEnumVal][(int)tuningVarEnum];
         }
 
         public float GetLiveMetricsFrequencyTuningVar(MetricsFrequencyPrototype metricsFrequencyProto, MetricsFrequencyTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
+            if (tuningVarEnum < 0 || tuningVarEnum >= MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= MetricsFrequencyTuningVar.eMFTV_NumMetricsFrequencyTuningVars");
+
+            int metricsFrequencyEnumVal = metricsFrequencyProto.MetricsFrequencyPrototypeEnumValue;
+            if (metricsFrequencyEnumVal < 0 || metricsFrequencyEnumVal >= _perMetricsFrequencyTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveMetricsFrequencyTuningVar(): metricsFrequencyEnumVal < 0 || metricsFrequencyEnumVal >= _perMetricsFrequencyTuningVars.Count");
+
+            return _perMetricsFrequencyTuningVars[metricsFrequencyEnumVal][(int)tuningVarEnum];
         }
 
-        private float GetLiveMetricsFrequencyTuningVar(int metricsFrequencyEnumVal, MetricsFrequencyTuningVar tuningVarEnum)
+        #endregion
+
+        #region Private Tuning Var Accessors (for protobuf generation)
+
+        private float GetLiveWorldEntityTuningVar(int worldEntityEnumVal, WorldEntityTuningVar tuningVarEnum)
         {
-            return DefaultTuningVarValue;
+            if (tuningVarEnum < 0 || tuningVarEnum >= WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveWorldEntityTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= WorldEntityTuningVar.eWETV_NumWorldEntityTuningVars");
+
+            if (worldEntityEnumVal < 0 || worldEntityEnumVal >= _perWorldEntityTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveWorldEntityTuningVar(): worldEntityEnumVal < 0 || worldEntityEnumVal >= _perWorldEntityTuningVars.Count");
+
+            return _perWorldEntityTuningVars[worldEntityEnumVal][(int)tuningVarEnum];
+        }
+
+        private float GetLivePowerTuningVar(int powerEnumVal, PowerTuningVar tuningVarEnum)
+        {
+            if (tuningVarEnum < 0 || tuningVarEnum >= PowerTuningVar.ePTV_NumPowerTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePowerTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= PowerTuningVar.ePTV_NumPowerTuningVars");
+
+            if (powerEnumVal < 0 || powerEnumVal >= _perPowerTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePowerTuningVar(): powerEnumVal < 0 || powerEnumVal >= _perPowerTuningVars.Count");
+
+            return _perPowerTuningVars[powerEnumVal][(int)tuningVarEnum];
+        }
+
+        private float GetLiveRegionTuningVar(int regionEnumVal, RegionTuningVar tuningVarEnum)
+        {
+            if (tuningVarEnum < 0 || tuningVarEnum >= RegionTuningVar.eRTV_NumRegionTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveRegionTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= RegionTuningVar.eRTV_NumRegionTuningVars");
+
+            if (regionEnumVal < 0 || regionEnumVal >= _perRegionTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveRegionTuningVar(): regionEnumVal < 0 || regionEnumVal >= _perRegionTuningVars.Count");
+
+            return _perRegionTuningVars[regionEnumVal][(int)tuningVarEnum];
+        }
+
+        private float GetLiveAvatarTuningVar(int avatarEnumVal, AvatarEntityTuningVar tuningVarEnum)
+        {
+            if (tuningVarEnum < 0 || tuningVarEnum >= AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveAvatarTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= AvatarEntityTuningVar.eAETV_NumAvatarEntityTuningVars");
+
+            if (avatarEnumVal < 0 || avatarEnumVal >= _perAvatarTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLiveAvatarTuningVar(): avatarEnumVal < 0 || avatarEnumVal >= _perAvatarTuningVars.Count");
+
+            return _perAvatarTuningVars[avatarEnumVal][(int)tuningVarEnum];
+        }
+
+        private float GetLivePublicEventTuningVar(int publicEventEnumVal, PublicEventTuningVar tuningVarEnum)
+        {
+            if (tuningVarEnum < 0 || tuningVarEnum >= PublicEventTuningVar.ePETV_NumPublicEventTuningVars)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): tuningVarEnum < 0 || tuningVarEnum >= PublicEventTuningVar.ePETV_NumPublicEventTuningVars");
+
+            if (publicEventEnumVal < 0 || publicEventEnumVal >= _perPublicEventTuningVars.Count)
+                return Logger.WarnReturn(DefaultTuningVarValue, $"GetLivePublicEventTuningVar(): publicEventEnumVal < 0 || publicEventEnumVal >= _perPublicEventTuningVars.Count");
+
+            return _perPublicEventTuningVars[publicEventEnumVal][(int)tuningVarEnum];
         }
 
         #endregion

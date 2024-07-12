@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -705,6 +706,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetricsFrequencyPrototype : Prototype
     {
         public float SampleRate { get; protected set; }
+
+        [DoNotCopy]
+        public int MetricsFrequencyPrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            MetricsFrequencyPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetMetricsFrequencyBlueprintDataRef());
+        }
     }
 
     public class CameraSettingPrototype : Prototype
