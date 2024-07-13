@@ -1031,7 +1031,8 @@ namespace MHServerEmu.Games.Entities
 
         private void ScheduleRandomWakeStart(int wakeRandomStartMS)
         {
-            throw new NotImplementedException();
+            Properties[PropertyEnum.Dormant] = false;
+            // TODO throw new NotImplementedException();
         }
 
         #endregion
