@@ -1,4 +1,5 @@
-﻿using IniParser;
+﻿using System.Globalization;
+using IniParser;
 using IniParser.Model;
 
 namespace MHServerEmu.Core.Config
@@ -95,6 +96,19 @@ namespace MHServerEmu.Core.Config
             string stringValue = GetString(section, key);
 
             if (ulong.TryParse(stringValue, out ulong parsedValue) == false)
+                return null;
+
+            return parsedValue;
+        }
+
+        /// <summary>
+        /// Gets the value with the specified key from the specified section of this <see cref="IniFile"/> as <see cref="float"/>.
+        /// </summary>
+        public float? GetSingle(string section, string key)
+        {
+            string stringValue = GetString(section, key);
+
+            if (float.TryParse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedValue) == false)
                 return null;
 
             return parsedValue;

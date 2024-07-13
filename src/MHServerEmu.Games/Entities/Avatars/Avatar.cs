@@ -819,7 +819,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
             Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
             Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
-            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 2f;
+            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 1f + MathF.Max(Game.CustomGameOptions.AvatarHealthMaxMagnitudeBonus, 0f);
 
             // Set health to max
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
