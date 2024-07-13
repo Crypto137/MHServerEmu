@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -37,6 +36,7 @@ namespace MHServerEmu.Games.Entities
         public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
+        public Avatar TeamUpOwner { get => Game.EntityManager.GetEntity<Avatar>(Properties[PropertyEnum.TeamUpOwnerId]); }
 
         public int PowerSpecIndexActive { get; set; }
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
@@ -773,6 +773,10 @@ namespace MHServerEmu.Games.Entities
         public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             // TODO other events
+
+            Avatar teamUpOwner = TeamUpOwner;
+            if (teamUpOwner != null)
+                teamUpOwner.ClearSummonedTeamUpAgent(this);
 
             if (AIController != null)
             {
