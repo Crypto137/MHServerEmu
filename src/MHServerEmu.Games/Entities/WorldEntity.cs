@@ -227,8 +227,7 @@ namespace MHServerEmu.Games.Entities
                 eventPointer.Get().Initialize(SpawnSpec);
             }
 
-            // HACK?: Set death state
-            SetFlag(EntityFlags.IsDead, true);
+            // Set death state properties
             Properties[PropertyEnum.IsDead] = true;
             Properties[PropertyEnum.NoEntityCollide] = true;
 
@@ -285,7 +284,7 @@ namespace MHServerEmu.Games.Entities
             ExitWorld();
             if (IsDestroyed == false)
             {
-                // CancelExitWorldEvent();
+                CancelExitWorldEvent();
                 // CancelKillEvent();
                 CancelDestroyEvent();
                 base.Destroy();
@@ -1862,6 +1861,12 @@ namespace MHServerEmu.Games.Entities
             }
             else
                 ScheduleEntityEvent(_exitWorldEvent, time);
+        }
+
+        public void CancelExitWorldEvent()
+        {
+            if (_exitWorldEvent.IsValid)
+                Game?.GameEventScheduler?.CancelEvent(_exitWorldEvent);
         }
 
         protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>

@@ -109,6 +109,38 @@ namespace MHServerEmu.Games.Entities
 
         #region Powers
 
+        public virtual bool Resurrect()
+        {
+            // Cancel cleanup events
+            CancelExitWorldEvent();
+            // CancelKillEvent();
+            CancelDestroyEvent();
+
+            // Reset health
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
+            // Remove death state properties
+            Properties[PropertyEnum.IsDead] = false;
+            Properties[PropertyEnum.NoEntityCollide] = false;
+
+            // Send resurrection message
+            var resurrectMessage = NetMessageOnResurrect.CreateBuilder()
+                .SetTargetId(Id)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(resurrectMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            // Activate resurrection power
+            if (AgentPrototype.OnResurrectedPower != PrototypeId.Invalid)
+            {
+                PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
+                settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                ActivatePower(AgentPrototype.OnResurrectedPower, ref settings);
+            }
+
+            return true;
+        }
+
         public virtual bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
@@ -680,6 +712,14 @@ namespace MHServerEmu.Games.Entities
             if (this is not Avatar)     // fix for avatar
                 RegionLocation.Cell.EnemySpawn(); // Calc Enemy
                                                   // ActivePowerRef = settings.PowerPrototype
+
+            // Assign on resurrected power
+            PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower;
+            if (onResurrectedPowerRef != PrototypeId.Invalid)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                AssignPower(onResurrectedPowerRef, indexProps);
+            }
 
             // AI
             // if (TestAI() == false) return;

@@ -323,6 +323,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;          // 46
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;      // 47
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
+                case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
@@ -902,6 +903,20 @@ namespace MHServerEmu.Games.Network
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
             return true;
+        }
+
+        private bool OnRequestDeathRelease(MailboxMessage message)  // 48
+        {
+            var swapInAbilityBar = message.As<NetMessageRequestDeathRelease>();
+            if (swapInAbilityBar == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): avatar == null");
+
+            // Requesting release of an avatar who is no longer dead due to lag
+            if (avatar.IsDead == false) return true;
+
+            return avatar.Resurrect();
         }
 
         private bool OnReturnToHub(MailboxMessage message)  // 55

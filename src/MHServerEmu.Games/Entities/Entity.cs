@@ -497,6 +497,10 @@ namespace MHServerEmu.Games.Entities
                     SetFlag(EntityFlags.EncounterResource, newValue);
                     break;
 
+                case PropertyEnum.IsDead:
+                    SetFlag(EntityFlags.IsDead, newValue);
+                    break;
+
                 case PropertyEnum.MissionPrototype:
                     SetFlag(EntityFlags.HasMissionPrototype, newValue);
                     break;
