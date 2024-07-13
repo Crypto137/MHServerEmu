@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.Entities
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
         public bool IsRootOwner { get => OwnerId == 0; }
-
+        public virtual bool IsWakingUp { get => false; }
         public TimeSpan TotalLifespan { get; private set; }
 
         public ulong RegionId { get; set; } = 0;    // REMOVEME: non-world entities should not have a region

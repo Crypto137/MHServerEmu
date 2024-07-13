@@ -9,6 +9,8 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -33,6 +35,8 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly EventPointer<WakeStartEvent> _wakeStartEvent = new();
+        private readonly EventPointer<WakeEndEvent> _wakeEndEvent = new();
         public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
@@ -40,6 +44,8 @@ namespace MHServerEmu.Games.Entities
 
         public int PowerSpecIndexActive { get; set; }
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
+        public override bool IsWakingUp { get => _wakeEndEvent.IsValid; }
+        public override bool IsDormant { get => base.IsDormant || IsWakingUp; }
 
         public Agent(Game game) : base(game) { }
 
@@ -622,6 +628,12 @@ namespace MHServerEmu.Games.Entities
             else if (result == SimulateResult.Clear)
             {
                 EntityActionComponent?.RestartPendingActions();
+                var scheduler = Game?.GameEventScheduler;
+                if (scheduler != null)
+                {
+                    scheduler.CancelEvent(_wakeStartEvent);
+                    scheduler.CancelEvent(_wakeEndEvent);
+                }
             }
 
             return result;
@@ -675,7 +687,6 @@ namespace MHServerEmu.Games.Entities
                     AllianceChange();
                     break;
 
-
                 case PropertyEnum.Immobilized:
                 case PropertyEnum.ImmobilizedByHitReact:
                 case PropertyEnum.SystemImmobilized:
@@ -699,11 +710,6 @@ namespace MHServerEmu.Games.Entities
         private void StopLocomotor()
         {
             if (IsInWorld) Locomotor?.Stop();
-        }
-
-        private void СheckWakeDelay()
-        {
-            // TODO NotImplementedException();
         }
 
         public override void OnEnteredWorld(EntitySettings settings)
@@ -1071,12 +1077,77 @@ namespace MHServerEmu.Games.Entities
                     EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
         }
 
+        private void TryAutoActivatePowersInCollection()
+        {
+            // TODO throw new NotImplementedException();
+        }
+
         #region Scheduled Events
 
         private void ScheduleRandomWakeStart(int wakeRandomStartMS)
         {
+            if (!_wakeStartEvent.IsValid)
+            {
+                TimeSpan randomStart = TimeSpan.FromMilliseconds(Game.Random.Next(wakeRandomStartMS));
+                ScheduleEntityEvent(_wakeStartEvent, randomStart);
+            }
+        }
+
+        private void WakeStartCallback()
+        {
             Properties[PropertyEnum.Dormant] = false;
-            // TODO throw new NotImplementedException();
+        }
+
+        private void СheckWakeDelay()
+        {
+            var prototype = AgentPrototype;
+            if (prototype == null) return;
+
+            if (prototype.WakeDelayMS > 0 
+                && prototype.PlayDramaticEntrance != DramaticEntranceType.Never
+                && Properties[PropertyEnum.DramaticEntrancePlayedOnce] == false)
+            {
+                TimeSpan wakeDelay = TimeSpan.FromMilliseconds(prototype.WakeDelayMS);
+                if (wakeDelay > TimeSpan.Zero)
+                {
+                    if (_wakeEndEvent.IsValid)
+                    {
+                        var scheduler = Game?.GameEventScheduler;
+                        if (Game.CurrentTime + wakeDelay < _wakeEndEvent.Get().FireTime)
+                            scheduler?.RescheduleEvent(_wakeEndEvent, wakeDelay);
+                    }
+                    else
+                        ScheduleEntityEvent(_wakeEndEvent, wakeDelay);
+                }
+            }
+            else
+                TryAutoActivatePowersInCollection();
+        }
+
+        private void WakeEndCallback()
+        {
+            RegisterForPendingPhysicsResolve();
+            OnDramaticEntranceEnd();
+            var prototype = AgentPrototype;
+            if (prototype != null && prototype.PlayDramaticEntrance == DramaticEntranceType.Once)
+                Properties[PropertyEnum.DramaticEntrancePlayedOnce] = true;
+            var region = Region;
+            if (region != null)
+            {
+                var evt = new EntityLeaveDormantGameEvent(this);
+                region.EntityLeaveDormantEvent.Invoke(evt);
+            }
+            TryAutoActivatePowersInCollection();
+        }
+
+        protected class WakeStartEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as Agent)?.WakeStartCallback();
+        }
+
+        protected class WakeEndEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as Agent)?.WakeEndCallback();
         }
 
         #endregion

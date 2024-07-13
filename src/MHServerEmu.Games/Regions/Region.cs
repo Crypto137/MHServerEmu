@@ -123,6 +123,7 @@ namespace MHServerEmu.Games.Regions
         public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
         public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
         public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
+        public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
 
         private BitList _collisionIds;
         private BitList _collisionBits;
