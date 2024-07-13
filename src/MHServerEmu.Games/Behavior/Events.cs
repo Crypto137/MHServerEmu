@@ -48,6 +48,16 @@ namespace MHServerEmu.Games.Behavior
         public WorldEntity AggroEntity;
     }
 
+    public struct EntityLeaveDormantGameEvent
+    {
+        public WorldEntity Entity;
+
+        public EntityLeaveDormantGameEvent(WorldEntity entity)
+        {
+            Entity = entity;
+        }
+    }
+
     public struct EntityEnteredMissionHotspotGameEvent
     {
         public WorldEntity Target;
