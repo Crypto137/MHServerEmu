@@ -207,7 +207,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             // HACK: LOOT
-            if (this is Agent agent && agent is not Missile)
+            if (this is Agent agent && agent is not Missile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
                 foreach (ulong playerId in InterestReferences.PlayerIds)
                 {
@@ -1098,11 +1098,6 @@ namespace MHServerEmu.Games.Entities
             // Send power results to clients
             NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
             Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
-
-            // Do not apply damage to avatars and team-ups... yet
-            // Do this after sending the message so that the client can play hit effects anyway
-            if (this is Avatar || (this is Agent agent && agent.IsTeamUpAgent))
-                return true;
 
             // Apply the results to this entity
             // NOTE: A lot more things should happen here, but for now we just apply damage and check death
