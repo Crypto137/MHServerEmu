@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.Entities
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
 
         public int PowerSpecIndexActive { get; set; }
+        public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
 
         public Agent(Game game) : base(game) { }
 
@@ -531,6 +532,11 @@ namespace MHServerEmu.Games.Entities
             AIController?.Think();
         }
 
+        private void AllianceChange()
+        {
+            AIController?.OnAIAllianceChange();
+        }
+
         public void SetDormant(bool dormant)
         {
             if (IsDormant != dormant)
@@ -620,6 +626,53 @@ namespace MHServerEmu.Games.Entities
         #endregion
 
         #region Event Handlers
+
+        public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            base.OnPropertyChange(id, newValue, oldValue, flags);
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.AllianceOverride:
+                    AllianceChange();
+                    break;
+
+                case PropertyEnum.Confused:
+                    SetFlag(EntityFlags.Confused, newValue);
+                    AllianceChange();
+                    break;
+
+
+                case PropertyEnum.Immobilized:
+                case PropertyEnum.ImmobilizedByHitReact:
+                case PropertyEnum.SystemImmobilized:
+                case PropertyEnum.TutorialImmobilized:
+
+                    if (newValue) StopLocomotor();
+                    break;
+
+                case PropertyEnum.Dormant:
+
+                    bool dormant = newValue;
+                    SetFlag(EntityFlags.Dormant, dormant);
+                    if (dormant == false) СheckWakeDelay();
+                    RegisterForPendingPhysicsResolve();
+                    if (!IsVisibleWhenDormant) Properties[PropertyEnum.Visible] = !dormant;
+
+                    break;
+            }
+        }
+
+        private void StopLocomotor()
+        {
+            if (IsInWorld) Locomotor?.Stop();
+        }
+
+        private void СheckWakeDelay()
+        {
+            // TODO NotImplementedException();
+        }
 
         public override void OnEnteredWorld(EntitySettings settings)
         {
@@ -978,7 +1031,8 @@ namespace MHServerEmu.Games.Entities
 
         private void ScheduleRandomWakeStart(int wakeRandomStartMS)
         {
-            throw new NotImplementedException();
+            Properties[PropertyEnum.Dormant] = false;
+            // TODO throw new NotImplementedException();
         }
 
         #endregion

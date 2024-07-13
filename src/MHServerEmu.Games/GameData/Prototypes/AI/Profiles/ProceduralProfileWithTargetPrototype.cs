@@ -459,7 +459,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = agent.Game;
             var blackboard = agent.AIController?.Blackboard;
             if (game == null || blackboard == null) return;
-            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
+            agent.Properties[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
 
             InitPower(agent, EffectPower);
         }
