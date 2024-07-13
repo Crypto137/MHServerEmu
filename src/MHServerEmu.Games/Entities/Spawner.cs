@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            _flags |= EntityFlags.NoCollide;
+            SetFlag(EntityFlags.NoCollide, true);
 
             return true;
         }

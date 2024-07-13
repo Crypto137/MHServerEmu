@@ -144,7 +144,7 @@ namespace MHServerEmu.Games.Entities
             var proto = WorldEntityPrototype;
 
             if (settings.IgnoreNavi)
-                _flags |= EntityFlags.IgnoreNavi;
+                SetFlag(EntityFlags.IgnoreNavi, true);
 
             ShouldSnapToFloorOnSpawn = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
                 ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // HACK?: Set death state
-            _flags |= EntityFlags.IsDead;
+            SetFlag(EntityFlags.IsDead, true);
             Properties[PropertyEnum.IsDead] = true;
             Properties[PropertyEnum.NoEntityCollide] = true;
 
@@ -1546,7 +1546,7 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 case PropertyEnum.NoEntityCollide:
-                    _flags |= EntityFlags.NoCollide;
+                    SetFlag(EntityFlags.NoCollide, true);
                     // EnableNavigationInfluence DisableNavigationInfluence
                     break;
             }

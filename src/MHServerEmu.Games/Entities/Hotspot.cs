@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Entities
 
         public Hotspot(Game game) : base(game) 
         { 
-            _flags |= EntityFlags.IsHotspot; 
+            SetFlag(EntityFlags.IsHotspot, true); 
         }
 
         public override bool Initialize(EntitySettings settings)
@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Entities
             HasApplyEffectsDelay = hotspotProto.ApplyEffectsDelayMS > 0;
 
             if (hotspotProto.DirectApplyToMissilesData?.EvalPropertiesToApply != null || hotspotProto.Negatable)
-                _flags |= EntityFlags.IsCollidableHotspot;
+                SetFlag(EntityFlags.IsCollidableHotspot, true);
 
             return true;
         }
