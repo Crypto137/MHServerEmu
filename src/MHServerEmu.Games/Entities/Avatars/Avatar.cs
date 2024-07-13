@@ -812,7 +812,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.CombatLevel] = 60;
             Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
 
-            // Health
+            // Add base stats to compensate for the lack of equipment
+            Properties[PropertyEnum.DamageRating] = 2500f;
+            Properties[PropertyEnum.DamagePctBonusVsBosses] = 4f;
+            Properties[PropertyEnum.Defense, (int)DamageType.Any] = 15000f;
+            Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
+            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
+            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
+            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 2f;
+
+            // Set health to max
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
 
             // Resources
@@ -835,14 +844,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Secondary resource base is already present in the prototype's property collection as a curve property
             Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
             Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
-
-            // Add base stats to compensate for the lack of equipment
-            Properties[PropertyEnum.DamageRating] = 2500f;
-            Properties[PropertyEnum.DamagePctBonusVsBosses] = 4f;
-            Properties[PropertyEnum.Defense, (int)DamageType.Any] = 15000f;
-            Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
-            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
-            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
 
             // Stats
             foreach (PrototypeId entryId in avatarProto.StatProgressionTable)
