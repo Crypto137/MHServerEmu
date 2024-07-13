@@ -1106,13 +1106,15 @@ namespace MHServerEmu.Games.Entities
 
             // Apply the results to this entity
             // NOTE: A lot more things should happen here, but for now we just apply damage and check death
-            int health = Properties[PropertyEnum.Health];
+
+            // NOTE: Health can be > 2147483647, so we have to use 64-bit integers here to avoid overflows
+            long health = Properties[PropertyEnum.Health];
 
             float totalDamage = powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
             totalDamage += powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
             totalDamage += powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
 
-            health = (int)Math.Max(health - totalDamage, 0);
+            health = Math.Max(health - (long)MathF.Round(totalDamage), 0);
 
             // Kill
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
