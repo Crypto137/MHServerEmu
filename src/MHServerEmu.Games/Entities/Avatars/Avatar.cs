@@ -692,10 +692,26 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarTeamUpStartTime] = (long)Game.CurrentTime.TotalMilliseconds;
             //Power power = GetPower(TeamUpPowerRef);
             //Properties[PropertyEnum.AvatarTeamUpDuration] = power.GetCooldownDuration();
+
+            if (teamUp.IsDead)
+                teamUp.Resurrect();
+
             EntitySettings setting = new()
             { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden };
             teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, setting);
             teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
+        }
+
+        public bool ClearSummonedTeamUpAgent(Agent teamUpAgent)
+        {
+            if (teamUpAgent != CurrentTeamUpAgent)
+                return Logger.WarnReturn(false, "CleanUpSummonedTeamUpAgent(): teamUpAgent != CurrentTeamUpAgent");
+
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
+            //Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
+
+            return true;
         }
 
         public void DismissTeamUpAgent()
@@ -704,19 +720,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (teamUp == null) return;
             if (teamUp.IsAliveInWorld)
             {
-                // TODO: teamUp.Kill(null);
-
-                var killMessage = NetMessageEntityKill.CreateBuilder()
-                    .SetIdEntity(teamUp.Id)
-                    .SetIdKillerEntity(0)
-                    .SetKillFlags(0)
-                    .Build();
-                Game.NetworkManager.SendMessageToInterested(killMessage, teamUp, AOINetworkPolicyValues.AOIChannelProximity);
-                Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
-                Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
-                Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
-                teamUp.AIController.SetIsEnabled(false);
-                teamUp.ScheduleExitWorldEvent(TimeSpan.FromMilliseconds(teamUp.WorldEntityPrototype.RemoveFromWorldTimerMS));
+                teamUp.Kill();
             }
         }
 

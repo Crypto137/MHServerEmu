@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Powers
         private readonly List<Condition> _conditionAddList = new();
         private readonly List<Condition> _conditionRemoveList = new();
 
-        public float HealingForClient { get; private set; }
+        public float HealingForClient { get; set; }
         public AssetId PowerAssetRefOverride { get; private set; }
         public PowerResultFlags Flags { get; set; }
         public ulong TransferToId { get; set; }

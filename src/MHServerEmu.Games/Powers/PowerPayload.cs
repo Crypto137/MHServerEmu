@@ -55,6 +55,11 @@ namespace MHServerEmu.Games.Powers
             results.SetDamageForClient(DamageType.Energy, energyDamage);
             results.SetDamageForClient(DamageType.Mental, mentalDamage);
 
+            // Calculate and set healing
+            float healing = CalculateHealing(power, target);
+            results.Properties[PropertyEnum.Healing] = healing;
+            results.HealingForClient = healing;
+
             return results;
         }
 
@@ -249,6 +254,38 @@ namespace MHServerEmu.Games.Powers
         {
             float superCritChance = Power.GetSuperCritChance(powerProto, user.Properties, target);
             return user.Game.Random.NextFloat() < superCritChance;
+        }
+
+        private static float CalculateHealing(Power power, WorldEntity target)
+        {
+            // Based on Rule_healing::GetValue()
+            PropertyCollection powerProperties = power.Properties;
+            PropertyCollection targetProperties = target.Properties;
+
+            // Calculate flat healing
+            float healingBase = powerProperties[PropertyEnum.HealingBase];
+            healingBase += powerProperties[PropertyEnum.HealingBaseCurve];
+
+            float healingMagnitude = powerProperties[PropertyEnum.HealingMagnitude];
+            float healingVariance = powerProperties[PropertyEnum.HealingVariance];
+
+            float minHealing = healingBase * healingMagnitude * (1f - healingVariance);
+            float maxHealing = healingBase * healingMagnitude * (1f + healingVariance);
+
+            float healing = power.Game.Random.NextFloat(minHealing, maxHealing);
+
+            // Apply percentage healing
+            float healingBasePct = powerProperties[PropertyEnum.HealingBasePct];
+            if (healingBasePct > 0)
+            {
+                long targetHealthMax = targetProperties[PropertyEnum.HealthMaxOther];
+                healing += targetHealthMax * healingBasePct;
+            }
+
+            // HACK: Increase healing to compensate for the lack of avatar stats
+            healing *= 3f;
+
+            return healing;
         }
 
         #endregion

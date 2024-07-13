@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -37,6 +36,7 @@ namespace MHServerEmu.Games.Entities
         public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
+        public Avatar TeamUpOwner { get => Game.EntityManager.GetEntity<Avatar>(Properties[PropertyEnum.TeamUpOwnerId]); }
 
         public int PowerSpecIndexActive { get; set; }
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
@@ -108,6 +108,38 @@ namespace MHServerEmu.Games.Entities
         #endregion
 
         #region Powers
+
+        public virtual bool Resurrect()
+        {
+            // Cancel cleanup events
+            CancelExitWorldEvent();
+            // CancelKillEvent();
+            CancelDestroyEvent();
+
+            // Reset health
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
+            // Remove death state properties
+            Properties[PropertyEnum.IsDead] = false;
+            Properties[PropertyEnum.NoEntityCollide] = false;
+
+            // Send resurrection message
+            var resurrectMessage = NetMessageOnResurrect.CreateBuilder()
+                .SetTargetId(Id)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(resurrectMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            // Activate resurrection power
+            if (AgentPrototype.OnResurrectedPower != PrototypeId.Invalid)
+            {
+                PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
+                settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                ActivatePower(AgentPrototype.OnResurrectedPower, ref settings);
+            }
+
+            return true;
+        }
 
         public virtual bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
         {
@@ -681,6 +713,14 @@ namespace MHServerEmu.Games.Entities
                 RegionLocation.Cell.EnemySpawn(); // Calc Enemy
                                                   // ActivePowerRef = settings.PowerPrototype
 
+            // Assign on resurrected power
+            PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower;
+            if (onResurrectedPowerRef != PrototypeId.Invalid)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                AssignPower(onResurrectedPowerRef, indexProps);
+            }
+
             // AI
             // if (TestAI() == false) return;
 
@@ -733,6 +773,10 @@ namespace MHServerEmu.Games.Entities
         public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             // TODO other events
+
+            Avatar teamUpOwner = TeamUpOwner;
+            if (teamUpOwner != null)
+                teamUpOwner.ClearSummonedTeamUpAgent(this);
 
             if (AIController != null)
             {
