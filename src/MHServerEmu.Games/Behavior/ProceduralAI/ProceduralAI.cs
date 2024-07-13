@@ -329,6 +329,33 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             _proceduralPtr.Profile?.OnMissileReturnEvent(_owningController);
         }
+
+        public void OnSetSimulated(bool simulated)
+        {
+            _proceduralPtr.Profile?.OnSetSimulated(_owningController, simulated);
+        }
+
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            switch (id.Enum)
+            {
+                case PropertyEnum.AIFullOverride:
+                case PropertyEnum.AIPartialOverride:
+
+                    if (BrainPrototype == null) return;
+                    OverrideType overrideType = id.Enum == PropertyEnum.AIFullOverride ? OverrideType.Full : OverrideType.Partial;
+                    if (newValue.ToPrototypeId() != PrototypeId.Invalid)
+                    {
+                        var profile = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(newValue.ToPrototypeId());
+                        if (profile == null) return;
+                        SetOverride(profile, overrideType);
+                    }
+                    else
+                        ClearOverrideBehavior(overrideType);
+
+                    break;
+            }
+        }
     }
 
     public enum OverrideType

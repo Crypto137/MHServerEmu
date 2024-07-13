@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Locomotor locomotor = agent.Locomotor;
                 if (locomotor == null)
                 {
-                    ProceduralAI.Logger.Warn($"Agent [{agent}] does not have a locomotor and should not be calling this function");
+                    // ProceduralAI.Logger.Warn($"Agent [{agent}] does not have a locomotor and should not be calling this function");
                     return;
                 }
                 locomotor.LookAt(target.RegionLocation.Position);
@@ -459,7 +459,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = agent.Game;
             var blackboard = agent.AIController?.Blackboard;
             if (game == null || blackboard == null) return;
-            blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
+            agent.Properties[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
 
             InitPower(agent, EffectPower);
         }

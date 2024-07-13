@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledLifespanEvent> _scheduledLifespanEvent = new();
         private readonly EventPointer<ScheduledDestroyEvent> _scheduledDestroyEvent = new();
 
-        protected EntityFlags _flags;
+        private EntityFlags _flags;
 
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.Entities
         public InventoryLocation InventoryLocation { get; private set; } = new();
         public ulong OwnerId { get => InventoryLocation.ContainerId; }
         public bool IsRootOwner { get => OwnerId == 0; }
-
+        public virtual bool IsWakingUp { get => false; }
         public TimeSpan TotalLifespan { get; private set; }
 
         public ulong RegionId { get; set; } = 0;    // REMOVEME: non-world entities should not have a region
@@ -200,6 +200,14 @@ namespace MHServerEmu.Games.Entities
         public Entity(Game game)
         {
             Game = game;
+        }
+
+        protected void SetFlag(EntityFlags flag, bool value)
+        {
+            if (value)
+                _flags |= flag;
+            else
+                _flags &= ~flag;
         }
 
         public virtual bool PreInitialize(EntitySettings settings)
@@ -478,28 +486,27 @@ namespace MHServerEmu.Games.Entities
             switch (id.Enum)
             {
                 case PropertyEnum.AIMasterAvatar:
-                    if (newValue) _flags |= EntityFlags.AIMasterAvatar;
-                    else _flags &= ~EntityFlags.AIMasterAvatar;
+                    SetFlag(EntityFlags.AIMasterAvatar, newValue);
                     break;
 
                 case PropertyEnum.ClusterPrototype:
-                    if (newValue) _flags |= EntityFlags.ClusterPrototype;
-                    else _flags &= ~EntityFlags.ClusterPrototype;
+                    SetFlag(EntityFlags.ClusterPrototype, newValue);
                     break;
 
                 case PropertyEnum.EncounterResource:
-                    if (newValue) _flags |= EntityFlags.EncounterResource;
-                    else _flags &= ~EntityFlags.EncounterResource;
+                    SetFlag(EntityFlags.EncounterResource, newValue);
+                    break;
+
+                case PropertyEnum.IsDead:
+                    SetFlag(EntityFlags.IsDead, newValue);
                     break;
 
                 case PropertyEnum.MissionPrototype:
-                    if (newValue) _flags |= EntityFlags.HasMissionPrototype;
-                    else _flags &= ~EntityFlags.HasMissionPrototype;
+                    SetFlag(EntityFlags.HasMissionPrototype, newValue);
                     break;
 
                 case PropertyEnum.PowerUserOverrideID:
-                    if (newValue) _flags |= EntityFlags.PowerUserOverrideId;
-                    else _flags &= ~EntityFlags.PowerUserOverrideId;
+                    SetFlag(EntityFlags.PowerUserOverrideId, newValue);
                     break;
             }
         }
@@ -758,13 +765,13 @@ namespace MHServerEmu.Games.Entities
                         return Logger.WarnReturn(false, $"ModifyCollectionMembership(): Trying to add out of world entity {ToString()} to collection {collection}");
                 }
 
-                if (collection == EntityCollection.Simulated) _flags |= EntityFlags.IsSimulated;
+                if (collection == EntityCollection.Simulated) SetFlag(EntityFlags.IsSimulated, true);
                 list.AddBack(this);
             }
             else if (add == false && isInCollection)
             {
                 list.Remove(this);
-                if (collection == EntityCollection.Simulated) _flags &= ~EntityFlags.IsSimulated;
+                if (collection == EntityCollection.Simulated) SetFlag(EntityFlags.IsSimulated, false);
             }
 
             return true;

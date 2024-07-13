@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Entities
 
         public Missile(Game game) : base(game) 
         {
-            _flags |= EntityFlags.IsNeverAffectedByPowers;
+            SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
             _contextPrototype = null;
             ReturnTargetMissingEvent = OnReturnTargetMissing;
             SeekTargetMissingEvent = OnSeekTargetMissing;
@@ -698,6 +698,8 @@ namespace MHServerEmu.Games.Entities
                         FXRandomSeed = (uint)Properties[PropertyEnum.VariationSeed]
                     };
 
+                    // EntityHelper.CrateOrb(EntityHelper.TestOrb.Blue, RegionLocation.Position, Region);
+                    // EntityHelper.CrateOrb(EntityHelper.TestOrb.Red, position, Region);
                     ActivateMissilePower(power, ref powerSettings, target);
                 }
             }
