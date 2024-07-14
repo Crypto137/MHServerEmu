@@ -24,13 +24,13 @@ namespace MHServerEmu.Games.Loot
             Player = player;
         }
 
-        public LootRollResult PushItem(DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
+        public LootRollResult PushItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
             Logger.Debug($"PushItem(): {dropFilterArgs.ItemProto}");
             return LootRollResult.NoRoll;
         }
 
-        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount)
+        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount)
         {
             Logger.Debug($"PushCurrency(): {worldEntityProto}");
             return LootRollResult.NoRoll;
@@ -70,6 +70,11 @@ namespace MHServerEmu.Games.Loot
         }
 
         public bool CheckNoDropPercent(LootRollSettings settings, float noDropPercent)
+        {
+            return true;
+        }
+
+        public bool CheckItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, bool arg2)
         {
             return true;
         }

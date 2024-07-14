@@ -134,7 +134,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 AvatarPrototype resolvedAvatarProto = resolver.ResolveAvatarPrototype(usableAvatarProto, settings.HasUsableOverride, settings.UsableOverrideValue);
                 AgentPrototype resolvedTeamUpProto = resolver.ResolveTeamUpPrototype(usableTeamUpProto, settings.UsableOverrideValue);
                 PrototypeId rollFor = resolvedAvatarProto != null ? resolvedAvatarProto.DataRef : PrototypeId.Invalid;
-                PrototypeId rarity = resolver.ResolveRarity(settings.Rarities, level, isAbstract ? null : itemProto);
+                PrototypeId? rarity = resolver.ResolveRarity(settings.Rarities, level, isAbstract ? null : itemProto);
 
                 // We must have a valid rarity ref
                 if (rarity == PrototypeId.Invalid)
@@ -158,11 +158,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         currentPickerAvatarProto = resolvedAvatarProto;
                     }
 
-                    DropFilterArguments pickDropFilterArgs = new(null, rollFor, level, rarity, 0, slot, resolver.LootContext);
+                    DropFilterArguments pickDropFilterArgs = new(null, rollFor, level, rarity.Value, 0, slot, resolver.LootContext);
                     pickDropFilterArgs.DropDistanceThresholdSq = settings.DropDistanceThresholdSq;
 
                     if (picker.Empty() ||
-                        LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, in pickDropFilterArgs, ref pickedItemProto, restrictionTestFlags, rarity) == false)
+                        LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, in pickDropFilterArgs, ref pickedItemProto, restrictionTestFlags, ref rarity) == false)
                     {
                         resolver.Fail();
                         return LootRollResult.Failure;
@@ -174,17 +174,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     pickedItemProto = itemProto;
                 }
 
-                DropFilterArguments pushDropFilterArgs = new(pickedItemProto, rollFor, level, rarity, 0, slot, resolver.LootContext);
+                DropFilterArguments pushDropFilterArgs = new(pickedItemProto, rollFor, level, rarity.Value, 0, slot, resolver.LootContext);
                 pushDropFilterArgs.DropDistanceThresholdSq = settings.DropDistanceThresholdSq;
 
                 if (pickedItemProto.IsCurrency)
                 {
-                    result |= resolver.PushCurrency(pickedItemProto, pushDropFilterArgs, restrictionTestFlags, settings.DropChanceModifiers, stackCount);
+                    result |= resolver.PushCurrency(pickedItemProto, in pushDropFilterArgs, restrictionTestFlags, settings.DropChanceModifiers, stackCount);
                 }
                 else
                 {
                     // TODO: Costume rolling for costume closet (consoles / 1.53)
-                    result |= resolver.PushItem(pushDropFilterArgs, restrictionTestFlags, stackCount, mutations);
+                    result |= resolver.PushItem(in pushDropFilterArgs, restrictionTestFlags, stackCount, mutations);
                 }
 
                 // Stop rolling if something went wrong

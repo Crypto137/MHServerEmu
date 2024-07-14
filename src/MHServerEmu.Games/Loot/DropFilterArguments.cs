@@ -5,10 +5,10 @@ namespace MHServerEmu.Games.Loot
 {
     public struct DropFilterArguments
     {
-        public Prototype ItemProto { get; }
-        public PrototypeId RollFor { get; }
+        public Prototype ItemProto { get; set; }
+        public PrototypeId RollFor { get; set; }
         public int Level { get; }
-        public PrototypeId Rarity { get; }
+        public PrototypeId Rarity { get; set; }
         public int Rank { get; }
         public EquipmentInvUISlot Slot { get; }
         public LootContext LootContext { get; }

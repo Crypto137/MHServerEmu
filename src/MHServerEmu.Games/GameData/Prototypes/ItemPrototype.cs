@@ -139,6 +139,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(this, avatarProto);
         }
+
+        public virtual PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
+        {
+            return rollForAvatar;
+        }
     }
 
     public class ItemAbilitySettingsPrototype : Prototype
@@ -414,6 +419,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpGearPrototype : ItemPrototype
     {
+        public override PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
+        {
+            return rollForTeamUp == null ? rollForAvatar : rollForTeamUp.DataRef;
+        }
     }
 
     public class PermaBuffPrototype : Prototype
