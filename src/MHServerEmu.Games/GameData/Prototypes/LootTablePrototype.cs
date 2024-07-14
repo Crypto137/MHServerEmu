@@ -312,7 +312,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         protected internal override int GetWeight()
         {
             float weightLiveTuningVar = LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_Weight);
-            return (int)(GetWeight() * weightLiveTuningVar);
+            return (int)(base.GetWeight() * weightLiveTuningVar);
         }
 
         private LootRollResult PickWeight(LootRollSettings settings, IItemResolver resolver)
@@ -330,7 +330,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             LootRollResult result = LootRollResult.NoRoll;
             for (int i = 0; i < numPicks; i++)
             {
-                while (nodePicker.Pick(out LootNodePrototype node))
+                if (nodePicker.Pick(out LootNodePrototype node))
                     result |= node.Select(settings, resolver);
             }
 
