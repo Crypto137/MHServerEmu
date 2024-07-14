@@ -69,6 +69,11 @@ namespace MHServerEmu.Games.Loot
             return GameDatabase.LootGlobalsPrototype.RarityDefault;
         }
 
+        public bool CheckNoDropPercent(LootRollSettings settings, float noDropPercent)
+        {
+            return true;
+        }
+
         public void Fail()
         {
 

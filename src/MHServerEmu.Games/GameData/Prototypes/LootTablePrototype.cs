@@ -1,5 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -172,6 +174,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootTablePrototype : LootDropPrototype
     {
+        public const int MaxLootTreeDepth = 50;
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PickMethod PickMethod { get; protected set; }
         public float NoDropPercent { get; protected set; }
         public LootNodePrototype[] Choices { get; protected set; }
@@ -203,43 +208,95 @@ namespace MHServerEmu.Games.GameData.Prototypes
             };
         }
 
-        public LootRollResult RollLootTable(LootRollResult settings, IItemResolver resolver)
+        public LootRollResult RollLootTable(LootRollSettings settings, IItemResolver resolver)
         {
             // NOTE: This is renamed from LootTablePrototype::Roll() to avoid confusion with the inherited LootNodePrototype::roll()
-            return LootRollResult.NoRoll;
+            settings.Depth = 1;
+            return Select(settings, resolver);
         }
 
         protected override LootRollResult Select(LootRollSettings settings, IItemResolver resolver)
         {
-            return base.Select(settings, resolver);
+            if (IsLiveTuningEnabled() == false)
+                return LootRollResult.NoRoll;
+
+            // Determine the number of rolls based on live tuning
+            int numRolls = (int)Math.Floor(LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_Rolls));
+            numRolls = Math.Max(numRolls, 1);
+
+            LootRollResult result = LootRollResult.NoRoll;
+            for (int i = 0; i < numRolls; i++)
+                result |= base.Select(settings, resolver);
+
+            return result;
         }
 
         protected override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            return base.Roll(settings, resolver);
+            if (NumMin < 1 || Choices.IsNullOrEmpty())
+                return LootRollResult.NoRoll;
+
+            if (settings.Depth > MaxLootTreeDepth)
+                return Logger.WarnReturn(LootRollResult.Failure, $"Roll(): Loot Table infinite recursion check failed, max depth of {MaxLootTreeDepth} exceeded [{this}]");
+
+            // Use prototype value if live tuning no drop percent is set to 1f, otherwise use the no drop percent from tuning
+            float noDropPercent = MathF.Max(LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_NoDropPercent), 0f);
+            if (Segment.EpsilonTest(noDropPercent, 1f))
+                noDropPercent = NoDropPercent;
+
+            // Cancel roll if no roll percent check fails
+            if (resolver.CheckNoDropPercent(settings, noDropPercent) == false)
+                return resolver.Resolve(settings) ? LootRollResult.Success : LootRollResult.Failure;
+
+            settings.Depth++;
+
+            LootRollResult result;
+            switch (PickMethod)
+            {
+                case PickMethod.PickWeight:
+                    result = PickWeight(settings, resolver);
+                    break;
+
+                case PickMethod.PickWeightTryAll:
+                    result = PickWeightTryAll(settings, resolver);
+                    break;
+
+                case PickMethod.PickAll:
+                    result = PickAll(settings, resolver);
+                    break;
+
+                default:
+                    return Logger.WarnReturn(LootRollResult.NoRoll, $"Roll(): Unknown pick method in table [{this}]");
+            }
+
+            PickLiveTuningNodes(settings, resolver);
+            settings.Depth--;
+
+            return result;
         }
 
         protected override int GetWeight()
         {
-            return base.GetWeight();
+            float weightLiveTuningVar = LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_Weight);
+            return (int)(GetWeight() * weightLiveTuningVar);
         }
 
-        private LootRollResult PickWeight()
+        private LootRollResult PickWeight(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
 
-        private LootRollResult PickWeightTryAll()
+        private LootRollResult PickWeightTryAll(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
 
-        private LootRollResult PickAll()
+        private LootRollResult PickAll(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
 
-        private LootRollResult PickLiveTuningNodes()
+        private LootRollResult PickLiveTuningNodes(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
