@@ -13,6 +13,8 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private List<PrototypeId> _itemList = new();
+
         public GRandom Random { get; }
         public LootContext LootContext { get; }
         public Player Player { get; }
@@ -27,7 +29,8 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
             Logger.Debug($"PushItem():\n{dropFilterArgs}");
-            return LootRollResult.NoRoll;
+            _itemList.Add(dropFilterArgs.ItemProto.DataRef);
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount)
@@ -87,6 +90,11 @@ namespace MHServerEmu.Games.Loot
         public bool Resolve(LootRollSettings settings)
         {
             return true;
+        }
+
+        public IEnumerable<PrototypeId> IterateResolvedItemProtoRefs()
+        {
+            return _itemList;
         }
     }
 }
