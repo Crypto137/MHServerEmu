@@ -30,6 +30,14 @@ namespace MHServerEmu.Core.Collections
             _weights = 0;
         }
 
+        public Picker(Picker<T> other)
+        {
+            _elements = new(other._elements);
+            _random = new(other._random.GetSeed());
+            _weightMode = other._weightMode;
+            _weights = other._weights;
+        }
+
         public void Add(T element)
         {
             if (_weightMode == WeightMode.Invalid)

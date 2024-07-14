@@ -32,17 +32,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             visitor.Visit(this);
         }
 
-        protected virtual LootRollResult Select(LootRollSettings settings, IItemResolver resolver)
+        // NOTE: Select() / Roll() / GetWeight() need to be protected internal because they are accessed from derived loot node types (Drop and Table)
+
+        protected internal virtual LootRollResult Select(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
 
-        protected virtual LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        protected internal virtual LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
 
-        protected virtual int GetWeight()
+        protected internal virtual int GetWeight()
         {
             return Weight;
         }
@@ -166,7 +168,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return resolver.Resolve(settings) ? result : LootRollResult.Failure;
         }
 
-        protected override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             return LootRollResult.NoRoll;
         }
@@ -215,7 +217,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return Select(settings, resolver);
         }
 
-        protected override LootRollResult Select(LootRollSettings settings, IItemResolver resolver)
+        protected internal override LootRollResult Select(LootRollSettings settings, IItemResolver resolver)
         {
             if (IsLiveTuningEnabled() == false)
                 return LootRollResult.NoRoll;
@@ -231,7 +233,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return result;
         }
 
-        protected override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             if (NumMin < 1 || Choices.IsNullOrEmpty())
                 return LootRollResult.NoRoll;
@@ -275,7 +277,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return result;
         }
 
-        protected override int GetWeight()
+        protected internal override int GetWeight()
         {
             float weightLiveTuningVar = LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_Weight);
             return (int)(GetWeight() * weightLiveTuningVar);
@@ -283,21 +285,67 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private LootRollResult PickWeight(LootRollSettings settings, IItemResolver resolver)
         {
-            return LootRollResult.NoRoll;
+            if (Choices.IsNullOrEmpty())
+                return Logger.WarnReturn(LootRollResult.NoRoll, $"PickWeight(): LootTable with no choices!\n Loot Table: {this}");
+
+            // Create a picker of possible nodes
+            Picker<LootNodePrototype> nodePicker = new(resolver.Random);
+            foreach (LootNodePrototype proto in Choices)
+                nodePicker.Add(proto, proto.GetWeight());
+
+            int numPicks = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
+
+            LootRollResult result = LootRollResult.NoRoll;
+            for (int i = 0; i < numPicks; i++)
+            {
+                while (nodePicker.Pick(out LootNodePrototype node))
+                    result |= node.Select(settings, resolver);
+            }
+
+            return result;
         }
 
         private LootRollResult PickWeightTryAll(LootRollSettings settings, IItemResolver resolver)
         {
-            return LootRollResult.NoRoll;
+            // Create a picker of possible nodes
+            Picker<LootNodePrototype> nodePicker = new(resolver.Random);
+            foreach (LootNodePrototype proto in Choices)
+                nodePicker.Add(proto);
+
+            int numPicks = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
+
+            LootRollResult result = LootRollResult.NoRoll;
+            for (int i = 0; i < numPicks; i++)
+            {
+                Picker<LootNodePrototype> removePicker = new(nodePicker);
+
+                LootRollResult nodeResult = LootRollResult.NoRoll;
+                while (nodeResult.HasFlag(LootRollResult.Success) == false && removePicker.PickRemove(out LootNodePrototype node))
+                    nodeResult |= node.Select(settings, resolver);
+
+                result |= nodeResult;
+            }
+
+            return result;
         }
 
         private LootRollResult PickAll(LootRollSettings settings, IItemResolver resolver)
         {
-            return LootRollResult.NoRoll;
+            int numPicks = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
+
+            LootRollResult result = LootRollResult.NoRoll;
+            for (int i = 0; i < numPicks; i++)
+            {
+                foreach(LootNodePrototype node in Choices)
+                    result |= node.Select(settings, resolver);
+            }
+
+            return result;
         }
 
         private LootRollResult PickLiveTuningNodes(LootRollSettings settings, IItemResolver resolver)
         {
+            // TODO
             return LootRollResult.NoRoll;
         }
     }
