@@ -35,6 +35,7 @@ namespace MHServerEmu.Games.Loot
         RareItemFind                    = 1 << 17,
         Modifier18                      = 1 << 18,
         IncludeCurrencyBonus            = 1 << 19,
+        Modifier20                      = 1 << 20,
     }
 
     [Flags]

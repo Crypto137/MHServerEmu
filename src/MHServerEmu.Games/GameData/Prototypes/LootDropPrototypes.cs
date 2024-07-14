@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
-        protected override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             if (Item == PrototypeId.Invalid)
                 return LootRollResult.NoRoll;

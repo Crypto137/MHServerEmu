@@ -36,7 +36,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal virtual LootRollResult Select(LootRollSettings settings, IItemResolver resolver)
         {
-            return LootRollResult.NoRoll;
+            // TODO: Secondary avatar for coop
+
+            // Do a modified roll
+            if (Modifiers.HasValue())
+            {
+                LootRollSettings modifiedSettings = new()
+                {
+                    Level = settings.Level,
+                    UsableAvatar = settings.UsableAvatar,
+                    UseSecondaryAvatar = settings.UseSecondaryAvatar
+                };
+
+                foreach (LootRollModifierPrototype modifier in Modifiers)
+                    modifier.Apply(modifiedSettings);
+
+                if (modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyModeRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.RegionRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.KillCountRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.WeekdayRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.ConditionRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.LevelRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.Modifier18) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.Modifier20))
+                {
+                    return LootRollResult.Failure;
+                }
+
+                return Roll(modifiedSettings, resolver);
+            }
+
+            // Do a non-modified roll
+            return Roll(settings, resolver);
         }
 
         protected internal virtual LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)

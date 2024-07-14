@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Loot
 
         public AvatarPrototype UsableAvatar { get; set; }       // LootRollSetAvatarPrototype
         public AgentPrototype UsableTeamUp { get; set; }        // Team-ups are the only agents other than avatars that have equipment
+        public bool UseSecondaryAvatar { get; set; }            // LootNodePrototype::select()
 
         public bool HasUsableOverride { get; set; }             // LootRollSetAvatarPrototype
         public float UsableOverrideValue { get; set; }          // LootRollSetUsablePrototype
