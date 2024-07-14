@@ -8,6 +8,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -217,6 +218,23 @@ namespace MHServerEmu.Games.Loot
             // Rare 0.1% drops
             if (Game.Random.NextFloat() < 0.001f * lootRating)
                 DropItem(source, _rareMetaPicker.Pick().Pick(), maxDistanceFromSource, restrictedToPlayerGuid);
+        }
+
+        public void TestLootTable(PrototypeId lootTableProtoRef, Player player)
+        {
+            LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
+            if (lootTableProto == null) return;
+
+            Logger.Info($"--- Loot Table Test - {lootTableProto} ---");
+
+            LootRollSettings settings = new();
+            settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
+
+            ItemResolver resolver = new(Game.Random, LootContext.Drop, player);
+
+            lootTableProto.RollLootTable(settings, resolver);
+
+            Logger.Info("--- Loot Table Test Over ---");
         }
     }
 }

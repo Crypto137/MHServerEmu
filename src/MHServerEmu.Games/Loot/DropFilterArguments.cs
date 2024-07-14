@@ -26,5 +26,17 @@ namespace MHServerEmu.Games.Loot
             Slot = slot;
             LootContext = lootContext;
         }
+
+        public override string ToString()
+        {
+            return string.Format("Item: {0} Context: {1} Level: {2} Rarity: {3} Rank: {4} Slot: {5} RollFor: {6}",
+                ItemProto,
+                LootContext,
+                Level,
+                GameDatabase.GetFormattedPrototypeName(Rarity),
+                Rank,
+                Slot,
+                RollFor.GetName());
+        }
     }
 }
