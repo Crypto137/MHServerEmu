@@ -35,6 +35,7 @@ namespace MHServerEmu.Core.Config
                     TypeCode.UInt32     => configFile.GetUInt32(section, property.Name),
                     TypeCode.Int64      => configFile.GetInt64(section, property.Name),
                     TypeCode.UInt64     => configFile.GetUInt64(section, property.Name),
+                    TypeCode.Single     => configFile.GetSingle(section, property.Name),
                     _ => throw new NotImplementedException($"Value type {property.PropertyType} is not supported for config files."),
                 };
 
