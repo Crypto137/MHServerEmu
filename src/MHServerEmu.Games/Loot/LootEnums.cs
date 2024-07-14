@@ -2,12 +2,54 @@
 
 namespace MHServerEmu.Games.Loot
 {
+    [Flags]
     public enum LootRollResult
     {
-        NoRoll = 0,
-        Success = 1,
-        Failure = 2,
-        PartialSuccess = 3,
+        NoRoll          = 0,
+        Success         = 1 << 0,
+        Failure         = 1 << 1,
+        PartialSuccess  = Success | Failure
+    }
+
+    [Flags]
+    public enum LootDropChanceModifiers
+    {
+        None                        = 0,
+        CooldownOncePerXHours       = 1 << 0,
+        CooldownOncePerRollover     = 1 << 1,
+        CooldownByChannel           = 1 << 2,
+        SpecialItemFind             = 1 << 3,
+        PerAccount                  = 1 << 4,
+        DifficultyModeRestricted    = 1 << 5,
+        RegionRestricted            = 1 << 6,
+        KillCountRestricted         = 1 << 7,
+        KillCountRequirementMet     = 1 << 8,
+        PreviewOnly                 = 1 << 9,
+        WeekdayRestricted           = 1 << 10,
+        ConditionRestricted         = 1 << 11,
+        Modifier12                  = 1 << 12,
+        DifficultyTierRestricted    = 1 << 13,
+        IgnoreCooldown              = 1 << 14,
+        IgnoreCap                   = 1 << 15,
+        LevelRestricted             = 1 << 16,
+        RareItemFind                = 1 << 17,
+    }
+
+    [Flags]
+    public enum RestrictionTestFlags
+    {
+        None        = 0,
+        Flag0       = 1 << 0,
+        Flag1       = 1 << 1,
+        Flag2       = 1 << 2,
+        Flag3       = 1 << 3,
+        Flag4       = 1 << 4,
+        Flag5       = 1 << 5,
+        Flag6       = 1 << 6,
+        Flag7       = 1 << 7,
+        Flag8       = 1 << 8,
+        Cooldown    = 1 << 9,
+        All = Flag0 | Flag1 | Flag2 | Flag3 | Flag4 | Flag5 | Flag6 | Flag7 | Flag8 | Cooldown
     }
 
     [AssetEnum((int)None)]

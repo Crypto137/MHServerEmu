@@ -7,6 +7,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -278,6 +279,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId MarvelModelRenderClass { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+
+        [DoNotCopy]
+        public bool IsCurrency { get => Properties != null && Properties.HasProperty(PropertyEnum.ItemCurrency); }
 
         [DoNotCopy]
         public AlliancePrototype AlliancePrototype { get => Alliance.As<AlliancePrototype>(); }

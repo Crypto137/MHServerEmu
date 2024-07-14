@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -27,8 +29,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropItemPrototype : LootDropPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PrototypeId Item { get; protected set; }
         public LootMutationPrototype[] Mutations { get; protected set; }
+
+        public override bool OnResultsEvaluation(Player player, WorldEntity source)
+        {
+            if (Item == PrototypeId.Invalid || DataDirectory.Instance.PrototypeIsA<CostumePrototype>(Item) == false)
+                return Logger.WarnReturn(false, $"LootDropItemPrototype::OnResultsEvaluation() is only supported for Costumes!");
+
+            // Unlock costume for costume closet (consoles / 1.53)
+            // player.UnlockCostume(Item);
+
+            return true;
+        }
+
+        protected override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            if (Item == PrototypeId.Invalid)
+                return LootRollResult.NoRoll;
+
+            int numItems = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax);
+
+            return RollItem(Item.As<ItemPrototype>(), numItems, settings, resolver, Mutations);
+        }
     }
 
     public class LootDropItemFilterPrototype : LootDropPrototype

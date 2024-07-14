@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties.Evals;
 
@@ -129,6 +130,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsDroppableForAgent(AgentPrototype agentProto)
         {
             return IsUsableByAgent(agentProto);
+        }
+
+        public EquipmentInvUISlot GetInventorySlotForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is not AvatarPrototype avatarProto)
+                return DefaultEquipmentSlot;
+
+            return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(this, avatarProto);
         }
     }
 
