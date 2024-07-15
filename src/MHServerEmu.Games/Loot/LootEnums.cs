@@ -33,9 +33,9 @@ namespace MHServerEmu.Games.Loot
         IgnoreCap                       = 1 << 15,
         LevelRestricted                 = 1 << 16,
         RareItemFind                    = 1 << 17,
-        Modifier18                      = 1 << 18,
+        DropperRestricted               = 1 << 18,
         IncludeCurrencyBonus            = 1 << 19,
-        Modifier20                      = 1 << 20,
+        MissionRestricted               = 1 << 20,
     }
 
     [Flags]

@@ -53,8 +53,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.ConditionRestricted) ||
                     modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierRestricted) ||
                     modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.LevelRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.Modifier18) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.Modifier20))
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DropperRestricted) ||
+                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.MissionRestricted))
                 {
                     return LootRollResult.Failure;
                 }
