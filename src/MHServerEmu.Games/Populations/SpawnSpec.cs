@@ -85,7 +85,12 @@ namespace MHServerEmu.Games.Populations
             int level = area.GetCharacterLevel(entityProto);
             settings.Properties[PropertyEnum.CharacterLevel] = level;
             settings.Properties[PropertyEnum.CombatLevel] = level;
-            settings.Properties[PropertyEnum.SpawnGroupId] = Group.Id;
+            if (Group != null)
+            {
+                settings.Properties[PropertyEnum.SpawnGroupId] = Group.Id;
+                if (Group.ObjectProto != null)
+                    settings.Properties[PropertyEnum.ClusterPrototype] = Group.ObjectProto.DataRef;
+            }
 
             settings.Position = position;
             settings.Orientation = orientation;
