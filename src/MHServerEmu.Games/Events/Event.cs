@@ -2,16 +2,28 @@
 {
     public class Event
     {        
-        // TODO write worked Event and replace Action
-        private readonly List<Action> _actionList = new();
-        public void AddActionFront(Action handler) => _actionList.Insert(0, handler);
-        public void AddActionBack(Action handler) => _actionList.Add(handler);
-        public void RemoveAction(Action handler) => _actionList.Remove(handler);
+        private readonly LinkedList<Action> _actionList = new();
+        public void AddActionFront(Action handler) => _actionList.AddFirst(handler);
+        public void AddActionBack(Action handler) => _actionList.AddLast(handler);
+
+        public void RemoveAction(Action handler)
+        {
+            var node = _actionList.Find(handler);
+            if (node != null)
+            {
+                _actionList.Remove(node);
+            }
+        }
 
         public void Invoke()
         {
-            foreach(var action in _actionList)
-                action();
+            var node = _actionList.First;
+            while (node != null)
+            {
+                var nextNode = node.Next;
+                node.Value();
+                node = nextNode;
+            }
         }
 
         public void UnregisterCallbacks() => _actionList.Clear();
@@ -20,15 +32,30 @@
 
     public class Event<T>
     {
-        private readonly List<Action<T>> _actionList = new();
-        public void AddActionFront(Action<T> handler) => _actionList.Insert(0, handler);
-        public void AddActionBack(Action<T> handler) => _actionList.Add(handler);
-        public void RemoveAction(Action<T> handler) => _actionList.Remove(handler);
+        private readonly LinkedList<Action<T>> _actionList = new();
+        public void AddActionFront(Action<T> handler) => _actionList.AddFirst(handler);
+        public void AddActionBack(Action<T> handler) => _actionList.AddLast(handler);
+
+        public void RemoveAction(Action<T> handler)
+        {
+            var node = _actionList.Find(handler);
+            if (node != null)
+            {
+                _actionList.Remove(node);
+            }
+        }
+
         public void Invoke(T eventType)
         {
-            foreach (var action in _actionList)
-                action(eventType);
+            var node = _actionList.First;
+            while (node != null)
+            {
+                var nextNode = node.Next;
+                node.Value(eventType);
+                node = nextNode;
+            }
         }
+
         public void UnregisterCallbacks() => _actionList.Clear();
     }
 }
