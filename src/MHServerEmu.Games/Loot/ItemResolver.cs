@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -14,14 +15,14 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly List<PrototypeId> _pendingItemList = new();
-        private readonly List<PrototypeId> _processedItemList = new();
+        private readonly List<ItemSpec> _pendingItemList = new();
+        private readonly List<ItemSpec> _processedItemList = new();
 
         public GRandom Random { get; }
         public LootContext LootContext { get; }
         public Player Player { get; }
 
-        public IEnumerable<PrototypeId> ProcessedItems { get => _processedItemList; }
+        public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
         public int ProcessedItemCount { get => _processedItemList.Count; }
 
         public ItemResolver(GRandom random, LootContext lootContext, Player player)
@@ -31,13 +32,18 @@ namespace MHServerEmu.Games.Loot
             Player = player;
         }
 
-        public LootRollResult PushItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
+        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
-            _pendingItemList.Add(dropFilterArgs.ItemProto.DataRef);
+            ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
+                0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
+
+            _pendingItemList.Add(itemSpec);
+
             return LootRollResult.Success;
         }
 
-        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount)
+        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
+            LootDropChanceModifiers dropChanceModifiers, int stackCount)
         {
             //Logger.Debug($"PushCurrency(): {worldEntityProto}");
             return LootRollResult.NoRoll;
@@ -73,12 +79,20 @@ namespace MHServerEmu.Games.Loot
 
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarities, int level, ItemPrototype itemProto)
         {
-            if (rarities.Count == 0)
-                return GameDatabase.LootGlobalsPrototype.RarityDefault;
-
             Picker<PrototypeId> rarityPicker = new(Random);
-            foreach (PrototypeId rarityProtoRef in rarities)
-                rarityPicker.Add(rarityProtoRef);
+
+            if (rarities.Count == 0)
+            {
+                foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                    rarityPicker.Add(rarityProtoRef);
+
+                rarityPicker.Add(GameDatabase.LootGlobalsPrototype.RarityDefault);
+            }
+            else
+            {
+                foreach (PrototypeId rarityProtoRef in rarities)
+                    rarityPicker.Add(rarityProtoRef);
+            }
 
             return rarityPicker.Pick();
         }
@@ -88,15 +102,15 @@ namespace MHServerEmu.Games.Loot
             return Random.NextFloat() < 1f - noDropPercent;
         }
 
-        public bool CheckItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, bool arg2)
+        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2)
         {
-            ItemPrototype itemProto = dropFilterArgs.ItemProto as ItemPrototype;
+            ItemPrototype itemProto = filterArgs.ItemProto as ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
 
             if (itemProto.ApprovedForUse() == false)
                 return false;
 
-            if (itemProto.IsDroppableForRestrictions(dropFilterArgs, restrictionTestFlags) == false)
+            if (itemProto.IsDroppableForRestrictions(filterArgs, restrictionFlags) == false)
                 return false;
 
             return true;
@@ -109,11 +123,8 @@ namespace MHServerEmu.Games.Loot
 
         public bool ProcessPending(LootRollSettings settings)
         {
-            foreach (PrototypeId itemProtoRef in _pendingItemList)
-            {
-                Logger.Debug($"ProcessPending(): {itemProtoRef.GetName()}");
-                _processedItemList.Add(itemProtoRef);
-            }
+            foreach (ItemSpec itemSpec in _pendingItemList)
+                _processedItemList.Add(itemSpec);
 
             _pendingItemList.Clear();
             return true;

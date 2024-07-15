@@ -14,10 +14,10 @@ namespace MHServerEmu.Games.Loot
         public LootContext LootContext { get; }
         public Player Player { get; }
 
-        public LootRollResult PushItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags,
+        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             int stackCount, IEnumerable<LootMutationPrototype> mutations);
-        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, in DropFilterArguments dropFilterArgs,
-            RestrictionTestFlags restrictionTestFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
+        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs,
+            RestrictionTestFlags restrictionFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
 
         public void PushLootNodeCallback();
         public void PushCraftingCallback();
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Loot
         public AgentPrototype ResolveTeamUpPrototype(AgentPrototype usableTeamUpProto, float usableOverrideValue);
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarities, int level, ItemPrototype itemProto);
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent);
-        public bool CheckItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, bool arg2);
+        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2);
 
         public void ClearPending();
         public bool ProcessPending(LootRollSettings settings);

@@ -42,24 +42,21 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates and drops a new <see cref="Item"/> near the provided source <see cref="WorldEntity"/>. 
         /// </summary>
-        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        public Item DropItem(WorldEntity source, ItemSpec itemSpec, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
         {
-            if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
-                return Logger.WarnReturn<Item>(null, $"DropItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
-
             // Pick a random point near source entity
             source.Region.ChooseRandomPositionNearPoint(source.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
                 BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
 
             // Create entity
             EntitySettings settings = new();
-            settings.EntityRef = itemProtoRef;
+            settings.EntityRef = itemSpec.ItemProtoRef;
             settings.RegionId = source.RegionLocation.RegionId;
             settings.Position = dropPosition;
             settings.SourceEntityId = source.Id;
             settings.SourcePosition = source.RegionLocation.Position;
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
-            settings.ItemSpec = CreateItemSpec(itemProtoRef);
+            settings.ItemSpec = itemSpec;
 
             if (restrictedToPlayerGuid != 0)
             {
@@ -76,6 +73,16 @@ namespace MHServerEmu.Games.Loot
             item.InitLifespan(expirationTime);
 
             return item;
+        }
+
+        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        {
+            if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
+                return Logger.WarnReturn<Item>(null, $"DropItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
+
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
+
+            return DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
         }
 
         /// <summary>
@@ -119,6 +126,7 @@ namespace MHServerEmu.Games.Loot
 
             LootRollSettings settings = new();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
+            settings.Level = player.CurrentAvatar.CharacterLevel;
             settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
 
             ItemResolver resolver = new(Game.Random, LootContext.Drop, player);
@@ -127,8 +135,8 @@ namespace MHServerEmu.Games.Loot
             
             float maxDistanceFromSource = MathF.Min(75f + 25f * resolver.ProcessedItemCount, 300f);
 
-            foreach (PrototypeId itemProtoRef in resolver.ProcessedItems)
-                DropItem(source, itemProtoRef, maxDistanceFromSource, restrictedToPlayerGuid);
+            foreach (ItemSpec itemSpec in resolver.ProcessedItems)
+                DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
         }
 
         public void TestLootTable(PrototypeId lootTableProtoRef, Player player)
@@ -140,11 +148,15 @@ namespace MHServerEmu.Games.Loot
 
             LootRollSettings settings = new();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
+            settings.Level = player.CurrentAvatar.CharacterLevel;
             settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
 
             ItemResolver resolver = new(Game.Random, LootContext.Drop, player);
 
             lootTableProto.RollLootTable(settings, resolver);
+
+            foreach (ItemSpec itemSpec in resolver.ProcessedItems)
+                Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
 
             Logger.Info("--- Loot Table Test Over ---");
         }

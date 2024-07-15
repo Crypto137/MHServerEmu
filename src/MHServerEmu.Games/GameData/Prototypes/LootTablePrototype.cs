@@ -179,7 +179,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 else
                 {
                     // TODO: Costume rolling for costume closet (consoles / 1.53)
-                    result |= resolver.PushItem(in pushFilterArgs, restrictionFlags, stackCount, mutations);
+                    result |= resolver.PushItem(pushFilterArgs, restrictionFlags, stackCount, mutations);
                 }
 
                 // Stop rolling if something went wrong
