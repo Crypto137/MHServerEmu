@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool HasInteractOption()
         {
-            return ActionTable.ContainsKey(EntitySelectorActionEventType.OnPlayerInteract);
+            return ActionTable.ContainsKey(EntitySelectorActionEventType.OnPlayerInteract) || ActionTable.ContainsKey(EntitySelectorActionEventType.OnPlayerInteract);
         }
 
         public bool CanTrigger(EntitySelectorActionEventType eventType)
