@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return TimeSpan.FromMilliseconds(expirationTimeMS);
         }
 
-        public bool IsUsableByAgent(AgentPrototype agentProto)
+        public virtual bool IsUsableByAgent(AgentPrototype agentProto)
         {
             if (EquipRestrictions.IsNullOrEmpty())
                 return true;
@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
-        public bool IsDroppableForAgent(AgentPrototype agentProto)
+        public virtual bool IsDroppableForAgent(AgentPrototype agentProto)
         {
             return IsUsableByAgent(agentProto);
         }
@@ -143,6 +143,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
         {
             return rollForAvatar;
+        }
+
+        public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)
+        {
+            if (agentProto == null)
+                return true;
+
+            if (agentProto is not AvatarPrototype avatarProto)
+                return false;
+
+            return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(itemProto, avatarProto) != EquipmentInvUISlot.Invalid;
         }
     }
 
@@ -337,6 +348,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ArmorPrototype : ItemPrototype
     {
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            return AvatarUsesEquipmentType(this, agentProto);
+        }
     }
 
     public class ArtifactPrototype : ItemPrototype
@@ -397,6 +412,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
         }
+
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            PrototypeId agentProtoRef = agentProto != null ? agentProto.DataRef : PrototypeId.Invalid;
+            return UsableBy == agentProtoRef;
+        }
     }
 
     public class LegendaryPrototype : ItemPrototype
@@ -405,6 +426,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MedalPrototype : ItemPrototype
     {
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            return AvatarUsesEquipmentType(this, agentProto);
+        }
     }
 
     public class RelicPrototype : ItemPrototype
@@ -419,6 +444,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpGearPrototype : ItemPrototype
     {
+        public override bool IsDroppableForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is AvatarPrototype)
+                return true;
+
+            return base.IsDroppableForAgent(agentProto);
+        }
+
         public override PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
         {
             return rollForTeamUp == null ? rollForAvatar : rollForTeamUp.DataRef;
