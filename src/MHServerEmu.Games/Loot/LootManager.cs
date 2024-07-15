@@ -125,9 +125,11 @@ namespace MHServerEmu.Games.Loot
             ItemResolver resolver = new(Game.Random, LootContext.Drop, player);
 
             lootTableProto.RollLootTable(settings, resolver);
+            
+            float maxDistanceFromSource = 75f + 25f * resolver.ProcessedItemCount;
 
-            foreach (PrototypeId itemProtoRef in resolver.IterateResolvedItemProtoRefs())
-                DropItem(source, itemProtoRef, 250f, restrictedToPlayerGuid);
+            foreach (PrototypeId itemProtoRef in resolver.ProcessedItems)
+                DropItem(source, itemProtoRef, maxDistanceFromSource, restrictedToPlayerGuid);
         }
 
         public void TestLootTable(PrototypeId lootTableProtoRef, Player player)

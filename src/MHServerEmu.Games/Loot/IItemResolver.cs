@@ -26,10 +26,10 @@ namespace MHServerEmu.Games.Loot
         public AvatarPrototype ResolveAvatarPrototype(AvatarPrototype usableAvatarProto, bool hasUsableOverride, float usableOverrideValue);
         public AgentPrototype ResolveTeamUpPrototype(AgentPrototype usableTeamUpProto, float usableOverrideValue);
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarities, int level, ItemPrototype itemProto);
-        public bool CheckNoDropPercent(LootRollSettings settings, float noDropPercent);
+        public bool CheckDropPercent(LootRollSettings settings, float noDropPercent);
         public bool CheckItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, bool arg2);
 
-        public void Fail();
-        public bool Resolve(LootRollSettings settings);
+        public void ClearPending();
+        public bool ProcessPending(LootRollSettings settings);
     }
 }

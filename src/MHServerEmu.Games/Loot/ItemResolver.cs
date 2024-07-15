@@ -13,11 +13,15 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private List<PrototypeId> _itemList = new();
+        private readonly List<PrototypeId> _pendingItemList = new();
+        private readonly List<PrototypeId> _processedItemList = new();
 
         public GRandom Random { get; }
         public LootContext LootContext { get; }
         public Player Player { get; }
+
+        public IEnumerable<PrototypeId> ProcessedItems { get => _processedItemList; }
+        public int ProcessedItemCount { get => _processedItemList.Count; }
 
         public ItemResolver(GRandom random, LootContext lootContext, Player player)
         {
@@ -28,8 +32,7 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
-            Logger.Debug($"PushItem():\n{dropFilterArgs}");
-            _itemList.Add(dropFilterArgs.ItemProto.DataRef);
+            _pendingItemList.Add(dropFilterArgs.ItemProto.DataRef);
             return LootRollResult.Success;
         }
 
@@ -72,7 +75,7 @@ namespace MHServerEmu.Games.Loot
             return GameDatabase.LootGlobalsPrototype.RarityDefault;
         }
 
-        public bool CheckNoDropPercent(LootRollSettings settings, float noDropPercent)
+        public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
         {
             return Random.NextFloat() < 1f - noDropPercent;
         }
@@ -82,19 +85,21 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        public void Fail()
+        public void ClearPending()
         {
-
+            _pendingItemList.Clear();
         }
 
-        public bool Resolve(LootRollSettings settings)
+        public bool ProcessPending(LootRollSettings settings)
         {
+            foreach (PrototypeId itemProtoRef in _pendingItemList)
+            {
+                Logger.Debug($"ProcessPending(): {itemProtoRef.GetName()}");
+                _processedItemList.Add(itemProtoRef);
+            }
+
+            _pendingItemList.Clear();
             return true;
-        }
-
-        public IEnumerable<PrototypeId> IterateResolvedItemProtoRefs()
-        {
-            return _itemList;
         }
     }
 }

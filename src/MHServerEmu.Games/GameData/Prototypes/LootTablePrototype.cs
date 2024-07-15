@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 // We must have a valid rarity ref
                 if (rarity == PrototypeId.Invalid)
                 {
-                    resolver.Fail();
+                    resolver.ClearPending();
                     return LootRollResult.Failure;
                 }
 
@@ -164,7 +164,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (picker.Empty() ||
                         LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, in pickDropFilterArgs, ref pickedItemProto, restrictionTestFlags, ref rarity) == false)
                     {
-                        resolver.Fail();
+                        resolver.ClearPending();
                         return LootRollResult.Failure;
                     }
                 }
@@ -190,14 +190,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 // Stop rolling if something went wrong
                 if (result.HasFlag(LootRollResult.Failure))
                 {
-                    resolver.Fail();
+                    resolver.ClearPending();
                     return LootRollResult.Failure;
                 }
 
                 rolled += stackSize;
             }
 
-            return resolver.Resolve(settings) ? result : LootRollResult.Failure;
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
@@ -279,8 +279,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 noDropPercent = NoDropPercent;
 
             // Cancel roll if no roll percent check fails
-            if (resolver.CheckNoDropPercent(settings, noDropPercent) == false)
-                return resolver.Resolve(settings) ? LootRollResult.Success : LootRollResult.Failure;
+            if (resolver.CheckDropPercent(settings, noDropPercent) == false)
+                return resolver.ProcessPending(settings) ? LootRollResult.Success : LootRollResult.Failure;
 
             settings.Depth++;
 
