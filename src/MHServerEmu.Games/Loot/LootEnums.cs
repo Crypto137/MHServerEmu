@@ -42,19 +42,23 @@ namespace MHServerEmu.Games.Loot
     public enum RestrictionTestFlags
     {
         None        = 0,
-        Flag0       = 1 << 0,
-        Flag1       = 1 << 1,
-        Rarity      = 1 << 2,
-        Flag3       = 1 << 3,
-        Flag4       = 1 << 4,
-        Flag5       = 1 << 5,
+        Level       = 1 << 0,
+        Rarity      = 1 << 1,
+        Rank        = 1 << 2,
+        Slot        = 1 << 3,
+        ItemType    = 1 << 4,
+        UsableBy    = 1 << 5,
         Flag6       = 1 << 6,
         Flag7       = 1 << 7,
-        Flag8       = 1 << 8,
+        ItemParent  = 1 << 8,
         Cooldown    = 1 << 9,
-        All = Flag0 | Flag1 | Rarity | Flag3 | Flag4 | Flag5 | Flag6 | Flag7 | Flag8 | Cooldown,
+        All = Level | Rarity | Rank | Slot | ItemType | UsableBy | Flag6 | Flag7 | ItemParent | Cooldown,
 
-        Flag15      = 1 << 15,
+        // Extra flags used in output restriction prototypes
+        Output          = 1 << 15,
+        OutputLevel     = 1 << 16,
+        OutputRarity    = 1 << 17,
+        OutputRank      = 1 << 18,
     }
 
     [AssetEnum((int)None)]

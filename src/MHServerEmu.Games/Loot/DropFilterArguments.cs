@@ -7,13 +7,13 @@ namespace MHServerEmu.Games.Loot
     {
         public Prototype ItemProto { get; set; }
         public PrototypeId RollFor { get; set; }
-        public int Level { get; }
+        public int Level { get; set; }
         public PrototypeId Rarity { get; set; }
-        public int Rank { get; }
-        public EquipmentInvUISlot Slot { get; }
+        public int Rank { get; set; }
+        public EquipmentInvUISlot Slot { get; set; }
         public LootContext LootContext { get; }
 
-        public float DropDistanceThresholdSq { get; set; } = 0f;
+        public float DropDistanceSq { get; set; } = 0f;
 
         public DropFilterArguments(Prototype itemProto, PrototypeId rollFor, int level, PrototypeId rarity,
             int rank, EquipmentInvUISlot slot, LootContext lootContext)
@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Loot
             Slot = other.Slot;
             LootContext = other.LootContext;
 
-            DropDistanceThresholdSq = other.DropDistanceThresholdSq;
+            DropDistanceSq = other.DropDistanceSq;
         }
 
         public override string ToString()

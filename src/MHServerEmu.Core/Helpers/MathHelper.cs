@@ -42,6 +42,16 @@
             return (value & bitMask) != 0;
         }
 
+        public static bool BitTestAll(int value, int bitMask)
+        {
+            return (value & bitMask) == bitMask;
+        }
+
+        public static int BitfieldGetLS1B(int value)
+        {
+            return value & ~(value - 1);
+        }
+
         public static int RoundToInt(float value) // TODO check where it used
         {
             if (value < 0.0f)

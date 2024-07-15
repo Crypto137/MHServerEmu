@@ -9,13 +9,13 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static bool PickValidItem(IItemResolver resolver, Picker<Prototype> basePicker, AgentPrototype teamUpProto, DropFilterArguments args,
-            ref ItemPrototype pickedItemProto, RestrictionTestFlags restrictionTestFlags, ref PrototypeId? rarityProtoRef)
+        public static bool PickValidItem(IItemResolver resolver, Picker<Prototype> basePicker, AgentPrototype teamUpProto, DropFilterArguments filterArgs,
+            ref ItemPrototype pickedItemProto, RestrictionTestFlags restrictionFlags, ref PrototypeId? rarityProtoRef)
         {
             pickedItemProto = null;
-            DropFilterArguments currentArgs = new(args);     // Copy arguments to compare to what we started
+            DropFilterArguments currentArgs = new(filterArgs);     // Copy arguments to compare to what we started
 
-            while (pickedItemProto == null && (restrictionTestFlags.HasFlag(RestrictionTestFlags.Rarity) || currentArgs.Rarity != PrototypeId.Invalid))
+            while (pickedItemProto == null && (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) || currentArgs.Rarity != PrototypeId.Invalid))
             {
                 Picker<Prototype> iterationPicker = new(basePicker);
 
@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Loot
                     currentArgs.ItemProto = itemProto;
                     currentArgs.RollFor = itemProto.GetRollForAgent(currentArgs.RollFor, teamUpProto);
 
-                    if (resolver.CheckItem(in currentArgs, restrictionTestFlags, false))
+                    if (resolver.CheckItem(in currentArgs, restrictionFlags, false))
                     {
                         pickedItemProto = itemProto;
                         if (rarityProtoRef != null)
@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Loot
                 }
 
                 // Check other rarities if we have one a base one provided
-                if (rarityProtoRef == null || pickedItemProto != null || restrictionTestFlags.HasFlag(RestrictionTestFlags.Rarity) == false)
+                if (rarityProtoRef == null || pickedItemProto != null || restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false)
                     break;
 
                 RarityPrototype rarityProto = currentArgs.Rarity.As<RarityPrototype>();
@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Loot
 
                 currentArgs.Rarity = rarityProto.DowngradeTo;
 
-                if (currentArgs.Rarity == args.Rarity)
+                if (currentArgs.Rarity == filterArgs.Rarity)
                 {
                     Logger.Warn($"PickValidItem(): Rarity loop detected [{currentArgs.Rarity.GetName()}]");
                     break;

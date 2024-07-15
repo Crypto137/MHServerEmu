@@ -118,9 +118,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EquipRestrictions.IsNullOrEmpty())
                 return true;
 
-            foreach (EquipRestrictionPrototype restrictionProto in EquipRestrictions)
+            foreach (EquipRestrictionPrototype equipRestrictionProto in EquipRestrictions)
             {
-                if (restrictionProto.IsEquippableByAgent(agentProto) == false)
+                if (equipRestrictionProto.IsEquippableByAgent(agentProto) == false)
                     return false;
             }
 
@@ -132,14 +132,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return IsUsableByAgent(agentProto);
         }
 
-        public bool IsDroppableForRestrictions(DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags)
+        public bool IsDroppableForRestrictions(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
             if (LootDropRestrictions.IsNullOrEmpty())
                 return true;
 
-            foreach (DropRestrictionPrototype restrictionProto in LootDropRestrictions)
+            foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)
             {
-                if (restrictionProto.Allow(dropFilterArgs, restrictionTestFlags) == false)
+                if (dropRestrictionProto.Allow(filterArgs, restrictionFlags) == false)
                     return false;
             }
 

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -72,7 +73,14 @@ namespace MHServerEmu.Games.Loot
 
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarities, int level, ItemPrototype itemProto)
         {
-            return GameDatabase.LootGlobalsPrototype.RarityDefault;
+            if (rarities.Count == 0)
+                return GameDatabase.LootGlobalsPrototype.RarityDefault;
+
+            Picker<PrototypeId> rarityPicker = new(Random);
+            foreach (PrototypeId rarityProtoRef in rarities)
+                rarityPicker.Add(rarityProtoRef);
+
+            return rarityPicker.Pick();
         }
 
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
