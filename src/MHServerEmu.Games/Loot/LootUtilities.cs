@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Loot
             pickedItemProto = null;
             DropFilterArguments currentArgs = new(filterArgs);     // Copy arguments to compare to what we started
 
-            while (pickedItemProto == null && (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) || currentArgs.Rarity != PrototypeId.Invalid))
+            while (pickedItemProto == null && (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false || currentArgs.Rarity != PrototypeId.Invalid))
             {
                 Picker<Prototype> iterationPicker = new(basePicker);
 
@@ -40,22 +40,24 @@ namespace MHServerEmu.Games.Loot
                 }
 
                 // Check other rarities if we have one a base one provided
-                if (rarityProtoRef == null || pickedItemProto != null || restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false)
+                if (rarityProtoRef == null)
                     break;
 
-                RarityPrototype rarityProto = currentArgs.Rarity.As<RarityPrototype>();
-                if (rarityProto == null)
+                if (pickedItemProto == null && restrictionFlags.HasFlag(RestrictionTestFlags.Rarity))
                 {
-                    Logger.Warn("PickValidItem(): rarityProto == null");
-                    break;
-                }
+                    RarityPrototype rarityProto = currentArgs.Rarity.As<RarityPrototype>();
+                    if (rarityProto == null)
+                    {
+                        Logger.Warn("PickValidItem(): rarityProto == null");
+                        break;
+                    }
 
-                currentArgs.Rarity = rarityProto.DowngradeTo;
-
-                if (currentArgs.Rarity == filterArgs.Rarity)
-                {
-                    Logger.Warn($"PickValidItem(): Rarity loop detected [{currentArgs.Rarity.GetName()}]");
-                    break;
+                    currentArgs.Rarity = rarityProto.DowngradeTo;
+                    if (currentArgs.Rarity == filterArgs.Rarity)
+                    {
+                        Logger.Warn($"PickValidItem(): Rarity loop detected [{currentArgs.Rarity.GetName()}]");
+                        break;
+                    }
                 }
             }
 

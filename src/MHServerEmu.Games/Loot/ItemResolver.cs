@@ -77,22 +77,38 @@ namespace MHServerEmu.Games.Loot
             return usableTeamUpProto;
         }
 
-        public PrototypeId ResolveRarity(HashSet<PrototypeId> rarities, int level, ItemPrototype itemProto)
+        public PrototypeId ResolveRarity(HashSet<PrototypeId> rarityFilter, int level, ItemPrototype itemProto)
         {
             Picker<PrototypeId> rarityPicker = new(Random);
 
-            if (rarities.Count == 0)
-            {
-                foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                    rarityPicker.Add(rarityProtoRef);
+            DropFilterArguments filterArgs = itemProto != null ? new() : null;
 
-                rarityPicker.Add(GameDatabase.LootGlobalsPrototype.RarityDefault);
-            }
-            else
+            foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                foreach (PrototypeId rarityProtoRef in rarities)
-                    rarityPicker.Add(rarityProtoRef);
+                // Skip rarities that don't match the provided filter
+                if (rarityFilter.Count > 0 && rarityFilter.Contains(rarityProtoRef) == false)
+                    continue;
+
+                // Skip rarities that don't match the provided item prototype
+                if (itemProto != null)
+                {
+                    filterArgs.Rarity = rarityProtoRef;
+                    if (itemProto.IsDroppableForRestrictions(filterArgs, RestrictionTestFlags.Rarity) == false)
+                        continue;
+                }
+
+                RarityPrototype rarityProto = rarityProtoRef.As<RarityPrototype>();
+                if (rarityProto == null)
+                {
+                    Logger.Warn("ResolveRarity(): rarityProto == null");
+                    continue;
+                }
+
+                rarityPicker.Add(rarityProtoRef, (int)rarityProto.GetWeight(level));
             }
+
+            if (rarityPicker.GetNumElements() == 0)
+                return PrototypeId.Invalid;
 
             return rarityPicker.Pick();
         }

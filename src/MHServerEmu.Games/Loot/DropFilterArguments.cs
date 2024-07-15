@@ -15,6 +15,8 @@ namespace MHServerEmu.Games.Loot
 
         public float DropDistanceSq { get; set; } = 0f;
 
+        public DropFilterArguments() { }
+
         public DropFilterArguments(Prototype itemProto, PrototypeId rollFor, int level, PrototypeId rarity,
             int rank, EquipmentInvUISlot slot, LootContext lootContext)
         {

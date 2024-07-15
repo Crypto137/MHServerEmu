@@ -374,5 +374,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Tier++;
             }
         }
+
+        public float GetWeight(int level)
+        {
+            Curve curve = CurveDirectory.Instance.GetCurve(Weight);
+            if (curve == null) return Logger.WarnReturn(0f, "GetWeight(): curve == null");
+
+            return curve.GetAt(Math.Clamp(level, curve.MinPosition, curve.MaxPosition));
+        }
     }
 }
