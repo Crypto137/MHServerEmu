@@ -484,7 +484,7 @@ namespace MHServerEmu.Games.Behavior
         {
             TimeSpan time = TimeSpan.Zero;
             var propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(throwEnum);
-            var throwPropId = new PropertyId(throwEnum, Owner.PrototypeDataRef/*, propInfo.DefaultParamValues[1]*/);
+            var throwPropId = new PropertyId(throwEnum, Owner.PrototypeDataRef, propInfo.DefaultParamValues[1]);
 
             if (throwableProp.HasProperty(throwPropId))
                 return throwableProp[throwPropId];
