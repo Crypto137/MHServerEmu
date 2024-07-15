@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Avatar != PrototypeId.Invalid)
             {
                 settings.UsableAvatar = Avatar.As<AvatarPrototype>();
-                settings.HasUsableOverride = true;
+                settings.ForceUsable = true;
             }
         }
     }
@@ -242,7 +242,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            settings.UsableOverrideValue = Usable;
+            settings.UsablePercent = Usable;
         }
     }
 

@@ -16,11 +16,14 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ItemResolver _resolver;
+
         public Game Game { get; }
 
         public LootManager(Game game)
         {
             Game = game;
+            _resolver = new(game.Random);
         }
 
         /// <summary>
@@ -126,16 +129,17 @@ namespace MHServerEmu.Games.Loot
 
             LootRollSettings settings = new();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
+            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = player.CurrentAvatar.CharacterLevel;
             settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
 
-            ItemResolver resolver = new(Game.Random, LootContext.Drop, player);
+            _resolver.SetContext(LootContext.Drop, player);
 
-            lootTableProto.RollLootTable(settings, resolver);
+            lootTableProto.RollLootTable(settings, _resolver);
             
-            float maxDistanceFromSource = MathF.Min(75f + 25f * resolver.ProcessedItemCount, 300f);
+            float maxDistanceFromSource = MathF.Min(75f + 25f * _resolver.ProcessedItemCount, 300f);
 
-            foreach (ItemSpec itemSpec in resolver.ProcessedItems)
+            foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
                 DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
         }
 
@@ -148,14 +152,15 @@ namespace MHServerEmu.Games.Loot
 
             LootRollSettings settings = new();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
+            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = player.CurrentAvatar.CharacterLevel;
             settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
 
-            ItemResolver resolver = new(Game.Random, LootContext.Drop, player);
+            _resolver.SetContext(LootContext.Drop, player);
 
-            lootTableProto.RollLootTable(settings, resolver);
+            lootTableProto.RollLootTable(settings, _resolver);
 
-            foreach (ItemSpec itemSpec in resolver.ProcessedItems)
+            foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
                 Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
 
             Logger.Info("--- Loot Table Test Over ---");

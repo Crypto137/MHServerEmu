@@ -126,8 +126,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             while (rolled < numItems)
             {
                 int level = resolver.ResolveLevel(settings.Level, settings.UseLevelVerbatim);
-                AvatarPrototype resolvedAvatarProto = resolver.ResolveAvatarPrototype(usableAvatarProto, settings.HasUsableOverride, settings.UsableOverrideValue);
-                AgentPrototype resolvedTeamUpProto = resolver.ResolveTeamUpPrototype(usableTeamUpProto, settings.UsableOverrideValue);
+                AvatarPrototype resolvedAvatarProto = resolver.ResolveAvatarPrototype(usableAvatarProto, settings.ForceUsable, settings.UsablePercent);
+                AgentPrototype resolvedTeamUpProto = resolver.ResolveTeamUpPrototype(usableTeamUpProto, settings.UsablePercent);
                 PrototypeId rollFor = resolvedAvatarProto != null ? resolvedAvatarProto.DataRef : PrototypeId.Invalid;
                 PrototypeId? rarity = resolver.ResolveRarity(settings.Rarities, level, isAbstract ? null : itemProto);
 

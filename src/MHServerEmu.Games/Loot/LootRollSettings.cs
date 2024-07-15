@@ -12,8 +12,8 @@ namespace MHServerEmu.Games.Loot
         public AvatarPrototype UsableAvatar { get; set; }       // LootRollSetAvatarPrototype
         public AgentPrototype UsableTeamUp { get; set; }        // Team-ups are the only agents other than avatars that have equipment
         public bool UseSecondaryAvatar { get; set; }            // LootNodePrototype::select()
-        public bool HasUsableOverride { get; set; }             // LootRollSetAvatarPrototype
-        public float UsableOverrideValue { get; set; }          // LootRollSetUsablePrototype
+        public bool ForceUsable { get; set; }                   // LootRollSetAvatarPrototype
+        public float UsablePercent { get; set; }                // LootRollSetUsablePrototype
 
         public int Level { get; set; } = 1;                     // LootRollOffsetLevelPrototype
         public bool UseLevelVerbatim { get; set; } = false;     // LootRollUseLevelVerbatimPrototype
@@ -46,8 +46,8 @@ namespace MHServerEmu.Games.Loot
             UsableAvatar = other.UsableAvatar;
             UsableTeamUp = other.UsableTeamUp;
             UseSecondaryAvatar = other.UseSecondaryAvatar;
-            HasUsableOverride = other.HasUsableOverride;
-            UsableOverrideValue = other.UsableOverrideValue;
+            ForceUsable = other.ForceUsable;
+            UsablePercent = other.UsablePercent;
 
             Level = other.Level;
             UseLevelVerbatim = other.UseLevelVerbatim;

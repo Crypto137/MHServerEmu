@@ -15,19 +15,39 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly Picker<AvatarPrototype> _avatarPicker;
+
         private readonly List<ItemSpec> _pendingItemList = new();
         private readonly List<ItemSpec> _processedItemList = new();
 
         public GRandom Random { get; }
-        public LootContext LootContext { get; }
-        public Player Player { get; }
+        public LootContext LootContext { get; private set; }
+        public Player Player { get; private set; }
 
         public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
         public int ProcessedItemCount { get => _processedItemList.Count; }
 
-        public ItemResolver(GRandom random, LootContext lootContext, Player player)
+        public ItemResolver(GRandom random)
         {
             Random = random;
+
+            _avatarPicker = new(random);
+            foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                // We could filter by avatarProto.ShowInRosterIfLocked instead of hardcoding,
+                // but then we won't get random drops for "removed" heroes.
+                if (avatarProtoRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+
+                AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                _avatarPicker.Add(avatarProto);
+            }
+        }
+
+        public void SetContext(LootContext lootContext, Player player)
+        {
+            _pendingItemList.Clear();
+            _processedItemList.Clear();
+
             LootContext = lootContext;
             Player = player;
         }
@@ -61,18 +81,22 @@ namespace MHServerEmu.Games.Loot
 
         public int ResolveLevel(int level, bool useLevelVerbatim)
         {
-            if (useLevelVerbatim)
-                return level;
-
-            return 1;
+            // NOTE: In version 1.52 MobLevelToItemLevel.curve is empty, so we can always treat this as if useLevelVerbatim is set.
+            // If we were to support older versions (most likely predating level scaling) we would have to properly implement this.
+            return level;
         }
 
-        public AvatarPrototype ResolveAvatarPrototype(AvatarPrototype usableAvatarProto, bool hasUsableOverride, float usableOverrideValue)
+        public AvatarPrototype ResolveAvatarPrototype(AvatarPrototype usableAvatarProto, bool forceUsable, float usablePercent)
         {
-            return usableAvatarProto;
+            // Check if we can just use the provided avatar proto as is
+            if (usableAvatarProto != null && (forceUsable || Random.NextFloat() < usablePercent))
+                return usableAvatarProto;
+
+            // Pick a random avatar otherwise
+            return _avatarPicker.Pick();
         }
 
-        public AgentPrototype ResolveTeamUpPrototype(AgentPrototype usableTeamUpProto, float usableOverrideValue)
+        public AgentPrototype ResolveTeamUpPrototype(AgentPrototype usableTeamUpProto, float usablePercent)
         {
             return usableTeamUpProto;
         }
