@@ -132,6 +132,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return IsUsableByAgent(agentProto);
         }
 
+        public bool IsDroppableForRestrictions(DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags)
+        {
+            if (LootDropRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (DropRestrictionPrototype restrictionProto in LootDropRestrictions)
+            {
+                if (restrictionProto.Allow(dropFilterArgs, restrictionTestFlags) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
         public EquipmentInvUISlot GetInventorySlotForAgent(AgentPrototype agentProto)
         {
             if (agentProto is not AvatarPrototype avatarProto)

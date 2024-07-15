@@ -52,7 +52,9 @@ namespace MHServerEmu.Games.Loot
         Flag7       = 1 << 7,
         Flag8       = 1 << 8,
         Cooldown    = 1 << 9,
-        All = Flag0 | Flag1 | Rarity | Flag3 | Flag4 | Flag5 | Flag6 | Flag7 | Flag8 | Cooldown
+        All = Flag0 | Flag1 | Rarity | Flag3 | Flag4 | Flag5 | Flag6 | Flag7 | Flag8 | Cooldown,
+
+        Flag15      = 1 << 15,
     }
 
     [AssetEnum((int)None)]

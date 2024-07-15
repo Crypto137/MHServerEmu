@@ -82,6 +82,15 @@ namespace MHServerEmu.Games.Loot
 
         public bool CheckItem(in DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags, bool arg2)
         {
+            ItemPrototype itemProto = dropFilterArgs.ItemProto as ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
+
+            if (itemProto.ApprovedForUse() == false)
+                return false;
+
+            if (itemProto.IsDroppableForRestrictions(dropFilterArgs, restrictionTestFlags) == false)
+                return false;
+
             return true;
         }
 

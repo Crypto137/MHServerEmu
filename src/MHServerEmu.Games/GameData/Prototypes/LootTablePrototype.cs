@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     pickDropFilterArgs.DropDistanceThresholdSq = settings.DropDistanceThresholdSq;
 
                     if (picker.Empty() ||
-                        LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, in pickDropFilterArgs, ref pickedItemProto, restrictionTestFlags, ref rarity) == false)
+                        LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, pickDropFilterArgs, ref pickedItemProto, restrictionTestFlags, ref rarity) == false)
                     {
                         resolver.ClearPending();
                         return LootRollResult.Failure;
@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (pickedItemProto.IsCurrency)
                 {
-                    result |= resolver.PushCurrency(pickedItemProto, in pushDropFilterArgs, restrictionTestFlags, settings.DropChanceModifiers, stackCount);
+                    result |= resolver.PushCurrency(pickedItemProto, pushDropFilterArgs, restrictionTestFlags, settings.DropChanceModifiers, stackCount);
                 }
                 else
                 {

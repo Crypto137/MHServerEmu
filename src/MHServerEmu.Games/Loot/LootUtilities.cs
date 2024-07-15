@@ -9,11 +9,11 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static bool PickValidItem(IItemResolver resolver, Picker<Prototype> basePicker, AgentPrototype teamUpProto, in DropFilterArguments args,
+        public static bool PickValidItem(IItemResolver resolver, Picker<Prototype> basePicker, AgentPrototype teamUpProto, DropFilterArguments args,
             ref ItemPrototype pickedItemProto, RestrictionTestFlags restrictionTestFlags, ref PrototypeId? rarityProtoRef)
         {
             pickedItemProto = null;
-            DropFilterArguments currentArgs = args;     // Copy arguments to compare to what we started
+            DropFilterArguments currentArgs = new(args);     // Copy arguments to compare to what we started
 
             while (pickedItemProto == null && (restrictionTestFlags.HasFlag(RestrictionTestFlags.Rarity) || currentArgs.Rarity != PrototypeId.Invalid))
             {

@@ -4,6 +4,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class DropRestrictionPrototype : Prototype
     {
+        public virtual bool Allow(DropFilterArguments dropFilterArgs, RestrictionTestFlags restrictionTestFlags)
+        {
+            return true; // remove after implementing overrides
+            return (dropFilterArgs.LootContext & LootContext.CashShop) == dropFilterArgs.LootContext;
+        }
+
+        public virtual bool AllowAsCrafting(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionTestFlags)
+        {
+            return Allow(lootCloneRecord, restrictionTestFlags);
+        }
+
+        public virtual bool Adjust(DropFilterArguments dropFilterArgs, ref RestrictionTestFlags adjustedFlags, RestrictionTestFlags flags)
+        {
+            return flags.HasFlag(RestrictionTestFlags.Flag15) || Allow(dropFilterArgs, flags);
+        }
     }
 
     public class ConditionalRestrictionPrototype : DropRestrictionPrototype

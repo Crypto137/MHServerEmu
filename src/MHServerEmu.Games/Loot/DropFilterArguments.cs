@@ -3,7 +3,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
-    public struct DropFilterArguments
+    public class DropFilterArguments
     {
         public Prototype ItemProto { get; set; }
         public PrototypeId RollFor { get; set; }
@@ -25,6 +25,19 @@ namespace MHServerEmu.Games.Loot
             Rank = rank;
             Slot = slot;
             LootContext = lootContext;
+        }
+
+        public DropFilterArguments(DropFilterArguments other)
+        {
+            ItemProto = other.ItemProto;
+            RollFor = other.RollFor;
+            Level = other.Level;
+            Rarity = other.Rarity;
+            Rank = other.Rank;
+            Slot = other.Slot;
+            LootContext = other.LootContext;
+
+            DropDistanceThresholdSq = other.DropDistanceThresholdSq;
         }
 
         public override string ToString()
