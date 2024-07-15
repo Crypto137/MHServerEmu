@@ -408,13 +408,14 @@ namespace MHServerEmu.Games.Entities
 
             // Assign throwable powers
             PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
-            PrototypeId throwablePowerRef = throwableEntity.Properties[PropertyEnum.ThrowablePower];
-            AssignPower(throwablePowerRef, indexProps);
             PrototypeId throwableCancelPowerRef = throwableEntity.Properties[PropertyEnum.ThrowableRestorePower];
             AssignPower(throwableCancelPowerRef, indexProps);
+            PrototypeId throwablePowerRef = throwableEntity.Properties[PropertyEnum.ThrowablePower];
+            AssignPower(throwablePowerRef, indexProps);
 
             // Remove the entity we are throwing from the world
             throwableEntity.ExitWorld();
+            throwableEntity.ConditionCollection?.RemoveAllConditions(true);
 
             // start throwing from AI
             AIController?.OnAIStartThrowing(throwableEntity, throwablePowerRef, throwableCancelPowerRef);
@@ -804,6 +805,12 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnExitedWorld();
             AIController?.OnAIExitedWorld();
+        }
+
+        public override void OnGotHit(WorldEntity attacker)
+        {
+            base.OnGotHit(attacker);
+            AIController?.OnAIOnGotHit(attacker);
         }
 
         public override void OnDramaticEntranceEnd()

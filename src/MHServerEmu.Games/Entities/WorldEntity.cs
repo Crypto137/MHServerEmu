@@ -6,6 +6,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
@@ -1134,9 +1135,18 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 Properties[PropertyEnum.Health] = health;
+                if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
+                    OnGotHit(powerUser);
             }
 
             return true;
+        }
+
+        public virtual void OnGotHit(WorldEntity attacker)
+        {
+            TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttacked);
+            if (attacker.GetMostResponsiblePowerUser<Avatar>() != null)
+                TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttackedByPlayer);
         }
 
         public string PowerCollectionToString()

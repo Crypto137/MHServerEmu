@@ -462,6 +462,21 @@ namespace MHServerEmu.Games.Behavior
             }
         }
 
+        public void OnAIOnGotHit(WorldEntity attacker)
+        {            
+            if (Owner == null) return;
+            if (attacker != null && Owner.IsHostileTo(attacker))
+                Blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = attacker.Id;
+
+            if (Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] == Entity.InvalidId)
+            {
+                OnAIEnabled();
+                Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
+            }
+            else
+                ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
+        }
+
         public void OnAIStartThrowing(WorldEntity throwableEntity, PrototypeId throwablePowerRef, PrototypeId throwableCancelPowerRef)
         {
             if (Owner == null) return;
