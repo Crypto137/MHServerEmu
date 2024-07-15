@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 }
             }
 
-            _proceduralPtr.Profile.Init(agent); // Init Powers for agent
+            current.Profile.Init(agent); // Init Powers for agent
             return true;
         }
 

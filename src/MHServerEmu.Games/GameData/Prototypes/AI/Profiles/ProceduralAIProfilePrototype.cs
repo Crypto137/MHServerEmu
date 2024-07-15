@@ -287,6 +287,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DynamicBehavior { get; protected set; }
         public bool OrientToEnticerOrientation { get; protected set; }
 
+        public override void Init(Agent agent)
+        {
+            base.Init(agent);
+
+            AIController ownerController = agent.AIController;
+            if (ownerController == null) return;
+            BehaviorBlackboard blackboard = ownerController.Blackboard;
+            blackboard.PropertyCollection[PropertyEnum.AIInteractEntityId] = blackboard.PropertyCollection[PropertyEnum.AIEnticedToID];
+        }
+
         public override void Think(AIController ownerController)
         {
             ProceduralAI proceduralAI = ownerController.Brain;

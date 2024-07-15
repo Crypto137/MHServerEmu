@@ -5,6 +5,7 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -439,17 +440,152 @@ namespace MHServerEmu.Games.Behavior
             scheduler?.CancelAllEvents(_pendingEvents);
         }
 
-        public void OnAIPowerEnded(PrototypeId powerProtoRef, EndPowerFlags flags)
-        {
-            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
-
-            // TODO Off PropertyEnum.AIThrowPower
-        }
-
         public void OnAISetSimulated(bool simulated)
         {
             SetIsEnabled(simulated);
             Brain?.OnSetSimulated(simulated);
         }
+
+        public void OnAIPowerEnded(PrototypeId powerProtoRef, EndPowerFlags flags)
+        {
+            ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
+
+            if (flags.HasFlag(EndPowerFlags.Unassign))
+            {
+                if (powerProtoRef == Blackboard.PropertyCollection[PropertyEnum.AIThrowPower] 
+                    || powerProtoRef == Blackboard.PropertyCollection[PropertyEnum.AIThrowCancelPower])
+                {
+                    Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIThrowPower);
+                    Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIThrowCancelPower);
+                    Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIThrownObjectPickedUp);
+                }
+            }
+        }
+
+        public void OnAIOnGotHit(WorldEntity attacker)
+        {            
+            if (Owner == null) return;
+            if (attacker != null && Owner.IsHostileTo(attacker))
+                Blackboard.PropertyCollection[PropertyEnum.AILastAttackerID] = attacker.Id;
+
+            if (Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] == Entity.InvalidId)
+            {
+                OnAIEnabled();
+                Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
+            }
+            else
+                ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
+        }
+
+        public void OnAIStartThrowing(WorldEntity throwableEntity, PrototypeId throwablePowerRef, PrototypeId throwableCancelPowerRef)
+        {
+            if (Owner == null) return;
+
+            // ignore no target override
+            Blackboard.PropertyCollection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = true;
+
+            // set powers
+            Blackboard.PropertyCollection[PropertyEnum.AIThrowPower] = throwablePowerRef;
+            Blackboard.PropertyCollection[PropertyEnum.AIThrowCancelPower] = throwableCancelPowerRef;
+
+            // schedule event
+            EventPointer<ThrownObjectPickedUpEvent> pickUpEvent = new();
+            TimeSpan pickupTime = GetThrowableTime(throwableEntity.Properties, PropertyEnum.AIThrowPowerPickupLength);
+            TimeSpan loopDelay = GetThrowableTime(throwableEntity.Properties, PropertyEnum.AIThrowPowerLoopDelay);
+            ScheduleAIEvent(pickUpEvent, pickupTime, loopDelay);
+        }
+
+        private TimeSpan GetThrowableTime(PropertyCollection throwableProp, PropertyEnum throwEnum)
+        {
+            TimeSpan time = TimeSpan.Zero;
+            var propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(throwEnum);
+            var throwPropId = new PropertyId(throwEnum, Owner.PrototypeDataRef, propInfo.DefaultParamValues[1]);
+
+            if (throwableProp.HasProperty(throwPropId))
+                return throwableProp[throwPropId];
+            else
+            {
+                var keywords = Owner.Keywords;
+                if (keywords.HasValue())
+                    foreach (var keyword in keywords)
+                    {
+                        throwPropId = new PropertyId(throwEnum, propInfo.DefaultParamValues[0], keyword);
+                        if (throwableProp.HasProperty(throwPropId))
+                            return throwableProp[throwPropId];
+                    }
+            }
+            
+            return time;
+        }
+
+        #region Events
+
+        private void ThrownObjectPickedUp(TimeSpan time)
+        {
+            Blackboard.PropertyCollection[PropertyEnum.AIThrownObjectPickedUp] = true;
+            EventPointer<StartThrowPowerEvent> startThrowEvent = new();
+            ScheduleAIEvent(startThrowEvent, time);
+        }
+
+        private void StartThrownPower()
+        {
+            if (Blackboard.PropertyCollection.HasProperty(PropertyEnum.AIThrowPower))
+            {
+                // throw object to target or forward from owner
+                PrototypeId throwPowerRef = Blackboard.PropertyCollection[PropertyEnum.AIThrowPower];
+                var targetEntity = TargetEntity;
+                if (targetEntity != null)
+                {
+                    if (AttemptActivatePower(throwPowerRef, targetEntity.Id, targetEntity.RegionLocation.Position) == false)
+                        ThrowForwardFromOwner(throwPowerRef);
+                }
+                else
+                    ThrowForwardFromOwner(throwPowerRef);
+            }
+
+            // return no target override
+            Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIIgnoreNoTgtOverrideProfile);
+        }
+
+        private void ThrowForwardFromOwner(PrototypeId throwPowerRef)
+        {
+            var throwPowerProto = GameDatabase.GetPrototype<PowerPrototype>(throwPowerRef);
+            if (throwPowerProto != null)
+            {
+                float range = throwPowerProto.GetRange(new(), Owner.Properties);
+                Vector3 targetPosition = Owner.RegionLocation.Position + (Owner.Forward * range);
+                AttemptActivatePower(throwPowerRef, Owner.Id, targetPosition);
+            }
+        }
+
+        private void ScheduleAIEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
+            where TEvent : CallMethodEvent<AIController>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this);
+        }
+
+        public void ScheduleAIEvent<TEvent, TParam1>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset, TParam1 param1)
+            where TEvent : CallMethodEventParam1<AIController, TParam1>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this, param1);
+        }
+
+        public class StartThrowPowerEvent : CallMethodEvent<AIController>
+        {
+            protected override CallbackDelegate GetCallback() => (controller) => controller.StartThrownPower();
+        }
+
+        public class ThrownObjectPickedUpEvent : CallMethodEventParam1<AIController, TimeSpan>
+        {
+            protected override CallbackDelegate GetCallback() => (controller, time) => controller.ThrownObjectPickedUp(time);
+        }
+
+        #endregion
     }
 }

@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Entities
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
         public Avatar TeamUpOwner { get => Game.EntityManager.GetEntity<Avatar>(Properties[PropertyEnum.TeamUpOwnerId]); }
-
+        public override int Throwability { get => Properties[PropertyEnum.Throwability]; }
         public int PowerSpecIndexActive { get; set; }
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
         public override bool IsWakingUp { get => _wakeEndEvent.IsValid; }
@@ -408,11 +408,17 @@ namespace MHServerEmu.Games.Entities
 
             // Assign throwable powers
             PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
-            AssignPower(throwableEntity.Properties[PropertyEnum.ThrowablePower], indexProps);
-            AssignPower(throwableEntity.Properties[PropertyEnum.ThrowableRestorePower], indexProps);
+            PrototypeId throwableCancelPowerRef = throwableEntity.Properties[PropertyEnum.ThrowableRestorePower];
+            AssignPower(throwableCancelPowerRef, indexProps);
+            PrototypeId throwablePowerRef = throwableEntity.Properties[PropertyEnum.ThrowablePower];
+            AssignPower(throwablePowerRef, indexProps);
 
             // Remove the entity we are throwing from the world
             throwableEntity.ExitWorld();
+            throwableEntity.ConditionCollection?.RemoveAllConditions(true);
+
+            // start throwing from AI
+            AIController?.OnAIStartThrowing(throwableEntity, throwablePowerRef, throwableCancelPowerRef);
 
             return true;
         }
@@ -687,6 +693,37 @@ namespace MHServerEmu.Games.Entities
                     AllianceChange();
                     break;
 
+                case PropertyEnum.Knockback:
+                case PropertyEnum.Knockdown:
+                case PropertyEnum.Knockup:
+                case PropertyEnum.Mesmerized:
+                case PropertyEnum.Stunned:
+                case PropertyEnum.StunnedByHitReact:
+                case PropertyEnum.NPCAmbientLock:
+
+                    if (newValue) 
+                    {
+                        var activePower = ActivePower;
+                        bool endPower = false;
+                        var endFlags = EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting;
+                        if (activePower != null)
+                            endPower = activePower.EndPower(endFlags);
+
+                        Locomotor?.Stop();
+
+                        var throwablePower = GetThrowablePower();
+                        if (throwablePower != null)
+                        {
+                            if (AIController != null)
+                            {
+                                if (!endPower || activePower != throwablePower)
+                                    AIController.OnAIPowerEnded(throwablePower.PrototypeDataRef, endFlags);
+                            }
+                            UnassignPower(throwablePower.PrototypeDataRef);
+                        }
+                    }
+                    break;
+
                 case PropertyEnum.Immobilized:
                 case PropertyEnum.ImmobilizedByHitReact:
                 case PropertyEnum.SystemImmobilized:
@@ -768,6 +805,12 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnExitedWorld();
             AIController?.OnAIExitedWorld();
+        }
+
+        public override void OnGotHit(WorldEntity attacker)
+        {
+            base.OnGotHit(attacker);
+            AIController?.OnAIOnGotHit(attacker);
         }
 
         public override void OnDramaticEntranceEnd()
@@ -886,8 +929,7 @@ namespace MHServerEmu.Games.Entities
                 ActivePowerRef = PrototypeId.Invalid;
             }
 
-            if (AIController != null)
-                AIController.OnAIPowerEnded(power.PrototypeDataRef, flags);
+            AIController?.OnAIPowerEnded(power.PrototypeDataRef, flags);
         }
 
         #endregion

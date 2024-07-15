@@ -975,17 +975,24 @@ namespace MHServerEmu.Games.Populations
             var rot = GetAbsoluteOrientation();
 
             var spec = manager.CreateSpawnSpec(group);
+
             spec.EntityRef = EntityRef;
             spec.Transform = Transform3.BuildTransform(offsetPos, rot);
             spec.SnapToFloor = SnapToFloor;
             spec.EntitySelectorProto = EntitySelectorProto;
+
+            spec.Properties = new();
+            spec.Properties.FlattenCopyFrom(Parent.Properties, false);
+
             if (EntityProto != null)
                 spec.AppendActions(EntityProto.EntitySelectorActions);
             if (EntitySelectorProto != null)
+            {
                 spec.AppendActions(EntitySelectorProto.EntitySelectorActions);
+                if (EntitySelectorProto.IgnoreMissionOwnerForTargeting)
+                    spec.Properties[PropertyEnum.IgnoreMissionOwnerForTargeting] = true;
+            }
             spec.MissionRef = Parent.MissionRef;
-            spec.Properties = new();
-            spec.Properties.FlattenCopyFrom(Parent.Properties, false);
             // TODO set Rank
 
             spec.Spawn();
