@@ -1235,6 +1235,13 @@ namespace MHServerEmu.Games.Dialog
         public EntityAppearanceEnum? AppearanceEnum;
         public HashSet<EntityObjectiveInfo> MissionObjectives { get; set; } // client only
         public DialogDataCollection DialogDataCollection { get; set; } // client only
+
+        public InteractData()
+        {
+            Visible = true;
+            Interactable = TriBool.Undefined;
+            VisibleOverride = TriBool.Undefined;
+        }
     }
 
     public class InteractionData
