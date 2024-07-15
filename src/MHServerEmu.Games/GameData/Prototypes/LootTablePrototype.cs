@@ -41,12 +41,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Do a modified roll
             if (Modifiers.HasValue())
             {
-                LootRollSettings modifiedSettings = new()
-                {
-                    Level = settings.Level,
-                    UsableAvatar = settings.UsableAvatar,
-                    UseSecondaryAvatar = settings.UseSecondaryAvatar
-                };
+                LootRollSettings modifiedSettings = new(settings);
 
                 foreach (LootRollModifierPrototype modifier in Modifiers)
                     modifier.Apply(modifiedSettings);

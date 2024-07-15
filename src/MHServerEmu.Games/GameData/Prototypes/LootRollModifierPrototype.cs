@@ -320,7 +320,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             // TODO: Needs bit_array::test_any()
-            Logger.Warn("Apply(): Not implemented");
+            //Logger.Warn("Apply(): Not implemented");
+            settings.DropChanceModifiers |= LootDropChanceModifiers.ConditionRestricted;
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -346,7 +347,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             // TODO: Needs bit_array::test_any()
-            Logger.Warn("Apply(): Not implemented");
+            //Logger.Warn("Apply(): Not implemented");
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -398,7 +399,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             // TODO: Needs bit_array::test_any()
-            Logger.Warn("Apply(): Not implemented");
+            //Logger.Warn("Apply(): Not implemented");
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -424,7 +425,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             // TODO: Needs bit_array::test_any()
-            Logger.Warn("Apply(): Not implemented");
+            //Logger.Warn("Apply(): Not implemented");
+            settings.DropChanceModifiers |= LootDropChanceModifiers.RegionRestricted;
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -450,7 +452,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void Apply(LootRollSettings settings)
         {
             // TODO: Needs bit_array::test_any()
-            Logger.Warn("Apply(): Not implemented");
+            //Logger.Warn("Apply(): Not implemented");
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
