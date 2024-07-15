@@ -20,9 +20,8 @@
             var node = _actionList.First;
             while (node != null)
             {
-                var nextNode = node.Next;
                 node.Value();
-                node = nextNode;
+                node = node.Next;
             }
         }
 
