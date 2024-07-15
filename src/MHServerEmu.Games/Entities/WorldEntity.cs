@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId ActivePowerRef { get; protected set; }
         public Power ActivePower { get => GetActivePower(); }
         public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
-
+        public PrototypeId[] Keywords { get => WorldEntityPrototype?.Keywords; }
         public Vector3 Forward { get => GetTransform().Col0; }
         public Vector3 GetUp { get => GetTransform().Col2; }
         public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
@@ -1492,6 +1492,10 @@ namespace MHServerEmu.Games.Entities
 
             switch (id.Enum)
             {
+                case PropertyEnum.AllianceOverride:
+                    OnAllianceChanged(newValue);
+                    break;
+
                 case PropertyEnum.CastSpeedDecrPct:
                 case PropertyEnum.CastSpeedIncrPct:
                 case PropertyEnum.CastSpeedMult:
@@ -1548,9 +1552,42 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.HealthMaxOther] = newValue;
                     break;
 
+                case PropertyEnum.MissileBlockingHotspot:
+                    if (IsHotspot)
+                        SetFlag(EntityFlags.IsCollidableHotspot, newValue);
+                    break;
+
                 case PropertyEnum.NoEntityCollide:
-                    SetFlag(EntityFlags.NoCollide, true);
-                    // EnableNavigationInfluence DisableNavigationInfluence
+                    SetFlag(EntityFlags.NoCollide, newValue);
+                    bool canInfluence = CanInfluenceNavigationMesh();
+                    if (canInfluence ^ HasNavigationInfluence)
+                    {
+                        if (canInfluence)
+                            EnableNavigationInfluence();
+                        else
+                            DisableNavigationInfluence();
+                    }
+                    break;
+
+                case PropertyEnum.NoEntityCollideException:
+                    SetFlag(EntityFlags.HasNoCollideException, newValue != InvalidId);
+                    break;
+
+                case PropertyEnum.Intangible:
+                    SetFlag(EntityFlags.Intangible, newValue);
+                    canInfluence = CanInfluenceNavigationMesh();
+                    if (canInfluence ^ HasNavigationInfluence)
+                    {
+                        if (canInfluence)
+                            EnableNavigationInfluence();
+                        else
+                            DisableNavigationInfluence();
+                    }
+                    break;
+
+                case PropertyEnum.SkillshotReflectChancePct:
+                    if (IsHotspot)
+                        SetFlag(EntityFlags.IsReflectingHotspot, newValue);
                     break;
             }
         }

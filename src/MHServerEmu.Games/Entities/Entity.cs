@@ -485,29 +485,148 @@ namespace MHServerEmu.Games.Entities
 
             switch (id.Enum)
             {
+                case PropertyEnum.AIControlPowerLock:
+                    SetFlag(EntityFlags.AIControlPowerLock, newValue);
+                    break;
+
+                case PropertyEnum.AIMasterAvatarDbGuid:
+                    Properties[PropertyEnum.AIMasterAvatar] = newValue != 0;
+                    break;
+
                 case PropertyEnum.AIMasterAvatar:
                     SetFlag(EntityFlags.AIMasterAvatar, newValue);
                     break;
 
+                case PropertyEnum.AITargetableOverride:
+                    SetFlag(EntityFlags.AITargetableOverride, newValue);
+                    break;
+
                 case PropertyEnum.ClusterPrototype:
-                    SetFlag(EntityFlags.ClusterPrototype, newValue);
+                    SetFlag(EntityFlags.ClusterPrototype, newValue != PrototypeId.Invalid);
                     break;
 
                 case PropertyEnum.EncounterResource:
-                    SetFlag(EntityFlags.EncounterResource, newValue);
+                    SetFlag(EntityFlags.EncounterResource, newValue != PrototypeId.Invalid);
+                    break;
+
+                case PropertyEnum.IgnoreMissionOwnerForTargeting:
+                    SetFlag(EntityFlags.IgnoreMissionOwnerForTargeting, newValue);
+                    break;
+
+                case PropertyEnum.Immobilized:
+                    if (id.GetParam(0) > 0)
+                        SetFlag(EntityFlags.ImmobilizedParam, newValue);
+                    else
+                        SetFlag(EntityFlags.Immobilized, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.ImmobilizedByHitReact:
+                    SetFlag(EntityFlags.ImmobilizedByHitReact, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
                     break;
 
                 case PropertyEnum.IsDead:
                     SetFlag(EntityFlags.IsDead, newValue);
                     break;
 
+                case PropertyEnum.Knockback:
+                    SetFlag(EntityFlags.Knockback, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.Knockdown:
+                    SetFlag(EntityFlags.Knockdown, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.Knockup:
+                    SetFlag(EntityFlags.Knockup, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.Mesmerized:
+                    SetFlag(EntityFlags.Mesmerized, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.MissionAllyOfAvatarDbGuid:
+                    Properties[PropertyEnum.MissionAllyOfAvatar] = newValue != 0;
+                    break;
+
                 case PropertyEnum.MissionPrototype:
-                    SetFlag(EntityFlags.HasMissionPrototype, newValue);
+                    SetFlag(EntityFlags.HasMissionPrototype, newValue != PrototypeId.Invalid);
+                    break;
+
+                case PropertyEnum.MissionXEncounterHostilityOk:
+                    SetFlag(EntityFlags.MissionXEncounterHostilityOk, newValue);
+                    break;
+
+                case PropertyEnum.NPCAmbientLock:
+                    SetFlag(EntityFlags.NPCAmbientLock, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.PowerLock:
+                    SetFlag(EntityFlags.PowerLock, newValue);
                     break;
 
                 case PropertyEnum.PowerUserOverrideID:
-                    SetFlag(EntityFlags.PowerUserOverrideId, newValue);
+                    SetFlag(EntityFlags.PowerUserOverrideId, newValue != InvalidId);
                     break;
+
+                case PropertyEnum.Stunned:
+                    SetFlag(EntityFlags.Stunned, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.StunnedByHitReact:
+                    SetFlag(EntityFlags.StunnedByHitReact, newValue);
+                    OnMovementPreventionPropertyChange(newValue);
+                    break;
+
+                case PropertyEnum.SystemImmobilized:
+                    SetFlag(EntityFlags.SystemImmobilized, newValue);
+                    break;
+
+                case PropertyEnum.TutorialImmobilized:
+                    SetFlag(EntityFlags.TutorialImmobilized, newValue);
+                    break;
+
+                case PropertyEnum.TutorialInvulnerable:
+                    SetFlag(EntityFlags.TutorialInvulnerable, newValue);
+                    break;
+
+                case PropertyEnum.TutorialPowerLock:
+                    SetFlag(EntityFlags.TutorialPowerLock, newValue);
+                    break;
+
+                case PropertyEnum.Untargetable:
+                    SetFlag(EntityFlags.Untargetable, newValue);
+                    break;
+
+                case PropertyEnum.Unaffectable:
+                    SetFlag(EntityFlags.Unaffectable, newValue);
+                    break;
+            }
+        }
+
+        private void OnMovementPreventionPropertyChange(bool newValue)
+        {
+            bool prevStatus = _flags.HasFlag(EntityFlags.HasMovementPreventionStatus);
+            if (prevStatus != newValue)
+            {
+                bool newStatus = newValue 
+                    || IsStunned 
+                    || IsMesmerized
+                    || IsInKnockback
+                    || IsInKnockdown
+                    || IsInKnockup
+                    || IsImmobilized
+                    || IsImmobilizedByHitReact
+                    || NPCAmbientLock;
+                if (newStatus != prevStatus)
+                    SetFlag(EntityFlags.HasMovementPreventionStatus, newStatus);
             }
         }
 
