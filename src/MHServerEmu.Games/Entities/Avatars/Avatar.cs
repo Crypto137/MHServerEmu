@@ -366,8 +366,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                             PowerUseResult result = CanActivatePower(continuousPower, targetId, targetPosition);
                             if (result == PowerUseResult.Success)
                                 ActivatePower(continuousPower, ref settings);
-                            else
-                                Logger.Debug($"CheckContinuousPower(): result={result}");
+                            //else
+                            //    Logger.Debug($"CheckContinuousPower(): result={result}");
                         }
                     }
                 }
@@ -386,7 +386,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void CancelPendingAction()
         {
-            Logger.Debug("CancelPendingAction()");
+            //Logger.Debug("CancelPendingAction()");
             _pendingAction.Clear();
         }
 

@@ -392,7 +392,7 @@ namespace MHServerEmu.Games.Powers
         private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings initialSettings)
         {
             // Activate combo power - a power triggered by a power event action
-            Logger.Debug($"DoActivateComboPower(): {triggeredPower.Prototype}");
+            //Logger.Debug($"DoActivateComboPower(): {triggeredPower.Prototype}");
 
             if (Owner == null) return Logger.WarnReturn(false, "DoActivateComboPower(): Owner == null");
 
@@ -557,7 +557,7 @@ namespace MHServerEmu.Games.Powers
         // 2, 3
         private bool DoPowerEventActionCancelScheduledActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Debug($"DoPowerEventActionCancelScheduledActivation(): {triggeredPowerEvent.Power.GetName()}");
+            //Logger.Debug($"DoPowerEventActionCancelScheduledActivation(): {triggeredPowerEvent.Power.GetName()}");
 
             if (triggeredPowerEvent.Power == PrototypeId.Invalid)
             {
@@ -653,7 +653,7 @@ namespace MHServerEmu.Games.Powers
         // 8, 10, 11
         private bool DoPowerEventActionScheduleActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
         {
-            Logger.Debug($"DoPowerEventActionScheduleActivation(): {triggeredPowerEvent.Power.GetName()}");
+            //Logger.Debug($"DoPowerEventActionScheduleActivation(): {triggeredPowerEvent.Power.GetName()}");
 
             if (triggeredPowerEvent.Power == PrototypeId.Invalid && actionType != PowerEventActionType.RescheduleActivationInSeconds)
             {
@@ -739,7 +739,7 @@ namespace MHServerEmu.Games.Powers
         // 14
         private bool DoPowerEventActionSwitchAvatar()
         {
-            Logger.Debug($"DoPowerEventActionSwitchAvatar()");
+            //Logger.Debug($"DoPowerEventActionSwitchAvatar()");
 
             Player player = Owner.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSwitchAvatar(): player == null");
@@ -750,7 +750,7 @@ namespace MHServerEmu.Games.Powers
         // 15, 16
         private bool DoPowerEventActionTogglePower(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings, PowerEventActionType actionType)
         {
-            Logger.Debug($"DoPowerEventActionTogglePower(): {triggeredPowerEvent.Power.GetName()} - {actionType}");
+            //Logger.Debug($"DoPowerEventActionTogglePower(): {triggeredPowerEvent.Power.GetName()} - {actionType}");
 
             Power triggeredPower = Owner?.GetPower(triggeredPowerEvent.Power);
             if (triggeredPower == null) return Logger.WarnReturn(false, "DoPowerEventActionTogglePower(): triggeredPower == null");
@@ -783,7 +783,7 @@ namespace MHServerEmu.Games.Powers
         // 19
         private bool DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Debug($"DoPowerEventActionUsePower(): {triggeredPowerEvent.Power.GetName()}");
+            //Logger.Debug($"DoPowerEventActionUsePower(): {triggeredPowerEvent.Power.GetName()}");
 
             // Validate
 
@@ -838,7 +838,7 @@ namespace MHServerEmu.Games.Powers
         // 23
         private bool DoPowerEventActionEndPower(PrototypeId powerProtoRef, EndPowerFlags flags)
         {
-            Logger.Debug($"DoPowerEventActionEndPower(): powerProtoRef={powerProtoRef.GetName()}, flags={flags}");
+            //Logger.Debug($"DoPowerEventActionEndPower(): powerProtoRef={powerProtoRef.GetName()}, flags={flags}");
             
             if (powerProtoRef == PrototypeId.Invalid)
                 return Logger.WarnReturn(false, $"DoPowerEventActionEndPower(): Encountered a triggered power event with an invalid power ref!\n{this}");
@@ -905,7 +905,7 @@ namespace MHServerEmu.Games.Powers
         // 26
         private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Debug($"DoPowerEventActionCooldownModifySecs()");
+            //Logger.Debug($"DoPowerEventActionCooldownModifySecs()");
 
             List<Power> powersToOperateOnList = new();
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
@@ -928,7 +928,7 @@ namespace MHServerEmu.Games.Powers
         // 27
         private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
         {
-            Logger.Debug($"DoPowerEventActionCooldownModifyPct()");
+            //Logger.Debug($"DoPowerEventActionCooldownModifyPct()");
 
             List<Power> powersToOperateOnList = new();
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
@@ -951,7 +951,7 @@ namespace MHServerEmu.Games.Powers
         // 28
         private bool DoPowerEventActionTeamUpAgentSummon(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Debug($"DoPowerEventActionTeamUpAgentSummon()");
+            //Logger.Debug($"DoPowerEventActionTeamUpAgentSummon()");
 
             if (Owner is not Avatar avatar)
                 return Logger.WarnReturn(false, $"DoPowerEventActionTeamUpAgentSummon(): A non-avatar entity {Owner} is trying to summon a team-up agent");
@@ -975,7 +975,7 @@ namespace MHServerEmu.Games.Powers
         // 31
         private bool DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Trace($"DoPowerEventActionPetItemDonate()");
+            //Logger.Trace($"DoPowerEventActionPetItemDonate()");
 
             // We need the right context
             if (triggeredPowerEvent.PowerEventContext is not PowerEventContextPetDonateItemPrototype itemDonateContext)
