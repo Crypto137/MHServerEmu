@@ -43,6 +43,24 @@
 
     public class CostumeCorePrototype : CraftingIngredientPrototype
     {
+        public override bool IsDroppableForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is not AvatarPrototype avatarProto)
+                return false;
+
+            return this == avatarProto.CostumeCore.As<CostumeCorePrototype>();
+        }
+
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            if (base.IsUsableByAgent(agentProto) == false)
+                return false;
+
+            if (agentProto is not AvatarPrototype avatarProto)
+                return false;
+
+            return this == avatarProto.CostumeCore.As<CostumeCorePrototype>();
+        }
     }
 
     public class CraftingRecipePrototype : ItemPrototype

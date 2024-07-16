@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 
@@ -56,6 +57,24 @@ namespace MHServerEmu.Commands.Implementations
             LootManager lootGenerator = playerConnection.Game.LootManager;
             var item = lootGenerator.GiveItem(player, itemProtoRef);
             Logger.Debug($"GiveItem(): {item} to {player}");
+
+            return string.Empty;
+        }
+
+        [Command("roll", "Test rolls a loot table.\nUsage: item testloottable")]
+        public string RollLootTable(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            //PrototypeId lootTableProtoRef = (PrototypeId)7277456960932484638;   // Loot/Tables/Mob/NormalMobs/PopcornSharedTable.prototype
+            //PrototypeId lootTableProtoRef = (PrototypeId)10214339958427752538;  // Loot/Tables/Mob/NormalMobs/Chapter01/PopcornCh01Small.prototype
+            //PrototypeId lootTableProtoRef = (PrototypeId)13573205868182115049;   // Loot/Tables/Mob/CowsAndKings/CowsLoot.prototype
+            PrototypeId lootTableProtoRef = (PrototypeId)2972188768208229407;   // Loot/Tables/Mob/CowsAndKings/CowKingLoot.prototype
+
+            player.Game.LootManager.TestLootTable(lootTableProtoRef, player);
 
             return string.Empty;
         }

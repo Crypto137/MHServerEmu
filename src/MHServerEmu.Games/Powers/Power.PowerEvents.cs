@@ -992,15 +992,29 @@ namespace MHServerEmu.Games.Powers
             // Find items to vacuum
             Sphere vacuumVolume = new(Owner.RegionLocation.Position, itemDonateContext.Radius);
             Stack<Item> vacuumStack = new();
+            DataDirectory dataDirectory = DataDirectory.Instance;
+            BlueprintId donationBlueprint = dataDirectory.GetPrototypeBlueprintDataRef(GameDatabase.AdvancementGlobalsPrototype.PetTechDonationItemPrototype);
+            RarityPrototype rarityThresholdProto = itemDonateContext.RarityThreshold.As<RarityPrototype>();
 
             foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new(EntityRegionSPContextFlags.ActivePartition)))
             {
+                // Skip non-item world entities
                 if (worldEntity is not Item item)
                     continue;
 
                 // Check if this is an item restricted to a player (instanced loot)
+                // This check needs to happen asap to avoid wasting time on loot piles of other players
                 ulong restrictedToPlayerGuid = item.Properties[PropertyEnum.RestrictedToPlayerGuid];
                 if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != player.DatabaseUniqueId)
+                    continue;
+
+                // Skip non-vacuumable items
+                if (dataDirectory.PrototypeIsChildOfBlueprint(item.PrototypeDataRef, donationBlueprint) == false)
+                    continue;
+
+                // Check rarity
+                RarityPrototype itemRarityProto = item.ItemSpec.RarityProtoRef.As<RarityPrototype>();
+                if (itemRarityProto.Tier > rarityThresholdProto.Tier)
                     continue;
 
                 // Push the item to the stack

@@ -30,6 +30,9 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             if (proto == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
                 return HandleBowlingBallItem();
 
+            if (proto.GetName().Contains("DangerRoom")) // fix for scenario crashes
+                return false;
+
             var itemProto = GameDatabase.GetPrototype<ItemPrototype>(proto);
 
             if (itemProto?.ActionsTriggeredOnItemEvent?.Choices == null)

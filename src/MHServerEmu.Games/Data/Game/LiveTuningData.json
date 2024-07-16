@@ -10,6 +10,11 @@
     "TuningVarValue": 1.5
   },
   {
+    "TuningVarProtoId": 0,
+    "TuningVarEnum": 5,
+    "TuningVarValue": 1.5
+  },
+  {
     "TuningVarProtoId": 12612937294753306787,
     "TuningVarEnum": 1,
     "TuningVarValue": 0.3
@@ -128,5 +133,10 @@
     "TuningVarProtoId": 2950583692197561917,
     "TuningVarEnum": 1,
     "TuningVarValue": 14
+  },
+  {
+    "TuningVarProtoId": 16617851625226321385,
+    "TuningVarEnum": 5,
+    "TuningVarValue": 0
   }
 ]
