@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Loot;
 
@@ -60,6 +61,69 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public short ItemRank { get; protected set; }
         public EquipmentInvUISlot UISlot { get; protected set; }
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin < 1 || ItemRank < 0 || UISlot == EquipmentInvUISlot.Invalid)
+                return result;
+
+            AvatarPrototype usableAvatarProto = settings.UsableAvatar;
+
+            RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) ||
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
+            {
+                restrictionFlags &= ~RestrictionTestFlags.Cooldown;
+            }
+
+            int numRolls = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
+
+            for (int i = 0; i < numRolls; i++)
+            {
+                int level = resolver.ResolveLevel(settings.Level, settings.UseLevelVerbatim);
+                AvatarPrototype resolvedAvatarProto = resolver.ResolveAvatarPrototype(usableAvatarProto, settings.ForceUsable, settings.UsablePercent);
+                PrototypeId rollFor = resolvedAvatarProto != null ? resolvedAvatarProto.DataRef : PrototypeId.Invalid;
+
+                Picker<Prototype> picker = new(resolver.Random);
+                LootUtilities.BuildInventoryLootPicker(picker, rollFor, UISlot);
+
+                if (picker.Empty())
+                {
+                    resolver.ClearPending();
+                    return LootRollResult.Failure;
+                }
+
+                PrototypeId? rarityProtoRef = resolver.ResolveRarity(settings.Rarities, level, null);
+                if (rarityProtoRef == PrototypeId.Invalid)
+                {
+                    resolver.ClearPending();
+                    return LootRollResult.Failure;
+                }
+
+                ItemPrototype itemProto = null;
+                DropFilterArguments filterArgs = new(itemProto, rollFor, level, rarityProtoRef.Value, ItemRank, UISlot, resolver.LootContext);
+                if (LootUtilities.PickValidItem(resolver, picker, null, filterArgs, ref itemProto, RestrictionTestFlags.All, ref rarityProtoRef) == false)
+                {
+                    resolver.ClearPending();
+                    return LootRollResult.Failure;
+                }
+
+                filterArgs.Rarity = rarityProtoRef.Value;
+                filterArgs.ItemProto = itemProto;
+
+                result |= resolver.PushItem(filterArgs, restrictionFlags, 1, null);
+
+                if (result.HasFlag(LootRollResult.Failure))
+                {
+                    resolver.ClearPending();
+                    return LootRollResult.Failure;
+                }
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropPowerPointsPrototype : LootDropPrototype

@@ -17,13 +17,13 @@ namespace MHServerEmu.Games.Loot
 
         public DropFilterArguments() { }
 
-        public DropFilterArguments(Prototype itemProto, PrototypeId rollFor, int level, PrototypeId rarity,
+        public DropFilterArguments(Prototype itemProto, PrototypeId rollFor, int level, PrototypeId rarityProtoRef,
             int rank, EquipmentInvUISlot slot, LootContext lootContext)
         {
             ItemProto = itemProto;
             RollFor = rollFor;
             Level = level;
-            Rarity = rarity;
+            Rarity = rarityProtoRef;
             Rank = rank;
             Slot = slot;
             LootContext = lootContext;

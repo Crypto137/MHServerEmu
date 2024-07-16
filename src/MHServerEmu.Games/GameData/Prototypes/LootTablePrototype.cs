@@ -113,8 +113,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Picker<Prototype> picker = new(resolver.Random);
 
             RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) || settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) ||
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
+            {
                 restrictionFlags &= ~RestrictionTestFlags.Cooldown;
+            }
 
             int stackSize = 1;
             if (itemProto.StackSettings != null)
@@ -129,10 +132,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 AvatarPrototype resolvedAvatarProto = resolver.ResolveAvatarPrototype(usableAvatarProto, settings.ForceUsable, settings.UsablePercent);
                 AgentPrototype resolvedTeamUpProto = resolver.ResolveTeamUpPrototype(usableTeamUpProto, settings.UsablePercent);
                 PrototypeId rollFor = resolvedAvatarProto != null ? resolvedAvatarProto.DataRef : PrototypeId.Invalid;
-                PrototypeId? rarity = resolver.ResolveRarity(settings.Rarities, level, isAbstract ? null : itemProto);
+                PrototypeId? rarityProtoRef = resolver.ResolveRarity(settings.Rarities, level, isAbstract ? null : itemProto);
 
                 // We must have a valid rarity ref
-                if (rarity == PrototypeId.Invalid)
+                if (rarityProtoRef == PrototypeId.Invalid)
                 {
                     resolver.ClearPending();
                     return LootRollResult.Failure;
@@ -153,11 +156,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         currentPickerAvatarProto = resolvedAvatarProto;
                     }
 
-                    DropFilterArguments pickFilterArgs = new(null, rollFor, level, rarity.Value, 0, slot, resolver.LootContext);
+                    DropFilterArguments pickFilterArgs = new(null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                     pickFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
 
                     if (picker.Empty() ||
-                        LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, pickFilterArgs, ref pickedItemProto, restrictionFlags, ref rarity) == false)
+                        LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, pickFilterArgs, ref pickedItemProto, restrictionFlags, ref rarityProtoRef) == false)
                     {
                         resolver.ClearPending();
                         return LootRollResult.Failure;
@@ -169,7 +172,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     pickedItemProto = itemProto;
                 }
 
-                DropFilterArguments pushFilterArgs = new(pickedItemProto, rollFor, level, rarity.Value, 0, slot, resolver.LootContext);
+                DropFilterArguments pushFilterArgs = new(pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                 pushFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
 
                 if (pickedItemProto.IsCurrency)
@@ -197,6 +200,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
+            Logger.Warn($"Roll(): Unimplemented drop type {GetType().Name}");
             return LootRollResult.NoRoll;
         }
     }

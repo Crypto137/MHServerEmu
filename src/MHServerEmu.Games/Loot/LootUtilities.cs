@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -62,6 +63,31 @@ namespace MHServerEmu.Games.Loot
             }
 
             return pickedItemProto != null;
+        }
+
+        public static bool BuildInventoryLootPicker(Picker<Prototype> picker, PrototypeId avatarProtoRef, EquipmentInvUISlot slot)
+        {
+            AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+            if (avatarProto == null) return Logger.WarnReturn(false, "BuildInventoryLootPicker(): avatarProto == null");
+            if (avatarProto.EquipmentInventories == null) return Logger.WarnReturn(false, "BuildInventoryLootPicker(): avatarProto.EquipmentInventories == null");
+
+            picker.Clear();
+
+            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignmentProto in avatarProto.EquipmentInventories)
+            {
+                if (equipInvAssignmentProto.UISlot != slot)
+                    continue;
+
+                InventoryPrototype invProto = equipInvAssignmentProto.Inventory.As<InventoryPrototype>();
+                if (invProto == null) return Logger.WarnReturn(false, "BuildInventoryLootPicker(): invProto == null");
+
+                foreach (PrototypeId typeRef in invProto.EntityTypeFilter)
+                    GameDataTables.Instance.LootPickingTable.GetConcreteLootPicker(picker, typeRef, avatarProto);
+
+                break;
+            }
+
+            return true;
         }
     }
 }
