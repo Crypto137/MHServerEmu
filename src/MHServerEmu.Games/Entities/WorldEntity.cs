@@ -78,6 +78,10 @@ namespace MHServerEmu.Games.Entities
         protected PowerCollection _powerCollection;
         protected int _unkEvent;
 
+        public Event<EntityCollisionEvent> OverlapBeginEvent = new();
+        public Event<EntityCollisionEvent> CollideEvent = new();
+        public Event<EntityCollisionEvent> OverlapEndEvent = new();
+
         public EntityTrackingContextMap TrackingContextMap { get => _trackingContextMap; }
         public ConditionCollection ConditionCollection { get => _conditionCollection; }
         public PowerCollection PowerCollection { get => _powerCollection; }

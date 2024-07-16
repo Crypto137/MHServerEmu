@@ -14,6 +14,18 @@ namespace MHServerEmu.Games.Behavior
         }
     }
 
+    public struct EntityCollisionEvent
+    {
+        public WorldEntity Who;
+        public WorldEntity Whom;
+
+        public EntityCollisionEvent(WorldEntity who, WorldEntity whom)
+        {
+            Who = who;
+            Whom = whom;
+        }
+    }
+
     public struct EntityDeadGameEvent
     {
         public WorldEntity Defender;
