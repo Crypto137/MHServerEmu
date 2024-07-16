@@ -232,13 +232,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             int tuningVar = (int)Math.Floor(LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_Enabled));
 
-            return tuningVar switch
-            {
-                0 => false,
-                1 => LiveTuningDefaultEnabled,
-                2 => true,
-                _ => true,
-            };
+            if (tuningVar == 0)
+                return false;
+
+            if (tuningVar == 1)
+                return LiveTuningDefaultEnabled;
+
+            return true;
         }
 
         public LootRollResult RollLootTable(LootRollSettings settings, IItemResolver resolver)

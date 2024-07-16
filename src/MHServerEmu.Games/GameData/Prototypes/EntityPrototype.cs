@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -319,6 +320,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             // Add settings for using DesignStatePS4 or DesignStateXboxOne here if we end up supporting console clients
             return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public virtual bool IsLiveTuningEnabled()
+        {
+            int tuningVar = (int)Math.Floor(LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_Enabled));
+
+            if (tuningVar == 0)
+                return false;
+
+            if (tuningVar == 1)
+                return LiveTuningDefaultEnabled;
+
+            return true;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

@@ -4,6 +4,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
@@ -54,6 +55,9 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
+            if (CheckItem(filterArgs, restrictionFlags, false) == false)
+                return LootRollResult.NoRoll;
+
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
@@ -139,7 +143,8 @@ namespace MHServerEmu.Games.Loot
 
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
         {
-            return Random.NextFloat() < 1f - noDropPercent;
+            float dropChance = (1f - noDropPercent) * LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_LootDropRate);
+            return Random.NextFloat() < dropChance;
         }
 
         public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2)
@@ -148,6 +153,9 @@ namespace MHServerEmu.Games.Loot
             if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
 
             if (itemProto.ApprovedForUse() == false)
+                return false;
+
+            if (itemProto.IsLiveTuningEnabled() == false)
                 return false;
 
             if (itemProto.IsDroppableForRestrictions(filterArgs, restrictionFlags) == false)
