@@ -18,16 +18,29 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool Initialize()
         {
+            LoadLiveTuningDataFromDisk();
+            return true;
+        }
+
+        public bool LoadLiveTuningDataFromDisk()
+        {
             string savedLiveTuningDataPath = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuningData.json");
 
-            if (File.Exists(savedLiveTuningDataPath))
+            if (File.Exists(savedLiveTuningDataPath) == false)
+                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): LiveTuningData.json not found");
+
+            var updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(savedLiveTuningDataPath);
+
+            List<NetStructLiveTuningSettingProtoEnumValue> protobufList = new();
+            foreach (LiveTuningUpdateValue value in updateValues)
             {
-                var updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(savedLiveTuningDataPath);
-                UpdateLiveTuningData(updateValues.Select(value => value.ToProtobuf()), true);
-                Logger.Info($"Loaded {updateValues.Length} live tuning settings");
+                NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
+                if (protobuf == null) continue;
+                protobufList.Add(protobuf);
             }
 
-            return true;
+            UpdateLiveTuningData(protobufList, true);
+            return Logger.InfoReturn(true, $"Loaded {updateValues.Length} live tuning settings");
         }
 
         public void UpdateLiveTuningData(IEnumerable<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)
