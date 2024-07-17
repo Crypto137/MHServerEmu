@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
@@ -45,6 +46,14 @@ namespace MHServerEmu.Commands.Implementations
             groupingManager.BroadcastMessage(ChatServerNotification.CreateBuilder().SetTheMessage(message).Build());
             Logger.Trace($"Broadcasting server notification: \"{message}\"");
 
+            return string.Empty;
+        }
+
+        [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning", AccountUserLevel.Admin)]
+        public string ReloadLiveTuning(string[] @params, FrontendClient client)
+        {
+            if (client != null) return "You can only invoke this command from the server console.";
+            LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
             return string.Empty;
         }
 

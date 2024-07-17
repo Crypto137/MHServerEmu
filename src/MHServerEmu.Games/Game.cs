@@ -45,6 +45,8 @@ namespace MHServerEmu.Games
         private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
         private int _frameCount;
 
+        private int _liveTuningChangeNum;
+
         private bool _isRunning;
         private Thread _gameThread;
         private Task _regionCleanupTask;
@@ -113,6 +115,7 @@ namespace MHServerEmu.Games
 
             LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);
             LiveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
+            _liveTuningChangeNum = LiveTuningData.ChangeNum;
 
             return success;
         }
@@ -270,7 +273,8 @@ namespace MHServerEmu.Games
 
                 UpdateFixedTime();                                  // Update simulation state
 
-                RegionManager.ProcessPendingRegions();              // Process any regions pending shutdowns (TODO: Add generation here as well)
+                RegionManager.ProcessPendingRegions();              // Process any regions pending shutdowns
+                UpdateLiveTuning();                                 // Check if live tuning data is out of date
             }
         }
 
@@ -328,6 +332,18 @@ namespace MHServerEmu.Games
 
             // Send responses to all clients
             NetworkManager.SendAllPendingMessages();
+        }
+
+        private void UpdateLiveTuning()
+        {
+            // This won't do anything unless this game's live tuning data is out of date
+            LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);  
+
+            if (_liveTuningChangeNum != LiveTuningData.ChangeNum)
+            {
+                NetworkManager.BroadcastMessage(LiveTuningData.GetLiveTuningUpdate());
+                _liveTuningChangeNum = LiveTuningData.ChangeNum;
+            }
         }
     }
 }

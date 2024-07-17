@@ -9,10 +9,11 @@ namespace MHServerEmu.Games.GameData.LiveTuning
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private LiveTuningData _liveTuningData = new();
-        private int _lastUpdateChangeNum = 0;
+        private readonly LiveTuningData _liveTuningData = new();
 
         public static LiveTuningManager Instance { get; } = new();
+
+        public int LastUpdateChangeNum { get; private set; }
 
         private LiveTuningManager() { }
 
@@ -76,19 +77,19 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     }
                 }
 
-                _liveTuningData.ChangeNum = ++_lastUpdateChangeNum;
+                _liveTuningData.ChangeNum = ++LastUpdateChangeNum;
             }
         }
 
         public bool CopyLiveTuningData(LiveTuningData output)
         {
-            if (output.ChangeNum == _lastUpdateChangeNum)
+            if (output.ChangeNum == LastUpdateChangeNum)
                 return false;
 
             lock (_liveTuningData)
             {
-                if (_liveTuningData.ChangeNum != _lastUpdateChangeNum)
-                    Logger.Warn("CopyLiveTuningData(): _liveTuningData.ChangeNum != _lastUpdateChangeNum");
+                if (_liveTuningData.ChangeNum != LastUpdateChangeNum)
+                    Logger.Warn("CopyLiveTuningData(): _liveTuningData.ChangeNum != LastUpdateChangeNum");
 
                 output.Copy(_liveTuningData);
                 return true;
