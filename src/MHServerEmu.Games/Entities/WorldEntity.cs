@@ -226,7 +226,7 @@ namespace MHServerEmu.Games.Entities
             // HACK: Schedule respawn using SpawnSpec
             if (SpawnSpec != null)
             {
-                Logger.Debug($"Respawn scheduled for {this}");
+                Logger.Trace($"Respawn scheduled for {this}");
                 EventPointer<TEMP_SpawnEntityEvent> eventPointer = new();
                 Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
                 eventPointer.Get().Initialize(SpawnSpec);

@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties.Evals;
 
@@ -112,23 +113,61 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return TimeSpan.FromMilliseconds(expirationTimeMS);
         }
 
-        public bool IsUsableByAgent(AgentPrototype agentProto)
+        public virtual bool IsUsableByAgent(AgentPrototype agentProto)
         {
             if (EquipRestrictions.IsNullOrEmpty())
                 return true;
 
-            foreach (EquipRestrictionPrototype restrictionProto in EquipRestrictions)
+            foreach (EquipRestrictionPrototype equipRestrictionProto in EquipRestrictions)
             {
-                if (restrictionProto.IsEquippableByAgent(agentProto) == false)
+                if (equipRestrictionProto.IsEquippableByAgent(agentProto) == false)
                     return false;
             }
 
             return true;
         }
 
-        public bool IsDroppableForAgent(AgentPrototype agentProto)
+        public virtual bool IsDroppableForAgent(AgentPrototype agentProto)
         {
             return IsUsableByAgent(agentProto);
+        }
+
+        public bool IsDroppableForRestrictions(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
+        {
+            if (LootDropRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)
+            {
+                if (dropRestrictionProto.Allow(filterArgs, restrictionFlags) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public EquipmentInvUISlot GetInventorySlotForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is not AvatarPrototype avatarProto)
+                return DefaultEquipmentSlot;
+
+            return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(this, avatarProto);
+        }
+
+        public virtual PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
+        {
+            return rollForAvatar;
+        }
+
+        public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)
+        {
+            if (agentProto == null)
+                return true;
+
+            if (agentProto is not AvatarPrototype avatarProto)
+                return false;
+
+            return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(itemProto, avatarProto) != EquipmentInvUISlot.Invalid;
         }
     }
 
@@ -323,6 +362,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ArmorPrototype : ItemPrototype
     {
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            return AvatarUsesEquipmentType(this, agentProto);
+        }
     }
 
     public class ArtifactPrototype : ItemPrototype
@@ -383,6 +426,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
         }
+
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            PrototypeId agentProtoRef = agentProto != null ? agentProto.DataRef : PrototypeId.Invalid;
+            return UsableBy == agentProtoRef;
+        }
     }
 
     public class LegendaryPrototype : ItemPrototype
@@ -391,6 +440,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MedalPrototype : ItemPrototype
     {
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            return AvatarUsesEquipmentType(this, agentProto);
+        }
     }
 
     public class RelicPrototype : ItemPrototype
@@ -405,6 +458,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpGearPrototype : ItemPrototype
     {
+        public override bool IsDroppableForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is AvatarPrototype)
+                return true;
+
+            return base.IsDroppableForAgent(agentProto);
+        }
+
+        public override PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
+        {
+            return rollForTeamUp == null ? rollForAvatar : rollForTeamUp.DataRef;
+        }
     }
 
     public class PermaBuffPrototype : Prototype

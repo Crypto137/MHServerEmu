@@ -335,7 +335,7 @@ namespace MHServerEmu.Games.Powers
 
         public virtual PowerUseResult Activate(ref PowerActivationSettings settings)
         {
-            Logger.Trace($"Activate(): {Prototype}");
+            //Logger.Trace($"Activate(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "Activate(): powerProto == null");
@@ -521,7 +521,7 @@ namespace MHServerEmu.Games.Powers
 
         public void ReleaseVariableActivation(ref PowerActivationSettings settings)
         {
-            Logger.Debug($"ReleaseVariableActivation(): {Prototype}");
+            //Logger.Debug($"ReleaseVariableActivation(): {Prototype}");
             settings.VariableActivationRelease = true;  // Mark power as release
             Activate(ref settings);
         }
@@ -708,7 +708,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool StartCharging()
         {
-            Logger.Debug("StartCharging()");
+            //Logger.Debug("StartCharging()");
 
             if (Owner == null) return Logger.WarnReturn(false, "StartCharging(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "StartCharging(): Game == null");
@@ -732,7 +732,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool StopCharging()
         {
-            Logger.Debug("StopCharging()");
+            //Logger.Debug("StopCharging()");
 
             if (Owner == null) return Logger.WarnReturn(false, "StopCharging(): Owner == null");
 
@@ -754,7 +754,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool StartChanneling()
         {
-            Logger.Debug("StartChanneling()");
+            //Logger.Debug("StartChanneling()");
 
             if (Owner == null) return Logger.WarnReturn(false, "StartChanneling(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "StartChanneling(): Game == null");
@@ -792,7 +792,7 @@ namespace MHServerEmu.Games.Powers
 
         public bool StopChanneling()
         {
-            Logger.Debug("StopChanneling()");
+            //Logger.Debug("StopChanneling()");
 
             if (Owner == null) return Logger.WarnReturn(false, "StopChanneling(): Owner == null");
 
@@ -896,7 +896,7 @@ namespace MHServerEmu.Games.Powers
                     _endCooldownEvent.Get().Initialize(this);
                 }
 
-                Logger.Debug($"StartCooldown(): {Prototype} - {cooldownDuration.TotalMilliseconds} ms");
+                //Logger.Debug($"StartCooldown(): {Prototype} - {cooldownDuration.TotalMilliseconds} ms");
             }
 
             return true;
@@ -2985,7 +2985,7 @@ namespace MHServerEmu.Games.Powers
 
                     if (result == PowerPositionSweepResult.Error || result == PowerPositionSweepResult.TargetPositionInvalid)
                     {
-                        Logger.Debug($"Movement power failed to sweep to target position. Using position {actualTargetPosition}, " +
+                        Logger.Warn($"GenerateActualTargetPosition(): Movement power failed to sweep to target position. Using position {actualTargetPosition}, " +
                             $"which may not be valid. Sweep result code: {result}\nPower: {ToString()}\nOwner: {Owner}\nRegionLocation: {Owner.RegionLocation}");
 
                         actualTargetPosition = ownerPosition;
@@ -3409,7 +3409,7 @@ namespace MHServerEmu.Games.Powers
             Logger.Debug("GetValidMeleeTarget()");
 
             if (user == null)
-                return false; ;
+                return false;
 
             Region region = user.Region;
             if (region == null) return Logger.WarnReturn(false, "GetValidMeleeTarget(): region == null");
@@ -3614,7 +3614,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleChannelStart()
         {
-            Logger.Debug("ScheduleChannelStart()");
+            //Logger.Debug("ScheduleChannelStart()");
 
             if (Owner == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Game == null");
