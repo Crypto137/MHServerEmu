@@ -872,11 +872,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
-            long timeUpdate = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1]; // Error!!! replace to AICustomTimeVal1
+            long timeUpdate = blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1];
             int intervalUpdate = blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1];
             if (currentTime >= (timeUpdate + intervalUpdate))
             {
-                blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = currentTime; // Error!!! replace to AICustomTimeVal1
+                blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = currentTime;
                 GRandom random = game.Random;
                 intervalUpdate = random.Next(MinSpeedDegreeUpdateIntervalMS, MaxSpeedDegreeUpdateIntervalMS);
                 blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = intervalUpdate;
