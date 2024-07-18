@@ -1887,6 +1887,47 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_unkEvent)}: 0x{_unkEvent:X}");
         }
 
+        public bool ModifyTrackingContext(PrototypeId contextRef, EntityTrackingFlag flags)
+        {
+            bool modified = false;
+
+            if (flags != EntityTrackingFlag.None)
+            {
+                if (_trackingContextMap.TryGetValue(contextRef, out var modifyFlags) == false || modifyFlags != flags)
+                {
+                    _trackingContextMap[contextRef] = flags;
+                    modified = true;
+                }
+            }
+            else
+            {
+                if (_trackingContextMap.ContainsKey(contextRef))
+                {
+                    _trackingContextMap.Remove(contextRef);
+                    modified = true;
+                }
+            }
+
+            if (modified == false) return false;
+
+            var entityTracked = NetMessageEntityTracked.CreateBuilder()
+                .SetIdEntity(Id)
+                .SetTrackingProtoId((ulong)contextRef)
+                .SetFlags((uint)flags)
+                .Build();
+
+            var policy = AOINetworkPolicyValues.AOIChannelProximity
+                | AOINetworkPolicyValues.AOIChannelDiscovery
+                | AOINetworkPolicyValues.AOIChannelParty
+                | AOINetworkPolicyValues.AOIChannelOwner;
+
+            Game.NetworkManager.SendMessageToInterested(entityTracked, this, policy);
+
+            // region UIDataProvider
+
+            return true;
+        }
+
         public static bool CheckWithinAngle(in Vector3 targetPosition, in Vector3 targetForward, in Vector3 position, float angle)
         {
             if (angle > 0)
