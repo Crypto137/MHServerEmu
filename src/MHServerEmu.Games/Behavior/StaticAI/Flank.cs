@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             TimeSpan currentTime = game.CurrentTime;
 
             if (blackboard.PropertyCollection.HasProperty(PropertyEnum.AIFlankTimeout)
-                && currentTime >= TimeSpan.FromMilliseconds(blackboard.PropertyCollection[PropertyEnum.AIFlankTimeout]))
+                && currentTime >= TimeSpan.FromMilliseconds((long)blackboard.PropertyCollection[PropertyEnum.AIFlankTimeout]))
                 return flankContext.FailOnTimeout ? StaticBehaviorReturnType.Failed : StaticBehaviorReturnType.Completed;
 
             WorldEntity flankTarget = GetFlankTarget(ownerController, flankContext.FlankTo);
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (locomotor.HasPath && locomotor.IsPathComplete())
                 return StaticBehaviorReturnType.Completed;
 
-            if (currentTime >= TimeSpan.FromMilliseconds(blackboard.PropertyCollection[PropertyEnum.AIFlankNextThinkTime]))
+            if (currentTime >= TimeSpan.FromMilliseconds((long)blackboard.PropertyCollection[PropertyEnum.AIFlankNextThinkTime]))
             {
                 blackboard.PropertyCollection[PropertyEnum.AIFlankNextThinkTime] = (long)currentTime.TotalMilliseconds + 250;
                 Vector3 targetEntityPos = flankTarget.RegionLocation.Position;

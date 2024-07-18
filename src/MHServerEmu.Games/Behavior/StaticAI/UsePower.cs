@@ -441,7 +441,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (Segment.IsNearZero(powerContext.TargetOffset) == false)
             {
-                Logger.Warn($"An ActionUsePower has non-zero values for both TargetOffset and OwnerOffset. Ignoring OwnerOffset.\nAgent: {agent}");
+                if (Segment.IsNearZero(powerContext.OwnerOffset) == false)
+                    Logger.Warn($"An ActionUsePower has non-zero values for both TargetOffset and OwnerOffset. Ignoring OwnerOffset.\nAgent: {agent}");
                
                 float targetOffsetPlusVariance = powerContext.TargetOffset + (random.NextFloat() * powerContext.OffsetVarianceMagnitude);
 
@@ -493,12 +494,12 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         public DistanceRangePredicate(Vector3 position, float minDistance, float maxDistance)
         {
             _position = position;
-
+            /* This check makes no sense!!! maxDistance always is Unbound              
             if (minDistance != Unbound && maxDistance != Unbound && minDistance > maxDistance)
             {
                 Logger.Warn($"DistanceRangePredicate min distance of {minDistance} is greater than max distance of {maxDistance}! Swapping for now, but this should be fixed.");
                 (maxDistance, minDistance) = (minDistance, maxDistance);
-            }
+            }*/
 
             if (minDistance == Unbound || minDistance < 0.0f)
             {
@@ -511,8 +512,9 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (maxDistance == Unbound || maxDistance <= 0.0f)
             {
-                if (maxDistance <= 0.0f)
-                    Logger.Warn($"DistanceRangePredicate max distance must be either unbound or > 0! Current value is {maxDistance}. Forcing max to unbound.");
+                // maxDistance always is Unbound
+                //if (maxDistance <= 0.0f)
+                //    Logger.Warn($"DistanceRangePredicate max distance must be either unbound or > 0! Current value is {maxDistance}. Forcing max to unbound.");
                 _maxDistanceSq = Unbound;
             }
             else
