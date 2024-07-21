@@ -7,6 +7,10 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Dialog;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -14,6 +18,7 @@ namespace MHServerEmu.Games.Missions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private EventGroup _pendingEvents = new();
         private PrototypeId _avatarPrototypeRef;
         private Dictionary<PrototypeId, Mission> _missionDict = new();
         private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklist = new();
@@ -21,11 +26,16 @@ namespace MHServerEmu.Games.Missions
         public Player Player { get; private set; }       
         public Game Game { get; private set; }
         public IMissionManagerOwner Owner { get; set; }
+        public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }
 
         private ulong _regionId; 
         private HashSet<ulong> _missionInterestEntities = new();
+        private InteractionOptimizationFlags _optimizationFlag;
 
-        public MissionManager() { }
+        public MissionManager() 
+        {
+            _optimizationFlag = InteractionOptimizationFlags.Hint | InteractionOptimizationFlags.Visibility;
+        }
 
         public bool Serialize(Archive archive)
         {
@@ -120,9 +130,10 @@ namespace MHServerEmu.Games.Missions
             return mission;
         }
 
-        internal void Shutdown(Region region)
+        public void Shutdown(Region region)
         {
-            throw new NotImplementedException();
+            Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
+            // TODO close region events
         }
 
         public bool GenerateMissionPopulation()
@@ -244,9 +255,7 @@ namespace MHServerEmu.Games.Missions
                     return false;
             }
 
-            // TODO: Game::OmegaMissionsEnabled() && missionPrototype is DailyMissionPrototype
-            bool omegaMissionsEnabled = true;
-            if (omegaMissionsEnabled == false && missionPrototype is DailyMissionPrototype)
+            if (Game.OmegaMissionsEnabled == false && missionPrototype is DailyMissionPrototype)
                 return false;
 
             return true;
@@ -268,7 +277,7 @@ namespace MHServerEmu.Games.Missions
             return FindMissionManagerForMission(player, region, missionRef.As<MissionPrototype>());
         }
 
-        private static MissionManager FindMissionManagerForMission(Player player, Region region, MissionPrototype missionProto)
+        public static MissionManager FindMissionManagerForMission(Player player, Region region, MissionPrototype missionProto)
         {
             if (player != null)
             {
@@ -304,7 +313,18 @@ namespace MHServerEmu.Games.Missions
             // collection.Add(missionDialogData);
         }
 
+        public void OnMissionStateChange(Mission mission)
+        {
+            mission.ScheduleDelayedUpdateMissionEntities();
+        }
+
+        public void OnMissionObjectiveStateChange(Mission mission, MissionObjective missionObjective)
+        {
+            mission.ScheduleDelayedUpdateMissionEntities();
+        }
+
         static int UpperBoundsOffset = int.MaxValue;
+
         public static int MissionLevelUpperBoundsOffset()
         {
             if (UpperBoundsOffset == int.MaxValue)
@@ -315,10 +335,144 @@ namespace MHServerEmu.Games.Missions
             return UpperBoundsOffset;
         }
 
-        internal static bool MatchItemsToRemove(Player player, MissionItemRequiredEntryPrototype[] requiredItems)
+        public static bool MatchItemsToRemove(Player player, MissionItemRequiredEntryPrototype[] itemsIn, 
+            List<Entity> itemsOut = null, List<int> itemCounts = null)
         {
-            throw new NotImplementedException();
+            if (itemsIn.IsNullOrEmpty() || (itemsOut != null && itemCounts == null) || (itemsOut == null && itemCounts != null)) return false;
+            var game = player.Game;
+            if (game == null) return false;
+
+            var manager = game.EntityManager;
+            foreach (var itemPrototype in itemsIn)
+            {
+                if (itemPrototype == null) continue;
+                int count = (int)itemPrototype.Num;
+                var flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra | InventoryIterationFlags.SortByPrototypeRef;
+                foreach (var inventory in new InventoryIterator(player, flags))
+                    foreach (var item in inventory)
+                        if (item.ProtoRef == itemPrototype.ItemPrototype && count > 0)
+                        {
+                            var contained = manager.GetEntity<Item>(item.Id);
+                            if (contained != null)
+                            {
+                                int stackSize = Math.Min(count, contained.CurrentStackSize);
+                                count -= stackSize;
+
+                                if (itemsOut != null && itemCounts != null && itemPrototype.Remove)
+                                {
+                                    itemsOut.Add(contained);
+                                    itemCounts.Add(stackSize);
+                                }
+                            }
+                        }
+
+                if (count > 0) return false;
+            }
+
+            return true;
         }
+
+        public void UpdateMissionEntities(Mission mission)
+        {
+            List<Entity> participants = new();
+            if (mission.GetParticipants(participants))
+                foreach(var participant in participants)
+                    if (participant is Player player)
+                        UpdateMissionEntitiesForPlayer(mission, player);
+        }
+
+        public static void UpdateMissionEntitiesForPlayer(Mission mission, Player player)
+        {
+            var region = player.GetRegion();
+            if (region != null)
+            {
+                var missionProto = mission.Prototype;
+                if (missionProto == null) return;
+
+                var missionRef = missionProto.DataRef;
+                 
+                var flags = EntityTrackingFlag.Appearance | EntityTrackingFlag.HUD;
+                if (missionProto.PlayerHUDShowObjs)
+                    flags |= EntityTrackingFlag.MissionCondition;
+                else
+                {
+                    var missionData = GameDatabase.InteractionManager.GetMissionData(missionRef);
+                    if (missionData?.PlayerHUDShowObjs == true)
+                        flags |= EntityTrackingFlag.MissionCondition;
+                }
+
+                var missionManager = mission.MissionManager;
+                foreach (WorldEntity worldEntity in region.EntityTracker.Iterate(mission.PrototypeDataRef, flags))
+                    if (worldEntity != null)
+                        missionManager.UpdateMissionEntity(worldEntity, player);
+            }
+        }
+
+        protected void UpdateMissionEntity(WorldEntity worldEntity, Player player)
+        {
+            bool hasObjectives = false;
+            bool hasInterest = false;
+
+            if (worldEntity.IsInWorld)
+            {
+                var entityDesc = new EntityDesc(worldEntity);
+                PrototypeId mapOverrideRef = PrototypeId.Invalid;
+                var outInteractData = new InteractData { MapIconOverrideRef = mapOverrideRef };
+
+                InteractionManager.CallGetInteractionStatus(entityDesc, player.PrimaryAvatar, _optimizationFlag,
+                    InteractionFlags.EvaluateInteraction | InteractionFlags.DeadInteractor | InteractionFlags.DormanInvisibleInteractee,
+                    ref outInteractData
+                );
+
+                hasObjectives |= outInteractData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.HasObjectives);
+                hasInterest |= outInteractData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.ShowObjs);
+
+                if (worldEntity is Transition transition)
+                    foreach (var dest in transition.Destinations)
+                    {
+                        var regionRef = dest.RegionRef;
+                        if (regionRef != PrototypeId.Invalid)
+                        {
+                            GameDatabase.InteractionManager.GetRegionInterest(player, regionRef, dest.AreaRef, dest.CellRef, _optimizationFlag,
+                                ref outInteractData);
+                            hasObjectives |= outInteractData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.HasObjectives);
+                            hasInterest |= outInteractData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.ShowObjs);
+                        }
+                    }
+
+                if (hasInterest == false)
+                {
+                    var objectiveInfoProto = GameDatabase.GetPrototype<ObjectiveInfoPrototype>(outInteractData.MapIconOverrideRef.Value)
+                        ?? worldEntity.WorldEntityPrototype?.ObjectiveInfo;
+                    if (objectiveInfoProto?.EdgeEnabled == true) hasInterest = true;
+                }
+            }
+
+            if (hasInterest)
+                AddMissionInterestEntity(worldEntity.Id, player);
+            else
+                RemoveMissionInterestEntity(worldEntity.Id, player);
+
+            UpdateMissionContextEntity(worldEntity, player);
+        }
+
+        private void UpdateMissionContextEntity(WorldEntity worldEntity, Player player)
+        {
+            if (worldEntity == null) return;
+            player.PlayerConnection.AOI.ConsiderEntity(worldEntity);
+        }
+
+        private void RemoveMissionInterestEntity(ulong entityId, Player player)
+        {
+            // TODO remove entity from interest
+        }
+
+        private void AddMissionInterestEntity(ulong entityId, Player player)
+        {
+            // TODO add entity to interest
+        }
+
+        #region Hardcoded
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
         {
@@ -495,5 +649,8 @@ namespace MHServerEmu.Games.Missions
             CH07SabretoothKismetController = 1519881959113893239,
             CH08MODOKSpawnKismetController = 15291664867109315779,
         }
+
+        #endregion
+
     }
 }
