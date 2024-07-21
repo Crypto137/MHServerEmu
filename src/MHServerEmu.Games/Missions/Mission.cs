@@ -1,12 +1,17 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions.Actions;
+using MHServerEmu.Games.Missions.Conditions;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -21,12 +26,13 @@ namespace MHServerEmu.Games.Missions
         Failed = 5,
     }
 
-    public class Mission : ISerialize
+    public class Mission : ISerialize, IMissionConditionOwner, IMissionActionOwner
     {
         // Relevant protobuf: NetMessageMissionUpdate
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private EventPointer<DelayedUpdateMissionEntitiesEvent> _delayedUpdateMissionEntitiesEvent = new();
         private MissionState _state;
         private TimeSpan _timeExpireCurrentState;
         private PrototypeId _prototypeDataRef;
@@ -43,9 +49,12 @@ namespace MHServerEmu.Games.Missions
         public int UnkRandom { get => _unkRandom; }
         public SortedSet<ulong> Participants { get => _participants; }
         public bool IsSuspended { get => _isSuspended; }
-
+        public EventGroup EventGroup { get; } = new();
         public MissionManager MissionManager { get; }
         public Game Game { get; }
+        public EventScheduler GameEventScheduler { get => MissionManager.GameEventScheduler; }
+        public bool ShouldShowMapPingOnPortals { get => Prototype?.ShowMapPingOnPortals ?? false; }
+        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
@@ -123,6 +132,21 @@ namespace MHServerEmu.Games.Missions
             sb.AppendLine($"{nameof(_isSuspended)}: {_isSuspended}");
             return sb.ToString();
         }
+
+        public string GetTraceName()
+        {
+            StringBuilder sb = new();
+            sb.Append(PrototypeName);
+
+            var player = MissionManager.Player;
+            if (player != null) sb.Append($" [player: {player}]");
+            else
+            {
+                var region = MissionManager.GetRegion();
+                if (region != null) sb.Append($" [region: {region}]");
+            }
+            return sb.ToString();
+        }
         
         public void SetState(MissionState newState)
         {
@@ -198,6 +222,59 @@ namespace MHServerEmu.Games.Missions
         {
             if (Prototype == null) return false;
             return Prototype.ShowInteractIndicators;
+        }
+
+        public void ScheduleDelayedUpdateMissionEntities()
+        {
+            if (_delayedUpdateMissionEntitiesEvent.IsValid == false)
+            {
+                var scheduler = GameEventScheduler;
+                if (scheduler == null) return;
+                TimeSpan timeOffset = Clock.Max(Game.RealGameTime - Game.CurrentTime, TimeSpan.Zero) + TimeSpan.FromMilliseconds(1);
+                scheduler.ScheduleEvent(_delayedUpdateMissionEntitiesEvent, timeOffset, EventGroup);
+                _delayedUpdateMissionEntitiesEvent.Get().Initialize(this);
+            }
+        }
+
+        public bool GetParticipants(List<Entity> participants)
+        {
+            participants.Clear();
+            var manager = Game.EntityManager;
+            foreach (var participant in Participants) 
+            { 
+                var entity = manager.GetEntity<Entity>(participant);
+                if (entity != null)
+                    participants.Add(entity);
+            }
+            return participants.Count > 0;
+        }
+
+        public MissionObjective GetObjectiveByPrototypeIndex(byte objectiveIndex)
+        {
+            if (_objectiveDict.TryGetValue(objectiveIndex, out var objective))
+                return objective;
+            return null;
+        }
+
+        public MissionObjectivePrototype GetObjectivePrototypeByIndex(byte prototypeIndex)
+        {
+            var missionProto = Prototype;
+            if (missionProto == null || missionProto.Objectives.IsNullOrEmpty()) return null;
+            if (missionProto.Objectives.Length <= prototypeIndex)
+            {
+                Logger.Warn($"Unable to get mission objective {prototypeIndex} for mission [{missionProto}]. Mission prototype only has {missionProto.Objectives.Length} objectives.");
+                return null;
+            }
+
+            var objectiveProto = missionProto.Objectives[prototypeIndex];
+            if (objectiveProto == null) return null;
+
+            return objectiveProto;
+        }
+
+        protected class DelayedUpdateMissionEntitiesEvent : CallMethodEvent<Mission>
+        {
+            protected override CallbackDelegate GetCallback() => (mission) => mission?.MissionManager.UpdateMissionEntities(mission);
         }
     }
 }

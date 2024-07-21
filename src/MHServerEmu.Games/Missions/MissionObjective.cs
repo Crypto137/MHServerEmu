@@ -3,6 +3,8 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions.Conditions;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -16,7 +18,7 @@ namespace MHServerEmu.Games.Missions
         Skipped = 5
     }
 
-    public class MissionObjective : ISerialize
+    public class MissionObjective : ISerialize, IMissionConditionOwner
     {
         // Relevant protobuf: NetMessageMissionObjectiveUpdate
 
@@ -36,7 +38,7 @@ namespace MHServerEmu.Games.Missions
 
         public Mission Mission { get; }
         public Game Game { get => Mission.Game; }
-
+        public MissionObjectivePrototype Prototype { get; private set; }
         public byte PrototypeIndex { get => _prototypeIndex; }
         public MissionObjectiveState State { get => _objectiveState; }
         public TimeSpan TimeExpire { get => _objectiveStateExpireTime; }
@@ -46,6 +48,7 @@ namespace MHServerEmu.Games.Missions
         {
             Mission = mission;
             _prototypeIndex = prototypeIndex;
+            Prototype = mission.GetObjectivePrototypeByIndex(prototypeIndex);
         }
 
         public MissionObjective(byte prototypeIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
@@ -120,16 +123,14 @@ namespace MHServerEmu.Games.Missions
         public bool HasInteractedWithEntity(WorldEntity entity)
         {
             ulong entityId = entity.Id;
-            ulong regionId = 0;     // TODO: WorldEntity::IsInWorld, WorldEntity::GetRegionLocation(), WorldEntity::GetExitWorldRegionLocation
+            ulong regionId = entity.IsInWorld ? entity.RegionLocation.RegionId : entity.ExitWorldRegionLocation.RegionId;
 
             if (_interactedEntityList.Count >= 20)
-                Logger.Warn("HasInteractedWithEntity(): _interactedEntityList.Count >= 20");    // same check as the client
+                Logger.Warn($"HasInteractedWithEntity(): MissionObjective {_prototypeIndex} of mission {Mission.GetTraceName()} is tracking more than 20 interacted entities ({_interactedEntityList.Count})");
 
             foreach (InteractionTag tag in _interactedEntityList)
-            {
                 if (tag.EntityId == entityId && tag.RegionId == regionId)
                     return true;
-            }
 
             return false;
         }
