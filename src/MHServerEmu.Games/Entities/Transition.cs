@@ -33,8 +33,7 @@ namespace MHServerEmu.Games.Entities
         private string _transitionName = string.Empty;          // Seemingly unused
         private List<Destination> _destinationList = new();
 
-        public List<Destination> DestinationList { get => _destinationList; }
-
+        public List<Destination> Destinations { get => _destinationList; }
         public TransitionPrototype TransitionPrototype { get { return Prototype as TransitionPrototype; } }
 
         public Transition(Game game) : base(game) { }

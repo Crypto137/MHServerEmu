@@ -777,23 +777,23 @@ namespace MHServerEmu.Games.Network
                     teleport.TeleportToLastTown(this);
                     return true;
                 }
-                if (teleport.DestinationList.Count == 0 || teleport.DestinationList[0].Type == RegionTransitionType.Waypoint) return true;
-                Logger.Trace($"Destination entity {teleport.DestinationList[0].EntityRef}");
+                if (teleport.Destinations.Count == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return true;
+                Logger.Trace($"Destination entity {teleport.Destinations[0].EntityRef}");
 
-                if (teleport.DestinationList[0].Type == RegionTransitionType.TowerUp ||
-                    teleport.DestinationList[0].Type == RegionTransitionType.TowerDown)
+                if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||
+                    teleport.Destinations[0].Type == RegionTransitionType.TowerDown)
                 {
-                    teleport.TeleportToEntity(this, teleport.DestinationList[0].EntityId);
+                    teleport.TeleportToEntity(this, teleport.Destinations[0].EntityId);
                     return true;
                 }
 
-                if (RegionDataRef != teleport.DestinationList[0].RegionRef)
+                if (RegionDataRef != teleport.Destinations[0].RegionRef)
                 {
                     teleport.TeleportClient(this);
                     return true;
                 }
 
-                if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
+                if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return true;
 
                 if (AOI.InterestedInCell(target.RegionLocation.Cell.Id) == false)
                 {

@@ -605,11 +605,6 @@ namespace MHServerEmu.Games.Regions
             return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
 
-        private string GetPrototypeName()
-        {
-            return GameDatabase.GetPrototypeName(PrototypeDataRef);
-        }
-
         public void Shutdown()
         {
             // SetStatus(2, true);

@@ -532,7 +532,7 @@ namespace MHServerEmu.Games.Dialog
             var worldEntityProto = entity.WorldEntityPrototype;
 
             if (entity is Transition transition)
-                foreach (var destination in transition.DestinationList)
+                foreach (var destination in transition.Destinations)
                 {
                     var regionRef = destination.RegionRef;
                     if (regionRef != PrototypeId.Invalid)
@@ -856,7 +856,7 @@ namespace MHServerEmu.Games.Dialog
                     if (interactOption.IsActiveForMissionAndEntity(mission, interactee))
                     {
                         var indicatorType = HUDEntityOverheadIcon.None;
-                        if (interactOption.HasObjective() == false)
+                        if (interactOption.HasObjective == false)
                         {
                             if (interactee is Agent)
                                 indicatorType = mission.ShouldShowInteractIndicators() ? HUDEntityOverheadIcon.MissionBestower : HUDEntityOverheadIcon.DiscoveryBestower;
@@ -1073,7 +1073,7 @@ namespace MHServerEmu.Games.Dialog
                 var objectiveIndex = option.ObjectiveIndex;
                 sbyte conditionIndex = (sbyte)interactProto.Index;
 
-                if (option.HasObjective() == false && mission.State != MissionState.Active)
+                if (option.HasObjective == false && mission.State != MissionState.Active)
                     if (missionProto.Rewards.HasValue())
                         showRewards = true;
 
@@ -1221,6 +1221,86 @@ namespace MHServerEmu.Games.Dialog
                     return false;
             return true;
         }
+
+        public bool GetRegionInterest(Player player, PrototypeId regionRef, PrototypeId areaRef, PrototypeId cellRef, InteractionOptimizationFlags optimizationFlags, ref InteractData outInteractData)
+        {
+            if (regionRef == PrototypeId.Invalid) return false;
+
+            var interactor = player.PrimaryAvatar;
+            if (interactor == null) return false;
+
+            if (DataDirectory.Instance.GetPrototypeClassType(regionRef) != typeof(RegionPrototype))
+                return Logger.WarnReturn(false, $"GetRegionInterest called on a non-Region PrototypeId: {regionRef}"); 
+
+            bool interest = false;
+            if (_interaсtionMap.TryGetValue(regionRef, out var interactionData))
+            {
+                if (interactionData == null) return false;
+
+                if (optimizationFlags == 0 || interactionData.HasOptionFlags(optimizationFlags))
+                    foreach (var option in interactionData.Options)
+                    {
+                        if (option == null) continue;
+                        interest |= ParseRegionInterests(player, option, ref outInteractData, regionRef, areaRef, cellRef);
+                    }
+            }
+            return interest;
+        }
+
+        private static bool ParseRegionInterests(Player player, InteractionOption option, ref InteractData outInteractData, PrototypeId regionRef, PrototypeId areaRef, PrototypeId cellRef)
+        {
+            bool interest = false;
+            MissionPrototype missionProto;
+
+            if (option is BaseMissionOption missionOption)
+                missionProto = missionOption.MissionProto;
+            else
+                return interest;
+
+            if (missionProto == null) return false;
+
+            var region = player.GetRegion();
+            if (region == null) return false;
+
+            var missionManager = MissionManager.FindMissionManagerForMission(player, region, missionProto);
+            var mission = missionManager?.FindMissionByDataRef(missionProto.DataRef);
+            if (mission != null)
+            {
+                if (mission.ShouldShowMapPingOnPortals == false) return false;
+
+                if (missionOption is MissionHintOption missionHintOption)
+                {
+                    if (missionHintOption.IsActiveForMissionAndEntity(mission, null))
+                    {
+                        var data = missionHintOption.Proto;
+                        if (data != null)
+                        {
+                            bool targetRegion = data.TargetRegion == regionRef;
+                            bool targetArea = (areaRef == PrototypeId.Invalid) || (data.TargetArea == PrototypeId.Invalid) || areaRef == data.TargetArea;
+
+                            var avatar = player.PrimaryAvatar;
+                            bool targetPlayer = (data.PlayerStateFilter == null) 
+                                || (avatar != null && data.PlayerStateFilter.Evaluate(avatar, new EntityFilterContext(missionProto.DataRef)));
+
+                            if (targetRegion && targetArea && targetPlayer)
+                                missionHintOption.SetInteractDataObjectiveFlags(player, ref outInteractData, mission, null);
+                        }
+                    }
+                }
+                else
+                {
+                    if (missionOption.IsLocationInteresting(player, regionRef, areaRef, cellRef)
+                        && missionOption.ObjectiveFlagsAllowed()
+                        && missionOption.IsActiveForMissionAndEntity(mission, null))
+                        missionOption.SetInteractDataObjectiveFlags(player, ref outInteractData, mission, null);
+
+                    interest |= true;
+                }
+            }
+
+            return interest;
+        }
+
     }
 
     public class InteractData
@@ -1235,12 +1315,26 @@ namespace MHServerEmu.Games.Dialog
         public EntityAppearanceEnum? AppearanceEnum;
         public HashSet<EntityObjectiveInfo> MissionObjectives { get; set; } // client only
         public DialogDataCollection DialogDataCollection { get; set; } // client only
+        public int PlayerHUDArrowDistanceOverride { get; set; }
 
         public InteractData()
         {
             Visible = true;
             Interactable = TriBool.Undefined;
             VisibleOverride = TriBool.Undefined;
+            PlayerHUDArrowDistanceOverride = -1;
+        }
+
+        public void InsertMissionObjective(Mission mission, MissionObjective objective, BaseMissionOption option, PlayerHUDEnum flags)
+        {
+            if (mission == null) return;
+            if (MissionObjectives != null)
+            { 
+                if (objective != null)
+                    MissionObjectives.Add(new EntityObjectiveInfo(mission.PrototypeDataRef, mission.State, objective.State, objective.PrototypeIndex, option, flags));
+                else
+                    MissionObjectives.Add(new EntityObjectiveInfo(mission.PrototypeDataRef, mission.State, 0, objective.PrototypeIndex, option, flags));
+            }
         }
     }
 
