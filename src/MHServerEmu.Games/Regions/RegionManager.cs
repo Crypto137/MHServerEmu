@@ -5,8 +5,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
@@ -220,16 +218,20 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public async Task CleanUpRegionsAsync()
+        public async Task CleanUpRegionsAsync(CancellationToken cancellationToken)
         {            
             while (true)
-            {
-                CleanUpRegions();
-                await Task.Delay(Game.CustomGameOptions.RegionCleanupIntervalMS); 
+            {                
+                // NOTE: When cancellation is requested, control doesn't return from Task.Delay(),
+                // effectively breaking the loop.
+                await Task.Delay(Game.CustomGameOptions.RegionCleanupIntervalMS, cancellationToken);
+
+                // Run cleanup after the delay so that it doesn't happen as soon as we first run this task.
+                CleanUpRegions(false);
             }
         }
 
-        private void CleanUpRegions()
+        public void CleanUpRegions(bool forceCleanAll)
         {
             lock (_managerLock)
             {
@@ -248,25 +250,34 @@ namespace MHServerEmu.Games.Regions
 
             // Check all regions 
             List<Region> toShutdown = new();
-            lock (_managerLock)
-            {
-                foreach (Region region in AllRegions)
-                {
-                    DateTime visitedTime;
-                    lock (region.Lock)
-                    {
-                        visitedTime = region.VisitedTime;
-                    }
 
-                    if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
+            if (forceCleanAll)
+            {
+                // Add all regions if we are forcing a cleanup of all regions (e.g. when shutting the game down)
+                toShutdown.AddRange(AllRegions);
+            }
+            else
+            {
+                lock (_managerLock)
+                {
+                    foreach (Region region in AllRegions)
                     {
-                        // TODO send force exit from region to Players
-                    }
-                    else
-                    {
-                        // TODO check all active local teleport to this Region
-                        if (currentTime - visitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
-                            toShutdown.Add(region);
+                        DateTime visitedTime;
+                        lock (region.Lock)
+                        {
+                            visitedTime = region.VisitedTime;
+                        }
+
+                        if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
+                        {
+                            // TODO send force exit from region to Players
+                        }
+                        else
+                        {
+                            // TODO check all active local teleport to this Region
+                            if (currentTime - visitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
+                                toShutdown.Add(region);
+                        }
                     }
                 }
             }

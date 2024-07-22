@@ -60,7 +60,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void Shutdown()
         {
-            // TODO: Shut down all games
+            _gameManager.ShutdownAllGames();
 
             // Wait for all data to be saved
             bool waitingForSave;

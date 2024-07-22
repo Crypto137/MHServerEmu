@@ -58,7 +58,24 @@ namespace MHServerEmu.PlayerManagement
             if (_gameDict.Count == 0)
                 Logger.WarnReturn<Game>(null, $"GetAvailableGame(): No games are available");
 
-            return _gameDict.First().Value;
+            Game availableGame = _gameDict.First().Value;
+            if (availableGame.HasBeenShutDown)
+            {
+                // We need to recreate the game if the one we had has been shut down
+                _gameDict.Clear();
+                availableGame = CreateGame();
+            }
+
+            return availableGame;
+        }
+
+        public void ShutdownAllGames()
+        {
+            foreach (var kvp in _gameDict)
+            {
+                kvp.Value.Shutdown(GameShutdownReason.ServerShuttingDown);
+                _gameDict.Remove(kvp.Key);  // Should be safe to remove while iterating as long as we use a dictionary
+            }
         }
     }
 }
