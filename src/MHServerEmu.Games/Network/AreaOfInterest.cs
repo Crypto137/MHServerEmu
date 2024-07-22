@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Network
 {
     public class AreaOfInterest
     {
-        private const float UpdateDistanceSquared = 256f * 256f;
+        public const float UpdateDistanceSquared = 256f * 256f;
         private const float ViewExpansionDistance = 600.0f;
         private const float InvisibleExpansionDistance = 1200.0f;
 

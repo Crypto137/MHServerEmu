@@ -387,7 +387,7 @@ namespace MHServerEmu.Games.Entities
 
         #region AOI
 
-        public void UpdateInterestPolicies(bool updateForAllPlayers, EntitySettings settings = null)
+        public virtual void UpdateInterestPolicies(bool updateForAllPlayers, EntitySettings settings = null)
         {
             if (updateForAllPlayers)
             {

@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Entities
         Teleport            = 1 << 6,
         HighFlying          = 1 << 7,
         PhysicsResolve      = 1 << 8,
-        SkipAOI             = 1 << 9,
+        SkipInterestUpdate  = 1 << 9,
         EnterWorld          = 1 << 10,
     }
 
@@ -72,6 +72,9 @@ namespace MHServerEmu.Games.Entities
 
         private AlliancePrototype _allianceProto;
         private Transform3 _transform = Transform3.Identity();
+
+        // We keep track of the last interest update position to avoid updating interest too often when moving around.
+        private Vector3 _lastInterestUpdatePosition = Vector3.Zero;     
 
         protected EntityTrackingContextMap _trackingContextMap;
         protected ConditionCollection _conditionCollection;
@@ -310,7 +313,7 @@ namespace MHServerEmu.Games.Entities
 
             Physics.AcquireCollisionId();
 
-            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipAOI) == ChangePositionResult.PositionChanged)
+            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipInterestUpdate) == ChangePositionResult.PositionChanged)
                 OnEnteredWorld(settings);
             else
                 ClearWorldLocation();
@@ -342,6 +345,12 @@ namespace MHServerEmu.Games.Entities
 
             if (exitStatus)
                 SetStatus(EntityStatus.ExitingWorld, false);
+        }
+
+        public override void UpdateInterestPolicies(bool updateForAllPlayers, EntitySettings settings = null)
+        {
+            base.UpdateInterestPolicies(updateForAllPlayers, settings);
+            _lastInterestUpdatePosition = IsInWorld ? RegionLocation.Position : Vector3.Zero;
         }
 
         public SimulateResult UpdateSimulationState()
@@ -377,6 +386,7 @@ namespace MHServerEmu.Games.Entities
         {
             bool positionChanged = false;
             bool orientationChanged = false;
+            Cell previousCell = Cell;
 
             RegionLocation preChangeLocation = new(RegionLocation);
             Region region = Game.RegionManager.GetRegion(preChangeLocation.RegionId);
@@ -387,9 +397,11 @@ namespace MHServerEmu.Games.Entities
                 var result = RegionLocation.SetPosition(position.Value);
 
                 if (result != RegionLocation.SetPositionResult.Success)     // onSetPositionFailure()
+                {
                     return Logger.WarnReturn(ChangePositionResult.NotChanged, string.Format(
                         "ChangeRegionPosition(): Failed to set entity new position (Moved out of world)\n\tEntity: {0}\n\tResult: {1}\n\tPrev Loc: {2}\n\tNew Pos: {3}",
                         this, result, RegionLocation, position));
+                }
 
                 if (Bounds.Geometry != GeometryType.None)
                     Bounds.Center = position.Value;
@@ -432,6 +444,17 @@ namespace MHServerEmu.Games.Entities
             if (RegionLocation.IsValid())
                 ExitWorldRegionLocation.Set(RegionLocation);
 
+            if (positionChanged && flags.HasFlag(ChangePositionFlags.SkipInterestUpdate) == false)
+            {
+                // Update interest when this world entity moves to another cell or it has moved far enough from the last interest update position
+                if (Cell != null &&
+                   (Cell != previousCell || Vector3.DistanceSquared2D(_lastInterestUpdatePosition, RegionLocation.Position) >= AreaOfInterest.UpdateDistanceSquared))
+                {
+                    UpdateInterestPolicies(true);
+                }
+            }
+
+            // Send position to clients if needed
             if (flags.HasFlag(ChangePositionFlags.DoNotSendToClients) == false)
             {
                 bool excludeOwner = flags.HasFlag(ChangePositionFlags.DoNotSendToOwner);
@@ -449,12 +472,6 @@ namespace MHServerEmu.Games.Entities
 
                     networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
                 }
-            }
-
-            if (Cell != null && flags.HasFlag(ChangePositionFlags.SkipAOI) == false)
-            {
-                // TODO: Notify if distance is far enough, similar to AOI updates
-                UpdateInterestPolicies(true);
             }
 
             return ChangePositionResult.PositionChanged;
