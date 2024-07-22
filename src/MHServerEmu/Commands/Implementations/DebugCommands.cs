@@ -210,6 +210,13 @@ namespace MHServerEmu.Commands.Implementations
             throw new("Game instance crash invoked by a debug command.");
         }
 
+        [Command("crashserver", "Crashes the current game instance.", AccountUserLevel.Admin)]
+        public string CrashServer(string[] @params, FrontendClient client)
+        {
+            if (client != null) return "You can only invoke this command from the server console.";
+            throw new("Server crash invoked by a debug command.");
+        }
+
         [Command("scheduletestevent", "Schedules a test event.", AccountUserLevel.Admin)]
         public string ScheduleTestEvent(string[] @params, FrontendClient client)
         {
