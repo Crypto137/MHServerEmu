@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.Network
                         locoFieldFlags |= LocomotionState.GetFieldFlags(locomotionState, null, true);
                     }
 
-                    //activePowerPrototypeRef = worldEntity.ActivePowerRef;     // TODO
+                    activePowerPrototypeRef = worldEntity.ActivePowerRef;
                     if (activePowerPrototypeRef != PrototypeId.Invalid)
                         fieldFlags |= EntityCreateMessageFlags.HasActivePowerPrototypeRef;
 
