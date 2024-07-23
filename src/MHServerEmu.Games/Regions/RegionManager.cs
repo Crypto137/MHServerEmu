@@ -58,7 +58,8 @@ namespace MHServerEmu.Games.Regions
             if (cell != null && _allCells.ContainsKey(cell.Id) == false)
             {
                 _allCells[cell.Id] = cell;
-                if (cell.Area.Log) Logger.Trace($"Adding cell {cell} in region {cell.Region} area id={cell.Area.Id}");
+                if (cell.Area.GenerateLog)
+                    Logger.Trace($"Adding cell {cell} in region {cell.Region} area id={cell.Area.Id}");
                 return true;
             }
             return false;
@@ -73,13 +74,16 @@ namespace MHServerEmu.Games.Regions
         public bool RemoveCell(Cell cell)
         {
             if (cell == null) return false;
-            if (cell.Area.Log) Logger.Trace($"Removing cell {cell} from region {cell.Region}");
+
+            if (cell.Area.GenerateLog)
+                Logger.Trace($"Removing cell {cell} from region {cell.Region}");
 
             if (_allCells.ContainsKey(cell.Id))
             {
                 _allCells.Remove(cell.Id);
                 return true;
             }
+
             return false;
         }
 

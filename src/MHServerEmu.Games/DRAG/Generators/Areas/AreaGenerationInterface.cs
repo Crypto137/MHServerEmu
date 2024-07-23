@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         {
             if (!base.Initialize(area)) return false;
 
-            if (Area.AreaPrototype.Generator is not AreaGenerationInterfacePrototype) return false;
+            if (Area.Prototype.Generator is not AreaGenerationInterfacePrototype) return false;
 
             GenCellContainer.Initialize();
 
@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
-            if (Area.AreaPrototype.Generator is not AreaGenerationInterfacePrototype) return false;
+            if (Area.Prototype.Generator is not AreaGenerationInterfacePrototype) return false;
 
             foreach (GenCell cell in GenCellContainer)
             {

@@ -278,7 +278,7 @@ namespace MHServerEmu.Games.Network
                 Cell cell = invisibleCells.Pop();
                 RemoveCell(cell);
                 // EnvironmentUpdate
-                environmentUpdate |= cell.Area.IsDynamicArea() == false;
+                environmentUpdate |= cell.Area.IsDynamicArea == false;
             }
 
             // Add new cells
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.Network
                 {
                     AddCell(cell);
                     // EnvironmentUpdate
-                    environmentUpdate |= cell.Area.IsDynamicArea() == false;
+                    environmentUpdate |= cell.Area.IsDynamicArea == false;
                 }
             }
 
@@ -389,7 +389,7 @@ namespace MHServerEmu.Games.Network
         private void AddArea(Area area, bool isStartArea)
         {
             _trackedAreas.Add(area.Id, new(_currentFrame));
-            SendMessage(area.MessageAddArea(isStartArea));
+            SendMessage(area.ToProtobuf(isStartArea));
         }
 
         private void RemoveArea(Area area)

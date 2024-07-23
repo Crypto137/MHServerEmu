@@ -374,7 +374,7 @@ namespace MHServerEmu.Games.Regions
                     var propMarkerProto = entityMarker.GetMarkedPrototype<PropMarkerPrototype>();
                     if (propMarkerProto != null && propMarkerRef != PrototypeId.Invalid && propMarkerProto.Type == MarkerType.Prop)
                     {
-                        PrototypeId propDensityRef = Area.AreaPrototype.PropDensity;
+                        PrototypeId propDensityRef = Area.Prototype.PropDensity;
                         if (propDensityRef != PrototypeId.Invalid)
                         {
                             var propDensityProto = GameDatabase.GetPrototype<PropDensityPrototype>(propDensityRef);

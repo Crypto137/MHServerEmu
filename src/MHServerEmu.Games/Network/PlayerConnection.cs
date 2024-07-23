@@ -414,7 +414,7 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer syncOrientation");
 
             // AOI
-            AOI.Region.Visited();
+            AOI.Region.UpdateVisitedTime();
             if (IsLoading == false)
                 AOI.Update(syncPosition);
 

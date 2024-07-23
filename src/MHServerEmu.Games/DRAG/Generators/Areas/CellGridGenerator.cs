@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         public override bool InitializeContainer()
         {
             if (!base.InitializeContainer()) return false;
-            if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not GridAreaGeneratorPrototype proto) return false;
             if (proto.Behaviors.HasValue())
                 RunBehaviors(null, proto.Behaviors, ProcessEnum.Initialize);
 
@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (CellContainer == null) return false;
-            if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not GridAreaGeneratorPrototype proto) return false;
 
             bool success = false;
             int tries = 10;
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         private bool ProcessCellTypes(GRandom random)
         {
             if (CellContainer == null) return false;
-            if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not GridAreaGeneratorPrototype proto) return false;
 
             int randomSeed = Area.RandomSeed;
 
@@ -306,7 +306,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (area == null) return false;
 
             CellGridBorderBehaviorPrototype borderBehaviorProto = null;
-            GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
+            GeneratorPrototype generatorProto = area.Prototype.Generator;
             GridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as GridAreaGeneratorPrototype;
 
             if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors.HasValue())
@@ -315,7 +315,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (borderBehaviorProto == null || gridAreaGeneratorProto.CellSets.IsNullOrEmpty()) return true;
 
             CellSetRegistry registry = new();
-            registry.Initialize(true, area.Log);
+            registry.Initialize(true, area.GenerateLog);
             foreach (var cellSetEntry in gridAreaGeneratorProto.CellSets)
             {
                 if (cellSetEntry == null) continue;

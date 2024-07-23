@@ -58,7 +58,6 @@ namespace MHServerEmu.Games.Regions
         // New
         public readonly object Lock = new();
 
-
         public ulong Id { get; private set; } // InstanceAddress
         public int RandomSeed { get; private set; }
         public Dictionary<uint, Area> Areas { get; } = new();  
@@ -138,6 +137,11 @@ namespace MHServerEmu.Games.Regions
             _collisionBits = new();
             _collisionBitList = new();
             _collisionIds.Resize(256);
+        }
+
+        public override string ToString()
+        {
+            return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
 
         public void InitEmpty(RegionPrototypeId prototype, int seed) // For test
@@ -450,9 +454,11 @@ namespace MHServerEmu.Games.Regions
             EntitySpatialPartition = new(bound);
             CellSpatialPartition = new(bound);
 
-            foreach (var area in IterateAreas())
+            foreach (Area area in IterateAreas())
+            {
                 foreach (var cellItr in area.Cells)
                     PartitionCell(cellItr.Value, RegionPartitionContext.Insert);
+            }
 
             SpawnMarkerRegistry.InitializeSpacialPartition(bound);
             PopulationManager.InitializeSpacialPartition(bound);
@@ -460,9 +466,10 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public object PartitionCell(Cell cell, RegionPartitionContext context)
+        public bool? PartitionCell(Cell cell, RegionPartitionContext context)
         {
             if (CellSpatialPartition != null)
+            {
                 switch (context)
                 {
                     case RegionPartitionContext.Insert:
@@ -470,6 +477,8 @@ namespace MHServerEmu.Games.Regions
                     case RegionPartitionContext.Remove:
                         return CellSpatialPartition.Remove(cell);
                 }
+            }
+
             return null;
         }
 
@@ -523,7 +532,9 @@ namespace MHServerEmu.Games.Regions
             foreach (Area area in IterateAreas())
             {
                 if (area == null)
+                {
                     success = false;
+                }
                 else
                 {
                     List<PrototypeId> areas = new() { area.PrototypeDataRef };
@@ -577,7 +588,9 @@ namespace MHServerEmu.Games.Regions
 
         public Area GetAreaById(uint id)
         {
-            if (Areas.TryGetValue(id, out Area area)) return area;
+            if (Areas.TryGetValue(id, out Area area))
+                return area;
+
             return null;
         }
 
@@ -593,14 +606,20 @@ namespace MHServerEmu.Games.Regions
         private void DeallocateArea(Area area)
         {
             if (area == null) return;
-            if (Settings.GenerateLog) Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
+            
+            if (Settings.GenerateLog)
+                Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
+            
             area.Shutdown();
         }
 
         public Area GetArea(PrototypeId prototypeId)
         {
             foreach (var area in Areas)
-                if (area.Value.PrototypeDataRef == prototypeId) return area.Value;
+            {
+                if (area.Value.PrototypeDataRef == prototypeId)
+                    return area.Value;
+            }
 
             return null;
         }
@@ -608,7 +627,7 @@ namespace MHServerEmu.Games.Regions
         public float GetDistanceToClosestAreaBounds(Vector3 position)
         {
             float minDistance = float.MaxValue;
-            foreach (var area in IterateAreas())
+            foreach (Area area in IterateAreas())
             {
                 float distance = area.RegionBounds.DistanceToPoint2D(position);
                 minDistance = Math.Min(distance, minDistance);
@@ -616,6 +635,7 @@ namespace MHServerEmu.Games.Regions
 
             if (minDistance == float.MaxValue)
                 Logger.Error("GetDistanceToClosestAreaBounds");
+
             return minDistance;
         }
 
@@ -652,15 +672,14 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<Avatar>();
         }
 
-        public override string ToString()
-        {
-            return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
-        }
-
         public Cell GetCellAtPosition(Vector3 position)
         {
             foreach (var cell in Cells)
-                if (cell.IntersectsXY(position)) return cell;
+            {
+                if (cell.IntersectsXY(position))
+                    return cell;
+            }
+                
             return null;
         }
 
@@ -669,8 +688,10 @@ namespace MHServerEmu.Games.Regions
             foreach (var itr in Areas)
             {
                 Area area = itr.Value;
-                if (area.IntersectsXY(position)) return area;
+                if (area.IntersectsXY(position))
+                    return area;
             }
+
             return null;
         }
 
@@ -698,7 +719,7 @@ namespace MHServerEmu.Games.Regions
             Area targetArea;
 
             // fix for AvengerTower
-            if (StartArea.PrototypeId == AreaPrototypeId.AvengersTowerHubArea)
+            if (StartArea.OLD_AreaPrototypeId == AreaPrototypeId.AvengersTowerHubArea)
             {
                 markerPos = new (1589.0f, -2.0f, 180.0f);
                 markerRot = new (3.1415f, 0.0f, 0.0f);
@@ -719,20 +740,24 @@ namespace MHServerEmu.Games.Regions
 
             // Has the wrong areaRef
             if (found == false)
+            {
                 foreach (Area area in IterateAreas())
                 {
                     targetArea = area;
                     if (targetArea.FindTargetPosition(ref markerPos, ref markerRot, target))
                         return true;
                 }
+            }
 
             // Has the wrong cellRef // Fix for Upper Eastside
             if (found == false)
+            {
                 foreach (Cell cell in Cells)
                 {
                     if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))
                         return true;
                 }
+            }
 
             return found;
         }
@@ -796,7 +821,11 @@ namespace MHServerEmu.Games.Regions
         public Cell GetCellbyId(uint cellId)
         {
             foreach (var cell in Cells)
-                if (cell.Id == cellId) return cell;
+            {
+                if (cell.Id == cellId)
+                    return cell;
+            }
+                
             return default;
         }
 
@@ -810,7 +839,7 @@ namespace MHServerEmu.Games.Regions
             return (PrototypeId)DifficultyTier.Normal; // TODO PropertyCollection[PropertyEnum.DifficultyTier];
         }
 
-        public void Visited()
+        public void UpdateVisitedTime()
         {
             lock (Lock)
             {
@@ -853,7 +882,9 @@ namespace MHServerEmu.Games.Regions
 
         public int GetAreaLevel(Area area)
         {
-            if (Prototype.LevelUseAreaOffset) return area.GetAreaLevel();
+            if (Prototype.LevelUseAreaOffset)
+                return area.GetAreaLevel();
+
             return RegionLevel;
         }
 
@@ -900,7 +931,8 @@ namespace MHServerEmu.Games.Regions
 
         public void ReleaseCollisionId(int collisionId)
         {
-            if (collisionId >= 0) _collisionIds.Reset(collisionId);
+            if (collisionId >= 0)
+                _collisionIds.Reset(collisionId);
         }
 
         public void ClearCollidedEntities()
@@ -928,13 +960,16 @@ namespace MHServerEmu.Games.Regions
             maxHeight += height;
             Vector3? resultPosition = Vector3.Zero;
             Vector3? resultNormal = null;
-            var sweepResult = NaviMesh.Sweep(startPosition, targetPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
+
+            SweepResult sweepResult = NaviMesh.Sweep(startPosition, targetPosition, radius, pathFlags, ref resultPosition, ref resultNormal,
                 padding, HeightSweepType.Constraint, (int)maxHeight, short.MinValue, owner);
+
             if (sweepResult == SweepResult.Success)
             {
                 Vector3? resultHitPosition = null;
                 return SweepToFirstHitEntity(startPosition, targetPosition, owner, targetEntityId, true, 0.0f, ref resultHitPosition) == null;
             }
+
             return false;
         }
 
@@ -980,7 +1015,9 @@ namespace MHServerEmu.Games.Regions
             float minDot = -1f;
             WorldEntity hitEntity = null;
             var spContext = new EntityRegionSPContext(EntityRegionSPContextFlags.All);
+
             foreach (var otherEntity in IterateEntitiesInVolume(sweepBox, spContext))
+            {
                 if (canBlockFunc(otherEntity))
                 {
                     float resultTime = 1.0f;
@@ -1013,6 +1050,7 @@ namespace MHServerEmu.Games.Regions
                         }
                     }
                 }
+            }
 
             return hitEntity;
         }
@@ -1023,17 +1061,23 @@ namespace MHServerEmu.Games.Regions
 
             if (owner != null)
             {
-                if (testEntity.Id == owner.Id) return false;
-                if (blocksLOS == false && owner.CanBeBlockedBy(testEntity)) return true;
+                if (testEntity.Id == owner.Id)
+                    return false;
+
+                if (blocksLOS == false && owner.CanBeBlockedBy(testEntity))
+                    return true;
             }
 
-            if (targetEntityId != Entity.InvalidId && testEntity.Id == targetEntityId) return false;
+            if (targetEntityId != Entity.InvalidId && testEntity.Id == targetEntityId)
+                return false;
 
             if (blocksLOS)
             {
                 var proto = testEntity.WorldEntityPrototype;
                 if (proto == null) return false;
-                if (proto.Bounds.BlocksLineOfSight) return true;
+
+                if (proto.Bounds.BlocksLineOfSight)
+                    return true;
             }
 
             return false;
@@ -1050,9 +1094,10 @@ namespace MHServerEmu.Games.Regions
                 return true;
             }
             else
-                return ChooseRandomPositionNearPoint(bounds, pathFlags, posFlags, blockFlags, 0, maxDistance, out resultPosition, 
+            {
+                return ChooseRandomPositionNearPoint(bounds, pathFlags, posFlags, blockFlags, 0, maxDistance, out resultPosition,
                     positionPredicate, checkPredicate, maxPositionTests);
-           
+            }
         }
 
         public bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
@@ -1088,9 +1133,13 @@ namespace MHServerEmu.Games.Regions
                 GetEntitiesInVolume(entitiesInRadius, new Sphere(point, maxDistanceFromPoint), new EntityRegionSPContext(EntityRegionSPContextFlags.ActivePartition));
 
                 if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) && checkPredicate != null)
+                {
                     for (int i = entitiesInRadius.Count - 1; i >= 0; i--)
+                    {
                         if (checkPredicate.Test(entitiesInRadius[i]) == false)
                             entitiesInRadius.RemoveAt(i);
+                    }
+                }
             }
 
             Bounds checkBounds = new(bounds);
@@ -1106,12 +1155,16 @@ namespace MHServerEmu.Games.Regions
             List<WorldEntity> influenceEntities = new ();
 
             if (posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
+            {
                 foreach (WorldEntity entity in entitiesInRadius)
+                {
                     if (entity.HasNavigationInfluence)
                     {
                         entity.DisableNavigationInfluence();
                         influenceEntities.Add(entity);
                     }
+                }
+            }
 
             PathFlags checkPathFlags = pathFlags;
             if (blockFlags.HasFlag(BlockingCheckFlags.CheckLanding))
@@ -1172,6 +1225,7 @@ namespace MHServerEmu.Games.Regions
                         continue;
 
                     if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity))
+                    {
                         if (IsLocationClearOfEntities(checkBounds, entitiesInRadius, blockFlags) == false)
                         {
                             if (posFlags.HasFlag(PositionCheckFlags.PreferNoEntity) && foundBlockedEntity == false)
@@ -1179,8 +1233,10 @@ namespace MHServerEmu.Games.Regions
                                 foundBlockedEntity = true;
                                 blockedPosition = checkBounds.Center;
                             }
+
                             continue;
                         }
+                    }
 
                     return true;
                 }
@@ -1206,9 +1262,12 @@ namespace MHServerEmu.Games.Regions
 
         private static bool IsLocationClearOfEntities(Bounds bounds, List<WorldEntity> entities, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
         {
-            foreach (var entity in entities)
+            foreach (WorldEntity entity in entities)
+            {
                 if (IsBoundsBlockedByEntity(bounds, entity, blockFlags))
                     return false;
+            }
+
             return true;
         }
 

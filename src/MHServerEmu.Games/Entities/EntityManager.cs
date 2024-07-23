@@ -319,7 +319,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.RegionId == regionId)
                 {
                     if (entity is not Transition transition) continue;
-                    if (areaRef != 0 && areaRef != (PrototypeId)transition.RegionLocation.Area.PrototypeId) continue;
+                    if (areaRef != 0 && areaRef != (PrototypeId)transition.RegionLocation.Area.OLD_AreaPrototypeId) continue;
                     if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeId) continue;
                     if (transition.PrototypeDataRef == entityRef)
                         return transition;

@@ -217,10 +217,13 @@ namespace MHServerEmu.Games.Populations
             {
                 foreach (var area in Region.IterateAreas())
                     regionAreas.Add(area.PrototypeDataRef);
+
                 regionCell = new();
-                foreach (var cell in Region.Cells)
-                    if (cell.Area.IsDynamicArea() == false)
+                foreach (Cell cell in Region.Cells)
+                {
+                    if (cell.Area.IsDynamicArea == false)
                         regionCell.Add(cell.PrototypeId);
+                }
             }
             else
             {

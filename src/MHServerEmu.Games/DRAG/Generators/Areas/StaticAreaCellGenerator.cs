@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 return null;
             }
 
-            if (Area.AreaPrototype.Generator is not DistrictAreaGeneratorPrototype proto) return null;
+            if (Area.Prototype.Generator is not DistrictAreaGeneratorPrototype proto) return null;
 
             AssetId districtAssetRef = proto.District;
             if (districtAssetRef == 0)
