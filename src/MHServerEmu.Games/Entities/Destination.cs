@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Entities
             Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
             ConnectionNodeList targets = region.Targets;
-            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, entityGuid);
+            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeDataRef, entityGuid);
             if (node != null)
                 return DestinationFromTarget(node.TargetId, region, transitionProto);
             return null;

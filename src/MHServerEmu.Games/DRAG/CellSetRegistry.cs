@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.DRAG
 
         public CellSetRegistryEntry() { }
     }
+
     public class AreaTransition
     {
         public Vector3 Position;

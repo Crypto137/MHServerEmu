@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.Entities
         public static Vector3 ProjectToFloor(Cell cell, in Vector3 regionPos)
         {
             if (cell == null || cell.RegionBounds.IntersectsXY(regionPos) == false) return regionPos;
-            var cellProto = cell.CellProto;
+            var cellProto = cell.Prototype;
             if (cellProto == null) return regionPos;
 
             short height;
@@ -235,7 +235,7 @@ namespace MHServerEmu.Games.Entities
             if (cell != null)
             {
                 CellId = cell.Id;
-                CellRef = cell.PrototypeId;
+                CellRef = cell.PrototypeDataRef;
             }
             else
             {

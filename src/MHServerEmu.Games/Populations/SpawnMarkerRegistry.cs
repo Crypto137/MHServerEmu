@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Populations
         public void AddCell(Cell cell)
         {
             int id = 0;
-            CellPrototype cellProto = cell.CellProto;
+            CellPrototype cellProto = cell.Prototype;
             foreach (var marker in cellProto.MarkerSet.Markers)
             {
                 if (marker is not EntityMarkerPrototype entityMarker) continue;
@@ -109,13 +109,13 @@ namespace MHServerEmu.Games.Populations
                         var markerRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                         if (markerRef == 0) continue;
 
-                        Vector3 cellPos = entityMarker.Position - cell.CellProto.BoundingBox.Center;
+                        Vector3 cellPos = entityMarker.Position - cell.Prototype.BoundingBox.Center;
                         Vector3 regionPos = cell.RegionBounds.Center + cellPos;
 
                         if (!cell.RegionBounds.IntersectsXY(regionPos))
                         {
                             Logger.Warn($"[DESIGN]Trying to add marker outside of cell bounds. " +
-                                $"CELL={GameDatabase.GetFormattedPrototypeName(cell.PrototypeId)}, BOUNDS={cell.RegionBounds}, " +
+                                $"CELL={GameDatabase.GetFormattedPrototypeName(cell.PrototypeDataRef)}, BOUNDS={cell.RegionBounds}, " +
                                 $"MARKER={GameDatabase.GetFormattedPrototypeName(markerRef)}, REGIONPOS={regionPos}, CELLPOS={marker.Position}");
                             continue;
                         }
@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Populations
         {
             Picker<SpawnReservation> picker = new(random);
 
-            var spawnCellRef = spawnCell.PrototypeId;
+            var spawnCellRef = spawnCell.PrototypeDataRef;
             var spawnCellId = spawnCell.Id;
             var spawnAreaRef = spawnCell.Area.PrototypeDataRef;
 

@@ -402,7 +402,7 @@ namespace MHServerEmu.Games.Network
 
         private void AddCell(Cell cell)
         {
-            SendMessage(cell.MessageCellCreate());
+            SendMessage(cell.ToProtobuf());
             _trackedCells.Add(cell.Id, new(_currentFrame, false));
         }
 

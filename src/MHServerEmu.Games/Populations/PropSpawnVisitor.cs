@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Populations
                 Transform3 transform = Transform3.BuildTransform(position, rotation);
 
                 MarkerSetOptions instanceMarkerSetOptions = MarkerSetOptions.Default;
-                if (_cell.CellProto.IsOffsetInMapFile == false) instanceMarkerSetOptions |= MarkerSetOptions.NoOffset;
+                if (_cell.Prototype.IsOffsetInMapFile == false) instanceMarkerSetOptions |= MarkerSetOptions.NoOffset;
 
                 _cell.InstanceMarkerSet(markerSet, transform, instanceMarkerSetOptions/*, propGroup.PrefabPath*/);
             }

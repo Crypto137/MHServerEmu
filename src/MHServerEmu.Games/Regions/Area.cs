@@ -309,7 +309,7 @@ namespace MHServerEmu.Games.Regions
                 foreach (Cell cell in CellIterator())
                 {
                     MarkerSetOptions options = MarkerSetOptions.Default | MarkerSetOptions.SpawnMissionAssociated;
-                    CellPrototype cellProto = cell.CellProto;
+                    CellPrototype cellProto = cell.Prototype;
 
                     if (cellProto.IsOffsetInMapFile == false)
                         options |= MarkerSetOptions.NoOffset;
@@ -577,7 +577,7 @@ namespace MHServerEmu.Games.Regions
 
             foreach (Cell cell in CellIterator())
             {
-                if (cellRef != 0 && cellRef != cell.PrototypeId)
+                if (cellRef != 0 && cellRef != cell.PrototypeDataRef)
                     continue; // TODO check
 
                 if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))

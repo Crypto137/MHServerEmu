@@ -222,7 +222,7 @@ namespace MHServerEmu.Games.Populations
                 foreach (Cell cell in Region.Cells)
                 {
                     if (cell.Area.IsDynamicArea == false)
-                        regionCell.Add(cell.PrototypeId);
+                        regionCell.Add(cell.PrototypeDataRef);
                 }
             }
             else

@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Populations
 
         public void CalculateRegionInfo()
         {
-            Vector3 cellLocalPos = MarkerPos - Cell.CellProto.BoundingBox.Center;
+            Vector3 cellLocalPos = MarkerPos - Cell.Prototype.BoundingBox.Center;
             Vector3 regionPos = Cell.RegionBounds.Center + cellLocalPos;
             RegionSphere = new Sphere(regionPos, 64.0f);
             RegionBounds = RegionSphere.ToAabb();
