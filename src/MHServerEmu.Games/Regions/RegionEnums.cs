@@ -12,6 +12,14 @@ namespace MHServerEmu.Games.Regions
         Cosmic
     }
 
+    public enum DifficultyTierMask
+    {
+        None = 0,
+        Green =     1 << 0,
+        Red =       1 << 1,
+        Cosmic =    1 << 2,
+    }
+
     public enum DifficultyTier : ulong
     {
         Normal = 18016845980090109785,

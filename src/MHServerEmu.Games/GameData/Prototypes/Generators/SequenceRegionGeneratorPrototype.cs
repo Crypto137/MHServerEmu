@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -48,6 +49,46 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return EndlessTheme.Boss;
             else
                 return EndlessTheme.Normal;
+        }
+
+        public override void GetAreasInGenerator(HashSet<PrototypeId> areas)
+        {
+            if (AreaSequence.HasValue())
+                HelperGetAreasInGenerator(AreaSequence, areas);
+
+            if (SubAreaSequences.HasValue())
+                foreach(var subAreaSequence in SubAreaSequences)
+                    if (subAreaSequence != null && subAreaSequence.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(subAreaSequence.AreaSequence, areas);
+
+            if (EndlessThemes.HasValue())
+                foreach(var endlessTheme in EndlessThemes)
+                {
+                    if (endlessTheme == null) continue;
+                    if (endlessTheme.Normal != null && endlessTheme.Normal.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(endlessTheme.Normal.AreaSequence, areas);
+                    if (endlessTheme.Boss != null && endlessTheme.Boss.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(endlessTheme.Boss.AreaSequence, areas);
+                    if (endlessTheme.TreasureRoom != null && endlessTheme.TreasureRoom.AreaSequence.HasValue())
+                        HelperGetAreasInGenerator(endlessTheme.TreasureRoom.AreaSequence, areas);
+                }
+        }
+
+        private static void HelperGetAreasInGenerator(AreaSequenceInfoPrototype[] areaSequence, HashSet<PrototypeId> areas)
+        {
+            foreach (var areaProto in areaSequence)
+            {
+                if (areaProto == null) continue;
+                if (areaProto.AreaChoices.HasValue())
+                    foreach(var weightedArea in areaProto.AreaChoices)
+                    {
+                        if (weightedArea == null || weightedArea.Area == PrototypeId.Invalid) continue;
+                        areas.Add(weightedArea.Area);
+                    }
+
+                if (areaProto.ConnectedTo.HasValue())
+                    HelperGetAreasInGenerator(areaProto.ConnectedTo, areas);
+            }
         }
     }
 
