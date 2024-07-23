@@ -472,7 +472,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (prototype != null) prototype.Index = index++;
         }
 
-        public bool HasPopulationInRegion(Region region)
+        public virtual bool HasPopulationInRegion(Region region)
         {
             if (PopulationSpawns.HasValue())
             {
@@ -559,6 +559,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public double ParticipationContributionValue { get; protected set; }
         public long AchievementTimeLimitSeconds { get; protected set; }
         public bool ShowToastMessages { get; protected set; }
+
+        private SortedSet<PrototypeId> _activeRegions = new();
+        private SortedSet<PrototypeId> _activeAreas = new();
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            PopulateZoneLookups();
+        }
+
+        private void PopulateZoneLookups()
+        {
+            RegionPrototype.BuildRegionsFromFilters(_activeRegions, ActiveInRegions, ActiveInRegionsIncludeChildren, ActiveInRegionsExclude);
+
+            if (ActiveInAreas.HasValue())
+                foreach (var areaRef in ActiveInAreas)
+                    if (areaRef != PrototypeId.Invalid) _activeAreas.Add(areaRef);
+
+            if (_activeAreas.Count == 0)
+                foreach (var regionRef in _activeRegions)
+                    foreach (var areaRef in RegionPrototype.GetAreasInGenerator(regionRef))
+                        _activeAreas.Add(areaRef);
+        }
+
+        public bool IsActiveInRegion(RegionPrototype regionToMatchProto)
+        {
+            if (regionToMatchProto == null) return false;
+            return _activeRegions.Contains(regionToMatchProto.DataRef);
+        }
+
+        public override bool HasPopulationInRegion(Region region)
+        {
+            bool isActive = IsActiveInRegion(region.Prototype);
+            bool hasPopulation = base.HasPopulationInRegion(region);
+
+            return isActive && hasPopulation;
+        }
     }
 
     public class LegendaryMissionCategoryPrototype : Prototype
