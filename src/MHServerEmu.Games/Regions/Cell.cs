@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common.SpatialPartitions;
@@ -18,6 +19,8 @@ namespace MHServerEmu.Games.Regions
 {
     public class Cell
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private float _playableNavArea;
         private float _spawnableNavArea;
 
@@ -190,12 +193,14 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public void InstanceMarkerSet(MarkerSetPrototype markerSet, in Transform3 transform, MarkerSetOptions instanceMarkerSetOptions)
+        public bool InstanceMarkerSet(MarkerSetPrototype markerSet, in Transform3 transform, MarkerSetOptions instanceMarkerSetOptions)
         {
-            // This is incorrect, this check should be checking to make sure only one flag is set
-            // TODO: fix this
-            if (instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated | MarkerSetOptions.NoSpawnMissionAssociated))
-                return;
+            if (instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated) &&
+                instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated))
+            {
+                return Logger.WarnReturn(false,
+                    "InstanceMarkerSet(): SpawnMissionAssociated and NoSpawnMissionAssociated cannot be set at the same time");
+            }
 
             if (markerSet.Markers.HasValue())
             {
@@ -205,6 +210,8 @@ namespace MHServerEmu.Games.Regions
                         SpawnMarker(marker, transform, instanceMarkerSetOptions);
                 }
             }
+
+            return true;
         }
 
         public void SpawnMarker(MarkerPrototype marker, in Transform3 transform, MarkerSetOptions options)
