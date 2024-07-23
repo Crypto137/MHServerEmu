@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             }
 
             if (connectionsFound == false)
-                Logger.Error($"No connection found between: AreaA: {areaA.OLD_AreaPrototypeId} AreaB: {areaB.OLD_AreaPrototypeId}");
+                Logger.Error($"No connection found between: AreaA: {areaA.PrototypeName} AreaB: {areaB.PrototypeName}");
 
             return connectionsFound;
         }

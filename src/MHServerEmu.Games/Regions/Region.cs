@@ -718,8 +718,8 @@ namespace MHServerEmu.Games.Regions
         {
             Area targetArea;
 
-            // fix for AvengerTower
-            if (StartArea.OLD_AreaPrototypeId == AreaPrototypeId.AvengersTowerHubArea)
+            // Fix for the old Avengers Tower
+            if ((AreaPrototypeId)StartArea.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
             {
                 markerPos = new (1589.0f, -2.0f, 180.0f);
                 markerRot = new (3.1415f, 0.0f, 0.0f);

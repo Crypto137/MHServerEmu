@@ -315,15 +315,24 @@ namespace MHServerEmu.Games.Entities
             PrototypeId areaRef = destination.AreaRef;
             PrototypeId cellRef = destination.CellRef;
             PrototypeId entityRef = destination.EntityRef;
-            foreach (var entity in _entityDict.Values)
+
+            foreach (Entity entity in _entityDict.Values)
+            {
                 if (entity.RegionId == regionId)
                 {
-                    if (entity is not Transition transition) continue;
-                    if (areaRef != 0 && areaRef != (PrototypeId)transition.RegionLocation.Area.OLD_AreaPrototypeId) continue;
-                    if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeDataRef) continue;
+                    if (entity is not Transition transition)
+                        continue;
+
+                    if (areaRef != 0 && areaRef != transition.RegionLocation.Area.PrototypeDataRef)
+                        continue;
+
+                    if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeDataRef)
+                        continue;
+
                     if (transition.PrototypeDataRef == entityRef)
                         return transition;
                 }
+            }
 
             return default;
         }

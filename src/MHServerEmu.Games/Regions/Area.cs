@@ -42,7 +42,6 @@ namespace MHServerEmu.Games.Regions
         private GenerateFlag _statusFlag;
         private List<TowerFixupData> _towerFixupList;
 
-        public AreaPrototypeId OLD_AreaPrototypeId { get; private set; }
         public bool GenerateLog { get; private set; }
 
         public uint Id { get; private set; }
@@ -102,7 +101,6 @@ namespace MHServerEmu.Games.Regions
             Id = settings.Id;
             if (Id == 0) return false;
 
-            OLD_AreaPrototypeId = (AreaPrototypeId)settings.AreaDataRef;
             Prototype = GameDatabase.GetPrototype<AreaPrototype>(settings.AreaDataRef);
             if (Prototype == null) return false;
 
@@ -565,7 +563,7 @@ namespace MHServerEmu.Games.Regions
         {
             return NetMessageAddArea.CreateBuilder()
                 .SetAreaId(Id)
-                .SetAreaPrototypeId((ulong)OLD_AreaPrototypeId)
+                .SetAreaPrototypeId((ulong)PrototypeDataRef)
                 .SetAreaOrigin(Origin.ToNetStructPoint3())
                 .SetIsStartArea(isStartArea)
                 .Build();

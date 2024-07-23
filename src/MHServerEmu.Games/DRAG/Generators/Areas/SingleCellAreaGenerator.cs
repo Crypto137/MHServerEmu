@@ -80,7 +80,8 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (cellRef == 0) return 0;
 
             // Fix for AvengersTowerHubArea
-            if (Area.OLD_AreaPrototypeId == AreaPrototypeId.AvengersTowerHubArea) return (PrototypeId)9602664968964741817;
+            if ((AreaPrototypeId)Area.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
+                return (PrototypeId)9602664968964741817;    // Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell
 
             return cellRef;
         }
