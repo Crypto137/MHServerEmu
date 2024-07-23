@@ -223,7 +223,7 @@ namespace MHServerEmu.Games.Dialog
 
                 bool found = false;
                 foreach (var regionRef in _regionRefs)
-                    if (RegionPrototype.Equivalent(regionRef.As<RegionPrototype>(), region.RegionPrototype))
+                    if (RegionPrototype.Equivalent(regionRef.As<RegionPrototype>(), region.Prototype))
                     {
                         found = true;
                         break;

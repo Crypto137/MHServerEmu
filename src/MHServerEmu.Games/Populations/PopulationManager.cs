@@ -204,7 +204,7 @@ namespace MHServerEmu.Games.Populations
             {
                 Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
                 var areas = popProto.RestrictToAreas;
-                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
+                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.OLD_RegionPrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
                 AddRequiredObjects(popProto.PopulationObjects, areas, popProto.RestrictToCells);
             }
         }
@@ -239,7 +239,7 @@ namespace MHServerEmu.Games.Populations
                 while (popPicker.PickRemove(out var popObject))
                 {
                     int count = popObject.Count;
-                    if (RegionManager.PatrolRegions.Contains(Region.PrototypeId)) count = 1;
+                    if (RegionManager.PatrolRegions.Contains(Region.OLD_RegionPrototypeId)) count = 1;
                     var objectProto = popObject.GetPopObject();
                     AddPopulationObject(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
                 }

@@ -26,25 +26,6 @@ using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class RegionSettings
-    {
-        public int EndlessLevel;
-        public int Seed;
-        public bool GenerateAreas;
-        public PrototypeId DifficultyTierRef;
-        public ulong InstanceAddress; // region ID
-        public Aabb Bound;
-
-        public List<PrototypeId> Affixes;
-        public int Level;
-        public bool DebugLevel;
-        public PrototypeId RegionDataRef;
-        public ulong MatchNumber;
-
-        public bool GenerateEntities;
-        public bool GenerateLog;
-    }
-
     [Flags]
     public enum PositionCheckFlags
     {
@@ -59,23 +40,29 @@ namespace MHServerEmu.Games.Regions
         PreferNoEntity     = 1 << 7,
     }
 
+    public enum RegionPartitionContext
+    {
+        Insert,
+        Remove
+    }
+
     public class Region : IMissionManagerOwner
     {
-        // Old
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly IdGenerator IdGenerator = new(IdType.Region, 0);
 
-        public RegionPrototypeId PrototypeId { get; private set; }   
         public byte[] ArchiveData { get; set; }
         public bool IsGenerated { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
 
         // New
         public readonly object Lock = new();
+
+
         public ulong Id { get; private set; } // InstanceAddress
         public int RandomSeed { get; private set; }
         public Dictionary<uint, Area> Areas { get; } = new();  
 
-        public static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb Bound { get; set; }
         public bool AvatarSwapEnabled { get; private set; }
         public object RestrictedRosterEnabled { get; private set; }
@@ -94,19 +81,27 @@ namespace MHServerEmu.Games.Regions
                 _startArea = value;
             }
         }
-        public RegionPrototype RegionPrototype { get; set; }
+        public RegionPrototype Prototype { get; private set; }
+        public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
+        public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
+
+        public DateTime CreatedTime { get; set; }
+        public DateTime VisitedTime { get; private set; }
+        
+
+        public RegionPrototypeId OLD_RegionPrototypeId { get; private set; }
         public RegionSettings Settings { get; private set; }
-        public RegionProgressionGraph ProgressionGraph { get; set; } // Region progression graph 
+        public ulong MatchNumber { get => Settings.MatchNumber; }
+
+        public RegionProgressionGraph ProgressionGraph { get; set; }
         public ObjectiveGraph ObjectiveGraph { get; private set; }
         public PathCache PathCache { get; private set; }
         public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
-        public EntityTracker EntityTracker { get; private set; } // Entity tracker
-
-        private TuningTable _difficulty; // Difficulty table
-        public TuningTable TuningTable { get => _difficulty; }
-        public MissionManager MissionManager { get; private set; } // Mission manager
-        public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; } // Entity spatial partition
-        public CellSpatialPartition CellSpatialPartition { get; private set; } // Cell spatial partition
+        public EntityTracker EntityTracker { get; private set; }
+        public TuningTable TuningTable { get; private set; }    // Difficulty table
+        public MissionManager MissionManager { get; private set; }
+        public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; }
+        public CellSpatialPartition CellSpatialPartition { get; private set; }
         public NaviSystem NaviSystem { get; private set; }
         public NaviMesh NaviMesh { get; private set; }
         public List<DividedStartLocation> DividedStartLocations { get; } = new();
@@ -148,7 +143,7 @@ namespace MHServerEmu.Games.Regions
         public void InitEmpty(RegionPrototypeId prototype, int seed) // For test
         {
             Id = IdGenerator.Generate();
-            PrototypeId = prototype;
+            OLD_RegionPrototypeId = prototype;
             RandomSeed = seed;
             ArchiveData = Array.Empty<byte>();
             CreateParams = new(10, DifficultyTier.Normal);
@@ -169,15 +164,15 @@ namespace MHServerEmu.Games.Regions
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
-            PrototypeId = (RegionPrototypeId)settings.RegionDataRef;
-            RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
-            if (RegionPrototype == null) return false;
+            OLD_RegionPrototypeId = (RegionPrototypeId)settings.RegionDataRef;
+            Prototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
+            if (Prototype == null) return false;
 
-            RegionPrototype regionProto = RegionPrototype;
+            RegionPrototype regionProto = Prototype;
             RandomSeed = settings.Seed;
             Bound = settings.Bound;
-            AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.HasValue());
+            AvatarSwapEnabled = Prototype.EnableAvatarSwap;
+            RestrictedRosterEnabled = (Prototype.RestrictedRoster.HasValue());
 
             SetRegionLevel();
 
@@ -194,12 +189,12 @@ namespace MHServerEmu.Games.Regions
             if (globals == null)
                 return Logger.ErrorReturn(false, "Unable to get globals prototype for region initialize");
 
-            _difficulty = new(this);
+            TuningTable = new(this);
 
             RegionDifficultySettingsPrototype difficultySettings = regionProto.GetDifficultySettings();
             if (difficultySettings != null)
             {
-                _difficulty.SetTuningTable(difficultySettings.TuningTable);
+                TuningTable.SetTuningTable(difficultySettings.TuningTable);
 
                 /* if (HasProperty(PropertyEnum.DifficultyIndex))
                        TuningTable.SetDifficultyIndex(GetProperty<int>(PropertyEnum.DifficultyIndex), false);
@@ -322,6 +317,75 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
+        public void Shutdown()
+        {
+            // SetStatus(2, true);
+
+            /* int tries = 100;
+             bool found;
+             do
+             {
+                 found = false;*/
+            foreach (var entity in Entities)
+            {
+                if (entity is WorldEntity worldEntity)
+                {
+                    if (worldEntity.GetRootOwner() is not Player)
+                    {
+                        if (worldEntity.IsDestroyed == false)
+                        {
+                            worldEntity.Destroy();
+                            //found = true;
+                        }
+                    }
+                    else
+                    {
+                        if (worldEntity.IsInWorld)
+                        {
+                            worldEntity.ExitWorld();
+                            // found = true;
+                        }
+                    }
+                }
+            }
+            // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
+
+            /*
+            if (Game != null && MissionManager != null)
+                MissionManager.Shutdown(this);
+            */
+            while (MetaGames.Any())
+            {
+                var metaGameId = MetaGames.First();
+                var metaGame = Game.EntityManager.GetEntity<Entity>(metaGameId);
+                metaGame?.Destroy();
+                MetaGames.Remove(metaGameId);
+            }
+
+            while (Areas.Any())
+            {
+                var areaId = Areas.First().Key;
+                DestroyArea(areaId);
+            }
+
+            ClearDividedStartLocations();
+
+            /* var scheduler = Game?.GameEventScheduler;
+             if (scheduler != null)
+             {
+                 scheduler.CancelAllEvents(_events);
+             }
+
+             foreach (var entity in Game.EntityManager.GetEntities())
+             {
+                 if (entity is WorldEntity worldEntity)
+                     worldEntity.EmergencyRegionCleanup(this);
+             }
+            */
+
+            NaviMesh.Release();
+        }
+
         public void RegisterMetaGame(MetaGame metaGame)
         {
             if (metaGame != null) MetaGames.Add(metaGame.Id);
@@ -351,7 +415,7 @@ namespace MHServerEmu.Games.Regions
         private void SetRegionLevel()
         {
             if (RegionLevel == 0) return;
-            var regionProto = RegionPrototype;
+            var regionProto = Prototype;
             if (regionProto == null) return;
 
             if (Settings.DebugLevel == true) RegionLevel = Settings.Level;
@@ -388,7 +452,7 @@ namespace MHServerEmu.Games.Regions
 
             foreach (var area in IterateAreas())
                 foreach (var cellItr in area.Cells)
-                    PartitionCell(cellItr.Value, PartitionContext.Insert);
+                    PartitionCell(cellItr.Value, RegionPartitionContext.Insert);
 
             SpawnMarkerRegistry.InitializeSpacialPartition(bound);
             PopulationManager.InitializeSpacialPartition(bound);
@@ -396,20 +460,14 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public enum PartitionContext
-        {
-            Insert,
-            Remove
-        }
-
-        public object PartitionCell(Cell cell, PartitionContext context)
+        public object PartitionCell(Cell cell, RegionPartitionContext context)
         {
             if (CellSpatialPartition != null)
                 switch (context)
                 {
-                    case PartitionContext.Insert:
+                    case RegionPartitionContext.Insert:
                         return CellSpatialPartition.Insert(cell);
-                    case PartitionContext.Remove:
+                    case RegionPartitionContext.Remove:
                         return CellSpatialPartition.Remove(cell);
                 }
             return null;
@@ -417,7 +475,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateAreas(bool log)
         {
-            RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
+            RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(Prototype.RegionGenerator);
 
             regionGenerator.GenerateRegion(log, RandomSeed, this);
 
@@ -594,92 +652,10 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<Avatar>();
         }
 
-        public PrototypeId PrototypeDataRef => RegionPrototype.DataRef;
-
-        public DateTime CreatedTime { get; set; }
-        public DateTime VisitedTime { get; private set; }
-        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
-
         public override string ToString()
         {
             return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
-
-        private string GetPrototypeName()
-        {
-            return GameDatabase.GetPrototypeName(PrototypeDataRef);
-        }
-
-        public void Shutdown()
-        {
-            // SetStatus(2, true);
-            
-           /* int tries = 100;
-            bool found;
-            do
-            {
-                found = false;*/
-                foreach (var entity in Entities)
-                {
-                    if (entity is WorldEntity worldEntity)
-                    {
-                        if (worldEntity.GetRootOwner() is not Player)
-                        {
-                            if (worldEntity.IsDestroyed == false)
-                            {
-                                worldEntity.Destroy();
-                                //found = true;
-                            }
-                        }
-                        else
-                        {
-                            if (worldEntity.IsInWorld)
-                            {
-                                worldEntity.ExitWorld();
-                                // found = true;
-                            }
-                        }
-                    }
-                }
-            // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
-
-            /*
-            if (Game != null && MissionManager != null)
-                MissionManager.Shutdown(this);
-            */
-            while (MetaGames.Any())
-            {
-                var metaGameId = MetaGames.First();
-                var metaGame = Game.EntityManager.GetEntity<Entity>(metaGameId);
-                metaGame?.Destroy();
-                MetaGames.Remove(metaGameId);
-            }
-
-            while (Areas.Any())
-            {
-                var areaId = Areas.First().Key;
-                DestroyArea(areaId);
-            }
-
-            ClearDividedStartLocations();
-
-            /* var scheduler = Game?.GameEventScheduler;
-             if (scheduler != null)
-             {
-                 scheduler.CancelAllEvents(_events);
-             }
-
-             foreach (var entity in Game.EntityManager.GetEntities())
-             {
-                 if (entity is WorldEntity worldEntity)
-                     worldEntity.EmergencyRegionCleanup(this);
-             }
-            */
-
-            NaviMesh.Release();
-        }
-
-        public ulong GetMatchNumber() => Settings.MatchNumber;
 
         public Cell GetCellAtPosition(Vector3 position)
         {
@@ -701,7 +677,7 @@ namespace MHServerEmu.Games.Regions
         public bool CheckMarkerFilter(PrototypeId filterRef)
         {
             if (filterRef == 0) return true;
-            PrototypeId markerFilter = RegionPrototype.MarkerFilter;
+            PrototypeId markerFilter = Prototype.MarkerFilter;
             if (markerFilter == 0) return true;
             return markerFilter == filterRef;
         }
@@ -761,7 +737,7 @@ namespace MHServerEmu.Games.Regions
             return found;
         }
 
-        public List<IMessage> GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
+        public List<IMessage> OLD_GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
         {
             List<IMessage> messageList = new();
 
@@ -769,7 +745,7 @@ namespace MHServerEmu.Games.Regions
                 .SetRegionId(Id)
                 .SetServerGameId(serverGameId)
                 .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)PrototypeId)
+                .SetRegionPrototypeId((ulong)OLD_RegionPrototypeId)
                 .SetRegionRandomSeed(RandomSeed)
                 .SetRegionMin(Bound.Min.ToNetStructPoint3())
                 .SetRegionMax(Bound.Max.ToNetStructPoint3())
@@ -785,7 +761,7 @@ namespace MHServerEmu.Games.Regions
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build());
+            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)OLD_RegionPrototypeId).Build());
 
             // TODO: prefetch other regions
             
@@ -877,13 +853,13 @@ namespace MHServerEmu.Games.Regions
 
         public int GetAreaLevel(Area area)
         {
-            if (RegionPrototype.LevelUseAreaOffset) return area.GetAreaLevel();
+            if (Prototype.LevelUseAreaOffset) return area.GetAreaLevel();
             return RegionLevel;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {            
-            return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
+            return keywordProto != null && Prototype.HasKeyword(keywordProto);
         }
 
         public int AcquireCollisionId()
@@ -1305,140 +1281,4 @@ namespace MHServerEmu.Games.Regions
             Location = location;
         }
     }
- 
-    #region ProgressionGraph
-
-    public class RegionProgressionGraph
-    {
-        public static readonly Logger Logger = LogManager.CreateLogger();
-        private RegionProgressionNode _root;
-        private List<RegionProgressionNode> _nodes;
-
-        public RegionProgressionGraph() { _nodes = new(); _root = null; }
-
-        public void SetRoot(Area area)
-        {
-            if (area == null) return;
-            DestroyGraph();
-            _root = CreateNode(null, area);
-        }
-
-        public Area GetRoot()
-        {
-            if (_root != null) return _root.Area;
-            return null;
-        }
-
-        public RegionProgressionNode CreateNode(RegionProgressionNode parent, Area area)
-        {
-            if (area == null) return null;
-            RegionProgressionNode node = new(parent, area);
-            _nodes.Add(node);
-            return node;
-        }
-
-        public void AddLink(Area parent, Area child)
-        {
-            if (parent == null || child == null) return;
-
-            RegionProgressionNode foundParent = FindNode(parent);
-            if (foundParent == null) return;
-
-            RegionProgressionNode childNode = _root.FindChildNode(child, true);
-            if (childNode == null)
-            {
-                childNode = CreateNode(foundParent, child);
-                if (childNode == null) return;
-            }
-            else
-            {
-                Logger.Error($"Attempt to do a double link between a parent and child:\n parent: {foundParent.Area}\n child: {child}");
-                return;
-            }
-
-            foundParent.AddChild(childNode);
-        }
-
-        public void RemoveLink(Area parent, Area child)
-        {
-            if (parent == null || child == null) return;
-
-            RegionProgressionNode foundParent = FindNode(parent);
-            if (foundParent == null) return;
-
-            RegionProgressionNode childNode = _root.FindChildNode(child, true);
-            if (childNode == null) return;
-
-            foundParent.RemoveChild(childNode);
-            RemoveNode(childNode);
-        }
-
-        public void RemoveNode(RegionProgressionNode deleteNode)
-        {
-            if (deleteNode != null) _nodes.Remove(deleteNode);
-        }
-
-        public RegionProgressionNode FindNode(Area area)
-        {
-            if (_root == null) return null;
-            if (_root.Area == area) return _root;
-
-            return _root.FindChildNode(area, true);
-        }
-
-        public Area GetPreviousArea(Area area)
-        {
-            RegionProgressionNode node = FindNode(area);
-            if (node != null)
-            {
-                RegionProgressionNode prev = node.ParentNode;
-                if (prev != null) return prev.Area;
-            }
-            return null;
-        }
-
-        private void DestroyGraph()
-        {
-            if (_root == null) return;
-            _nodes.Clear();
-            _root = null;
-        }
-    }
-
-    public class RegionProgressionNode
-    {
-        public RegionProgressionNode ParentNode { get; }
-        public Area Area { get; }
-
-        private readonly List<RegionProgressionNode> _childs;
-
-        public RegionProgressionNode(RegionProgressionNode parent, Area area)
-        {
-            ParentNode = parent;
-            Area = area;
-            _childs = new();
-        }
-
-        public void AddChild(RegionProgressionNode node) { _childs.Add(node); }
-
-        public void RemoveChild(RegionProgressionNode node) { _childs.Remove(node); }
-
-        public RegionProgressionNode FindChildNode(Area area, bool recurse = false)
-        {
-            foreach (var child in _childs)
-            {
-                if (child.Area == area)
-                    return child;
-                else if (recurse)
-                {
-                    RegionProgressionNode foundNode = child.FindChildNode(area, true);
-                    if (foundNode != null)
-                        return foundNode;
-                }
-            }
-            return null;
-        }
-
-    }
-    #endregion
 }

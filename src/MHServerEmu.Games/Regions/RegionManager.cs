@@ -28,6 +28,7 @@ namespace MHServerEmu.Games.Regions
 
         public static void ClearRegionDict() => _regionDict?.Clear();
         public IEnumerable<Region> AllRegions => _allRegions.Values;
+
         //----------
         private uint _cellId;
         private uint _areaId;
@@ -104,8 +105,8 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
 
-            if (region.GetMatchNumber() != 0)
-                _matches[region.GetMatchNumber()] = region;
+            if (region.MatchNumber != 0)
+                _matches[region.MatchNumber] = region;
 
             return region;
         }
@@ -268,7 +269,7 @@ namespace MHServerEmu.Games.Regions
                             visitedTime = region.VisitedTime;
                         }
 
-                        if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
+                        if (playerRegions.Contains(region.OLD_RegionPrototypeId)) // TODO RegionId
                         {
                             // TODO send force exit from region to Players
                         }
@@ -288,7 +289,7 @@ namespace MHServerEmu.Games.Regions
                 lock (_managerLock)
                 {
                     _allRegions.Remove(region.Id);
-                    _regionDict.Remove(region.PrototypeId);
+                    _regionDict.Remove(region.OLD_RegionPrototypeId);
                     _shutdownQueue.Enqueue(region);
                 }              
             }

@@ -240,7 +240,7 @@ namespace MHServerEmu.Games.Network
                 return;
             }
 
-            var messages = region.GetLoadingMessages(Game.Id, WaypointDataRef, this);
+            var messages = region.OLD_GetLoadingMessages(Game.Id, WaypointDataRef, this);
             foreach (IMessage message in messages)
                 SendMessage(message);
 
@@ -932,7 +932,7 @@ namespace MHServerEmu.Games.Network
 
             // TODO: Use region.GetBodysliderPowerRef()
 
-            if (region.RegionPrototype.Behavior == RegionBehaviorAsset.Town)
+            if (region.Prototype.Behavior == RegionBehaviorAsset.Town)
                 return Logger.WarnReturn(false, $"OnReturnToHub(): Returning from hubs via bodysliding is not yet implemented");
 
             PrototypeId bodysliderPowerRef = GameDatabase.GlobalsPrototype.ReturnToHubPower;

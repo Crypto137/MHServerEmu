@@ -70,20 +70,20 @@ namespace MHServerEmu.Games.MetaGames
                     foreach(var state in gameMode.ApplyStates)
                         popManager.MetaStateRegisty(state);
 
-                if (region.PrototypeId == RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
+                if (region.OLD_RegionPrototypeId == RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
                     int wave = Game.Random.Next(0, stateMode.States.Length);
                     popManager.MetaStateRegisty(stateMode.States[wave]);
                 } 
-                else if (region.PrototypeId == RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
+                else if (region.OLD_RegionPrototypeId == RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
                     popManager.MetaStateRegisty(stateMode.States[0]);
                 }
-                else if (region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
+                else if (region.OLD_RegionPrototypeId == RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
                     popManager.MetaStateRegisty((PrototypeId)7730041682554854878); // CH04UpperMoloids
-                else if (region.PrototypeId == RegionPrototypeId.SurturRaidRegionGreen) // Hardcode for Surtur
+                else if (region.OLD_RegionPrototypeId == RegionPrototypeId.SurturRaidRegionGreen) // Hardcode for Surtur
                 {   
                     var stateRef = (PrototypeId)5463286934959496963; // SurturMissionProgressionStateFiveMan
                     var missionProgression = stateRef.As<MetaStateMissionProgressionPrototype>();

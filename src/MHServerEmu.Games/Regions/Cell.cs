@@ -107,7 +107,7 @@ namespace MHServerEmu.Games.Regions
             if (CellProto == null) return;
 
             if (SpatialPartitionLocation.IsValid())
-                Region.PartitionCell(this, Region.PartitionContext.Remove);
+                Region.PartitionCell(this, RegionPartitionContext.Remove);
 
             AreaPosition = positionInArea;
             AreaOrientation = orientationInArea;
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Regions
             RegionBounds.RoundToNearestInteger();
 
             if (!SpatialPartitionLocation.IsValid())
-                Region.PartitionCell(this, Region.PartitionContext.Insert);
+                Region.PartitionCell(this, RegionPartitionContext.Insert);
         }
 
         public void AddNavigationDataToRegion()
@@ -229,7 +229,7 @@ namespace MHServerEmu.Games.Regions
 
             var region = Region;
             var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword.As<KeywordPrototype>();            
-            if (region.RegionPrototype.RespawnDestructibles && entityProto.HasKeyword(destructibleKeyword))
+            if (region.Prototype.RespawnDestructibles && entityProto.HasKeyword(destructibleKeyword))
             {
                 SpawnGroup group = PopulationManager.CreateSpawnGroup();
                 group.Transform = Transform3.BuildTransform(entityPosition, entityOrientation);
@@ -321,7 +321,7 @@ namespace MHServerEmu.Games.Regions
         {
             Region region = Region;
             if (region != null && SpatialPartitionLocation.IsValid())
-                region.PartitionCell(this, Region.PartitionContext.Remove);
+                region.PartitionCell(this, RegionPartitionContext.Remove);
         }
 
         public bool IntersectsXY(Vector3 position)

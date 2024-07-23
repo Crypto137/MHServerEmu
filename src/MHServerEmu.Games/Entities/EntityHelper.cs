@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Entities
             //CellPrototype entry;
             // Vector3 entityPosition;            
 
-            switch (region.PrototypeId)
+            switch (region.OLD_RegionPrototypeId)
             {
                 case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
 
@@ -144,7 +144,7 @@ namespace MHServerEmu.Games.Entities
                         {
                             // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                             if (LockedTargets.Contains((InvTarget)teleport.DestinationList[0].TargetRef) == false) continue;
-                            if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
+                            if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry && region.OLD_RegionPrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
                             entity.TEMP_ReplacePrototype(visibleParent);
                             continue;

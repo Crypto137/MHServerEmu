@@ -229,7 +229,7 @@ namespace MHServerEmu.Games
 
             playerConnection.ExitGame();
 
-            playerConnection.RegionDataRef = (PrototypeId)worldEntity.Region.PrototypeId;
+            playerConnection.RegionDataRef = (PrototypeId)worldEntity.Region.OLD_RegionPrototypeId;
             playerConnection.EntityToTeleport = worldEntity;
 
             NetworkManager.SetPlayerConnectionPending(playerConnection);
