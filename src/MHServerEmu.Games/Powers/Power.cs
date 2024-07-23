@@ -2205,7 +2205,7 @@ namespace MHServerEmu.Games.Powers
         public static bool CanBeUsedInRegion(PowerPrototype powerProto, PropertyCollection powerProperties, Region region)
         {
             if (region == null) return false;
-            RegionPrototype regionPrototype = region.RegionPrototype;
+            RegionPrototype regionPrototype = region.Prototype;
             if (regionPrototype == null) return Logger.WarnReturn(false, "CanBeUsedInRegion(): regionPrototype == null");
 
             PropertyCollection properties = powerProperties ?? powerProto.Properties;

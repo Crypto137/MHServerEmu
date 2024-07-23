@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Network
                 SendMessage(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
 
                 // Mini map (TODO: keep track of the map server-side)
-                LowResMap lowResMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
+                LowResMap lowResMap = new(Region.Prototype.AlwaysRevealFullMap);
                 SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
             }
 

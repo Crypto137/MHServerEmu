@@ -135,7 +135,7 @@ namespace MHServerEmu.Games.Regions
             MinimapRevealGroupId = AreaPrototype.MinimapRevealGroupId;
 
             var emptyPopulation = GameDatabase.PopulationGlobalsPrototype.EmptyPopulation;
-            var populationOverrides = Region.RegionPrototype.PopulationOverrides;
+            var populationOverrides = Region.Prototype.PopulationOverrides;
 
             if (populationOverrides.HasValue() && AreaPrototype.Population != emptyPopulation)
             {
@@ -570,7 +570,7 @@ namespace MHServerEmu.Games.Regions
             int areaLevel = Region.GetAreaLevel(this);
             if (characterLevel > 0 && areaLevel > 0)
             {
-                if (Region.RegionPrototype.LevelOverridesCharacterLevel) 
+                if (Region.Prototype.LevelOverridesCharacterLevel) 
                     characterLevel = areaLevel;
             }
             else

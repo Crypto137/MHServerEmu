@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (!base.Initialize(area)) return false;
 
             Region region = area.Region;
-            RegionPrototype regionProto = region.RegionPrototype;
+            RegionPrototype regionProto = region.Prototype;
 
             if (regionProto.StartTarget != 0)
             {

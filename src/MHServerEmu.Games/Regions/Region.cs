@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Regions
                 _startArea = value;
             }
         }
-        public RegionPrototype RegionPrototype { get; set; }
+        public RegionPrototype Prototype { get; set; }
         public RegionSettings Settings { get; private set; }
         public RegionProgressionGraph ProgressionGraph { get; set; } // Region progression graph 
         public ObjectiveGraph ObjectiveGraph { get; private set; }
@@ -170,14 +170,14 @@ namespace MHServerEmu.Games.Regions
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
             PrototypeId = (RegionPrototypeId)settings.RegionDataRef;
-            RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
-            if (RegionPrototype == null) return false;
+            Prototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
+            if (Prototype == null) return false;
 
-            RegionPrototype regionProto = RegionPrototype;
+            RegionPrototype regionProto = Prototype;
             RandomSeed = settings.Seed;
             Bound = settings.Bound;
-            AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.HasValue());
+            AvatarSwapEnabled = Prototype.EnableAvatarSwap;
+            RestrictedRosterEnabled = (Prototype.RestrictedRoster.HasValue());
 
             SetRegionLevel();
 
@@ -351,7 +351,7 @@ namespace MHServerEmu.Games.Regions
         private void SetRegionLevel()
         {
             if (RegionLevel == 0) return;
-            var regionProto = RegionPrototype;
+            var regionProto = Prototype;
             if (regionProto == null) return;
 
             if (Settings.DebugLevel == true) RegionLevel = Settings.Level;
@@ -417,7 +417,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateAreas(bool log)
         {
-            RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
+            RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(Prototype.RegionGenerator);
 
             regionGenerator.GenerateRegion(log, RandomSeed, this);
 
@@ -594,7 +594,7 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<Avatar>();
         }
 
-        public PrototypeId PrototypeDataRef => RegionPrototype.DataRef;
+        public PrototypeId PrototypeDataRef => Prototype.DataRef;
 
         public DateTime CreatedTime { get; set; }
         public DateTime VisitedTime { get; private set; }
@@ -696,7 +696,7 @@ namespace MHServerEmu.Games.Regions
         public bool CheckMarkerFilter(PrototypeId filterRef)
         {
             if (filterRef == 0) return true;
-            PrototypeId markerFilter = RegionPrototype.MarkerFilter;
+            PrototypeId markerFilter = Prototype.MarkerFilter;
             if (markerFilter == 0) return true;
             return markerFilter == filterRef;
         }
@@ -872,13 +872,13 @@ namespace MHServerEmu.Games.Regions
 
         public int GetAreaLevel(Area area)
         {
-            if (RegionPrototype.LevelUseAreaOffset) return area.GetAreaLevel();
+            if (Prototype.LevelUseAreaOffset) return area.GetAreaLevel();
             return RegionLevel;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {            
-            return keywordProto != null && RegionPrototype.HasKeyword(keywordProto);
+            return keywordProto != null && Prototype.HasKeyword(keywordProto);
         }
 
         public int AcquireCollisionId()

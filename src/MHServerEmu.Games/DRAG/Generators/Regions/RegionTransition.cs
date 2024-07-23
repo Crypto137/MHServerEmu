@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             // Fall back to default start target for the region
             if (targetRef == PrototypeId.Invalid)
             {
-                targetRef = region.RegionPrototype.StartTarget;
+                targetRef = region.Prototype.StartTarget;
                 Logger.Warn($"FindStartPosition(): invalid targetRef, falling back to {GameDatabase.GetPrototypeName(targetRef)}");
             }
 

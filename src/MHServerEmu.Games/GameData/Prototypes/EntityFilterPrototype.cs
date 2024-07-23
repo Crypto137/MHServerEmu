@@ -285,7 +285,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 else
                     region = entity.ExitWorldRegionLocation.GetRegion();
             }
-            return region != null && RegionPrototype.Equivalent(InRegion.As<RegionPrototype>(), region.RegionPrototype);
+            return region != null && RegionPrototype.Equivalent(InRegion.As<RegionPrototype>(), region.Prototype);
         }
     }
 
