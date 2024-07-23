@@ -195,24 +195,26 @@ namespace MHServerEmu.Games.Regions
                 {
                     // Generate the region and create entities for it if needed
                     ulong numEntities = Game.EntityManager.PeekNextEntityId();
-                    Logger.Debug($"GenerateRegion {GameDatabase.GetFormattedPrototypeName((PrototypeId)prototype)}");
+                    Logger.Info($"Generating region {((PrototypeId)prototype).GetNameFormatted()}...");
+
                     try
                     {
                         Stopwatch stopwatch = Stopwatch.StartNew();
                         region = GenerateRegion(prototype);
-                        Logger.Debug($"GetRegion(): Generated region {prototype} in {stopwatch.ElapsedMilliseconds} ms");
+                        Logger.Info($"Generated region {prototype} in {stopwatch.ElapsedMilliseconds} ms");
                     } 
                     catch(Exception e) 
                     {
                         Logger.ErrorException(e, "Generation failed");
-                    }                    
+                    }   
+                    
                     // region = EmptyRegion(prototype);
                     if (region != null)
                     {
                         region.ArchiveData = GetArchiveData(prototype);
                         EntityHelper.SetUpHardcodedEntities(region);
                         ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
-                        Logger.Debug($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
+                        Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
                         region.CreatedTime = DateTime.Now;
 
                         _regionDict.Add(prototype, region);

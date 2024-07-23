@@ -182,7 +182,7 @@ namespace MHServerEmu.Games.Populations
                     foreach (var state in missionActivate.SubStates)
                         MetaStateRegisty(state);
 
-                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
+                Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
                 AddRequiredObjects(missionActivate.PopulationObjects, missionActivate.PopulationAreaRestriction, null);
             }
             else if (metastate is MetaStateMissionSequencerPrototype missionSequencer)
@@ -190,7 +190,7 @@ namespace MHServerEmu.Games.Populations
                 if (missionSequencer.Sequence.HasValue())
                     foreach (var missionEntry in missionSequencer.Sequence)
                     {
-                        Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
+                        Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
                         AddRequiredObjects(missionEntry.PopulationObjects, missionEntry.PopulationAreaRestriction, null);
                     }
             }
@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Populations
             }
             else if (metastate is MetaStatePopulationMaintainPrototype popProto && popProto.PopulationObjects.HasValue())
             {
-                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
+                Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
                 var areas = popProto.RestrictToAreas;
                 if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.OLD_RegionPrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
                 AddRequiredObjects(popProto.PopulationObjects, areas, popProto.RestrictToCells);

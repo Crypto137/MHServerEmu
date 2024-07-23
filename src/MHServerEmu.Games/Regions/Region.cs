@@ -211,8 +211,11 @@ namespace MHServerEmu.Games.Regions
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             if (NaviSystem.Initialize(this) == false) return false;
-            if (Bound.IsZero() == false) {
-                if (settings.GenerateAreas) Logger.Warn("Bound is not Zero with GenerateAreas On");                
+            if (Bound.IsZero() == false)
+            {
+                if (settings.GenerateAreas)
+                    Logger.Warn("Bound is not Zero with GenerateAreas On");             
+                
                 InitializeSpacialPartition(Bound);
                 NaviMesh.Initialize(Bound, 1000.0f, this);
             }
@@ -263,10 +266,7 @@ namespace MHServerEmu.Games.Regions
             if (settings.GenerateAreas)
             {
                 if (GenerateAreas(settings.GenerateLog) == false)
-                {
-                    Logger.Warn($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
-                    return false;
-                }
+                    return Logger.WarnReturn(false, $"Initialize(): Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
             }
             /*
             if (Settings.Affixes.Any())
@@ -419,12 +419,15 @@ namespace MHServerEmu.Games.Regions
         private void SetRegionLevel()
         {
             if (RegionLevel == 0) return;
-            var regionProto = Prototype;
+            RegionPrototype regionProto = Prototype;
             if (regionProto == null) return;
 
-            if (Settings.DebugLevel == true) RegionLevel = Settings.Level;
-            else if (regionProto.Level > 0) RegionLevel = regionProto.Level;
-            else Logger.Error("RegionLevel <= 0");
+            if (Settings.DebugLevel == true)
+                RegionLevel = Settings.Level;
+            else if (regionProto.Level > 0)
+                RegionLevel = regionProto.Level;
+            else
+                Logger.Error("RegionLevel <= 0");
         }
 
         public Aabb CalculateBound()
@@ -501,10 +504,12 @@ namespace MHServerEmu.Games.Regions
             if (success)
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
+
                 success &= GenerateMissionPopulation()
                         && GenerateHelper(regionGenerator, GenerateFlag.Population)
                         && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
-                Logger.Debug($"GenerateAreas(): Generated population in {stopwatch.ElapsedMilliseconds} ms");
+
+                Logger.Info($"Generated population in {stopwatch.ElapsedMilliseconds} ms");
             }
 
             return success;
@@ -529,6 +534,7 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
             bool success = Areas.Count > 0;
+
             foreach (Area area in IterateAreas())
             {
                 if (area == null)
@@ -539,9 +545,11 @@ namespace MHServerEmu.Games.Regions
                 {
                     List<PrototypeId> areas = new() { area.PrototypeDataRef };
                     success &= area.Generate(regionGenerator, areas, flag);
-                    if (!area.TestStatus(GenerateFlag.Background)) Logger.Error($"{area} Not generated");
+                    if (area.TestStatus(GenerateFlag.Background) == false)
+                        Logger.Error($"{area} Not generated");
                 }
             }
+
             return success;
         }
 
@@ -565,13 +573,18 @@ namespace MHServerEmu.Games.Regions
         {
             if (settings.AreaDataRef == 0 || settings.Id == 0 || settings.RegionSettings == null) return null;
             Area area = new(Game, this);
-            if (!area.Initialize(settings))
+
+            if (area.Initialize(settings) == false)
             {
                 DeallocateArea(area);
                 return null;
             }
+
             Areas[area.Id] = area;
-            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin}, seed = {RandomSeed}");
+
+            if (settings.RegionSettings.GenerateLog)
+                Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin}, seed = {RandomSeed}");
+
             return area;
         }
 
@@ -583,6 +596,7 @@ namespace MHServerEmu.Games.Regions
                 if (affixProto != null && affixProto.ChallengeTier != MetaStateChallengeTierEnum.None)
                     return affixProto.ChallengeTier;
             }
+
             return MetaStateChallengeTierEnum.None;
         }
 

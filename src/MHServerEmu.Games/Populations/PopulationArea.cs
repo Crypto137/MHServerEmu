@@ -104,7 +104,8 @@ namespace MHServerEmu.Games.Populations
                 manager.AddPopulationObject(markerRef, objectProto, spawnPicker.Count, areas, cells, PrototypeId.Invalid);
                 markerCount++;
             }
-            Logger.Debug($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(PopulationRef)}][{objCount}][{markerCount}]");
+
+            Logger.Info($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(PopulationRef)}][{objCount}][{markerCount}]");
         }
 
         public static void GetContainedEncounters(PopulationObjectInstancePrototype[] objectList, List<PopulationObjectInstancePrototype> encounters)
