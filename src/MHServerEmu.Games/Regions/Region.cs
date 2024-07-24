@@ -6,6 +6,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
@@ -22,7 +23,9 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
+using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -46,12 +49,11 @@ namespace MHServerEmu.Games.Regions
         Remove
     }
 
-    public class Region : IMissionManagerOwner
+    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly IdGenerator IdGenerator = new(IdType.Region, 0);
 
-        public byte[] ArchiveData { get; set; }
         public bool IsGenerated { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
 
@@ -84,21 +86,24 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
+        // ArchiveData
+        public ReplicatedPropertyCollection Properties { get; private set; }
+        public MissionManager MissionManager { get; private set; }
+        public UIDataProvider UIDataProvider { get; private set; }
+        public ObjectiveGraph ObjectiveGraph { get; private set; }
+
         public DateTime CreatedTime { get; set; }
         public DateTime VisitedTime { get; private set; }
-        
 
         public RegionPrototypeId OLD_RegionPrototypeId { get; private set; }
         public RegionSettings Settings { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
 
         public RegionProgressionGraph ProgressionGraph { get; set; }
-        public ObjectiveGraph ObjectiveGraph { get; private set; }
         public PathCache PathCache { get; private set; }
         public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
         public EntityTracker EntityTracker { get; private set; }
         public TuningTable TuningTable { get; private set; }    // Difficulty table
-        public MissionManager MissionManager { get; private set; }
         public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; }
         public CellSpatialPartition CellSpatialPartition { get; private set; }
         public NaviSystem NaviSystem { get; private set; }
@@ -149,7 +154,6 @@ namespace MHServerEmu.Games.Regions
             Id = IdGenerator.Generate();
             OLD_RegionPrototypeId = prototype;
             RandomSeed = seed;
-            ArchiveData = Array.Empty<byte>();
             CreateParams = new(10, DifficultyTier.Normal);
             Bound = Aabb.Zero; 
         }
@@ -160,11 +164,11 @@ namespace MHServerEmu.Games.Regions
             if (Game == null) return false;
 
             MissionManager = new MissionManager(Game, this);
-            // CreateUIDataProvider(Game);
+            UIDataProvider = new(Game, this);     // CreateUIDataProvider(Game);
             PopulationManager = new(Game, this);
 
             Settings = settings;
-            //Bind(this, 0xEF);
+            Properties = new(Game.CurrentRepId); //Bind(this, 0xEF);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
@@ -316,7 +320,6 @@ namespace MHServerEmu.Games.Regions
 
             */
 
-            ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
             IsGenerated = true;
             return true;
         }
@@ -388,6 +391,15 @@ namespace MHServerEmu.Games.Regions
             */
 
             NaviMesh.Release();
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = Properties.Serialize(archive);
+            success &= MissionManager.Serialize(archive);
+            success &= UIDataProvider.Serialize(archive);
+            success &= ObjectiveGraph.Serialize(archive);
+            return success;
         }
 
         public void RegisterMetaGame(MetaGame metaGame)
@@ -778,6 +790,8 @@ namespace MHServerEmu.Games.Regions
 
         public List<IMessage> OLD_GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
         {
+            // TODO: Move this to AOI
+
             List<IMessage> messageList = new();
 
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
@@ -792,8 +806,12 @@ namespace MHServerEmu.Games.Regions
 
             // can add EntitiesToDestroy here
 
-            // empty archive data seems to cause region loading to hang for some time
-            if (ArchiveData.Length > 0) regionChangeBuilder.SetArchiveData(ByteString.CopyFrom(ArchiveData));
+            ByteString archiveData = ByteString.Empty;
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+            {
+                Serialize(archive);
+                regionChangeBuilder.SetArchiveData(archive.ToByteString());
+            }
 
             messageList.Add(regionChangeBuilder.Build());
 
