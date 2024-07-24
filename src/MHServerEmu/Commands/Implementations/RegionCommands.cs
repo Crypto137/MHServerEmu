@@ -6,7 +6,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -53,13 +52,13 @@ namespace MHServerEmu.Commands.Implementations
 
             int numRegions = 0;
 
-            foreach (var value in Enum.GetValues<RegionPrototypeId>())
+            foreach (RegionPrototypeId value in Enum.GetValues<RegionPrototypeId>())
             {
-                Task.Run(() => game.RegionManager.GetRegion(value));
+                game.RegionManager.GetRegionByRef((PrototypeId)value);
                 numRegions++;
             }
 
-            return $"Generating {numRegions} regions.";
+            return $"Generated {numRegions} regions.";
         }
     }
 }

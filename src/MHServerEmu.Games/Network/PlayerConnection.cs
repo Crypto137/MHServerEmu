@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.Network
 
             Player.IsOnLoadingScreen = true;
 
-            Region region = Game.RegionManager.GetRegion((RegionPrototypeId)RegionDataRef);
+            Region region = Game.RegionManager.GetRegionByRef(RegionDataRef);
             if (region == null)
             {
                 Logger.Error($"Event ErrorInRegion {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");

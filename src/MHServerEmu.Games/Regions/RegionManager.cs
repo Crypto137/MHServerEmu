@@ -2,46 +2,35 @@
 using System.Diagnostics;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Missions;
-using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.UI.Widgets;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Regions
 {
     public class RegionManager
     {
-        public static bool GenerationAsked;
-
         private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
 
-        private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
+        private readonly ConcurrentQueue<Region> _shutdownQueue = new();
+        private readonly object _managerLock = new();
 
-        private ConcurrentQueue<(Region, PlayerConnection)> _generationQueue = new();
-        private ConcurrentQueue<Region> _shutdownQueue = new();
-
-        public static void ClearRegionDict() => _regionDict?.Clear();
-        public IEnumerable<Region> AllRegions => _allRegions.Values;
-
-        //----------
-        private uint _cellId;
-        private uint _areaId;
         private readonly Dictionary<uint, Cell> _allCells = new();
         private readonly Dictionary<ulong, Region> _allRegions = new();
         private readonly Dictionary<ulong, Region> _matches = new();
+
+        private readonly Dictionary<PrototypeId, Region> _regionByRefDict = new();    // TODO: multiple instances of the same region
+
+        private uint _areaId = 1;
+        private uint _cellId = 1;
+
         public Game Game { get; private set; }
-        private readonly object _managerLock = new();
+        public IEnumerable<Region> AllRegions { get => _allRegions.Values; }
 
         public RegionManager()
         {
-            _areaId = 1;
-            _cellId = 1;
         }
 
         public bool Initialize(Game game)
@@ -50,8 +39,15 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public uint AllocateCellId() => _cellId++;
-        public uint AllocateAreaId() => _areaId++;
+        public uint AllocateCellId()
+        {
+            return _cellId++;
+        }
+
+        public uint AllocateAreaId()
+        {
+            return _areaId++;
+        }
 
         public bool AddCell(Cell cell)
         {
@@ -115,14 +111,7 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public Region EmptyRegion(RegionPrototypeId prototype) // For test
-        {
-            Region region = new(Game);
-            region.InitEmpty(prototype, 1210027349);
-            return region;
-        }
-
-        public Region GenerateRegion(RegionPrototypeId prototype) 
+        public Region GenerateRegion(PrototypeId regionProtoRef) 
         {
             RegionSettings settings = new()
             {
@@ -135,7 +124,7 @@ namespace MHServerEmu.Games.Regions
                 GenerateEntities = true,
                 GenerateLog = false,
                 Affixes = new List<PrototypeId>(),
-                RegionDataRef = (PrototypeId)prototype
+                RegionDataRef = regionProtoRef
             };
             // settings.Seed = 1210027349;
             // GRandom random = new(settings.Seed);//Game.Random.Next()
@@ -148,7 +137,7 @@ namespace MHServerEmu.Games.Regions
             }
 
             if (region == null)
-                Logger.Error($"GenerateRegion failed after {10 - tries} attempts | regionId: {prototype} | Last Seed: {settings.Seed}");
+                Logger.Error($"GenerateRegion failed after {10 - tries} attempts | regionId: {regionProtoRef.GetNameFormatted()} | Last Seed: {settings.Seed}");
 
             return region;
         }
@@ -186,22 +175,25 @@ namespace MHServerEmu.Games.Regions
         }
 
         // OLD
-        public Region GetRegion(RegionPrototypeId prototype)
+        public Region GetRegionByRef(PrototypeId regionProtoRef)
         {
+            if (DataDirectory.Instance.PrototypeIsA<RegionPrototype>(regionProtoRef) == false)
+                return Logger.WarnReturn<Region>(null, $"GetRegion(): {regionProtoRef} is not a valid region prototype ref");
+
             //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             lock (_managerLock)
             {
-                if (_regionDict.TryGetValue(prototype, out Region region) == false)
+                if (_regionByRefDict.TryGetValue(regionProtoRef, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
                     ulong numEntities = Game.EntityManager.PeekNextEntityId();
-                    Logger.Info($"Generating region {((PrototypeId)prototype).GetNameFormatted()}...");
+                    Logger.Info($"Generating region {((PrototypeId)regionProtoRef).GetNameFormatted()}...");
 
                     try
                     {
                         Stopwatch stopwatch = Stopwatch.StartNew();
-                        region = GenerateRegion(prototype);
-                        Logger.Info($"Generated region {prototype} in {stopwatch.ElapsedMilliseconds} ms");
+                        region = GenerateRegion(regionProtoRef);
+                        Logger.Info($"Generated region {regionProtoRef} in {stopwatch.ElapsedMilliseconds} ms");
                     } 
                     catch(Exception e) 
                     {
@@ -217,7 +209,7 @@ namespace MHServerEmu.Games.Regions
                         Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
                         region.CreatedTime = DateTime.Now;
 
-                        _regionDict.Add(prototype, region);
+                        _regionByRefDict.Add(regionProtoRef, region);
                     }
                 }
 
@@ -248,12 +240,9 @@ namespace MHServerEmu.Games.Regions
             Logger.Info($"Running region cleanup...");
 
             // Get PlayerRegions
-            HashSet<RegionPrototypeId> playerRegions = new();
+            HashSet<PrototypeId> regionsWithPlayers = new();
             foreach (var playerConnection in Game.NetworkManager)
-            {
-                var regionRef = (RegionPrototypeId)playerConnection.RegionDataRef; // TODO use RegionID
-                playerRegions.Add(regionRef); 
-            }
+                regionsWithPlayers.Add(playerConnection.RegionDataRef); // TODO use RegionID
 
             // Check all regions 
             List<Region> toShutdown = new();
@@ -275,7 +264,7 @@ namespace MHServerEmu.Games.Regions
                             visitedTime = region.VisitedTime;
                         }
 
-                        if (playerRegions.Contains(region.OLD_RegionPrototypeId)) // TODO RegionId
+                        if (regionsWithPlayers.Contains(region.PrototypeDataRef)) // TODO RegionId
                         {
                             // TODO send force exit from region to Players
                         }
@@ -295,24 +284,11 @@ namespace MHServerEmu.Games.Regions
                 lock (_managerLock)
                 {
                     _allRegions.Remove(region.Id);
-                    _regionDict.Remove(region.OLD_RegionPrototypeId);
+                    _regionByRefDict.Remove(region.PrototypeDataRef);
                     _shutdownQueue.Enqueue(region);
                 }              
             }
         }
-
-        #region Hardcoded
-
-        public static RegionPrototypeId[] PatrolRegions = new RegionPrototypeId[]
-        {
-            RegionPrototypeId.XManhattanRegion1to60,
-            RegionPrototypeId.XManhattanRegion60Cosmic,
-            RegionPrototypeId.BrooklynPatrolRegionL60,
-            RegionPrototypeId.BrooklynPatrolRegionL60Cosmic,
-            RegionPrototypeId.UpperMadripoorRegionL60,
-            RegionPrototypeId.UpperMadripoorRegionL60Cosmic,
-        };
-        #endregion
     }
 }
 

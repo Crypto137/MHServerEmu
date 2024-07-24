@@ -9,6 +9,21 @@ namespace MHServerEmu.Games.Regions
 {
     public static class RegionHelper
     {
+        private static readonly RegionPrototypeId[] PatrolRegions = new RegionPrototypeId[]
+        {
+            RegionPrototypeId.XManhattanRegion1to60,
+            RegionPrototypeId.XManhattanRegion60Cosmic,
+            RegionPrototypeId.BrooklynPatrolRegionL60,
+            RegionPrototypeId.BrooklynPatrolRegionL60Cosmic,
+            RegionPrototypeId.UpperMadripoorRegionL60,
+            RegionPrototypeId.UpperMadripoorRegionL60Cosmic,
+        };
+
+        public static bool TEMP_IsPatrolRegion(PrototypeId regionProtoRef)
+        {
+            return PatrolRegions.Contains((RegionPrototypeId)regionProtoRef);
+        }
+
         public static void TEMP_InitializeHardcodedRegionData(Region region)
         {
             switch ((RegionPrototypeId)region.PrototypeDataRef)

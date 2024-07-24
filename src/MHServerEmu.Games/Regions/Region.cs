@@ -149,15 +149,6 @@ namespace MHServerEmu.Games.Regions
             return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
 
-        public void InitEmpty(RegionPrototypeId prototype, int seed) // For test
-        {
-            Id = IdGenerator.Generate();
-            OLD_RegionPrototypeId = prototype;
-            RandomSeed = seed;
-            CreateParams = new(10, DifficultyTier.Normal);
-            Bound = Aabb.Zero; 
-        }
-
         public bool Initialize(RegionSettings settings)
         {
             // "Region_Initialize" ProfileTimer

@@ -242,7 +242,9 @@ namespace MHServerEmu.Games.Populations
                 while (popPicker.PickRemove(out var popObject))
                 {
                     int count = popObject.Count;
-                    if (RegionManager.PatrolRegions.Contains(Region.OLD_RegionPrototypeId)) count = 1;
+                    if (RegionHelper.TEMP_IsPatrolRegion(Region.PrototypeDataRef))
+                        count = 1;
+                    
                     var objectProto = popObject.GetPopObject();
                     AddPopulationObject(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
                 }
