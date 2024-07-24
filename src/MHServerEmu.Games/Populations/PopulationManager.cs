@@ -204,7 +204,8 @@ namespace MHServerEmu.Games.Populations
             {
                 Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
                 var areas = popProto.RestrictToAreas;
-                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.OLD_RegionPrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
+                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.CH0402UpperEastRegion)
+                    areas = null; // Hack for Moloids
                 AddRequiredObjects(popProto.PopulationObjects, areas, popProto.RestrictToCells);
             }
         }

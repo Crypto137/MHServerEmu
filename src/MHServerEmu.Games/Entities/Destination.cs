@@ -134,7 +134,7 @@ namespace MHServerEmu.Games.Entities
             var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
             
             if (RegionPrototype.Equivalent(targetRegion, region.Prototype))
-                targetRegionRef = (PrototypeId)region.OLD_RegionPrototypeId;
+                targetRegionRef = region.PrototypeDataRef;
 
             Destination destination = new()
             {

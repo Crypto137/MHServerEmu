@@ -52,7 +52,6 @@ namespace MHServerEmu.Games.Regions
     public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly IdGenerator IdGenerator = new(IdType.Region, 0);
 
         public bool IsGenerated { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
@@ -95,7 +94,6 @@ namespace MHServerEmu.Games.Regions
         public DateTime CreatedTime { get; set; }
         public DateTime VisitedTime { get; private set; }
 
-        public RegionPrototypeId OLD_RegionPrototypeId { get; private set; }
         public RegionSettings Settings { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
 
@@ -163,7 +161,7 @@ namespace MHServerEmu.Games.Regions
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
-            OLD_RegionPrototypeId = (RegionPrototypeId)settings.RegionDataRef;
+
             Prototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
             if (Prototype == null) return false;
 
@@ -789,7 +787,7 @@ namespace MHServerEmu.Games.Regions
                 .SetRegionId(Id)
                 .SetServerGameId(serverGameId)
                 .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)OLD_RegionPrototypeId)
+                .SetRegionPrototypeId((ulong)PrototypeDataRef)
                 .SetRegionRandomSeed(RandomSeed)
                 .SetRegionMin(Bound.Min.ToNetStructPoint3())
                 .SetRegionMax(Bound.Max.ToNetStructPoint3())
@@ -797,7 +795,6 @@ namespace MHServerEmu.Games.Regions
 
             // can add EntitiesToDestroy here
 
-            ByteString archiveData = ByteString.Empty;
             using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
             {
                 Serialize(archive);
@@ -809,7 +806,7 @@ namespace MHServerEmu.Games.Regions
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)OLD_RegionPrototypeId).Build());
+            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeDataRef).Build());
 
             // TODO: prefetch other regions
             
