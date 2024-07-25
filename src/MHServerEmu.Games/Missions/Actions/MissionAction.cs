@@ -1,10 +1,12 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
     public class MissionAction
     {
         public IMissionActionOwner Owner { get; private set; }
+        public PrototypeId MissionRef { get => Owner.PrototypeDataRef; }
         public MissionActionPrototype Prototype { get; private set; }
         public virtual bool RunOnStart { get => false; }
 

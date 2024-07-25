@@ -1729,6 +1729,11 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        public bool IsTrackedByContext(PrototypeId context)
+        {
+            return _trackingContextMap.ContainsKey(context);
+        }
+
         #region Actions
 
         public void RegisterActions(List<EntitySelectorActionPrototype> actions)

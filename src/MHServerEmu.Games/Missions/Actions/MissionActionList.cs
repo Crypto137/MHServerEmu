@@ -1,4 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -9,9 +11,10 @@ namespace MHServerEmu.Games.Missions.Actions
         public IMissionActionOwner Owner { get; private set; }
         public bool IsInitialized { get; private set; }
         public List<MissionAction> Actions { get; private set; }
-        public List<MissionAction> EntityActions { get; private set; }
+        public List<MissionActionEntityTarget> EntityActions { get; private set; }
         public Mission Mission { get => Owner as Mission; }
         public Region Region { get => Mission.Region; }
+        public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public bool IsActive { get; private set; }
         public Action<EntitySetSimulatedGameEvent> EntitySetSimulatedAction { get; private set; }
         public Action<EntityLeaveDormantGameEvent> EntityLeaveDormantAction { get; private set; }
@@ -105,12 +108,22 @@ namespace MHServerEmu.Games.Missions.Actions
 
         private void OnEntitySetSimulated(EntitySetSimulatedGameEvent evt)
         {
-            throw new NotImplementedException();
+            RunEntityActions(evt.Entity);
         }
 
         private void OnEntityLeaveDormant(EntityLeaveDormantGameEvent evt)
         {
-            throw new NotImplementedException();
+            RunEntityActions(evt.Entity);
+        }
+
+        private void RunEntityActions(WorldEntity entity)
+        {
+            if (entity == null || entity.IsDormant) return;
+            if (IsInitialized == false || IsActive == false) return;
+            if (entity.IsTrackedByContext(Context) == false) return;
+
+            foreach (var action in EntityActions)
+                action?.EvaluateAndRunEntity(entity);
         }
     }
 }
