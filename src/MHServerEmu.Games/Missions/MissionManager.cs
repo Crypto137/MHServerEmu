@@ -26,7 +26,9 @@ namespace MHServerEmu.Games.Missions
         public Player Player { get; private set; }       
         public Game Game { get; private set; }
         public IMissionManagerOwner Owner { get; set; }
-        public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }
+        public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }        
+        public bool IsInitialized { get; private set; }
+        public List<PrototypeId> ActiveMissions { get; private set; } = new();
 
         private ulong _regionId; 
         private HashSet<ulong> _missionInterestEntities = new();
@@ -72,10 +74,11 @@ namespace MHServerEmu.Games.Missions
 
         public bool InitializeForPlayer(Player player, Region region)
         {
-            if (player == null) return false;
+            if (player == null || region == null) return false;
 
             Player = player;
             SetRegion(region);
+            IsInitialized = true;
 
             return true;
         }
@@ -104,7 +107,40 @@ namespace MHServerEmu.Games.Missions
             Player = null;
             SetRegion(region);
 
+            IsInitialized = true;
+
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<OpenMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var openMissionProto = missionRef.As<OpenMissionPrototype>();
+                if (openMissionProto != null 
+                    && ShouldCreateMission(openMissionProto) 
+                    && openMissionProto.IsActiveInRegion(region.Prototype))
+                    CreateMissionByDataRef(openMissionProto.DataRef, MissionCreationState.Create, MissionState.Invalid);
+            }
+
+            // TODO register events
+
             return true;
+        }
+
+        private Mission CreateMissionByDataRef(PrototypeId missionRef, MissionCreationState creationState, MissionState initialState)
+        {
+            var mission = CreateMission(missionRef);
+            if (mission == null) return null;
+            InsertMission(mission);
+
+            mission.SetCreationState(creationState, initialState);
+
+            if (IsInitialized)
+                if (mission.Initialize(creationState) == false)
+                {
+                    DeleteMission(missionRef);
+                    return null;
+                }
+
+            // TODO register events
+
+            return mission;
         }
 
         private void SetRegion(Region region)
@@ -130,8 +166,15 @@ namespace MHServerEmu.Games.Missions
             return mission;
         }
 
+        private void DeleteMission(PrototypeId missionRef)
+        {
+            if (_missionDict.ContainsKey(missionRef) == false) return;
+            _missionDict.Remove(missionRef);
+        }
+
         public void Shutdown(Region region)
         {
+            IsInitialized = false;
             Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
             // TODO close region events
         }
@@ -213,6 +256,9 @@ namespace MHServerEmu.Games.Missions
                     Mission mission = CreateMission(missionRef);
                     success &= Serializer.Transfer(archive, ref mission);
                     InsertMission(mission);
+
+                    if (archive.IsReplication == false)
+                        mission.SetCreationState(MissionCreationState.Loaded);
                 }
 
                 int numBlacklistCategories = 0;
