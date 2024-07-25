@@ -1,7 +1,8 @@
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 
-namespace MHServerEmu.Games.Behavior
+namespace MHServerEmu.Games.Regions
 {
     public class AIThinkEvent : ScheduledEvent
     {

@@ -10,7 +10,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.Properties.Evals;
-using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Missions.MissionManager;
 
 namespace MHServerEmu.Games.Entities

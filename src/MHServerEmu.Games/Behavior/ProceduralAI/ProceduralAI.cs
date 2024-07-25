@@ -1,11 +1,10 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Behavior.ProceduralAI
 {
