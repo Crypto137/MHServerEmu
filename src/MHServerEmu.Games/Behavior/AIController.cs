@@ -31,11 +31,11 @@ namespace MHServerEmu.Games.Behavior
         public WorldEntity TargetEntity => Senses.GetCurrentTarget();
         public WorldEntity InteractEntity => GetInteractEntityHelper();
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
-        public Action<EntityDeadGameEvent> EntityDeadEvent { get; private set; }
-        public Action<EntityAggroedGameEvent> EntityAggroedEvent { get; private set; }
-        public Action<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent { get; private set; }
-        public Action<PlayerInteractGameEvent> PlayerInteractEvent { get; private set; }
-        public Action MissileReturnEvent { get; private set; }
+        public Action<EntityDeadGameEvent> EntityDeadAction { get; private set; }
+        public Action<EntityAggroedGameEvent> EntityAggroedAction { get; private set; }
+        public Action<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardAction { get; private set; }
+        public Action<PlayerInteractGameEvent> PlayerInteractAction { get; private set; }
+        public Action MissileReturnAction { get; private set; }
 
         public AIController(Game game, Agent owner)
         {
@@ -44,11 +44,11 @@ namespace MHServerEmu.Games.Behavior
             Senses = new ();
             Blackboard = new (owner);
             Brain = new (game, this);
-            EntityDeadEvent = OnAIEntityDeadEvent;
-            EntityAggroedEvent = OnAIEntityAggroedGameEvent;
-            AIBroadcastBlackboardEvent = OnAIBroadcastBlackboardEvent;
-            PlayerInteractEvent = OnAIOnPlayerInteractEvent;
-            MissileReturnEvent = OnAIMissileReturnEvent;
+            EntityDeadAction = OnAIEntityDead;
+            EntityAggroedAction = OnAIEntityAggroedGame;
+            AIBroadcastBlackboardAction = OnAIBroadcastBlackboard;
+            PlayerInteractAction = OnAIOnPlayerInteract;
+            MissileReturnAction = OnAIMissileReturn;
         }
 
         public bool Initialize(BehaviorProfilePrototype profile, SpawnSpec spec, PropertyCollection collection)
@@ -365,27 +365,27 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnAllyGotKilled();          
         }
 
-        private void OnAIMissileReturnEvent()
+        private void OnAIMissileReturn()
         {
             Brain?.OnMissileReturnEvent();
         }
 
-        private void OnAIEntityDeadEvent(EntityDeadGameEvent deadEvent)
+        private void OnAIEntityDead(EntityDeadGameEvent deadEvent)
         {
             Brain?.OnEntityDeadEvent(deadEvent);
         }
 
-        private void OnAIBroadcastBlackboardEvent(AIBroadcastBlackboardGameEvent broadcastEvent)
+        private void OnAIBroadcastBlackboard(AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             Brain?.OnAIBroadcastBlackboardEvent(broadcastEvent);
         }
 
-        private void OnAIOnPlayerInteractEvent(PlayerInteractGameEvent broadcastEvent)
+        private void OnAIOnPlayerInteract(PlayerInteractGameEvent broadcastEvent)
         {
             Brain?.OnPlayerInteractEvent(broadcastEvent);
         }
 
-        private void OnAIEntityAggroedGameEvent(EntityAggroedGameEvent broadcastEvent)
+        private void OnAIEntityAggroedGame(EntityAggroedGameEvent broadcastEvent)
         {
             Brain?.OnEntityAggroedEvent(broadcastEvent);
         }
@@ -393,33 +393,33 @@ namespace MHServerEmu.Games.Behavior
         public void RegisterForEntityAggroedEvents(Region region, bool register)
         {
             if (register)
-                region.EntityAggroedEvent.AddActionBack(EntityAggroedEvent);
+                region.EntityAggroedEvent.AddActionBack(EntityAggroedAction);
             else
-                region.EntityAggroedEvent.RemoveAction(EntityAggroedEvent);
+                region.EntityAggroedEvent.RemoveAction(EntityAggroedAction);
         }
 
         public void RegisterForEntityDeadEvents(Region region, bool register)
         {
             if (register)
-                region.EntityDeadEvent.AddActionBack(EntityDeadEvent);
+                region.EntityDeadEvent.AddActionBack(EntityDeadAction);
             else
-                region.EntityDeadEvent.RemoveAction(EntityDeadEvent);
+                region.EntityDeadEvent.RemoveAction(EntityDeadAction);
         }
 
         public void RegisterForAIBroadcastBlackboardEvents(Region region, bool register)
         {
             if (register)
-                region.AIBroadcastBlackboardEvent.AddActionBack(AIBroadcastBlackboardEvent);
+                region.AIBroadcastBlackboardEvent.AddActionBack(AIBroadcastBlackboardAction);
             else
-                region.AIBroadcastBlackboardEvent.RemoveAction(AIBroadcastBlackboardEvent);
+                region.AIBroadcastBlackboardEvent.RemoveAction(AIBroadcastBlackboardAction);
         }
 
         public void RegisterForPlayerInteractEvents(Region region, bool register)
         {
             if (register)
-                region.PlayerInteractEvent.AddActionBack(PlayerInteractEvent);
+                region.PlayerInteractEvent.AddActionBack(PlayerInteractAction);
             else
-                region.PlayerInteractEvent.RemoveAction(PlayerInteractEvent);
+                region.PlayerInteractEvent.RemoveAction(PlayerInteractAction);
         }
 
         public void OnAIDramaticEntranceEnd()

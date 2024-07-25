@@ -34,8 +34,9 @@ namespace MHServerEmu.Games.Entities
         public bool IsMovedIndependentlyOnClient { get => _contextPrototype != null && _contextPrototype.IndependentClientMovement; }
         public bool IsKilledOnOverlappingCollision { get => _contextPrototype != null && _contextPrototype.KilledOnOverlappingCollision; }
         public GRandom Random { get; private set; }
-        public Action ReturnTargetMissingEvent { get; private set; }
-        public Action SeekTargetMissingEvent { get; private set; }
+        public Action ReturnTargetMissingAction { get; private set; }
+        public Action SeekTargetMissingAction { get; private set; }
+
         private TimeSpan _lastSizeUpdateTime;
 
         private EventPointer<PendingKillCallback> _pendingKillEvent = new();
@@ -49,8 +50,8 @@ namespace MHServerEmu.Games.Entities
         {
             SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
             _contextPrototype = null;
-            ReturnTargetMissingEvent = OnReturnTargetMissing;
-            SeekTargetMissingEvent = OnSeekTargetMissing;
+            ReturnTargetMissingAction = OnReturnTargetMissing;
+            SeekTargetMissingAction = OnSeekTargetMissing;
             Random = new();
             _entityCollideBounds = new();
             _lastSizeUpdateTime = TimeSpan.Zero;
@@ -382,7 +383,7 @@ namespace MHServerEmu.Games.Entities
                     locomotionOptions.Flags |= LocomotionFlags.LocomotionNoEntityCollide;
 
                 locomotor.FollowEntity(ownerId, 0f, locomotionOptions);
-                locomotor.FollowEntityMissingEvent.AddActionBack(ReturnTargetMissingEvent);
+                locomotor.FollowEntityMissingEvent.AddActionBack(ReturnTargetMissingAction);
             }
             else Kill();
         }

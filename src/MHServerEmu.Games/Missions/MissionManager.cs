@@ -34,14 +34,14 @@ namespace MHServerEmu.Games.Missions
         public List<PrototypeId> ActiveMissions { get; private set; } = new();
 
         public bool EventRegistred { get; private set; }
-        public Action<AreaCreatedGameEvent> AreaCreatedEvent { get; private set; }
-        public Action<CellCreatedGameEvent> CellCreatedEvent { get; private set; }
-        public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent { get; private set; }
-        public Action<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent { get; private set; }
-        public Action<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent { get; private set; }
-        public Action<PlayerInteractGameEvent> PlayerInteractEvent { get; private set; }
-        public Action<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent { get; private set; }
-        public Action<PlayerFailedMissionGameEvent> PlayerFailedMissionEvent { get; private set; }
+        public Action<AreaCreatedGameEvent> AreaCreatedAction { get; private set; }
+        public Action<CellCreatedGameEvent> CellCreatedAction { get; private set; }
+        public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotAction { get; private set; }
+        public Action<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotAction { get; private set; }
+        public Action<PlayerLeftRegionGameEvent> PlayerLeftRegionAction { get; private set; }
+        public Action<PlayerInteractGameEvent> PlayerInteractAction { get; private set; }
+        public Action<PlayerCompletedMissionGameEvent> PlayerCompletedMissionAction { get; private set; }
+        public Action<PlayerFailedMissionGameEvent> PlayerFailedMissionAction { get; private set; }
 
         private ulong _regionId; 
         private HashSet<ulong> _missionInterestEntities = new();
@@ -83,14 +83,14 @@ namespace MHServerEmu.Games.Missions
         {
             Game = game;
             Owner = owner;
-            AreaCreatedEvent = OnAreaCreatedEvent;
-            CellCreatedEvent = OnCellCreatedEvent;
-            EntityEnteredMissionHotspotEvent = OnEntityEnteredMissionHotspotEvent;
-            EntityLeftMissionHotspotEvent = OnEntityLeftMissionHotspotEvent;
-            PlayerLeftRegionEvent = OnPlayerLeftRegionEvent;
-            PlayerInteractEvent = OnPlayerInteractEvent;
-            PlayerCompletedMissionEvent = OnPlayerCompletedMissionEvent;
-            PlayerFailedMissionEvent = OnPlayerFailedMissionEvent;
+            AreaCreatedAction = OnAreaCreated;
+            CellCreatedAction = OnCellCreated;
+            EntityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
+            EntityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;
+            PlayerLeftRegionAction = OnPlayerLeftRegion;
+            PlayerInteractAction = OnPlayerInteract;
+            PlayerCompletedMissionAction = OnPlayerCompletedMission;
+            PlayerFailedMissionAction = OnPlayerFailedMission;
         }
 
         public bool InitializeForPlayer(Player player, Region region)
@@ -148,18 +148,18 @@ namespace MHServerEmu.Games.Missions
         {
             if (IsRegionMissionManager())
             {
-                region.AreaCreatedEvent.AddActionBack(AreaCreatedEvent);
-                region.CellCreatedEvent.AddActionBack(CellCreatedEvent);
-                region.EntityEnteredMissionHotspotEvent.AddActionBack(EntityEnteredMissionHotspotEvent);
-                region.EntityLeftMissionHotspotEvent.AddActionBack(EntityLeftMissionHotspotEvent);
-                region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionEvent);
+                region.AreaCreatedEvent.AddActionBack(AreaCreatedAction);
+                region.CellCreatedEvent.AddActionBack(CellCreatedAction);
+                region.EntityEnteredMissionHotspotEvent.AddActionBack(EntityEnteredMissionHotspotAction);
+                region.EntityLeftMissionHotspotEvent.AddActionBack(EntityLeftMissionHotspotAction);
+                region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionAction);
             }
             else
             {
-                region.PlayerCompletedMissionEvent.AddActionBack(PlayerCompletedMissionEvent);
-                region.PlayerFailedMissionEvent.AddActionBack(PlayerFailedMissionEvent);
-                region.PlayerInteractEvent.AddActionBack(PlayerInteractEvent);
-                region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionEvent);
+                region.PlayerCompletedMissionEvent.AddActionBack(PlayerCompletedMissionAction);
+                region.PlayerFailedMissionEvent.AddActionBack(PlayerFailedMissionAction);
+                region.PlayerInteractEvent.AddActionBack(PlayerInteractAction);
+                region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionAction);
             }
             
             EventRegistred = true;
@@ -169,24 +169,24 @@ namespace MHServerEmu.Games.Missions
         {
             if (IsRegionMissionManager())
             {
-                region.AreaCreatedEvent.RemoveAction(AreaCreatedEvent);
-                region.CellCreatedEvent.RemoveAction(CellCreatedEvent);
-                region.EntityEnteredMissionHotspotEvent.RemoveAction(EntityEnteredMissionHotspotEvent);
-                region.EntityLeftMissionHotspotEvent.RemoveAction(EntityLeftMissionHotspotEvent);
-                region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionEvent);
+                region.AreaCreatedEvent.RemoveAction(AreaCreatedAction);
+                region.CellCreatedEvent.RemoveAction(CellCreatedAction);
+                region.EntityEnteredMissionHotspotEvent.RemoveAction(EntityEnteredMissionHotspotAction);
+                region.EntityLeftMissionHotspotEvent.RemoveAction(EntityLeftMissionHotspotAction);
+                region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionAction);
             }
             else
             {
-                region.PlayerCompletedMissionEvent.RemoveAction(PlayerCompletedMissionEvent);
-                region.PlayerFailedMissionEvent.RemoveAction(PlayerFailedMissionEvent);
-                region.PlayerInteractEvent.RemoveAction(PlayerInteractEvent);
-                region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionEvent);
+                region.PlayerCompletedMissionEvent.RemoveAction(PlayerCompletedMissionAction);
+                region.PlayerFailedMissionEvent.RemoveAction(PlayerFailedMissionAction);
+                region.PlayerInteractEvent.RemoveAction(PlayerInteractAction);
+                region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionAction);
             }
 
             EventRegistred = false;
         }
 
-        private void OnAreaCreatedEvent(AreaCreatedGameEvent evt)
+        private void OnAreaCreated(AreaCreatedGameEvent evt)
         {
             var area = evt.Area;
             if (area == null || area.IsDynamicArea()) return;
@@ -194,14 +194,14 @@ namespace MHServerEmu.Games.Missions
             // TODO add enter left area events
         }
 
-        private void OnCellCreatedEvent(CellCreatedGameEvent evt)
+        private void OnCellCreated(CellCreatedGameEvent evt)
         {
             var cell = evt.Cell;
 
             // TODO add enter left cell events
         }
 
-        private void OnEntityEnteredMissionHotspotEvent(EntityEnteredMissionHotspotGameEvent evt)
+        private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
         {
             if (evt.Target is not Avatar avatar) return;
             var player = avatar.GetOwnerOfType<Player>();
@@ -216,7 +216,7 @@ namespace MHServerEmu.Games.Missions
             mission.OnAvatarEnteredMission(player);
         }
 
-        private void OnEntityLeftMissionHotspotEvent(EntityLeftMissionHotspotGameEvent evt)
+        private void OnEntityLeftMissionHotspot(EntityLeftMissionHotspotGameEvent evt)
         {
             if (evt.Target is not Avatar avatar) return;
             var player = avatar.GetOwnerOfType<Player>();
@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Missions
             mission.OnAvatarLeftMission(player);
         }
 
-        private void OnPlayerLeftRegionEvent(PlayerLeftRegionGameEvent evt)
+        private void OnPlayerLeftRegion(PlayerLeftRegionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -240,7 +240,7 @@ namespace MHServerEmu.Games.Missions
                     mission?.OnPlayerLeftRegion(player);
         }
 
-        private void OnPlayerInteractEvent(PlayerInteractGameEvent evt)
+        private void OnPlayerInteract(PlayerInteractGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -250,7 +250,7 @@ namespace MHServerEmu.Games.Missions
             // TODO Interact event NetMessageMissionInteractRepeat NetMessageMissionInteractRelease
         }
 
-        private void OnPlayerCompletedMissionEvent(PlayerCompletedMissionGameEvent evt)
+        private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -276,7 +276,7 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private void OnPlayerFailedMissionEvent(PlayerFailedMissionGameEvent evt)
+        private void OnPlayerFailedMission(PlayerFailedMissionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;

@@ -13,16 +13,16 @@ namespace MHServerEmu.Games.Missions.Actions
         public Mission Mission { get => Owner as Mission; }
         public Region Region { get => Mission.Region; }
         public bool IsActive { get; private set; }
-        public Action<EntitySetSimulatedGameEvent> EntitySetSimulatedEvent { get; private set; }
-        public Action<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent { get; private set; }
+        public Action<EntitySetSimulatedGameEvent> EntitySetSimulatedAction { get; private set; }
+        public Action<EntityLeaveDormantGameEvent> EntityLeaveDormantAction { get; private set; }
 
         public MissionActionList(IMissionActionOwner owner)
         {
             Owner = owner;
             Actions = new();
             EntityActions = new();
-            EntitySetSimulatedEvent = OnEntitySetSimulatedEvent;
-            EntityLeaveDormantEvent = OnEntityLeaveDormantEvent;
+            EntitySetSimulatedAction = OnEntitySetSimulated;
+            EntityLeaveDormantAction = OnEntityLeaveDormant;
         }
 
         public bool Initialize(MissionActionPrototype[] protoList)
@@ -78,8 +78,8 @@ namespace MHServerEmu.Games.Missions.Actions
                 var region = Region;
                 if (region != null)
                 {
-                    region.EntitySetSimulatedEvent.AddActionBack(EntitySetSimulatedEvent);
-                    region.EntityLeaveDormantEvent.AddActionBack(EntityLeaveDormantEvent);
+                    region.EntitySetSimulatedEvent.AddActionBack(EntitySetSimulatedAction);
+                    region.EntityLeaveDormantEvent.AddActionBack(EntityLeaveDormantAction);
                 }
             }
             IsActive = true;
@@ -95,20 +95,20 @@ namespace MHServerEmu.Games.Missions.Actions
                 var region = Region;
                 if (region != null)
                 {
-                    region.EntitySetSimulatedEvent.RemoveAction(EntitySetSimulatedEvent);
-                    region.EntityLeaveDormantEvent.RemoveAction(EntityLeaveDormantEvent);
+                    region.EntitySetSimulatedEvent.RemoveAction(EntitySetSimulatedAction);
+                    region.EntityLeaveDormantEvent.RemoveAction(EntityLeaveDormantAction);
                 }
             }
             IsActive = false;
             return true;
         }
 
-        private void OnEntitySetSimulatedEvent(EntitySetSimulatedGameEvent evt)
+        private void OnEntitySetSimulated(EntitySetSimulatedGameEvent evt)
         {
             throw new NotImplementedException();
         }
 
-        private void OnEntityLeaveDormantEvent(EntityLeaveDormantGameEvent evt)
+        private void OnEntityLeaveDormant(EntityLeaveDormantGameEvent evt)
         {
             throw new NotImplementedException();
         }
