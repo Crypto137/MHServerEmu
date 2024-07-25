@@ -284,8 +284,8 @@ namespace MHServerEmu.Games.Missions
         {
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
-            if (MissionActionList.CreateActionList(_onAvailableActions, objetiveProto.OnAvailableActions, Mission, reset) == false
-                || MissionConditionList.CreateConditionList(_activateConditions, objetiveProto.ActivateConditions, Mission, this, true) == false)
+            if (MissionActionList.CreateActionList(ref _onAvailableActions, objetiveProto.OnAvailableActions, Mission, reset) == false
+                || MissionConditionList.CreateConditionList(ref _activateConditions, objetiveProto.ActivateConditions, Mission, this, true) == false)
                 return false;
 
             if (reset && _activateConditions != null)
@@ -316,9 +316,9 @@ namespace MHServerEmu.Games.Missions
             if (objetiveProto.SuccessConditions != null)
                 Mission.RemoteNotificationForConditions(objetiveProto.SuccessConditions);
 
-            if (MissionActionList.CreateActionList(_onStartActions, objetiveProto.OnStartActions, Mission, reset) == false
-                || MissionConditionList.CreateConditionList(_successConditions, objetiveProto.SuccessConditions, Mission, this, true) == false
-                || MissionConditionList.CreateConditionList(_failureConditions, objetiveProto.FailureConditions, Mission, this, true) == false) 
+            if (MissionActionList.CreateActionList(ref _onStartActions, objetiveProto.OnStartActions, Mission, reset) == false
+                || MissionConditionList.CreateConditionList(ref _successConditions, objetiveProto.SuccessConditions, Mission, this, true) == false
+                || MissionConditionList.CreateConditionList(ref _failureConditions, objetiveProto.FailureConditions, Mission, this, true) == false) 
                return false;
 
             if (reset)
@@ -371,7 +371,7 @@ namespace MHServerEmu.Games.Missions
         {
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
-            if (MissionActionList.CreateActionList(_onSuccessActions, objetiveProto.OnSuccessActions, Mission, reset) == false)
+            if (MissionActionList.CreateActionList(ref _onSuccessActions, objetiveProto.OnSuccessActions, Mission, reset) == false)
                 return false;
 
             if (reset)
@@ -393,7 +393,7 @@ namespace MHServerEmu.Games.Missions
         {
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
-            if (MissionActionList.CreateActionList(_onFailActions, objetiveProto.OnFailActions, Mission, reset) == false)
+            if (MissionActionList.CreateActionList(ref _onFailActions, objetiveProto.OnFailActions, Mission, reset) == false)
                 return false;
 
             if (reset && (objetiveProto.FailureFailsMission || objetiveProto.Required) && Mission.State != MissionState.Failed) 

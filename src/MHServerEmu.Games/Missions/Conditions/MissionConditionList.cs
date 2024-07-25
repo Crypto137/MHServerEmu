@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        public static bool CreateConditionList(MissionConditionList conditions, MissionConditionListPrototype proto, 
+        public static bool CreateConditionList(ref MissionConditionList conditions, MissionConditionListPrototype proto, 
             Mission mission, IMissionConditionOwner owner, bool registerEvents)
         {
             if (conditions == null && proto != null)

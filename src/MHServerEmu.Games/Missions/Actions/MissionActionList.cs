@@ -39,14 +39,14 @@ namespace MHServerEmu.Games.Missions.Actions
                 {
                     Actions.Add(action);
                     if (action is MissionActionEntityTarget entityAction && entityAction.RunOnStart)
-                        EntityActions.Add(action);
+                        EntityActions.Add(entityAction);
                 }
             }
             IsInitialized = true;
             return true;
         }
 
-        public static bool CreateActionList(MissionActionList actions, MissionActionPrototype[] protoList, 
+        public static bool CreateActionList(ref MissionActionList actions, MissionActionPrototype[] protoList, 
             IMissionActionOwner owner, bool runOnStart = true)
         {
             if (actions == null && protoList.HasValue())

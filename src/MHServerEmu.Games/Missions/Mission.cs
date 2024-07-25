@@ -556,9 +556,9 @@ namespace MHServerEmu.Games.Missions
                 // TODO mission spawn
             }
 
-            if (MissionConditionList.CreateConditionList(_prereqConditions, missionProto.PrereqConditions, this, this, true) == false
-                || MissionConditionList.CreateConditionList(_activateNowConditions, missionProto.ActivateNowConditions, this, this, true) == false
-                || MissionConditionList.CreateConditionList(_completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
+            if (MissionConditionList.CreateConditionList(ref _prereqConditions, missionProto.PrereqConditions, this, this, true) == false
+                || MissionConditionList.CreateConditionList(ref _activateNowConditions, missionProto.ActivateNowConditions, this, this, true) == false
+                || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
                 return false;
 
             ResetStateObjectives(false);
@@ -614,10 +614,10 @@ namespace MHServerEmu.Games.Missions
             if (missionProto.ActivateConditions != null)
                 RemoteNotificationForConditions(missionProto.ActivateConditions);
 
-            if (MissionActionList.CreateActionList(_onAvailableActions, missionProto.OnAvailableActions, this, reset) == false
-                || MissionConditionList.CreateConditionList(_activateConditions, missionProto.ActivateConditions, this, this, true) == false
-                || MissionConditionList.CreateConditionList(_activateNowConditions, missionProto.ActivateNowConditions, this, this, true) == false
-                || MissionConditionList.CreateConditionList(_completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
+            if (MissionActionList.CreateActionList(ref _onAvailableActions, missionProto.OnAvailableActions, this, reset) == false
+                || MissionConditionList.CreateConditionList(ref _activateConditions, missionProto.ActivateConditions, this, this, true) == false
+                || MissionConditionList.CreateConditionList(ref _activateNowConditions, missionProto.ActivateNowConditions, this, this, true) == false
+                || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
                 return false;
 
             if (reset)
@@ -686,9 +686,9 @@ namespace MHServerEmu.Games.Missions
 
             // TODO missionProto.ShowInMissionLog
 
-            if (MissionActionList.CreateActionList(_onStartActions, missionProto.OnStartActions, this, reset) == false
-                || MissionConditionList.CreateConditionList(_failureConditions, missionProto.FailureConditions, this, this, true) == false
-                || MissionConditionList.CreateConditionList(_completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
+            if (MissionActionList.CreateActionList(ref _onStartActions, missionProto.OnStartActions, this, reset) == false
+                || MissionConditionList.CreateConditionList(ref _failureConditions, missionProto.FailureConditions, this, this, true) == false
+                || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
                 return false;
 
             if (IsOpenMission)
@@ -757,9 +757,9 @@ namespace MHServerEmu.Games.Missions
                     ScheduleTimeLimit(missionProto.ResetTimeSeconds);
 
             var reapeatable = missionProto.Repeatable;
-            if (MissionActionList.CreateActionList(_onSuccessActions, missionProto.OnSuccessActions, this, reset) == false
-                || MissionConditionList.CreateConditionList(_activateConditions, missionProto.ActivateConditions, this, this, reapeatable) == false
-                || MissionConditionList.CreateConditionList(_activateNowConditions, missionProto.ActivateNowConditions, this, this, reapeatable) == false)
+            if (MissionActionList.CreateActionList(ref _onSuccessActions, missionProto.OnSuccessActions, this, reset) == false
+                || MissionConditionList.CreateConditionList(ref _activateConditions, missionProto.ActivateConditions, this, this, reapeatable) == false
+                || MissionConditionList.CreateConditionList(ref _activateNowConditions, missionProto.ActivateNowConditions, this, this, reapeatable) == false)
                 return false;
 
             if (reset)
@@ -829,9 +829,9 @@ namespace MHServerEmu.Games.Missions
                     ScheduleTimeLimit(missionProto.ResetTimeSeconds);
 
             var reapeatable = missionProto.Repeatable;
-            if (MissionActionList.CreateActionList(_onFailActions, missionProto.OnFailActions, this, reset) == false
-                || MissionConditionList.CreateConditionList(_activateConditions, missionProto.ActivateConditions, this, this, reapeatable) == false
-                || MissionConditionList.CreateConditionList(_activateNowConditions, missionProto.ActivateNowConditions, this, this, reapeatable) == false)
+            if (MissionActionList.CreateActionList(ref _onFailActions, missionProto.OnFailActions, this, reset) == false
+                || MissionConditionList.CreateConditionList(ref _activateConditions, missionProto.ActivateConditions, this, this, reapeatable) == false
+                || MissionConditionList.CreateConditionList(ref _activateNowConditions, missionProto.ActivateNowConditions, this, this, reapeatable) == false)
                 return false;
 
             if (reset)
