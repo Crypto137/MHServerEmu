@@ -1,6 +1,7 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -56,9 +57,73 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerLeftRegionGameEvent
+    {
+        public Player Player;
+        public PrototypeId RegionRef;
+
+        public PlayerLeftRegionGameEvent(Player player, PrototypeId regionRef)
+        {
+            Player = player;
+            RegionRef = regionRef;
+        }
+    }
+
+    public struct PlayerCompletedMissionGameEvent
+    {
+        public Player Player;
+        public PrototypeId MissionRef;
+        public bool Participant;
+        public bool Contributor;
+
+        public PlayerCompletedMissionGameEvent(Player player, PrototypeId missionRef, bool participant, bool contributor)
+        {
+            Player = player;
+            MissionRef = missionRef;
+            Participant = participant;
+            Contributor = contributor;
+        }
+    }
+
+    public struct PlayerFailedMissionGameEvent
+    {
+        public Player Player;
+        public PrototypeId MissionRef;
+        public bool Participant;
+        public bool Contributor;
+
+        public PlayerFailedMissionGameEvent(Player player, PrototypeId missionRef, bool participant, bool contributor)
+        {
+            Player = player;
+            MissionRef = missionRef;
+            Participant = participant;
+            Contributor = contributor;
+        }
+    }
+
     public struct EntityAggroedGameEvent
     {
         public WorldEntity AggroEntity;
+    }
+
+    public struct AreaCreatedGameEvent
+    {
+        public Area Area;
+
+        public AreaCreatedGameEvent(Area area)
+        {
+            Area = area;
+        }
+    }
+
+    public struct CellCreatedGameEvent
+    {
+        public Cell Cell;
+
+        public CellCreatedGameEvent(Cell cell)
+        {
+            Cell = cell;
+        }
     }
 
     public struct EntityLeaveDormantGameEvent

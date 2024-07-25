@@ -11,6 +11,9 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities.Avatars;
+using Gazillion;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -29,6 +32,16 @@ namespace MHServerEmu.Games.Missions
         public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }        
         public bool IsInitialized { get; private set; }
         public List<PrototypeId> ActiveMissions { get; private set; } = new();
+
+        public bool EventRegistred { get; private set; }
+        public Action<AreaCreatedGameEvent> AreaCreatedEvent { get; private set; }
+        public Action<CellCreatedGameEvent> CellCreatedEvent { get; private set; }
+        public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspot { get; private set; }
+        public Action<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent { get; private set; }
+        public Action<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent { get; private set; }
+        public Action<PlayerInteractGameEvent> PlayerInteractEvent { get; private set; }
+        public Action<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent { get; private set; }
+        public Action<PlayerFailedMissionGameEvent> PlayerFailedMissionEvent { get; private set; }
 
         private ulong _regionId; 
         private HashSet<ulong> _missionInterestEntities = new();
@@ -70,6 +83,14 @@ namespace MHServerEmu.Games.Missions
         {
             Game = game;
             Owner = owner;
+            AreaCreatedEvent = OnAreaCreatedEvent;
+            CellCreatedEvent = OnCellCreatedEvent;
+            EntityEnteredMissionHotspot = OnEntityEnteredMissionHotspotEvent;
+            EntityLeftMissionHotspotEvent = OnEntityLeftMissionHotspotEvent;
+            PlayerLeftRegionEvent = OnPlayerLeftRegionEvent;
+            PlayerInteractEvent = OnPlayerInteractEvent;
+            PlayerCompletedMissionEvent = OnPlayerCompletedMissionEvent;
+            PlayerFailedMissionEvent = OnPlayerFailedMissionEvent;
         }
 
         public bool InitializeForPlayer(Player player, Region region)
@@ -118,9 +139,159 @@ namespace MHServerEmu.Games.Missions
                     CreateMissionByDataRef(openMissionProto.DataRef, MissionCreationState.Create, MissionState.Invalid);
             }
 
-            // TODO register events
+            RegisterEvents(region);
 
             return true;
+        }
+
+        private void RegisterEvents(Region region)
+        {
+            if (IsRegionMissionManager())
+            {
+                region.AreaCreatedEvent.AddActionBack(AreaCreatedEvent);
+                region.CellCreatedEvent.AddActionBack(CellCreatedEvent);
+                region.EntityEnteredMissionHotspotEvent.AddActionBack(EntityEnteredMissionHotspot);
+                region.EntityLeftMissionHotspotEvent.AddActionBack(EntityLeftMissionHotspotEvent);
+                region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionEvent);
+            }
+            else
+            {
+                region.PlayerCompletedMissionEvent.AddActionBack(PlayerCompletedMissionEvent);
+                region.PlayerFailedMissionEvent.AddActionBack(PlayerFailedMissionEvent);
+                region.PlayerInteractEvent.AddActionBack(PlayerInteractEvent);
+                region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionEvent);
+            }
+            
+            EventRegistred = true;
+        }
+
+        public void UnRegisterEvents(Region region)
+        {
+            if (IsRegionMissionManager())
+            {
+                region.AreaCreatedEvent.RemoveAction(AreaCreatedEvent);
+                region.CellCreatedEvent.RemoveAction(CellCreatedEvent);
+                region.EntityEnteredMissionHotspotEvent.RemoveAction(EntityEnteredMissionHotspot);
+                region.EntityLeftMissionHotspotEvent.RemoveAction(EntityLeftMissionHotspotEvent);
+                region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionEvent);
+            }
+            else
+            {
+                region.PlayerCompletedMissionEvent.RemoveAction(PlayerCompletedMissionEvent);
+                region.PlayerFailedMissionEvent.RemoveAction(PlayerFailedMissionEvent);
+                region.PlayerInteractEvent.RemoveAction(PlayerInteractEvent);
+                region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionEvent);
+            }
+
+            EventRegistred = false;
+        }
+
+        private void OnAreaCreatedEvent(AreaCreatedGameEvent evt)
+        {
+            var area = evt.Area;
+            if (area == null || area.IsDynamicArea()) return;
+
+            // TODO add enter left area events
+        }
+
+        private void OnCellCreatedEvent(CellCreatedGameEvent evt)
+        {
+            var cell = evt.Cell;
+
+            // TODO add enter left cell events
+        }
+
+        private void OnEntityEnteredMissionHotspotEvent(EntityEnteredMissionHotspotGameEvent evt)
+        {
+            if (evt.Target is not Avatar avatar) return;
+            var player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return;
+            var hotspot = evt.Hotspot;
+            if (hotspot == null) return;
+            var missionRef = hotspot.MissionPrototype;
+            if (missionRef == PrototypeId.Invalid) return;
+            var mission = FindMissionByDataRef(missionRef);
+            if (mission == null) return;
+
+            mission.OnAvatarEnteredMission(player);
+        }
+
+        private void OnEntityLeftMissionHotspotEvent(EntityLeftMissionHotspotGameEvent evt)
+        {
+            if (evt.Target is not Avatar avatar) return;
+            var player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return;
+            var hotspot = evt.Hotspot;
+            if (hotspot == null) return;
+            var missionRef = hotspot.MissionPrototype;
+            if (missionRef == PrototypeId.Invalid) return;
+            var mission = FindMissionByDataRef(missionRef);
+            if (mission == null) return;
+
+            mission.OnAvatarLeftMission(player);
+        }
+
+        private void OnPlayerLeftRegionEvent(PlayerLeftRegionGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            if (IsRegionMissionManager() || player == Player)
+                foreach (var mission in _missionDict.Values)
+                    mission?.OnPlayerLeftRegion(player);
+        }
+
+        private void OnPlayerInteractEvent(PlayerInteractGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            var target = evt.InteractableObject;
+            if (target == null) return;
+            
+            // TODO Interact event NetMessageMissionInteractRepeat NetMessageMissionInteractRelease
+        }
+
+        private void OnPlayerCompletedMissionEvent(PlayerCompletedMissionGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            var missionRef = evt.MissionRef;
+            var mission = FindMissionByDataRef(missionRef);
+            if (mission == null) return;
+
+            if (mission.IsLegendaryMission)
+            {
+                var avatar = player.CurrentAvatar;
+                if (avatar != null)
+                {
+                    avatar.Properties.AdjustProperty(1, PropertyEnum.LegendaryMissionsComplete);
+                    player.Properties.AdjustProperty(1, PropertyEnum.LegendaryMissionsComplete);
+                    avatar.Properties.RemoveProperty(PropertyEnum.LegendaryMissionWasShared);
+                }
+
+                // TODO Add _legendaryMissionBlacklist missionRef
+            }
+            else if (mission.IsAdvancedMission)
+            {
+                // TODO AdvancedMissionFrequencyType
+            }
+        }
+
+        private void OnPlayerFailedMissionEvent(PlayerFailedMissionGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            var missionRef = evt.MissionRef;
+            var mission = FindMissionByDataRef(missionRef);
+            if (mission == null) return;
+
+            if (mission.IsLegendaryMission)
+            {
+                // TODO Add _legendaryMissionBlacklist missionRef
+            }
+            else if (mission.IsAdvancedMission)
+            {
+                // TODO AdvancedMissionFrequencyType
+            }
         }
 
         private Mission CreateMissionByDataRef(PrototypeId missionRef, MissionCreationState creationState, MissionState initialState)
@@ -176,7 +347,8 @@ namespace MHServerEmu.Games.Missions
         {
             IsInitialized = false;
             Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
-            // TODO close region events
+            if (EventRegistred && region != null)
+                UnRegisterEvents(region);
         }
 
         public bool GenerateMissionPopulation()

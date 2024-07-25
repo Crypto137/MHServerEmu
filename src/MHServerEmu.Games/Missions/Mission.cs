@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.Missions
         private int _lootSeed;     
         private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
         private SortedSet<ulong> _participants = new();
-        private Dictionary<ulong, float> _playerActivity = new();
+        private Dictionary<ulong, float> _contributors = new(); // DistributionType.Contributors
         private bool _isSuspended;
         private MissionCreationState _creationState;
 
@@ -678,7 +678,7 @@ namespace MHServerEmu.Games.Missions
                     ResetsWithRegionId = region.Id;
 
             if (_objectiveDict.Count == 0) CreateObjectives();
-            if (IsOpenMission) _playerActivity.Clear();
+            if (IsOpenMission) _contributors.Clear();
             if (reset) ResetObjectives();
 
             if (missionProto.TimeLimitSeconds > 0)
@@ -1390,6 +1390,21 @@ namespace MHServerEmu.Games.Missions
             if (objectiveProto == null) return null;
 
             return objectiveProto;
+        }
+
+        internal void OnAvatarEnteredMission(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void OnAvatarLeftMission(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void OnPlayerLeftRegion(Player player)
+        {
+            throw new NotImplementedException();
         }
 
         private void OnTimeLimit()
