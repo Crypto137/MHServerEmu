@@ -310,6 +310,12 @@ namespace MHServerEmu.Games.Entities
             return GetEntityByDbGuid(dbGuid, flags & ~GetEntityFlags.DestroyedOnly) as T;
         }
 
+        public bool IsEntityArchived(ulong entityId)
+        {
+            // TODO?
+            return false;
+        }
+
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
             PrototypeId areaRef = destination.AreaRef;
