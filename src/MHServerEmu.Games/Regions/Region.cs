@@ -129,6 +129,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent = new();
         public Event<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent = new();
         public Event<PlayerFailedMissionGameEvent> PlayerFailedMissionEvent = new();
+        public Event<EntitySetSimulatedGameEvent> EntitySetSimulatedEvent = new();
 
         private BitList _collisionIds;
         private BitList _collisionBits;

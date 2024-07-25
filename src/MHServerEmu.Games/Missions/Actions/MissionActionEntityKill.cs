@@ -2,7 +2,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
-    public class MissionActionEntityKill : MissionAction
+    public class MissionActionEntityKill : MissionActionEntityTarget
     {
         public MissionActionEntityKill(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {

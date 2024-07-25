@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Missions.Actions
             return actionProto.AllocateAction(owner);
         }
 
+        public virtual bool Initialize() => true;
         public virtual void Run() { }
     }
 }

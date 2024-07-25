@@ -1,21 +1,9 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class AIThinkEvent : ScheduledEvent
-    {
-        public AIController OwnerController;
-
-        public override bool OnTriggered()
-        {
-            OwnerController?.Think();
-            return true;
-        }
-    }
-
     public struct EntityCollisionEvent
     {
         public WorldEntity Who;
@@ -31,6 +19,16 @@ namespace MHServerEmu.Games.Regions
     public struct EntityDeadGameEvent
     {
         public WorldEntity Defender;
+    }
+
+    public struct EntitySetSimulatedGameEvent
+    {
+        public WorldEntity Entity;
+
+        public EntitySetSimulatedGameEvent(WorldEntity entity)
+        {
+            Entity = entity;
+        }
     }
 
     public struct AIBroadcastBlackboardGameEvent

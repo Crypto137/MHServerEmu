@@ -586,6 +586,17 @@ namespace MHServerEmu.Games.Behavior
             protected override CallbackDelegate GetCallback() => (controller, time) => controller.ThrownObjectPickedUp(time);
         }
 
+        public class AIThinkEvent : ScheduledEvent
+        {
+            public AIController OwnerController;
+
+            public override bool OnTriggered()
+            {
+                OwnerController?.Think();
+                return true;
+            }
+        }
+
         #endregion
     }
 }

@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Missions
         public bool EventRegistred { get; private set; }
         public Action<AreaCreatedGameEvent> AreaCreatedEvent { get; private set; }
         public Action<CellCreatedGameEvent> CellCreatedEvent { get; private set; }
-        public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspot { get; private set; }
+        public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent { get; private set; }
         public Action<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent { get; private set; }
         public Action<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent { get; private set; }
         public Action<PlayerInteractGameEvent> PlayerInteractEvent { get; private set; }
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Missions
             Owner = owner;
             AreaCreatedEvent = OnAreaCreatedEvent;
             CellCreatedEvent = OnCellCreatedEvent;
-            EntityEnteredMissionHotspot = OnEntityEnteredMissionHotspotEvent;
+            EntityEnteredMissionHotspotEvent = OnEntityEnteredMissionHotspotEvent;
             EntityLeftMissionHotspotEvent = OnEntityLeftMissionHotspotEvent;
             PlayerLeftRegionEvent = OnPlayerLeftRegionEvent;
             PlayerInteractEvent = OnPlayerInteractEvent;
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Missions
             {
                 region.AreaCreatedEvent.AddActionBack(AreaCreatedEvent);
                 region.CellCreatedEvent.AddActionBack(CellCreatedEvent);
-                region.EntityEnteredMissionHotspotEvent.AddActionBack(EntityEnteredMissionHotspot);
+                region.EntityEnteredMissionHotspotEvent.AddActionBack(EntityEnteredMissionHotspotEvent);
                 region.EntityLeftMissionHotspotEvent.AddActionBack(EntityLeftMissionHotspotEvent);
                 region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionEvent);
             }
@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.Missions
             {
                 region.AreaCreatedEvent.RemoveAction(AreaCreatedEvent);
                 region.CellCreatedEvent.RemoveAction(CellCreatedEvent);
-                region.EntityEnteredMissionHotspotEvent.RemoveAction(EntityEnteredMissionHotspot);
+                region.EntityEnteredMissionHotspotEvent.RemoveAction(EntityEnteredMissionHotspotEvent);
                 region.EntityLeftMissionHotspotEvent.RemoveAction(EntityLeftMissionHotspotEvent);
                 region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionEvent);
             }
