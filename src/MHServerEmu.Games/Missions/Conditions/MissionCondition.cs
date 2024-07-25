@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
@@ -7,6 +8,10 @@ namespace MHServerEmu.Games.Missions.Conditions
         public Mission Mission { get; private set; }
         public IMissionConditionOwner Owner { get; private set; }
         public MissionConditionPrototype Prototype { get; private set; }
+        public Region Region { get => Mission.Region; }
+        public bool EventsRegistered { get; protected set; }
+        public virtual bool IsCompleted { get => false; }
+        public bool IsReseting { get; private set; }
 
         public MissionCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
         {
@@ -20,6 +25,17 @@ namespace MHServerEmu.Games.Missions.Conditions
             return conditionProto.AllocateCondition(mission, owner);
         }
 
+        public bool Reset()
+        {
+            IsReseting = true;
+            bool result = OnReset();
+            IsReseting = false;
+            return result;
+        }
+
+        protected virtual bool OnReset() => false;
         public virtual bool Initialize(int conditionIndex) => true;
+        public virtual void RegisterEvents(Region region) { }
+        public virtual void UnRegisterEvents(Region region) { }
     }
 }

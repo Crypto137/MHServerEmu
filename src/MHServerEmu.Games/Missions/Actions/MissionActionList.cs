@@ -30,18 +30,19 @@ namespace MHServerEmu.Games.Missions.Actions
             return true;
         }
 
-        public static bool CreateActionList(MissionActionList actions, MissionActionPrototype[] protoList, IMissionActionOwner owner)
+        public static bool CreateActionList(MissionActionList actions, MissionActionPrototype[] protoList, 
+            IMissionActionOwner owner, bool runOnStart = true)
         {
             if (actions == null && protoList.HasValue())
             {
                 actions = new MissionActionList(owner);
                 if (actions == null || actions.Initialize(protoList) == false) return false;
             }
-            actions?.Run();
+            actions?.Run(runOnStart);
             return true;
         }
 
-        public void Run()
+        public void Run(bool runOnStart)
         {
             if (IsInitialized == false) return;
             Mission mission = Mission;
@@ -49,20 +50,26 @@ namespace MHServerEmu.Games.Missions.Actions
             if (IsActive == false) Activate();
             foreach(var action in Actions) 
             {
-                action.Run();
+                if (action == null) continue;
+                if (runOnStart || action.RunOnStart)
+                    action.Run();
             }
         }
 
-        public void Activate()
+        public bool Activate()
         {
-            if (IsInitialized == false || IsActive) return;
+            if (IsInitialized == false) return false;
+            if (IsActive) return true;
             IsActive = true;
+            return true;
         }
 
-        public void Deactivate()
+        public bool Deactivate()
         {
-            if (IsInitialized == false || IsActive == false) return;
+            if (IsInitialized == false) return false;
+            if (IsActive == false) return true;
             IsActive = false;
+            return true;
         }
     }
 }

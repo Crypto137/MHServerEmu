@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public IMissionActionOwner Owner { get; private set; }
         public MissionActionPrototype Prototype { get; private set; }
+        public virtual bool RunOnStart { get => false; }
 
         public MissionAction(IMissionActionOwner owner, MissionActionPrototype prototype)
         {

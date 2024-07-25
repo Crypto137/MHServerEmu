@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
@@ -35,14 +36,31 @@ namespace MHServerEmu.Games.Missions.Conditions
         }
 
         public static bool CreateConditionList(MissionConditionList conditions, MissionConditionListPrototype proto, 
-            Mission mission, IMissionConditionOwner owner)
+            Mission mission, IMissionConditionOwner owner, bool registerEvents)
         {
             if (conditions == null && proto != null)
             {
                 conditions = CreateCondition(mission, owner, proto) as MissionConditionList;
                 if (conditions == null || conditions.Initialize(0) == false) return false;
             }
+            if (registerEvents)
+                conditions?.RegisterEvents(mission.Region);
             return true;
+        }
+
+        public override void RegisterEvents(Region region)
+        {
+            if (Mission.IsSuspended) return;
+            EventsRegistered = true;
+            foreach(var condition in Conditions)
+                condition?.RegisterEvents(region);
+        }
+
+        public override void UnRegisterEvents(Region region)
+        {
+            foreach (var condition in Conditions)
+                condition?.UnRegisterEvents(region);
+            EventsRegistered = false;
         }
     }
 }
