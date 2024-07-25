@@ -1279,6 +1279,12 @@ namespace MHServerEmu.Games.Regions
             bounds.Center = new Vector3(closestPoint.X, closestPoint.Y, bounds.Center.Z);
             return true;
         }
+
+        public bool FilterRegion(PrototypeId filterRegionRef, bool includeChildren = false)
+        {
+            if (Prototype == null) return false;
+            return Prototype.FilterRegion(filterRegionRef, includeChildren);
+        }
     }
 
     public class RandomPositionPredicate

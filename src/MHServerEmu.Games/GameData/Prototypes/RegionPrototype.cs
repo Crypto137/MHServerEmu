@@ -390,6 +390,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             regionProto.RegionGenerator?.GetAreasInGenerator(areas);
         }
+
+        public bool FilterRegion(PrototypeId filterRef, bool includeChildren)
+        {
+            if (filterRef == PrototypeId.Invalid) return false;
+            var filterProto = GameDatabase.GetPrototype<RegionPrototype>(filterRef);
+            if (filterProto != null)
+            {
+                if (filterProto == this) return true;
+                if (includeChildren && GameDatabase.DataDirectory.PrototypeIsAPrototype(DataRef, filterRef)) return true;
+                if (filterProto.HasAltRegion(DataRef)) return true;
+            }
+            return false;
+        }
     }
 
     public class RegionConnectionTargetPrototype : Prototype
