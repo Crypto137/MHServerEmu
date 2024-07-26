@@ -53,6 +53,8 @@ namespace MHServerEmu.Games.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private Area _startArea;
+
         public bool IsGenerated { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
 
@@ -68,19 +70,6 @@ namespace MHServerEmu.Games.Regions
         public object RestrictedRosterEnabled { get; private set; }
         public Game Game { get; private set; }
 
-        private Area _startArea;
-        public Area StartArea
-        {
-            get
-            {
-                if (_startArea == null && Areas.Any()) _startArea = IterateAreas().First();
-                return _startArea;
-            }
-            set
-            {
-                _startArea = value;
-            }
-        }
         public RegionPrototype Prototype { get; private set; }
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
@@ -492,7 +481,7 @@ namespace MHServerEmu.Games.Regions
 
             regionGenerator.GenerateRegion(log, RandomSeed, this);
 
-            StartArea = regionGenerator.StartArea;
+            _startArea = regionGenerator.StartArea;
             SetBound(CalculateBound());
 
             bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
@@ -607,6 +596,14 @@ namespace MHServerEmu.Games.Regions
                 return area;
 
             return null;
+        }
+
+        public Area GetStartArea()
+        {
+            if (_startArea == null && Areas.Any())
+                _startArea = IterateAreas().First();
+
+            return _startArea;
         }
 
         public void DestroyArea(uint id)
@@ -734,7 +731,7 @@ namespace MHServerEmu.Games.Regions
             Area targetArea;
 
             // Fix for the old Avengers Tower
-            if ((AreaPrototypeId)StartArea.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
+            if ((AreaPrototypeId)_startArea?.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
             {
                 markerPos = new (1589.0f, -2.0f, 180.0f);
                 markerRot = new (3.1415f, 0.0f, 0.0f);
@@ -809,9 +806,10 @@ namespace MHServerEmu.Games.Regions
             messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeDataRef).Build());
 
             // TODO: prefetch other regions
-            
-            // Get starArea to load by Waypoint
-            if (StartArea != null)
+
+            // Get startArea to load by Waypoint
+            Area startArea = GetStartArea();
+            if (startArea != null)
             {
                 if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
@@ -830,7 +828,7 @@ namespace MHServerEmu.Games.Regions
                 }
                 else
                 {
-                    playerConnection.StartPosition = StartArea.Cells.First().Value.RegionBounds.Center;
+                    playerConnection.StartPosition = _startArea.Cells.First().Value.RegionBounds.Center;
                     playerConnection.StartOrientation = Orientation.Zero;
                 }
             }
