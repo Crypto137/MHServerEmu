@@ -382,7 +382,7 @@ namespace MHServerEmu.Games.Missions
         private void LoadProgressStatePerAvatar()
         {
             var player = MissionManager.Player;
-            foreach(var avatar in player.IterateAvatars())
+            foreach(var avatar in new AvatarIterator(player))
             {
                 if (avatar == null) continue;
                 float avatarSequence = avatar.Properties[PropertyEnum.AvatarMissionObjectiveSeq, PrototypeDataRef];
