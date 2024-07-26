@@ -48,8 +48,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (BehaviorProfile != null && BehaviorProfile.Brain != PrototypeId.Invalid)
             {
-                var profile = GameDatabase.GetPrototype<ProceduralProfileSeekingMissilePrototype>(BehaviorProfile.Brain);
-                if (profile != null) return TimeSpan.FromMilliseconds(profile.SeekDelayMS);
+                if (GameDatabase.GetPrototype<BrainPrototype>(BehaviorProfile.Brain) is ProceduralProfileSeekingMissilePrototype profile) 
+                    return TimeSpan.FromMilliseconds(profile.SeekDelayMS);
             }
             return TimeSpan.Zero;
         }
@@ -58,8 +58,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (BehaviorProfile != null && BehaviorProfile.Brain != PrototypeId.Invalid)
             {
-                var profile = GameDatabase.GetPrototype<ProceduralProfileSeekingMissilePrototype>(BehaviorProfile.Brain);
-                if (profile != null) return profile.SeekDelaySpeed;
+                if (GameDatabase.GetPrototype<BrainPrototype>(BehaviorProfile.Brain) is ProceduralProfileSeekingMissilePrototype profile)
+                    return profile.SeekDelaySpeed;
             }
             return 0;
         }

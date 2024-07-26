@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (locomotor.HasPath)
             {
-                var fleeTime = game.CurrentTime - TimeSpan.FromMilliseconds(blackboard.PropertyCollection[PropertyEnum.AIFleeStartTime]);
+                var fleeTime = game.CurrentTime - TimeSpan.FromMilliseconds((long)blackboard.PropertyCollection[PropertyEnum.AIFleeStartTime]);
                 if (fleeTime >= fleeContext.FleeTime || locomotor.IsPathComplete())
                     return StaticBehaviorReturnType.Completed;
             }

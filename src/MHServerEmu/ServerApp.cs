@@ -133,16 +133,31 @@ namespace MHServerEmu
         /// </summary>
         private void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {
-            Exception ex = e.ExceptionObject as Exception;
+            Exception exception = e.ExceptionObject as Exception;
 
             if (e.IsTerminating)
             {
-                Logger.FatalException(ex, "MHServerEmu terminating because of unhandled exception.");
+                DateTime now = DateTime.Now;
+
+                string crashReportDir = Path.Combine(FileHelper.ServerRoot, "CrashReports");
+                if (Directory.Exists(crashReportDir) == false)
+                    Directory.CreateDirectory(crashReportDir);
+
+                string crashReportFilePath = Path.Combine(crashReportDir, $"ServerCrash_{now:yyyy-dd-MM_HH.mm.ss}.txt");
+
+                using (StreamWriter writer = new(crashReportFilePath))
+                {
+                    writer.WriteLine($"{VersionInfo}\n");
+                    writer.WriteLine($"Local Server Time: {now:yyyy.MM.dd HH:mm:ss.fff}\n");
+                    writer.WriteLine($"Exception:\n{exception}");
+                }
+
+                Logger.FatalException(exception, $"MHServerEmu terminating because of unhandled exception, report saved to {crashReportFilePath}");
                 ServerManager.Instance.ShutdownServices();
             }
             else
             {
-                Logger.ErrorException(ex, "Caught unhandled exception.");
+                Logger.ErrorException(exception, "Caught unhandled exception.");
             }
 
             Console.ReadLine();

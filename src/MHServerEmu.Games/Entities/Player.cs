@@ -347,7 +347,7 @@ namespace MHServerEmu.Games.Entities
 
             account.Player.Credits = Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits];
 
-            foreach (Avatar avatar in IterateAvatars())
+            foreach (Avatar avatar in new AvatarIterator(this))
             {
                 DBAvatar dbAvatar = account.GetAvatar((long)avatar.PrototypeDataRef);
                 dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
@@ -783,13 +783,9 @@ namespace MHServerEmu.Games.Entities
         {
             if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Avatar>(null, "GetAvatar(): avatarProtoRef == PrototypeId.Invalid");
 
-            foreach (Avatar avatar in IterateAvatars())
-            {
-                if (avatar.PrototypeDataRef == avatarProtoRef)
-                    return avatar;
-            }
+            AvatarIterator iterator = new(this, AvatarIteratorMode.IncludeArchived, avatarProtoRef);
 
-            return null;
+            return iterator.FirstOrDefault();
         }
 
         public Avatar GetActiveAvatarById(ulong avatarEntityId)
@@ -802,15 +798,6 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO: Secondary avatar for consoles?
             return (index == 0) ? CurrentAvatar : null;
-        }
-        
-        public IEnumerable<Avatar> IterateAvatars()
-        {
-            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.PlayerAvatars))
-            {
-                foreach (var entry in inventory)
-                    yield return Game.EntityManager.GetEntity<Avatar>(entry.Id);
-            }
         }
 
         public Agent GetTeamUpAgent(PrototypeId teamUpProtoRef)

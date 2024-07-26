@@ -9,9 +9,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyVersion>0.3.0.0</AssemblyVersion>
+    <InformationalVersion>0.3.0</InformationalVersion>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
+    <AssemblyVersion>$(InformationalVersion).0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
-    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
