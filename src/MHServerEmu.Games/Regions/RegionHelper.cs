@@ -31,7 +31,6 @@ namespace MHServerEmu.Games.Regions
                 // dumped
                 case RegionPrototypeId.NPEAvengersTowerHUBRegion:
                     region.Properties[PropertyEnum.BonusItemFindBonusDifficultyMult] = 6;
-                    region.Properties[PropertyEnum.DifficultyTier] = (PrototypeId)DifficultyTier.Normal;   // Difficulty/Tiers/Tier1Normal.prototype
 
                     // Missions/Prototypes/BonusMissions/WeeklyEventMissions/CosmicWeekMissionController.prototype
                     region.MissionManager.InsertMission(new((PrototypeId)9033745879814514175, 0x64A2F98F));
@@ -61,7 +60,6 @@ namespace MHServerEmu.Games.Regions
                     region.Properties[PropertyEnum.BonusItemFindBonusDifficultyMult] = 9;
                     region.Properties[PropertyEnum.DamageRegionMobToPlayer] = 4f;
                     region.Properties[PropertyEnum.DamageRegionPlayerToMob] = 0.3f;
-                    region.Properties[PropertyEnum.DifficultyTier] = (PrototypeId)DifficultyTier.Heroic;   // Difficulty/Tiers/Tier2Heroic.prototype
                     region.Properties[PropertyEnum.ExperienceBonusPct] = 0.9f;
                     region.Properties[PropertyEnum.LootBonusCreditsPct] = 0.9f;
                     region.Properties[PropertyEnum.LootBonusXPPct] = 0.9f;
@@ -73,7 +71,6 @@ namespace MHServerEmu.Games.Regions
                     region.Properties[PropertyEnum.BonusItemFindBonusDifficultyMult] = 13;
                     region.Properties[PropertyEnum.DamageRegionMobToPlayer] = 8f;
                     region.Properties[PropertyEnum.DamageRegionPlayerToMob] = 0.13f;
-                    region.Properties[PropertyEnum.DifficultyTier] = (PrototypeId)DifficultyTier.Superheroic;  // Difficulty/Tiers/Tier3Superheroic.prototype
                     region.Properties[PropertyEnum.ExperienceBonusPct] = 2.4f;
                     region.Properties[PropertyEnum.LootBonusCreditsPct] = 2.4f;
                     region.Properties[PropertyEnum.LootBonusXPPct] = 2.4f;

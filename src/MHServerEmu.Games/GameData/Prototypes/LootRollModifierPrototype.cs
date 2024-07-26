@@ -287,7 +287,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (curve == null) return;
 
             var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(settings.DifficultyTier);
-            DifficultyTierAsset difficultyTierAsset = difficultyTierProto != null ? difficultyTierProto.Tier : DifficultyTierAsset.Green;
+            DifficultyTier difficultyTierAsset = difficultyTierProto != null ? difficultyTierProto.Tier : DifficultyTier.Green;
 
             float noDropModifier = curve.GetAt((int)difficultyTierAsset);
             if (Segment.EpsilonTest(noDropModifier, 1f) == false)

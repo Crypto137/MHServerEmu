@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Regions
             RegionSettings settings = new()
             {
                 Seed = Game.Random.Next(),
-                DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
+                DifficultyTierRef = (PrototypeId)DifficultyTierPrototypeId.Normal,
                 InstanceAddress = _idGenerator.Generate(),
                 Level = 10,
                 Bounds = Aabb.Zero,
