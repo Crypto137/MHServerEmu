@@ -1451,7 +1451,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 if (region == null && entity is Player player)
                     region = player.GetRegion();
                 if (region != null)
-                    tierRef = region.GetDifficultyTierRef();
+                    tierRef = region.DifficultyTierRef;
             }
             else if (FromValue(contextVar, out PropertyCollection collection, data.Game))
                 tierRef = collection.GetProperty(PropertyEnum.DifficultyTier);

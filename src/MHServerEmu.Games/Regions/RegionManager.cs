@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Regions
                 DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
                 InstanceAddress = _idGenerator.Generate(),
                 Level = 10,
-                Bound = Aabb.Zero,
+                Bounds = Aabb.Zero,
                 GenerateAreas = true,
                 GenerateEntities = true,
                 GenerateLog = false,

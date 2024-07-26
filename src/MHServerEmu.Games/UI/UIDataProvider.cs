@@ -92,6 +92,11 @@ namespace MHServerEmu.Games.UI
             throw new NotImplementedException();
         }
 
+        public void ActivatePanel(PrototypeId panelProtoRef)
+        {
+            Logger.Debug($"ActivatePanel(): {panelProtoRef.GetName()}");
+        }
+
         /// <summary>
         /// Creates a <see cref="UISyncData"/> instance of the appropriate subtype for the specified widget prototype.
         /// </summary>

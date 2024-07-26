@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Regions
         Remove
     }
 
-    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner
+    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner, IPropertyChangeWatcher
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -63,13 +63,15 @@ namespace MHServerEmu.Games.Regions
 
         private Area _startArea;
 
+        private int _playerDeaths;
+
         public Game Game { get; private set; }
         public ulong Id { get; private set; } // InstanceAddress
-        public CreateRegionParams CreateParams { get; private set; }
         public RegionSettings Settings { get; private set; }
         public int RandomSeed { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
         public int RegionLevel { get; private set; }
+        public PrototypeId DifficultyTierRef { get => Properties[PropertyEnum.DifficultyTier]; }
 
         public RegionPrototype Prototype { get; private set; }
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
@@ -141,7 +143,6 @@ namespace MHServerEmu.Games.Regions
 
         public bool Initialize(RegionSettings settings)
         {
-            // "Region_Initialize" ProfileTimer
             if (Game == null) return false;
 
             MissionManager = new MissionManager(Game, this);
@@ -150,26 +151,30 @@ namespace MHServerEmu.Games.Regions
 
             Settings = settings;
             Properties = new(Game.CurrentRepId); // TODO: Bind(this, 0xEF);
+            Attach(Properties);
 
             Id = settings.InstanceAddress; // Region Id
-            if (Id == 0) return false;
+            if (Id == 0) return Logger.WarnReturn(false, "Initialize(): settings.InstanceAddress == 0");
 
             Prototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
-            if (Prototype == null) return false;
+            if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
             RegionPrototype regionProto = Prototype;
             RandomSeed = settings.Seed;
-            Aabb = settings.Bound;
+            Aabb = settings.Bounds;
             AvatarSwapEnabled = Prototype.EnableAvatarSwap;
             RestrictedRosterEnabled = (Prototype.RestrictedRoster.HasValue());
 
             SetRegionLevel();
 
-            //FlattenCopyFrom(settings.PropertyCollection, false); 
-            // unk1 = settings.unk1;
-            // SetProperty(settings.EndlessLevel, PropertyEnum.EndlessLevel);
-            // SequenceRegionGeneratorPrototype sequenceRegionGenerator = regionProto.RegionGenerator as SequenceRegionGeneratorPrototype;
-            // SetProperty(sequenceRegionGenerator != null ? sequenceRegionGenerator.EndlessLevelsPerTheme : 0, PropertyEnum.EndlessLevelsTotal);
+            if (settings.Properties != null)
+                Properties.FlattenCopyFrom(settings.Properties, false);
+
+            _playerDeaths = settings.PlayerDeaths;
+            Properties[PropertyEnum.EndlessLevel] = settings.EndlessLevel;
+
+            var sequenceRegionGenerator = regionProto.RegionGenerator as SequenceRegionGeneratorPrototype;
+            Properties[PropertyEnum.EndlessLevelsTotal] = sequenceRegionGenerator != null ? sequenceRegionGenerator.EndlessLevelsPerTheme : 0;
 
             EntityTracker = new(this);
             //LowResMapResolution = GetLowResMapResolution();
@@ -189,8 +194,6 @@ namespace MHServerEmu.Games.Regions
                        TuningTable.SetDifficultyIndex(GetProperty<int>(PropertyEnum.DifficultyIndex), false);
                 */
             }
-
-            CreateParams = new((uint)RegionLevel, (DifficultyTier)settings.DifficultyTierRef); // OLD params
 
             if (regionProto.DividedStartLocations.HasValue())
                 InitDividedStartLocations(regionProto.DividedStartLocations);
@@ -232,10 +235,12 @@ namespace MHServerEmu.Games.Regions
                      }
                  }
              }
-
-             if (HasProperty(PropertyEnum.DifficultyTier) && settings.DifficultyTierRef != 0)
-                 SetProperty<PrototypeDataRef>(settings.DifficultyTierRef, PropertyEnum.DifficultyTier);
             */
+
+            if (settings.DifficultyTierRef != PrototypeId.Invalid)
+                Properties[PropertyEnum.DifficultyTier] = settings.DifficultyTierRef;
+            else
+                Logger.Warn("Initialize(): settings.DifficultyTierRef == PrototypeId.Invalid");
 
             Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
@@ -291,15 +296,16 @@ namespace MHServerEmu.Games.Regions
                 } else 
                 Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
             }
-
-            if (regionProto.AvatarPowers.HasValue())
-                foreach (var avatarPower in regionProto.AvatarPowers)
-                    SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, avatarPower));
-
-            if (0 != regionProto.UITopPanel)
-                SetProperty(regionProto.UITopPanel, PropertyEnum.RegionUITopPanel);
-
             */
+            
+            if (regionProto.AvatarPowers.HasValue())
+            {
+                foreach (PrototypeId avatarPowerRef in regionProto.AvatarPowers)
+                    Properties[PropertyEnum.RegionAvatarPower, avatarPowerRef] = true;
+            }
+
+            if (regionProto.UITopPanel != PrototypeId.Invalid)
+                Properties[PropertyEnum.RegionUITopPanel] = regionProto.UITopPanel;
 
             IsGenerated = true;
             return true;
@@ -382,6 +388,39 @@ namespace MHServerEmu.Games.Regions
             success &= ObjectiveGraph.Serialize(archive);
             return success;
         }
+
+        #region IPropertyChangeWatcher
+
+        public void Attach(PropertyCollection propertyCollection)
+        {
+            if (propertyCollection != Properties)
+            {
+                Logger.Warn("Attach(): Regions can attach only to their own property collection");
+                return;
+            }
+
+            Properties.AttachWatcher(this);
+        }
+
+        public void Detach(bool removeFromAttachedCollection)
+        {
+            if (removeFromAttachedCollection)
+                Properties.DetachWatcher(this);
+        }
+
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            switch (id.Enum)
+            {
+                case PropertyEnum.RegionUITopPanel:
+                    PrototypeId panelProtoRef = newValue;
+                    if (panelProtoRef != PrototypeId.Invalid)
+                        UIDataProvider.ActivatePanel(newValue);
+                    break;
+            }
+        }
+
+        #endregion
 
         public void RegisterMetaGame(MetaGame metaGame)
         {
@@ -791,7 +830,9 @@ namespace MHServerEmu.Games.Regions
                 .SetRegionRandomSeed(RandomSeed)
                 .SetRegionMin(Aabb.Min.ToNetStructPoint3())
                 .SetRegionMax(Aabb.Max.ToNetStructPoint3())
-                .SetCreateRegionParams(CreateParams.ToNetStruct());
+                .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
+                    .SetLevel((uint)RegionLevel)
+                    .SetDifficultyTierProtoId((ulong)DifficultyTierRef));
 
             // can add EntitiesToDestroy here
 
@@ -853,11 +894,6 @@ namespace MHServerEmu.Games.Regions
         internal void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
         {
             throw new NotImplementedException();
-        }
-
-        public PrototypeId GetDifficultyTierRef()
-        {
-            return (PrototypeId)DifficultyTier.Normal; // TODO PropertyCollection[PropertyEnum.DifficultyTier];
         }
 
         public void UpdateLastVisitedTime()
