@@ -258,11 +258,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     foreach (Region region in AllRegions)
                     {
-                        DateTime visitedTime;
-                        lock (region.Lock)
-                        {
-                            visitedTime = region.VisitedTime;
-                        }
+                        DateTime lastVisitedTime = region.LastVisitedTime;
 
                         if (regionsWithPlayers.Contains(region.PrototypeDataRef)) // TODO RegionId
                         {
@@ -271,7 +267,7 @@ namespace MHServerEmu.Games.Regions
                         else
                         {
                             // TODO check all active local teleport to this Region
-                            if (currentTime - visitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
+                            if (currentTime - lastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
                                 toShutdown.Add(region);
                         }
                     }

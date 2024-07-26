@@ -53,13 +53,18 @@ namespace MHServerEmu.Games.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly BitList _collisionIds = new();
+        private readonly BitList _collisionBits = new();
+        private readonly List<BitList> _collisionBitList = new();
+
+        // Last visited time needs to be thread safe because it is accessed by asynchronous region cleanup tasks
+        private readonly object _lastVisitedTimeLock = new();
+        private DateTime _lastVisitedTime;
+
         private Area _startArea;
 
         public bool IsGenerated { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
-
-        // New
-        public readonly object Lock = new();
 
         public ulong Id { get; private set; } // InstanceAddress
         public int RandomSeed { get; private set; }
@@ -81,7 +86,7 @@ namespace MHServerEmu.Games.Regions
         public ObjectiveGraph ObjectiveGraph { get; private set; }
 
         public DateTime CreatedTime { get; set; }
-        public DateTime VisitedTime { get; private set; }
+        public DateTime LastVisitedTime { get { lock (_lastVisitedTimeLock) return _lastVisitedTime; } }
 
         public RegionSettings Settings { get; private set; }
         public ulong MatchNumber { get => Settings.MatchNumber; }
@@ -110,10 +115,6 @@ namespace MHServerEmu.Games.Regions
         public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
         public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
         public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
-
-        private BitList _collisionIds;
-        private BitList _collisionBits;
-        private List<BitList> _collisionBitList;
 
         public Region(Game game)
         {
@@ -146,7 +147,7 @@ namespace MHServerEmu.Games.Regions
             PopulationManager = new(Game, this);
 
             Settings = settings;
-            Properties = new(Game.CurrentRepId); //Bind(this, 0xEF);
+            Properties = new(Game.CurrentRepId); // TODO: Bind(this, 0xEF);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
@@ -857,12 +858,10 @@ namespace MHServerEmu.Games.Regions
             return (PrototypeId)DifficultyTier.Normal; // TODO PropertyCollection[PropertyEnum.DifficultyTier];
         }
 
-        public void UpdateVisitedTime()
+        public void UpdateLastVisitedTime()
         {
-            lock (Lock)
-            {
-                VisitedTime = DateTime.Now;
-            }
+            lock (_lastVisitedTimeLock)
+                _lastVisitedTime = DateTime.Now;
         }
 
         public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
