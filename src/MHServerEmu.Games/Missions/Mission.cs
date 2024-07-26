@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Missions
         private MissionState _state;
         private TimeSpan _timeExpireCurrentState;
         private PrototypeId _prototypeDataRef;
-        private int _randomSeed;
+        private int _lootSeed;
         private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
         private SortedSet<ulong> _participants = new();
         private bool _isSuspended;
@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Missions
         public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Clock.GameTime; }
         public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
         public MissionPrototype Prototype { get; }
-        public int RandomSeed { get => _randomSeed; }
+        public int LootSeed { get => _lootSeed; }
         public SortedSet<ulong> Participants { get => _participants; }
         public bool IsSuspended { get => _isSuspended; }
 
@@ -56,13 +56,13 @@ namespace MHServerEmu.Games.Missions
         }
 
         public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeDataRef,
-            int unkRandom, IEnumerable<MissionObjective> objectives, IEnumerable<ulong> participants, bool isSuspended)
+            int lootSeed, IEnumerable<MissionObjective> objectives, IEnumerable<ulong> participants, bool isSuspended)
         {
             _state = state;
             _timeExpireCurrentState = timeExpireCurrentState;
             _prototypeDataRef = prototypeDataRef;
             Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
-            _randomSeed = unkRandom;
+            _lootSeed = lootSeed;
 
             foreach (MissionObjective objective in objectives)
                 _objectiveDict.Add(objective.PrototypeIndex, objective);
@@ -71,13 +71,13 @@ namespace MHServerEmu.Games.Missions
             _isSuspended = isSuspended;
         }
 
-        public Mission(PrototypeId prototypeDataRef, int randomSeed)
+        public Mission(PrototypeId prototypeDataRef, int lootSeed)
         {
             _state = MissionState.Active;
             _timeExpireCurrentState = TimeSpan.Zero;
             _prototypeDataRef = prototypeDataRef;
             Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
-            _randomSeed = randomSeed;
+            _lootSeed = lootSeed;
 
             _objectiveDict.Add(0, new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0));
         }
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Missions
             success &= Serializer.Transfer(archive, ref _timeExpireCurrentState);
             success &= Serializer.Transfer(archive, ref _prototypeDataRef);
             // old versions contain an ItemSpec map here
-            success &= Serializer.Transfer(archive, ref _randomSeed);
+            success &= Serializer.Transfer(archive, ref _lootSeed);
 
             // Objectives, participants, and suspension status are serialized only for replication
             success &= SerializeObjectives(archive);
@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.Missions
             string expireTime = TimeExpireCurrentState != TimeSpan.Zero ? Clock.GameTimeToDateTime(TimeExpireCurrentState).ToString() : "0";
             sb.AppendLine($"{nameof(_timeExpireCurrentState)}: {expireTime}");
             sb.AppendLine($"{nameof(_prototypeDataRef)}: {GameDatabase.GetPrototypeName(_prototypeDataRef)}");
-            sb.AppendLine($"{nameof(_randomSeed)}: {_randomSeed}");
+            sb.AppendLine($"{nameof(_lootSeed)}: {_lootSeed}");
 
             foreach (var kvp in _objectiveDict)
                 sb.AppendLine($"{nameof(_objectiveDict)}[{kvp.Key}]: {kvp.Value}");

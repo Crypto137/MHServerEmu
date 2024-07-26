@@ -657,9 +657,9 @@ namespace MHServerEmu.Games.Network.Parsing
             Serializer.Transfer(archive, ref prototypeDataRef);
             sb.AppendLine($"\t\tprototypeDataRef: {prototypeDataRef.GetName()}");
 
-            int randomSeed = 0;
-            Serializer.Transfer(archive, ref randomSeed);
-            sb.AppendLine($"\t\trandomSeed: {randomSeed}");
+            int lootSeed = 0;
+            Serializer.Transfer(archive, ref lootSeed);
+            sb.AppendLine($"\t\tlootSeed: {lootSeed}");
 
             sb.AppendLine("\t\tobjectives:");
             ParseMissionObjectives(archive, sb);
