@@ -63,21 +63,31 @@ namespace MHServerEmu.Games.Regions
 
         private Area _startArea;
 
-        public bool IsGenerated { get; private set; }
-        public CreateRegionParams CreateParams { get; private set; }
-
-        public ulong Id { get; private set; } // InstanceAddress
-        public int RandomSeed { get; private set; }
-        public Dictionary<uint, Area> Areas { get; } = new();  
-
-        public Aabb Bound { get; set; }
-        public bool AvatarSwapEnabled { get; private set; }
-        public object RestrictedRosterEnabled { get; private set; }
         public Game Game { get; private set; }
+        public ulong Id { get; private set; } // InstanceAddress
+        public CreateRegionParams CreateParams { get; private set; }
+        public RegionSettings Settings { get; private set; }
+        public int RandomSeed { get; private set; }
+        public ulong MatchNumber { get => Settings.MatchNumber; }
+        public int RegionLevel { get; private set; }
 
         public RegionPrototype Prototype { get; private set; }
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
+
+        public Aabb Aabb { get; private set; }
+        public Aabb2 Aabb2 { get => new(Aabb); }
+
+        public bool IsGenerated { get; private set; }
+        public bool AvatarSwapEnabled { get; private set; }
+        public bool RestrictedRosterEnabled { get; private set; }
+
+        public DateTime CreatedTime { get; set; }
+        public DateTime LastVisitedTime { get { lock (_lastVisitedTimeLock) return _lastVisitedTime; } }
+
+        public Dictionary<uint, Area> Areas { get; } = new();
+        public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Aabb); }
+        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
 
         // ArchiveData
         public ReplicatedPropertyCollection Properties { get; private set; }
@@ -85,28 +95,20 @@ namespace MHServerEmu.Games.Regions
         public UIDataProvider UIDataProvider { get; private set; }
         public ObjectiveGraph ObjectiveGraph { get; private set; }
 
-        public DateTime CreatedTime { get; set; }
-        public DateTime LastVisitedTime { get { lock (_lastVisitedTimeLock) return _lastVisitedTime; } }
-
-        public RegionSettings Settings { get; private set; }
-        public ulong MatchNumber { get => Settings.MatchNumber; }
-
+        public List<DividedStartLocation> DividedStartLocations { get; } = new();
+        public ConnectionNodeList Targets { get; private set; }
         public RegionProgressionGraph ProgressionGraph { get; set; }
-        public PathCache PathCache { get; private set; }
-        public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
-        public EntityTracker EntityTracker { get; private set; }
-        public TuningTable TuningTable { get; private set; }    // Difficulty table
         public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; }
         public CellSpatialPartition CellSpatialPartition { get; private set; }
         public NaviSystem NaviSystem { get; private set; }
         public NaviMesh NaviMesh { get; private set; }
-        public List<DividedStartLocation> DividedStartLocations { get; } = new();
-        public int RegionLevel { get; private set; }
-        public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
-        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
+        public PathCache PathCache { get; private set; }
         public List<ulong> MetaGames { get; private set; } = new();
-        public ConnectionNodeList Targets { get; private set; }
+
         public PopulationManager PopulationManager { get; private set; }
+        public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
+        public EntityTracker EntityTracker { get; private set; }
+        public TuningTable TuningTable { get; private set; }    // Difficulty table
 
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
         public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
@@ -157,7 +159,7 @@ namespace MHServerEmu.Games.Regions
 
             RegionPrototype regionProto = Prototype;
             RandomSeed = settings.Seed;
-            Bound = settings.Bound;
+            Aabb = settings.Bound;
             AvatarSwapEnabled = Prototype.EnableAvatarSwap;
             RestrictedRosterEnabled = (Prototype.RestrictedRoster.HasValue());
 
@@ -194,13 +196,13 @@ namespace MHServerEmu.Games.Regions
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             if (NaviSystem.Initialize(this) == false) return false;
-            if (Bound.IsZero() == false)
+            if (Aabb.IsZero() == false)
             {
                 if (settings.GenerateAreas)
                     Logger.Warn("Bound is not Zero with GenerateAreas On");             
                 
-                InitializeSpacialPartition(Bound);
-                NaviMesh.Initialize(Bound, 1000.0f, this);
+                InitializeSpacialPartition(Aabb);
+                NaviMesh.Initialize(Aabb, 1000.0f, this);
             }
 
             SpawnMarkerRegistry.Initialize();
@@ -421,24 +423,24 @@ namespace MHServerEmu.Games.Regions
                 Logger.Error("RegionLevel <= 0");
         }
 
-        public Aabb CalculateBound()
+        public Aabb CalculateAabbFromAreas()
         {
-            Aabb bound = Aabb.InvertedLimit;
+            Aabb bounds = Aabb.InvertedLimit;
 
             foreach (var area in IterateAreas())
-                bound += area.RegionBounds;
+                bounds += area.RegionBounds;
 
-            return bound;
+            return bounds;
         }
 
-        public void SetBound(in Aabb boundingBox)
+        public void SetAabb(in Aabb boundingBox)
         {
-            if (boundingBox.Volume <= 0 || (boundingBox.Min == Bound.Min && boundingBox.Max == Bound.Max)) return;
+            if (boundingBox.Volume <= 0 || (boundingBox.Min == Aabb.Min && boundingBox.Max == Aabb.Max)) return;
 
-            Bound = boundingBox;
+            Aabb = boundingBox;
 
-            NaviMesh.Initialize(Bound, 1000.0f, this);
-            InitializeSpacialPartition(Bound);
+            NaviMesh.Initialize(Aabb, 1000.0f, this);
+            InitializeSpacialPartition(Aabb);
         }
 
         private bool InitializeSpacialPartition(in Aabb bound)
@@ -483,7 +485,7 @@ namespace MHServerEmu.Games.Regions
             regionGenerator.GenerateRegion(log, RandomSeed, this);
 
             _startArea = regionGenerator.StartArea;
-            SetBound(CalculateBound());
+            SetAabb(CalculateAabbFromAreas());
 
             bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
                         && GenerateHelper(regionGenerator, GenerateFlag.PostInitialize)
@@ -666,7 +668,7 @@ namespace MHServerEmu.Games.Regions
 
         public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)
         {
-            return IterateEntitiesInVolume(Bound, context);
+            return IterateEntitiesInVolume(Aabb, context);
         }
 
         public IEnumerable<WorldEntity> IterateEntitiesInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
@@ -787,8 +789,8 @@ namespace MHServerEmu.Games.Regions
                 .SetClearingAllInterest(false)
                 .SetRegionPrototypeId((ulong)PrototypeDataRef)
                 .SetRegionRandomSeed(RandomSeed)
-                .SetRegionMin(Bound.Min.ToNetStructPoint3())
-                .SetRegionMax(Bound.Max.ToNetStructPoint3())
+                .SetRegionMin(Aabb.Min.ToNetStructPoint3())
+                .SetRegionMax(Aabb.Max.ToNetStructPoint3())
                 .SetCreateRegionParams(CreateParams.ToNetStruct());
 
             // can add EntitiesToDestroy here
@@ -1307,11 +1309,9 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public Aabb2 GetAabb2() => new(Bound);
-
         public bool ProjectBoundsIntoRegion(ref Bounds bounds, in Vector3 direction)
         {
-            Point2[] points = GetAabb2().Expand(-bounds.GetRadius()).GetPoints();
+            Point2[] points = Aabb2.Expand(-bounds.GetRadius()).GetPoints();
 
             float minDistance = float.MaxValue;
             Vector3 closestPoint = Vector3.Zero;

@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Populations
                 reservation.CalculateRegionInfo();
 
                 SpawnReservation managedObject = reservation;
-                if (_region.Bound.FullyContains(managedObject.RegionBounds) == false)
+                if (_region.Aabb.FullyContains(managedObject.RegionBounds) == false)
                 {
                     Logger.Trace("Trying to insert Marker out of bounds in Spatial Partition! " +
                                       $"MARKER={GameDatabase.GetFormattedPrototypeName(managedObject.MarkerRef)} " +

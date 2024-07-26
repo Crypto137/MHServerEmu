@@ -133,7 +133,7 @@ namespace MHServerEmu.Games.Entities
 
             // Hack mode for Off Teleports / Blocker
             List<WorldEntity> blockers = new();
-            foreach (var entity in region.IterateEntitiesInVolume(region.Bound, new()))
+            foreach (var entity in region.IterateEntitiesInVolume(region.Aabb, new()))
             {
                 if (entity is Transition teleport)
                 {
