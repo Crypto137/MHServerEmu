@@ -488,41 +488,6 @@ namespace MHServerEmu.Games.Dialog
             }
         }
 
-        // Test function for get StartAction
-        public bool GetStartAction(PrototypeId entityRef, PrototypeId targetRef, out MissionActionEntityPerformPowerPrototype action)
-        {
-            action = null;
-            var proto = GameDatabase.GetPrototype<Prototype>(targetRef);
-            if (proto is MissionPrototype missionProto && missionProto.OnStartActions.HasValue())
-            {
-                if (_interaсtionMap.TryGetValue(entityRef, out var data))
-                {
-                    var actionPower = data.GetStartPower(missionProto);
-                    if (actionPower != null)
-                    {
-                        action = actionPower;
-                        return true;
-                    }
-                }
-            }
-            else
-            {
-                if (_interaсtionMap.TryGetValue(entityRef, out var entityData))
-                {
-                    if (_interaсtionMap.TryGetValue(targetRef, out var targetData))
-                    {
-                        var actionPower = entityData.GetStartPowerIntersect(targetData);
-                        if (actionPower != null)
-                        {
-                            action = actionPower;
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
         public bool GetEntityContextInvolvement(WorldEntity entity, EntityTrackingContextMap map)
         {
             if (entity == null) return false;

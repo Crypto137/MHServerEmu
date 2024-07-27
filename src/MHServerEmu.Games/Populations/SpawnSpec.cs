@@ -98,7 +98,6 @@ namespace MHServerEmu.Games.Populations
             settings.Cell = cell;
 
             settings.Actions = Actions;
-            settings.ActionsTarget = MissionRef;
             settings.SpawnSpec = this;
 
             ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;

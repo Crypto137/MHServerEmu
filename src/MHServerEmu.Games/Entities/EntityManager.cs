@@ -220,7 +220,6 @@ namespace MHServerEmu.Games.Entities
             if (entity is WorldEntity worldEntity)
             {
                 worldEntity.RegisterActions(settings.Actions);
-                worldEntity.AppendStartAction_OLD(settings.ActionsTarget); // TODO move to missionAction
 
                 if (settings.RegionId != 0)
                 {

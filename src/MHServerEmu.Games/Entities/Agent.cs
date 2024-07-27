@@ -781,9 +781,7 @@ namespace MHServerEmu.Games.Entities
                 ActivateAI();
             }
             
-            // Activate StartAnimation from missionRef
-            // TODO change when Mission Action will work
-            if (/*IsSimulated &&*/ Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
+            if (IsSimulated && Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
             {
                 PrototypeId startPower = Properties[PropertyEnum.AIPowerOnSpawn];
                 if (startPower != PrototypeId.Invalid)
@@ -1096,19 +1094,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             return PowerUseResult.Success;
-        }
-
-        // TODO ActivatePerformPower in MissionActionEntityPerformPowerPrototype
-        public override void AppendStartAction_OLD(PrototypeId actionsTarget) 
-        {
-            if (EntityActionComponent != null || actionsTarget == PrototypeId.Invalid) return;
-
-            if (GameDatabase.InteractionManager.GetStartAction(PrototypeDataRef, actionsTarget, out MissionActionEntityPerformPowerPrototype action))
-            {
-                PrototypeId startPowerRef = action.PowerPrototype;
-                if (startPowerRef == PrototypeId.Invalid) return;
-                Properties[PropertyEnum.AIPowerOnSpawn] = startPowerRef;              
-            }
         }
 
         public void DrawPath(EntityHelper.TestOrb orbRef)

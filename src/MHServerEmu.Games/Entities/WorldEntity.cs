@@ -1760,8 +1760,6 @@ namespace MHServerEmu.Games.Entities
             EntityActionComponent.Register(actions);
         }
 
-        public virtual void AppendStartAction_OLD(PrototypeId actionsTarget) { }
-
         public ScriptRoleKeyEnum GetScriptRoleKey()
         {
             if (SpawnSpec != null)

@@ -264,7 +264,6 @@ namespace MHServerEmu.Games.Regions
             settings.Orientation = entityOrientation;
             settings.RegionId = region.Id;
             settings.Cell = this;
-            settings.ActionsTarget = region.PrototypeDataRef;
 
             Game.EntityManager.CreateEntity(settings);
         }
