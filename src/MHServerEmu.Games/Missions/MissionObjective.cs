@@ -413,14 +413,14 @@ namespace MHServerEmu.Games.Missions
             {
                 case MissionObjectiveState.Available:
 
-                    _activateConditions?.Reset();
+                    _activateConditions?.ResetList();
 
                     break;
 
                 case MissionObjectiveState.Active:
 
-                    _successConditions?.Reset();
-                    _failureConditions?.Reset();
+                    _successConditions?.ResetList();
+                    _failureConditions?.ResetList();
 
                     break;
             }

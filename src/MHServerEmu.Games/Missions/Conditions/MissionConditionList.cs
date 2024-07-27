@@ -48,6 +48,42 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
+        public override bool OnReset()
+        {
+            return ResetList();           
+        }
+
+        public bool ResetList()
+        {
+            bool result = true;
+            foreach(var condition in Conditions)
+            {
+                if (condition == null)
+                {
+                    result = false;
+                    continue;
+                }
+
+                if (condition is MissionConditionList list)
+                {
+                    if (list.ResetList() == false)
+                    {
+                        result = false;
+                        continue;
+                    }
+                }
+                else if (condition.EvaluateOnReset())
+                {
+                    if (condition.Reset() == false)
+                    {
+                        result = false;
+                        continue;
+                    }
+                }
+            }
+            return result;
+        }
+
         public override void RegisterEvents(Region region)
         {
             if (Mission.IsSuspended) return;

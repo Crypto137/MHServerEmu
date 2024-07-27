@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Missions
         public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Clock.GameTime; }
         public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
         public MissionPrototype Prototype { get; }
-        public int LootSeed { get => _lootSeed; } // AvatarMissionLootSeed
+        public int LootSeed { get => _lootSeed; set => _lootSeed = value; } // AvatarMissionLootSeed
         public SortedSet<ulong> Participants { get => _participants; }
         public bool IsSuspended { get => _isSuspended; }
         public EventGroup EventGroup { get; } = new();
@@ -906,6 +906,12 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
+        public bool ResetCreationState(MissionCreationState creationState)
+        {
+            _creationState = creationState;
+            return Initialize(creationState);
+        }
+
         public bool Initialize(MissionCreationState creationState)
         {
             if (MissionManager.IsInitialized == false) return false;
@@ -1030,31 +1036,31 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
-        private void ResetConditions()
+        public void ResetConditions()
         {
             var state = State;
             switch (state)
             {
                 case MissionState.Inactive:
 
-                    _prereqConditions?.Reset();
-                    _activateNowConditions?.Reset();
-                    _completeNowConditions?.Reset();
+                    _prereqConditions?.ResetList();
+                    _activateNowConditions?.ResetList();
+                    _completeNowConditions?.ResetList();
 
                     break;
 
                 case MissionState.Available:
 
-                    _activateConditions?.Reset();
-                    _activateNowConditions?.Reset();
-                    _completeNowConditions?.Reset();
+                    _activateConditions?.ResetList();
+                    _activateNowConditions?.ResetList();
+                    _completeNowConditions?.ResetList();
 
                     break;
 
                 case MissionState.Active:
 
-                    _failureConditions?.Reset();
-                    _completeNowConditions?.Reset();
+                    _failureConditions?.ResetList();
+                    _completeNowConditions?.ResetList();
 
                     break;
             }

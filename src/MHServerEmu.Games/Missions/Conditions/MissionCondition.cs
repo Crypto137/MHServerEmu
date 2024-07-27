@@ -33,9 +33,10 @@ namespace MHServerEmu.Games.Missions.Conditions
             return result;
         }
 
-        protected virtual bool OnReset() => false;
+        public virtual bool OnReset() => false;
         public virtual bool Initialize(int conditionIndex) => true;
         public virtual void RegisterEvents(Region region) { }
         public virtual void UnRegisterEvents(Region region) { }
+        public virtual bool EvaluateOnReset() => false;
     }
 }
