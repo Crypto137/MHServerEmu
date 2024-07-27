@@ -7,7 +7,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.DRAG;
@@ -18,12 +17,14 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 using MHServerEmu.Games.UI;
 
@@ -213,28 +214,28 @@ namespace MHServerEmu.Games.Regions
 
             if (MissionManager != null && MissionManager.InitializeForRegion(this) == false) return false;
 
-            /* if (Settings.Affixes.Any)
-             {
-                 RegionAffixTablePrototype affixTableP = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
-                 if (affixTableP != null)
-                 {
-                     foreach (var affix in Settings.Affixes)
-                     {
-                         RegionAffixPrototype regionAffixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
-                         if (regionAffixProto != null)
-                         {
-                             AdjustProperty(regionAffixProto.AdditionalLevels, PropertyEnum.EndlessLevelsTotal);
-                             if (regionAffixProto.Eval != null)
-                             {
-                                 EvalContextData context = new (Game);
-                                 context.SetVar_PropertyCollectionPtr(0, this);
-                                 Eval.Run<bool>(regionAffixProto.Eval, context);
-                             }
-                         }
-                     }
-                 }
-             }
-            */
+            if (settings.Affixes != null && settings.Affixes.Any())
+            {
+                RegionAffixTablePrototype affixTableP = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
+                if (affixTableP != null)
+                {
+                    foreach (PrototypeId regionAffixProtoRef in settings.Affixes)
+                    {
+                        RegionAffixPrototype regionAffixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(regionAffixProtoRef);
+                        if (regionAffixProto != null)
+                        {
+                            Properties.AdjustProperty(regionAffixProto.AdditionalLevels, PropertyEnum.EndlessLevelsTotal);
+
+                            if (regionAffixProto.Eval != null)
+                            {
+                                EvalContextData contextData = new(Game);
+                                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                                Eval.RunBool(regionAffixProto.Eval, contextData);
+                            }
+                        }
+                    }
+                }
+            }
 
             if (settings.DifficultyTierRef != PrototypeId.Invalid)
                 Properties[PropertyEnum.DifficultyTier] = settings.DifficultyTierRef;
@@ -243,59 +244,65 @@ namespace MHServerEmu.Games.Regions
 
             Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
+            // Does this need to be initialized before we generate areas? Is this supposed to be happening later?
             if (regionProto.MetaGames.HasValue())
+            {
                 foreach (var metaGameRef in regionProto.MetaGames)
                 {
                     EntitySettings metaSettings = new();
                     metaSettings.RegionId = Id;
                     metaSettings.EntityRef = metaGameRef;
-                    MetaGame metagame = Game.EntityManager.CreateEntity(metaSettings) as MetaGame;                    
+                    MetaGame metagame = Game.EntityManager.CreateEntity(metaSettings) as MetaGame;
                 }
+            }
 
             if (settings.GenerateAreas)
             {
                 if (GenerateAreas(settings.GenerateLog) == false)
                     return Logger.WarnReturn(false, $"Initialize(): Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
             }
-            /*
-            if (Settings.Affixes.Any())
+
+            if (settings.Affixes != null && settings.Affixes.Any())
             {
-                RegionAffixTablePrototype affixTableProto = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
+                var affixTableProto = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
                 if (affixTableProto != null)
                 {
-                    foreach (var affix in Settings.Affixes)
+                    foreach (PrototypeId regionAffixProtoRef in Settings.Affixes)
                     {
-                        RegionAffixPrototype regionAffixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                        var regionAffixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(regionAffixProtoRef);
                         if (regionAffixProto != null)
                         {
-                            SetProperty<bool>(true, new (PropertyEnum.RegionAffix, affix));
-                            AdjustProperty(regionAffixProto.Difficulty, PropertyEnum.RegionAffixDifficulty);
+                            Properties[PropertyEnum.RegionAffix, regionAffixProtoRef] = true;
+                            Properties.AdjustProperty(regionAffixProto.Difficulty, PropertyEnum.RegionAffixDifficulty);
 
                             if (regionAffixProto.CanApplyToRegion(this))
                             {
-                                if (regionAffixProto.MetaState != 0)
-                                    SetProperty<bool>(true, new (PropertyEnum.MetaStateApplyOnInit, regionAffixProto.MetaState));
-                                if (regionAffixProto.AvatarPower != 0)
-                                    SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, regionAffixProto.AvatarPower));
+                                if (regionAffixProto.MetaState != PrototypeId.Invalid)
+                                    Properties[PropertyEnum.MetaStateApplyOnInit, regionAffixProto.MetaState] = true;
+
+                                if (regionAffixProto.AvatarPower != PrototypeId.Invalid)
+                                    Properties[PropertyEnum.RegionAvatarPower, regionAffixProto.AvatarPower] = true;
                             }
                         }
                     }
 
-                    EvalContextData context = new ();
-                    context.SetReadOnlyVar_PropertyCollectionPtr(0, this);
-                    int affixTier = Eval.Run<int>(affixTableProto.EvalTier, context);
+                    EvalContextData contextData = new();
+                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                    int affixTier = Eval.RunInt(affixTableProto.EvalTier, contextData);
 
                     RegionAffixTableTierEntryPrototype tierEntryProto = affixTableProto.GetByTier(affixTier);
                     if (tierEntryProto != null)
                     {
-                        int value = 0;
-                        ulong valueAsset = Property.PropertyEnumToAsset(PropertyEnum.LootSourceTableOverride, 1, value);
-                        SetProperty<PrototypeDataRef>(tierEntryProto.LootTable, new (PropertyEnum.LootSourceTableOverride, affixTableProto.LootSource, valueAsset));
+                        int enumValue = (int)LootDropEventType.None;
+                        AssetId valueAsset = Property.PropertyEnumToAsset(PropertyEnum.LootSourceTableOverride, 1, enumValue);
+                        Properties[PropertyEnum.LootSourceTableOverride, affixTableProto.LootSource, valueAsset] = tierEntryProto.LootTable;
                     }
-                } else 
-                Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
+                }
+                else
+                {
+                    Logger.Warn($"Initialize(): Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}");
+                }
             }
-            */
             
             if (regionProto.AvatarPowers.HasValue())
             {

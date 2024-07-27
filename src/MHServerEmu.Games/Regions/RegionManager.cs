@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities;
@@ -114,18 +113,17 @@ namespace MHServerEmu.Games.Regions
         public Region GenerateRegion(PrototypeId regionProtoRef) 
         {
             RegionSettings settings = new()
-            {
-                Seed = Game.Random.Next(),
-                DifficultyTierRef = (PrototypeId)DifficultyTierPrototypeId.Normal,
+            {          
                 InstanceAddress = _idGenerator.Generate(),
-                Level = 10,
-                Bounds = Aabb.Zero,
+                RegionDataRef = regionProtoRef,
+                Level = 60,
+                DifficultyTierRef = (PrototypeId)DifficultyTierPrototypeId.Normal,
+                Seed = Game.Random.Next(),
                 GenerateAreas = true,
                 GenerateEntities = true,
-                GenerateLog = false,
-                Affixes = new List<PrototypeId>(),
-                RegionDataRef = regionProtoRef
+                GenerateLog = false
             };
+
             // settings.Seed = 1210027349;
             // GRandom random = new(settings.Seed);//Game.Random.Next()
             int tries = 10;
