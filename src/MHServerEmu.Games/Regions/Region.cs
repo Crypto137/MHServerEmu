@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Regions
         Remove
     }
 
-    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner, IPropertyChangeWatcher
+    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -151,7 +151,6 @@ namespace MHServerEmu.Games.Regions
 
             Settings = settings;
             Properties = new(Game.CurrentRepId); // TODO: Bind(this, 0xEF);
-            Attach(Properties);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return Logger.WarnReturn(false, "Initialize(): settings.InstanceAddress == 0");
@@ -304,8 +303,14 @@ namespace MHServerEmu.Games.Regions
                     Properties[PropertyEnum.RegionAvatarPower, avatarPowerRef] = true;
             }
 
-            if (regionProto.UITopPanel != PrototypeId.Invalid)
-                Properties[PropertyEnum.RegionUITopPanel] = regionProto.UITopPanel;
+            // NOTE: The only region prototype that uses UITopPanel is Regions/ZZZDevelopment/DevRooms/TestingRoom/TestRegionA.prototype
+            // that has UI/Panels/SurturRaidTopPanel.prototype assigned to it that doesn't seem to do anything.
+            //
+            // It's useless for 1.52, but I'm leaving this here in case it has a larger role in older versions of the game.
+            // If we ever need this, we also need to add OnPropertyChange() handling for the RegionUITopPanel property.
+            //
+            // if (regionProto.UITopPanel != PrototypeId.Invalid)
+            //     Properties[PropertyEnum.RegionUITopPanel] = regionProto.UITopPanel;
 
             IsGenerated = true;
             return true;
@@ -388,39 +393,6 @@ namespace MHServerEmu.Games.Regions
             success &= ObjectiveGraph.Serialize(archive);
             return success;
         }
-
-        #region IPropertyChangeWatcher
-
-        public void Attach(PropertyCollection propertyCollection)
-        {
-            if (propertyCollection != Properties)
-            {
-                Logger.Warn("Attach(): Regions can attach only to their own property collection");
-                return;
-            }
-
-            Properties.AttachWatcher(this);
-        }
-
-        public void Detach(bool removeFromAttachedCollection)
-        {
-            if (removeFromAttachedCollection)
-                Properties.DetachWatcher(this);
-        }
-
-        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
-        {
-            switch (id.Enum)
-            {
-                case PropertyEnum.RegionUITopPanel:
-                    PrototypeId panelProtoRef = newValue;
-                    if (panelProtoRef != PrototypeId.Invalid)
-                        UIDataProvider.ActivatePanel(newValue);
-                    break;
-            }
-        }
-
-        #endregion
 
         public void RegisterMetaGame(MetaGame metaGame)
         {
