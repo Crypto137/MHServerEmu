@@ -346,6 +346,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public int MissionPrototypeEnumValue { get; private set; }
+        [DoNotCopy]
+        public List<PrototypeId> MissionActionReferencedPowers { get; private set; }
 
         private readonly SortedSet<PrototypeId> PopulationRegions = new();
         private readonly SortedSet<PrototypeId> PopulationAreas = new();
@@ -390,13 +392,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (HotspotConditionList.Count == 0)
                 HotspotConditionList = null;
-            /*
+            
             if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef) == false)
                 FirstMarker = FindFirstMarker();
             else
                 FirstMarker = PrototypeId.Invalid;
 
             PopulateMissionActionReferencedPowers();
+            /*
             HasClientInterest = GetHasClientInterest();
             HasItemDrops = GetHasItemDrops();
             HasMissionLogRewards = GetHasMissionLogRewards();*/
@@ -423,12 +426,60 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private void PopulateMissionActionReferencedPowers()
         {
-            throw new NotImplementedException();
+            bool hasPowers = false;
+            HashSet<PrototypeId> powers = new();
+
+            hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnAvailableActions);
+            hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnStartActions);
+            hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnFailActions);
+            hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnSuccessActions);
+
+            if (Objectives.HasValue())
+                foreach (var objectivePrototype in Objectives)
+                    if (objectivePrototype != null)
+                    {
+                        hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnAvailableActions);
+                        hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnStartActions);
+                        hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnFailActions);
+                        hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, objectivePrototype.OnSuccessActions);
+                    }
+
+            if (hasPowers)
+                MissionActionReferencedPowers = new(powers);
+        }
+
+        private bool AddMissionActionEntityPerformPowerPrototypePowerFromList(HashSet<PrototypeId> powers, MissionActionPrototype[] actions)
+        {
+            bool hasPowers = false;
+            if (actions.HasValue())
+                foreach (var actionProto in actions)
+                {
+                    if (actionProto is MissionActionEntityPerformPowerPrototype performPowerProto)
+                    {
+                        if (performPowerProto.PowerPrototype != PrototypeId.Invalid)
+                            powers.Add(performPowerProto.PowerPrototype);
+                        hasPowers |= performPowerProto.MissionReferencedPowerRemove;
+                    }
+
+                    if (actionProto is MissionActionTimedActionPrototype timedActionProto)
+                        hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, timedActionProto.ActionsToPerform);
+                }
+            return hasPowers;
         }
 
         private PrototypeId FindFirstMarker()
         {
-            throw new NotImplementedException();
+            if (PopulationSpawns.HasValue())
+                foreach (var missionPopulationProto in PopulationSpawns)
+                {
+                    if (missionPopulationProto == null) continue;
+                    var population = missionPopulationProto.Population;
+                    if (population == null) continue;
+                    var marker = population.UsePopulationMarker;
+                    if (marker != PrototypeId.Invalid)
+                        return marker;
+                }
+            return PrototypeId.Invalid;
         }
 
         private bool GetConditionsOfType(Type conditionType, List<MissionConditionPrototype> conditions)

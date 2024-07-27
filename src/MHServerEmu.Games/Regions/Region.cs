@@ -22,6 +22,7 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
 namespace MHServerEmu.Games.Regions
@@ -96,6 +97,7 @@ namespace MHServerEmu.Games.Regions
         }
         public RegionPrototype Prototype { get; set; }
         public RegionSettings Settings { get; private set; }
+        public PropertyCollection Properties { get; private set; }
         public RegionProgressionGraph ProgressionGraph { get; set; } // Region progression graph 
         public ObjectiveGraph ObjectiveGraph { get; private set; }
         public PathCache PathCache { get; private set; }
@@ -138,6 +140,7 @@ namespace MHServerEmu.Games.Regions
         public Region(Game game)
         {
             Game = game;
+            Properties = new();
             SpawnMarkerRegistry = new(this);
             Settings = new();
             PathCache = new();

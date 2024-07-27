@@ -486,6 +486,17 @@ namespace MHServerEmu.Games.Entities
             return power.IsInRange(position, RangeCheckType.Activation);
         }
 
+        public void RemoveMissionActionReferencedPowers(PrototypeId missionRef)
+        {
+            if (missionRef == PrototypeId.Invalid) return;
+            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+            if (missionProto == null) return;
+            var referencedPowers = missionProto.MissionActionReferencedPowers;
+            if (referencedPowers == null) return;
+            foreach (var referencedPower in referencedPowers) 
+                UnassignPower(referencedPower);
+        }
+
         #endregion
 
         #region Interaction
@@ -1064,7 +1075,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private PowerUseResult ActivatePerformPower(PrototypeId powerRef)
+        public PowerUseResult ActivatePerformPower(PrototypeId powerRef)
         {
             if (this is Avatar) return PowerUseResult.GenericError;
             if (powerRef == PrototypeId.Invalid) return PowerUseResult.AbilityMissing;
