@@ -12,7 +12,6 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities.Avatars;
-using Gazillion;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Missions
@@ -31,6 +30,7 @@ namespace MHServerEmu.Games.Missions
         public IMissionManagerOwner Owner { get; set; }
         public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }        
         public bool IsInitialized { get; private set; }
+        public bool HasMissions { get => _missionDict.Count > 0; }
         public List<PrototypeId> ActiveMissions { get; private set; } = new();
 
         public bool EventRegistred { get; private set; }
@@ -101,7 +101,90 @@ namespace MHServerEmu.Games.Missions
             SetRegion(region);
             IsInitialized = true;
 
+            if (HasMissions)
+                InitializeMissions();
+            else
+                foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                    if (ShouldCreateMission(missionProto))
+                        if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)
+                            CreateMissionByDataRef(missionRef);
+                }
+            
+            // TODO PropertyEnum.LegendaryMissionWasShared
+            // PropertyEnum.LastDailyMissionCalendarDay;
+
+            RegisterEvents(region);
+
             return true;
+        }
+
+        private void InitializeMissions()
+        {
+            if (Player == null || HasMissions == false) return;
+
+            // initialize and clear old missions
+            List<Mission> oldMissions = new();
+            foreach (var mission in _missionDict.Values)
+            {
+                if (mission == null) continue;
+                if (ShouldCreateMission(mission.Prototype) == false || mission.Initialize(mission.CreationState) == false)
+                    oldMissions.Add(mission);
+            }
+
+            foreach(var mission in oldMissions)
+            {
+                if (ShouldCreateMission(mission.Prototype))
+                    ReCreateMission(mission.PrototypeDataRef);
+                else
+                    DeleteMission(mission.PrototypeDataRef);
+            }
+
+            // TODO ResetsWithRegion
+
+            // reset all mission with conditions
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (ShouldCreateMission(missionProto))
+                    if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)                    
+                    {
+                        var mission = FindMissionByDataRef(missionRef);
+                        if (mission != null || mission.State == MissionState.Invalid)
+                            ResetMissionOrCreate(missionRef);
+                    }
+            }
+
+            // reset all conditions
+            foreach(var mission in _missionDict.Values)
+            {
+                if (mission == null) continue;
+                if (mission.IsDailyMission == false && mission.IsLegendaryMission == false)
+                    mission.ResetConditions();
+            }
+        }
+
+        private Mission ResetMissionOrCreate(PrototypeId missionRef, MissionCreationState creationState = MissionCreationState.Create, int lootSeed = 0)
+        {
+            var mission = FindMissionByDataRef(missionRef);
+            if (mission != null)
+            {
+                mission.SetCreationState(creationState);
+                mission.LootSeed = lootSeed;
+                mission.ResetCreationState(creationState);
+            }
+            else
+            {
+                mission = CreateMissionByDataRef(missionRef, creationState);
+            }
+            return mission;
+        }
+
+        private void ReCreateMission(PrototypeId missionRef)
+        {
+            DeleteMission(missionRef);
+            CreateMissionByDataRef(missionRef);
         }
 
         public bool SetAvatar(PrototypeId avatarPrototypeRef)
@@ -136,7 +219,7 @@ namespace MHServerEmu.Games.Missions
                 if (openMissionProto != null 
                     && ShouldCreateMission(openMissionProto) 
                     && openMissionProto.IsActiveInRegion(region.Prototype))
-                    CreateMissionByDataRef(openMissionProto.DataRef, MissionCreationState.Create, MissionState.Invalid);
+                    CreateMissionByDataRef(openMissionProto.DataRef);
             }
 
             RegisterEvents(region);
@@ -294,7 +377,8 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private Mission CreateMissionByDataRef(PrototypeId missionRef, MissionCreationState creationState, MissionState initialState)
+        private Mission CreateMissionByDataRef(PrototypeId missionRef, 
+            MissionCreationState creationState = MissionCreationState.Create, MissionState initialState = MissionState.Invalid)
         {
             var mission = CreateMission(missionRef);
             if (mission == null) return null;
