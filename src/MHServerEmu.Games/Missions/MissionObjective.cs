@@ -240,16 +240,16 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeStateAvailable()
         {
-            if (_activateConditions != null && _activateConditions.IsCompleted)
+            if (_activateConditions != null && _activateConditions.IsCompleted())
                 return SetState(MissionObjectiveState.Active);
             return false;
         }
 
         private bool OnChangeStateActive()
         {
-            if (_failureConditions != null && _failureConditions.IsCompleted)
+            if (_failureConditions != null && _failureConditions.IsCompleted())
                 return SetState(MissionObjectiveState.Failed);
-            else if (_successConditions != null && _successConditions.IsCompleted)
+            else if (_successConditions != null && _successConditions.IsCompleted())
                 return SetState(MissionObjectiveState.Completed);
             return false;
         }

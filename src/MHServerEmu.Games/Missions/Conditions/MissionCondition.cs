@@ -10,7 +10,6 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionPrototype Prototype { get; private set; }
         public Region Region { get => Mission.Region; }
         public bool EventsRegistered { get; protected set; }
-        public virtual bool IsCompleted { get => false; }
         public bool IsReseting { get; private set; }
 
         public MissionCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
@@ -33,6 +32,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             return result;
         }
 
+        public virtual bool IsCompleted() => false;
+        public virtual void SetCompleted() { }
         public virtual bool OnReset() => false;
         public virtual bool Initialize(int conditionIndex) => true;
         public virtual void RegisterEvents(Region region) { }

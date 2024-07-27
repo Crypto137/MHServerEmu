@@ -445,17 +445,17 @@ namespace MHServerEmu.Games.Missions
         {
             if (SpawnState == MissionSpawnState.None)
             {
-                if (_completeNowConditions != null && _completeNowConditions.IsCompleted)
+                if (_completeNowConditions != null && _completeNowConditions.IsCompleted())
                 {
                     UpdateLootSeed();
                     CompleteNowRewards = true;
                     return SetState(MissionState.Completed);
                 }
 
-                if (_activateNowConditions != null && _activateNowConditions.IsCompleted)
+                if (_activateNowConditions != null && _activateNowConditions.IsCompleted())
                     return SetState(MissionState.Active);
 
-                if (_prereqConditions != null && _prereqConditions.IsCompleted)
+                if (_prereqConditions != null && _prereqConditions.IsCompleted())
                     return SetState(MissionState.Available);
             }
             return false;
@@ -463,15 +463,15 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeStateAvailable()
         {
-            if (_completeNowConditions != null && _completeNowConditions.IsCompleted)
+            if (_completeNowConditions != null && _completeNowConditions.IsCompleted())
             {
                 CompleteNowRewards = true;
                 return SetState(MissionState.Completed);
             }
-            if (_activateNowConditions != null && _activateNowConditions.IsCompleted)
+            if (_activateNowConditions != null && _activateNowConditions.IsCompleted())
                 return SetState(MissionState.Active);
 
-            if (_prereqConditions != null && _prereqConditions.IsCompleted)
+            if (_prereqConditions != null && _prereqConditions.IsCompleted())
                 return SetState(MissionState.Available);
 
             return false;
@@ -479,11 +479,11 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeStateActive()
         {
-            if (_failureConditions != null && _failureConditions.IsCompleted)
+            if (_failureConditions != null && _failureConditions.IsCompleted())
             {
                 return SetState(MissionState.Failed);
             }
-            else if (_completeNowConditions != null && _completeNowConditions.IsCompleted)
+            else if (_completeNowConditions != null && _completeNowConditions.IsCompleted())
             {
                 CompleteNowRewards = true;
                 return SetState(MissionState.Completed);
