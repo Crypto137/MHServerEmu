@@ -7,5 +7,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public MissionActionEntityDestroy(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
         }
+
+        public override bool RunOnStart() => false;
     }
 }

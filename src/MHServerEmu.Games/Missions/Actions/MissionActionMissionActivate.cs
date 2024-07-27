@@ -1,3 +1,5 @@
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions.Actions
@@ -7,5 +9,11 @@ namespace MHServerEmu.Games.Missions.Actions
         public MissionActionMissionActivate(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
         }
+
+        public override bool RunOnStart()
+        {
+            if (Prototype is not MissionActionMissionActivatePrototype proto) return false;
+            return proto.MissionPrototype != PrototypeId.Invalid && proto.WeightedMissionPickList.HasValue();
+        } 
     }
 }

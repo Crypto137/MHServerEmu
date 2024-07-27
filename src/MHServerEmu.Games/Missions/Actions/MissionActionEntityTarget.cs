@@ -33,6 +33,6 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public virtual bool RunEntity(WorldEntity entity) => true;
 
-        public override bool RunOnStart => true;
+        public override bool RunOnStart() => true;
     }
 }

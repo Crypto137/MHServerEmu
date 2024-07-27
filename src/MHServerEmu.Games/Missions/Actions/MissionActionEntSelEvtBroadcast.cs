@@ -7,5 +7,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public MissionActionEntSelEvtBroadcast(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
         }
+
+        public override bool RunOnStart() => false;
     }
 }

@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Missions.Actions
                 if (action.Initialize())
                 {
                     Actions.Add(action);
-                    if (action is MissionActionEntityTarget entityAction && entityAction.RunOnStart)
+                    if (action is MissionActionEntityTarget entityAction && entityAction.RunOnStart())
                         EntityActions.Add(entityAction);
                 }
             }
@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.Missions.Actions
             foreach(var action in Actions) 
             {
                 if (action == null) continue;
-                if (runOnStart || action.RunOnStart)
+                if (runOnStart || action.RunOnStart())
                     action.Run();
             }
         }
