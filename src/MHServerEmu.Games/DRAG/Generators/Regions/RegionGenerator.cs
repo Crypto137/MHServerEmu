@@ -6,6 +6,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.POIPickers;
 
 namespace MHServerEmu.Games.DRAG.Generators.Regions
 {
