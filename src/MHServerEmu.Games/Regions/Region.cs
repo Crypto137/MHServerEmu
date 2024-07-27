@@ -80,6 +80,7 @@ namespace MHServerEmu.Games.Regions
 
         public Aabb Aabb { get; private set; }
         public Aabb2 Aabb2 { get => new(Aabb); }
+        public int MaxCollisionId { get => _collisionIds.Size; }
 
         public bool IsGenerated { get; private set; }
         public bool AvatarSwapEnabled { get; private set; }
@@ -401,400 +402,6 @@ namespace MHServerEmu.Games.Regions
             return success;
         }
 
-        public void RegisterMetaGame(MetaGame metaGame)
-        {
-            if (metaGame != null) MetaGames.Add(metaGame.Id);
-        }
-
-        public void UnRegisterMetaGame(MetaGame metaGame)
-        {
-            if (metaGame != null) MetaGames.Remove(metaGame.Id);
-        }
-
-        private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)
-        {
-            ClearDividedStartLocations();
-            if (dividedStartLocations == null) return false;
-
-            foreach (var location in dividedStartLocations)
-                DividedStartLocations.Add(new(location));
-
-            return true;
-        }
-
-        private void ClearDividedStartLocations()
-        {
-            DividedStartLocations.Clear();
-        }
-
-        private void SetRegionLevel()
-        {
-            if (RegionLevel == 0) return;
-            RegionPrototype regionProto = Prototype;
-            if (regionProto == null) return;
-
-            if (Settings.DebugLevel == true)
-                RegionLevel = Settings.Level;
-            else if (regionProto.Level > 0)
-                RegionLevel = regionProto.Level;
-            else
-                Logger.Error("RegionLevel <= 0");
-        }
-
-        public Aabb CalculateAabbFromAreas()
-        {
-            Aabb bounds = Aabb.InvertedLimit;
-
-            foreach (var area in IterateAreas())
-                bounds += area.RegionBounds;
-
-            return bounds;
-        }
-
-        public void SetAabb(in Aabb boundingBox)
-        {
-            if (boundingBox.Volume <= 0 || (boundingBox.Min == Aabb.Min && boundingBox.Max == Aabb.Max)) return;
-
-            Aabb = boundingBox;
-
-            NaviMesh.Initialize(Aabb, 1000.0f, this);
-            InitializeSpacialPartition(Aabb);
-        }
-
-        private bool InitializeSpacialPartition(in Aabb bound)
-        {
-            if (EntitySpatialPartition != null || CellSpatialPartition != null) return false;
-
-            EntitySpatialPartition = new(bound);
-            CellSpatialPartition = new(bound);
-
-            foreach (Area area in IterateAreas())
-            {
-                foreach (var cellItr in area.Cells)
-                    PartitionCell(cellItr.Value, RegionPartitionContext.Insert);
-            }
-
-            SpawnMarkerRegistry.InitializeSpacialPartition(bound);
-            PopulationManager.InitializeSpacialPartition(bound);
-
-            return true;
-        }
-
-        public bool? PartitionCell(Cell cell, RegionPartitionContext context)
-        {
-            if (CellSpatialPartition != null)
-            {
-                switch (context)
-                {
-                    case RegionPartitionContext.Insert:
-                        return CellSpatialPartition.Insert(cell);
-                    case RegionPartitionContext.Remove:
-                        return CellSpatialPartition.Remove(cell);
-                }
-            }
-
-            return null;
-        }
-
-        public bool GenerateAreas(bool log)
-        {
-            RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(Prototype.RegionGenerator);
-
-            regionGenerator.GenerateRegion(log, RandomSeed, this);
-
-            _startArea = regionGenerator.StartArea;
-            SetAabb(CalculateAabbFromAreas());
-
-            bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
-                        && GenerateHelper(regionGenerator, GenerateFlag.PostInitialize)
-                        && GenerateHelper(regionGenerator, GenerateFlag.Navi)
-                        && GenerateNaviMesh()
-                        && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
-            // BuildObjectiveGraph()
-
-            if (success)
-            {
-                Stopwatch stopwatch = Stopwatch.StartNew();
-
-                success &= GenerateMissionPopulation()
-                        && GenerateHelper(regionGenerator, GenerateFlag.Population)
-                        && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
-
-                Logger.Info($"Generated population in {stopwatch.ElapsedMilliseconds} ms");
-            }
-
-            return success;
-        }
-
-        public bool GenerateNaviMesh()
-        {
-            NaviSystem.ClearErrorLog();
-            return NaviMesh.GenerateMesh();
-        }
-
-        public bool GenerateMissionPopulation()
-        {
-            foreach(var metaGameId in MetaGames)
-            {
-                var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);                
-                metaGame?.RegistyStates();
-            }
-            return MissionManager.GenerateMissionPopulation();            
-        }
-
-        public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
-        {
-            bool success = Areas.Count > 0;
-
-            foreach (Area area in IterateAreas())
-            {
-                if (area == null)
-                {
-                    success = false;
-                }
-                else
-                {
-                    List<PrototypeId> areas = new() { area.PrototypeDataRef };
-                    success &= area.Generate(regionGenerator, areas, flag);
-                    if (area.TestStatus(GenerateFlag.Background) == false)
-                        Logger.Error($"{area} Not generated");
-                }
-            }
-
-            return success;
-        }
-
-        public Area CreateArea(PrototypeId areaRef, Vector3 origin)
-        {
-            RegionManager regionManager = Game.RegionManager;
-            if (regionManager == null) return null;
-
-            AreaSettings settings = new()
-            {
-                Id = regionManager.AllocateAreaId(),
-                AreaDataRef = areaRef,
-                Origin = origin,
-                RegionSettings = Settings
-            };
-
-            return AddArea(settings);
-        }
-
-        public Area AddArea(AreaSettings settings)
-        {
-            if (settings.AreaDataRef == 0 || settings.Id == 0 || settings.RegionSettings == null) return null;
-            Area area = new(Game, this);
-
-            if (area.Initialize(settings) == false)
-            {
-                DeallocateArea(area);
-                return null;
-            }
-
-            Areas[area.Id] = area;
-
-            if (settings.RegionSettings.GenerateLog)
-                Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin}, seed = {RandomSeed}");
-
-            return area;
-        }
-
-        public MetaStateChallengeTierEnum RegionAffixGetMissionTier()
-        {
-            foreach (var affix in Settings.Affixes)
-            {
-                var affixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
-                if (affixProto != null && affixProto.ChallengeTier != MetaStateChallengeTierEnum.None)
-                    return affixProto.ChallengeTier;
-            }
-
-            return MetaStateChallengeTierEnum.None;
-        }
-
-        public Area GetAreaById(uint id)
-        {
-            if (Areas.TryGetValue(id, out Area area))
-                return area;
-
-            return null;
-        }
-
-        public Area GetStartArea()
-        {
-            if (_startArea == null && Areas.Any())
-                _startArea = IterateAreas().First();
-
-            return _startArea;
-        }
-
-        public void DestroyArea(uint id)
-        {
-            if (Areas.TryGetValue(id, out Area areaToRemove))
-            {
-                DeallocateArea(areaToRemove);
-                Areas.Remove(id);
-            }
-        }
-
-        private void DeallocateArea(Area area)
-        {
-            if (area == null) return;
-            
-            if (Settings.GenerateLog)
-                Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
-            
-            area.Shutdown();
-        }
-
-        public Area GetArea(PrototypeId prototypeId)
-        {
-            foreach (var area in Areas)
-            {
-                if (area.Value.PrototypeDataRef == prototypeId)
-                    return area.Value;
-            }
-
-            return null;
-        }
-
-        public float GetDistanceToClosestAreaBounds(Vector3 position)
-        {
-            float minDistance = float.MaxValue;
-            foreach (Area area in IterateAreas())
-            {
-                float distance = area.RegionBounds.DistanceToPoint2D(position);
-                minDistance = Math.Min(distance, minDistance);
-            }
-
-            if (minDistance == float.MaxValue)
-                Logger.Error("GetDistanceToClosestAreaBounds");
-
-            return minDistance;
-        }
-
-        public IEnumerable<Cell> IterateCellsInVolume<B>(B bound) where B: IBounds
-        {
-            if (CellSpatialPartition != null)
-                return CellSpatialPartition.IterateElementsInVolume(bound);
-            else
-                return Enumerable.Empty<Cell>(); //new CellSpatialPartition.ElementIterator();
-        }
-
-        public bool InsertEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Insert(entity);
-        public void UpdateEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Update(entity);
-        public bool RemoveEntityFromSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Remove(entity);
-
-        public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)
-        {
-            return IterateEntitiesInVolume(Aabb, context);
-        }
-
-        public IEnumerable<WorldEntity> IterateEntitiesInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
-        {
-            if (EntitySpatialPartition != null)
-                return EntitySpatialPartition.IterateElementsInVolume(bound, context);
-            else
-                return Enumerable.Empty<WorldEntity>();
-        }
-
-        public IEnumerable<Avatar> IterateAvatarsInVolume(in Sphere bound)
-        {
-            if (EntitySpatialPartition != null)
-                return EntitySpatialPartition.IterateAvatarsInVolume(bound);
-            else
-                return Enumerable.Empty<Avatar>();
-        }
-
-        public Cell GetCellAtPosition(Vector3 position)
-        {
-            foreach (var cell in Cells)
-            {
-                if (cell.IntersectsXY(position))
-                    return cell;
-            }
-                
-            return null;
-        }
-
-        public Area GetAreaAtPosition(Vector3 position)
-        {
-            foreach (var itr in Areas)
-            {
-                Area area = itr.Value;
-                if (area.IntersectsXY(position))
-                    return area;
-            }
-
-            return null;
-        }
-
-        public bool CheckMarkerFilter(PrototypeId filterRef)
-        {
-            if (filterRef == 0) return true;
-            PrototypeId markerFilter = Prototype.MarkerFilter;
-            if (markerFilter == 0) return true;
-            return markerFilter == filterRef;
-        }
-
-        public IEnumerable<Area> IterateAreas(Aabb? bound = null)
-        {
-            List<Area> areasList = Areas.Values.ToList();
-            foreach (Area area in areasList)
-            {
-                //Area area = enumerator.Current.Value;
-                if (bound == null || area.RegionBounds.Intersects(bound.Value))
-                    yield return area;
-            }
-        }
-
-        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
-        {
-            Area targetArea;
-
-            // Fix for the old Avengers Tower
-            if ((AreaPrototypeId)_startArea?.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
-            {
-                markerPos = new (1589.0f, -2.0f, 180.0f);
-                markerRot = new (3.1415f, 0.0f, 0.0f);
-                return true;
-            }
-
-            var areaRef = target.Area;
-
-            bool found = false;
-
-            // Has areaRef
-            if (areaRef != 0)
-            {
-                targetArea = GetArea(areaRef);
-                if (targetArea != null) 
-                    found = targetArea.FindTargetPosition(ref markerPos, ref markerRot, target);
-            }
-
-            // Has the wrong areaRef
-            if (found == false)
-            {
-                foreach (Area area in IterateAreas())
-                {
-                    targetArea = area;
-                    if (targetArea.FindTargetPosition(ref markerPos, ref markerRot, target))
-                        return true;
-                }
-            }
-
-            // Has the wrong cellRef // Fix for Upper Eastside
-            if (found == false)
-            {
-                foreach (Cell cell in Cells)
-                {
-                    if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))
-                        return true;
-                }
-            }
-
-            return found;
-        }
-
         public List<IMessage> OLD_GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
         {
             // TODO: Move this to AOI
@@ -859,26 +466,433 @@ namespace MHServerEmu.Games.Regions
             return messageList;
         }
 
+        #region Area Management
+
+        public Area CreateArea(PrototypeId areaRef, Vector3 origin)
+        {
+            RegionManager regionManager = Game.RegionManager;
+            if (regionManager == null) return null;
+
+            AreaSettings settings = new()
+            {
+                Id = regionManager.AllocateAreaId(),
+                AreaDataRef = areaRef,
+                Origin = origin,
+                RegionSettings = Settings
+            };
+
+            return AddArea(settings);
+        }
+
+        public Area AddArea(AreaSettings settings)
+        {
+            if (settings.AreaDataRef == 0 || settings.Id == 0 || settings.RegionSettings == null) return null;
+            Area area = new(Game, this);
+
+            if (area.Initialize(settings) == false)
+            {
+                DeallocateArea(area);
+                return null;
+            }
+
+            Areas[area.Id] = area;
+
+            if (settings.RegionSettings.GenerateLog)
+                Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin}, seed = {RandomSeed}");
+
+            return area;
+        }
+
+        public Area GetArea(PrototypeId prototypeId)
+        {
+            foreach (var area in Areas)
+            {
+                if (area.Value.PrototypeDataRef == prototypeId)
+                    return area.Value;
+            }
+
+            return null;
+        }
+
+        public Area GetAreaById(uint id)
+        {
+            if (Areas.TryGetValue(id, out Area area))
+                return area;
+
+            return null;
+        }
+
+        public Area GetAreaAtPosition(Vector3 position)
+        {
+            foreach (var itr in Areas)
+            {
+                Area area = itr.Value;
+                if (area.IntersectsXY(position))
+                    return area;
+            }
+
+            return null;
+        }
+
+        public Area GetStartArea()
+        {
+            if (_startArea == null && Areas.Any())
+                _startArea = IterateAreas().First();
+
+            return _startArea;
+        }
+
+        public IEnumerable<Area> IterateAreas(Aabb? bound = null)
+        {
+            List<Area> areasList = Areas.Values.ToList();   // TODO: Change this to ToArray()
+            foreach (Area area in areasList)
+            {
+                //Area area = enumerator.Current.Value;
+                if (bound == null || area.RegionBounds.Intersects(bound.Value))
+                    yield return area;
+            }
+        }
+
+        public int GetAreaLevel(Area area)
+        {
+            if (Prototype.LevelUseAreaOffset)
+                return area.GetAreaLevel();
+
+            return RegionLevel;
+        }
+
+        public void DestroyArea(uint id)
+        {
+            if (Areas.TryGetValue(id, out Area areaToRemove))
+            {
+                DeallocateArea(areaToRemove);
+                Areas.Remove(id);
+            }
+        }
+
+        private void DeallocateArea(Area area)
+        {
+            if (area == null) return;
+
+            if (Settings.GenerateLog)
+                Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
+
+            area.Shutdown();
+        }
+
+        #endregion
+
+        #region Cell Management
+
         public Cell GetCellbyId(uint cellId)
         {
-            foreach (var cell in Cells)
+            foreach (Cell cell in Cells)
             {
                 if (cell.Id == cellId)
                     return cell;
             }
-                
+
             return default;
         }
 
-        internal void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
+        public Cell GetCellAtPosition(Vector3 position)
+        {
+            foreach (Cell cell in Cells)
+            {
+                if (cell.IntersectsXY(position))
+                    return cell;
+            }
+
+            return null;
+        }
+
+        public IEnumerable<Cell> IterateCellsInVolume<B>(B bounds) where B : IBounds
+        {
+            if (CellSpatialPartition != null)
+                return CellSpatialPartition.IterateElementsInVolume(bounds);
+            else
+                return Enumerable.Empty<Cell>(); //new CellSpatialPartition.ElementIterator();
+        }
+
+        #endregion
+
+        #region Entity Management
+
+        public bool InsertEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Insert(entity);
+        public void UpdateEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Update(entity);
+        public bool RemoveEntityFromSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Remove(entity);
+
+        public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)
+        {
+            return IterateEntitiesInVolume(Aabb, context);
+        }
+
+        public IEnumerable<WorldEntity> IterateEntitiesInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
+        {
+            if (EntitySpatialPartition != null)
+                return EntitySpatialPartition.IterateElementsInVolume(bound, context);
+            else
+                return Enumerable.Empty<WorldEntity>();
+        }
+
+        public IEnumerable<Avatar> IterateAvatarsInVolume(in Sphere bound)
+        {
+            if (EntitySpatialPartition != null)
+                return EntitySpatialPartition.IterateAvatarsInVolume(bound);
+            else
+                return Enumerable.Empty<Avatar>();
+        }
+
+        public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
+        {
+            EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
+        }
+
+        #endregion
+
+        #region Generation
+
+        public bool GenerateAreas(bool log)
+        {
+            RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(Prototype.RegionGenerator);
+
+            regionGenerator.GenerateRegion(log, RandomSeed, this);
+
+            _startArea = regionGenerator.StartArea;
+            SetAabb(CalculateAabbFromAreas());
+
+            bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
+                        && GenerateHelper(regionGenerator, GenerateFlag.PostInitialize)
+                        && GenerateHelper(regionGenerator, GenerateFlag.Navi)
+                        && GenerateNaviMesh()
+                        && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
+            // BuildObjectiveGraph()
+
+            if (success)
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                success &= GenerateMissionPopulation()
+                        && GenerateHelper(regionGenerator, GenerateFlag.Population)
+                        && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
+
+                Logger.Info($"Generated population in {stopwatch.ElapsedMilliseconds} ms");
+            }
+
+            return success;
+        }
+
+        public bool GenerateNaviMesh()
+        {
+            NaviSystem.ClearErrorLog();
+            return NaviMesh.GenerateMesh();
+        }
+
+        public bool GenerateMissionPopulation()
+        {
+            foreach (var metaGameId in MetaGames)
+            {
+                var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);
+                metaGame?.RegistyStates();
+            }
+            return MissionManager.GenerateMissionPopulation();
+        }
+
+        public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
+        {
+            bool success = Areas.Count > 0;
+
+            foreach (Area area in IterateAreas())
+            {
+                if (area == null)
+                {
+                    success = false;
+                }
+                else
+                {
+                    List<PrototypeId> areas = new() { area.PrototypeDataRef };
+                    success &= area.Generate(regionGenerator, areas, flag);
+                    if (area.TestStatus(GenerateFlag.Background) == false)
+                        Logger.Error($"{area} Not generated");
+                }
+            }
+
+            return success;
+        }
+
+        #endregion
+
+        #region Difficulty & Affixes & MetaGame
+
+        public void RegisterMetaGame(MetaGame metaGame)
+        {
+            if (metaGame != null) MetaGames.Add(metaGame.Id);
+        }
+
+        public void UnRegisterMetaGame(MetaGame metaGame)
+        {
+            if (metaGame != null) MetaGames.Remove(metaGame.Id);
+        }
+
+        public MetaStateChallengeTierEnum RegionAffixGetMissionTier()
+        {
+            foreach (var affix in Settings.Affixes)
+            {
+                var affixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                if (affixProto != null && affixProto.ChallengeTier != MetaStateChallengeTierEnum.None)
+                    return affixProto.ChallengeTier;
+            }
+
+            return MetaStateChallengeTierEnum.None;
+        }
+
+        public void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
         {
             throw new NotImplementedException();
         }
 
-        public void UpdateLastVisitedTime()
+        private void SetRegionLevel()
         {
-            lock (_lastVisitedTimeLock)
-                _lastVisitedTime = DateTime.Now;
+            if (RegionLevel == 0) return;
+            RegionPrototype regionProto = Prototype;
+            if (regionProto == null) return;
+
+            if (Settings.DebugLevel == true)
+                RegionLevel = Settings.Level;
+            else if (regionProto.Level > 0)
+                RegionLevel = regionProto.Level;
+            else
+                Logger.Error("RegionLevel <= 0");
+        }
+
+        #endregion
+
+        #region Space & Physics
+
+        public Aabb CalculateAabbFromAreas()
+        {
+            Aabb bounds = Aabb.InvertedLimit;
+
+            foreach (var area in IterateAreas())
+                bounds += area.RegionBounds;
+
+            return bounds;
+        }
+
+        public void SetAabb(in Aabb boundingBox)
+        {
+            if (boundingBox.Volume <= 0 || (boundingBox.Min == Aabb.Min && boundingBox.Max == Aabb.Max)) return;
+
+            Aabb = boundingBox;
+
+            NaviMesh.Initialize(Aabb, 1000.0f, this);
+            InitializeSpacialPartition(Aabb);
+        }
+
+        private bool InitializeSpacialPartition(in Aabb bound)
+        {
+            if (EntitySpatialPartition != null || CellSpatialPartition != null) return false;
+
+            EntitySpatialPartition = new(bound);
+            CellSpatialPartition = new(bound);
+
+            foreach (Area area in IterateAreas())
+            {
+                foreach (var cellItr in area.Cells)
+                    PartitionCell(cellItr.Value, RegionPartitionContext.Insert);
+            }
+
+            SpawnMarkerRegistry.InitializeSpacialPartition(bound);
+            PopulationManager.InitializeSpacialPartition(bound);
+
+            return true;
+        }
+
+        public bool? PartitionCell(Cell cell, RegionPartitionContext context)
+        {
+            if (CellSpatialPartition != null)
+            {
+                switch (context)
+                {
+                    case RegionPartitionContext.Insert:
+                        return CellSpatialPartition.Insert(cell);
+                    case RegionPartitionContext.Remove:
+                        return CellSpatialPartition.Remove(cell);
+                }
+            }
+
+            return null;
+        }
+
+        public float GetDistanceToClosestAreaBounds(Vector3 position)
+        {
+            float minDistance = float.MaxValue;
+            foreach (Area area in IterateAreas())
+            {
+                float distance = area.RegionBounds.DistanceToPoint2D(position);
+                minDistance = Math.Min(distance, minDistance);
+            }
+
+            if (minDistance == float.MaxValue)
+                Logger.Error("GetDistanceToClosestAreaBounds");
+
+            return minDistance;
+        }
+
+        public bool CheckMarkerFilter(PrototypeId filterRef)
+        {
+            if (filterRef == 0) return true;
+            PrototypeId markerFilter = Prototype.MarkerFilter;
+            if (markerFilter == 0) return true;
+            return markerFilter == filterRef;
+        }
+
+        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
+        {
+            Area targetArea;
+
+            // Fix for the old Avengers Tower
+            if ((AreaPrototypeId)_startArea?.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
+            {
+                markerPos = new(1589.0f, -2.0f, 180.0f);
+                markerRot = new(3.1415f, 0.0f, 0.0f);
+                return true;
+            }
+
+            var areaRef = target.Area;
+
+            bool found = false;
+
+            // Has areaRef
+            if (areaRef != 0)
+            {
+                targetArea = GetArea(areaRef);
+                if (targetArea != null)
+                    found = targetArea.FindTargetPosition(ref markerPos, ref markerRot, target);
+            }
+
+            // Has the wrong areaRef
+            if (found == false)
+            {
+                foreach (Area area in IterateAreas())
+                {
+                    targetArea = area;
+                    if (targetArea.FindTargetPosition(ref markerPos, ref markerRot, target))
+                        return true;
+                }
+            }
+
+            // Has the wrong cellRef // Fix for Upper Eastside
+            if (found == false)
+            {
+                foreach (Cell cell in Cells)
+                {
+                    if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))
+                        return true;
+                }
+            }
+
+            return found;
         }
 
         public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
@@ -914,19 +928,6 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public int GetAreaLevel(Area area)
-        {
-            if (Prototype.LevelUseAreaOffset)
-                return area.GetAreaLevel();
-
-            return RegionLevel;
-        }
-
-        public bool HasKeyword(KeywordPrototype keywordProto)
-        {            
-            return keywordProto != null && Prototype.HasKeyword(keywordProto);
-        }
-
         public int AcquireCollisionId()
         {
             int index = _collisionIds.FirstUnset();
@@ -942,7 +943,7 @@ namespace MHServerEmu.Games.Regions
             {
                 maxCollisionId = MaxCollisionId + 64;
                 while (_collisionBitList.Count < maxCollisionId)
-                    _collisionBitList.Add(new ());
+                    _collisionBitList.Add(new());
             }
 
             var collisionBits = _collisionBitList[collisionId];
@@ -960,8 +961,6 @@ namespace MHServerEmu.Games.Regions
             collisionBits.Set(otherCollisionId);
             return !collide;
         }
-
-        public int MaxCollisionId => _collisionIds.Size;
 
         public void ReleaseCollisionId(int collisionId)
         {
@@ -1007,16 +1006,16 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T: ICanBlock
+        public WorldEntity SweepToFirstHitEntity<T>(Bounds sweepBounds, Vector3 sweepVelocity, ref Vector3? resultHitPosition, T canBlock) where T : ICanBlock
         {
             bool CanBlockFunc(WorldEntity otherEntity) => canBlock.CanBlock(otherEntity);
             return SweepToFirstHitEntity(sweepBounds, sweepVelocity, ref resultHitPosition, CanBlockFunc);
         }
 
-        public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner, 
+        public WorldEntity SweepToFirstHitEntity(Vector3 startPosition, Vector3 targetPosition, WorldEntity owner,
             ulong targetEntityId, bool blocksLOS, float radiusOverride, ref Vector3? resultHitPosition)
         {
-            Bounds sweepBounds = new ();
+            Bounds sweepBounds = new();
 
             if (owner != null)
                 sweepBounds = new(owner.Bounds);
@@ -1117,8 +1116,8 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags, 
-            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null, 
+        public bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
+            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null,
             EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
         {
             if (IsLocationClear(bounds, pathFlags, posFlags, blockFlags)
@@ -1160,7 +1159,7 @@ namespace MHServerEmu.Games.Regions
             resultPosition.Z = point.Z;
             var random = Game.Random;
 
-            List<WorldEntity> entitiesInRadius = new ();
+            List<WorldEntity> entitiesInRadius = new();
             if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
             {
                 entitiesInRadius.Capacity = 256;
@@ -1186,7 +1185,7 @@ namespace MHServerEmu.Games.Regions
             bool foundBlockedEntity = false;
             Vector3 blockedPosition = Vector3.Zero;
 
-            List<WorldEntity> influenceEntities = new ();
+            List<WorldEntity> influenceEntities = new();
 
             if (posFlags.HasFlag(PositionCheckFlags.CanPathToEntities))
             {
@@ -1246,7 +1245,7 @@ namespace MHServerEmu.Games.Regions
                         Vector3? resultSweepPosition = new();
                         Vector3? resultNorm = null;
                         float radius = posFlags.HasFlag(PositionCheckFlags.CanSweepRadius) ? 0f : bounds.Radius;
-                        SweepResult sweepResult = naviMesh.Sweep(point, resultPosition, radius, pathFlags, 
+                        SweepResult sweepResult = naviMesh.Sweep(point, resultPosition, radius, pathFlags,
                             ref resultSweepPosition, ref resultNorm, 0f, heightSweep, maxSweepHeight);
                         if (sweepResult != SweepResult.Success) continue;
                     }
@@ -1289,11 +1288,6 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
-        {
-            EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
-        }
-
         private static bool IsLocationClearOfEntities(Bounds bounds, List<WorldEntity> entities, BlockingCheckFlags blockFlags = BlockingCheckFlags.None)
         {
             foreach (WorldEntity entity in entities)
@@ -1313,10 +1307,10 @@ namespace MHServerEmu.Games.Regions
             if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedEntity) || posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar))
             {
                 var volume = new Sphere(bounds.Center, bounds.Radius);
-                foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new ( EntityRegionSPContextFlags.ActivePartition)))
+                foreach (WorldEntity entity in IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
                 {
                     if (posFlags.HasFlag(PositionCheckFlags.CanBeBlockedAvatar) && entity is not Avatar) continue;
-                    if (IsBoundsBlockedByEntity(bounds, entity, blockFlags)) 
+                    if (IsBoundsBlockedByEntity(bounds, entity, blockFlags))
                         return false;
                 }
             }
@@ -1351,14 +1345,43 @@ namespace MHServerEmu.Games.Regions
             bounds.Center = new Vector3(closestPoint.X, closestPoint.Y, bounds.Center.Z);
             return true;
         }
+
+        #endregion
+
+        public void UpdateLastVisitedTime()
+        {
+            lock (_lastVisitedTimeLock)
+                _lastVisitedTime = DateTime.Now;
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && Prototype.HasKeyword(keywordProto);
+        }
+
+        private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)
+        {
+            ClearDividedStartLocations();
+            if (dividedStartLocations == null) return false;
+
+            foreach (var location in dividedStartLocations)
+                DividedStartLocations.Add(new(location));
+
+            return true;
+        }
+
+        private void ClearDividedStartLocations()
+        {
+            DividedStartLocations.Clear();
+        }
     }
 
-    public class RandomPositionPredicate
+    public class RandomPositionPredicate    // TODO: Change to interface / struct
     {
         public virtual bool Test(Vector3 center) => false;
     }
 
-    public class EntityCheckPredicate
+    public class EntityCheckPredicate       // TODO: Change to interface / struct
     {
         public virtual bool Test(WorldEntity worldEntity) => false;
     }
