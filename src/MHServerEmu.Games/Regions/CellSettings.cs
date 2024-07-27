@@ -9,6 +9,7 @@ namespace MHServerEmu.Games.Regions
         public Orientation OrientationInArea { get; set; }
         public PrototypeId CellRef { get; set; }
         public int Seed { get; set; }
+        public int BufferWidth { get; set; }
         public LocaleStringId OverrideLocationName { get; set; }
         public List<uint> ConnectedCells { get; set; }
         public PrototypeId PopulationThemeOverrideRef { get; set; }

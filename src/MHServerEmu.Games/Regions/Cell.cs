@@ -105,6 +105,12 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
+        public void PostGenerate()
+        {
+            // SpawnMarker Prop type
+            VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this));
+        }
+
         public void Shutdown()
         {
             Region region = Region;
@@ -346,12 +352,6 @@ namespace MHServerEmu.Games.Regions
             return RegionBounds.Center + markerPos - Prototype.BoundingBox.Center;
         }
 
-        public void PostGenerate()
-        {
-            // SpawnMarker Prop type
-            VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this)); 
-        }
-
         public void SpawnPopulation(List<PopulationObject> population)
         {
             foreach (var markerProto in Prototype.MarkerSet.Markers)
@@ -425,23 +425,6 @@ namespace MHServerEmu.Games.Regions
                 PrototypeId missionRef = PrototypeId.Invalid;
                 visitor.Visit(encounterResourceRef, reservation, popProto, missionRef, encounter.UseMarkerOrientation);
             }
-        }
-
-        public IMessage ToProtobuf()
-        {
-            var builder = NetMessageCellCreate.CreateBuilder()
-                .SetAreaId(Area.Id)
-                .SetCellId(Id)
-                .SetCellPrototypeId((ulong)PrototypeDataRef)
-                .SetPositionInArea(AreaPosition.ToNetStructPoint3())
-                .SetCellRandomSeed(Area.RandomSeed)
-                .SetBufferwidth(0)
-                .SetOverrideLocationName(0);
-
-            foreach (ReservedSpawn reservedSpawn in Encounters)
-                builder.AddEncounters(reservedSpawn.ToNetStruct());
-
-            return builder.Build();
         }
 
         public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)

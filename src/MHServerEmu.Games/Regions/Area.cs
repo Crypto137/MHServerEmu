@@ -559,16 +559,6 @@ namespace MHServerEmu.Games.Regions
             return positionInArea + Origin;
         }
 
-        public IMessage ToProtobuf(bool isStartArea)
-        {
-            return NetMessageAddArea.CreateBuilder()
-                .SetAreaId(Id)
-                .SetAreaPrototypeId((ulong)PrototypeDataRef)
-                .SetAreaOrigin(Origin.ToNetStructPoint3())
-                .SetIsStartArea(isStartArea)
-                .Build();
-        }
-
         public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             var cellRef = GameDatabase.GetDataRefByAsset(target.Cell);

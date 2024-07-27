@@ -389,26 +389,47 @@ namespace MHServerEmu.Games.Network
         private void AddArea(Area area, bool isStartArea)
         {
             _trackedAreas.Add(area.Id, new(_currentFrame));
-            SendMessage(area.ToProtobuf(isStartArea));
+
+            SendMessage(NetMessageAddArea.CreateBuilder()
+                .SetAreaId(area.Id)
+                .SetAreaPrototypeId((ulong)area.PrototypeDataRef)
+                .SetAreaOrigin(area.Origin.ToNetStructPoint3())
+                .SetIsStartArea(isStartArea)
+                .Build());
         }
 
         private void RemoveArea(Area area)
         {
+            _trackedAreas.Remove(area.Id);
+
             SendMessage(NetMessageRemoveArea.CreateBuilder()
                 .SetAreaId(area.Id)
                 .Build());
-            _trackedAreas.Remove(area.Id);
         }
 
         private void AddCell(Cell cell)
         {
-            SendMessage(cell.ToProtobuf());
             _trackedCells.Add(cell.Id, new(_currentFrame, false));
+
+            var builder = NetMessageCellCreate.CreateBuilder()
+                .SetAreaId(cell.Area.Id)
+                .SetCellId(cell.Id)
+                .SetCellPrototypeId((ulong)cell.PrototypeDataRef)
+                .SetPositionInArea(cell.AreaPosition.ToNetStructPoint3())
+                .SetCellRandomSeed(cell.Area.RandomSeed)
+                .SetBufferwidth(cell.Settings.BufferWidth)
+                .SetOverrideLocationName((ulong)cell.Settings.OverrideLocationName);
+
+            foreach (ReservedSpawn reservedSpawn in cell.Encounters)
+                builder.AddEncounters(reservedSpawn.ToNetStruct());
+
+            SendMessage(builder.Build());
         }
 
         private void RemoveCell(Cell cell)
         {
-            var areaId = cell.Area.Id;
+            uint areaId = cell.Area.Id;
+
             if (_trackedAreas.ContainsKey(areaId))
             {
                 SendMessage(NetMessageCellDestroy.CreateBuilder()
@@ -416,6 +437,7 @@ namespace MHServerEmu.Games.Network
                     .SetCellId(cell.Id)
                     .Build());
             }
+
             _trackedCells.Remove(cell.Id);
             LoadedCellCount--;
         }
