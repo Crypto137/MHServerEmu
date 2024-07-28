@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Regions
 
         private TimeSpan _lastCleanupTime;
         private readonly Stack<ulong> _regionsToDestroy = new();
-        private readonly HashSet<PrototypeId> _activeRegions = new();     // TODO?: Remove this and use PlayerIterator or something
+        private readonly HashSet<ulong> _activeRegions = new();
 
         public Game Game { get; private set; }
         public IEnumerable<Region> AllRegions { get => _allRegions.Values; }
@@ -194,13 +194,13 @@ namespace MHServerEmu.Games.Regions
             {
                 // Generate the region and create entities for it if needed
                 ulong numEntities = Game.EntityManager.PeekNextEntityId();
-                Logger.Info($"Generating region {((PrototypeId)regionProtoRef).GetNameFormatted()}...");
+                Logger.Info($"Generating region {regionProtoRef.GetNameFormatted()}...");
 
                 try
                 {
                     Stopwatch stopwatch = Stopwatch.StartNew();
                     region = GenerateRegion(regionProtoRef);
-                    Logger.Info($"Generated region {regionProtoRef} in {stopwatch.ElapsedMilliseconds} ms");
+                    Logger.Info($"Generated region {regionProtoRef.GetNameFormatted()} in {stopwatch.ElapsedMilliseconds} ms");
                 } 
                 catch(Exception e) 
                 {
@@ -234,18 +234,18 @@ namespace MHServerEmu.Games.Regions
             Logger.Trace($"Running region cleanup...");
 
             _activeRegions.Clear();
-            foreach (PlayerConnection playerConnection in Game.NetworkManager)
-                _activeRegions.Add(playerConnection.RegionDataRef); // TODO use RegionID
+            foreach (Player player in new PlayerIterator(Game))
+                _activeRegions.Add(player.GetRegion().Id);
 
             foreach (Region region in AllRegions)
             {
-                if (_activeRegions.Contains(region.PrototypeDataRef)) // TODO RegionId
+                if (_activeRegions.Contains(region.Id))
                 {
-                    // TODO send force exit from region to Players
+                    // TODO: force remove players from the region
                 }
                 else
                 {
-                    // TODO check all active local teleport to this Region
+                    // TODO: check world views of players this region is relevant to
                     if (now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
                         _regionsToDestroy.Push(region.Id);
                 }

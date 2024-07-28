@@ -395,11 +395,8 @@ namespace MHServerEmu.Games.Entities
 
         public Region GetRegion()
         {
-            // TODO confirm if it's working
-            if (Game == null) return null;
-            var manager = Game.RegionManager;
-            if (manager == null) return null;
-            return manager.GetRegion(RegionId);
+            // This shouldn't need any null checks, at least for now
+            return PlayerConnection.AOI.Region;
         }
 
         /// <summary>

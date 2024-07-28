@@ -324,7 +324,10 @@ namespace MHServerEmu.Games.Entities
 
             foreach (Entity entity in _entityDict.Values)
             {
-                if (entity.RegionId == regionId)
+                if (entity is not WorldEntity worldEntity)
+                    continue;
+
+                if (worldEntity.RegionLocation.RegionId == regionId)
                 {
                     if (entity is not Transition transition)
                         continue;

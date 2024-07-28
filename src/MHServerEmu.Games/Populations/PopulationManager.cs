@@ -167,20 +167,20 @@ namespace MHServerEmu.Games.Populations
             populationObject.SpawnObject(spawnTarget, out entities);
         }
 
-        public void MetaStateRegisty(PrototypeId prototypeId)
+        public void RegisterMetaState(PrototypeId prototypeId)
         {
             var metastate = GameDatabase.GetPrototype<MetaStatePrototype>(prototypeId);
 
             if (metastate is MetaStateMissionProgressionPrototype missionProgression)
             {
                 if (missionProgression.StatesProgression.HasValue())
-                    MetaStateRegisty(missionProgression.StatesProgression.First());
+                    RegisterMetaState(missionProgression.StatesProgression.First());
             }
             else if (metastate is MetaStateMissionActivatePrototype missionActivate)
             {
                 if (missionActivate.SubStates.HasValue())
                     foreach (var state in missionActivate.SubStates)
-                        MetaStateRegisty(state);
+                        RegisterMetaState(state);
 
                 Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
                 AddRequiredObjects(missionActivate.PopulationObjects, missionActivate.PopulationAreaRestriction, null);
@@ -198,7 +198,7 @@ namespace MHServerEmu.Games.Populations
             {
                 if (waveInstance.States.HasValue())
                     foreach (var state in waveInstance.States)
-                        MetaStateRegisty(state);
+                        RegisterMetaState(state);
             }
             else if (metastate is MetaStatePopulationMaintainPrototype popProto && popProto.PopulationObjects.HasValue())
             {

@@ -135,8 +135,6 @@ namespace MHServerEmu.Games.Entities
         public virtual bool IsWakingUp { get => false; }
         public TimeSpan TotalLifespan { get; private set; }
 
-        public ulong RegionId { get; set; } = 0;    // REMOVEME: non-world entities should not have a region
-
         #region Flag Properties
 
         public virtual bool IsDormant { get => _flags.HasFlag(EntityFlags.Dormant); }
@@ -230,9 +228,6 @@ namespace MHServerEmu.Games.Entities
 
             Prototype = PrototypeDataRef.As<EntityPrototype>();
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
-
-            // Set region - REMOVEME: non-world entities should not have a region
-            RegionId = settings.RegionId;
 
             // Initialize property collection and copy baseline properties from prototype / settings
             // TODO: Bind to ArchiveMessageDispatcher

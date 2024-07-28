@@ -793,7 +793,8 @@ namespace MHServerEmu.Games.Network
                     return true;
                 }
 
-                if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionId) is not Transition target) return true;
+                if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionLocation.RegionId) is not Transition target)
+                    return true;
 
                 if (AOI.InterestedInCell(target.RegionLocation.Cell.Id) == false)
                 {

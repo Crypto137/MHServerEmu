@@ -691,7 +691,7 @@ namespace MHServerEmu.Games.Regions
             foreach (var metaGameId in MetaGames)
             {
                 var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);
-                metaGame?.RegistyStates();
+                metaGame?.RegisterStates();
             }
             return MissionManager.GenerateMissionPopulation();
         }
