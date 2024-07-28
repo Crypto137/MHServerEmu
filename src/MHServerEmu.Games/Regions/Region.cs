@@ -75,6 +75,9 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
+        public bool IsPublic { get => Prototype != null && Prototype.IsPublic; }
+        public bool IsPrivate { get => Prototype != null && Prototype.IsPrivate; }
+
         public Aabb Aabb { get; private set; }
         public Aabb2 Aabb2 { get => new(Aabb); }
         public int MaxCollisionId { get => _collisionIds.Size; }

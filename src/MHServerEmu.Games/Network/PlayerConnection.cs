@@ -933,7 +933,7 @@ namespace MHServerEmu.Games.Network
 
             // TODO: Use region.GetBodysliderPowerRef()
 
-            if (region.Prototype.Behavior == RegionBehaviorAsset.Town)
+            if (region.Prototype.Behavior == RegionBehavior.Town)
                 return Logger.WarnReturn(false, $"OnReturnToHub(): Returning from hubs via bodysliding is not yet implemented");
 
             PrototypeId bodysliderPowerRef = GameDatabase.GlobalsPrototype.ReturnToHubPower;
