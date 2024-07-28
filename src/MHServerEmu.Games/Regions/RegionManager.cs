@@ -127,10 +127,9 @@ namespace MHServerEmu.Games.Regions
             _regionByRefDict.Remove(region.PrototypeDataRef);
 
             TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
-            string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
-            Logger.Info($"Shutdown region = {region}, Lifetime = {lifetime:m min s sec}");
-
+            Logger.Info($"Shutdown: Region = {region}, Lifetime = {lifetime:%m} min {lifetime:%s} sec");
             region.Shutdown();
+
             _allRegions.Remove(regionId);
 
             return true;
