@@ -1,10 +1,11 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -12,9 +13,6 @@ namespace MHServerEmu.Games.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
-
-        private readonly ConcurrentQueue<Region> _shutdownQueue = new();
-        private readonly object _managerLock = new();
 
         private readonly Dictionary<uint, Cell> _allCells = new();
         private readonly Dictionary<ulong, Region> _allRegions = new();
@@ -24,6 +22,10 @@ namespace MHServerEmu.Games.Regions
 
         private uint _areaId = 1;
         private uint _cellId = 1;
+
+        private TimeSpan _lastCleanupTime;
+        private readonly Stack<ulong> _regionsToDestroy = new();
+        private readonly HashSet<PrototypeId> _activeRegions = new();     // TODO?: Remove this and use PlayerIterator or something
 
         public Game Game { get; private set; }
         public IEnumerable<Region> AllRegions { get => _allRegions.Values; }
@@ -35,6 +37,7 @@ namespace MHServerEmu.Games.Regions
         public bool Initialize(Game game)
         {
             Game = game;
+            _lastCleanupTime = Clock.UnixTime;
             return true;
         }
 
@@ -110,6 +113,37 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
+        public bool DestroyRegion(ulong regionId)
+        {
+            // NOTE: We merged Region::DestroyRegion() with Region::destroyRegionFromIterator() from the client
+            // because we don't use C++ style iterators here.
+
+            if (_allRegions.TryGetValue(regionId, out Region region) == false)
+                return Logger.WarnReturn(false, $"DestroyRegion(): Failed to retrieve region for id 0x{regionId:X}");
+
+            if (region.MatchNumber != 0)
+                _matches.Remove(regionId);
+
+            _regionByRefDict.Remove(region.PrototypeDataRef);
+
+            TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
+            string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
+            Logger.Info($"Shutdown region = {region}, Lifetime = {lifetime:m min s sec}");
+
+            region.Shutdown();
+            _allRegions.Remove(regionId);
+
+            return true;
+        }
+
+        public void DestroyAllRegions()
+        {
+            while (_allRegions.Count > 0)
+            {
+                DestroyRegion(_allRegions.Keys.First());
+            }
+        }
+
         public Region GenerateRegion(PrototypeId regionProtoRef) 
         {
             RegionSettings settings = new()
@@ -140,147 +174,88 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public void ProcessPendingRegions()
-        {
-            // Process regions that need to be shut down
-            while (_shutdownQueue.TryDequeue(out Region region))
-            {
-                TimeSpan lifetime = DateTime.Now - region.CreatedTime;
-                string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
-                Logger.Info($"Shutdown region = {region}, Lifetime = {formattedLifetime}");
-                region.Shutdown();
-            }
-        }
-
-        // NEW
         public Region GetRegion(ulong id)
         {
             if (id == 0) return null;
-            lock (_managerLock)
-            {
-                if (_allRegions.TryGetValue(id, out Region region))
-                    return region;
-            }
+
+            if (_allRegions.TryGetValue(id, out Region region))
+                return region;
+
             return null;
         }
 
-        public static Region GetRegion(Game game, ulong id)
-        {
-            if (game == null) return null;
-            RegionManager regionManager = game.RegionManager;
-            if (regionManager == null) return null;
-            return regionManager.GetRegion(id);
-        }
-
-        // OLD
         public Region GetRegionByRef(PrototypeId regionProtoRef)
         {
             if (DataDirectory.Instance.PrototypeIsA<RegionPrototype>(regionProtoRef) == false)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): {regionProtoRef} is not a valid region prototype ref");
 
             //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-            lock (_managerLock)
-            {
-                if (_regionByRefDict.TryGetValue(regionProtoRef, out Region region) == false)
-                {
-                    // Generate the region and create entities for it if needed
-                    ulong numEntities = Game.EntityManager.PeekNextEntityId();
-                    Logger.Info($"Generating region {((PrototypeId)regionProtoRef).GetNameFormatted()}...");
 
-                    try
-                    {
-                        Stopwatch stopwatch = Stopwatch.StartNew();
-                        region = GenerateRegion(regionProtoRef);
-                        Logger.Info($"Generated region {regionProtoRef} in {stopwatch.ElapsedMilliseconds} ms");
-                    } 
-                    catch(Exception e) 
-                    {
-                        Logger.ErrorException(e, "Generation failed");
-                    }   
+            if (_regionByRefDict.TryGetValue(regionProtoRef, out Region region) == false)
+            {
+                // Generate the region and create entities for it if needed
+                ulong numEntities = Game.EntityManager.PeekNextEntityId();
+                Logger.Info($"Generating region {((PrototypeId)regionProtoRef).GetNameFormatted()}...");
+
+                try
+                {
+                    Stopwatch stopwatch = Stopwatch.StartNew();
+                    region = GenerateRegion(regionProtoRef);
+                    Logger.Info($"Generated region {regionProtoRef} in {stopwatch.ElapsedMilliseconds} ms");
+                } 
+                catch(Exception e) 
+                {
+                    Logger.ErrorException(e, "Generation failed");
+                }   
                     
-                    // region = EmptyRegion(prototype);
-                    if (region != null)
-                    {
-                        RegionHelper.TEMP_InitializeHardcodedRegionData(region);
-                        EntityHelper.SetUpHardcodedEntities(region);
-                        ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
-                        Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
-                        region.CreatedTime = DateTime.Now;
+                // region = EmptyRegion(prototype);
+                if (region != null)
+                {
+                    RegionHelper.TEMP_InitializeHardcodedRegionData(region);
+                    EntityHelper.SetUpHardcodedEntities(region);
+                    ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
+                    Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
 
-                        _regionByRefDict.Add(regionProtoRef, region);
-                    }
+                    _regionByRefDict.Add(regionProtoRef, region);
                 }
-
-                return region;
             }
+
+            return region;
         }
 
-        public async Task CleanUpRegionsAsync(CancellationToken cancellationToken)
-        {            
-            while (true)
-            {                
-                // NOTE: When cancellation is requested, control doesn't return from Task.Delay(),
-                // effectively breaking the loop.
-                await Task.Delay(Game.CustomGameOptions.RegionCleanupIntervalMS, cancellationToken);
-
-                // Run cleanup after the delay so that it doesn't happen as soon as we first run this task.
-                CleanUpRegions(false);
-            }
-        }
-
-        public void CleanUpRegions(bool forceCleanAll)
+        public void Update()
         {
-            lock (_managerLock)
-            {
-                if (_allRegions.Count == 0) return;
-            }            
-            var currentTime = DateTime.Now;
-            Logger.Info($"Running region cleanup...");
+            TimeSpan now = Clock.UnixTime;
 
-            // Get PlayerRegions
-            HashSet<PrototypeId> regionsWithPlayers = new();
-            foreach (var playerConnection in Game.NetworkManager)
-                regionsWithPlayers.Add(playerConnection.RegionDataRef); // TODO use RegionID
+            if ((now - _lastCleanupTime) < Game.CustomGameOptions.RegionCleanupInterval)
+                return;
 
-            // Check all regions 
-            List<Region> toShutdown = new();
+            _lastCleanupTime = now;
 
-            if (forceCleanAll)
+            Logger.Trace($"Running region cleanup...");
+
+            _activeRegions.Clear();
+            foreach (PlayerConnection playerConnection in Game.NetworkManager)
+                _activeRegions.Add(playerConnection.RegionDataRef); // TODO use RegionID
+
+            foreach (Region region in AllRegions)
             {
-                // Add all regions if we are forcing a cleanup of all regions (e.g. when shutting the game down)
-                toShutdown.AddRange(AllRegions);
-            }
-            else
-            {
-                lock (_managerLock)
+                if (_activeRegions.Contains(region.PrototypeDataRef)) // TODO RegionId
                 {
-                    foreach (Region region in AllRegions)
-                    {
-                        DateTime lastVisitedTime = region.LastVisitedTime;
-
-                        if (regionsWithPlayers.Contains(region.PrototypeDataRef)) // TODO RegionId
-                        {
-                            // TODO send force exit from region to Players
-                        }
-                        else
-                        {
-                            // TODO check all active local teleport to this Region
-                            if (currentTime - lastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
-                                toShutdown.Add(region);
-                        }
-                    }
+                    // TODO send force exit from region to Players
+                }
+                else
+                {
+                    // TODO check all active local teleport to this Region
+                    if (now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
+                        _regionsToDestroy.Push(region.Id);
                 }
             }
 
-            // Queue all inactive regions for shutdown
-            foreach (Region region in toShutdown)
+            while (_regionsToDestroy.Count > 0)
             {
-                lock (_managerLock)
-                {
-                    _allRegions.Remove(region.Id);
-                    _regionByRefDict.Remove(region.PrototypeDataRef);
-                    _shutdownQueue.Enqueue(region);
-                }              
+                ulong regionId = _regionsToDestroy.Pop();
+                DestroyRegion(regionId);
             }
         }
     }

@@ -55,8 +55,6 @@ namespace MHServerEmu.Games
         private int _liveTuningChangeNum;
 
         private Thread _gameThread;
-        private Task _regionCleanupTask;
-        private CancellationTokenSource _cts;
 
         private ulong _currentRepId;
 
@@ -137,13 +135,6 @@ namespace MHServerEmu.Games
             if (IsRunning) throw new InvalidOperationException();
             IsRunning = true;
 
-            // Reset CTS
-            _cts?.Dispose();
-            _cts = new();
-
-            // Run a task that cleans up unused regions periodically
-            _regionCleanupTask = Task.Run(async () => await RegionManager.CleanUpRegionsAsync(_cts.Token));
-
             // Initialize and start game thread
             _gameThread = new(GameLoop) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             _gameThread.Start();
@@ -167,13 +158,8 @@ namespace MHServerEmu.Games
                 playerConnection.Disconnect();
             NetworkManager.Update();        // We need this to process player saves (for now)
 
-            // Cancel region cleanup task and force clean up all regions manually
-            _cts.Cancel();
-            _cts.Dispose();
-            _cts = null;
-
-            RegionManager.CleanUpRegions(true);
-            RegionManager.ProcessPendingRegions();
+            // Clean up regions
+            RegionManager.DestroyAllRegions();
 
             // Mark this game as shut down for the player manager
             HasBeenShutDown = true;
@@ -326,10 +312,11 @@ namespace MHServerEmu.Games
             NetworkManager.ReceiveAllPendingMessages();         // Process input
             NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
 
-            UpdateFixedTime();                                  // Update simulation state
+            RegionManager.Update();                             // Clean up old regions
 
-            RegionManager.ProcessPendingRegions();              // Process any regions pending shutdowns
             UpdateLiveTuning();                                 // Check if live tuning data is out of date
+
+            UpdateFixedTime();                                  // Update simulation state
         }
 
         private void UpdateFixedTime()

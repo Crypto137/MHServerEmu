@@ -7,6 +7,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.DRAG;
@@ -58,10 +59,6 @@ namespace MHServerEmu.Games.Regions
         private readonly BitList _collisionBits = new();
         private readonly List<BitList> _collisionBitList = new();
 
-        // Last visited time needs to be thread safe because it is accessed by asynchronous region cleanup tasks
-        private readonly object _lastVisitedTimeLock = new();
-        private DateTime _lastVisitedTime;
-
         private Area _startArea;
 
         private int _playerDeaths;
@@ -86,8 +83,8 @@ namespace MHServerEmu.Games.Regions
         public bool AvatarSwapEnabled { get; private set; }
         public bool RestrictedRosterEnabled { get; private set; }
 
-        public DateTime CreatedTime { get; set; }
-        public DateTime LastVisitedTime { get { lock (_lastVisitedTimeLock) return _lastVisitedTime; } }
+        public TimeSpan CreatedTime { get; private set; }
+        public TimeSpan LastVisitedTime { get; private set; }
 
         public Dictionary<uint, Area> Areas { get; } = new();
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Aabb); }
@@ -321,6 +318,7 @@ namespace MHServerEmu.Games.Regions
             //     Properties[PropertyEnum.RegionUITopPanel] = regionProto.UITopPanel;
 
             IsGenerated = true;
+            CreatedTime = Clock.UnixTime;
             return true;
         }
 
@@ -1350,8 +1348,7 @@ namespace MHServerEmu.Games.Regions
 
         public void UpdateLastVisitedTime()
         {
-            lock (_lastVisitedTimeLock)
-                _lastVisitedTime = DateTime.Now;
+            LastVisitedTime = Clock.UnixTime;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

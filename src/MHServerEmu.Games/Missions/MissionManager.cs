@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Missions
         public Region GetRegion()
         {
             if (_regionId == 0 || Game == null) return null;
-            return RegionManager.GetRegion(Game, _regionId);
+            return Game.RegionManager.GetRegion(_regionId);
         }
 
         public Mission CreateMission(PrototypeId missionRef)
