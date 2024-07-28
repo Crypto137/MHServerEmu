@@ -1148,16 +1148,17 @@ namespace MHServerEmu.Games.Entities
 
             // Change health to the new value
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+            WorldEntity ultimatePowerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
             if (health <= 0)
             {
-                Kill(powerUser, KillFlags.None, null);
+                Kill(ultimatePowerUser, KillFlags.None, powerUser);
             }
             else
             {
                 Properties[PropertyEnum.Health] = health;
                 if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
-                    OnGotHit(powerUser);
+                    OnGotHit(ultimatePowerUser);
             }
 
             return true;
