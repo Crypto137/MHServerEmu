@@ -58,6 +58,7 @@ namespace MHServerEmu.Games.Network
         public Orientation LastOrientation { get; set; }
 
         public AreaOfInterest AOI { get; private set; }
+        public WorldView WorldView { get; private set; }
         public Vector3 StartPosition { get; internal set; }
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
@@ -72,6 +73,7 @@ namespace MHServerEmu.Games.Network
             _frontendClient = frontendClient;
             _dbAccount = _frontendClient.Session.Account;
 
+            WorldView = new(this);
             InitializeFromDBAccount();
         }
 
