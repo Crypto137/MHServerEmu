@@ -1167,7 +1167,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnGotHit(WorldEntity attacker)
         {
             TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttacked);
-            if (attacker.GetMostResponsiblePowerUser<Avatar>() != null)
+            if (attacker != null && attacker.GetMostResponsiblePowerUser<Avatar>() != null)
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttackedByPlayer);
         }
 
