@@ -845,6 +845,8 @@ namespace MHServerEmu.Games.Powers
                 {
                     Owner.Properties.AdjustProperty(1, new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
 
+                    ScheduleExtraActivationTimeout(extraActivateOnSubsequent);
+
                     int numActivatesBeforeCooldown = extraActivateOnSubsequent.GetNumActivatesBeforeCooldown(Properties[PropertyEnum.PowerRank]);
                     if (numActivatesBeforeCooldown > 1)
                     {
@@ -3655,6 +3657,8 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleExtraActivationTimeout(ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
         {
+            Logger.Debug("ScheduleExtraActivationTimeout()");
+
             int timeoutLengthMS = extraActivateOnSubsequent.GetTimeoutLengthMS(Properties[PropertyEnum.PowerRank]);
             
             if (timeoutLengthMS == 0)
