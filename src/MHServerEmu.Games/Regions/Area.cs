@@ -248,13 +248,6 @@ namespace MHServerEmu.Games.Regions
             foreach (var cell in CellIterator())
                 cell.PostGenerate(); // can be here?
 
-            // Spawn Entity from Missions, MetaStates
-            var population = Region.PopulationManager.PopulationMarkers;
-            foreach (var cell in CellIterator())
-                cell.SpawnPopulation(population);
-            // Spawn Themes
-            PopulationArea.SpawnPopulation(Region.PopulationManager.PopulationObjects);
-
             return true;
         }
 

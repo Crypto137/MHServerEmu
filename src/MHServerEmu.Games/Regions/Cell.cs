@@ -339,20 +339,6 @@ namespace MHServerEmu.Games.Regions
             VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this)); 
         }
 
-        public void SpawnPopulation(List<PopulationObject> population)
-        {
-            foreach (var markerProto in CellProto.MarkerSet.Markers)
-                if (markerProto is EntityMarkerPrototype entityMarker)
-                {
-                    PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                    Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
-
-                    if (entity is SpawnMarkerPrototype spawnMarker && spawnMarker.Type != MarkerType.Prop)
-                        foreach (var spawn in population)
-                            if (spawn.MarkerRef == spawnMarker.DataRef && spawn.SpawnByMarker(this)) break;
-                }
-        }
-
         private void VisitPropSpawns(PropSpawnVisitor visitor)
         {
             PropTable propTable = Area.PropTable;
