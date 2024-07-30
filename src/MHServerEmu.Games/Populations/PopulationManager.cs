@@ -1,14 +1,16 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using static MHServerEmu.Games.Populations.PopulationManager;
 
 namespace MHServerEmu.Games.Populations
 {
@@ -18,9 +20,11 @@ namespace MHServerEmu.Games.Populations
         public Game Game { get; }
         public Region Region { get; }
         public GRandom Random { get; }
-        public List<PopulationObject> PopulationMarkers { get; }
-        public List<PopulationObject> PopulationObjects { get; }
+        public Dictionary<PrototypeId, MarkerEventScheduler> MarkerSchedulers { get; }
+        public List<SpawnScheduler> LocationSchedulers { get; }
+        private List<SpawnEvent> _spawnEvents { get; }
 
+        private EventGroup _pendingEvents = new();
         private ulong _blackOutId;
         private BlackOutSpatialPartition _blackOutSpatialPartition;
         private Dictionary<ulong, BlackOutZone> _blackOutZones;
@@ -34,102 +38,114 @@ namespace MHServerEmu.Games.Populations
         private Dictionary<ulong, SpawnSpec> _spawnSpecs;
         private ulong NextSpawnSpecId() => _nextSpawnSpecId++;
 
+        private EventPointer<LocationSpawnEvent> _locationSpawnEvent = new();
+
         public PopulationManager(Game game, Region region)
         {
             Game = game;
             Region = region;
             Random = new(region.RandomSeed);
-            PopulationMarkers = new();
-            PopulationObjects = new();
+            MarkerSchedulers = new();
+            LocationSchedulers = new();
             _blackOutZones = new();
             _blackOutId = 1;
             _spawnGroups = new();
             _nextSpawnGroupId = 1;
             _spawnSpecs = new();
+            _spawnEvents = new();
             _nextSpawnSpecId = 1;
         }
 
-        public void MissionRegistry(MissionPrototype missionProto)
+        public void AddSpawnEvent(SpawnEvent spawnEvent)
         {
-            if (missionProto == null) return;
-
-            if (missionProto.PopulationSpawns.HasValue())
-            {
-                foreach (var entry in missionProto.PopulationSpawns)
-                {
-                    //if (missionProto.DesignState == DesignWorkflowState.NotInGame) 
-                    //    Logger.Debug($"Mission [{missionProto.DesignState}] {GameDatabase.GetFormattedPrototypeName(missionProto.DataRef)} = {missionProto.DataRef} {GameDatabase.GetFormattedPrototypeName(entry.Population.UsePopulationMarker)}");
-                    if (entry.RestrictToAreas.HasValue()) // check areas
-                    {
-                        bool foundArea = false;
-                        foreach (var areaRef in entry.RestrictToAreas)
-                        {
-                            if (Region.GetArea(areaRef) != null)
-                            {
-                                foundArea = true;
-                                break;
-                            }
-                        }
-                        if (foundArea == false) continue;
-
-                        List<PrototypeId> regionAreas = new();
-                        foreach (var areaRef in entry.RestrictToAreas)
-                            regionAreas.Add(areaRef);
-                        // entry.Count; TODO count population
-                        //for (var i = 0; i < entry.Count; i++)
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, regionAreas, AssetsToList(entry.RestrictToCells), missionProto.DataRef);
-                    }
-                    else if (entry.RestrictToRegions.HasValue()) // No areas but have Region
-                    {
-                        List<PrototypeId> regionAreas = new();
-                        foreach (var area in Region.IterateAreas())
-                            regionAreas.Add(area.PrototypeDataRef);
-
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, regionAreas, AssetsToList(entry.RestrictToCells), missionProto.DataRef);
-                    }
-                }
-            }
-
+            if (_spawnEvents.Contains(spawnEvent) == false) 
+                _spawnEvents.Add(spawnEvent);
         }
 
-        public static List<PrototypeId> AssetsToList(AssetId[] assets)
+        public void RemoveSpawnEvent(SpawnEvent spawnEvent)
         {
-            if (assets.IsNullOrEmpty()) return new();
-            List<PrototypeId> list = new();
-            foreach (var asset in assets)
-                list.Add(GameDatabase.GetDataRefByAsset(asset));
-            return list;
+            if (_spawnEvents.Contains(spawnEvent))
+                _spawnEvents.Remove(spawnEvent);
         }
 
-        public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, List<PrototypeId> restrictToAreas, List<PrototypeId> restrictToCells, PrototypeId missionRef)
+        public void ScheduleSpawnEvent(SpawnEvent spawnEvent)
         {
-            //Logger.Warn($"SpawnMarker[{count}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");
-            GRandom random = Game.Random;
-            PropertyCollection properties = null;
-            if (missionRef != PrototypeId.Invalid)
+            foreach (var kvp in spawnEvent.SpawnMarkerSchedulers)
             {
-                properties = new PropertyCollection();
-                properties[PropertyEnum.MissionPrototype] = missionRef;
+                var markerRef = kvp.Key;
+                var markerScheduler = kvp.Value;
+                if (MarkerSchedulers.ContainsKey(markerRef) == false)
+                    MarkerSchedulers[markerRef] = new();
+                MarkerSchedulers[markerRef].SpawnSchedulers.Add(markerScheduler);
+                MarkerSchedule(markerRef);
             }
-            PopulationObject populationObject = new()
+
+            if (spawnEvent.SpawnLocationSchedulers.Count > 0)
             {
-                MarkerRef = populationMarkerRef,
-                MissionRef = missionRef,
-                Random = random,
-                Properties = properties,
-                SpawnFlags = SpawnFlags.None,
-                Object = population,
-                SpawnAreas = restrictToAreas,
-                SpawnCells = restrictToCells,
-                Count = count
-            };
+                LocationSchedulers.AddRange(spawnEvent.SpawnLocationSchedulers.Values);
+                LocationSchedule();
+            }
+        }
 
-            if (populationMarkerRef != PrototypeId.Invalid)
-                PopulationMarkers.Add(populationObject);
-            else
-                PopulationObjects.Add(populationObject);
+        private void LocationSchedule()
+        {
+            var scheduler = Game.GameEventScheduler;
+            TimeSpan timeOffset = TimeSpan.FromSeconds(500); // TODO calc Max timeOffset
+            if (_locationSpawnEvent.IsValid == false)
+            {
+                scheduler.ScheduleEvent(_locationSpawnEvent, timeOffset, _pendingEvents);
+                _locationSpawnEvent.Get().Initialize(this);
+            }
+            else if (_locationSpawnEvent.Get().FireTime > Game.CurrentTime + timeOffset)
+                scheduler.RescheduleEvent(_locationSpawnEvent, timeOffset);
+        }
 
-            return populationObject;
+        private void MarkerSchedule(PrototypeId markerRef)
+        {
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+            if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler) == false) return;
+            if (Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) == 0) return;
+            
+            var markerEvent = markerEventScheduler.MarkerSpawnEvent;
+            TimeSpan timeOffset = TimeSpan.FromSeconds(20); // TODO calc Max timeOffset
+            if (markerEvent.IsValid == false)
+            {
+                scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
+                markerEvent.Get().Initialize(this, markerRef);
+            }
+            else if (markerEvent.Get().FireTime > Game.CurrentTime + timeOffset)
+                scheduler.RescheduleEvent(markerEvent, timeOffset);
+        }
+
+        private void ScheduleLocationObject()
+        {
+            Picker<SpawnScheduler> schedulerPicker = new(Game.Random);
+            foreach (var scheduler in LocationSchedulers)
+                if (scheduler.ScheduledObjects.Count > 0)
+                    schedulerPicker.Add(scheduler);
+
+            while (schedulerPicker.Empty() == false)
+            {
+                schedulerPicker.PickRemove(out var scheduler);
+                if (scheduler.ScheduledObjects.Count > 0)
+                    scheduler.ScheduleLocationObject();
+                if (scheduler.ScheduledObjects.Count > 0)
+                    schedulerPicker.Add(scheduler);
+            }
+
+            LocationSchedule();
+        }
+
+        private void ScheduleMarkerObject(PrototypeId markerRef)
+        {
+            if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler)
+                && Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) > 0)
+                foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
+                    if (scheduler.ScheduledObjects.Count > 0)
+                        scheduler.ScheduleMarkerObject();
+
+            MarkerSchedule(markerRef);
         }
 
         public void SpawnObject(PopulationObjectPrototype popObject, RegionLocation location, PropertyCollection properties, SpawnFlags spawnFlags, WorldEntity spawner, out List<WorldEntity> entities)
@@ -148,10 +164,8 @@ namespace MHServerEmu.Games.Populations
                 spawnTarget.Location = location;
                 spawnTarget.SpawnerProto = spawner.Prototype as SpawnerPrototype;
             }
-            List<PrototypeId> spawnArea = new()
-            {
-                location.Area.PrototypeDataRef
-            };
+            var spawnLocation = new SpawnLocation(Region, location.Area);
+
             PopulationObject populationObject = new()
             {
                 MarkerRef = popObject.UsePopulationMarker,
@@ -160,90 +174,10 @@ namespace MHServerEmu.Games.Populations
                 SpawnFlags = spawnFlags,
                 Object = popObject,
                 Spawner = spawner,
-                SpawnAreas = spawnArea,
-                SpawnCells = new(),
+                SpawnLocation = spawnLocation,
                 Count = 1
             };
             populationObject.SpawnObject(spawnTarget, out entities);
-        }
-
-        public void MetaStateRegisty(PrototypeId prototypeId)
-        {
-            var metastate = GameDatabase.GetPrototype<MetaStatePrototype>(prototypeId);
-
-            if (metastate is MetaStateMissionProgressionPrototype missionProgression)
-            {
-                if (missionProgression.StatesProgression.HasValue())
-                    MetaStateRegisty(missionProgression.StatesProgression.First());
-            }
-            else if (metastate is MetaStateMissionActivatePrototype missionActivate)
-            {
-                if (missionActivate.SubStates.HasValue())
-                    foreach (var state in missionActivate.SubStates)
-                        MetaStateRegisty(state);
-
-                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
-                AddRequiredObjects(missionActivate.PopulationObjects, missionActivate.PopulationAreaRestriction, null);
-            }
-            else if (metastate is MetaStateMissionSequencerPrototype missionSequencer)
-            {
-                if (missionSequencer.Sequence.HasValue())
-                    foreach (var missionEntry in missionSequencer.Sequence)
-                    {
-                        Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
-                        AddRequiredObjects(missionEntry.PopulationObjects, missionEntry.PopulationAreaRestriction, null);
-                    }
-            }
-            else if (metastate is MetaStateWaveInstancePrototype waveInstance)
-            {
-                if (waveInstance.States.HasValue())
-                    foreach (var state in waveInstance.States)
-                        MetaStateRegisty(state);
-            }
-            else if (metastate is MetaStatePopulationMaintainPrototype popProto && popProto.PopulationObjects.HasValue())
-            {
-                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
-                var areas = popProto.RestrictToAreas;
-                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
-                AddRequiredObjects(popProto.PopulationObjects, areas, popProto.RestrictToCells);
-            }
-        }
-
-        private void AddRequiredObjects(PopulationRequiredObjectPrototype[] populationObjects, PrototypeId[] restrictToAreas, AssetId[] restrictToCells)
-        {
-            List<PrototypeId> regionAreas = new();
-            List<PrototypeId> regionCell;
-            if (restrictToAreas.IsNullOrEmpty())
-            {
-                foreach (var area in Region.IterateAreas())
-                    regionAreas.Add(area.PrototypeDataRef);
-                regionCell = new();
-                foreach (var cell in Region.Cells)
-                    if (cell.Area.IsDynamicArea() == false)
-                        regionCell.Add(cell.PrototypeId);
-            }
-            else
-            {
-                foreach (var areaRef in restrictToAreas)
-                    regionAreas.Add(areaRef);
-                regionCell = AssetsToList(restrictToCells);
-            }
-
-            Picker<PopulationRequiredObjectPrototype> popPicker = new(Game.Random);
-
-            foreach (var popObject in populationObjects)
-                popPicker.Add(popObject);
-
-            if (popPicker.Empty() == false)
-            {
-                while (popPicker.PickRemove(out var popObject))
-                {
-                    int count = popObject.Count;
-                    if (RegionManager.PatrolRegions.Contains(Region.PrototypeId)) count = 1;
-                    var objectProto = popObject.GetPopObject();
-                    AddPopulationObject(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
-                }
-            }
         }
 
         public ulong SpawnBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
@@ -253,6 +187,7 @@ namespace MHServerEmu.Games.Populations
             _blackOutZones[id] = zone;
             _blackOutSpatialPartition.Insert(zone);
             // TODO BlackOutZonesRebuild
+            Region.SpawnMarkerRegistry.AddBlackOutZone(zone);
             return id;
         }
 
@@ -296,6 +231,22 @@ namespace MHServerEmu.Games.Populations
             return group;
         }
 
+        public SpawnGroup GetSpawnGroup(ulong groupId)
+        {
+            if (_spawnGroups.TryGetValue(groupId, out var group))
+                return group;
+            return null;
+        }
+
+        private void RemoveSpawnGroup(ulong groupId)
+        {
+            if (_spawnGroups.TryGetValue(groupId, out var group))
+            {
+                _spawnGroups.Remove(groupId);
+                group.Destroy();
+            }
+        }
+
         public SpawnSpec CreateSpawnSpec(SpawnGroup group)
         {
             ulong id = NextSpawnSpecId();
@@ -303,6 +254,38 @@ namespace MHServerEmu.Games.Populations
             group.AddSpec(spec);
             _spawnSpecs[id] = spec;
             return spec;
+        }
+
+        public void DespawnSpawnGroups(PrototypeId missionRef)
+        {
+            List<SpawnGroup> despawnGroups = new ();
+            foreach (var group in _spawnGroups.Values)
+                if (group!= null && group.MissionRef == missionRef)
+                    despawnGroups.Add(group);
+
+            foreach (var despawnGroup in despawnGroups)
+                RemoveSpawnGroup(despawnGroup.Id);
+        }
+
+        public void ResetEncounterSpawnPhase(PrototypeId missionRef)
+        {
+            throw new NotImplementedException();
+        }
+
+        public class MarkerEventScheduler
+        {
+            public List<SpawnScheduler> SpawnSchedulers = new();
+            public EventPointer<MarkerSpawnEvent> MarkerSpawnEvent = new();
+        }
+
+        public class LocationSpawnEvent : CallMethodEvent<PopulationManager>
+        {
+            protected override CallbackDelegate GetCallback() => (manager) => manager.ScheduleLocationObject();
+        }
+
+        public class MarkerSpawnEvent : CallMethodEventParam1<PopulationManager, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (manager, markerRef) => manager.ScheduleMarkerObject(markerRef);
         }
 
     }

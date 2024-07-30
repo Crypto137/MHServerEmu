@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Populations;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -24,6 +25,7 @@ namespace MHServerEmu.Games.Missions
         private PrototypeId _avatarPrototypeRef;
         private Dictionary<PrototypeId, Mission> _missionDict = new();
         private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklist = new();
+        private Dictionary<PrototypeId, MissionSpawnEvent> _spawnedMissions = new();
 
         public Player Player { get; private set; }       
         public Game Game { get; private set; }
@@ -437,17 +439,83 @@ namespace MHServerEmu.Games.Missions
 
         public bool GenerateMissionPopulation()
         {
-            Region region = GetRegion();
             // search all Missions with encounter
             foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                var missionProto = missionRef.As<MissionPrototype>();
+                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (missionProto == null) continue;
-                if (missionProto.HasPopulationInRegion(region) == false) continue;
-                if (IsMissionValidAndApprovedForUse(missionProto))
-                    region.PopulationManager.MissionRegistry(missionProto);
+                var mission = FindMissionByDataRef(missionRef);
+                if (mission != null && mission.IsOpenMission)
+                    mission.SetState(MissionState.Inactive);
+                else
+                    SpawnPopulation(missionProto);
             }
             return true;
+        }
+
+        public void SpawnPopulation(MissionPrototype missionProto)
+        {
+            Region region = GetRegion();
+            var missionRef = missionProto.DataRef;
+            if (missionProto.HasPopulationInRegion(region) == false) return;
+
+            if (IsMissionValidAndApprovedForUse(missionProto) == false) return;
+
+            if (_spawnedMissions.ContainsKey(missionRef)) return;
+            else
+            {
+                var spawnEvent = new MissionSpawnEvent(missionRef, this, region);
+                _spawnedMissions[missionRef] = spawnEvent;
+                spawnEvent.MissionRegistry(missionProto);
+                spawnEvent.Schedule();
+            }
+        }
+
+        public void RespawnPopulation(MissionPrototype missionProto)
+        {
+            if (missionProto == null) return;
+            var missionRef = missionProto.DataRef;
+            if (missionProto is OpenMissionPrototype openProto)
+            {
+                if (openProto.RespawnOnRestart == false) return;
+                var popManager = GetRegion().PopulationManager;
+                popManager.ResetEncounterSpawnPhase(missionRef);
+
+                if (openProto.RespawnInPlace)
+                {
+                    if (_spawnedMissions.TryGetValue(missionRef, out var missionEvent))
+                        missionEvent.Respawn();
+                }
+                else
+                {
+                    RemoveSpawnedMission(missionRef);
+                    popManager.DespawnSpawnGroups(missionRef);
+                    SpawnPopulation(missionProto);
+                }
+            }
+        }
+
+        public void RemoveSpawnedMission(PrototypeId missionRef)
+        {
+            if (_spawnedMissions.ContainsKey(missionRef))
+                _spawnedMissions.Remove(missionRef);
+        }
+
+        public MissionSpawnState GetSpawnStateForMission(MissionPrototype missionProto)
+        {
+            if (missionProto == null) return MissionSpawnState.None;
+            if (IsRegionMissionManager() && missionProto.HasPopulationInRegion(GetRegion()))
+            {
+                if (_spawnedMissions.TryGetValue(missionProto.DataRef, out var spawnEvent))
+                {
+                    if (spawnEvent == null) return MissionSpawnState.None;
+                    if (spawnEvent.IsSpawned()) return MissionSpawnState.Spawned;
+                    else return MissionSpawnState.Spawning;
+                }
+                else
+                    return MissionSpawnState.NotSpawned;
+            }
+            return MissionSpawnState.None;
         }
 
         /// <summary>

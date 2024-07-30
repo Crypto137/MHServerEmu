@@ -49,6 +49,9 @@ namespace MHServerEmu.Games.Missions
     public enum MissionSpawnState
     {
         None,
+        NotSpawned,
+        Spawned,
+        Spawning,
     }
 
     [Flags] // Relevant protobuf: NetMessageMissionUpdate
@@ -443,7 +446,7 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeStateInactive()
         {
-            if (SpawnState == MissionSpawnState.None)
+            if (SpawnState == MissionSpawnState.None || SpawnState == MissionSpawnState.Spawned)
             {
                 if (_completeNowConditions != null && _completeNowConditions.IsCompleted())
                 {
@@ -529,12 +532,14 @@ namespace MHServerEmu.Games.Missions
         private bool OnSetStateInvalid(bool reset)
         {
             if (IsOpenMission) _participants.Clear();
-
+            Region.PopulationManager.ResetEncounterSpawnPhase(PrototypeDataRef);
             ResetStateObjectives(false);
 
             if (reset)
             {
-                // TODO mission despawn
+                var openProto = OpenMissionPrototype;
+                if (openProto != null && openProto.PopulationSpawns.HasValue() && openProto.RespawnInPlace == false)
+                    MissionManager.RemoveSpawnedMission(openProto.DataRef);
             }
 
             return true;
@@ -553,7 +558,11 @@ namespace MHServerEmu.Games.Missions
 
             if (IsOpenMission)
             {
-                // TODO mission spawn
+                SpawnState = MissionManager.GetSpawnStateForMission(missionProto);
+                if (SpawnState == MissionSpawnState.NotSpawned)
+                    MissionManager.SpawnPopulation(missionProto);
+                else if (SpawnState == MissionSpawnState.Spawned)
+                    MissionManager.RespawnPopulation(missionProto);
             }
 
             if (MissionConditionList.CreateConditionList(ref _prereqConditions, missionProto.PrereqConditions, this, this, true) == false

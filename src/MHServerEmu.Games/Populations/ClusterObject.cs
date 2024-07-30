@@ -994,7 +994,7 @@ namespace MHServerEmu.Games.Populations
             }
             spec.MissionRef = Parent.MissionRef;
             // TODO set Rank
-
+            // TODO check EncounterSpawnPhase
             spec.Spawn();
             if (spec.ActiveEntity != null)
                 entities.Add(spec.ActiveEntity);

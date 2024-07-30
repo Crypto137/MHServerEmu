@@ -9,12 +9,22 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Populations
 {
+    public enum SpawnState
+    {
+        Pending = 0,
+        Live = 1,
+        Defeated = 2,
+        Destroyed = 3,
+        Respawning = 4,
+    }
+
     public class SpawnSpec
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public ulong Id { get; }
         public SpawnGroup Group { get; set; }
+        public SpawnState State { get; private set; }
         public PrototypeId EntityRef { get; set; }
         public WorldEntity ActiveEntity { get; set; }
         public PropertyCollection Properties { get; set; }
@@ -101,6 +111,7 @@ namespace MHServerEmu.Games.Populations
             settings.SpawnSpec = this;
 
             ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;
+            State = SpawnState.Live;
             return true;
         }
 
@@ -118,11 +129,29 @@ namespace MHServerEmu.Games.Populations
                     Actions.Add(action);
             }
         }
+
+        // TODO SpawnState.Defeated;
+        // TODO SpawnState.Destroyed;
+
+        public void Respawn()
+        {
+            if (State == SpawnState.Respawning) return;
+
+            State = SpawnState.Respawning;
+            if (ActiveEntity != null) 
+            {
+                ActiveEntity.ScheduleDestroyEvent(TimeSpan.Zero);
+                ActiveEntity = null;
+            }
+            State = SpawnState.Pending;
+            Spawn();
+        }
     }
 
     public class SpawnGroup
     {
         public ulong Id { get; }
+        public SpawnState State { get; private set; }
         public Transform3 Transform { get; set; }
         public List<SpawnSpec> Specs { get; set; }
         public PrototypeId MissionRef { get; set; }
@@ -130,12 +159,15 @@ namespace MHServerEmu.Games.Populations
         public PopulationManager PopulationManager { get; set; }
         public ulong SpawnerId { get; set; }
         public PopulationObjectPrototype ObjectProto { get; set; }
+        public SpawnScheduler SpawnScheduler { get; set; }
+        public PopulationObject PopulationObject { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
             Id = id;
             PopulationManager = populationManager;
             Specs = new();
+            State = SpawnState.Live;
         }
 
         public void AddSpec(SpawnSpec spec)
@@ -187,6 +219,26 @@ namespace MHServerEmu.Games.Populations
             }
 
             return false;
+        }
+
+        public void Respawn()
+        {
+            foreach (var spec in Specs)
+                spec.Respawn();
+        }
+
+        public void Destroy()
+        {
+            if (State == SpawnState.Destroyed) return;
+            if (State == SpawnState.Live) Defeat();
+            State = SpawnState.Destroyed;
+            // TODO Destroy
+        }
+
+        private void Defeat()
+        {
+            State = SpawnState.Defeated;
+            // TODO kill entity
         }
     }
 

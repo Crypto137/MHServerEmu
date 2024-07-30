@@ -48,6 +48,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapDistributeSpread { get; protected set; }
         public bool SpawnMapEnabled { get; protected set; }
 
+        public const float PopulationClusterSq = 3200.0f; 
+
         public override void PostProcess()
         {
             base.PostProcess();

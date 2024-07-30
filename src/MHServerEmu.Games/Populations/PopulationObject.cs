@@ -20,17 +20,21 @@ namespace MHServerEmu.Games.Populations
         public SpawnFlags SpawnFlags;
         public PopulationObjectPrototype Object;
         public WorldEntity Spawner;
-        public List<PrototypeId> SpawnAreas;
-        public List<PrototypeId> SpawnCells;
+        public SpawnLocation SpawnLocation;
         public int Count;
+        public bool Critical;
+        public TimeSpan Time;
+        public bool IsMarker;
+        public SpawnEvent SpawnEvent;
+        public SpawnScheduler Scheduler;
+        public ulong SpawnGroupId;
 
-        public bool SpawnByMarker(Cell cell)
+        public bool SpawnByMarker()
         {
             if (Count == 0) return false;
-            SpawnTarget spawnTarget = new(cell.Region)
+            SpawnTarget spawnTarget = new(SpawnLocation.Region)
             {
-                Type = SpawnTargetType.Marker,
-                Cell = cell
+                Type = SpawnTargetType.Marker
             };
             if (SpawnObject(spawnTarget, out _) != 0)
             {
@@ -42,7 +46,7 @@ namespace MHServerEmu.Games.Populations
 
         public bool SpawnInCell(Cell cell)
         {
-            SpawnTarget spawnTarget = new(cell.Region)
+            SpawnTarget spawnTarget = new(SpawnLocation.Region)
             {
                 Type = SpawnTargetType.RegionBounds,
                 RegionBounds = cell.RegionBounds
@@ -66,7 +70,7 @@ namespace MHServerEmu.Games.Populations
             {
                 Region region = spawnTarget.Region;
                 SpawnMarkerRegistry registry = region.SpawnMarkerRegistry;
-                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, spawnTarget.Cell, SpawnAreas, SpawnCells);
+                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation);
                 if (reservation != null)
                 {
                     reservation.Object = Object;
@@ -80,9 +84,19 @@ namespace MHServerEmu.Games.Populations
             clusterGroup.Initialize();
             bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
             if (success) groupId = clusterGroup.Spawn(null, Spawner, entities);
+            SpawnGroupId = groupId;
             return groupId;
         }
+
+        public int GetPriority()
+        {
+            int priority = Critical ? 10000 : 0;
+            if (Time > TimeSpan.Zero)
+                return priority + (int)Time.TotalMilliseconds;
+            return priority + SpawnLocation.SpawnAreas.Count;
+        }
     }
+
     public enum SpawnTargetType
     {
         Marker,
