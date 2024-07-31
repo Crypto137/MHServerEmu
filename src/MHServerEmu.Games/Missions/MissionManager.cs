@@ -85,6 +85,7 @@ namespace MHServerEmu.Games.Missions
         {
             Game = game;
             Owner = owner;
+            _optimizationFlag = InteractionOptimizationFlags.Hint | InteractionOptimizationFlags.Visibility;
             AreaCreatedAction = OnAreaCreated;
             CellCreatedAction = OnCellCreated;
             EntityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;

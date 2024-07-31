@@ -10,7 +10,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using static MHServerEmu.Games.Populations.PopulationManager;
 
 namespace MHServerEmu.Games.Populations
 {
@@ -23,7 +22,7 @@ namespace MHServerEmu.Games.Populations
         public Dictionary<PrototypeId, MarkerEventScheduler> MarkerSchedulers { get; }
         public List<SpawnScheduler> LocationSchedulers { get; }
         private List<SpawnEvent> _spawnEvents { get; }
-
+        private ulong _scheduledCount;
         private EventGroup _pendingEvents = new();
         private ulong _blackOutId;
         private BlackOutSpatialPartition _blackOutSpatialPartition;
@@ -56,6 +55,7 @@ namespace MHServerEmu.Games.Populations
             _spawnSpecs = new();
             _spawnEvents = new();
             _nextSpawnSpecId = 1;
+            _scheduledCount = 0;
         }
 
         public void Deallocate()
@@ -98,11 +98,12 @@ namespace MHServerEmu.Games.Populations
         private void LocationSchedule()
         {
             var scheduler = Game.GameEventScheduler;
-            TimeSpan timeOffset = TimeSpan.FromSeconds(500); // TODO calc Max timeOffset
+            TimeSpan timeOffset = TimeSpan.FromMilliseconds(500); // TODO calc Max timeOffset
             if (_locationSpawnEvent.IsValid == false)
             {
                 scheduler.ScheduleEvent(_locationSpawnEvent, timeOffset, _pendingEvents);
-                _locationSpawnEvent.Get().Initialize(this);
+                _locationSpawnEvent.Get().Initialize(this); _scheduledCount++;
+                Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
             }
             else if (_locationSpawnEvent.Get().FireTime > Game.CurrentTime + timeOffset)
                 scheduler.RescheduleEvent(_locationSpawnEvent, timeOffset);
@@ -116,11 +117,12 @@ namespace MHServerEmu.Games.Populations
             if (Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) == 0) return;
             
             var markerEvent = markerEventScheduler.MarkerSpawnEvent;
-            TimeSpan timeOffset = TimeSpan.FromSeconds(20); // TODO calc Max timeOffset
+            TimeSpan timeOffset = TimeSpan.FromMilliseconds(20); // TODO calc Max timeOffset
             if (markerEvent.IsValid == false)
             {
                 scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
                 markerEvent.Get().Initialize(this, markerRef);
+                Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
             }
             else if (markerEvent.Get().FireTime > Game.CurrentTime + timeOffset)
                 scheduler.RescheduleEvent(markerEvent, timeOffset);
@@ -137,7 +139,10 @@ namespace MHServerEmu.Games.Populations
             {
                 schedulerPicker.PickRemove(out var scheduler);
                 if (scheduler.ScheduledObjects.Count > 0)
+                {
+                    Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");
                     scheduler.ScheduleLocationObject();
+                }
                 if (scheduler.ScheduledObjects.Count > 0)
                     schedulerPicker.Add(scheduler);
             }
@@ -151,7 +156,10 @@ namespace MHServerEmu.Games.Populations
                 && Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) > 0)
                 foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
                     if (scheduler.ScheduledObjects.Count > 0)
+                    {
+                        Logger.Debug($"ScheduleMarkerObject [{markerRef}] [{scheduler.ScheduledObjects.Count}]");
                         scheduler.ScheduleMarkerObject();
+                    }
 
             MarkerSchedule(markerRef);
         }

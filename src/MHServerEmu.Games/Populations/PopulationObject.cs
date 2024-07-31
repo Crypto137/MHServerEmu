@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Populations
             bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
             if (success) groupId = clusterGroup.Spawn(null, Spawner, entities);
             SpawnGroupId = groupId;
-            SpawnEvent.SetSpawnData(groupId, entities);
+            SpawnEvent?.SetSpawnData(groupId, entities);
             return groupId;
         }
 
