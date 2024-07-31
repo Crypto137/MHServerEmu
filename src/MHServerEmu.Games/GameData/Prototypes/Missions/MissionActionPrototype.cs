@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Missions.Actions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -111,6 +112,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEncounterSpawnPrototype : MissionActionPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public AssetId EncounterResource { get; protected set; }
         public int Phase { get; protected set; }
         public bool MissionSpawnOnly { get; protected set; }
@@ -118,6 +120,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEncounterSpawn(owner, this);
+        }
+
+        public PrototypeId GetEncounterRef()
+        {
+            if (EncounterResource == AssetId.Invalid)
+            {
+                Logger.Warn($"{ToString()} has no value in its EncounterResource field.");
+                return PrototypeId.Invalid;
+            }
+
+            PrototypeId encounterProtoRef = GameDatabase.GetDataRefByAsset(EncounterResource);
+            if (encounterProtoRef == PrototypeId.Invalid)
+            {
+                Logger.Warn($"{ToString()} was unable to find resource for asset {GameDatabase.GetAssetName(EncounterResource)}, check file path and verify file exists.");
+                return PrototypeId.Invalid;
+            }
+
+            return encounterProtoRef;
         }
     }
 
