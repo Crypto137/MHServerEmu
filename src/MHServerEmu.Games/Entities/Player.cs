@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Entities
 
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
 
-        private MissionManager _missionManager = new();
+        private MissionManager _missionManager;
         private ReplicatedPropertyCollection _avatarProperties;
         private ulong _shardId;
         private ReplicatedVariable<string> _playerName = new(0, string.Empty);
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Entities
 
         public Player(Game game) : base(game)
         {
-            _missionManager.Owner = this;
+            _missionManager = new(Game, this);
             _gameplayOptions.SetOwner(this);
         }
 
@@ -249,6 +249,7 @@ namespace MHServerEmu.Games.Entities
 
             // Complete all missions
             _missionManager.SetAvatar((PrototypeId)account.CurrentAvatar.RawPrototype);
+            if (false) // Off completion
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);

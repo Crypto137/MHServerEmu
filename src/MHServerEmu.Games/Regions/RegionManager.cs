@@ -204,7 +204,7 @@ namespace MHServerEmu.Games.Regions
                     // region = EmptyRegion(prototype);
                     if (region != null)
                     {
-                        region.ArchiveData = GetArchiveData(prototype);
+                        region.ArchiveData = Array.Empty<byte>(); // OFF GetArchiveData(prototype);
                         EntityHelper.SetUpHardcodedEntities(region);
                         ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
                         Logger.Debug($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
