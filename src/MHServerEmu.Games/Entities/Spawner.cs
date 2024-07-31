@@ -94,5 +94,10 @@ namespace MHServerEmu.Games.Entities
         {
             Logger.Debug($"KillSummonedInventory(): {this}");
         }
+
+        public void OnDefeatEntity(WorldEntity activeEntity)
+        {
+            // TODO NetMessageEntityKill
+        }
     }
 }

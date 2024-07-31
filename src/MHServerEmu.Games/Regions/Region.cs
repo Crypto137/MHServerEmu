@@ -681,6 +681,7 @@ namespace MHServerEmu.Games.Regions
             */
 
             NaviMesh.Release();
+            PopulationManager.Deallocate();
         }
 
         public ulong GetMatchNumber() => Settings.MatchNumber;

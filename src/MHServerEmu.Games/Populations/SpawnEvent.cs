@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -16,8 +17,8 @@ namespace MHServerEmu.Games.Populations
         public Region Region;
         public Game Game;
         public PopulationManager PopulationManager;
-        public List<ulong> SpawnGroups;
-
+        public HashSet<ulong> SpawnGroups;
+        public HashSet<ulong> SpawnedEntities;
         public Dictionary<PrototypeId, SpawnScheduler> SpawnMarkerSchedulers;
         public Dictionary<SpawnLocation, SpawnScheduler> SpawnLocationSchedulers;
 
@@ -28,8 +29,18 @@ namespace MHServerEmu.Games.Populations
             PopulationManager = region.PopulationManager;
             PopulationManager.AddSpawnEvent(this);
             SpawnGroups = new();
+            SpawnedEntities = new();
             SpawnMarkerSchedulers = new();
             SpawnLocationSchedulers = new();
+        }
+
+        public void SetSpawnData(ulong groupId, List<WorldEntity> entities)
+        {
+            var group = PopulationManager.GetSpawnGroup(groupId);
+            if (group != null) group.SpawnEvent = this;
+            SpawnGroups.Add(groupId);
+            foreach (var entity in entities)
+                SpawnedEntities.Add(entity.Id);
         }
 
         public bool IsSpawned()
@@ -49,7 +60,6 @@ namespace MHServerEmu.Games.Populations
                 group?.Respawn();
             }
         }
-
 
         public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, bool critical,
             SpawnLocation spawnLocation, PrototypeId missionRef, TimeSpan time = default)

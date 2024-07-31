@@ -182,6 +182,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void ClearSpawnSpec()
+        {
+            SpawnSpec = null;
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);

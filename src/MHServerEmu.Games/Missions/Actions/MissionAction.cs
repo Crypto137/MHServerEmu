@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
@@ -8,6 +9,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public IMissionActionOwner Owner { get; private set; }
         public PrototypeId MissionRef { get => Owner.PrototypeDataRef; }
         public MissionActionPrototype Prototype { get; private set; }
+        public Region Region { get => Owner.Region; }
 
         public MissionAction(IMissionActionOwner owner, MissionActionPrototype prototype)
         {

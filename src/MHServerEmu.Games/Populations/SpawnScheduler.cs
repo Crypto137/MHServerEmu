@@ -37,11 +37,7 @@ namespace MHServerEmu.Games.Populations
         private void UpdateSpawnGroup(PopulationObject populationObject)
         {
             var group = SpawnEvent.PopulationManager.GetSpawnGroup(populationObject.SpawnGroupId);
-            if (group != null)
-            {
-                group.SpawnScheduler = this;
-                group.PopulationObject = populationObject;
-            }
+            if (group != null) group.PopulationObject = populationObject;
         }
 
         public void ScheduleLocationObject() // Spawn Themes

@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public List<MissionAction> Actions { get; private set; }
         public List<MissionActionEntityTarget> EntityActions { get; private set; }
         public Mission Mission { get => Owner as Mission; }
-        public Region Region { get => Mission.Region; }
+        public Region Region { get => Owner.Region; }
         public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public bool IsActive { get; private set; }
         public Action<EntitySetSimulatedGameEvent> EntitySetSimulatedAction { get; private set; }

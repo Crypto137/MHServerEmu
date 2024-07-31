@@ -28,6 +28,7 @@ namespace MHServerEmu.Games.Populations
         private ulong _blackOutId;
         private BlackOutSpatialPartition _blackOutSpatialPartition;
         private Dictionary<ulong, BlackOutZone> _blackOutZones;
+        private Dictionary<KeyValuePair<PrototypeId, PrototypeId>, ulong> _encounterSpawnPhases;
         private ulong NextBlackOutId() => _blackOutId++;
 
         private ulong _nextSpawnGroupId;
@@ -47,6 +48,7 @@ namespace MHServerEmu.Games.Populations
             Random = new(region.RandomSeed);
             MarkerSchedulers = new();
             LocationSchedulers = new();
+            _encounterSpawnPhases = new();
             _blackOutZones = new();
             _blackOutId = 1;
             _spawnGroups = new();
@@ -56,16 +58,22 @@ namespace MHServerEmu.Games.Populations
             _nextSpawnSpecId = 1;
         }
 
+        public void Deallocate()
+        {
+            var scheduler = Game.GameEventScheduler;
+            scheduler.CancelAllEvents(_pendingEvents);
+            _encounterSpawnPhases.Clear();
+            _blackOutZones.Clear();
+            _spawnEvents.Clear();
+            // TODO clear Schedulers?
+            MarkerSchedulers.Clear();
+            LocationSchedulers.Clear();
+        }
+
         public void AddSpawnEvent(SpawnEvent spawnEvent)
         {
             if (_spawnEvents.Contains(spawnEvent) == false) 
                 _spawnEvents.Add(spawnEvent);
-        }
-
-        public void RemoveSpawnEvent(SpawnEvent spawnEvent)
-        {
-            if (_spawnEvents.Contains(spawnEvent))
-                _spawnEvents.Remove(spawnEvent);
         }
 
         public void ScheduleSpawnEvent(SpawnEvent spawnEvent)
@@ -256,6 +264,11 @@ namespace MHServerEmu.Games.Populations
             return spec;
         }
 
+        public void RemoveSpawnSpec(ulong id)
+        {
+            _spawnSpecs.Remove(id);
+        }
+
         public void DespawnSpawnGroups(PrototypeId missionRef)
         {
             List<SpawnGroup> despawnGroups = new ();
@@ -269,7 +282,49 @@ namespace MHServerEmu.Games.Populations
 
         public void ResetEncounterSpawnPhase(PrototypeId missionRef)
         {
-            throw new NotImplementedException();
+            List<KeyValuePair<PrototypeId, PrototypeId>> keysToRemove = new ();
+            foreach (var pair in _encounterSpawnPhases)
+                if (pair.Key.Value == missionRef)
+                    keysToRemove.Add(pair.Key);
+
+            foreach (var key in keysToRemove)
+                _encounterSpawnPhases.Remove(key);
+        }
+
+        public void SpawnEncounterPhase(int encounterPhase, PrototypeId encounterRef, PrototypeId missionRef)
+        {
+            if (encounterRef == PrototypeId.Invalid || encounterPhase == 0) return;
+            KeyValuePair<PrototypeId, PrototypeId> key = new(encounterRef, missionRef);
+            if (_encounterSpawnPhases.TryGetValue(key, out var _)) return;
+            _encounterSpawnPhases[key] = 1ul << encounterPhase;
+            foreach(var group in _spawnGroups.Values)
+            {
+                if (group == null) continue;
+                if (group.EncounterRef == encounterRef)
+                    if (missionRef == PrototypeId.Invalid || missionRef == group.MissionRef)
+                        foreach(var spec in group.Specs)
+                        {
+                            if (spec == null) continue;
+                            spec.Properties[PropertyEnum.EncounterResource] = encounterRef;
+                            if (spec.EncounterSpawnPhase == encounterPhase)
+                                spec.Spawn();
+                        }
+            }
+        }
+
+        public bool CheckEncounterPhase(int encounterPhase, PrototypeId encounterRef, PrototypeId missionRef)
+        {
+            if (encounterPhase == 0) return true;
+            KeyValuePair<PrototypeId, PrototypeId> key = new(encounterRef, missionRef);
+
+            if (_encounterSpawnPhases.TryGetValue(key, out var foundPhase)) 
+                if ((foundPhase & (1ul << encounterPhase)) != 0 ) return true;
+
+            key = new(encounterRef, PrototypeId.Invalid);
+            if (_encounterSpawnPhases.TryGetValue(key, out var noMissionPhase))
+                if ((noMissionPhase & (1ul << encounterPhase)) != 0) return true;
+
+            return false;
         }
 
         public class MarkerEventScheduler

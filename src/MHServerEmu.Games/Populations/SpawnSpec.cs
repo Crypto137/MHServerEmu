@@ -32,6 +32,7 @@ namespace MHServerEmu.Games.Populations
         public bool? SnapToFloor { get; set; }
         public EntitySelectorPrototype EntitySelectorProto { get; set; }
         public PrototypeId MissionRef { get; set; }
+        public int EncounterSpawnPhase { get; set; }
         public List<EntitySelectorActionPrototype> Actions { get; private set; }
         public ScriptRoleKeyEnum RoleKey { get; internal set; }
         public float LeashDistance
@@ -60,7 +61,7 @@ namespace MHServerEmu.Games.Populations
 
         public bool Spawn()
         {
-            if (Group == null) return false;
+            if (Group == null || CheckEncounterPhase() == false) return false;
             Transform3 transform = Group.Transform * Transform;
             Vector3 position = transform.Translation;
             Orientation orientation = transform.Orientation;
@@ -115,6 +116,12 @@ namespace MHServerEmu.Games.Populations
             return true;
         }
 
+        public bool CheckEncounterPhase()
+        {
+            if (EncounterSpawnPhase == 0) return true;
+            return Group.PopulationManager.CheckEncounterPhase(EncounterSpawnPhase, Group.EncounterRef, Group.MissionRef);
+        }
+
         public static bool? SnapToFloorConvert(bool overrideSnapToFloor, bool overrideSnapToFloorValue)
         {
             return overrideSnapToFloor ? overrideSnapToFloorValue : null;
@@ -130,13 +137,45 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        // TODO SpawnState.Defeated;
-        // TODO SpawnState.Destroyed;
+        private void Defeat()
+        {
+            if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return;
+            State = SpawnState.Defeated;
+
+            // TODO defeat
+
+            if (Group != null && Group.SpawnerId != 0)
+            {
+                EntityManager manager = ActiveEntity?.Game.EntityManager;
+                if (manager != null)
+                {
+                    var spawner = manager.GetEntity<Spawner>(Group.SpawnerId);
+                    spawner?.OnDefeatEntity(ActiveEntity);
+                }
+            }
+        }
+
+        public void Destroy()
+        {
+            if (State == SpawnState.Destroyed || State == SpawnState.Respawning) return;
+            if (State == SpawnState.Live || State == SpawnState.Pending) Defeat();
+            State = SpawnState.Destroyed;
+            var entity = ActiveEntity;
+            if (entity != null)
+            {
+                var proto = entity.WorldEntityPrototype;
+                entity.ClearSpawnSpec();
+                TimeSpan time = TimeSpan.Zero;
+                if (entity.IsSimulated && entity.IsDead && proto.RemoveFromWorldTimerMS > 0)
+                    time = TimeSpan.FromMilliseconds(proto.RemoveFromWorldTimerMS);
+                entity.ScheduleDestroyEvent(time);
+                ActiveEntity = null;
+            }
+        }
 
         public void Respawn()
         {
             if (State == SpawnState.Respawning) return;
-
             State = SpawnState.Respawning;
             if (ActiveEntity != null) 
             {
@@ -159,8 +198,8 @@ namespace MHServerEmu.Games.Populations
         public PopulationManager PopulationManager { get; set; }
         public ulong SpawnerId { get; set; }
         public PopulationObjectPrototype ObjectProto { get; set; }
-        public SpawnScheduler SpawnScheduler { get; set; }
         public PopulationObject PopulationObject { get; set; }
+        public SpawnEvent SpawnEvent { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
@@ -232,7 +271,21 @@ namespace MHServerEmu.Games.Populations
             if (State == SpawnState.Destroyed) return;
             if (State == SpawnState.Live) Defeat();
             State = SpawnState.Destroyed;
-            // TODO Destroy
+            
+            while (Specs.Count > 0)
+            {
+                SpawnSpec spec = Specs[^1];
+                Specs.Remove(spec);
+                if (spec.State != SpawnState.Destroyed)
+                    spec.Destroy();
+                PopulationManager.RemoveSpawnSpec(spec.Id);
+            }
+
+            if (SpawnEvent != null)
+            {
+                SpawnEvent.SpawnGroups.Remove(Id);
+                SpawnEvent = null;
+            }
         }
 
         private void Defeat()
