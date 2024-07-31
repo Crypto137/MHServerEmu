@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
@@ -95,18 +96,34 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
+        private static bool GetEventTime(List<SpawnScheduler> schedulers, TimeSpan maxTime, out TimeSpan eventTime)
+        {
+            eventTime = TimeSpan.MaxValue;
+            foreach (var scheduler in schedulers)
+                if (scheduler.ScheduledObjects.Count > 0)
+                    eventTime = Clock.Min(eventTime, scheduler.ScheduledObjects.Peek().Time);
+
+            bool haveTime = eventTime != TimeSpan.MaxValue;
+            eventTime = Clock.Max(eventTime, maxTime);
+            return haveTime;
+        }
+
         private void LocationSchedule()
         {
             var scheduler = Game.GameEventScheduler;
-            TimeSpan timeOffset = TimeSpan.FromMilliseconds(500); // TODO calc Max timeOffset
-            if (_locationSpawnEvent.IsValid == false)
+            if (scheduler == null) return;
+
+            if (GetEventTime(LocationSchedulers, TimeSpan.FromMilliseconds(500), out var eventTime))
             {
-                scheduler.ScheduleEvent(_locationSpawnEvent, timeOffset, _pendingEvents);
-                _locationSpawnEvent.Get().Initialize(this); _scheduledCount++;
-                Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
+                if (_locationSpawnEvent.IsValid == false)
+                {
+                    scheduler.ScheduleEvent(_locationSpawnEvent, eventTime, _pendingEvents);
+                    _locationSpawnEvent.Get().Initialize(this); _scheduledCount++;
+                    Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
+                }
+                else if (_locationSpawnEvent.Get().FireTime > Game.CurrentTime + eventTime)
+                    scheduler.RescheduleEvent(_locationSpawnEvent, eventTime);
             }
-            else if (_locationSpawnEvent.Get().FireTime > Game.CurrentTime + timeOffset)
-                scheduler.RescheduleEvent(_locationSpawnEvent, timeOffset);
         }
 
         private void MarkerSchedule(PrototypeId markerRef)
@@ -115,17 +132,19 @@ namespace MHServerEmu.Games.Populations
             if (scheduler == null) return;
             if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler) == false) return;
             if (Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) == 0) return;
-            
-            var markerEvent = markerEventScheduler.MarkerSpawnEvent;
-            TimeSpan timeOffset = TimeSpan.FromMilliseconds(20); // TODO calc Max timeOffset
-            if (markerEvent.IsValid == false)
+
+            if (GetEventTime(markerEventScheduler.SpawnSchedulers, TimeSpan.FromMilliseconds(20), out var eventTime))
             {
-                scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
-                markerEvent.Get().Initialize(this, markerRef);
-                Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
+                var markerEvent = markerEventScheduler.MarkerSpawnEvent;
+                if (markerEvent.IsValid == false)
+                {
+                    scheduler.ScheduleEvent(markerEvent, eventTime, _pendingEvents);
+                    markerEvent.Get().Initialize(this, markerRef);
+                    Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
+                }
+                else if (markerEvent.Get().FireTime > Game.CurrentTime + eventTime)
+                    scheduler.RescheduleEvent(markerEvent, eventTime);
             }
-            else if (markerEvent.Get().FireTime > Game.CurrentTime + timeOffset)
-                scheduler.RescheduleEvent(markerEvent, timeOffset);
         }
 
         private void ScheduleLocationObject()
