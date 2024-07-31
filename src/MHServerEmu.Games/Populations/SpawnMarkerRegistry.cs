@@ -296,7 +296,7 @@ namespace MHServerEmu.Games.Populations
             var spawnCells = spawnLocation.SpawnCells;
 
             // picker add
-            if (spawnCells.Any())
+            if (spawnCells.Count > 0)
             {
                 foreach (var spawnCell in spawnCells)
                 {
@@ -312,7 +312,7 @@ namespace MHServerEmu.Games.Populations
                     }
                 }
             }
-            else if (spawnAreas.Any())
+            else if (spawnAreas.Count > 0)
             {
                 foreach (var spawnArea in spawnAreas)
                 {
@@ -325,6 +325,15 @@ namespace MHServerEmu.Games.Populations
                         picker.Add(testReservation);
                     }
                 }
+            }
+            else
+            {
+                if (_regionLookup.TryGetValue(markerRef, out var list) && list != null)
+                    foreach (var testReservation in list)
+                    {
+                        if (testReservation.State != MarkerState.Free) continue;
+                        picker.Add(testReservation);
+                    }
             }
 
             if (picker.Empty() == false && picker.Pick(out SpawnReservation reservation))

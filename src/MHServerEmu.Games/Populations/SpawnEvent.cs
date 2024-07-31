@@ -266,16 +266,11 @@ namespace MHServerEmu.Games.Populations
                             }
 
                         if (foundArea == false) continue;
+                    }
 
-                        var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
-                        //for (var i = 0; i < entry.Count; i++)                        
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, critical, spawnLocation, missionProto.DataRef);
-                    }
-                    else if (entry.RestrictToRegions.HasValue()) // No areas but have Region
-                    {
-                        var spawnLocation = new SpawnLocation(Region, entry.RestrictToCells);
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, critical, spawnLocation, missionProto.DataRef);
-                    }
+                    var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
+                    //for (var i = 0; i < entry.Count; i++)                        
+                    AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, critical, spawnLocation, missionProto.DataRef);
                 }
         }
     }
