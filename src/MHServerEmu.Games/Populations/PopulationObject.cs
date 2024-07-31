@@ -21,7 +21,6 @@ namespace MHServerEmu.Games.Populations
         public PopulationObjectPrototype Object;
         public WorldEntity Spawner;
         public SpawnLocation SpawnLocation;
-        public int Count;
         public bool Critical;
         public TimeSpan Time;
         public bool IsMarker;
@@ -31,17 +30,11 @@ namespace MHServerEmu.Games.Populations
 
         public bool SpawnByMarker()
         {
-            if (Count == 0) return false;
             SpawnTarget spawnTarget = new(SpawnLocation.Region)
             {
                 Type = SpawnTargetType.Marker
             };
-            if (SpawnObject(spawnTarget, out _) != 0)
-            {
-                Count--;
-                return true;
-            }
-            return false;
+            return SpawnObject(spawnTarget, out _) != 0;
         }
 
         public bool SpawnInCell(Cell cell)
@@ -51,14 +44,7 @@ namespace MHServerEmu.Games.Populations
                 Type = SpawnTargetType.RegionBounds,
                 RegionBounds = cell.RegionBounds
             };
-
-            while (Count > 0)
-            {
-                SpawnObject(spawnTarget, out _);
-                Count--;
-            }
-            if (Count == 0) return true;
-            return false;
+            return SpawnObject(spawnTarget, out _) != 0;
         }
 
         public ulong SpawnObject(SpawnTarget spawnTarget, out List<WorldEntity> entities)

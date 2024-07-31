@@ -210,7 +210,6 @@ namespace MHServerEmu.Games.Populations
                 Object = popObject,
                 Spawner = spawner,
                 SpawnLocation = spawnLocation,
-                Count = 1
             };
             populationObject.SpawnObject(spawnTarget, out entities);
         }
