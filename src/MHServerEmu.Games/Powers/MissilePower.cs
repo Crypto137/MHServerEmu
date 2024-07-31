@@ -522,10 +522,10 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleCreationDelayEvent(TimeSpan delay, PowerApplication powerApplication)
         {
-            var sheduler = Game?.GameEventScheduler;
-            if (sheduler == null) return false;
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return false;
             if (_createMissileEvent.IsValid) return Logger.WarnReturn(false, $"ScheduleCreationDelayEvent called when event already scheduled. POWER={ToString()}");
-            sheduler.ScheduleEvent(_createMissileEvent, delay, _pendingEvents);
+            scheduler.ScheduleEvent(_createMissileEvent, delay, _pendingEvents);
             _createMissileEvent.Get().Initialize(this, powerApplication);
 
             return true;
