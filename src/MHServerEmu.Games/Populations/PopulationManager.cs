@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Populations
                 {
                     scheduler.ScheduleEvent(_locationSpawnEvent, eventTime, _pendingEvents);
                     _locationSpawnEvent.Get().Initialize(this); _scheduledCount++;
-                    Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
+                    // Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
                 }
                 else if (_locationSpawnEvent.Get().FireTime > Game.CurrentTime + eventTime)
                     scheduler.RescheduleEvent(_locationSpawnEvent, eventTime);
@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Populations
                 {
                     scheduler.ScheduleEvent(markerEvent, eventTime, _pendingEvents);
                     markerEvent.Get().Initialize(this, markerRef);
-                    Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
+                    // Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
                 }
                 else if (markerEvent.Get().FireTime > Game.CurrentTime + eventTime)
                     scheduler.RescheduleEvent(markerEvent, eventTime);
@@ -159,7 +159,7 @@ namespace MHServerEmu.Games.Populations
                 schedulerPicker.PickRemove(out var scheduler);
                 if (scheduler.ScheduledObjects.Count > 0)
                 {
-                    Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");
+                    // Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");
                     scheduler.ScheduleLocationObject();
                 }
                 if (scheduler.ScheduledObjects.Count > 0)
@@ -176,7 +176,7 @@ namespace MHServerEmu.Games.Populations
                 foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
                     if (scheduler.ScheduledObjects.Count > 0)
                     {
-                        Logger.Debug($"ScheduleMarkerObject [{markerRef}] [{scheduler.ScheduledObjects.Count}]");
+                        // Logger.Debug($"ScheduleMarkerObject [{markerRef}] [{scheduler.ScheduledObjects.Count}]");
                         scheduler.ScheduleMarkerObject();
                     }
 
