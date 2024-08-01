@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Populations
             {
                 Region region = spawnTarget.Region;
                 SpawnMarkerRegistry registry = region.SpawnMarkerRegistry;
-                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation);
+                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation, SpawnFlags);
                 if (reservation != null)
                 {
                     reservation.Object = Object;

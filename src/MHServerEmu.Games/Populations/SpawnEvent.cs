@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Populations
                 Critical = critical,
                 Time = time,
                 Properties = properties,
-                SpawnFlags = SpawnFlags.None,
+                SpawnFlags = population.IgnoreBlackout ? SpawnFlags.IgnoreBlackout : SpawnFlags.None,
                 Object = population,
                 SpawnLocation = spawnLocation,
             };
