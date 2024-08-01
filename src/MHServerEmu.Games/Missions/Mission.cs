@@ -1407,19 +1407,19 @@ namespace MHServerEmu.Games.Missions
             return objectiveProto;
         }
 
-        internal void OnAvatarEnteredMission(Player player)
+        public void OnAvatarEnteredMission(Player player)
         {
-            throw new NotImplementedException();
+            Logger.Warn($"OnAvatarEnteredMission [{PrototypeName}]");
         }
 
-        internal void OnAvatarLeftMission(Player player)
+        public void OnAvatarLeftMission(Player player)
         {
-            throw new NotImplementedException();
+            Logger.Warn($"OnAvatarLeftMission [{PrototypeName}]");
         }
 
-        internal void OnPlayerLeftRegion(Player player)
+        public void OnPlayerLeftRegion(Player player)
         {
-            throw new NotImplementedException();
+            Logger.Warn($"OnPlayerLeftRegion [{PrototypeName}]");
         }
 
         private void OnTimeLimit()
