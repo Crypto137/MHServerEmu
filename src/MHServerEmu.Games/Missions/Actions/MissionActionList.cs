@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             if (entity == null || entity.IsDormant) return;
             if (IsInitialized == false || IsActive == false) return;
-            if (entity.IsTrackedByContext(Context) == false) return;
+            if (entity.IsTrackedByContext(Context) == false) return; // TODO add trackingContext
 
             foreach (var action in EntityActions)
                 action?.EvaluateAndRunEntity(entity);
