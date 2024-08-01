@@ -190,6 +190,13 @@ namespace MHServerEmu.Games.Missions
             CreateMissionByDataRef(missionRef);
         }
 
+        public Mission MissionByDataRef(PrototypeId missionRef)
+        {
+            var mission = FindMissionByDataRef(missionRef);
+            mission ??= CreateMissionByDataRef(missionRef);
+            return mission;
+        }
+
         public bool SetAvatar(PrototypeId avatarPrototypeRef)
         {
             // TODO: Pass the avatar instance itself rather than its prototype and do all the necessary initialization
@@ -835,12 +842,27 @@ namespace MHServerEmu.Games.Missions
 
         private void RemoveMissionInterestEntity(ulong entityId, Player player)
         {
+            Logger.Warn($"RemoveMissionInterestEntity [{entityId}] [{player}]");
             // TODO remove entity from interest
         }
 
         private void AddMissionInterestEntity(ulong entityId, Player player)
         {
+            Logger.Warn($"AddMissionInterestEntity [{entityId}] [{player}]");
             // TODO add entity to interest
+        }
+
+        public void OnSpawnedPopulation(PrototypeId missionRef)
+        {
+            if (IsRegionMissionManager())
+            {
+                var openMissionProto = GameDatabase.GetPrototype<OpenMissionPrototype>(missionRef);
+                if (openMissionProto != null)
+                {
+                    var mission = MissionByDataRef(missionRef);
+                    mission?.OnSpawnedPopulation();
+                }
+            }
         }
 
         #region Hardcoded

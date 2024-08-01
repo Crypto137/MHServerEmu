@@ -31,6 +31,16 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct EntitySetUnSimulatedGameEvent
+    {
+        public WorldEntity Entity;
+
+        public EntitySetUnSimulatedGameEvent(WorldEntity entity)
+        {
+            Entity = entity;
+        }
+    }
+
     public struct AIBroadcastBlackboardGameEvent
     {
         public WorldEntity Broadcaster;

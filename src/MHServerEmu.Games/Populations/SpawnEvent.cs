@@ -128,6 +128,9 @@ namespace MHServerEmu.Games.Populations
         {
             PopulationManager.ScheduleSpawnEvent(this);
         }
+
+        public virtual void OnSpawnedPopulation() { }
+        public virtual void OnUpdateSimulation() { }
     }
 
     public class PopulationAreaSpawnEvent : SpawnEvent
@@ -272,6 +275,17 @@ namespace MHServerEmu.Games.Populations
                     for (var i = 0; i < entry.Count; i++)                        
                         AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef);
                 }
+        }
+        public override void OnSpawnedPopulation()
+        {
+            if (MissionManager.IsRegionMissionManager() && IsSpawned()) 
+                MissionManager.OnSpawnedPopulation(MissionRef);
+        }
+
+        public override void OnUpdateSimulation()
+        {
+            var mission = MissionManager.FindMissionByDataRef(MissionRef);
+            mission?.OnUpdateSimulation(this);
         }
     }
     

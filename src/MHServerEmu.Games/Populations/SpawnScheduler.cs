@@ -31,13 +31,16 @@ namespace MHServerEmu.Games.Populations
         {
             if (Pop(out PopulationObject populationObject))
                 if (populationObject.SpawnByMarker()) // cell.SpawnPopulation(population);
-                    UpdateSpawnGroup(populationObject);
+                    OnSpawnedPopulation(populationObject);
         }
 
-        private void UpdateSpawnGroup(PopulationObject populationObject)
+        private void OnSpawnedPopulation(PopulationObject populationObject)
         {
+            if (populationObject == null || populationObject.SpawnGroupId == 0) return;
+
             var group = SpawnEvent.PopulationManager.GetSpawnGroup(populationObject.SpawnGroupId);
             if (group != null) group.PopulationObject = populationObject;
+            SpawnEvent.OnSpawnedPopulation();
         }
 
         public void ScheduleLocationObject() // Spawn Themes
@@ -65,7 +68,7 @@ namespace MHServerEmu.Games.Populations
                 {
                     var cell = picker.Pick();
                     if (populationObject.SpawnInCell(cell)) // PopulationArea.SpawnPopulation(PopulationObjects);
-                        UpdateSpawnGroup(populationObject);
+                        OnSpawnedPopulation(populationObject);
                 }
             }
         }

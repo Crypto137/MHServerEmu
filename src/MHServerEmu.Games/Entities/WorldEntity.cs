@@ -1738,7 +1738,17 @@ namespace MHServerEmu.Games.Entities
         {
             var result = base.SetSimulated(simulated);
             if (result != SimulateResult.None && Locomotor != null)
+            {
                 ModifyCollectionMembership(EntityCollection.Locomotion, IsSimulated);
+                if (Region != null)
+                {
+                    if (simulated)
+                        Region.EntitySetSimulatedEvent.Invoke(new(this));
+                    else
+                        Region.EntitySetUnSimulatedEvent.Invoke(new(this));
+                }
+                SpawnSpec?.OnUpdateSimulation();
+            }
             if (result == SimulateResult.Set)
             {
                 // TODO EnemyBoost Rank

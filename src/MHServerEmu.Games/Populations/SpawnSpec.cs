@@ -185,6 +185,11 @@ namespace MHServerEmu.Games.Populations
             State = SpawnState.Pending;
             Spawn();
         }
+
+        public void OnUpdateSimulation()
+        {
+            Group?.SpawnEvent?.OnUpdateSimulation();
+        }
     }
 
     public class SpawnGroup

@@ -14,6 +14,7 @@ using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -458,7 +459,7 @@ namespace MHServerEmu.Games.Missions
                 if (_activateNowConditions != null && _activateNowConditions.IsCompleted())
                     return SetState(MissionState.Active);
 
-                if (_prereqConditions != null && _prereqConditions.IsCompleted())
+                if (_prereqConditions == null || _prereqConditions.IsCompleted())
                     return SetState(MissionState.Available);
             }
             return false;
@@ -474,8 +475,8 @@ namespace MHServerEmu.Games.Missions
             if (_activateNowConditions != null && _activateNowConditions.IsCompleted())
                 return SetState(MissionState.Active);
 
-            if (_prereqConditions != null && _prereqConditions.IsCompleted())
-                return SetState(MissionState.Available);
+            if (_prereqConditions == null || _prereqConditions.IsCompleted())
+                return SetState(MissionState.Active);
 
             return false;
         }
@@ -1553,6 +1554,18 @@ namespace MHServerEmu.Games.Missions
                 scheduler.ScheduleEvent(_delayedUpdateMissionEntitiesEvent, timeOffset, EventGroup);
                 _delayedUpdateMissionEntitiesEvent.Get().Initialize(this);
             }
+        }
+
+        public void OnSpawnedPopulation()
+        {
+            SpawnState = MissionSpawnState.Spawned;
+            OnChangeState();
+        }
+
+        public void OnUpdateSimulation(MissionSpawnEvent missionSpawnEvent)
+        {
+            if (missionSpawnEvent == null) return;
+            // TODO restart Mission if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
         }
 
         protected class IdleTimeoutEvent : CallMethodEvent<Mission>
