@@ -1,6 +1,4 @@
-﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
@@ -273,9 +271,9 @@ namespace MHServerEmu.Games.Regions
             if (IsDynamicArea)
                 return true;
 
-            // if (AreaPrototype.FullyGenerateCells) // only TheRaft
-            foreach (Cell cell in CellIterator())
-                cell.PostGenerate(); // can be here?
+            if (Prototype.FullyGenerateCells) // only TheRaft
+                foreach (Cell cell in CellIterator())
+                    cell.Generate();
 
             return true;
         }
@@ -294,19 +292,11 @@ namespace MHServerEmu.Games.Regions
 
             BlackOutZonesRebuild();
 
+            Region.AreaCreatedEvent.Invoke(new(this));
+
             if (Region.Settings.GenerateEntities)
-            {
                 foreach (Cell cell in CellIterator())
-                {
-                    MarkerSetOptions options = MarkerSetOptions.Default | MarkerSetOptions.SpawnMissionAssociated;
-                    CellPrototype cellProto = cell.Prototype;
-
-                    if (cellProto.IsOffsetInMapFile == false)
-                        options |= MarkerSetOptions.NoOffset;
-
-                    cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
-                }
-            }
+                    cell.SpawnMarkerSet(MarkerSetOptions.SpawnMissionAssociated);
 
             PopulationArea?.Generate();
 

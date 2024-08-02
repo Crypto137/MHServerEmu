@@ -17,10 +17,17 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
+    [Flags]
+    public enum CellStatusFlag
+    {
+        PostInitialize = 1 << 0,
+        Generated = 1 << 1,
+    }
+
     public class Cell
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-
+        private CellStatusFlag _status;
         private float _playableNavArea;
         private float _spawnableNavArea;
 
@@ -31,7 +38,7 @@ namespace MHServerEmu.Games.Regions
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
         public CellSettings Settings { get; private set; }
-        public Cell.Type CellType { get; private set; }
+        public Type CellType { get; private set; }
         public int Seed { get; private set; }
         public PrototypeId PopulationThemeOverrideRef { get; private set; }
         public Aabb RegionBounds { get; private set; }
@@ -41,6 +48,8 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); } // TODO: Optimize
 
         public List<uint> CellConnections = new();
+        private int _AOIcount;
+        public bool HasAOI { get => _AOIcount > 0; }
         public List<ReservedSpawn> Encounters { get; } = new();
 
         public float PlayableArea { get => (_playableNavArea != -1.0) ? _playableNavArea : 0.0f; }
@@ -98,11 +107,26 @@ namespace MHServerEmu.Games.Regions
 
         public bool PostInitialize()
         {
-            MarkerSetOptions options = MarkerSetOptions.Default;
+            MarkerSetOptions options = MarkerSetOptions.Default;            
             if (Prototype.IsOffsetInMapFile == false) options |= MarkerSetOptions.NoOffset;
-            InstanceMarkerSet(Prototype.InitializeSet, Transform3.Identity(), options);
-
+            if (_status.HasFlag(CellStatusFlag.PostInitialize) == false)
+            {
+                _status |= CellStatusFlag.PostInitialize;
+                InstanceMarkerSet(Prototype.InitializeSet, Transform3.Identity(), options);
+            }
             return true;
+        }
+
+        public void Generate()
+        {
+            if (_status.HasFlag(CellStatusFlag.Generated) == false)
+            {
+                _status |= CellStatusFlag.Generated;
+                Region.CellCreatedEvent.Invoke(new(this));
+                SpawnMarkerSet(MarkerSetOptions.NoSpawnMissionAssociated);
+
+                PostGenerate();
+            }
         }
 
         public void PostGenerate()
@@ -445,6 +469,55 @@ namespace MHServerEmu.Games.Regions
         public void EnemySpawn()
         {
             PopulationArea.AddEnemyWeight(this);
+        }
+
+        public void SpawnMarkerSet(MarkerSetOptions options)
+        {
+            options |= MarkerSetOptions.Default;
+            CellPrototype cellProto = Prototype;
+
+            if (cellProto.IsOffsetInMapFile == false)
+                options |= MarkerSetOptions.NoOffset;
+
+            var districtRef = Area.DistrictDataRef;
+            if (districtRef != PrototypeId.Invalid)
+            {
+                var districtProto = GameDatabase.GetPrototype<DistrictPrototype>(districtRef);
+                if (districtProto != null)
+                    InstanceMarkerSet(districtProto.MarkerSet, Transform3.Identity(), MarkerSetOptions.None);
+            }
+
+            InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
+        }
+
+        public void OnAddToAOI()
+        {
+            Generate();
+            _AOIcount++;
+
+            if (_AOIcount == 1)
+            {
+                foreach (var entity in Entities)
+                {
+                    var worldEntity = entity as WorldEntity;
+                    worldEntity?.UpdateSimulationState();
+                }
+            }
+        }
+
+        public void OnRemoveFromAOI()
+        {
+            _AOIcount--;
+            if (_AOIcount < 0) _AOIcount = 0;
+
+            if (_AOIcount == 0)
+            {
+                foreach (var entity in Entities)
+                {
+                    var worldEntity = entity as WorldEntity;
+                    worldEntity?.UpdateSimulationState();
+                }
+            }
         }
 
         #region Enums

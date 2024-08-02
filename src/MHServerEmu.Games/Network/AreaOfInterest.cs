@@ -411,6 +411,8 @@ namespace MHServerEmu.Games.Network
         {
             _trackedCells.Add(cell.Id, new(_currentFrame, false));
 
+            cell.OnAddToAOI();
+
             var builder = NetMessageCellCreate.CreateBuilder()
                 .SetAreaId(cell.Area.Id)
                 .SetCellId(cell.Id)
@@ -437,6 +439,8 @@ namespace MHServerEmu.Games.Network
                     .SetCellId(cell.Id)
                     .Build());
             }
+
+            cell.OnRemoveFromAOI();
 
             _trackedCells.Remove(cell.Id);
             LoadedCellCount--;
