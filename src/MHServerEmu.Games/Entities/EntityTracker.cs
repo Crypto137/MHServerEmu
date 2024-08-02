@@ -190,6 +190,7 @@ namespace MHServerEmu.Games.Entities
                 _manager = _tracker._region.Game.EntityManager;
                 _flags = flags;
                 _options = options;
+                _keys = new();
 
                 if (contextRef == PrototypeId.Invalid) return;
 
