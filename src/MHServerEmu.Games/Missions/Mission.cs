@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Missions
         private float _currentObjectiveSequence;
         private TimeSpan _timeExpireCurrentState;
         private PrototypeId _prototypeDataRef;
-        private int _lootSeed;     
+        private int _lootSeed;
         private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
         private SortedSet<ulong> _participants = new();
         private Dictionary<ulong, float> _contributors = new(); // DistributionType.Contributors
@@ -227,7 +227,7 @@ namespace MHServerEmu.Games.Missions
             string expireTime = TimeExpireCurrentState != TimeSpan.Zero ? Clock.GameTimeToDateTime(TimeExpireCurrentState).ToString() : "0";
             sb.AppendLine($"{nameof(_timeExpireCurrentState)}: {expireTime}");
             sb.AppendLine($"{nameof(_prototypeDataRef)}: {GameDatabase.GetPrototypeName(_prototypeDataRef)}");
-            sb.AppendLine($"{nameof(_lootSeed)}: 0x{_lootSeed:X}");
+            sb.AppendLine($"{nameof(_lootSeed)}: {_lootSeed}");
 
             foreach (var kvp in _objectiveDict)
                 sb.AppendLine($"{nameof(_objectiveDict)}[{kvp.Key}]: {kvp.Value}");

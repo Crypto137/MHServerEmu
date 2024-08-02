@@ -232,8 +232,8 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // HACK: Schedule respawn using SpawnSpec
-            if (SpawnSpec != null)
+            // HACK: Schedule respawn in public zones using SpawnSpec
+            if (RegionLocation.Region != null && RegionLocation.Region.IsPublic && SpawnSpec != null)
             {
                 Logger.Trace($"Respawn scheduled for {this}");
                 EventPointer<TEMP_SpawnEntityEvent> eventPointer = new();
@@ -1154,16 +1154,17 @@ namespace MHServerEmu.Games.Entities
 
             // Change health to the new value
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+            WorldEntity ultimatePowerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
             if (health <= 0)
             {
-                Kill(powerUser, KillFlags.None, null);
+                Kill(ultimatePowerUser, KillFlags.None, powerUser);
             }
             else
             {
                 Properties[PropertyEnum.Health] = health;
                 if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
-                    OnGotHit(powerUser);
+                    OnGotHit(ultimatePowerUser);
             }
 
             return true;
@@ -1172,7 +1173,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnGotHit(WorldEntity attacker)
         {
             TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttacked);
-            if (attacker.GetMostResponsiblePowerUser<Avatar>() != null)
+            if (attacker != null && attacker.GetMostResponsiblePowerUser<Avatar>() != null)
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttackedByPlayer);
         }
 

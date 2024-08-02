@@ -58,6 +58,7 @@ namespace MHServerEmu.Games.Network
         public Orientation LastOrientation { get; set; }
 
         public AreaOfInterest AOI { get; private set; }
+        public WorldView WorldView { get; private set; }
         public Vector3 StartPosition { get; internal set; }
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
@@ -72,6 +73,7 @@ namespace MHServerEmu.Games.Network
             _frontendClient = frontendClient;
             _dbAccount = _frontendClient.Session.Account;
 
+            WorldView = new(this);
             InitializeFromDBAccount();
         }
 
@@ -206,6 +208,21 @@ namespace MHServerEmu.Games.Network
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
             Game.EntityManager.DestroyEntity(Player);
+
+            // Destroy all private region instances in the world view since they are not persistent anyway
+            foreach (var kvp in WorldView)
+            {
+                Region region = Game.RegionManager.GetRegion(kvp.Value);
+                if (region == null) continue;
+
+                if (region.IsPublic)
+                {
+                    Logger.Warn($"OnDisconnect(): Found public region {region} in the world view for player connection {this}");
+                    continue;
+                }
+
+                Game.RegionManager.DestroyRegion(kvp.Value);
+            }
         }
 
         #endregion
@@ -232,15 +249,15 @@ namespace MHServerEmu.Games.Network
 
             Player.IsOnLoadingScreen = true;
 
-            Region region = Game.RegionManager.GetRegion((RegionPrototypeId)RegionDataRef);
+            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionDataRef, this);
             if (region == null)
             {
-                Logger.Error($"Event ErrorInRegion {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
+                Logger.Error($"Failed to get or generate region {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
                 Disconnect();
                 return;
             }
 
-            var messages = region.GetLoadingMessages(Game.Id, WaypointDataRef, this);
+            var messages = region.OLD_GetLoadingMessages(Game.Id, WaypointDataRef, this);
             foreach (IMessage message in messages)
                 SendMessage(message);
 
@@ -414,7 +431,7 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer syncOrientation");
 
             // AOI
-            AOI.Region.Visited();
+            AOI.Region.UpdateLastVisitedTime();
             if (IsLoading == false)
                 AOI.Update(syncPosition);
 
@@ -793,7 +810,8 @@ namespace MHServerEmu.Games.Network
                     return true;
                 }
 
-                if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return true;
+                if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionLocation.RegionId) is not Transition target)
+                    return true;
 
                 if (AOI.InterestedInCell(target.RegionLocation.Cell.Id) == false)
                 {
@@ -932,7 +950,7 @@ namespace MHServerEmu.Games.Network
 
             // TODO: Use region.GetBodysliderPowerRef()
 
-            if (region.Prototype.Behavior == RegionBehaviorAsset.Town)
+            if (region.Prototype.Behavior == RegionBehavior.Town)
                 return Logger.WarnReturn(false, $"OnReturnToHub(): Returning from hubs via bodysliding is not yet implemented");
 
             PrototypeId bodysliderPowerRef = GameDatabase.GlobalsPrototype.ReturnToHubPower;

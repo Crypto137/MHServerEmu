@@ -5,7 +5,6 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.UI
@@ -17,9 +16,13 @@ namespace MHServerEmu.Games.UI
         private readonly Dictionary<(PrototypeId, PrototypeId), UISyncData> _dataDict = new();
 
         public Game Game { get; }
-        public Region Region { get; }
+        public IUIDataProviderOwner Owner { get; }
 
-        public UIDataProvider() { }
+        public UIDataProvider(Game game, IUIDataProviderOwner owner)
+        {
+            Game = game;
+            Owner = owner;
+        }
 
         public bool Serialize(Archive archive)
         {

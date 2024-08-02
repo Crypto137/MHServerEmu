@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.Behavior
         {
             if (power == null) return;
             Region region = Owner.Region;
-            if (region != null && power.AllowedInDifficulty(region.GetDifficultyTierRef()))
+            if (region != null && power.AllowedInDifficulty(region.DifficultyTierRef))
                 powerPicker.Add(power, power.PickWeight);
         }
 

@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Cell cell = entity.Cell;
             if (cell == null) return false;
 
-            return CellPrototypes.Contains(cell.PrototypeId);
+            return CellPrototypes.Contains(cell.PrototypeDataRef);
         }
     }
 

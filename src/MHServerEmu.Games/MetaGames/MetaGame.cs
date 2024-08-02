@@ -16,10 +16,10 @@ namespace MHServerEmu.Games.MetaGames
         public static readonly Logger Logger = LogManager.CreateLogger();
 
         protected ReplicatedVariable<string> _name = new(0, string.Empty);
-        public Region Region { get; private set; }
+        protected ulong _regionId;
+        public Region Region { get => GetRegion(); }
 
         private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnMap = new();
-        // new
         public MetaGame(Game game) : base(game) { }
 
         public override bool Initialize(EntitySettings settings)
@@ -27,8 +27,18 @@ namespace MHServerEmu.Games.MetaGames
             base.Initialize(settings);
 
             _name = new(0, "");
-            Region = Game.RegionManager.GetRegion(settings.RegionId);
-            Region?.RegisterMetaGame(this);
+            _regionId = settings.RegionId;
+
+            Region region = Game.RegionManager.GetRegion(_regionId);
+            if (region != null)
+            {
+                region.RegisterMetaGame(this);
+                // TODO: Other stuff
+            }
+            else
+            {
+                Logger.Warn("Initialize(): region == null");
+            }
 
             return true;
         }
@@ -47,6 +57,14 @@ namespace MHServerEmu.Games.MetaGames
             base.Destroy();
         }
 
+        public Region GetRegion()
+        {
+            if (_regionId == 0)
+                return null;
+
+            return Game.RegionManager.GetRegion(_regionId);
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
@@ -62,7 +80,7 @@ namespace MHServerEmu.Games.MetaGames
             }
             else
             {
-                spawnEvent = new MetaStateSpawnEvent(this, Game.RegionManager.GetRegion(RegionId));
+                spawnEvent = new MetaStateSpawnEvent(this, Region);
                 _metaStateSpawnMap[state] = spawnEvent;
             }
             return spawnEvent;
@@ -123,11 +141,12 @@ namespace MHServerEmu.Games.MetaGames
         }
 
         // TODO event registry States
-        public void RegistyStates()
+        public void RegisterStates()
         {
-            Region region = Game.RegionManager.GetRegion(RegionId);           
+            Region region = Region;           
             if (region == null) return;
             if (Prototype is not MetaGamePrototype metaGameProto) return;
+            
             if (metaGameProto.GameModes.HasValue())
             {
                 var gameMode = metaGameProto.GameModes.First().As<MetaGameModePrototype>();
@@ -137,20 +156,22 @@ namespace MHServerEmu.Games.MetaGames
                     foreach(var state in gameMode.ApplyStates)
                         MetaStateRegisty(state);
 
-                if (region.PrototypeId == RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
+                if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
                     int wave = Game.Random.Next(0, stateMode.States.Length);
                     MetaStateRegisty(stateMode.States[wave]);
                 } 
-                else if (region.PrototypeId == RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
+                else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
                     MetaStateRegisty(stateMode.States[0]);
                 }
-                else if (region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
+                else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
+                {
                     MetaStateRegisty((PrototypeId)7730041682554854878); // CH04UpperMoloids
-                else if (region.PrototypeId == RegionPrototypeId.SurturRaidRegionGreen) // Hardcode for Surtur
+                }
+                else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.SurturRaidRegionGreen) // Hardcode for Surtur
                 {   
                     var stateRef = (PrototypeId)5463286934959496963; // SurturMissionProgressionStateFiveMan
                     var missionProgression = stateRef.As<MetaStateMissionProgressionPrototype>();

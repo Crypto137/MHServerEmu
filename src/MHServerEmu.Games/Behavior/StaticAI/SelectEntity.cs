@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     
                     var entityRegion = ownerAgent.Region;
                     if (entityRegion == null) return null;
-                    var regionBound = entityRegion.Bound;
+                    var regionBound = entityRegion.Aabb;
                     if (Segment.IsNearZero(selectionContext.CellOrRegionAABBScale) == false)
                     {
                         regionBound = new Aabb(regionBound.Center,

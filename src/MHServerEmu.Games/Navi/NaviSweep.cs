@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Navi
         {
             if (cell == null) return SweepResult.Failed;
 
-            var cellProto = cell.CellProto;
+            var cellProto = cell.Prototype;
             if (cellProto == null || cellProto.HeightMap == null || cellProto.HeightMap.HeightMapData == null) return SweepResult.Failed;
 
             HeightMapPrototype heightMap = cellProto.HeightMap;
@@ -436,7 +436,7 @@ namespace MHServerEmu.Games.Navi
 
             Vector3 perpDir = Vector3.Perp2D(direction);
 
-            var cellProto = cell.CellProto;
+            var cellProto = cell.Prototype;
             if (cellProto == null || cellProto.HeightMap.HeightMapData.IsNullOrEmpty()) return SweepResult.Failed;
 
             float mapX = cellProto.HeightMap.HeightMapSize.X;

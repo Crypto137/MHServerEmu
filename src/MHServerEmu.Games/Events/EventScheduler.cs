@@ -104,11 +104,18 @@ namespace MHServerEmu.Games.Events
                 {
                     foreach (ScheduledEvent @event in frameEvents)
                     {
-                        if (@event.IsValid == false) continue;      // skip cancelled events
+                        if (@event.IsValid == false) continue;          // skip cancelled events
+                        if (@event.FireTime > frameEndTime) continue;   // skip rescheduled events
 
                         // It seems in the client time can roll back within the same frame, is this correct?
-                        //if (CurrentTime > @event.FireTime)
-                        //    Logger.Debug($"TriggerEvents(): Time rollback (-{(CurrentTime - @event.FireTime).TotalMilliseconds} ms)");
+                        /*
+                        if (CurrentTime > @event.FireTime)
+                        {
+                            TimeSpan rollback = CurrentTime - @event.FireTime;
+                            if (rollback > _quantumSize)
+                                Logger.Warn($"TriggerEvents(): Time rollback larger than quantum size (-{rollback.TotalMilliseconds} ms)");
+                        }
+                        */
 
                         CurrentTime = @event.FireTime;
                         _scheduledEvents.Remove(@event);
@@ -121,11 +128,11 @@ namespace MHServerEmu.Games.Events
                     // See if any more events got scheduled for this frame
                     frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
                 }
+
+                CurrentTime = frameEndTime;
             }
 
             //if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
-
-            CurrentTime = updateEndTime;
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()

@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         private bool GetPrototype(out BaseGridAreaGeneratorPrototype proto)
         {
-            proto = Area.AreaPrototype.Generator as BaseGridAreaGeneratorPrototype;
+            proto = Area.Prototype.Generator as BaseGridAreaGeneratorPrototype;
             return proto != null;
         }
 

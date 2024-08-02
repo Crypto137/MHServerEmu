@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.Regions
     // TODO: remove hardcoded prototype ids and combine these two enums
 
     [AssetEnum((int)Green)]
-    public enum DifficultyTierAsset
+    public enum DifficultyTier
     {
         Green,
         Red,

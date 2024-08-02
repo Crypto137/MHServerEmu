@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
         public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
         {
-            targetPos = region.StartArea.RegionBounds.Center; // default
+            targetPos = region.GetStartArea().RegionBounds.Center; // default
             targetRot = Orientation.Zero;
             RegionConnectionTargetPrototype targetDest = null;
 

@@ -33,8 +33,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinimapRevealGroupId { get; protected set; }
         public PrototypeId RespawnOverride { get; protected set; }
         public PrototypeId PlayerCameraSettings { get; protected set; }
-        public FootstepTraceBehaviorAsset FootstepTraceOverride { get; protected set; }
-        public RegionMusicBehaviorAsset MusicBehavior { get; protected set; }
+        public FootstepTraceBehavior FootstepTraceOverride { get; protected set; }
+        public RegionMusicBehavior MusicBehavior { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
         public int LevelOffset { get; protected set; }
         public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
