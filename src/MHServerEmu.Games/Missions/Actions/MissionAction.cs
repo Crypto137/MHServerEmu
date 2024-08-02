@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public PrototypeId MissionRef { get => Owner.PrototypeDataRef; }
         public MissionActionPrototype Prototype { get; private set; }
         public Region Region { get => Owner.Region; }
+        public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public EntityTracker EntityTracker { get => Owner.Region?.EntityTracker; }
 
         public MissionAction(IMissionActionOwner owner, MissionActionPrototype prototype)

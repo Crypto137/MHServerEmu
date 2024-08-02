@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -30,11 +32,71 @@ namespace MHServerEmu.Games.Entities
         private Region _region;
         private LinkedList<Iterator> _iterators;
         private Dictionary<PrototypeId, EntityTrackingData> _contextTrackingDataMap;
+
         public EntityTracker(Region region)
         {
             _region = region;
             _iterators = new();
             _contextTrackingDataMap = new();
+        }
+
+        public void ConsiderForTracking(WorldEntity entity)
+        {
+            if (entity == null || entity.IsTrackable == false) return;
+
+            var entityTracking = entity.TrackingContextMap;
+            bool hasOldTracking = entityTracking.Count > 0;
+
+            var interactionTracking = new EntityTrackingContextMap();
+            bool hasNewTracking = GameDatabase.InteractionManager.GetEntityContextInvolvement(entity, interactionTracking);
+
+            var newTracking = new EntityTrackingContextMap();
+            var oldTracking = new EntityTrackingContextMap();
+
+            if (hasNewTracking)
+            {
+                foreach (var kvp in interactionTracking)
+                    newTracking[kvp.Key] = kvp.Value;
+
+                if (hasOldTracking)
+                    foreach (var kvp in entityTracking)
+                        if (interactionTracking.ContainsKey(kvp.Key) == false)
+                            oldTracking[kvp.Key] = kvp.Value;
+            }
+            else if (hasOldTracking)
+            {
+                foreach (var kvp in entityTracking)
+                    oldTracking[kvp.Key] = kvp.Value;
+            }
+
+            foreach (var kvp in newTracking)
+            {
+                var contextRef = kvp.Key;
+                if (contextRef == PrototypeId.Invalid) continue;
+
+                if (ShouldTrackContext(contextRef))
+                {
+                    InsertEntityIntoContextMap(contextRef, entity, kvp.Value);
+                    entity.ModifyTrackingContext(contextRef, kvp.Value);
+                }
+            }
+
+            foreach (var kvp in oldTracking)
+            {
+                var contextRef = kvp.Key;
+                if (contextRef == PrototypeId.Invalid) continue;
+
+                RemoveEntityFromContextMap(contextRef, entity);
+                entity.ModifyTrackingContext(contextRef, EntityTrackingFlag.None);
+            }
+        }
+
+        private bool ShouldTrackContext(PrototypeId contextRef)
+        {
+            if (_region == null) return false;
+            var openProto = GameDatabase.GetPrototype<OpenMissionPrototype>(contextRef);
+            if (openProto != null && openProto.IsActiveInRegion(_region.Prototype) == false) return false;
+            return true;
         }
 
         public void ModifyTrackingContext(WorldEntity entity, PrototypeId contextRef, EntityTrackingFlag flags)
@@ -134,10 +196,10 @@ namespace MHServerEmu.Games.Entities
                 _tracker._iterators.AddLast(this);
                 if (_tracker._contextTrackingDataMap.TryGetValue(contextRef, out var trackingData) == false) return;
 
-                _keys = Entities.Keys.ToList();
                 _index = 0;
                 Entities = trackingData.Entities;
                 if (Entities == null) return;
+                _keys = Entities.Keys.ToList();
 
                 MoveNext();
             }
@@ -150,15 +212,15 @@ namespace MHServerEmu.Games.Entities
                     // update keys
                     if (Entities.Count > _keys.Count)
                         _keys = Entities.Keys.ToList();
-                    CurrentKey = _keys[_index];
-                    _index++;
-                }
+                    CurrentKey = _keys[_index];                   
+                } 
+                _index++;
             }
 
             public void MoveNext()
             {
                 Advance();
-                while (IsValid() == false)
+                while (IsValid() == false && End() == false)
                     Advance();
             }
 
@@ -166,8 +228,7 @@ namespace MHServerEmu.Games.Entities
             {
                 if (End()) return false;
                 if (Entities.TryGetValue(CurrentKey, out var flag) == false) return false; // Break
-                if (_flags != EntityTrackingFlag.None && flag.HasFlag(_flags))
-                    return false;
+                if (_flags != 0 && (flag & _flags) == 0) return false;
 
                 var entityId = CurrentKey;
                 var entity = _manager.GetEntity<WorldEntity>(entityId);
@@ -180,7 +241,7 @@ namespace MHServerEmu.Games.Entities
                 return true;
             }
 
-            public bool End() => _index >= _keys.Count || Entities == null;
+            public bool End() => _index > _keys.Count || Entities == null;
             public WorldEntity Current => IsValid() ? _current : null;
 
         }

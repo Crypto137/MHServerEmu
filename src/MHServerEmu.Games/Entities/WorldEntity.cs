@@ -136,6 +136,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
         public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
+        public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
 
         public WorldEntity(Game game) : base(game)
         {
@@ -1501,7 +1502,7 @@ namespace MHServerEmu.Games.Entities
             PowerCollection?.OnOwnerEnteredWorld();
 
             UpdateInterestPolicies(true, settings);
-
+            Region.EntityTracker.ConsiderForTracking(this);
             UpdateSimulationState();
         }
 
@@ -1591,6 +1592,16 @@ namespace MHServerEmu.Games.Entities
                 case PropertyEnum.MissileBlockingHotspot:
                     if (IsHotspot)
                         SetFlag(EntityFlags.IsCollidableHotspot, newValue);
+                    break;
+
+                case PropertyEnum.MissionPrototype:
+                    if (IsInWorld && Region != null && Region.EntityTracker != null)
+                    {
+                        PrototypeId missionRef = newValue;
+                        bool isTracked = IsTrackedByContext(missionRef);
+                        if ((missionRef == PrototypeId.Invalid && isTracked) || (missionRef != PrototypeId.Invalid && !isTracked))
+                            Region.EntityTracker.ConsiderForTracking(this);
+                    }
                     break;
 
                 case PropertyEnum.NoEntityCollide:

@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
             if (entity == null) return false;
-            if (Filters == null) return true;
+            if (Filters.IsNullOrEmpty()) return true;
             foreach (var prototype in Filters)
                 if (prototype == null || prototype.Evaluate(entity, context) == false)
                     return false;
@@ -452,7 +452,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (entity == null) return false;
             var missionRef = entity.MissionPrototype;
 
-            if (missionRef != PrototypeId.Invalid)
+            if (MissionPrototype != PrototypeId.Invalid)
                 return missionRef == MissionPrototype;
             else if (context.MissionRef != PrototypeId.Invalid)
                 return missionRef == context.MissionRef;

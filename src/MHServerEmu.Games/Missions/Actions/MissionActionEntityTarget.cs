@@ -1,5 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions.Actions
@@ -13,7 +15,12 @@ namespace MHServerEmu.Games.Missions.Actions
         public override void Run()
         {
             var entityTracker = EntityTracker;
-            // TODO EntityTracker Iterator
+            if (entityTracker == null) return;
+            var contextRef = Context;
+            if (contextRef == PrototypeId.Invalid) return;
+            foreach (var entity in entityTracker.Iterate(contextRef, EntityTrackingFlag.MissionAction | EntityTrackingFlag.SpawnedByMission))
+                if (Evaluate(entity)) EvaluateAndRunEntity(entity);
+
         }
 
         public virtual void EvaluateAndRunEntity(WorldEntity entity)
