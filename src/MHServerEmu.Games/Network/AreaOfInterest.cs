@@ -175,6 +175,16 @@ namespace MHServerEmu.Games.Network
         public void Reset()
         {
             _trackedAreas.Clear();
+
+            // RemoveCells from AOI
+            RegionManager manager = _game.RegionManager;
+            foreach (var cellStatus in _trackedCells)
+            {
+                Cell cell = manager.GetCell(cellStatus.Key);
+                if (cell == null) continue;
+                RemoveCell(cell);
+            }
+
             _trackedCells.Clear();
 
             foreach (var kvp in _trackedEntities)
