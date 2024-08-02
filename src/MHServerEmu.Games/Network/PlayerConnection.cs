@@ -234,10 +234,10 @@ namespace MHServerEmu.Games.Network
 
             Player.IsOnLoadingScreen = true;
 
-            Region region = Game.RegionManager.GetRegionByRef(RegionDataRef);
+            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionDataRef, this);
             if (region == null)
             {
-                Logger.Error($"Event ErrorInRegion {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
+                Logger.Error($"Failed to get or generate region {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
                 Disconnect();
                 return;
             }

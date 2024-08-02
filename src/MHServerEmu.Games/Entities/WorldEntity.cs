@@ -226,8 +226,8 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // HACK: Schedule respawn using SpawnSpec
-            if (SpawnSpec != null)
+            // HACK: Schedule respawn in public zones using SpawnSpec
+            if (RegionLocation.Region != null && RegionLocation.Region.IsPublic && SpawnSpec != null)
             {
                 Logger.Trace($"Respawn scheduled for {this}");
                 EventPointer<TEMP_SpawnEntityEvent> eventPointer = new();

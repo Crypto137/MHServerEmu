@@ -1,10 +1,11 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using System.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class WorldView
+    public class WorldView : IEnumerable<KeyValuePair<PrototypeId, ulong>>
     {
         // NOTE: This is based on the PlayerMgrToGameServer protocol extracted from 1.53 builds.
 
@@ -53,5 +54,8 @@ namespace MHServerEmu.Games.Regions
         {
             _regionInstanceDict.Clear();
         }
+
+        public IEnumerator<KeyValuePair<PrototypeId, ulong>> GetEnumerator() => _regionInstanceDict.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

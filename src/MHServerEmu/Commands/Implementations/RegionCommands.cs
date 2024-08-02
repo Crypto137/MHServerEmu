@@ -48,13 +48,14 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            CommandHelper.TryGetGame(client, out Game game);
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Game game = playerConnection.Game;
 
             int numRegions = 0;
 
             foreach (RegionPrototypeId value in Enum.GetValues<RegionPrototypeId>())
             {
-                game.RegionManager.GetRegionByRef((PrototypeId)value);
+                game.RegionManager.GetOrGenerateRegionForPlayer((PrototypeId)value, playerConnection);
                 numRegions++;
             }
 
