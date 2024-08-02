@@ -316,7 +316,8 @@ namespace MHServerEmu.Games.Populations
                         float averageSize = objectProto.GetAverageSize();
                         count = (int)(reqObject.Density / averageSize * (spawnableArea / PopulationPrototype.PopulationClusterSq));
                     }
-                    if (RegionManager.PatrolRegions.Contains(Region.PrototypeId)) count = 1;
+                    if (RegionHelper.TEMP_IsPatrolRegion(Region.PrototypeDataRef)) count = 1;
+
                     var spawnLocationReq = new SpawnLocation(spawnLocation, reqObject.RestrictToAreas, reqObject.RestrictToCells);
 
                     for (int i = 0; i < count; i++)

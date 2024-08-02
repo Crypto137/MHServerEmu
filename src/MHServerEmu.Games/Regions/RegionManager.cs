@@ -246,7 +246,7 @@ namespace MHServerEmu.Games.Regions
             // region = EmptyRegion(prototype);
             if (region != null)
             {
-                RegionHelper.TEMP_InitializeHardcodedRegionData(region);
+                // Off Region Mission info // RegionHelper.TEMP_InitializeHardcodedRegionData(region);
                 EntityHelper.SetUpHardcodedEntities(region);
                 ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
                 Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");

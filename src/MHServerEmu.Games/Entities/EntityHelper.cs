@@ -143,10 +143,10 @@ namespace MHServerEmu.Games.Entities
                         if (teleportProto.VisibleByDefault == false) // To fix
                         {
                             // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
-                            if (LockedTargets.Contains((InvTarget)teleport.DestinationList[0].TargetRef) == false)
+                            if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].TargetRef) == false)
                                 continue;
 
-                            if ((InvTarget)teleport.DestinationList[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry &&
+                            if ((InvTarget)teleport.Destinations[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry &&
                                 region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.NPERaftRegion)
                                 continue;
 

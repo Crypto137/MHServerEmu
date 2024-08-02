@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Populations
                 var region = populationObject.SpawnLocation.Region;
                 foreach (var area in region.IterateAreas())
                 {
-                    if (area.IsDynamicArea()) continue;
+                    if (area.IsDynamicArea) continue;
                     var popArea = area.PopulationArea;
                     if (popArea == null) continue;
                     foreach (var kvp in popArea.SpawnCells)

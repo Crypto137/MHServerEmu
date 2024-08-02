@@ -282,7 +282,7 @@ namespace MHServerEmu.Games.Missions
         private void OnAreaCreated(AreaCreatedGameEvent evt)
         {
             var area = evt.Area;
-            if (area == null || area.IsDynamicArea()) return;
+            if (area == null || area.IsDynamicArea) return;
 
             // TODO add enter left area events
         }

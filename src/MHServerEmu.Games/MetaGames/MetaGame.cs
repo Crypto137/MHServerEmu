@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.MetaGames
                 var metaStateRef = popProto.DataRef;
                 Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metaStateRef)}][{popProto.PopulationObjects.Length}]");
                 var areas = popProto.RestrictToAreas;
-                if (popProto.DataRef == (PrototypeId)7730041682554854878 && (RegionPrototypeId)RegionId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
+                if (popProto.DataRef == (PrototypeId)7730041682554854878 && _regionId == (ulong)RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
                 var metaStateEvent = GetMetaStateEvent(metaStateRef);
                 var spawnLocation = new SpawnLocation(Region, areas, popProto.RestrictToCells);
                 metaStateEvent.AddRequiredObjects(popProto.PopulationObjects, spawnLocation);
