@@ -208,6 +208,21 @@ namespace MHServerEmu.Games.Network
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
             Game.EntityManager.DestroyEntity(Player);
+
+            // Destroy all private region instances in the world view since they are not persistent anyway
+            foreach (var kvp in WorldView)
+            {
+                Region region = Game.RegionManager.GetRegion(kvp.Value);
+                if (region == null) continue;
+
+                if (region.IsPublic)
+                {
+                    Logger.Warn($"OnDisconnect(): Found public region {region} in the world view for player connection {this}");
+                    continue;
+                }
+
+                Game.RegionManager.DestroyRegion(kvp.Value);
+            }
         }
 
         #endregion
