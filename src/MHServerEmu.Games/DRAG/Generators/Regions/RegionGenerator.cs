@@ -6,12 +6,14 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.POIPickers;
 
 namespace MHServerEmu.Games.DRAG.Generators.Regions
 {
     public class RegionGenerator
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
         public Area StartArea { get; set; }
         public Dictionary<PrototypeId, Area> AreaMap { get; private set; }
         public RegionGeneratorPrototype GeneratorPrototype { get; private set; }
@@ -48,8 +50,8 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
         public static void CenterRegion(Region region)
         {
-            Aabb bound = region.CalculateBound();
-            Vector3 center = bound.Center;
+            Aabb bounds = region.CalculateAabbFromAreas();
+            Vector3 center = bounds.Center;
 
             foreach (Area area in region.IterateAreas())
                 area.SetOrigin(area.Origin - center);
@@ -91,7 +93,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             }
 
             if (connectionsFound == false)
-                Logger.Error($"No connection found between: AreaA: {areaA.PrototypeId} AreaB: {areaB.PrototypeId}");
+                Logger.Error($"No connection found between: AreaA: {areaA.PrototypeName} AreaB: {areaB.PrototypeName}");
 
             return connectionsFound;
         }

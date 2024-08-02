@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public override Aabb PreGenerate(GRandom random)
         {
-            if (Area.AreaPrototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
+            if (Area.Prototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
 
             CanyonCellChoiceListPrototype cells = proto.Cells;
             if (cells == null) return Aabb.InvertedLimit;
@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
-            if (Area.AreaPrototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return false;
 
             CanyonCellChoiceListPrototype cells = proto.Cells;
             if (cells == null) return false;
@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             Area area = Area;
             if (area == null) return false;
 
-            if (Area.AreaPrototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return false;
             if (proto.Cells == null) return false;
 
             int sizeX;

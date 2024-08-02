@@ -162,7 +162,7 @@ namespace MHServerEmu.Games.Dialog
                 Party party = interactingPlayer.Party;
                 if (party != null)
                 {
-                    RegionPrototype regionProto = interactingRegion.RegionPrototype;
+                    RegionPrototype regionProto = interactingRegion.Prototype;
                     if (regionProto == null) return false;
                     isAvailable = regionProto.AllowRaids();
                 }

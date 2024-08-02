@@ -16,11 +16,13 @@ namespace MHServerEmu.Games.Regions
             UseMarkerOrientation = useMarkerOrientation;
         }
 
-        public NetStructReservedSpawn ToNetStruct() => 
-            NetStructReservedSpawn.CreateBuilder()
-            .SetAsset((ulong)Asset)
-            .SetId(Id)
-            .SetUseMarkerOrientation(UseMarkerOrientation)
-            .Build();
+        public NetStructReservedSpawn ToNetStruct()
+        {
+            return NetStructReservedSpawn.CreateBuilder()
+                .SetAsset((ulong)Asset)
+                .SetId(Id)
+                .SetUseMarkerOrientation(UseMarkerOrientation)
+                .Build();
+        }
     }
 }

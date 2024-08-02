@@ -966,7 +966,7 @@ namespace MHServerEmu.Games.Populations
             var pos = GetAbsolutePosition();
             var groupPosition = group.Transform.Translation;
 
-            if (Region.Bound.IntersectsXY(pos))
+            if (Region.Aabb.IntersectsXY(pos))
                 pos = ProjectToFloor(Region);
             else
                 pos = groupPosition;

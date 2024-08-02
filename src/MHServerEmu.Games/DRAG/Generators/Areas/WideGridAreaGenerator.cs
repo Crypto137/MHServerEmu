@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
-            if (Area.AreaPrototype.Generator is not WideGridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not WideGridAreaGeneratorPrototype proto) return false;
 
             Region region = Region;
             if (region == null) return false;
@@ -258,7 +258,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         private bool ProcessCellTypes(GRandom random)
         {
             if (CellContainer == null) return false;
-            if (Area.AreaPrototype.Generator is not WideGridAreaGeneratorPrototype proto) return false;
+            if (Area.Prototype.Generator is not WideGridAreaGeneratorPrototype proto) return false;
 
             int randomSeed = Area.RandomSeed;
 
@@ -382,13 +382,13 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         {
             if (area == null) return false;
 
-            GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
+            GeneratorPrototype generatorProto = area.Prototype.Generator;
             WideGridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as WideGridAreaGeneratorPrototype;
 
             if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.HasValue())
             {
                 CellSetRegistry registry = new();
-                registry.Initialize(true, area.Log);
+                registry.Initialize(true, area.GenerateLog);
                 foreach (CellSetEntryPrototype cellSetEntry in gridAreaGeneratorProto.CellSets)
                 {
                     if (cellSetEntry == null) continue;

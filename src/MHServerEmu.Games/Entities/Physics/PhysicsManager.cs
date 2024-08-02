@@ -383,7 +383,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
             Region region = entity.Region;
             if (region != null)
-                resultPosition.Z = Math.Clamp(resultPosition.Z, region.Bound.Min.Z, region.Bound.Max.Z);
+                resultPosition.Z = Math.Clamp(resultPosition.Z, region.Aabb.Min.Z, region.Aabb.Max.Z);
 
             if (clipped && allowSweep)
             {

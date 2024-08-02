@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public override Aabb PreGenerate(GRandom random)
         {
-            if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
+            if (Area.Prototype.Generator is not TowerAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
 
             if (proto.Entries.HasValue())
             {
@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
-            if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype) return false;
+            if (Area.Prototype.Generator is not TowerAreaGeneratorPrototype) return false;
 
             List<Cell> cellList = new();
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public Cell AddCell(PrototypeId cellRef, LocaleStringId locationName)
         {
-            if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return null;
+            if (Area.Prototype.Generator is not TowerAreaGeneratorPrototype proto) return null;
 
             int x = NumCells / GridSize;
             int y = 0;

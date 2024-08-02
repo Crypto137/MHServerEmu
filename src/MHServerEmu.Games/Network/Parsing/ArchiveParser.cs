@@ -1,13 +1,16 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
 namespace MHServerEmu.Games.Network.Parsing
 {
@@ -119,6 +122,21 @@ namespace MHServerEmu.Games.Network.Parsing
                     sb.AppendLine($"attachedEntities[{i}]: {attachedEntityId}");
                 }
             }
+        }
+
+        public static void ParseRegionChangeArchiveData(Archive archive, StringBuilder sb)
+        {
+            sb.AppendLine("properties:");
+            ParseReplicatedPropertyCollection(archive, sb);
+
+            sb.AppendLine("missionManager:");
+            ParseMissionManager(archive, sb);
+
+            sb.AppendLine("uiDataProvider:");
+            ParseUIDataProvider(archive, sb);
+
+            sb.AppendLine("objectiveGraph:");
+            ParseObjectiveGraph(archive, sb);
         }
 
         public static void ParseLocomotionStateUpdate(Archive archive, StringBuilder sb)
@@ -577,6 +595,286 @@ namespace MHServerEmu.Games.Network.Parsing
             ReplicatedPropertyCollection properties = new();
             properties.Serialize(archive);
             sb.AppendLine(properties.ToString());
+        }
+
+        private static void ParseMissionManager(Archive archive, StringBuilder sb)
+        {
+            PrototypeId avatarPrototypeRef = PrototypeId.Invalid;
+            Serializer.Transfer(archive, ref avatarPrototypeRef);
+            sb.AppendLine($"\tavatarPrototypeRef: {avatarPrototypeRef.GetName()}");
+
+            // Missions
+            ulong numMissions = 0;
+            Serializer.Transfer(archive, ref numMissions);
+            for (ulong i = 0; i < numMissions; i++)
+            {
+                ulong guid = 0;
+                Serializer.Transfer(archive, ref guid);
+                PrototypeId protoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)guid);
+
+                sb.AppendLine($"\tmissions[{protoRef.GetNameFormatted()}]:");
+                ParseMission(archive, sb);
+            }
+
+            // Legendary mission blacklist
+            int numBlacklistCategories = 0;
+            Serializer.Transfer(archive, ref numBlacklistCategories);
+
+            sb.AppendLine("\tlegendaryMissionBlacklist:");
+            for (int i = 0; i < numBlacklistCategories; i++)
+            {
+                ulong categoryGuid = 0;
+                Serializer.Transfer(archive, ref categoryGuid);
+                PrototypeId categoryProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)categoryGuid);
+
+                sb.AppendLine($"\t\tlegendaryMissionBlacklist[{categoryProtoRef.GetName()}]");
+
+                ulong numCategoryMissions = 0;
+                Serializer.Transfer(archive, ref numCategoryMissions);
+                for (ulong j = 0; j < numCategoryMissions; j++)
+                {
+                    ulong categoryMissionGuid = 0;
+                    Serializer.Transfer(archive, ref categoryMissionGuid);
+                    PrototypeId categoryMissionProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)categoryMissionGuid);
+
+                    sb.AppendLine($"\t\t\t{categoryMissionProtoRef.GetName()}");
+                }
+            }
+        }
+
+        private static void ParseMission(Archive archive, StringBuilder sb)
+        {
+            int state = 0;
+            Serializer.Transfer(archive, ref state);
+            sb.AppendLine($"\t\tstate: {(MissionState)state}");
+
+            TimeSpan timeExpireCurrentState = TimeSpan.Zero;
+            Serializer.Transfer(archive, ref timeExpireCurrentState);
+            string expireTime = timeExpireCurrentState != TimeSpan.Zero ? Clock.GameTimeToDateTime(timeExpireCurrentState).ToString() : "0";
+            sb.AppendLine($"\t\ttimeExpireCurrentState: {expireTime}");
+
+            PrototypeId prototypeDataRef = PrototypeId.Invalid;
+            Serializer.Transfer(archive, ref prototypeDataRef);
+            sb.AppendLine($"\t\tprototypeDataRef: {prototypeDataRef.GetName()}");
+
+            int lootSeed = 0;
+            Serializer.Transfer(archive, ref lootSeed);
+            sb.AppendLine($"\t\tlootSeed: {lootSeed}");
+
+            sb.AppendLine("\t\tobjectives:");
+            ParseMissionObjectives(archive, sb);
+
+            sb.Append("\t\tparticipants: ");
+            ulong numParticipants = 0;
+            Serializer.Transfer(archive, ref numParticipants);
+            for (ulong i = 0; i < numParticipants; i++)
+            {
+                ulong participantId = 0;
+                Serializer.Transfer(archive, ref participantId);
+                sb.Append($"{participantId} ");
+            }
+            sb.AppendLine();
+
+            bool isSuspended = false;
+            Serializer.Transfer(archive, ref isSuspended);
+            sb.AppendLine($"\t\tisSuspended: {isSuspended}");
+        }
+
+        private static void ParseMissionObjectives(Archive archive, StringBuilder sb)
+        {
+            ulong numObjectives = 0;
+            Serializer.Transfer(archive, ref numObjectives);
+
+            for (ulong i = 0; i < numObjectives; i++)
+            {
+                byte index = 0;
+                Serializer.Transfer(archive, ref index);
+                sb.Append($"\t\t\tobjectives[{index}]: ");
+
+                Serializer.Transfer(archive, ref index);    // index is serialized twice in a row
+
+                int state = 0;
+                Serializer.Transfer(archive, ref state);
+
+                TimeSpan objectiveStateExpireTime = TimeSpan.Zero;
+                Serializer.Transfer(archive, ref objectiveStateExpireTime);
+                string expireTime = objectiveStateExpireTime != TimeSpan.Zero ? Clock.GameTimeToDateTime(objectiveStateExpireTime).ToString() : "0";
+
+                uint numInteractions = 0;   // this is always zero in all of our packets
+                Serializer.Transfer(archive, ref numInteractions);
+                for (uint j = 0; j < numInteractions; j++)
+                {
+                    ulong entityId = 0;
+                    Serializer.Transfer(archive, ref entityId);
+                    ulong regionId = 0;
+                    Serializer.Transfer(archive, ref regionId);
+                }
+
+                ushort currentCount = 0;
+                Serializer.Transfer(archive, ref currentCount);
+                ushort requiredCount = 0;
+                Serializer.Transfer(archive, ref requiredCount);
+                ushort failCurrentCount = 0;
+                Serializer.Transfer(archive, ref failCurrentCount);
+                ushort failRequiredCount = 0;
+                Serializer.Transfer(archive, ref failRequiredCount);
+
+                sb.AppendLine($"state={(MissionObjectiveState)state}, expireTime={expireTime}, numInteractions={numInteractions}, count={currentCount}/{requiredCount}, failCount={failCurrentCount}/{failRequiredCount}");
+            }
+        }
+
+        private static void ParseUIDataProvider(Archive archive, StringBuilder sb)
+        {
+            uint numWidgets = 0;
+            Serializer.Transfer(archive, ref numWidgets);
+
+            for (uint i = 0; i < numWidgets; i++)
+            {
+                PrototypeId widgetRef = PrototypeId.Invalid;
+                Serializer.Transfer(archive, ref widgetRef);
+                PrototypeId contextRef = PrototypeId.Invalid;
+                Serializer.Transfer(archive, ref contextRef);
+
+                sb.AppendLine($"\tdata[({widgetRef.GetName()}, {contextRef.GetName()})]:");
+                ParseUISyncData(archive, sb, widgetRef);
+            }
+        }
+
+        private static void ParseUISyncData(Archive archive, StringBuilder sb, PrototypeId widgetRef)
+        {
+            int numAreas = 0;
+            Serializer.Transfer(archive, ref numAreas);
+
+            sb.AppendLine($"\t\tareas:");
+            for (int i = 0; i < numAreas; i++)
+            {
+                PrototypeId areaProtoRef = 0;
+                Serializer.Transfer(archive, ref areaProtoRef);
+                sb.AppendLine($"\t\t\tareas[{i}]: {areaProtoRef.GetName()}");
+            }
+
+            Prototype widgetProto = GameDatabase.GetPrototype<Prototype>(widgetRef);
+
+            switch (widgetProto)
+            {
+                case UIWidgetButtonPrototype:           ParseUIWidgetButton(archive, sb); break;
+                case UIWidgetEntityIconsPrototype:      ParseUIWidgetEntityIcons(archive, sb); break;
+                case UIWidgetGenericFractionPrototype:  ParseUIWidgetGenericFraction(archive, sb); break;
+                case UIWidgetMissionTextPrototype:      ParseUIWidgetMissionText(archive, sb); break;
+                case UIWidgetReadyCheckPrototype:       ParseUIWidgetReadyCheck(archive, sb); break;
+
+                default: throw new NotImplementedException();
+            }
+        }
+
+        private static void ParseUIWidgetButton(Archive archive, StringBuilder sb)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void ParseUIWidgetEntityIcons(Archive archive, StringBuilder sb)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void ParseUIWidgetGenericFraction(Archive archive, StringBuilder sb)
+        {
+            int currentCount = 0;
+            Serializer.Transfer(archive, ref currentCount);
+            int totalCount = 0;
+            Serializer.Transfer(archive, ref totalCount);
+            sb.AppendLine($"\t\tcount: {currentCount} / {totalCount}");
+
+            long timeStart = 0;
+            Serializer.Transfer(archive, ref timeStart);
+            sb.AppendLine($"\t\ttimeStart: {(timeStart != 0 ? Clock.GameTimeMillisecondsToDateTime(timeStart) : 0)}");
+
+            long timeEnd = 0;
+            Serializer.Transfer(archive, ref timeEnd);
+            sb.AppendLine($"\t\ttimeEnd: {(timeEnd != 0 ? Clock.GameTimeMillisecondsToDateTime(timeEnd) : 0)}");
+
+            bool timePaused = false;
+            Serializer.Transfer(archive, ref timePaused);
+            sb.AppendLine($"\t\ttimePaused: {timePaused}");
+        }
+
+        private static void ParseUIWidgetMissionText(Archive archive, StringBuilder sb)
+        {
+            ulong missionName = 0;
+            Serializer.Transfer(archive, ref missionName);
+            sb.AppendLine($"\t\tmissionName: {missionName}");
+
+            ulong missionObjectiveName = 0;
+            Serializer.Transfer(archive, ref missionObjectiveName);
+            sb.AppendLine($"\t\tmissionObjectiveName: {missionObjectiveName}");
+        }
+
+        private static void ParseUIWidgetReadyCheck(Archive archive, StringBuilder sb)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void ParseObjectiveGraph(Archive archive, StringBuilder sb)
+        {
+            sb.AppendLine("\tnodes:");
+
+            uint numNodes = 0;
+            Serializer.Transfer(archive, ref numNodes);
+            for (uint i = 0; i < numNodes; i++)
+            {
+                ulong id = 0;
+                Serializer.Transfer(archive, ref id);
+                sb.AppendLine($"\t\tid: {id}");
+
+                Vector3 position = Vector3.Zero;
+                Serializer.Transfer(archive, ref position);
+                sb.AppendLine($"\t\tposition: {position}");
+
+                sb.AppendLine("\t\tareas:");
+                ulong numAreas = 0;
+                Serializer.Transfer(archive, ref numAreas);
+                for (ulong j = 0; j < numAreas; j++)
+                {
+                    ulong area = 0;
+                    Serializer.Transfer(archive, ref area);
+                    sb.AppendLine($"\t\t\tareas[{j}]: {area}");
+                }
+
+                sb.AppendLine("\t\tcells:");
+                ulong numCells = 0;
+                Serializer.Transfer(archive, ref numCells);
+                for (ulong j = 0; j < numCells; j++)
+                {
+                    ulong cell = 0;
+                    Serializer.Transfer(archive, ref cell);
+                    sb.AppendLine($"\t\t\tcells[{j}]: {cell}");
+                }
+
+                uint type = 0;
+                Serializer.Transfer(archive, ref type);
+                sb.AppendLine($"\t\ttype: {(ObjectiveGraphType)type}");
+
+                uint index = 0;
+                Serializer.Transfer(archive, ref index);
+                sb.AppendLine($"\t\tindex: {index}");
+
+            }
+
+            sb.AppendLine("\tconnections:");
+
+            uint numConnections = 0;
+            Serializer.Transfer(archive, ref numConnections);
+            for (uint i = 0; i < numConnections; i++)
+            {
+                uint nodeIndex0 = 0;
+                Serializer.Transfer(archive, ref nodeIndex0);
+                uint nodeIndex1 = 0;
+                Serializer.Transfer(archive, ref nodeIndex1);
+                float distance = 0f;
+                Serializer.Transfer(archive, ref distance);
+
+                sb.AppendLine($"\t\tconnections[{i}]: [{nodeIndex0}] <- {distance}f -> [{nodeIndex1}]");
+            }
         }
     }
 }

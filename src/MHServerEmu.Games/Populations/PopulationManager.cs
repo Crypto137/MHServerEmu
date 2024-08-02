@@ -167,22 +167,22 @@ namespace MHServerEmu.Games.Populations
             populationObject.SpawnObject(spawnTarget, out entities);
         }
 
-        public void MetaStateRegisty(PrototypeId prototypeId)
+        public void RegisterMetaState(PrototypeId prototypeId)
         {
             var metastate = GameDatabase.GetPrototype<MetaStatePrototype>(prototypeId);
 
             if (metastate is MetaStateMissionProgressionPrototype missionProgression)
             {
                 if (missionProgression.StatesProgression.HasValue())
-                    MetaStateRegisty(missionProgression.StatesProgression.First());
+                    RegisterMetaState(missionProgression.StatesProgression.First());
             }
             else if (metastate is MetaStateMissionActivatePrototype missionActivate)
             {
                 if (missionActivate.SubStates.HasValue())
                     foreach (var state in missionActivate.SubStates)
-                        MetaStateRegisty(state);
+                        RegisterMetaState(state);
 
-                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
+                Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(missionActivate.DataRef)}][{missionActivate.PopulationObjects.Length}]");
                 AddRequiredObjects(missionActivate.PopulationObjects, missionActivate.PopulationAreaRestriction, null);
             }
             else if (metastate is MetaStateMissionSequencerPrototype missionSequencer)
@@ -190,7 +190,7 @@ namespace MHServerEmu.Games.Populations
                 if (missionSequencer.Sequence.HasValue())
                     foreach (var missionEntry in missionSequencer.Sequence)
                     {
-                        Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
+                        Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(metastate.DataRef)}][{missionEntry.PopulationObjects.Length}]");
                         AddRequiredObjects(missionEntry.PopulationObjects, missionEntry.PopulationAreaRestriction, null);
                     }
             }
@@ -198,13 +198,14 @@ namespace MHServerEmu.Games.Populations
             {
                 if (waveInstance.States.HasValue())
                     foreach (var state in waveInstance.States)
-                        MetaStateRegisty(state);
+                        RegisterMetaState(state);
             }
             else if (metastate is MetaStatePopulationMaintainPrototype popProto && popProto.PopulationObjects.HasValue())
             {
-                Logger.Debug($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
+                Logger.Info($"State [{GameDatabase.GetFormattedPrototypeName(popProto.DataRef)}][{popProto.PopulationObjects.Length}]");
                 var areas = popProto.RestrictToAreas;
-                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
+                if (popProto.DataRef == (PrototypeId)7730041682554854878 && Region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.CH0402UpperEastRegion)
+                    areas = null; // Hack for Moloids
                 AddRequiredObjects(popProto.PopulationObjects, areas, popProto.RestrictToCells);
             }
         }
@@ -217,10 +218,13 @@ namespace MHServerEmu.Games.Populations
             {
                 foreach (var area in Region.IterateAreas())
                     regionAreas.Add(area.PrototypeDataRef);
+
                 regionCell = new();
-                foreach (var cell in Region.Cells)
-                    if (cell.Area.IsDynamicArea() == false)
-                        regionCell.Add(cell.PrototypeId);
+                foreach (Cell cell in Region.Cells)
+                {
+                    if (cell.Area.IsDynamicArea == false)
+                        regionCell.Add(cell.PrototypeDataRef);
+                }
             }
             else
             {
@@ -239,7 +243,9 @@ namespace MHServerEmu.Games.Populations
                 while (popPicker.PickRemove(out var popObject))
                 {
                     int count = popObject.Count;
-                    if (RegionManager.PatrolRegions.Contains(Region.PrototypeId)) count = 1;
+                    if (RegionHelper.TEMP_IsPatrolRegion(Region.PrototypeDataRef))
+                        count = 1;
+                    
                     var objectProto = popObject.GetPopObject();
                     AddPopulationObject(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
                 }

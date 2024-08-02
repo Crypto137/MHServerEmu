@@ -374,7 +374,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (region == null) return false;
             var cell = agent.RegionLocation.Cell;
             if (cell == null) return false;
-            var cellProto = cell.CellProto;
+            var cellProto = cell.Prototype;
             if (cellProto == null) return false;
 
             var cellType = cellProto.Type;

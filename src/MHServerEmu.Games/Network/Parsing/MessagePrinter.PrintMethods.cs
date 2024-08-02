@@ -94,16 +94,33 @@ namespace MHServerEmu.Games.Network.Parsing
 
             StringBuilder sb = new();
 
-            sb.Append(regionChange.ToString());
-            if (regionChange.ArchiveData.Length > 0)
+            sb.AppendLine($"regionId: 0x{regionChange.RegionId:X}");
+            sb.AppendLine($"serverGameId: 0x{regionChange.ServerGameId:X}");
+            sb.AppendLine($"clearingAllInterest: {regionChange.ClearingAllInterest}");
+
+            for (int i = 0; i < regionChange.EntitiestodestroyCount; i++)
+                sb.AppendLine($"entitiestodestroy[{i}]: {regionChange.EntitiestodestroyList[i]}");
+
+            if (regionChange.HasRegionPrototypeId)
+                sb.AppendLine($"regionPrototypeId: {GameDatabase.GetPrototypeName((PrototypeId)regionChange.RegionPrototypeId)}");
+
+            if (regionChange.HasRegionRandomSeed)
+                sb.AppendLine($"regionRandomSeed: {regionChange.RegionRandomSeed}");
+
+            if (regionChange.HasArchiveData)
             {
                 using (Archive archive = new(ArchiveSerializeType.Replication, regionChange.ArchiveData))
-                {
-                    RegionArchive regionArchive = new();
-                    regionArchive.Serialize(archive);
-                    sb.Append($"ArchiveData: {regionArchive}");
-                }
+                    ArchiveParser.ParseRegionChangeArchiveData(archive, sb);
             }
+
+            if (regionChange.HasRegionMax)
+                sb.AppendLine($"regionMin: {new Vector3(regionChange.RegionMin)}");
+
+            if (regionChange.HasRegionMax)
+                sb.AppendLine($"regionMax: {new Vector3(regionChange.RegionMax)}");
+
+            if (regionChange.HasCreateRegionParams)
+                sb.AppendLine($"createRegionParams: {regionChange.CreateRegionParams}");
 
             return sb.ToString();
         }

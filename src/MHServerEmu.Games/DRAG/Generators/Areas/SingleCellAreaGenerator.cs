@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         public PrototypeId GetCellPrototypeDataRef()
         {
-            if (Area.AreaPrototype.Generator is not SingleCellAreaGeneratorPrototype generatorProto) return 0;
+            if (Area.Prototype.Generator is not SingleCellAreaGeneratorPrototype generatorProto) return 0;
 
             AssetId cellAssetRef = generatorProto.Cell;
             if (cellAssetRef == 0) return 0;
@@ -80,7 +80,8 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (cellRef == 0) return 0;
 
             // Fix for AvengersTowerHubArea
-            if (Area.PrototypeId == AreaPrototypeId.AvengersTowerHubArea) return (PrototypeId)9602664968964741817;
+            if ((AreaPrototypeId)Area.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
+                return (PrototypeId)9602664968964741817;    // Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell
 
             return cellRef;
         }
@@ -115,7 +116,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
         {
             if (area == null) return false;
 
-            GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
+            GeneratorPrototype generatorProto = area.Prototype.Generator;
             var singleCellGeneratorProto = generatorProto as SingleCellAreaGeneratorPrototype;
 
             if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets.HasValue() && singleCellGeneratorProto.Cell != 0)
@@ -127,7 +128,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 if (cellP == null) return false;
 
                 CellSetRegistry registry = new();
-                registry.Initialize(true, area.Log);
+                registry.Initialize(true, area.GenerateLog);
                 foreach (var cellSetEntry in singleCellGeneratorProto.BorderCellSets)
                 {
                     if (cellSetEntry == null) continue;

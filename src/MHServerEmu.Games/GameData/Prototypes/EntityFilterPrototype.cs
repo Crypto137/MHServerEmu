@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Cell cell = entity.Cell;
             if (cell == null) return false;
 
-            return CellPrototypes.Contains(cell.PrototypeId);
+            return CellPrototypes.Contains(cell.PrototypeDataRef);
         }
     }
 
@@ -285,7 +285,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 else
                     region = entity.ExitWorldRegionLocation.GetRegion();
             }
-            return region != null && RegionPrototype.Equivalent(InRegion.As<RegionPrototype>(), region.RegionPrototype);
+            return region != null && RegionPrototype.Equivalent(InRegion.As<RegionPrototype>(), region.Prototype);
         }
     }
 

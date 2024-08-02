@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum((int)Invalid)]
-    public enum RegionBehaviorAsset     // Regions/RegionBehavior.type
+    public enum RegionBehavior     // Regions/RegionBehavior.type
     {
         Invalid = -1,
         Town = 0,
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum((int)None)]
-    public enum RegionMusicBehaviorAsset
+    public enum RegionMusicBehavior
     {
         None,
         Default,
@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum((int)None)]
-    public enum FootstepTraceBehaviorAsset
+    public enum FootstepTraceBehavior
     {
         None,
         Enable,
@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId StartTarget { get; protected set; }
         public AssetId[] Music { get; protected set; }
         public RegionGeneratorPrototype RegionGenerator { get; protected set; }
-        public RegionBehaviorAsset Behavior { get; protected set; }
+        public RegionBehavior Behavior { get; protected set; }
         public LocaleStringId RegionName { get; protected set; }
         public PrototypeId[] MetaGames { get; protected set; }
         public bool ForceSimulation { get; protected set; }
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionQueueStateEntryPrototype[] RegionQueueStates { get; protected set; }
         public PrototypeId MarkerFilter { get; protected set; }
         public bool LevelBandedRegionUsesPlayerLevel { get; protected set; }
-        public FootstepTraceBehaviorAsset FootstepTraceOverride { get; protected set; }
+        public FootstepTraceBehavior FootstepTraceOverride { get; protected set; }
         public bool QueueDoNotWaitToFull { get; protected set; }
         public bool DisplayCommunityNews { get; protected set; }
         public AssetId UnrealClass { get; protected set; }
@@ -124,7 +124,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId AffixTable { get; protected set; }
         public ObjectiveGraphSettingsPrototype ObjectiveGraph { get; protected set; }
         public DividedStartLocationPrototype[] DividedStartLocations { get; protected set; }
-        public RegionMusicBehaviorAsset MusicBehavior { get; protected set; }
+        public RegionMusicBehavior MusicBehavior { get; protected set; }
         public PrototypeId AvatarObjectiveInfoOverride { get; protected set; }
         public RegionDifficultySettingsPrototype DifficultySettings { get; protected set; }
         public bool LevelOverridesCharacterLevel { get; protected set; }
@@ -145,6 +145,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public int RegionPrototypeEnumValue { get; private set; }
+        [DoNotCopy]
+        public bool IsPublic { get => Behavior == RegionBehavior.Town || Behavior == RegionBehavior.PublicCombatZone || Behavior == RegionBehavior.MatchPlay; }
+        [DoNotCopy]
+        public bool IsPrivate { get => IsPublic == false; }
 
         private KeywordsMask _keywordsMask;
 
@@ -186,7 +190,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
             if (difficultyGlobals == null) return null;
 
-            if (Behavior == RegionBehaviorAsset.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)
+            if (Behavior == RegionBehavior.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)
                 return difficultyGlobals.RegionSettingsDefaultPCZ;
 
             return difficultyGlobals.RegionSettingsDefault;
@@ -214,14 +218,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (globalsProto == null) return false;
             switch (Behavior)
             {
-                case RegionBehaviorAsset.Town:
-                case RegionBehaviorAsset.PublicCombatZone:
-                case RegionBehaviorAsset.PrivateRaid:
+                case RegionBehavior.Town:
+                case RegionBehavior.PublicCombatZone:
+                case RegionBehavior.PrivateRaid:
                     return true;
-                case RegionBehaviorAsset.PrivateStory:
-                case RegionBehaviorAsset.PrivateNonStory:
+                case RegionBehavior.PrivateStory:
+                case RegionBehavior.PrivateNonStory:
                     return false;
-                case RegionBehaviorAsset.MatchPlay:
+                case RegionBehavior.MatchPlay:
                     int largestTeamSize = GetLargestTeamSize();
                     if (largestTeamSize > 0)
                         return largestTeamSize >= globalsProto.PlayerRaidMaxSize;

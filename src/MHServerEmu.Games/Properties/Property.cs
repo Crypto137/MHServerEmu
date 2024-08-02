@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
@@ -76,6 +77,8 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public static class Property
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public const int MaxParamCount = 4;
 
         // 11 bits for enum, the rest are params defined by PropertyInfo
@@ -138,6 +141,16 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             BlueprintId paramBlueprint = info.GetParamPrototypeBlueprint(paramIndex);
             return (PropertyParam)GameDatabase.DataDirectory.GetPrototypeEnumValue(paramValue, paramBlueprint);
+        }
+
+        public static AssetId PropertyEnumToAsset(PropertyEnum propertyEnum, int paramIndex, int enumValue)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+
+            AssetType assetType = AssetDirectory.Instance.GetAssetType(propertyInfo.GetParamAssetType(paramIndex));
+            if (assetType == null) return Logger.WarnReturn(AssetId.Invalid, "PropertyEnumToAsset(): assetType == null");
+
+            return assetType.GetAssetRefFromEnum(enumValue);
         }
 
         // ToValue() and FromValue() methods from the client are replaced with implicit casting, see PropertyValue.cs for more details
