@@ -40,7 +40,6 @@ namespace MHServerEmu.Games.Missions.Actions
             if (entity == null || entity.IsDestroyed) return false;
             if (Prototype is not MissionActionEntityTargetPrototype targetProto) return false;
             if (targetProto.AllowWhenDead == false && entity.IsDead) return false;
-            Logger.Debug($"Evaluate {entity.PrototypeName} targetProto {targetProto.DataRef}");
             if (targetProto.EntityFilter != null && targetProto.EntityFilter.Evaluate(entity, new(MissionRef)) == false) return false;
             return true;
         }

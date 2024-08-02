@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -9,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Actions
 {
     public class MissionActionEntityPerformPower : MissionActionEntityTarget
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public MissionActionEntityPerformPower(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype) { }
 
         public override bool Evaluate(WorldEntity entity)
@@ -56,6 +58,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         private bool ActivatePerformPower(Agent agent, PrototypeId powerPrototype)
         {
+            Logger.Debug($"Try ActivatePerformPower {GameDatabase.GetFormattedPrototypeName(powerPrototype)} for {agent.PrototypeName} simulate is {agent.IsSimulated}");
             if (agent.IsSimulated == false) return false;
             return agent.ActivatePerformPower(powerPrototype) == PowerUseResult.Success;
         }
