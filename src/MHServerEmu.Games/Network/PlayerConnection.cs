@@ -17,7 +17,6 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network.Parsing;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -63,7 +62,6 @@ namespace MHServerEmu.Games.Network
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
 
-
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
         /// </summary>
@@ -73,6 +71,7 @@ namespace MHServerEmu.Games.Network
             _frontendClient = frontendClient;
             _dbAccount = _frontendClient.Session.Account;
 
+            AOI = new(this);
             WorldView = new(this);
             InitializeFromDBAccount();
         }
@@ -114,7 +113,7 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn($"PlayerConnection(): Invalid waypoint data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(WaypointDataRef)}");
             }
 
-            AOI = new(this, _dbAccount.Player.AOIVolume);
+            AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
             EntitySettings playerSettings = new();
@@ -271,6 +270,7 @@ namespace MHServerEmu.Games.Network
             // because client UI breaks for some reason when we reuse the same player entity id
             // (e.g. inventory grid stops updating).
             UpdateDBAccount();
+            Player.ExitGame();  // We need to exit before we destroy so that the player entity can be removed from its AOI
             Player.Destroy();
             Game.EntityManager.ProcessDeferredLists();
             InitializeFromDBAccount();

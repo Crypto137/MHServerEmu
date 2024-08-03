@@ -388,9 +388,9 @@ namespace MHServerEmu.Games.Entities
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
             SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
 
-            PlayerConnection.AOI.Reset();
-
             base.ExitGame();
+
+            PlayerConnection.AOI.Reset();
         }
 
         public Region GetRegion()
