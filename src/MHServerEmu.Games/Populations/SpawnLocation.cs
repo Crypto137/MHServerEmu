@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Populations
         private void AddAreaRef(PrototypeId areaRef)
         {
             foreach (var area in Region.Areas.Values)
-                if (area.PopulationRef == areaRef)
+                if (area.PrototypeDataRef == areaRef)
                     SpawnAreas.Add(area);
         }
 
