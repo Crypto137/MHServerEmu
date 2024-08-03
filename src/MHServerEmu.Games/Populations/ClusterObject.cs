@@ -32,12 +32,12 @@ namespace MHServerEmu.Games.Populations
     public enum SpawnFlags
     {
         None            = 0,
-        flag1           = 1 << 0,
+        IgnoreSimulated = 1 << 0,
         flag2           = 1 << 1,
         flag4           = 1 << 2,
         flag8           = 1 << 3,
         IgnoreBlackout  = 1 << 4,
-        Spawned         = 1 << 5,
+        IgnoreSpawned   = 1 << 5,
     }
     #endregion
 
@@ -165,8 +165,10 @@ namespace MHServerEmu.Games.Populations
                 PathFlags &= obj.PathFlags;
             }
 
-            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false && Flags.HasFlag(ClusterObjectFlag.Hostile))
-                SpawnFlags |= ObjectProto.IgnoreBlackout ? SpawnFlags.IgnoreBlackout : 0;
+            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false 
+                && Flags.HasFlag(ClusterObjectFlag.Hostile) 
+                && ObjectProto.IgnoreBlackout)
+                SpawnFlags |= SpawnFlags.IgnoreBlackout;
 
             InitializeRankAndMods();
 
@@ -927,7 +929,7 @@ namespace MHServerEmu.Games.Populations
                 Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight)
             };
 
-            if (SpawnFlags.HasFlag(SpawnFlags.Spawned) == false)
+            if (SpawnFlags.HasFlag(SpawnFlags.IgnoreSpawned) == false)
             {
                 Sphere sphere = new(bounds.Center, bounds.Radius);
                 foreach (var entity in Region.IterateEntitiesInVolume(sphere, new()))

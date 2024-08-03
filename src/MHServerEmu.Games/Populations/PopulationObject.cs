@@ -52,11 +52,14 @@ namespace MHServerEmu.Games.Populations
             ulong groupId = 0;
             entities = new();
 
+            ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
+            clusterGroup.Initialize();
+
             if (spawnTarget.Type == SpawnTargetType.Marker)
             {
                 Region region = spawnTarget.Region;
                 SpawnMarkerRegistry registry = region.SpawnMarkerRegistry;
-                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation, SpawnFlags);
+                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation, clusterGroup.SpawnFlags);
                 if (reservation != null)
                 {
                     reservation.Object = Object;
@@ -66,8 +69,6 @@ namespace MHServerEmu.Games.Populations
                 else return groupId;
             }
 
-            ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
-            clusterGroup.Initialize();
             bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
             if (success) groupId = clusterGroup.Spawn(null, Spawner, entities);
             SpawnGroupId = groupId;

@@ -35,6 +35,7 @@ namespace MHServerEmu.Games.Populations
         public PopulationObjectPrototype Object { get; set; }
         public PrototypeId MissionRef { get; set; }
         public int BlackOutZones { get; set; }
+        public bool Simulated { get; set; }
 
         public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Orientation rotation, Cell cell, int id)
         {

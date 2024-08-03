@@ -14,6 +14,8 @@ namespace MHServerEmu.Games.Populations
 {
     public class SpawnEvent
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public Region Region;
         public Game Game;
         public PopulationManager PopulationManager;
@@ -64,7 +66,10 @@ namespace MHServerEmu.Games.Populations
         public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, bool critical,
             SpawnLocation spawnLocation, PrototypeId missionRef, TimeSpan time = default)
         {
-            //Logger.Warn($"SpawnMarker[{count}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");
+            /*HashSet<PrototypeId> entities = new();
+            population.GetContainedEntities(entities);
+            if (entities.Count > 0) 
+                Logger.Debug($"SpawnMarker[{GameDatabase.GetFormattedPrototypeName(entities.First())}][{population.IgnoreBlackout}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");*/
             GRandom random = Game.Random;
             PropertyCollection properties = null;
             if (missionRef != PrototypeId.Invalid)
@@ -83,7 +88,7 @@ namespace MHServerEmu.Games.Populations
                 Critical = critical,
                 Time = time,
                 Properties = properties,
-                SpawnFlags = population.IgnoreBlackout ? SpawnFlags.IgnoreBlackout : SpawnFlags.None,
+                SpawnFlags = SpawnFlags.IgnoreSimulated,
                 Object = population,
                 SpawnLocation = spawnLocation,
             };
