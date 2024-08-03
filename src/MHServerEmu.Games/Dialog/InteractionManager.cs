@@ -4,6 +4,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -1266,6 +1267,20 @@ namespace MHServerEmu.Games.Dialog
             return interest;
         }
 
+        public bool IsMissionAssociated(WorldEntityPrototype entityProto)
+        {
+            if (entityProto is TransitionPrototype) return true;
+            else if (entityProto is KismetSequenceEntityPrototype) return true;
+            else
+            {
+                bool isAssociated = false;
+                var interactionData = entityProto.GetInteractionData();
+                if (interactionData != null)
+                    foreach(var option in interactionData.Options)
+                        isAssociated |= option is BaseMissionConditionOption || option is MissionActionEntityTargetOption;
+                return isAssociated;
+            }
+        }
     }
 
     public class InteractData

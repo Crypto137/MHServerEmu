@@ -250,7 +250,6 @@ namespace MHServerEmu.Games.Regions
                 return;
 
             PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-            if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) return; // Invisible Domino NPC
             Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
                                 
             if (entity is BlackOutZonePrototype blackOutZone)   // Spawn Blackout zone
@@ -267,6 +266,13 @@ namespace MHServerEmu.Games.Regions
 
         public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entityProto, in Transform3 transform, MarkerSetOptions options)
         {
+            if (options.HasFlag(MarkerSetOptions.SpawnMissionAssociated) || options.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated))
+            {
+                bool missionAssociated = GameDatabase.InteractionManager.IsMissionAssociated(entityProto);
+                bool spawn = missionAssociated ? options.HasFlag(MarkerSetOptions.SpawnMissionAssociated) : options.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated);
+                if (spawn == false) return;
+            }
+
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 entityPosition, out Orientation entityOrientation);
             if (RegionBounds.Intersects(entityPosition) == false) entityPosition.RoundToNearestInteger();
 
