@@ -22,7 +22,6 @@ using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -401,70 +400,6 @@ namespace MHServerEmu.Games.Regions
             success &= UIDataProvider.Serialize(archive);
             success &= ObjectiveGraph.Serialize(archive);
             return success;
-        }
-
-        public List<IMessage> OLD_GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
-        {
-            // TODO: Move this to AOI
-
-            List<IMessage> messageList = new();
-
-            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(Id)
-                .SetServerGameId(serverGameId)
-                .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)PrototypeDataRef)
-                .SetRegionRandomSeed(RandomSeed)
-                .SetRegionMin(Aabb.Min.ToNetStructPoint3())
-                .SetRegionMax(Aabb.Max.ToNetStructPoint3())
-                .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
-                    .SetLevel((uint)RegionLevel)
-                    .SetDifficultyTierProtoId((ulong)DifficultyTierRef));
-
-            // can add EntitiesToDestroy here
-
-            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
-            {
-                Serialize(archive);
-                regionChangeBuilder.SetArchiveData(archive.ToByteString());
-            }
-
-            messageList.Add(regionChangeBuilder.Build());
-
-            // mission updates and entity creation happens here
-
-            // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeDataRef).Build());
-
-            // TODO: prefetch other regions
-
-            // Get startArea to load by Waypoint
-            Area startArea = GetStartArea();
-            if (startArea != null)
-            {
-                if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
-                {
-                    Vector3 position = playerConnection.EntityToTeleport.RegionLocation.Position;
-                    Orientation orientation = playerConnection.EntityToTeleport.RegionLocation.Orientation;
-                    if (playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity
-                        && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(ref orientation, ref position);
-                    playerConnection.StartPosition = position;
-                    playerConnection.StartOrientation = orientation;
-                    playerConnection.EntityToTeleport = null;
-                }
-                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Orientation orientation))
-                {
-                    playerConnection.StartPosition = position;
-                    playerConnection.StartOrientation = orientation;
-                }
-                else
-                {
-                    playerConnection.StartPosition = _startArea.Cells.First().Value.RegionBounds.Center;
-                    playerConnection.StartOrientation = Orientation.Zero;
-                }
-            }
-
-            return messageList;
         }
 
         #region Area Management

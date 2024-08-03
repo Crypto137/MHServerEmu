@@ -5,7 +5,9 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -168,8 +170,67 @@ namespace MHServerEmu.Games.Network
 
         public void SetRegion(Region region)
         {
-            // TEMP
+            // FIXME: This is ancient hackery, clean this up
+            // ---
+
+            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(region.Id)
+                .SetServerGameId(region.Game.Id)
+                .SetClearingAllInterest(false)
+                .SetRegionPrototypeId((ulong)region.PrototypeDataRef)
+                .SetRegionRandomSeed(region.RandomSeed)
+                .SetRegionMin(region.Aabb.Min.ToNetStructPoint3())
+                .SetRegionMax(region.Aabb.Max.ToNetStructPoint3())
+                .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
+                    .SetLevel((uint)region.RegionLevel)
+                    .SetDifficultyTierProtoId((ulong)region.DifficultyTierRef));
+
+            // can add EntitiesToDestroy here
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+            {
+                region.Serialize(archive);
+                regionChangeBuilder.SetArchiveData(archive.ToByteString());
+            }
+
+            SendMessage(regionChangeBuilder.Build());
+
+            // mission updates and entity creation happens here
+
+            // why is there a second NetMessageQueueLoadingScreen?
+            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)region.PrototypeDataRef).Build());
+
+            // TODO: prefetch other regions
+
+            // Get startArea to load by Waypoint
+            Area startArea = region.GetStartArea();
+            if (startArea != null)
+            {
+                if (_playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
+                {
+                    Vector3 position = _playerConnection.EntityToTeleport.RegionLocation.Position;
+                    Orientation orientation = _playerConnection.EntityToTeleport.RegionLocation.Orientation;
+                    if (_playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity && teleportEntity.SpawnOffset > 0)
+                        teleportEntity.CalcSpawnOffset(ref orientation, ref position);
+                    
+                    _playerConnection.StartPosition = position;
+                    _playerConnection.StartOrientation = orientation;
+                    _playerConnection.EntityToTeleport = null;
+                }
+                else if (RegionTransition.FindStartPosition(region, _playerConnection.WaypointDataRef, out Vector3 position, out Orientation orientation))
+                {
+                    _playerConnection.StartPosition = position;
+                    _playerConnection.StartOrientation = orientation;
+                }
+                else
+                {
+                    _playerConnection.StartPosition = startArea.Cells.First().Value.RegionBounds.Center;
+                    _playerConnection.StartOrientation = Orientation.Zero;
+                }
+            }
+
             Region = region;
+            Update(_playerConnection.StartPosition, true, true);
         }
 
         public void Reset()

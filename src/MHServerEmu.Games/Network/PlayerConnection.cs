@@ -256,12 +256,7 @@ namespace MHServerEmu.Games.Network
                 return;
             }
 
-            var messages = region.OLD_GetLoadingMessages(Game.Id, WaypointDataRef, this);
-            foreach (IMessage message in messages)
-                SendMessage(message);
-
             AOI.SetRegion(region);
-            AOI.Update(StartPosition, true, true);
         }
 
         public void ExitGame()
