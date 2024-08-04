@@ -261,6 +261,7 @@ namespace MHServerEmu.Games.Network
             }
 
             AOI.SetRegion(region);
+            Player.BeginTeleport(region.Id, StartPosition, StartOrientation);
         }
 
         public void ExitGame()
@@ -283,9 +284,7 @@ namespace MHServerEmu.Games.Network
 
             LastPosition = StartPosition;
             LastOrientation = StartOrientation;
-            Player.EnableCurrentAvatar(false, Player.CurrentAvatar.Id);
-
-            Player.DequeueLoadingScreen();
+            Player.FinishTeleport();
 
             // Play Kismet sequence intro for the region if there is one defined
             Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);

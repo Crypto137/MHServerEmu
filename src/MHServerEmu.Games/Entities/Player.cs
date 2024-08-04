@@ -85,6 +85,8 @@ namespace MHServerEmu.Games.Entities
         private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
+        private TeleportData _teleportData;
+
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
         public ulong ShardId { get => _shardId; }
@@ -837,9 +839,13 @@ namespace MHServerEmu.Games.Entities
             if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SwitchAvatar(): Failed to find pending avatar switch");
             Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
 
-            // Do the switch
+            // Get information about the previous avatar
             ulong lastCurrentAvatarId = CurrentAvatar != null ? CurrentAvatar.Id : InvalidId;
+            ulong prevRegionId = CurrentAvatar.RegionLocation.RegionId;
+            Vector3 prevPosition = CurrentAvatar.RegionLocation.Position;
+            Orientation prevOrientation = CurrentAvatar.RegionLocation.Orientation;
 
+            // Do the switch
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
             Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
 
@@ -851,11 +857,11 @@ namespace MHServerEmu.Games.Entities
             if (result != InventoryResult.Success)
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
 
-            EnableCurrentAvatar(true, lastCurrentAvatarId);
+            EnableCurrentAvatar(true, lastCurrentAvatarId, prevRegionId, prevPosition, prevOrientation);
             return true;
         }
 
-        public bool EnableCurrentAvatar(bool withSwapInPower, ulong lastCurrentAvatarId)
+        public bool EnableCurrentAvatar(bool withSwapInPower, ulong lastCurrentAvatarId, ulong regionId, in Vector3 position, in Orientation orientation)
         {
             // TODO: Use this for teleportation within region as well
 
@@ -864,6 +870,10 @@ namespace MHServerEmu.Games.Entities
 
             if (CurrentAvatar.IsInWorld)
                 return Logger.WarnReturn(false, "EnableCurrentAvatar(): Current avatar is already active");
+
+            Region region = Game.RegionManager.GetRegion(regionId);
+            if (region == null)
+                return Logger.WarnReturn(false, "EnableCurrentAvtar(): region == null");
 
             Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
 
@@ -876,7 +886,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Add new avatar to the world
-            if (CurrentAvatar.EnterWorld(PlayerConnection.AOI.Region, PlayerConnection.LastPosition, PlayerConnection.LastOrientation, settings) == false)
+            if (CurrentAvatar.EnterWorld(region, position, orientation, settings) == false)
                 return false;
 
             OnChangeActiveAvatar(0, lastCurrentAvatarId);
@@ -885,24 +895,29 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Messages
+        #region Loading and Teleports
 
-        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
-
-        public void QueueLoadingScreen(PrototypeId regionPrototypeRef)
+        public void QueueLoadingScreen(PrototypeId regionProtoRef)
         {
             IsOnLoadingScreen = true;
 
             // REMOVEME: Temp workaround for loading screen delay when generating regions
             Game.NetworkManager.SendMessageImmediate(PlayerConnection, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)regionPrototypeRef)
+                .SetRegionPrototypeId((ulong)regionProtoRef)
                 .Build());
 
             /*
             SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)regionPrototypeRef)
+                .SetRegionPrototypeId((ulong)regionProtoRef)
                 .Build());
             */
+        }
+
+        public void QueueLoadingScreen(ulong regionId)
+        {
+            Region region = Game.RegionManager.GetRegion(regionId);
+            PrototypeId regionProtoRef = region != null ? region.PrototypeDataRef : PrototypeId.Invalid;
+            QueueLoadingScreen(regionProtoRef);
         }
 
         public void DequeueLoadingScreen()
@@ -915,7 +930,26 @@ namespace MHServerEmu.Games.Entities
             IsOnLoadingScreen = false;
         }
 
+        public void BeginTeleport(ulong regionId, in Vector3 position, in Orientation orientation)
+        {
+            _teleportData.Set(regionId, position, orientation);
+            QueueLoadingScreen(regionId);
+        }
+
+        public bool FinishTeleport()
+        {
+            if (_teleportData.IsValid == false) return Logger.WarnReturn(false, "FinishTeleport(): No valid teleport data");
+
+            EnableCurrentAvatar(false, 0, _teleportData.RegionId, _teleportData.Position, _teleportData.Orientation);
+            _teleportData.Clear();
+            DequeueLoadingScreen();
+
+            return true;
+        }
+
         #endregion
+
+        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
 
         public override void OnDeallocate()
         {
