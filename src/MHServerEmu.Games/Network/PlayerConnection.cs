@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -52,7 +53,7 @@ namespace MHServerEmu.Games.Network
         public PrototypeId RegionDataRef { get; set; }
         public PrototypeId WaypointDataRef { get; set; }    // May also refer to RegionConnectionTarget
 
-        public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
+        public bool IsLoading { get; set; }
         public Vector3 LastPosition { get; set; }
         public Orientation LastOrientation { get; set; }
 
@@ -74,6 +75,11 @@ namespace MHServerEmu.Games.Network
             AOI = new(this);
             WorldView = new(this);
             InitializeFromDBAccount();
+
+            // Send achievement database
+            SendMessage(AchievementDatabase.Instance.GetDump());
+
+            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
         #region Data Management
@@ -245,8 +251,6 @@ namespace MHServerEmu.Games.Network
 
             AOI.LoadedCellCount = 0;
             IsLoading = true;
-
-            Player.IsOnLoadingScreen = true;
 
             Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionDataRef, this);
             if (region == null)
@@ -957,7 +961,7 @@ namespace MHServerEmu.Games.Network
 
         private void OnNotifyLoadingScreenFinished(MailboxMessage message)  // 86
         {
-            Player.IsOnLoadingScreen = false;
+            Player.OnLoadingScreenFinished();
         }
 
         private bool OnPlayKismetSeqDone(MailboxMessage message)    // 96

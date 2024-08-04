@@ -13,10 +13,8 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
@@ -99,7 +97,7 @@ namespace MHServerEmu.Games.Entities
         public AchievementState AchievementState { get => _achievementState; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
-        public bool IsOnLoadingScreen { get; set; }
+        public bool IsOnLoadingScreen { get; private set; }
 
         // Network
         public PlayerConnection PlayerConnection { get; private set; }
@@ -142,6 +140,9 @@ namespace MHServerEmu.Games.Entities
 
             _community = new(this);
             _community.Initialize();
+
+            // Default loading screen before we start loading into a region
+            QueueLoadingScreen(PrototypeId.Invalid);
 
             return true;
         }
@@ -890,6 +891,8 @@ namespace MHServerEmu.Games.Entities
 
         public void QueueLoadingScreen(PrototypeId regionPrototypeRef)
         {
+            IsOnLoadingScreen = true;
+
             // REMOVEME: Temp workaround for loading screen delay when generating regions
             Game.NetworkManager.SendMessageImmediate(PlayerConnection, NetMessageQueueLoadingScreen.CreateBuilder()
                 .SetRegionPrototypeId((ulong)regionPrototypeRef)
@@ -905,6 +908,11 @@ namespace MHServerEmu.Games.Entities
         public void DequeueLoadingScreen()
         {
             SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
+        }
+
+        public void OnLoadingScreenFinished()
+        {
+            IsOnLoadingScreen = false;
         }
 
         #endregion
