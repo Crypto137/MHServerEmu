@@ -50,10 +50,10 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public override bool OnReset()
         {
-            return ResetList();           
+            return ResetList(true);           
         }
 
-        public bool ResetList()
+        public bool ResetList(bool resetCondition)
         {
             bool result = true;
             foreach(var condition in Conditions)
@@ -66,13 +66,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 
                 if (condition is MissionConditionList list)
                 {
-                    if (list.ResetList() == false)
+                    if (list.ResetList(resetCondition) == false)
                     {
                         result = false;
                         continue;
                     }
                 }
-                else if (condition.EvaluateOnReset())
+                else if ( resetCondition || condition.EvaluateOnReset())
                 {
                     if (condition.Reset() == false)
                     {

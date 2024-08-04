@@ -123,8 +123,13 @@ namespace MHServerEmu.Games.Regions
         public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
         public Event<AreaCreatedGameEvent> AreaCreatedEvent = new();
         public Event<CellCreatedGameEvent> CellCreatedEvent = new();
+        public Event<AvatarEnteredRegionGameEvent> AvatarEnteredRegionEvent = new();
         public Event<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent = new();
         public Event<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent = new();
+        public Event<PlayerCompletedMissionObjectiveGameEvent> PlayerCompletedMissionObjectiveEvent = new();
+        public Event<MissionObjectiveUpdatedGameEvent> MissionObjectiveUpdatedEvent = new();
+        public Event<OpenMissionCompleteGameEvent> OpenMissionCompleteEvent = new();
+        public Event<OpenMissionFailedGameEvent> OpenMissionFailedEvent = new();
         public Event<PlayerFailedMissionGameEvent> PlayerFailedMissionEvent = new();
         public Event<EntitySetSimulatedGameEvent> EntitySetSimulatedEvent = new();
         public Event<EntitySetSimulatedGameEvent> EntitySetUnSimulatedEvent = new();
@@ -1387,6 +1392,11 @@ namespace MHServerEmu.Games.Regions
         {
             if (Prototype == null) return false;
             return Prototype.FilterRegion(filterRegionRef, includeChildren);
+        }
+
+        public void OnAddToAOI(Player player)
+        {
+            player.MissionManager.InitializeForPlayer(player, this);
         }
     }
 

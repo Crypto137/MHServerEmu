@@ -407,20 +407,20 @@ namespace MHServerEmu.Games.Missions
             return _onFailActions == null || _onFailActions.Deactivate();
         }
 
-        public void ResetConditions()
+        public void ResetConditions(bool resetCondition = true)
         {
             switch (State)
             {
                 case MissionObjectiveState.Available:
 
-                    _activateConditions?.ResetList();
+                    _activateConditions?.ResetList(resetCondition);
 
                     break;
 
                 case MissionObjectiveState.Active:
 
-                    _successConditions?.ResetList();
-                    _failureConditions?.ResetList();
+                    _successConditions?.ResetList(resetCondition);
+                    _failureConditions?.ResetList(resetCondition);
 
                     break;
             }

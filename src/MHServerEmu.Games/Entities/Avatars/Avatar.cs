@@ -30,6 +30,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private readonly EventPointer<ActivateSwapInPowerEvent> _activateSwapInPowerEvent = new();
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
+        private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
 
         private ReplicatedVariable<string> _playerName = new(0, string.Empty);
         private ulong _ownerPlayerDbId;
@@ -38,7 +39,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
-
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
@@ -751,6 +751,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
+            ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
         }
 
         public override void OnExitedWorld()
@@ -907,6 +908,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Scheduled Events
 
+        private void AvatarEnteredRegion()
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            var region = Region;
+            region?.AvatarEnteredRegionEvent.Invoke(new(player, region.PrototypeDataRef));
+        }
+
         public void ScheduleSwapInPower()
         {
             ScheduleEntityEventCustom(_activateSwapInPowerEvent, TimeSpan.FromMilliseconds(700));
@@ -922,6 +932,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             ScheduleEntityEvent(_recheckContinuousPowerEvent, delay);
+        }
+
+        private class AvatarEnteredRegionEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).AvatarEnteredRegion();
         }
 
         private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>

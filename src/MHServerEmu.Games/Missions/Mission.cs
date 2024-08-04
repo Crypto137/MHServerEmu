@@ -774,6 +774,7 @@ namespace MHServerEmu.Games.Missions
 
             if (reset)
             {
+                var missionRef = PrototypeDataRef;
                 if (reapeatable)
                 {
                     _activateConditions?.Reset();
@@ -785,9 +786,7 @@ namespace MHServerEmu.Games.Missions
                 if (region != null)
                 {
                     if (IsOpenMission)
-                    {
-                        // TODO region OpenMissionCompleteGameEvent
-                    }
+                        region.OpenMissionCompleteEvent.Invoke(new(missionRef));
 
                     // TODO region PlayerCompletedMissionGameEvent
                 }
@@ -1046,38 +1045,38 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
-        public void ResetConditions()
+        public void ResetConditions(bool resetCondition = true)
         {
             var state = State;
             switch (state)
             {
                 case MissionState.Inactive:
 
-                    _prereqConditions?.ResetList();
-                    _activateNowConditions?.ResetList();
-                    _completeNowConditions?.ResetList();
+                    _prereqConditions?.ResetList(resetCondition);
+                    _activateNowConditions?.ResetList(resetCondition);
+                    _completeNowConditions?.ResetList(resetCondition);
 
                     break;
 
                 case MissionState.Available:
 
-                    _activateConditions?.ResetList();
-                    _activateNowConditions?.ResetList();
-                    _completeNowConditions?.ResetList();
+                    _activateConditions?.ResetList(resetCondition);
+                    _activateNowConditions?.ResetList(resetCondition);
+                    _completeNowConditions?.ResetList(resetCondition);
 
                     break;
 
                 case MissionState.Active:
 
-                    _failureConditions?.ResetList();
-                    _completeNowConditions?.ResetList();
+                    _failureConditions?.ResetList(resetCondition);
+                    _completeNowConditions?.ResetList(resetCondition);
 
                     break;
             }
 
             if (state == State)
                 foreach (var objective in _objectiveDict.Values)
-                    objective?.ResetConditions();
+                    objective?.ResetConditions(resetCondition);
         }
 
         public bool OnObjectiveStateChange(MissionObjective objective)
@@ -1131,6 +1130,16 @@ namespace MHServerEmu.Games.Missions
                 return Logger.WarnReturn<MissionObjective>(null, $"GetObjectiveByObjectiveIndex(): Objective index {objectiveIndex} is not valid");
 
             return objective;
+        }
+
+        public MissionObjective GetObjectiveByObjectiveID(long objectiveID)
+        {
+            foreach(var objective in _objectiveDict.Values)
+                if (objective.Prototype is MissionNamedObjectivePrototype namedObjectiveProto)
+                    if (namedObjectiveProto.ObjectiveID == objectiveID)
+                        return objective;
+
+            return null;
         }
 
         public MissionObjective CreateObjective(byte objectiveIndex)
@@ -1337,6 +1346,13 @@ namespace MHServerEmu.Games.Missions
         public bool HasParticipant(Player player)
         {
             return Participants.Contains(player.Id);
+        }
+
+        public float GetContribution(Player player)
+        {
+            if (_contributors.TryGetValue(player.DatabaseUniqueId, out float contributor))
+                return contributor;
+            return 0.0f;
         }
 
         public bool HasEventMissionChapter()

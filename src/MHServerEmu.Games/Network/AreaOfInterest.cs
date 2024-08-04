@@ -170,6 +170,7 @@ namespace MHServerEmu.Games.Network
         {
             // TEMP
             Region = region;
+            region.OnAddToAOI(_playerConnection.Player);
         }
 
         public void Reset()

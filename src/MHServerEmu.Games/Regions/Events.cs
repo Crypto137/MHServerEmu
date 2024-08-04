@@ -65,6 +65,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct AvatarEnteredRegionGameEvent
+    {
+        public Player Player;
+        public PrototypeId RegionRef;
+
+        public AvatarEnteredRegionGameEvent(Player player, PrototypeId regionRef)
+        {
+            Player = player;
+            RegionRef = regionRef;
+        }
+    }
+
     public struct PlayerLeftRegionGameEvent
     {
         public Player Player;
@@ -74,6 +86,59 @@ namespace MHServerEmu.Games.Regions
         {
             Player = player;
             RegionRef = regionRef;
+        }
+    }
+
+    public struct OpenMissionCompleteGameEvent
+    {
+        public PrototypeId MissionRef;
+
+        public OpenMissionCompleteGameEvent(PrototypeId missionRef)
+        {
+            MissionRef = missionRef;
+        }
+    }
+
+    public struct OpenMissionFailedGameEvent
+    {
+        public PrototypeId MissionRef;
+
+        public OpenMissionFailedGameEvent(PrototypeId missionRef)
+        {
+            MissionRef = missionRef;
+        }
+    }
+
+    public struct MissionObjectiveUpdatedGameEvent
+    {
+        public Player Player;
+        public PrototypeId MissionRef;
+        public long ObjectiveId;
+
+        public MissionObjectiveUpdatedGameEvent(Player player, PrototypeId missionRef, long objectiveId)
+        {
+            Player = player;
+            MissionRef = missionRef;
+            ObjectiveId = objectiveId;
+        }
+    }
+
+    public struct PlayerCompletedMissionObjectiveGameEvent
+    {
+        public Player Player;
+        public PrototypeId MissionRef;
+        public long ObjectiveId;
+        public bool Participant;
+        public bool Contributor;
+
+        public PlayerCompletedMissionObjectiveGameEvent(Player player, PrototypeId missionRef, long objectiveId, 
+            bool participant, bool contributor)
+        {
+            Player = player;
+            MissionRef = missionRef;
+            ObjectiveId = objectiveId;
+            Participant = participant;
+            Contributor = contributor;
         }
     }
 

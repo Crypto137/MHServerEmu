@@ -393,7 +393,7 @@ namespace MHServerEmu.Games.Missions
             var mission = CreateMission(missionRef);
             if (mission == null) return null;
             InsertMission(mission);
-
+            Logger.Debug($"CreateMissionByDataRef {mission.PrototypeName}");
             mission.SetCreationState(creationState, initialState);
 
             if (IsInitialized)
