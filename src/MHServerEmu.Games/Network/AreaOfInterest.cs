@@ -38,8 +38,8 @@ namespace MHServerEmu.Games.Network
 
         private readonly Stack<EntityTrackingUpdate> _entityUpdateStack = new(64);
 
-        private PlayerConnection _playerConnection;
-        private Game _game;
+        private readonly PlayerConnection _playerConnection;
+        private readonly Game _game;
 
         private ulong _currentFrame = 0;
         private Vector3 _lastUpdatePosition = new();
@@ -54,8 +54,8 @@ namespace MHServerEmu.Games.Network
         private PrototypeId _lastCameraSetting;
 
         public Region Region { get; private set; }
-        public int CellsInRegion { get; set; }
-        public int LoadedCellCount { get; set; } = 0;
+        public ulong RegionId { get => Region != null ? Region.Id : 0; }
+        public int TrackedCellCount { get => _trackedCells.Count; }
         public int TrackedEntitiesCount { get => _trackedEntities.Count; }
         public float AOIVolume { get => _aoiVolume; set => SetAOIVolume(value); }
 
@@ -246,7 +246,6 @@ namespace MHServerEmu.Games.Network
             }
 
             _currentFrame = 0;
-            CellsInRegion = 0;
             _lastCameraSetting = 0;
         }
 
@@ -269,20 +268,29 @@ namespace MHServerEmu.Games.Network
             return (interestPolicies & interestFilter) != AOINetworkPolicyValues.AOIChannelNone;
         }
 
-        public bool OnCellLoaded(uint cellId)
+        public bool OnCellLoaded(uint cellId, ulong regionId)
         {
-            if (_trackedCells.TryGetValue(cellId, out CellInterestStatus cell) == false)
-                Logger.WarnReturn(false, $"OnCellLoaded(): Loaded cell id {cell} is not being tracked!");
+            if (regionId != RegionId)
+                return Logger.WarnReturn(false, $"OnCellLoaded(): Region id=0x{regionId:X} does not match tracked region id 0x{RegionId:X}");
 
-            LoadedCellCount++;
+            if (_trackedCells.ContainsKey(cellId) == false)
+                return Logger.WarnReturn(false, $"OnCellLoaded(): Loaded cell id={cellId} is not being tracked!");
+
             _trackedCells[cellId] = new(_currentFrame, true);
             return true;
         }
 
-        public void ForceCellLoad()
+        public int GetLoadedCellCount()
         {
-            foreach (var kvp in _trackedCells.Where(kvp => kvp.Value.IsLoaded == false))
-                _trackedCells[kvp.Key] = new(_currentFrame, true);
+            int numLoaded = 0;
+
+            foreach (CellInterestStatus cellInterest in _trackedCells.Values)
+            {
+                if (cellInterest.IsLoaded)
+                    numLoaded++;
+            }
+
+            return numLoaded;
         }
 
         public string DebugPrint()
@@ -356,7 +364,6 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            CellsInRegion = _trackedCells.Count;
             return environmentUpdate;
         }
 
@@ -500,7 +507,6 @@ namespace MHServerEmu.Games.Network
             }
 
             _trackedCells.Remove(cell.Id);
-            LoadedCellCount--;
         }
 
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)

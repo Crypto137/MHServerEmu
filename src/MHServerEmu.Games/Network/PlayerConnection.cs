@@ -40,23 +40,22 @@ namespace MHServerEmu.Games.Network
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
 
-        private EventPointer<OLD_FinishCellLoadingEvent> _finishCellLoadingEvent = new();
         private EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
         public Game Game { get; }
 
+        public AreaOfInterest AOI { get; private set; }
+        public WorldView WorldView { get; private set; }
+
+        public Player Player { get; private set; }
+
         public ulong PlayerDbId { get => _dbAccount.Id; }
 
         // Player State
-        public Player Player { get; private set; }
-
         public PrototypeId RegionDataRef { get; set; }
         public PrototypeId WaypointDataRef { get; set; }    // May also refer to RegionConnectionTarget
 
         public bool IsLoading { get; set; }
-
-        public AreaOfInterest AOI { get; private set; }
-        public WorldView WorldView { get; private set; }
         public Vector3 StartPosition { get; internal set; }
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
@@ -78,6 +77,11 @@ namespace MHServerEmu.Games.Network
             SendMessage(AchievementDatabase.Instance.GetDump());
 
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+        }
+
+        public override string ToString()
+        {
+            return $"dbGuid=0x{PlayerDbId:X}";
         }
 
         #region Data Management
@@ -247,7 +251,6 @@ namespace MHServerEmu.Games.Network
 
             Player.QueueLoadingScreen(RegionDataRef);
 
-            AOI.LoadedCellCount = 0;
             IsLoading = true;
 
             Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionDataRef, this);
@@ -276,7 +279,7 @@ namespace MHServerEmu.Games.Network
 
         public void EnterGameWorld()
         {
-            var avatar = Player.CurrentAvatar;
+            Avatar avatar = Player.CurrentAvatar;
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
             AOI.Update(entrancePosition, true);
 
@@ -284,8 +287,6 @@ namespace MHServerEmu.Games.Network
 
             // Play Kismet sequence intro for the region if there is one defined
             Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
-
-            IsLoading = false;
         }
 
         #endregion
@@ -471,25 +472,18 @@ namespace MHServerEmu.Games.Network
             var cellLoaded = message.As<NetMessageCellLoaded>();
             if (cellLoaded == null) return Logger.WarnReturn(false, $"OnCellLoaded(): Failed to retrieve message");
 
-            AOI.OnCellLoaded(cellLoaded.CellId);
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{AOI.LoadedCellCount}/{AOI.CellsInRegion}]");
+            uint cellId = cellLoaded.CellId;
+            ulong regionId = cellLoaded.RegionId;
 
-            if (IsLoading)
+            AOI.OnCellLoaded(cellId, regionId);
+            int numLoaded = AOI.GetLoadedCellCount();
+
+            Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
+
+            if (IsLoading && numLoaded == AOI.TrackedCellCount)
             {
-                if (_finishCellLoadingEvent.IsValid)
-                    Game.GameEventScheduler.CancelEvent(_finishCellLoadingEvent);
-
-                if (AOI.LoadedCellCount == AOI.CellsInRegion)
-                {
-                    EnterGameWorld();
-                }
-                else
-                {
-                    // set timer 5 seconds for wait client answer
-                    Game.GameEventScheduler.ScheduleEvent(_finishCellLoadingEvent, TimeSpan.FromSeconds(5));
-                    _finishCellLoadingEvent.Get().Initialize(this, AOI.CellsInRegion);
-                    AOI.ForceCellLoad();
-                }
+                IsLoading = false;
+                EnterGameWorld();
             }
 
             return true;
