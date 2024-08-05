@@ -132,7 +132,8 @@ namespace MHServerEmu.Games.Regions
         public Event<OpenMissionFailedGameEvent> OpenMissionFailedEvent = new();
         public Event<PlayerFailedMissionGameEvent> PlayerFailedMissionEvent = new();
         public Event<EntitySetSimulatedGameEvent> EntitySetSimulatedEvent = new();
-        public Event<EntitySetSimulatedGameEvent> EntitySetUnSimulatedEvent = new();
+        public Event<EntitySetUnSimulatedGameEvent> EntitySetUnSimulatedEvent = new();
+        public Event<ActiveChapterChangedGameEvent> ActiveChapterChangedEvent = new();
 
         public Region(Game game)
         {

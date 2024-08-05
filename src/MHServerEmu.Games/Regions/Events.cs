@@ -65,6 +65,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct ActiveChapterChangedGameEvent
+    {
+        public Player Player;
+        public PrototypeId ChapterRef;
+
+        public ActiveChapterChangedGameEvent(Player player, PrototypeId chapterRef)
+        {
+            Player = player;
+            ChapterRef = chapterRef;
+        }
+    }
+
     public struct AvatarEnteredRegionGameEvent
     {
         public Player Player;

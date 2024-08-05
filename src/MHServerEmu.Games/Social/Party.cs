@@ -13,5 +13,10 @@ namespace MHServerEmu.Games.Social
         {
             throw new NotImplementedException();
         }
+
+        internal bool IsMember(ulong databaseUniqueId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
