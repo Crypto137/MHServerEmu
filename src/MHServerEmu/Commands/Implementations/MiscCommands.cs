@@ -112,6 +112,9 @@ namespace MHServerEmu.Commands.Implementations
             if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
 
             float x = 0f, y = 0f, z = 0f;
             foreach (string param in @params)
@@ -138,11 +141,9 @@ namespace MHServerEmu.Commands.Implementations
             Vector3 teleportPoint = new(x, y, z);
 
             if (@params.Length < 3)
-                teleportPoint += playerConnection.LastPosition;
+                teleportPoint += avatar.RegionLocation.Position;
 
-            EventPointer<OLD_ToTeleportEvent> eventPointer = new();
-            game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-            eventPointer.Get().Initialize(playerConnection, teleportPoint);
+            avatar.ChangeRegionPosition(teleportPoint, null, ChangePositionFlags.Teleport);
 
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
