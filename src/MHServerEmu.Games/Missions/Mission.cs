@@ -144,8 +144,8 @@ namespace MHServerEmu.Games.Missions
             _isSuspended = false;
 
             if (missionManager.IsPlayerMissionManager())
-                if (missionManager.Owner is Player player) 
-                    AddParticipant(player);
+                if (missionManager.Owner is Player player)
+                    _participants.Add(player.Id);
 
             _timeExpireCurrentState = TimeSpan.Zero;
             Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
@@ -1315,7 +1315,42 @@ namespace MHServerEmu.Games.Missions
 
         public bool AddParticipant(Player player)
         {
-            return _participants.Add(player.Id);
+            if (HasParticipant(player)) return false; // todo reset?
+
+            _participants.Add(player.Id);
+
+            if (IsOpenMission)
+            {
+                var openProto = OpenMissionPrototype;
+                if (openProto.ParticipationContributionValue != 0.0)
+                    if (GetContribution(player) == 0.0f)
+                        AddContributionValue(player, (float)openProto.ParticipationContributionValue);
+
+                if (State == MissionState.Active) 
+                    SendStoryNotificationToPlayer(player, openProto.StoryNotification);
+
+                SendUpdateToPlayer(player, MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.Default);
+            }
+
+            if (player.GetRegion() != null)
+                MissionManager.UpdateMissionEntitiesForPlayer(this, player);
+
+            return true;
+        }
+
+        public void AddContribution(Player player, float contributionValue)
+        {
+            AddParticipant(player);
+            AddContributionValue(player, contributionValue);
+        }
+
+        private void AddContributionValue(Player player, float newContribution)
+        {
+            var playerUID = player.DatabaseUniqueId;
+            if (_contributors.TryGetValue(playerUID, out var oldContribution))
+                _contributors[playerUID] = oldContribution + newContribution;
+            else
+                _contributors[playerUID] = newContribution;
         }
 
         private bool SerializeObjectives(Archive archive)
@@ -1354,7 +1389,7 @@ namespace MHServerEmu.Games.Missions
 
         public bool HasParticipant(Player player)
         {
-            return Participants.Contains(player.Id);
+            return _participants.Contains(player.Id);
         }
 
         public float GetContribution(Player player)
