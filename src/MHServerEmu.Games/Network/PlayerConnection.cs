@@ -54,8 +54,6 @@ namespace MHServerEmu.Games.Network
         public PrototypeId WaypointDataRef { get; set; }    // May also refer to RegionConnectionTarget
 
         public bool IsLoading { get; set; }
-        public Vector3 LastPosition { get; set; }
-        public Orientation LastOrientation { get; set; }
 
         public AreaOfInterest AOI { get; private set; }
         public WorldView WorldView { get; private set; }
@@ -282,8 +280,6 @@ namespace MHServerEmu.Games.Network
             Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
             AOI.Update(entrancePosition, true);
 
-            LastPosition = StartPosition;
-            LastOrientation = StartOrientation;
             Player.FinishTeleport();
 
             // Play Kismet sequence intro for the region if there is one defined
@@ -466,9 +462,6 @@ namespace MHServerEmu.Games.Network
 
                 avatar.Locomotor.SetSyncState(newSyncState, position, orientation);
             }
-
-            LastPosition = avatar.RegionLocation.Position;
-            LastOrientation = avatar.RegionLocation.Orientation;
 
             return true;
         }
@@ -831,8 +824,6 @@ namespace MHServerEmu.Games.Network
                 Logger.Trace($"Teleporting to areaId={areaId} cellId={cellId}");
 
                 Player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
-
-                LastPosition = targetPos;
             }
             else
             {

@@ -53,8 +53,9 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            return $"Current position: {playerConnection.LastPosition.ToStringNames()}";
+            return $"Current position: {avatar.RegionLocation.Position.ToStringNames()}";
         }
     }
 
