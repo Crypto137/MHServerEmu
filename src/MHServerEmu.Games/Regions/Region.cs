@@ -134,6 +134,7 @@ namespace MHServerEmu.Games.Regions
         public Event<EntitySetSimulatedGameEvent> EntitySetSimulatedEvent = new();
         public Event<EntitySetUnSimulatedGameEvent> EntitySetUnSimulatedEvent = new();
         public Event<ActiveChapterChangedGameEvent> ActiveChapterChangedEvent = new();
+        public Event<PlayerBeginTravelToAreaGameEvent> PlayerBeginTravelToAreaEvent = new();
 
         public Region(Game game)
         {

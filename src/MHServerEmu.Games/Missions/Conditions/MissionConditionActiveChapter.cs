@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (proto == null || player == null || IsMissionPlayer(player) == false) return;
             if (proto.Chapter != chapter) return;
 
-            UpdatePlayerContribution(player, 1.0f);
+            UpdatePlayerContribution(player);
             SetCompleted();
         }
 
