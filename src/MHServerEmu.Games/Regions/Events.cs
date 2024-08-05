@@ -65,6 +65,30 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerEnteredAreaGameEvent
+    {
+        public Player Player;
+        public PrototypeId AreaRef;
+
+        public PlayerEnteredAreaGameEvent(Player player, PrototypeId areaRef)
+        {
+            Player = player;
+            AreaRef = areaRef;
+        }
+    }
+
+    public struct PlayerLeftAreaGameEvent
+    {
+        public Player Player;
+        public PrototypeId AreaRef;
+
+        public PlayerLeftAreaGameEvent(Player player, PrototypeId areaRef)
+        {
+            Player = player;
+            AreaRef = areaRef;
+        }
+    }
+
     public struct PlayerBeginTravelToAreaGameEvent
     {
         public Player Player;

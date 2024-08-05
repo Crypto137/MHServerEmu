@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public override bool OnReset()
         {
-            SetCompletion(false);
+            ResetCompleted();
             return true;
         }
 
