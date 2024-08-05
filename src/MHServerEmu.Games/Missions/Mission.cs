@@ -1304,6 +1304,15 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
+        public void OnUpdateCondition(MissionCondition condition) { }
+
+        public void OnUpdateObjectiveCondition(MissionObjective objective, MissionCondition condition)
+        {
+            if (objective.State == MissionObjectiveState.Active)
+                if (condition is MissionPlayerCondition playerCondition && playerCondition.Count > 0) 
+                    ScheduleIdleTimeout();
+        }
+
         public bool AddParticipant(Player player)
         {
             return _participants.Add(player.Id);

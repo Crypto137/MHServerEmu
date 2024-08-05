@@ -4,6 +4,9 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionEntityInteract : MissionPlayerCondition
     {
+        protected MissionConditionEntityInteractPrototype Proto => Prototype as MissionConditionEntityInteractPrototype;
+        protected override long MaxCount => Proto.Count;
+
         public MissionConditionEntityInteract(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {

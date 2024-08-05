@@ -8,12 +8,21 @@ namespace MHServerEmu.Games.Missions.Conditions
     {
         protected virtual PrototypeId MissionProtoRef => PrototypeId.Invalid;
         protected Player Player => Mission.MissionManager.Player;
-        protected virtual long Count => 1;
+
+        private long _count;
+        public long Count { get => _count; set => SetCount(value); }
+        protected virtual long MaxCount => 1;
 
         public MissionPlayerCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
             : base(mission, owner, prototype)
         {
+            _count = 0;
+        }
 
+        public override bool Initialize(int conditionIndex)
+        {
+            ConditionIndex = conditionIndex++;
+            return base.Initialize(conditionIndex);
         }
 
         protected Mission GetMission()
@@ -29,6 +38,8 @@ namespace MHServerEmu.Games.Missions.Conditions
                 return Mission;
         }
 
+        public override bool IsCompleted() => Count >= MaxCount;
+
         protected virtual bool GetCompletion() => false;
 
         protected virtual void SetCompletion(bool completed)
@@ -37,9 +48,21 @@ namespace MHServerEmu.Games.Missions.Conditions
             else ResetCompleted();
         }
 
+        protected virtual void SetCount(long count)
+        {
+            _count = Math.Clamp(count, 0, MaxCount);
+            OnUpdate();
+        }
+
         protected void ResetCompleted()
         {
-            throw new NotImplementedException();
+            SetCount(0);
+        }
+
+        public override bool OnReset()
+        {
+            ResetCompleted();
+            return true;
         }
     }
 }

@@ -432,6 +432,13 @@ namespace MHServerEmu.Games.Missions
             return Mission.IsSuspended || OnSetState();
         }
 
+        public void OnUpdateCondition(MissionCondition condition)
+        {
+            UpdateCompletionCount();
+            Mission.OnUpdateObjectiveCondition(this, condition);
+            UpdateMetaGameWidget();
+        }
+
         private void UpdateCompletionCount()
         {
             // TODO SendToParticipants(MissionObjectiveUpdateFlags.CurrentCount);

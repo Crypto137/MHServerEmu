@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     {
         protected MissionConditionObjectiveCompletePrototype Proto => Prototype as MissionConditionObjectiveCompletePrototype;
         protected override PrototypeId MissionProtoRef => Proto.MissionPrototype;
-        protected override long Count => Proto.Count;
+        protected override long MaxCount => Proto.Count;
         public Action<AvatarEnteredRegionGameEvent> AvatarEnteredRegionAction { get; private set; }
         public Action<PlayerCompletedMissionObjectiveGameEvent> PlayerCompletedMissionObjectiveAction { get; private set; }
         public Action<MissionObjectiveUpdatedGameEvent> MissionObjectiveUpdatedAction { get; private set; }

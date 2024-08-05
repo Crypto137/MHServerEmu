@@ -12,11 +12,14 @@ namespace MHServerEmu.Games.Missions.Conditions
         public bool EventsRegistered { get; protected set; }
         public bool IsReseting { get; private set; }
 
+        protected int ConditionIndex;
+
         public MissionCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
         {
             Mission = mission;
             Owner = owner;
             Prototype = prototype;
+            ConditionIndex = -1;
         }
 
         public static MissionCondition CreateCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype conditionProto)
@@ -39,5 +42,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         public virtual void RegisterEvents(Region region) { }
         public virtual void UnRegisterEvents(Region region) { }
         public virtual bool EvaluateOnReset() => false;
+        public void OnUpdateCondition(MissionCondition condition) => Owner.OnUpdateCondition(this);
+
+        protected void OnUpdate()
+        {
+            Owner.OnUpdateCondition(this);
+        }
     }
 }
