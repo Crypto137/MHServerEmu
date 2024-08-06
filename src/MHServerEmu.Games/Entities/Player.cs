@@ -937,7 +937,18 @@ namespace MHServerEmu.Games.Entities
             QueueLoadingScreen(regionId);
         }
 
-        public bool FinishTeleport()
+        public void OnCellLoaded(uint cellId, ulong regionId)
+        {
+            AOI.OnCellLoaded(cellId, regionId);
+            int numLoaded = AOI.GetLoadedCellCount();
+
+            Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
+
+            if (_teleportData.IsValid && numLoaded == AOI.TrackedCellCount)
+                FinishTeleport();
+        }
+
+        private bool FinishTeleport()
         {
             if (_teleportData.IsValid == false) return Logger.WarnReturn(false, "FinishTeleport(): No valid teleport data");
 

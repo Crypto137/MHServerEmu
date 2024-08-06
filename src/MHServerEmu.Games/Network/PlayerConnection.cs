@@ -52,9 +52,6 @@ namespace MHServerEmu.Games.Network
 
         public ulong PlayerDbId { get => _dbAccount.Id; }
 
-        // REMOVEME - use teleport data in Player entity instead
-        public bool IsLoading { get; set; }
-
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
         /// </summary>
@@ -238,8 +235,6 @@ namespace MHServerEmu.Games.Network
             PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
 
             Player.QueueLoadingScreen(regionProtoRef);
-
-            IsLoading = true;
 
             Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
             if (region == null)
@@ -452,19 +447,7 @@ namespace MHServerEmu.Games.Network
             var cellLoaded = message.As<NetMessageCellLoaded>();
             if (cellLoaded == null) return Logger.WarnReturn(false, $"OnCellLoaded(): Failed to retrieve message");
 
-            uint cellId = cellLoaded.CellId;
-            ulong regionId = cellLoaded.RegionId;
-
-            AOI.OnCellLoaded(cellId, regionId);
-            int numLoaded = AOI.GetLoadedCellCount();
-
-            Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
-
-            if (IsLoading && numLoaded == AOI.TrackedCellCount)
-            {
-                IsLoading = false;
-                Player.FinishTeleport();
-            }
+            Player.OnCellLoaded(cellLoaded.CellId, cellLoaded.RegionId);
 
             return true;
         }
