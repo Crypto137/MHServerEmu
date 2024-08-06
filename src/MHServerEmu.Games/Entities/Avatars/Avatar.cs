@@ -747,6 +747,24 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Event Handlers
 
+        public override void OnAreaChanged(RegionLocation oldLocation, RegionLocation newLocation)
+        {
+            base.OnAreaChanged(oldLocation, newLocation);
+
+            var oldArea = oldLocation.Area;
+            var newArea = newLocation.Area;
+            if (oldArea == newArea) return;
+
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            if (oldArea != null)
+                oldArea.Region.PlayerLeftAreaEvent.Invoke(new(player, oldArea.PrototypeDataRef));
+
+            if (newArea != null) // TODO Achievement?
+                newArea.Region.PlayerEnteredAreaEvent.Invoke(new(player, newArea.PrototypeDataRef));
+        }
+
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
