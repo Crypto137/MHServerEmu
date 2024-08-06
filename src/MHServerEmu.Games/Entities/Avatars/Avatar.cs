@@ -116,6 +116,32 @@ namespace MHServerEmu.Games.Entities.Avatars
             return PendingActionState != PendingActionState.VariableActivation && PendingActionState != PendingActionState.AvatarSwitchInProgress;
         }
 
+        public override ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        {
+            // We only need to do AOI processing if the avatar is changing its position
+            if (position == null)
+            {
+                if (orientation != null)
+                    return base.ChangeRegionPosition(position, orientation, flags);
+                else
+                    return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): No position or orientation provided");
+            }
+
+            // Get player for AOI update
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): player == null");
+
+            ChangePositionResult result = base.ChangeRegionPosition(position, orientation, flags);
+
+            // TODO: Remove avatar from the world if we are moving outside of our AOI
+            if (result == ChangePositionResult.PositionChanged)
+            {
+                player.AOI.Update(RegionLocation.Position);
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region Powers

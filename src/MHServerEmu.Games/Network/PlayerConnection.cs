@@ -413,11 +413,6 @@ namespace MHServerEmu.Games.Network
             if (Serializer.TransferOrientationFixed(archive, ref syncOrientation, yawOnly, 6) == false)
                 return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer syncOrientation");
 
-            // AOI
-            AOI.Region.UpdateLastVisitedTime();
-            if (IsLoading == false)
-                AOI.Update(syncPosition);
-
             // Update locomotion state
             bool canMove = avatar.CanMove();
             bool canRotate = avatar.CanRotate();

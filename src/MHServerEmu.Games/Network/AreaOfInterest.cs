@@ -98,6 +98,7 @@ namespace MHServerEmu.Games.Network
 
         public void Update(Vector3 position, bool forceUpdate = false, bool isStart = false)
         {
+            Region?.UpdateLastVisitedTime();
             _currentFrame++;
 
             // Unless forceUpdate is set, we update only when we move far enough from the last update position.
