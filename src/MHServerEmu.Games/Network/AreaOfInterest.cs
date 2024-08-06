@@ -241,6 +241,39 @@ namespace MHServerEmu.Games.Network
             return (interestPolicies & interestFilter) != AOINetworkPolicyValues.AOIChannelNone;
         }
 
+        public bool ContainsPosition(in Vector3 position)
+        {
+            if (Region == null) return false;
+
+            // Check all tracked areas
+            foreach (var areaKvp in _trackedAreas)
+            {
+                Area area = Region.GetAreaById(areaKvp.Key);
+                if (area == null)
+                {
+                    Logger.Warn("ContainsPosition(): area == null");
+                    continue;
+                }
+
+                // Skip areas that don't contain our position
+                if (area.IntersectsXY(position) == false)
+                    continue;
+
+                foreach (var cellKvp in area.Cells)
+                {
+                    // Skip untracked and unloaded cells
+                    if (InterestedInCell(cellKvp.Key) == false)
+                        continue;
+
+                    // Check if the cell contains requested position
+                    if (cellKvp.Value.IntersectsXY(position))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool OnCellLoaded(uint cellId, ulong regionId)
         {
             if (regionId != RegionId)

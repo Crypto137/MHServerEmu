@@ -118,6 +118,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
         {
+            if (RegionLocation.IsValid() == false)
+                return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): Cannot change region position without entering the world first");
+
             // We only need to do AOI processing if the avatar is changing its position
             if (position == null)
             {
@@ -131,12 +134,26 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): player == null");
 
-            ChangePositionResult result = base.ChangeRegionPosition(position, orientation, flags);
+            ChangePositionResult result;
 
-            // TODO: Remove avatar from the world if we are moving outside of our AOI
-            if (result == ChangePositionResult.PositionChanged)
+            if (player.AOI.ContainsPosition(position.Value))
             {
-                player.AOI.Update(RegionLocation.Position);
+                // Do a normal position change and update AOI if the position is loaded
+                result = base.ChangeRegionPosition(position, orientation, flags);
+                if (result == ChangePositionResult.PositionChanged)
+                    player.AOI.Update(RegionLocation.Position);
+            }
+            else
+            {
+                // If we are moving outside of our AOI, start a teleport and exit world.
+                // The avatar will be put back into the world when all cells at the destination are loaded.
+                if (RegionLocation.Region.GetCellAtPosition(position.Value) == null)
+                    return Logger.WarnReturn(ChangePositionResult.InvalidPosition, $"ChangeRegionPosition(): Invalid position {position.Value}");
+
+                player.BeginTeleport(RegionLocation.RegionId, position.Value, orientation != null ? orientation.Value : Orientation.Zero);
+                ExitWorld();
+                player.AOI.Update(position.Value);
+                result = ChangePositionResult.Teleport;
             }
 
             return result;

@@ -761,12 +761,6 @@ namespace MHServerEmu.Games.Network
                 if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionLocation.RegionId) is not Transition target)
                     return true;
 
-                if (AOI.InterestedInCell(target.RegionLocation.Cell.Id) == false)
-                {
-                    teleport.TeleportClient(this);
-                    return true;
-                }
-
                 var teleportEntity = target.TransitionPrototype;
                 if (teleportEntity == null) return true;
                 Vector3 targetPos = target.RegionLocation.Position;
