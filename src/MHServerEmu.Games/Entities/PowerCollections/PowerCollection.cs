@@ -198,7 +198,7 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             if (_owner == null) return Logger.WarnReturn(false, "SendEntireCollection(): _owner == null");
 
             // Make sure the provided player is actually interested in our owner
-            AreaOfInterest aoi = player.PlayerConnection.AOI;
+            AreaOfInterest aoi = player.AOI;
             if (aoi.InterestedInEntity(_owner.Id, AOINetworkPolicyValues.AOIChannelProximity) == false)
                 return Logger.WarnReturn(false, "SendEntireCollection(): Attempting to send an entire power collection to a player not interested in this collection's owner");
 

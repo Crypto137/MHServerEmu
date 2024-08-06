@@ -103,6 +103,7 @@ namespace MHServerEmu.Games.Entities
 
         // Network
         public PlayerConnection PlayerConnection { get; private set; }
+        public AreaOfInterest AOI { get => PlayerConnection.AOI; }
 
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
@@ -393,13 +394,13 @@ namespace MHServerEmu.Games.Entities
 
             base.ExitGame();
 
-            PlayerConnection.AOI.Reset();
+            AOI.Reset();
         }
 
         public Region GetRegion()
         {
             // This shouldn't need any null checks, at least for now
-            return PlayerConnection.AOI.Region;
+            return AOI.Region;
         }
 
         /// <summary>
@@ -642,7 +643,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
                 }
 
-                PlayerConnection.AOI.ConsiderEntity(entity);
+                AOI.ConsiderEntity(entity);
             }
 
             return true;

@@ -760,7 +760,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
             }
 
-            AreaOfInterest aoi = player.PlayerConnection.AOI;
+            AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
         }
 

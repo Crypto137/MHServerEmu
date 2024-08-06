@@ -525,7 +525,7 @@ namespace MHServerEmu.Games.Entities
             var player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "RevealEquipmentToOwner(): player == null");
 
-            AreaOfInterest aoi = player.PlayerConnection.AOI;
+            AreaOfInterest aoi = player.AOI;
 
             foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
             {
