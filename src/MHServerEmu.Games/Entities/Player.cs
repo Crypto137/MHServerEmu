@@ -886,7 +886,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Add new avatar to the world
-            if (CurrentAvatar.EnterWorld(region, position, orientation, settings) == false)
+            if (CurrentAvatar.EnterWorld(region, CurrentAvatar.FloorToCenter(position), orientation, settings) == false)
                 return false;
 
             OnChangeActiveAvatar(0, lastCurrentAvatarId);
@@ -940,9 +940,10 @@ namespace MHServerEmu.Games.Entities
         {
             if (_teleportData.IsValid == false) return Logger.WarnReturn(false, "FinishTeleport(): No valid teleport data");
 
-            EnableCurrentAvatar(false, 0, _teleportData.RegionId, _teleportData.Position, _teleportData.Orientation);
+            EnableCurrentAvatar(false, CurrentAvatar.Id, _teleportData.RegionId, _teleportData.Position, _teleportData.Orientation);
             _teleportData.Clear();
             DequeueLoadingScreen();
+            TryPlayIntroKismetSeqForRegion(CurrentAvatar.RegionLocation.RegionId);
 
             return true;
         }
@@ -957,12 +958,13 @@ namespace MHServerEmu.Games.Entities
             base.OnDeallocate();
         }
 
-        public void TryPlayKismetSeqIntroForRegion(PrototypeId regionPrototypeId)
+        public bool TryPlayIntroKismetSeqForRegion(ulong regionId)
         {
             // TODO/REMOVEME: Remove this when we have working Kismet sequence triggers
-            if (PlayerConnection.RegionDataRef == PrototypeId.Invalid) return;
+            Region region = Game.RegionManager.GetRegion(regionId);
+            if (region == null) return Logger.WarnReturn(false, "TryPlayIntroKismetSeqForRegion(): region == null");
 
-            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)regionPrototypeId switch
+            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)region.PrototypeDataRef switch
             {
                 RegionPrototypeId.NPERaftRegion             => KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart,
                 RegionPrototypeId.TimesSquareTutorialRegion => KismetSeqPrototypeId.Times01CaptainAmericaLanding,
@@ -970,7 +972,11 @@ namespace MHServerEmu.Games.Entities
                 _ => 0
             };
 
-            if (kismetSeqRef != 0) PlayKismetSeq((PrototypeId)kismetSeqRef);
+            if (kismetSeqRef == 0)
+                return false;
+
+            PlayKismetSeq((PrototypeId)kismetSeqRef);
+            return true;
         }
 
         public void PlayKismetSeq(PrototypeId kismetSeqRef)

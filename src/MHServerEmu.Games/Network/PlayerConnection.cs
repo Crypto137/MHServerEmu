@@ -277,18 +277,6 @@ namespace MHServerEmu.Games.Network
             InitializeFromDBAccount();
         }
 
-        public void EnterGameWorld()
-        {
-            Avatar avatar = Player.CurrentAvatar;
-            Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
-            AOI.Update(entrancePosition, true);
-
-            Player.FinishTeleport();
-
-            // Play Kismet sequence intro for the region if there is one defined
-            Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
-        }
-
         #endregion
 
         public void Disconnect()
@@ -483,7 +471,7 @@ namespace MHServerEmu.Games.Network
             if (IsLoading && numLoaded == AOI.TrackedCellCount)
             {
                 IsLoading = false;
-                EnterGameWorld();
+                Player.FinishTeleport();
             }
 
             return true;

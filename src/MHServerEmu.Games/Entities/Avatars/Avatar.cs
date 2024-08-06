@@ -751,6 +751,17 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
+
+            // Update AOI of the owner player
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+            {
+                Logger.Warn("OnEnteredWorld(): player == null");
+                return;
+            }
+
+            AreaOfInterest aoi = player.PlayerConnection.AOI;
+            aoi.Update(RegionLocation.Position, true);
         }
 
         public override void OnExitedWorld()
