@@ -196,12 +196,12 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
-        public void MovePlayerToRegion(PlayerConnection playerConnection, PrototypeId regionDataRef, PrototypeId waypointDataRef)
+        public void MovePlayerToRegion(PlayerConnection playerConnection, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
         {
             playerConnection.ExitGame();
 
-            playerConnection.RegionDataRef = regionDataRef;
-            playerConnection.WaypointDataRef = waypointDataRef;
+            playerConnection.TransferParams.DestRegionProtoRef = regionProtoRef;
+            playerConnection.TransferParams.DestTargetProtoRef = targetProtoRef;
 
             NetworkManager.SetPlayerConnectionPending(playerConnection);
         }
@@ -215,8 +215,8 @@ namespace MHServerEmu.Games
 
             playerConnection.ExitGame();
 
-            playerConnection.RegionDataRef = worldEntity.Region.PrototypeDataRef;
-            playerConnection.EntityToTeleport = worldEntity;
+            playerConnection.TransferParams.DestRegionProtoRef = worldEntity.Region.PrototypeDataRef;
+            playerConnection.TransferParams.DestEntityId = worldEntity.Id;
 
             NetworkManager.SetPlayerConnectionPending(playerConnection);
         }

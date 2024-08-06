@@ -39,8 +39,12 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
-            return $"Reloading region {GameDatabase.GetPrototypeName(playerConnection.RegionDataRef)}.";
+
+            PrototypeId regionProtoRef = playerConnection.TransferParams.DestRegionProtoRef;
+            PrototypeId targetProtoRef = playerConnection.TransferParams.DestTargetProtoRef;
+            game.MovePlayerToRegion(playerConnection, regionProtoRef, targetProtoRef);
+
+            return $"Reloading region {regionProtoRef.GetName()}.";
         }
 
         [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe", AccountUserLevel.Admin)]

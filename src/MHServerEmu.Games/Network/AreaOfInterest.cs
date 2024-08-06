@@ -7,7 +7,6 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -169,7 +168,7 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        public void SetRegion(Region region)
+        public void SetRegion(Region region, in Vector3 startPosition)
         {
             // FIXME: This is ancient hackery, clean this up
             // ---
@@ -203,35 +202,8 @@ namespace MHServerEmu.Games.Network
 
             // TODO: prefetch other regions
 
-            // Get startArea to load by Waypoint
-            Area startArea = region.GetStartArea();
-            if (startArea != null)
-            {
-                if (_playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
-                {
-                    Vector3 position = _playerConnection.EntityToTeleport.RegionLocation.Position;
-                    Orientation orientation = _playerConnection.EntityToTeleport.RegionLocation.Orientation;
-                    if (_playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity && teleportEntity.SpawnOffset > 0)
-                        teleportEntity.CalcSpawnOffset(ref orientation, ref position);
-                    
-                    _playerConnection.StartPosition = position;
-                    _playerConnection.StartOrientation = orientation;
-                    _playerConnection.EntityToTeleport = null;
-                }
-                else if (RegionTransition.FindStartPosition(region, _playerConnection.WaypointDataRef, out Vector3 position, out Orientation orientation))
-                {
-                    _playerConnection.StartPosition = position;
-                    _playerConnection.StartOrientation = orientation;
-                }
-                else
-                {
-                    _playerConnection.StartPosition = startArea.Cells.First().Value.RegionBounds.Center;
-                    _playerConnection.StartOrientation = Orientation.Zero;
-                }
-            }
-
             Region = region;
-            Update(_playerConnection.StartPosition, true, true);
+            Update(startPosition, true, true);
         }
 
         public void Reset()

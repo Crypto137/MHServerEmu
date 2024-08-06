@@ -40,25 +40,20 @@ namespace MHServerEmu.Games.Network
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
 
-        private EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
+        private readonly EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
         public Game Game { get; }
 
-        public AreaOfInterest AOI { get; private set; }
-        public WorldView WorldView { get; private set; }
+        public AreaOfInterest AOI { get; }
+        public WorldView WorldView { get; }
+        public TransferParams TransferParams { get; }
 
         public Player Player { get; private set; }
 
         public ulong PlayerDbId { get => _dbAccount.Id; }
 
-        // Player State
-        public PrototypeId RegionDataRef { get; set; }
-        public PrototypeId WaypointDataRef { get; set; }    // May also refer to RegionConnectionTarget
-
+        // REMOVEME - use teleport data in Player entity instead
         public bool IsLoading { get; set; }
-        public Vector3 StartPosition { get; internal set; }
-        public Orientation StartOrientation { get; internal set; }
-        public WorldEntity EntityToTeleport { get; internal set; }
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
@@ -71,6 +66,8 @@ namespace MHServerEmu.Games.Network
 
             AOI = new(this);
             WorldView = new(this);
+            TransferParams = new(this);
+
             InitializeFromDBAccount();
 
             // Send achievement database
@@ -91,8 +88,8 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            _dbAccount.Player.RawRegion = (long)RegionDataRef;
-            _dbAccount.Player.RawWaypoint = (long)WaypointDataRef;
+            _dbAccount.Player.RawRegion = (long)TransferParams.DestRegionProtoRef;
+            _dbAccount.Player.RawWaypoint = (long)TransferParams.DestTargetProtoRef;
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
             Player.SaveToDBAccount(_dbAccount);
@@ -106,21 +103,10 @@ namespace MHServerEmu.Games.Network
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
-            // Initialize region
-            RegionDataRef = (PrototypeId)_dbAccount.Player.RawRegion;
-            if (dataDirectory.PrototypeIsA<RegionPrototype>(RegionDataRef) == false)
-            {
-                RegionDataRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
-                Logger.Warn($"PlayerConnection(): Invalid region data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(RegionDataRef)}");
-            }
+            // Initialize transfer params
+            TransferParams.SetPersistentData((PrototypeId)_dbAccount.Player.RawRegion, (PrototypeId)_dbAccount.Player.RawWaypoint);
 
-            WaypointDataRef = (PrototypeId)_dbAccount.Player.RawWaypoint;
-            if ((dataDirectory.PrototypeIsA<WaypointPrototype>(WaypointDataRef) || dataDirectory.PrototypeIsA<RegionConnectionTargetPrototype>(WaypointDataRef)) == false)
-            {
-                WaypointDataRef = GameDatabase.GetPrototype<RegionPrototype>(RegionDataRef).StartTarget;
-                Logger.Warn($"PlayerConnection(): Invalid waypoint data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(WaypointDataRef)}");
-            }
-
+            // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
@@ -249,20 +235,31 @@ namespace MHServerEmu.Games.Network
                 .SetClearingAllInterest(false)
                 .Build());
 
-            Player.QueueLoadingScreen(RegionDataRef);
+            PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
+
+            Player.QueueLoadingScreen(regionProtoRef);
 
             IsLoading = true;
 
-            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionDataRef, this);
+            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
             if (region == null)
             {
-                Logger.Error($"Failed to get or generate region {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
+                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetNameFormatted()}");
                 Disconnect();
                 return;
             }
 
-            AOI.SetRegion(region);
-            Player.BeginTeleport(region.Id, StartPosition, StartOrientation);
+            TransferParams.DestRegionId = region.Id;
+
+            if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)
+            {
+                Logger.Error($"EnterGame(): Failed to find start location");
+                Disconnect();
+                return;
+            }
+
+            AOI.SetRegion(region, startPosition);
+            Player.BeginTeleport(region.Id, startPosition, startOrientation);
         }
 
         public void ExitGame()
@@ -772,7 +769,7 @@ namespace MHServerEmu.Games.Network
                     return true;
                 }
 
-                if (RegionDataRef != teleport.DestinationList[0].RegionRef)
+                if (TransferParams.DestRegionProtoRef != teleport.DestinationList[0].RegionRef)
                 {
                     teleport.TeleportClient(this);
                     return true;
