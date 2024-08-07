@@ -45,6 +45,14 @@ namespace MHServerEmu.Games.Regions
         PreferNoEntity     = 1 << 7,
     }
 
+    [Flags]
+    public enum RegionStatus
+    {
+        None = 0,
+        GenerateAreas = 1 << 0,
+        Shutdown = 1 << 2,
+    }
+
     public enum RegionPartitionContext
     {
         Insert,
@@ -60,7 +68,7 @@ namespace MHServerEmu.Games.Regions
         private readonly List<BitList> _collisionBitList = new();
 
         private Area _startArea;
-
+        private RegionStatus _statusFlag;
         private int _playerDeaths;
 
         public Game Game { get; private set; }
@@ -121,9 +129,12 @@ namespace MHServerEmu.Games.Regions
         public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
         public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
         public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
+        public Event<EntityEnteredAreaGameEvent> EntityEnteredAreaEvent = new();
+        public Event<EntityLeftAreaGameEvent> EntityLeftAreaEvent = new();
         public Event<AreaCreatedGameEvent> AreaCreatedEvent = new();
         public Event<CellCreatedGameEvent> CellCreatedEvent = new();
         public Event<AvatarEnteredRegionGameEvent> AvatarEnteredRegionEvent = new();
+        public Event<PlayerEnteredRegionGameEvent> PlayerEnteredRegionEvent = new();
         public Event<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent = new();
         public Event<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent = new();
         public Event<PlayerCompletedMissionObjectiveGameEvent> PlayerCompletedMissionObjectiveEvent = new();
@@ -137,6 +148,9 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerBeginTravelToAreaGameEvent> PlayerBeginTravelToAreaEvent = new();
         public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
         public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
+        public Event<PartySizeChangedGameEvent> PartySizeChangedEvent = new();
+        public Event<EntityEnteredWorldGameEvent> EntityEnteredWorldEvent = new();
+        public Event<EntityExitedWorldGameEvent> EntityExitedWorldEvent = new();
 
         public Region(Game game)
         {
@@ -341,9 +355,20 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
+        public bool TestStatus(RegionStatus status)
+        {
+            return _statusFlag.HasFlag(status);
+        }
+
+        private void SetStatus(RegionStatus status, bool enable)
+        {
+            if (enable) _statusFlag |= status;
+            else _statusFlag ^= status;
+        }
+
         public void Shutdown()
         {
-            // SetStatus(2, true);
+            SetStatus(RegionStatus.Shutdown, true);
 
             /* int tries = 100;
              bool found;
@@ -672,11 +697,14 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateAreas(bool log)
         {
+            if (TestStatus(RegionStatus.GenerateAreas) == false) return false;
+
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(Prototype.RegionGenerator);
 
             regionGenerator.GenerateRegion(log, RandomSeed, this);
 
             _startArea = regionGenerator.StartArea;
+            SetStatus(RegionStatus.GenerateAreas, true);
             SetAabb(CalculateAabbFromAreas());
 
             bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
@@ -1392,10 +1420,10 @@ namespace MHServerEmu.Games.Regions
             DividedStartLocations.Clear();
         }
 
-        public bool FilterRegion(PrototypeId filterRegionRef, bool includeChildren = false)
+        public bool FilterRegion(PrototypeId filterRegionRef, bool includeChildren = false, PrototypeId[] regionsExclude = null)
         {
             if (Prototype == null) return false;
-            return Prototype.FilterRegion(filterRegionRef, includeChildren);
+            return Prototype.FilterRegion(filterRegionRef, includeChildren, regionsExclude);
         }
 
         public void OnAddToAOI(Player player)

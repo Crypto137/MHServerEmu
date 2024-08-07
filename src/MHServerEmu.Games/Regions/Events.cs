@@ -21,6 +21,26 @@ namespace MHServerEmu.Games.Regions
         public WorldEntity Defender;
     }
 
+    public struct EntityEnteredWorldGameEvent
+    {
+        public WorldEntity Entity;
+
+        public EntityEnteredWorldGameEvent(WorldEntity entity)
+        {
+            Entity = entity;
+        }
+    }
+
+    public struct EntityExitedWorldGameEvent
+    {
+        public WorldEntity Entity;
+
+        public EntityExitedWorldGameEvent(WorldEntity entity)
+        {
+            Entity = entity;
+        }
+    }
+
     public struct EntitySetSimulatedGameEvent
     {
         public WorldEntity Entity;
@@ -113,12 +133,36 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PartySizeChangedGameEvent
+    {
+        public Player Player;
+        public int PartySize;
+
+        public PartySizeChangedGameEvent(Player player, int partySize)
+        {
+            Player = player;
+            PartySize = partySize;
+        }
+    }
+
     public struct AvatarEnteredRegionGameEvent
     {
         public Player Player;
         public PrototypeId RegionRef;
 
         public AvatarEnteredRegionGameEvent(Player player, PrototypeId regionRef)
+        {
+            Player = player;
+            RegionRef = regionRef;
+        }
+    }
+
+    public struct PlayerEnteredRegionGameEvent
+    {
+        public Player Player;
+        public PrototypeId RegionRef;
+
+        public PlayerEnteredRegionGameEvent(Player player, PrototypeId regionRef)
         {
             Player = player;
             RegionRef = regionRef;
@@ -244,6 +288,30 @@ namespace MHServerEmu.Games.Regions
         public CellCreatedGameEvent(Cell cell)
         {
             Cell = cell;
+        }
+    }
+
+    public struct EntityEnteredAreaGameEvent
+    {
+        public WorldEntity Entity;
+        public Area Area;
+
+        public EntityEnteredAreaGameEvent(WorldEntity entity, Area area)
+        {
+            Entity = entity;
+            Area = area;
+        }
+    }
+
+    public struct EntityLeftAreaGameEvent
+    {
+        public WorldEntity Entity;
+        public Area Area;
+
+        public EntityLeftAreaGameEvent(WorldEntity entity, Area area)
+        {
+            Entity = entity;
+            Area = area;
         }
     }
 

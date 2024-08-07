@@ -395,8 +395,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             regionProto.RegionGenerator?.GetAreasInGenerator(areas);
         }
 
-        public bool FilterRegion(PrototypeId filterRef, bool includeChildren)
+        public bool FilterRegion(PrototypeId filterRef, bool includeChildren, PrototypeId[] regionsExclude)
         {
+            if (regionsExclude.HasValue())
+                if (regionsExclude.Contains(DataRef)) return false;
+
             if (filterRef == PrototypeId.Invalid) return false;
             var filterProto = GameDatabase.GetPrototype<RegionPrototype>(filterRef);
             if (filterProto != null)
