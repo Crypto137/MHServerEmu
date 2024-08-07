@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
@@ -9,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public IMissionConditionOwner Owner { get; private set; }
         public MissionConditionPrototype Prototype { get; private set; }
         public Region Region { get => Mission.Region; }
+        public Game Game { get => Mission.Game; }
         public bool EventsRegistered { get; protected set; }
         public bool IsReseting { get; private set; }
 
@@ -33,6 +35,12 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool result = OnReset();
             IsReseting = false;
             return result;
+        }
+
+        public bool EvaluateEntityFilter(EntityFilterPrototype entityFilter, WorldEntity entity)
+        {
+            if (entity == null || entityFilter == null) return false;
+            return entityFilter.Evaluate(entity, new(Mission.PrototypeDataRef));
         }
 
         public virtual bool IsCompleted() => false;
