@@ -743,14 +743,18 @@ namespace MHServerEmu.Games.Network
                 if (teleport.DestinationList.Count == 0 || teleport.DestinationList[0].Type == RegionTransitionType.Waypoint) return true;
                 Logger.Trace($"Destination entity {teleport.DestinationList[0].EntityRef}");
 
+                /*
                 if (teleport.DestinationList[0].Type == RegionTransitionType.TowerUp ||
                     teleport.DestinationList[0].Type == RegionTransitionType.TowerDown)
                 {
                     teleport.TeleportToEntity(this, teleport.DestinationList[0].EntityId);
                     return true;
                 }
+                */
 
-                if (TransferParams.DestRegionProtoRef != teleport.DestinationList[0].RegionRef)
+                PrototypeId targetRegionProtoRef = teleport.DestinationList[0].RegionRef;
+
+                if (targetRegionProtoRef != PrototypeId.Invalid && TransferParams.DestRegionProtoRef != targetRegionProtoRef)
                 {
                     teleport.TeleportClient(this);
                     return true;

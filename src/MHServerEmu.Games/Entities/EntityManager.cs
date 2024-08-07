@@ -318,6 +318,9 @@ namespace MHServerEmu.Games.Entities
 
         public Transition GetTransitionInRegion(Destination destination, ulong regionId)
         {
+            if (destination.EntityId != Entity.InvalidId)
+                return GetEntity<Transition>(destination.EntityId);
+
             PrototypeId areaRef = destination.AreaRef;
             PrototypeId cellRef = destination.CellRef;
             PrototypeId entityRef = destination.EntityRef;
