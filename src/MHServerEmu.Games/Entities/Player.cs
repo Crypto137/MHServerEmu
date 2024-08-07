@@ -1064,6 +1064,16 @@ namespace MHServerEmu.Games.Entities
             return unlockType;
         }
 
+        public int GetCharacterLevelForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            if (levelCap <= 0) return 0;
+            int level = Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef];
+            if (level <= 0) return 0;
+            level %= levelCap;
+            return level == 0 ? levelCap : level;
+        }
+
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
