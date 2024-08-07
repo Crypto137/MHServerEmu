@@ -853,6 +853,9 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
 
             EnableCurrentAvatar(true, lastCurrentAvatarId);
+
+            GetRegion()?.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
+
             return true;
         }
 
