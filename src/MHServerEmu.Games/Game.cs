@@ -203,12 +203,14 @@ namespace MHServerEmu.Games
             playerConnection.TransferParams.DestRegionProtoRef = regionProtoRef;
             playerConnection.TransferParams.DestTargetProtoRef = targetProtoRef;
 
+            playerConnection.Player.QueueLoadingScreen(playerConnection.TransferParams.DestRegionProtoRef, true);
+
             NetworkManager.SetPlayerConnectionPending(playerConnection);
         }
 
         public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
         {
-            // TODO change Reload without exit of region
+            // TODO: Move without re-entering the region
             var entityManager = playerConnection.Game.EntityManager;
             var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
             if (worldEntity == null) return;
@@ -217,6 +219,8 @@ namespace MHServerEmu.Games
 
             playerConnection.TransferParams.DestRegionProtoRef = worldEntity.Region.PrototypeDataRef;
             playerConnection.TransferParams.DestEntityId = worldEntity.Id;
+
+            playerConnection.Player.QueueLoadingScreen(playerConnection.TransferParams.DestRegionProtoRef, true);
 
             NetworkManager.SetPlayerConnectionPending(playerConnection);
         }

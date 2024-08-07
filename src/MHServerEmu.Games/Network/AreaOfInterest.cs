@@ -168,58 +168,94 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        public void SetRegion(Region region, in Vector3 startPosition)
+        public bool SetRegion(ulong regionId, bool clearingAllInterest, in Vector3? startPosition = null, in Orientation? startOrientation = null)
         {
-            // FIXME: This is ancient hackery, clean this up
-            // ---
+            // TODO: Trigger callbacks for
+            // - Mission updates
+            // - Discover avatars in our destination region
 
-            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(region.Id)
-                .SetServerGameId(region.Game.Id)
-                .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)region.PrototypeDataRef)
-                .SetRegionRandomSeed(region.RandomSeed)
-                .SetRegionMin(region.Aabb.Min.ToNetStructPoint3())
-                .SetRegionMax(region.Aabb.Max.ToNetStructPoint3())
-                .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
-                    .SetLevel((uint)region.RegionLevel)
-                    .SetDifficultyTierProtoId((ulong)region.DifficultyTierRef));
+            Region region = null;
+            Player player = _playerConnection.Player;
 
-            // can add EntitiesToDestroy here
-
-            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+            if (regionId != 0)
             {
-                region.Serialize(archive);
-                regionChangeBuilder.SetArchiveData(archive.ToByteString());
+                // Ignore region set requests unless they are clear requests or they are different from the current region
+                if (regionId == RegionId)
+                    return true;
+
+                // If we are not clearing region interest with an invalid region id, we need to have a valid region here
+                region = _game.RegionManager.GetRegion(regionId);
+                if (region == null) return Logger.WarnReturn(false, "SetRegion(): region == null");
+            }
+
+            // TODO: Notify the current region that we are leaving
+
+            // Reset previous state
+            Region = region;
+            _lastUpdatePosition = Vector3.Zero;
+
+            // FIXME: This is based on our older hacks, check if this works correctly
+            if (clearingAllInterest)
+            {
+                _trackedAreas.Clear();
+                _trackedCells.Clear();
+
+                foreach (var kvp in _trackedEntities)
+                {
+                    Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
+                    if (entity != null)
+                        SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+                }
+
+                _currentFrame = 0;
+                _lastCameraSetting = 0;
+            }
+
+            // Fill in required region change message fields
+            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(regionId)
+                .SetServerGameId(_game.Id)
+                .SetClearingAllInterest(clearingAllInterest);
+
+            // Add additional region metadata if we have a valid region
+            if (region != null)
+            {
+                regionChangeBuilder.SetRegionPrototypeId((ulong)region.PrototypeDataRef)
+                    .SetRegionRandomSeed(region.RandomSeed)
+                    .SetRegionMin(region.Aabb.Min.ToNetStructPoint3())
+                    .SetRegionMax(region.Aabb.Max.ToNetStructPoint3())
+                    .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
+                        .SetLevel((uint)region.RegionLevel)
+                        .SetDifficultyTierProtoId((ulong)region.DifficultyTierRef));
+
+                // Can add EntitiesToDestroy here
+
+                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+                {
+                    region.Serialize(archive);
+                    regionChangeBuilder.SetArchiveData(archive.ToByteString());
+                }
+
+                player.QueueLoadingScreen(region.PrototypeDataRef);
             }
 
             SendMessage(regionChangeBuilder.Build());
 
-            // mission updates and entity creation happens here
+            // TODO?: Prefetch other regions
 
-            // why is there a second NetMessageQueueLoadingScreen?
-            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)region.PrototypeDataRef).Build());
-
-            // TODO: prefetch other regions
-
-            Region = region;
-            Update(startPosition, true, true);
-        }
-
-        public void Reset()
-        {
-            _trackedAreas.Clear();
-            _trackedCells.Clear();
-
-            foreach (var kvp in _trackedEntities)
+            // Teleport the player into our destination region if we have one
+            if (region != null)
             {
-                Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
-                if (entity != null)
-                    SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+                if (startPosition == null)
+                    return Logger.WarnReturn(false, "SetRegion(): No valid start position is provided");
+
+                // BeginTeleport() queues another loading screen, so we end up with two in a row. This matches our packet dumps.
+                player.BeginTeleport(regionId, startPosition.Value, startOrientation != null ? startOrientation.Value : Orientation.Zero);
+                Region = region;
+                Update(startPosition.Value, true, true);
             }
 
-            _currentFrame = 0;
-            _lastCameraSetting = 0;
+            return true;
         }
 
         public bool InterestedInArea(uint areaId)

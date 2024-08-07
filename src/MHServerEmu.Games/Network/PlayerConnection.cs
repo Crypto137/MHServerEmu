@@ -221,16 +221,15 @@ namespace MHServerEmu.Games.Network
         
         public void EnterGame()
         {
-            Player.EnterGame();
+            // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
+            // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
+
+            Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
-            // Before changing to the actual destination region the game seems to first change into a transitional region
-            SendMessage(NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build());
+            // Clear region interest by setting it to invalid region, we still keep our owned entities
+            AOI.SetRegion(0, false, null, null);
 
             PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
 
@@ -253,8 +252,7 @@ namespace MHServerEmu.Games.Network
                 return;
             }
 
-            AOI.SetRegion(region, startPosition);
-            Player.BeginTeleport(region.Id, startPosition, startOrientation);
+            AOI.SetRegion(region.Id, false, startPosition, startOrientation);
         }
 
         public void ExitGame()

@@ -390,11 +390,9 @@ namespace MHServerEmu.Games.Entities
         public override void ExitGame()
         {
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
-            SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
+            AOI.SetRegion(0, true, null, null);
 
             base.ExitGame();
-
-            AOI.Reset();
         }
 
         public Region GetRegion()
@@ -898,20 +896,23 @@ namespace MHServerEmu.Games.Entities
 
         #region Loading and Teleports
 
-        public void QueueLoadingScreen(PrototypeId regionProtoRef)
+        public void QueueLoadingScreen(PrototypeId regionProtoRef, bool sendImmediately = false)
         {
             IsOnLoadingScreen = true;
 
             // REMOVEME: Temp workaround for loading screen delay when generating regions
-            Game.NetworkManager.SendMessageImmediate(PlayerConnection, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)regionProtoRef)
-                .Build());
-
-            /*
-            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)regionProtoRef)
-                .Build());
-            */
+            if (sendImmediately)
+            {
+                Game.NetworkManager.SendMessageImmediate(PlayerConnection, NetMessageQueueLoadingScreen.CreateBuilder()
+                    .SetRegionPrototypeId((ulong)regionProtoRef)
+                    .Build());
+            }
+            else
+            {
+                SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
+                    .SetRegionPrototypeId((ulong)regionProtoRef)
+                    .Build());
+            }
         }
 
         public void QueueLoadingScreen(ulong regionId)
