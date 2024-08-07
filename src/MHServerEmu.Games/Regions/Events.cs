@@ -145,6 +145,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerUnlockedAvatarGameEvent
+    {
+        public Player Player;
+        public PrototypeId AvatarRef;
+
+        public PlayerUnlockedAvatarGameEvent(Player player, PrototypeId avatarRef)
+        {
+            Player = player;
+            AvatarRef = avatarRef;
+        }
+    }
+
     public struct PlayerSwitchedToAvatarGameEvent
     {
         public Player Player;

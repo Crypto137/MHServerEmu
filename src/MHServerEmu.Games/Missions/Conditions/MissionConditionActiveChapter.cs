@@ -23,14 +23,15 @@ namespace MHServerEmu.Games.Missions.Conditions
             List<Entity> participants = new();
             Mission.GetParticipants(participants);
 
-            foreach(var participant in participants)
+            bool isActive = false;
+            foreach (var participant in participants)
                 if (participant is Player player && player.ActiveChapter == proto.Chapter)
                 {
-                    SetCompleted();
-                    return true;
+                    isActive = true;
+                    break;
                 }
 
-            ResetCompleted();
+            SetCompletion(isActive);
             return true;
         }
 
