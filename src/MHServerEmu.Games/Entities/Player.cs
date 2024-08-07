@@ -1048,6 +1048,22 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        public bool HasAvatarFullyUnlocked(PrototypeId avatarRef)
+        {
+            AvatarUnlockType unlockType = GetAvatarUnlockType(avatarRef);
+            return unlockType != AvatarUnlockType.None && unlockType != AvatarUnlockType.Starter;
+        }
+
+        public AvatarUnlockType GetAvatarUnlockType(PrototypeId avatarRef)
+        {
+            var avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatarRef);
+            if (avatarProto == null) return AvatarUnlockType.None;
+            AvatarUnlockType unlockType = (AvatarUnlockType)(int)Properties[PropertyEnum.AvatarUnlock, avatarRef];
+            if (unlockType == AvatarUnlockType.None && avatarProto.IsStarterAvatar) 
+                return AvatarUnlockType.Starter;
+            return unlockType;
+        }
+
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
