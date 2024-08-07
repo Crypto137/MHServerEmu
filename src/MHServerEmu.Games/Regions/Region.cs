@@ -9,7 +9,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
@@ -122,6 +121,8 @@ namespace MHServerEmu.Games.Regions
         public EntityTracker EntityTracker { get; private set; }
         public TuningTable TuningTable { get; private set; }    // Difficulty table
 
+        #region Events
+
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
         public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
         public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
@@ -150,9 +151,12 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
         public Event<PartySizeChangedGameEvent> PartySizeChangedEvent = new();
         public Event<PlayerSwitchedToAvatarGameEvent> PlayerSwitchedToAvatarEvent = new();
+        public Event<AvatarLeveledUpGameEvent> AvatarLeveledUpEvent = new();
         public Event<PlayerUnlockedAvatarGameEvent> PlayerUnlockedAvatarEvent = new();
         public Event<EntityEnteredWorldGameEvent> EntityEnteredWorldEvent = new();
         public Event<EntityExitedWorldGameEvent> EntityExitedWorldEvent = new();
+
+        #endregion
 
         public Region(Game game)
         {
