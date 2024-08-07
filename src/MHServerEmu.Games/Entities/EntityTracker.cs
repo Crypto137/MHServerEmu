@@ -99,6 +99,13 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public SortedSet<ulong> HotspotsForContext(PrototypeId contextRef)
+        {
+            if ( _contextTrackingDataMap.TryGetValue(contextRef, out var data))
+                return data.Hotspots;
+            return null;
+        }
+
         public void ModifyTrackingContext(WorldEntity entity, PrototypeId contextRef, EntityTrackingFlag flags)
         {
             if (entity == null) return;

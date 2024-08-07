@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Entities
         public HotspotPrototype HotspotPrototype { get => Prototype as HotspotPrototype; }
         public bool HasApplyEffectsDelay { get; private set; }
 
-        private Dictionary<MissionConditionContext, int> ConditionEntityCounter;
+        private Dictionary<MissionConditionContext, int> _missionConditionEntityCounter;
         private bool _skipCollide;
         private PropertyCollection _directApplyToMissileProperties;
 
@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Entities
 
             if (IsMissionHotspot)
             {
-                ConditionEntityCounter = new();
+                _missionConditionEntityCounter = new();
                 MissionEntityTracker();
             }
 
@@ -227,14 +227,14 @@ namespace MHServerEmu.Games.Entities
             // Logger.Trace($"HandleOverlapBegin_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
             bool missionEvent = false;
-            if (ConditionEntityCounter.Count > 0)
-                foreach(var context in ConditionEntityCounter)
+            if (_missionConditionEntityCounter.Count > 0)
+                foreach(var context in _missionConditionEntityCounter)
                 {
                     var missionRef = context.Key.MissionRef;
                     var conditionProto = context.Key.ConditionProto;
                     if (EvaluateTargetCondition(target, missionRef, conditionProto))
                     {
-                        ConditionEntityCounter[context.Key]++;
+                        _missionConditionEntityCounter[context.Key]++;
                         missionEvent = true;
                     }
                     // Hardcoded part
@@ -255,14 +255,14 @@ namespace MHServerEmu.Games.Entities
             // Logger.Trace($"HandleOverlapEnd_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
             bool missionEvent = false;
-            if (ConditionEntityCounter.Count > 0)
-                foreach (var context in ConditionEntityCounter)
+            if (_missionConditionEntityCounter.Count > 0)
+                foreach (var context in _missionConditionEntityCounter)
                 {
                     var missionRef = context.Key.MissionRef;
                     var conditionProto = context.Key.ConditionProto;
                     if (EvaluateTargetCondition(target, missionRef, conditionProto))
                     {
-                        ConditionEntityCounter[context.Key]--;
+                        _missionConditionEntityCounter[context.Key]--;
                         missionEvent = true;
                     }
                     // Hardcoded part
@@ -276,6 +276,17 @@ namespace MHServerEmu.Games.Entities
                 EntityLeftMissionHotspotGameEvent hotspotEvent = new(target, this);
                 Region.EntityLeftMissionHotspotEvent.Invoke(hotspotEvent);
             }
+        }
+
+        public int GetMissionConditionCount(PrototypeId missionRef, MissionConditionPrototype conditionProto)
+        {
+            if (_missionConditionEntityCounter != null)
+            {
+                var key = new MissionConditionContext(missionRef, conditionProto);
+                if (_missionConditionEntityCounter.TryGetValue(key, out int count))
+                    return count;
+            }
+            return 0;
         }
 
         #region hardcoded
@@ -412,7 +423,7 @@ namespace MHServerEmu.Games.Entities
                     if (EvaluateHotspotCondition(missionRef, conditionProto))
                     {
                         var key = new MissionConditionContext(missionRef, conditionProto);
-                        ConditionEntityCounter[key] = 0;
+                        _missionConditionEntityCounter[key] = 0;
                     }
             }
 

@@ -1399,6 +1399,16 @@ namespace MHServerEmu.Games.Missions
             return 0.0f;
         }
 
+        public bool GetMissionHotspots(out List<ulong> outHotspots)
+        {
+            outHotspots = new();
+            var region = Region;
+            if (region == null) return false;
+            var hotspots = region.EntityTracker.HotspotsForContext(PrototypeDataRef);
+            if (hotspots != null) outHotspots = new(hotspots);
+            return outHotspots.Count > 0;
+        }
+
         public bool HasEventMissionChapter()
         {
             var missionProto = Prototype;
