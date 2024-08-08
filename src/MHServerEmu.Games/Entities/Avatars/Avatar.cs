@@ -659,7 +659,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (interactableObject is Transition transition)
             {
-                transition.UseTransition(this, player);
+                transition.UseTransition(player);
             }
             else
             {
