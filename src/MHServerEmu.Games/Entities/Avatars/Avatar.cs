@@ -642,67 +642,28 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
         {
-            Logger.Debug($"UseInteractableObject(): {this} => {entityId} ({missionProtoRef.GetName()})");
-
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
 
             if (missionProtoRef != PrototypeId.Invalid)
             {
-                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {missionProtoRef.GetName()}");
+                // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
+                Logger.Debug($"UseInteractableObject(): missionProtoRef={missionProtoRef.GetName()}");
                 player.SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
             }
 
-            var interactableObject = Game.EntityManager.GetEntity<Entity>(entityId);
-            if (interactableObject == null) return Logger.WarnReturn(false, $"UseInteractableObject(): Failed to get entity {entityId}");
+            var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
 
-            if (interactableObject is Transition teleport)
+            Logger.Debug($"UseInteractableObject(): {this} => {interactableObject}");
+
+            if (interactableObject is Transition transition)
             {
-                if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
-                {
-                    teleport.TeleportToLastTown(player.PlayerConnection);
-                    return true;
-                }
-                if (teleport.DestinationList.Count == 0 || teleport.DestinationList[0].Type == RegionTransitionType.Waypoint) return true;
-                Logger.Trace($"Destination entity {teleport.DestinationList[0].EntityRef}");
-
-                /*
-                if (teleport.DestinationList[0].Type == RegionTransitionType.TowerUp ||
-                    teleport.DestinationList[0].Type == RegionTransitionType.TowerDown)
-                {
-                    teleport.TeleportToEntity(this, teleport.DestinationList[0].EntityId);
-                    return true;
-                }
-                */
-
-                PrototypeId targetRegionProtoRef = teleport.DestinationList[0].RegionRef;
-
-                if (targetRegionProtoRef != PrototypeId.Invalid && player.PlayerConnection.TransferParams.DestRegionProtoRef != targetRegionProtoRef)
-                {
-                    teleport.TeleportClient(player.PlayerConnection);
-                    return true;
-                }
-
-                if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionLocation.RegionId) is not Transition target)
-                    return true;
-
-                var teleportEntity = target.TransitionPrototype;
-                if (teleportEntity == null) return true;
-                Vector3 targetPos = target.RegionLocation.Position;
-                Orientation targetRot = target.RegionLocation.Orientation;
-
-                teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
-
-                Logger.Trace($"Teleporting to {targetPos}");
-
-                uint cellId = target.Properties[PropertyEnum.MapCellId];
-                uint areaId = target.Properties[PropertyEnum.MapAreaId];
-                Logger.Trace($"Teleporting to areaId={areaId} cellId={cellId}");
-
-                ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
+                transition.UseTransition(this, player);
             }
             else
             {
+                // REMOVEME
                 EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
                 Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
                 eventPointer.Get().Initialize(player, interactableObject);

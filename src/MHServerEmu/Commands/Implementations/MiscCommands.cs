@@ -38,7 +38,11 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.UpperEastSideRegion, (PrototypeId)TargetPrototypeId.JailTarget);
+
+            // Regions/Story/CH04EastSide/UpperEastSide/PoliceDepartment/Portals/JailTarget.prototype
+            PrototypeId startTarget = (PrototypeId)13284513933487907420;
+
+            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.UpperEastSideRegion, startTarget);
 
             return "Travel to East Side: Detention Facility (old)";
         }

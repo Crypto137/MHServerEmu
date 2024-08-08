@@ -1,9 +1,9 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -18,14 +18,6 @@ namespace MHServerEmu.Games.Entities
         AvengersTowerHub = 15322252936284737788,
     }
 
-    public enum TargetPrototypeId : ulong
-    {
-        CosmicDoopSectorSpaceStartTarget = 15872240608618488803,
-        AsgardCowLevelStartTarget = 12083387244127461092,
-        BovineSectorStartTarget = 2342633323497265984,
-        JailTarget = 13284513933487907420,
-    }
-
     public class Transition : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -35,7 +27,7 @@ namespace MHServerEmu.Games.Entities
 
         public List<Destination> DestinationList { get => _destinationList; }
 
-        public TransitionPrototype TransitionPrototype { get { return Prototype as TransitionPrototype; } }
+        public TransitionPrototype TransitionPrototype { get => Prototype as TransitionPrototype; }
 
         public Transition(Game game) : base(game) { }
 
@@ -89,7 +81,57 @@ namespace MHServerEmu.Games.Entities
             destination.Type = TransitionPrototype.Type;
         }
 
-        public void TeleportClient(PlayerConnection connection)
+        public bool UseTransition(Avatar avatar, Player player)
+        {
+            if (TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
+            {
+                TeleportToLastTown(player.PlayerConnection);
+                return true;
+            }
+
+            if (DestinationList.Count == 0 || DestinationList[0].Type == RegionTransitionType.Waypoint)
+                return true;
+
+            Logger.Trace($"Destination entity {DestinationList[0].EntityRef}");
+
+            /*
+            if (DestinationList[0].Type == RegionTransitionType.TowerUp ||
+                DestinationList[0].Type == RegionTransitionType.TowerDown)
+            {
+                TeleportToEntity(this, teleport.DestinationList[0].EntityId);
+                return true;
+            }
+            */
+
+            PrototypeId targetRegionProtoRef = DestinationList[0].RegionRef;
+
+            if (targetRegionProtoRef != PrototypeId.Invalid && player.PlayerConnection.TransferParams.DestRegionProtoRef != targetRegionProtoRef)
+            {
+                TeleportClient(player.PlayerConnection);
+                return true;
+            }
+
+            if (Game.EntityManager.GetTransitionInRegion(DestinationList[0], RegionLocation.RegionId) is not Transition target)
+                return true;
+
+            TransitionPrototype targetTransitionProto = target.TransitionPrototype;
+            if (targetTransitionProto == null) return true;
+            Vector3 targetPos = target.RegionLocation.Position;
+            Orientation targetRot = target.RegionLocation.Orientation;
+
+            targetTransitionProto.CalcSpawnOffset(ref targetRot, ref targetPos);
+
+            Logger.Trace($"Transitioning to {targetPos}");
+
+            uint cellId = target.Properties[PropertyEnum.MapCellId];
+            uint areaId = target.Properties[PropertyEnum.MapAreaId];
+            Logger.Trace($"Transitioning to areaId={areaId} cellId={cellId}");
+
+            avatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
+            return true;
+        }
+
+        private void TeleportClient(PlayerConnection connection)
         {
             Logger.Trace(string.Format("TeleportClient(): Destination region {0} [{1}]",
                 GameDatabase.GetFormattedPrototypeName(_destinationList[0].RegionRef),
@@ -97,13 +139,13 @@ namespace MHServerEmu.Games.Entities
             connection.Game.MovePlayerToRegion(connection, _destinationList[0].RegionRef, _destinationList[0].TargetRef);
         }
 
-        public void TeleportToEntity(PlayerConnection connection, ulong entityId)
+        private void TeleportToEntity(PlayerConnection connection, ulong entityId)
         {
             Logger.Trace($"TeleportToEntity(): Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(_destinationList[0].EntityRef)}]");
             connection.Game.MovePlayerToEntity(connection, _destinationList[0].EntityId);
         }
 
-        public void TeleportToLastTown(PlayerConnection connection)
+        private void TeleportToLastTown(PlayerConnection connection)
         {
             // TODO back to last saved hub
             Logger.Trace($"TeleportToLastTown(): Destination LastTown");
