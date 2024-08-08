@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -630,6 +631,81 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (GetPower(emoteProtoRef) != null) continue;
                 if (AssignPower(emoteProtoRef, indexProps) == null)
                     Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Interaction
+
+        public override bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        {
+            Logger.Debug($"UseInteractableObject(): {this} => {entityId} ({missionProtoRef.GetName()})");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
+
+            if (missionProtoRef != PrototypeId.Invalid)
+            {
+                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {missionProtoRef.GetName()}");
+                player.SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+            }
+
+            var interactableObject = Game.EntityManager.GetEntity<Entity>(entityId);
+            if (interactableObject == null) return Logger.WarnReturn(false, $"UseInteractableObject(): Failed to get entity {entityId}");
+
+            if (interactableObject is Transition teleport)
+            {
+                if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
+                {
+                    teleport.TeleportToLastTown(player.PlayerConnection);
+                    return true;
+                }
+                if (teleport.DestinationList.Count == 0 || teleport.DestinationList[0].Type == RegionTransitionType.Waypoint) return true;
+                Logger.Trace($"Destination entity {teleport.DestinationList[0].EntityRef}");
+
+                /*
+                if (teleport.DestinationList[0].Type == RegionTransitionType.TowerUp ||
+                    teleport.DestinationList[0].Type == RegionTransitionType.TowerDown)
+                {
+                    teleport.TeleportToEntity(this, teleport.DestinationList[0].EntityId);
+                    return true;
+                }
+                */
+
+                PrototypeId targetRegionProtoRef = teleport.DestinationList[0].RegionRef;
+
+                if (targetRegionProtoRef != PrototypeId.Invalid && player.PlayerConnection.TransferParams.DestRegionProtoRef != targetRegionProtoRef)
+                {
+                    teleport.TeleportClient(player.PlayerConnection);
+                    return true;
+                }
+
+                if (Game.EntityManager.GetTransitionInRegion(teleport.DestinationList[0], teleport.RegionLocation.RegionId) is not Transition target)
+                    return true;
+
+                var teleportEntity = target.TransitionPrototype;
+                if (teleportEntity == null) return true;
+                Vector3 targetPos = target.RegionLocation.Position;
+                Orientation targetRot = target.RegionLocation.Orientation;
+
+                teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
+
+                Logger.Trace($"Teleporting to {targetPos}");
+
+                uint cellId = target.Properties[PropertyEnum.MapCellId];
+                uint areaId = target.Properties[PropertyEnum.MapAreaId];
+                Logger.Trace($"Teleporting to areaId={areaId} cellId={cellId}");
+
+                ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
+            }
+            else
+            {
+                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+                eventPointer.Get().Initialize(player, interactableObject);
             }
 
             return true;

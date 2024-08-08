@@ -490,6 +490,12 @@ namespace MHServerEmu.Games.Entities
 
         #region Interaction
 
+        public virtual bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        {
+            // NOTE: This appears to be unused by regular agents.
+            return true;
+        }
+
         public InteractionResult StartInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, bool inRange, InteractionMethod method)
         {
             if (interacteeDesc.IsValid == false) return InteractionResult.Failure;
