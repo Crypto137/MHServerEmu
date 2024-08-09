@@ -900,19 +900,9 @@ namespace MHServerEmu.Games.Entities
         {
             IsOnLoadingScreen = true;
 
-            // REMOVEME: Temp workaround for loading screen delay when generating regions
-            if (sendImmediately)
-            {
-                Game.NetworkManager.SendMessageImmediate(PlayerConnection, NetMessageQueueLoadingScreen.CreateBuilder()
-                    .SetRegionPrototypeId((ulong)regionProtoRef)
-                    .Build());
-            }
-            else
-            {
-                SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
-                    .SetRegionPrototypeId((ulong)regionProtoRef)
-                    .Build());
-            }
+            SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
+                .SetRegionPrototypeId((ulong)regionProtoRef)
+                .Build());
         }
 
         public void QueueLoadingScreen(ulong regionId)

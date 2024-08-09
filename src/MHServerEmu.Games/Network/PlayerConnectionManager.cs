@@ -112,10 +112,13 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
-        /// Requests a player to be reloaded.
+        /// Requests a player to be loaded.
         /// </summary>
         public void SetPlayerConnectionPending(PlayerConnection playerConnection)
         {
+            // NOTE: We flush messages when we set the connection as pending so that
+            // we can deliver the loading screen message to the client ASAP.
+            playerConnection.FlushMessages();
             _pendingPlayerConnectionQueue.Enqueue(playerConnection);
         }
 
