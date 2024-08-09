@@ -159,6 +159,30 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerEnteredCellGameEvent
+    {
+        public Player Player;
+        public PrototypeId CellRef;
+
+        public PlayerEnteredCellGameEvent(Player player, PrototypeId cellRef)
+        {
+            Player = player;
+            CellRef = cellRef;
+        }
+    }
+
+    public struct PlayerLeftCellGameEvent
+    {
+        public Player Player;
+        public PrototypeId CellRef;
+
+        public PlayerLeftCellGameEvent(Player player, PrototypeId cellRef)
+        {
+            Player = player;
+            CellRef = cellRef;
+        }
+    }
+
     public struct PlayerUnlockedAvatarGameEvent
     {
         public Player Player;

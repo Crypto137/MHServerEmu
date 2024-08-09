@@ -134,6 +134,8 @@ namespace MHServerEmu.Games.Regions
         public Event<EntityLeftAreaGameEvent> EntityLeftAreaEvent = new();
         public Event<AreaCreatedGameEvent> AreaCreatedEvent = new();
         public Event<CellCreatedGameEvent> CellCreatedEvent = new();
+        public Event<PlayerEnteredCellGameEvent> PlayerEnteredCellEvent = new();
+        public Event<PlayerLeftCellGameEvent> PlayerLeftCellEvent = new();
         public Event<AvatarEnteredRegionGameEvent> AvatarEnteredRegionEvent = new();
         public Event<PlayerEnteredRegionGameEvent> PlayerEnteredRegionEvent = new();
         public Event<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent = new();

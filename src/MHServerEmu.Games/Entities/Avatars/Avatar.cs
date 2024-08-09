@@ -19,6 +19,7 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
 
 namespace MHServerEmu.Games.Entities.Avatars
@@ -770,6 +771,21 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (newArea != null) // TODO Achievement?
                 newArea.Region.PlayerEnteredAreaEvent.Invoke(new(player, newArea.PrototypeDataRef));
+        }
+
+        public override void OnCellChanged(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
+        {
+            base.OnCellChanged(oldLocation, newLocation, flags);
+
+            Cell oldCell = oldLocation.Cell;
+            Cell newCell = newLocation.Cell;
+            if (oldCell == newCell) return;
+
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            oldCell?.Region.PlayerLeftCellEvent.Invoke(new(player, oldCell.PrototypeDataRef));
+            newCell?.Region.PlayerEnteredAreaEvent.Invoke(new(player, newCell.PrototypeDataRef));
         }
 
         public override void OnEnteredWorld(EntitySettings settings)
