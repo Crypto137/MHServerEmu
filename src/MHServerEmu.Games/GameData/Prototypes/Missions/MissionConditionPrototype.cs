@@ -3,6 +3,7 @@ using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Missions.Conditions;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -243,13 +244,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
             if (Cells.HasValue())
-            {
                 foreach(var cell in Cells)
                 {
                     var cellRef = GameDatabase.GetDataRefByAsset(cell);
                     if (cellRef != PrototypeId.Invalid) _cells.Add(cellRef);
                 }
-            }
         }
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
@@ -264,15 +263,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var region in Regions) regions.Add(region);
             cells.UnionWith(_cells);
         }
+
+        public bool Contains(PrototypeId cellRef)
+        {
+            return _cells.Contains(cellRef);
+        }
     }
 
     public class MissionConditionCellLeavePrototype : MissionPlayerConditionPrototype
     {
         public AssetId[] Cells { get; protected set; }
 
+        private SortedSet<PrototypeId> _cells = new();
+
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
             return new MissionConditionCellLeave(mission, owner, this);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            if (Cells.HasValue())
+                foreach (var cell in Cells)
+                {
+                    var cellRef = GameDatabase.GetDataRefByAsset(cell);
+                    if (cellRef != PrototypeId.Invalid) _cells.Add(cellRef);
+                }
+        }
+
+        public bool Contains(PrototypeId cellRef)
+        {
+            return _cells.Contains(cellRef);
         }
     }
 
