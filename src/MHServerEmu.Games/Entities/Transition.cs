@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Entities
         private static bool TeleportToTarget(Player player, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
         {
             Logger.Trace($"TeleportToTarget(): Destination region {regionProtoRef.GetNameFormatted()} [{targetProtoRef.GetNameFormatted()}]");
-            player.Game.MovePlayerToRegion(player.PlayerConnection, regionProtoRef, targetProtoRef);
+            player.PlayerConnection.MoveToRegion(regionProtoRef, targetProtoRef);
             return true;
         }
 
@@ -156,8 +156,7 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO: Teleport to the last saved hub
             Logger.Trace($"TeleportToLastTown(): Destination LastTown");
-            player.Game.MovePlayerToRegion(player.PlayerConnection,
-                (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
+            player.PlayerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
             return true;
         }
     }

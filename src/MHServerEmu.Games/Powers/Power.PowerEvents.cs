@@ -549,8 +549,7 @@ namespace MHServerEmu.Games.Powers
             Player player = Owner.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): player == null");
 
-            Game.MovePlayerToRegion(player.PlayerConnection, (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion,
-                (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
+            player.PlayerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
             return true;
         }
 

@@ -196,18 +196,6 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
-        public void MovePlayerToRegion(PlayerConnection playerConnection, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
-        {
-            playerConnection.ExitGame();
-
-            playerConnection.TransferParams.DestRegionProtoRef = regionProtoRef;
-            playerConnection.TransferParams.DestTargetProtoRef = targetProtoRef;
-
-            playerConnection.Player.QueueLoadingScreen(playerConnection.TransferParams.DestRegionProtoRef, true);
-
-            NetworkManager.SetPlayerConnectionPending(playerConnection);
-        }
-
         public Entity AllocateEntity(PrototypeId entityRef)
         {
             var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);

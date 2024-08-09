@@ -218,7 +218,19 @@ namespace MHServerEmu.Games.Network
         #endregion
 
         #region Loading and Exiting
-        
+
+        public void MoveToRegion(PrototypeId regionProtoRef, PrototypeId targetProtoRef)
+        {
+            ExitGame();
+
+            TransferParams.DestRegionProtoRef = regionProtoRef;
+            TransferParams.DestTargetProtoRef = targetProtoRef;
+
+            Player.QueueLoadingScreen(TransferParams.DestRegionProtoRef, true);
+
+            Game.NetworkManager.SetPlayerConnectionPending(this);
+        }
+
         public void EnterGame()
         {
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
@@ -739,7 +751,7 @@ namespace MHServerEmu.Games.Network
             PrototypeId destinationRegion = (PrototypeId)useWaypoint.RegionProtoId;
             PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
 
-            Game.MovePlayerToRegion(this, destinationRegion, waypointDataRef);
+            MoveToRegion(destinationRegion, waypointDataRef);
             return true;
         }
 

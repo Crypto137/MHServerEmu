@@ -29,7 +29,7 @@ namespace MHServerEmu.Commands.Implementations
                 return $"Unsafe warp destination: {regionName}.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, regionProtoRef, PrototypeId.Invalid);
+            playerConnection.MoveToRegion(regionProtoRef, PrototypeId.Invalid);
             return $"Warping to {regionName}.";
         }
 
@@ -42,7 +42,7 @@ namespace MHServerEmu.Commands.Implementations
 
             PrototypeId regionProtoRef = playerConnection.TransferParams.DestRegionProtoRef;
             PrototypeId targetProtoRef = playerConnection.TransferParams.DestTargetProtoRef;
-            game.MovePlayerToRegion(playerConnection, regionProtoRef, targetProtoRef);
+            playerConnection.MoveToRegion(regionProtoRef, targetProtoRef);
 
             return $"Reloading region {regionProtoRef.GetName()}.";
         }
