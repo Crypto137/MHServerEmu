@@ -4,6 +4,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
@@ -432,6 +433,11 @@ namespace MHServerEmu.Games.Missions
             return Mission.IsSuspended || OnSetState();
         }
 
+        public bool OnConditionCompleted()
+        {
+            return IsChangingState == false && OnChangeState();
+        }
+
         public void OnUpdateCondition(MissionCondition condition)
         {
             UpdateCompletionCount();
@@ -439,11 +445,52 @@ namespace MHServerEmu.Games.Missions
             UpdateMetaGameWidget();
         }
 
+        private bool UpdateConditionsCount(ref ushort currentCountField, ref ushort requiredCountField, PrototypeId widgetRef,
+            MissionConditionList conditionType, MissionObjectiveUpdateFlags updateFlags)
+        {
+            bool toUpdate = false;
+            long currentCount = 0;
+            long requiredCount = 0;
+            bool isRequired = widgetRef != PrototypeId.Invalid;
+
+            if (conditionType != null && conditionType.GetCompletionCount(ref currentCount, ref requiredCount, isRequired))
+            {
+                if (currentCountField != currentCount)
+                {
+                    currentCountField = (ushort)currentCount;
+                    toUpdate = true;
+                }
+
+                if (requiredCountField != requiredCount)
+                {
+                    requiredCountField = (ushort)requiredCount;
+                    toUpdate = true;
+                }
+
+                if (toUpdate && requiredCount > 1)
+                    SendToParticipants(updateFlags);
+            }
+            return toUpdate;
+        }
+
         private void UpdateCompletionCount()
         {
-            // TODO SendToParticipants(MissionObjectiveUpdateFlags.CurrentCount);
-            // SendToParticipants(MissionObjectiveUpdateFlags.FailCurrentCount);
-            // region MissionObjectiveUpdatedGameEvent
+            var proto = Prototype;
+            if (proto == null) return;
+
+            bool toUpdate = UpdateConditionsCount(ref _currentCount, ref _requiredCount, proto.MetaGameWidget, _successConditions, MissionObjectiveUpdateFlags.CurrentCount);
+
+            UpdateConditionsCount(ref _failCurrentCount, ref _failRequiredCount, proto.MetaGameWidgetFail, _failureConditions, MissionObjectiveUpdateFlags.FailCurrentCount);
+
+            if (toUpdate && proto is MissionNamedObjectivePrototype namedProto)
+            {
+                var region = Region;
+                if (region == null) return;
+                
+                var missionRef = Mission.PrototypeDataRef;
+                foreach (var player in Mission.GetParticipants())
+                    region.MissionObjectiveUpdatedEvent.Invoke(new(player, missionRef, namedProto.ObjectiveID));                
+            }
         }
 
         private void UpdateMetaGameWidget()
@@ -461,11 +508,8 @@ namespace MHServerEmu.Games.Missions
             var missionProto = Mission.Prototype;
             if (missionProto == null || missionProto.HasClientInterest == false) return;
 
-            List<Entity> participants = new();
-            if (Mission.GetParticipants(participants))
-                foreach (var participant in participants)
-                    if (participant is Player player)
-                        SendUpdateToPlayer(player, objectiveFlags);
+            foreach (var player in Mission.GetParticipants())
+                SendUpdateToPlayer(player, objectiveFlags);
         }
 
         public void SendUpdateToPlayer(Player player, MissionObjectiveUpdateFlags objectiveFlags)

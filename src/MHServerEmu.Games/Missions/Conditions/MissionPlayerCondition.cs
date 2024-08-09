@@ -26,9 +26,9 @@ namespace MHServerEmu.Games.Missions.Conditions
             return base.Initialize(conditionIndex);
         }
 
-        public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool required)
+        public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired)
         {
-            if (RequiredCount > 1 || required)
+            if (RequiredCount > 1 || isRequired)
             {
                 currentCount += Count;
                 requiredCount += RequiredCount;

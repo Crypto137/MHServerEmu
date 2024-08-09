@@ -48,9 +48,22 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
+        public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired)
+        {
+            bool result = false;
+            foreach (var condition in Conditions)
+                result |= condition.GetCompletionCount(ref currentCount, ref requiredCount, isRequired);
+            return result;
+        }
+
         public override bool OnReset()
         {
             return ResetList(true);           
+        }
+
+        public override bool OnConditionCompleted()
+        {
+            return IsCompleted() && base.OnConditionCompleted();
         }
 
         public bool ResetList(bool resetCondition)

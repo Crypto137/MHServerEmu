@@ -50,11 +50,24 @@ namespace MHServerEmu.Games.Missions.Conditions
         public virtual void RegisterEvents(Region region) { }
         public virtual void UnRegisterEvents(Region region) { }
         public virtual bool EvaluateOnReset() => false;
-        public void OnUpdateCondition(MissionCondition condition) => Owner.OnUpdateCondition(this);
+        public virtual bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired) => false;
+        public virtual void OnUpdateCondition(MissionCondition condition) => Owner.OnUpdateCondition(this);
 
         protected void OnUpdate()
         {
             Owner.OnUpdateCondition(this);
+            if (IsCompleted())
+                OnConditionCompleted();
+        }
+
+        public virtual bool OnConditionCompleted()
+        {
+            var storyNotification = Prototype?.StoryNotification;
+            if (storyNotification != null)
+                foreach (var player in Mission.GetParticipants())
+                    Mission.SendStoryNotificationToPlayer(player, storyNotification);
+
+            return Owner.OnConditionCompleted();
         }
     }
 }
