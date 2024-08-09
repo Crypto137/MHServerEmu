@@ -20,21 +20,17 @@ namespace MHServerEmu.Games.Missions.Conditions
             var proto = Proto;
             if (proto == null) return false;
 
-            List<Entity> participants = new();
-            Mission.GetParticipants(participants);
-
-            foreach (var participant in participants)
-                if (participant is Player player)
+            foreach (var player in Mission.GetParticipants())
+            {
+                int partySize = 1;
+                var party = player.Party;
+                if (party != null) partySize = party.NumMembers;
+                if (partySize >= proto.MinSize && partySize <= proto.MaxSize)
                 {
-                    int partySize = 1;
-                    var party = player.Party;
-                    if (party != null) partySize = party.NumMembers;
-                    if (partySize >= proto.MinSize && partySize <= proto.MaxSize)
-                    {
-                        SetCompleted();
-                        return true;
-                    }
+                    SetCompleted();
+                    return true;
                 }
+            }
 
             ResetCompleted();
             return true;

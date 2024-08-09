@@ -19,12 +19,9 @@ namespace MHServerEmu.Games.Missions.Conditions
             var proto = Proto;
             if (proto == null) return false;
 
-            List<Entity> participants = new();
-            Mission.GetParticipants(participants);
-
             bool isUnlocked = false;
-            foreach (var participant in participants)
-                if (participant is Player player && player.HasAvatarFullyUnlocked(proto.AvatarPrototype))
+            foreach (var player in Mission.GetParticipants())
+                if (player.HasAvatarFullyUnlocked(proto.AvatarPrototype))
                 {
                     isUnlocked = true;
                     break;

@@ -20,20 +20,16 @@ namespace MHServerEmu.Games.Missions.Conditions
             var proto = Proto;
             if (proto == null) return false;
 
-            List<Entity> participants = new();
-            Mission.GetParticipants(participants);
-
             bool areaLeave = true;
-            foreach (var participant in participants)
-                if (participant is Player player)
+            foreach (var player in Mission.GetParticipants())
+            {
+                var area = player.CurrentAvatar?.Area;
+                if (area != null && area.PrototypeDataRef == proto.AreaPrototype)
                 {
-                    var area = player.CurrentAvatar?.Area;
-                    if (area != null && area.PrototypeDataRef == proto.AreaPrototype)
-                    {
-                        areaLeave = false;
-                        break;
-                    }
+                    areaLeave = false;
+                    break;
                 }
+            }
 
             SetCompletion(areaLeave);
             return true;

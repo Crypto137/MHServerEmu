@@ -21,7 +21,6 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         protected override long CountMin => Proto.CountMin;
         protected override long CountMax => Proto.CountMax;
-        protected override long MaxCount => Proto.CountMin;
 
         protected override bool Contains()
         {

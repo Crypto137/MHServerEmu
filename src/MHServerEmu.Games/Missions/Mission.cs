@@ -292,14 +292,7 @@ namespace MHServerEmu.Games.Missions
 
         private void SendToParticipants(MissionUpdateFlags missionFlags, MissionObjectiveUpdateFlags objectiveFlags)
         {
-            HashSet<Player> players = new();
-            List<Entity> participants = new();
-            if (GetParticipants(participants))
-                foreach(var participant in participants) 
-                    if (participant is Player player)
-                        players.Add(player);
-
-            foreach (var player in players)
+            foreach (var player in GetParticipants())
                 SendUpdateToPlayer(player, missionFlags, objectiveFlags);
         }
 
@@ -702,13 +695,8 @@ namespace MHServerEmu.Games.Missions
                 return false;
 
             if (IsOpenMission)
-            {
-                List<Entity> participants = new();
-                if (GetParticipants(participants))
-                    foreach (var participant in participants)
-                        if (participant is Player player)
-                            SendStoryNotificationToPlayer(player, OpenMissionPrototype.StoryNotification);
-            }
+                foreach (var player in GetParticipants())
+                    SendStoryNotificationToPlayer(player, OpenMissionPrototype.StoryNotification);
 
             if (reset)
             {
@@ -1442,17 +1430,29 @@ namespace MHServerEmu.Games.Missions
             return Prototype.ShowInteractIndicators;
         }
 
-        public bool GetParticipants(List<Entity> participants)
+        public bool GetParticipants(List<Entity> participants) // original
         {
             participants.Clear();
             var manager = Game.EntityManager;
-            foreach (var participant in Participants)
+            foreach (var participant in _participants)
             {
                 var entity = manager.GetEntity<Entity>(participant);
                 if (entity != null)
                     participants.Add(entity);
             }
             return participants.Count > 0;
+        }
+
+        public IEnumerable<Player> GetParticipants() // upgrade
+        {
+            var manager = Game.EntityManager;
+            List<ulong> participants = new(_participants);
+            foreach (var participant in participants)
+            {
+                var player = manager.GetEntity<Player>(participant);
+                if (player != null)
+                    yield return player;
+            }
         }
 
         public MissionObjective GetObjectiveByPrototypeIndex(byte objectiveIndex)
@@ -1486,6 +1486,11 @@ namespace MHServerEmu.Games.Missions
         public void OnAvatarLeftMission(Player player)
         {
             Logger.Warn($"OnAvatarLeftMission [{PrototypeName}]");
+        }
+
+        public bool OnConditionCompleted()
+        {
+            return OnChangeState();
         }
 
         public void OnPlayerLeftRegion(Player player)

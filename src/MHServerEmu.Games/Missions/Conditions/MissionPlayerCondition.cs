@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private long _count;
         public long Count { get => _count; set => SetCount(value); }
-        protected virtual long MaxCount => 1;
+        protected virtual long RequiredCount => 1;
 
         public MissionPlayerCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
             : base(mission, owner, prototype)
@@ -24,6 +24,16 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             ConditionIndex = conditionIndex++;
             return base.Initialize(conditionIndex);
+        }
+
+        public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool required)
+        {
+            if (RequiredCount > 1 || required)
+            {
+                currentCount += Count;
+                requiredCount += RequiredCount;
+            }
+            return requiredCount > 0;
         }
 
         protected bool IsMissionPlayer(Player player)
@@ -71,7 +81,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 return Mission;
         }
 
-        public override bool IsCompleted() => Count >= MaxCount;
+        public override bool IsCompleted() => Count >= RequiredCount;
         public override void SetCompleted() => SetCount(Count);
 
         protected virtual bool GetCompletion() => false;
@@ -84,7 +94,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         protected virtual void SetCount(long count)
         {
-            _count = Math.Clamp(count, 0, MaxCount);
+            _count = Math.Clamp(count, 0, RequiredCount);
             OnUpdate();
         }
 

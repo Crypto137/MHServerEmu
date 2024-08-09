@@ -20,12 +20,9 @@ namespace MHServerEmu.Games.Missions.Conditions
             var proto = Proto;
             if (proto == null) return false;
 
-            List<Entity> participants = new();
-            Mission.GetParticipants(participants);
-
             bool isActive = false;
-            foreach (var participant in participants)
-                if (participant is Player player && player.ActiveChapter == proto.Chapter)
+            foreach (var player in Mission.GetParticipants())
+                if (player.ActiveChapter == proto.Chapter)
                 {
                     isActive = true;
                     break;

@@ -12,7 +12,6 @@ namespace MHServerEmu.Games.Missions.Conditions
         public Action<EntityDeadGameEvent> EntityDeadAction { get; private set; }
         protected override long CountMin => Proto.CountMin;
         protected override long CountMax => Proto.CountMax;
-        protected override long MaxCount => Proto.CountMin;
 
         public MissionConditionAreaContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)

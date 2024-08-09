@@ -29,11 +29,8 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (missionProto == null) return false;
                 bool perAvatar = missionProto.SaveStatePerAvatar;
 
-                List<Entity> participants = new();
-                Mission.GetParticipants(participants);
-
-                foreach (var participant in participants)
-                    if (participant is Player player && TestAvatarLevel(player, proto, perAvatar))
+                foreach (var player in Mission.GetParticipants())
+                    if (TestAvatarLevel(player, proto, perAvatar))
                     {
                         isLevelUp = true;
                         break;

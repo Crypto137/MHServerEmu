@@ -19,20 +19,16 @@ namespace MHServerEmu.Games.Missions.Conditions
             var proto = Proto;
             if (proto == null) return false;
 
-            List<Entity> participants = new();
-            Mission.GetParticipants(participants);
-
             bool cellLeave = true;
-            foreach (var participant in participants)
-                if (participant is Player player)
+            foreach (var player in Mission.GetParticipants())
+            {
+                var cell = player.CurrentAvatar?.Cell;
+                if (cell != null && proto.Contains(cell.PrototypeDataRef))
                 {
-                    var cell = player.CurrentAvatar?.Cell;
-                    if (cell != null && proto.Contains(cell.PrototypeDataRef))
-                    {
-                        cellLeave = false;
-                        break;
-                    }
+                    cellLeave = false;
+                    break;
                 }
+            }
 
             SetCompletion(cellLeave);
             return true;

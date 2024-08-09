@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             PlayerEnteredRegionAction = OnPlayerEnteredRegion;
         }
 
+        protected override long RequiredCount => CountMin;
         protected virtual long CountMin => 0;
         protected virtual long CountMax => 0;
         protected virtual bool Contains() => true;

@@ -20,20 +20,16 @@ namespace MHServerEmu.Games.Missions.Conditions
             var proto = Proto;
             if (proto == null) return false;
 
-            List<Entity> participants = new();
-            Mission.GetParticipants(participants);
-
             bool isActive = false;
-            foreach (var participant in participants)
-                if (participant is Player player)
+            foreach (var player in Mission.GetParticipants())
+            {
+                var avatar = player.CurrentAvatar;
+                if (avatar != null && avatar.PrototypeDataRef == proto.AvatarPrototype)
                 {
-                    var avatar = player.CurrentAvatar;
-                    if (avatar != null && avatar.PrototypeDataRef == proto.AvatarPrototype)
-                    {
-                        isActive = true;
-                        break;
-                    }
+                    isActive = true;
+                    break;
                 }
+            }
 
             SetCompletion(isActive);
             return true;
