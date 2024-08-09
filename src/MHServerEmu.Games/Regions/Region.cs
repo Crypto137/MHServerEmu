@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -582,6 +580,29 @@ namespace MHServerEmu.Games.Regions
         public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
         {
             EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
+        }
+
+        public Transition FindTransition(PrototypeId areaRef, PrototypeId cellRef, PrototypeId entityRef)
+        {
+            // TODO: Limit iteration to area / cell for optimization
+            Logger.Debug($"FindTransition(): {entityRef.GetName()}");
+
+            foreach (WorldEntity worldEntity in IterateEntitiesInRegion(new()))
+            {
+                if (worldEntity is not Transition transition)
+                    continue;
+
+                if (areaRef != 0 && areaRef != transition.RegionLocation.Area.PrototypeDataRef)
+                    continue;
+
+                if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeDataRef)
+                    continue;
+
+                if (transition.PrototypeDataRef == entityRef)
+                    return transition;
+            }
+
+            return null;
         }
 
         #endregion
