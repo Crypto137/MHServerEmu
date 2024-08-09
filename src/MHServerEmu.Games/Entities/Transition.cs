@@ -88,8 +88,7 @@ namespace MHServerEmu.Games.Entities
             switch (TransitionPrototype.Type)
             {
                 case RegionTransitionType.Transition:
-                case RegionTransitionType.TowerUp:      // TODO: Separate TowerUp/TowerDown?
-                case RegionTransitionType.TowerDown:
+                {
                     if (_destinationList.Count == 0)
                         return Logger.WarnReturn(false, "UseTransition(): No available destinations");
 
@@ -99,70 +98,67 @@ namespace MHServerEmu.Games.Entities
 
                     PrototypeId targetRegionProtoRef = destination.RegionRef;
 
-                    if (targetRegionProtoRef != PrototypeId.Invalid && player.PlayerConnection.TransferParams.DestRegionProtoRef != targetRegionProtoRef)
-                    {
-                        TeleportToTarget(player, destination.RegionRef, destination.TargetRef);
-                        return true;
-                    }
+                    if (targetRegionProtoRef != PrototypeId.Invalid && player.GetRegion().PrototypeDataRef != targetRegionProtoRef)
+                        return TeleportToTarget(player, destination.RegionRef, destination.TargetRef);
 
-                    Transition targetTransition;
+                    Transition targetTransition = player.GetRegion()?.FindTransition(destination.AreaRef, destination.CellRef, destination.EntityRef);
+                    return TeleportToTransition(player, targetTransition);
+                }
 
-                    if (destination.EntityId != InvalidId)
-                        targetTransition = player.Game.EntityManager.GetEntity<Transition>(destination.EntityId);
-                    else
-                        targetTransition = player.GetRegion()?.FindTransition(destination.AreaRef, destination.CellRef, destination.EntityRef);
-
-                    TeleportToTransition(player, targetTransition);
-                    return true;
+                case RegionTransitionType.TowerUp:
+                case RegionTransitionType.TowerDown:
+                {
+                    Transition targetTransition = player.Game.EntityManager.GetEntity<Transition>(_destinationList[0].EntityId);
+                    return TeleportToTransition(player, targetTransition);
+                }
 
                 case RegionTransitionType.Waypoint:
+                {
                     // TODO: Unlock waypoint
                     return true;
+                }
 
                 case RegionTransitionType.ReturnToLastTown:
-                    TeleportToLastTown(player);
-                    return true;
+                    return TeleportToLastTown(player);
 
                 default:
                     return Logger.WarnReturn(false, $"UseTransition(): Unimplemented region transition type {TransitionPrototype.Type}");
             }
         }
 
-        private static void TeleportToTarget(Player player, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
+        private static bool TeleportToTarget(Player player, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
         {
-            Logger.Trace($"TeleportToRegionConnectionTarget(): Destination region {regionProtoRef.GetNameFormatted()} [{targetProtoRef.GetNameFormatted()}]");
+            Logger.Trace($"TeleportToTarget(): Destination region {regionProtoRef.GetNameFormatted()} [{targetProtoRef.GetNameFormatted()}]");
             player.Game.MovePlayerToRegion(player.PlayerConnection, regionProtoRef, targetProtoRef);
+            return true;
         }
 
         private static bool TeleportToTransition(Player player, Transition transition)
         {
-            if (transition == null)
-                return Logger.WarnReturn(false, "TeleportToTransition(): target == null");
+            if (transition == null) return Logger.WarnReturn(false, "TeleportToTransition(): transition == null");
 
-            Logger.Trace($"TeleportToTransition(): transition=[{transition}]");
-
-            TransitionPrototype targetTransitionProto = transition.TransitionPrototype;
-            if (targetTransitionProto == null) return true;
+            TransitionPrototype transitionProto = transition.TransitionPrototype;
+            if (transitionProto == null) return Logger.WarnReturn(false, "TeleportToTransition(): transitionProto == null");
 
             Vector3 targetPos = transition.RegionLocation.Position;
             Orientation targetRot = transition.RegionLocation.Orientation;
-            targetTransitionProto.CalcSpawnOffset(ref targetRot, ref targetPos);
-            Logger.Trace($"Transitioning to {targetPos}");
+            transitionProto.CalcSpawnOffset(ref targetRot, ref targetPos);
 
             uint cellId = transition.Properties[PropertyEnum.MapCellId];
             uint areaId = transition.Properties[PropertyEnum.MapAreaId];
-            Logger.Trace($"Transitioning to areaId={areaId} cellId={cellId}");
+            Logger.Debug($"TeleportToTransition(): targetPos={targetPos}, areaId={areaId}, cellId={cellId}");
 
-            player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
-            return true;
+            ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
+            return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        private static void TeleportToLastTown(Player player)
+        private static bool TeleportToLastTown(Player player)
         {
             // TODO: Teleport to the last saved hub
             Logger.Trace($"TeleportToLastTown(): Destination LastTown");
             player.Game.MovePlayerToRegion(player.PlayerConnection,
                 (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
+            return true;
         }
     }
 }
