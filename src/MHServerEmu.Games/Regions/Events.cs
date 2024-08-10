@@ -121,6 +121,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct EmotePerformedGameEvent
+    {
+        public Player Player;
+        public PrototypeId EmotePowerRef;
+
+        public EmotePerformedGameEvent(Player player, PrototypeId emotePowerRef)
+        {
+            Player = player;
+            EmotePowerRef = emotePowerRef;
+        }
+    }
+
     public struct ActiveChapterChangedGameEvent
     {
         public Player Player;

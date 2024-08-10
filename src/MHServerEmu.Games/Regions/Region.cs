@@ -155,6 +155,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerSwitchedToAvatarGameEvent> PlayerSwitchedToAvatarEvent = new();
         public Event<AvatarLeveledUpGameEvent> AvatarLeveledUpEvent = new();
         public Event<CurrencyCollectedGameEvent> CurrencyCollectedEvent = new();
+        public Event<EmotePerformedGameEvent> EmotePerformedEvent = new();
         public Event<PlayerUnlockedAvatarGameEvent> PlayerUnlockedAvatarEvent = new();
         public Event<EntityEnteredWorldGameEvent> EntityEnteredWorldEvent = new();
         public Event<EntityExitedWorldGameEvent> EntityExitedWorldEvent = new();
