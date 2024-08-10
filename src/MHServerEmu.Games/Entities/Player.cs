@@ -1074,6 +1074,20 @@ namespace MHServerEmu.Games.Entities
             return level == 0 ? levelCap : level;
         }
 
+        public bool ChapterIsUnlocked(PrototypeId chapterRef)
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return false;
+            return avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef];
+        }
+
+        public void UnlockChapter(PrototypeId chapterRef)
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+            avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
+        }
+
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
