@@ -378,7 +378,18 @@ namespace MHServerEmu.Games.Missions
             if (reset)
             {
                 // TODO rewards
-                // region PlayerCompletedMissionObjectiveGameEvent invoke
+
+                var region = Region;
+                if (region != null && objetiveProto is MissionNamedObjectivePrototype namedProto)
+                {                
+                    var isOpenMission = Mission.IsOpenMission;
+                    var missionRef = Mission.PrototypeDataRef;
+                    var objectiveId = namedProto.ObjectiveID;
+                    foreach (var activity in Mission.GetPlayerActivities())
+                        region.PlayerCompletedMissionObjectiveEvent
+                            .Invoke(new(activity.Player, missionRef, objectiveId, activity.Participant, activity.Contributor || isOpenMission == false));
+                }
+
                 UpdateMetaGameWidget();
             }
 

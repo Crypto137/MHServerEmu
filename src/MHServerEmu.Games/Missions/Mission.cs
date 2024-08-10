@@ -765,6 +765,7 @@ namespace MHServerEmu.Games.Missions
         {
             var missionProto = Prototype;
             if (missionProto == null) return false;
+            bool isOpenMission = IsOpenMission;
             var player = MissionManager.Player;
 
             ResetStateObjectives(true);
@@ -780,7 +781,7 @@ namespace MHServerEmu.Games.Missions
                 // TODO rewards
             }
 
-            if (IsOpenMission || missionProto.Repeatable == false)
+            if (isOpenMission || missionProto.Repeatable == false)
                 if (missionProto.ResetTimeSeconds > 0)
                     ScheduleTimeLimit(missionProto.ResetTimeSeconds);
 
@@ -803,10 +804,14 @@ namespace MHServerEmu.Games.Missions
                 var region = Region;
                 if (region != null)
                 {
-                    if (IsOpenMission)
+                    if (isOpenMission)
                         region.OpenMissionCompleteEvent.Invoke(new(missionRef));
-
-                    // TODO region PlayerCompletedMissionGameEvent
+                    
+                    foreach(var activity in GetPlayerActivities())
+                    {
+                        region.PlayerCompletedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                        // TODO achievements
+                    }
                 }
 
                 if (player != null)
@@ -848,10 +853,11 @@ namespace MHServerEmu.Games.Missions
         {
             var missionProto = Prototype;
             if (missionProto == null) return false;
+            bool isOpenMission = IsOpenMission;
 
             ResetStateObjectives(true);
 
-            if (IsOpenMission || missionProto.Repeatable == false)
+            if (isOpenMission || missionProto.Repeatable == false)
                 if (missionProto.ResetTimeSeconds > 0)
                     ScheduleTimeLimit(missionProto.ResetTimeSeconds);
 
@@ -863,15 +869,15 @@ namespace MHServerEmu.Games.Missions
 
             if (reset)
             {
+                var missionRef = PrototypeDataRef;
                 var region = Region;
                 if (region != null)
                 {
-                    if (IsOpenMission)
-                    {
-                        // TODO region OpenMissionFailedGameEvent
-                    }
+                    if (isOpenMission)
+                        region.OpenMissionFailedEvent.Invoke(new(missionRef));
 
-                    // TODO region PlayerFailedMissionGameEvent
+                    foreach (var activity in GetPlayerActivities())
+                        region.PlayerFailedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
                 }
 
                 if (reapeatable)
@@ -1485,6 +1491,34 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
+        public IEnumerable<PlayerActivity> GetPlayerActivities()
+        {
+            Dictionary<ulong, PlayerActivity> playerActivities = new ();
+            var manager = Game.EntityManager;
+
+            foreach (var participant in _participants)
+            {
+                var player = manager.GetEntity<Player>(participant);
+                if (player == null) continue;
+                if (playerActivities.TryGetValue(player.Id, out var activity))
+                    activity.Participant = true;
+                else
+                    playerActivities[player.Id] = new(player, true, false);
+            }
+
+            foreach (var playerUID in _contributors.Keys)
+            {
+                var player = manager.GetEntityByDbGuid<Player>(playerUID);
+                if (player == null) continue;
+                if (playerActivities.TryGetValue(player.Id, out var activity))
+                    activity.Contributor = true;
+                else
+                    playerActivities[player.Id] = new(player, false, true);
+            }
+
+            return playerActivities.Values;
+        }
+
         public MissionObjective GetObjectiveByPrototypeIndex(byte objectiveIndex)
         {
             if (_objectiveDict.TryGetValue(objectiveIndex, out var objective))
@@ -1699,5 +1733,19 @@ namespace MHServerEmu.Games.Missions
         }
 
         #endregion
+    }
+
+    public class PlayerActivity
+    {
+        public Player Player;
+        public bool Participant;
+        public bool Contributor;
+
+        public PlayerActivity(Player player, bool participant, bool contributor)
+        {
+            Player = player;
+            Participant = participant;
+            Contributor = contributor;
+        }
     }
 }
