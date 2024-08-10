@@ -273,9 +273,12 @@ namespace MHServerEmu.Games.Network
             // because client UI breaks for some reason when we reuse the same player entity id
             // (e.g. inventory grid stops updating).
             UpdateDBAccount();
-            Player.ExitGame();  // We need to exit before we destroy so that the player entity can be removed from its AOI
+
+            // We need to exit before we destroy so that the player entity can be removed from its AOI
+            Player.ExitGame();
             Player.Destroy();
             Game.EntityManager.ProcessDeferredLists();
+
             InitializeFromDBAccount();
         }
 
