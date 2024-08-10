@@ -81,6 +81,7 @@ namespace MHServerEmu.Games.Missions
         private MissionState _state;
         private float _currentObjectiveSequence;
         private TimeSpan _timeExpireCurrentState;
+        private TimeSpan _achievementTime;
         private PrototypeId _prototypeDataRef;
         private int _lootSeed;
         private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
@@ -148,6 +149,7 @@ namespace MHServerEmu.Games.Missions
                     _participants.Add(player.Id);
 
             _timeExpireCurrentState = TimeSpan.Zero;
+            _achievementTime = TimeSpan.Zero;
             Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
             if (Prototype != null)
             {
@@ -290,9 +292,24 @@ namespace MHServerEmu.Games.Missions
                 }
         }
 
-        private void SendToParticipants(MissionUpdateFlags missionFlags, MissionObjectiveUpdateFlags objectiveFlags)
+        private void SendToParticipants(MissionUpdateFlags missionFlags, MissionObjectiveUpdateFlags objectiveFlags, bool contributors = false)
         {
+            HashSet<Player> players = new();
             foreach (var player in GetParticipants())
+                players.Add(player);
+
+            if (contributors)
+            {
+                var manager = Game.EntityManager;
+                foreach(var playerUID in _contributors.Keys)
+                {
+                    var player = manager.GetEntityByDbGuid<Player>(playerUID);
+                    if (player != null)
+                        players.Add(player);
+                }
+            }
+
+            foreach (var player in players)
                 SendUpdateToPlayer(player, missionFlags, objectiveFlags);
         }
 
@@ -414,9 +431,12 @@ namespace MHServerEmu.Games.Missions
             if (OnSetState(true) == false) return false;
             IsChangingState = false;
 
-            if (sendUpdate) 
+            if (sendUpdate)
+            {                
                 SendToParticipants(MissionUpdateFlags.State | MissionUpdateFlags.StateExpireTime,
-                MissionObjectiveUpdateFlags.Default | MissionObjectiveUpdateFlags.SuppressNotification);
+                MissionObjectiveUpdateFlags.Default | MissionObjectiveUpdateFlags.SuppressNotification,
+                _state == MissionState.Completed || _state == MissionState.Failed);
+            }
 
             MissionManager.OnMissionStateChange(this);
             OnChangeState();
@@ -670,6 +690,8 @@ namespace MHServerEmu.Games.Missions
         {
             var missionProto = Prototype;
             if (missionProto == null) return false;
+            bool isOpenMission = IsOpenMission;
+            var openProto = OpenMissionPrototype;
 
             MissionManager.ActiveMissions.Add(PrototypeDataRef);
 
@@ -681,22 +703,30 @@ namespace MHServerEmu.Games.Missions
                     ResetsWithRegionId = region.Id;
 
             if (_objectiveDict.Count == 0) CreateObjectives();
-            if (IsOpenMission) _contributors.Clear();
-            if (reset) ResetObjectives();
+            if (isOpenMission) _contributors.Clear();
+            if (reset)
+            {
+                ResetObjectives();
+                if (isOpenMission && OpenMissionPrototype.AchievementTimeLimitSeconds != 0)
+                    _achievementTime = Game.CurrentTime + TimeSpan.FromSeconds(openProto.AchievementTimeLimitSeconds);
+            }
 
             if (missionProto.TimeLimitSeconds > 0)
                 ScheduleTimeLimit(missionProto.TimeLimitSeconds);
 
-            // TODO missionProto.ShowInMissionLog
+            if (missionProto.ShowInMissionLog != MissionShowInLog.Never && missionProto.Chapter != PrototypeId.Invalid)
+                foreach (var player in GetParticipants())
+                    if (player.ChapterIsUnlocked(missionProto.Chapter) == false)
+                        player.UnlockChapter(missionProto.Chapter);
 
             if (MissionActionList.CreateActionList(ref _onStartActions, missionProto.OnStartActions, this, reset) == false
                 || MissionConditionList.CreateConditionList(ref _failureConditions, missionProto.FailureConditions, this, this, true) == false
                 || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, true) == false)
                 return false;
 
-            if (IsOpenMission)
+            if (isOpenMission)
                 foreach (var player in GetParticipants())
-                    SendStoryNotificationToPlayer(player, OpenMissionPrototype.StoryNotification);
+                    SendStoryNotificationToPlayer(player, openProto.StoryNotification);
 
             if (reset)
             {
