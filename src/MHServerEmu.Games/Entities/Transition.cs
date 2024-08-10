@@ -83,40 +83,37 @@ namespace MHServerEmu.Games.Entities
 
         public bool UseTransition(Player player)
         {
-            Logger.Debug($"UseTransition(): transitionType={TransitionPrototype.Type}");
+            // TODO: Separate teleport logic from Transition
 
             switch (TransitionPrototype.Type)
             {
                 case RegionTransitionType.Transition:
-                {
-                    if (_destinationList.Count == 0)
-                        return Logger.WarnReturn(false, "UseTransition(): No available destinations");
+                    Region region = player.GetRegion();
+                    if (region == null) return Logger.WarnReturn(false, "UseTransition(): region == null");
+
+                    if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
+                    if (_destinationList.Count > 1) Logger.Debug("UseTransition(): _destinationList.Count > 1");
 
                     Destination destination = _destinationList[0];
 
-                    Logger.Trace($"Destination entity {destination.EntityRef.GetName()}");
+                    Logger.Trace($"Transition Destination Entity: {destination.EntityRef.GetName()}");
 
                     PrototypeId targetRegionProtoRef = destination.RegionRef;
 
-                    if (targetRegionProtoRef != PrototypeId.Invalid && player.GetRegion().PrototypeDataRef != targetRegionProtoRef)
-                        return TeleportToTarget(player, destination.RegionRef, destination.TargetRef);
+                    // TODO: Additional checks if we need to transfer
+                    if (targetRegionProtoRef != PrototypeId.Invalid && region.PrototypeDataRef != targetRegionProtoRef)
+                        return TeleportToRegion(player, destination.RegionRef, destination.TargetRef);
 
-                    Transition targetTransition = player.GetRegion()?.FindTransition(destination.AreaRef, destination.CellRef, destination.EntityRef);
+                    Transition targetTransition = region.FindTransition(destination.AreaRef, destination.CellRef, destination.EntityRef);
                     return TeleportToTransition(player, targetTransition);
-                }
 
                 case RegionTransitionType.TowerUp:
                 case RegionTransitionType.TowerDown:
-                {
-                    Transition targetTransition = player.Game.EntityManager.GetEntity<Transition>(_destinationList[0].EntityId);
-                    return TeleportToTransition(player, targetTransition);
-                }
+                    return TeleportToTransition(player, player.Game.EntityManager.GetEntity<Transition>(_destinationList[0].EntityId));
 
                 case RegionTransitionType.Waypoint:
-                {
                     // TODO: Unlock waypoint
                     return true;
-                }
 
                 case RegionTransitionType.ReturnToLastTown:
                     return TeleportToLastTown(player);
@@ -126,9 +123,9 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool TeleportToTarget(Player player, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
+        private static bool TeleportToRegion(Player player, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
         {
-            Logger.Trace($"TeleportToTarget(): Destination region {regionProtoRef.GetNameFormatted()} [{targetProtoRef.GetNameFormatted()}]");
+            Logger.Trace($"TeleportToRegion(): Destination region {regionProtoRef.GetNameFormatted()} [{targetProtoRef.GetNameFormatted()}]");
             player.PlayerConnection.MoveToRegion(regionProtoRef, targetProtoRef);
             return true;
         }
