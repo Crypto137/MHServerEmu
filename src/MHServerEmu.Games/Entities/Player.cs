@@ -1088,6 +1088,24 @@ namespace MHServerEmu.Games.Entities
             avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
         }
 
+        public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player targetPlayer, bool party = false)
+        {
+            if (party)
+            {
+                // TODO send to party members
+            }
+            else
+            {
+                var message = NetMessageAIAggroNotification.CreateBuilder()
+                    .SetBannerMessageRef((ulong)bannerMessageRef)
+                    .SetAiRef((ulong)aiAgent.PrototypeDataRef)
+                    .SetPlayerId(targetPlayer.Id)
+                    .Build();
+
+                SendMessage(message);
+            }
+        }
+
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();

@@ -308,6 +308,7 @@ namespace MHServerEmu.Games.Behavior
             BehaviorBlackboard blackboard = _pAIController.Blackboard;
 
             blackboard.PropertyCollection[PropertyEnum.AINextHostileSense] = (long)game.RealGameTime.TotalMilliseconds + 1000;
+            HashSet<ulong> oldTargetIds = new(PotentialHostileTargetIds);
             PotentialHostileTargetIds.Clear();
             WorldEntity lastAttacker = GetLastAttacker();
             if (lastAttacker != null)
@@ -361,7 +362,9 @@ namespace MHServerEmu.Games.Behavior
                 }
             }
 
-            // TODO EntityAggroedEvent PropertyEnum.AIAggroAnnouncement
+            foreach (var targetId in PotentialHostileTargetIds)
+                if (oldTargetIds.Contains(targetId) == false)
+                    _pAIController.OnAIAggroNotification(targetId);
         }
 
         private WorldEntity GetLastAttacker()

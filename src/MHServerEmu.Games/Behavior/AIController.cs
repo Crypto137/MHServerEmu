@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -516,6 +517,23 @@ namespace MHServerEmu.Games.Behavior
             }
             
             return time;
+        }
+
+        public void OnAIAggroNotification(ulong targetId)
+        {
+            if (Owner == null) return;
+            var target = Game.EntityManager.GetEntity<Avatar>(targetId);
+            if (target == null) return;
+            var player = target.GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            if (Blackboard.PropertyCollection.HasProperty(PropertyEnum.AIAggroAnnouncement))
+            {
+                PrototypeId announcement = Blackboard.PropertyCollection[PropertyEnum.AIAggroAnnouncement];
+                player.SendAIAggroNotification(announcement, Owner, player, true);
+            }
+
+            target.Region?.EntityAggroedEvent.Invoke(new(player, Owner));
         }
 
         #region Events
