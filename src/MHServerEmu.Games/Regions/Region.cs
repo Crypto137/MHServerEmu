@@ -584,7 +584,7 @@ namespace MHServerEmu.Games.Regions
 
         public Transition FindTransition(PrototypeId areaRef, PrototypeId cellRef, PrototypeId entityRef)
         {
-            // TODO: Limit iteration to area / cell for optimization
+            // TODO: Merge with FindTargetPosition() and rename to FindTargetLocation()
             Logger.Debug($"FindTransition(): {entityRef.GetName()}");
 
             foreach (WorldEntity worldEntity in IterateEntitiesInRegion(new()))

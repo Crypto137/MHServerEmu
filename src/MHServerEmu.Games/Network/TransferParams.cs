@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -81,7 +80,7 @@ namespace MHServerEmu.Games.Network
                 return true;
             }
             
-            if (RegionTransition.FindStartPosition(region, DestTargetProtoRef, out position, out orientation))
+            if (FindStartPosition(region, DestTargetProtoRef, out position, out orientation))
             {
                 return true;
             }
@@ -89,6 +88,60 @@ namespace MHServerEmu.Games.Network
             // Fall back to the center of the first cell in the start area if all else fails
             position = startArea.Cells.First().Value.RegionBounds.Center;
             return true;
+        }
+
+        // Move from RegionTransition
+
+        private static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
+        {
+            targetPos = region.GetStartArea().RegionBounds.Center; // default
+            targetRot = Orientation.Zero;
+            RegionConnectionTargetPrototype targetDest = null;
+
+            // Fall back to default start target for the region
+            if (targetRef == PrototypeId.Invalid)
+            {
+                targetRef = region.Prototype.StartTarget;
+                Logger.Warn($"FindStartPosition(): invalid targetRef, falling back to {GameDatabase.GetPrototypeName(targetRef)}");
+            }
+
+            Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
+
+            if (targetProto is WaypointPrototype waypointProto)
+            {
+                if (GetDestination(waypointProto, out RegionConnectionTargetPrototype targetDestination))
+                {
+                    targetRef = targetDestination.Entity;
+                    targetDest = targetDestination;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else if (targetProto is RegionConnectionTargetPrototype targetDestination)
+            {
+                targetRef = targetDestination.Entity;
+                targetDest = targetDestination;
+            }
+
+            if (targetDest != null && region.FindTargetPosition(ref targetPos, ref targetRot, targetDest))
+            {
+                var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(targetRef);
+                if (teleportEntity != null && teleportEntity.SpawnOffset > 0)
+                    teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool GetDestination(WaypointPrototype waypointProto, out RegionConnectionTargetPrototype target)
+        {
+            target = null;
+            if (waypointProto == null || waypointProto.Destination == 0) return false;
+            target = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
+            return target != null;
         }
     }
 }
