@@ -145,6 +145,20 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct CurrencyCollectedGameEvent
+    {
+        public Player Player;
+        public PrototypeId CurrencyType;
+        public int Amount;
+
+        public CurrencyCollectedGameEvent(Player player, PrototypeId currency, int amount)
+        {
+            Player = player;
+            CurrencyType = currency;
+            Amount = amount;
+        }
+    }
+
     public struct AvatarLeveledUpGameEvent
     {
         public Player Player;
