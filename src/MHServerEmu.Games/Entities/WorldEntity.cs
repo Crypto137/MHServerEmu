@@ -283,12 +283,27 @@ namespace MHServerEmu.Games.Entities
 
         public void Kill(WorldEntity killer = null, KillFlags killFlags = KillFlags.None, WorldEntity directKiller = null)
         {
-            // CancelKillEvent();
+            CancelKillEvent();
 
-            // TODO Implement
+            if (this is not Missile)
+            {
+                long health = Properties[PropertyEnum.Health];
+                var region = Region;
+                if (health > 0 && region != null) 
+                {
+                    var avatar = killer?.GetMostResponsiblePowerUser<Avatar>();
+                    var player = avatar?.GetOwnerOfType<Player>();
+                    region.AdjustHealthEvent.Invoke(new(this, killer, player, -health, false));
+                }
+            }
 
             Properties[PropertyEnum.Health] = 0;
             OnKilled(killer, killFlags, directKiller);   
+        }
+
+        public void CancelKillEvent()
+        {
+            // TODO
         }
 
         public override void Destroy()
@@ -299,7 +314,7 @@ namespace MHServerEmu.Games.Entities
             if (IsDestroyed == false)
             {
                 CancelExitWorldEvent();
-                // CancelKillEvent();
+                CancelKillEvent();
                 CancelDestroyEvent();
                 base.Destroy();
             }

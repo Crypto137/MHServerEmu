@@ -354,9 +354,34 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct AdjustHealthGameEvent
+    {
+        public WorldEntity Entity;
+        public WorldEntity Killer;
+        public Player Player;
+        public long Damage;
+        public bool Dodged;
+
+        public AdjustHealthGameEvent(WorldEntity entity, WorldEntity killer, Player player, long damage, bool dodged)
+        {
+            Entity = entity;
+            Killer = killer;
+            Player = player;
+            Damage = damage;
+            Dodged = dodged;
+        }
+    }
+
     public struct EntityAggroedGameEvent
     {
+        public Player Player;
         public WorldEntity AggroEntity;
+
+        public EntityAggroedGameEvent(Player player, WorldEntity aggroEntity)
+        {
+            Player = player;
+            AggroEntity = aggroEntity;
+        }
     }
 
     public struct AreaCreatedGameEvent
