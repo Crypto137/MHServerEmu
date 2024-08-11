@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network
                 return true;
             }
             
-            if (FindStartPosition(region, DestTargetProtoRef, out position, out orientation))
+            if (OLD_FindStartPosition(region, DestTargetProtoRef, out position, out orientation))
             {
                 return true;
             }
@@ -90,9 +90,9 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        // Move from RegionTransition
+        // Moved from RegionTransition
 
-        private static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
+        private static bool OLD_FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
         {
             targetPos = region.GetStartArea().RegionBounds.Center; // default
             targetRot = Orientation.Zero;
@@ -125,12 +125,19 @@ namespace MHServerEmu.Games.Network
                 targetDest = targetDestination;
             }
 
-            if (targetDest != null && region.FindTargetPosition(ref targetPos, ref targetRot, targetDest))
+            if (targetDest != null)
             {
-                var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(targetRef);
-                if (teleportEntity != null && teleportEntity.SpawnOffset > 0)
-                    teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
-                return true;
+                PrototypeId areaProtoRef = targetDest.Area;
+                PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(targetDest.Cell);
+                PrototypeId entityProtoRef = targetDest.Entity;
+
+                if (region.FindTargetLocation(ref targetPos, ref targetRot, areaProtoRef, cellProtoRef, entityProtoRef))
+                {
+                    var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(targetRef);
+                    if (teleportEntity != null && teleportEntity.SpawnOffset > 0)
+                        teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
+                    return true;
+                }
             }
 
             return false;

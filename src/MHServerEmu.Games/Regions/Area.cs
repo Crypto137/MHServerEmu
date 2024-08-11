@@ -559,16 +559,14 @@ namespace MHServerEmu.Games.Regions
             return positionInArea + Origin;
         }
 
-        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetLocation(ref Vector3 markerPos, ref Orientation markerRot, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            var cellRef = GameDatabase.GetDataRefByAsset(target.Cell);
-
             foreach (Cell cell in CellIterator())
             {
-                if (cellRef != 0 && cellRef != cell.PrototypeDataRef)
+                if (cellProtoRef != PrototypeId.Invalid && cellProtoRef != cell.PrototypeDataRef)
                     continue; // TODO check
 
-                if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))
+                if (cell.FindTargetLocation(ref markerPos, ref markerRot, entityProtoRef))
                     return true;
             }
 

@@ -21,7 +21,10 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            playerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
+
+            // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
+            PrototypeId avengersTowerHubEntryProtoRef = (PrototypeId)16780605467179883619;
+            playerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, avengersTowerHubEntryProtoRef);
 
             return "Changing region to Avengers Tower (original)";
         }
