@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             EntityEnteredWorldAction = OnEntityEnteredWorld;
             EntityExitedWorldAction = OnEntityExitedWorld;
-            EntityDeadAction = OnEntityDeadAction;
+            EntityDeadAction = OnEntityDead;
         }
 
         protected override long CountMin => Proto.CountMin;
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 Count--;
         }
 
-        private void OnEntityDeadAction(EntityDeadGameEvent evt)
+        private void OnEntityDead(EntityDeadGameEvent evt)
         {
             var entity = evt.Defender;
             if (entity == null || entity.IsInWorld == false) return;

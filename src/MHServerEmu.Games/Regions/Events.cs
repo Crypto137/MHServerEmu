@@ -354,10 +354,26 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct EntityStatusEffectGameEvent
+    {
+        public WorldEntity Entity;
+        public Player Player;
+        public bool Status;
+        public bool NegStatusEffect;
+
+        public EntityStatusEffectGameEvent(WorldEntity entity, Player player, bool status, bool negStatusEffect)
+        {
+            Entity = entity;
+            Player = player;
+            Status = status;
+            NegStatusEffect = negStatusEffect;
+        }
+    }
+
     public struct AdjustHealthGameEvent
     {
         public WorldEntity Entity;
-        public WorldEntity Killer;
+        public WorldEntity Attacker;
         public Player Player;
         public long Damage;
         public bool Dodged;
@@ -365,7 +381,7 @@ namespace MHServerEmu.Games.Regions
         public AdjustHealthGameEvent(WorldEntity entity, WorldEntity killer, Player player, long damage, bool dodged)
         {
             Entity = entity;
-            Killer = killer;
+            Attacker = killer;
             Player = player;
             Damage = damage;
             Dodged = dodged;

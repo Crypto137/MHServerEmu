@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             : base(mission, owner, prototype)
         {
             EntityAggroedAction = OnEntityAggroed;
-            AdjustHealthAction = OnAdjustHealthAction;
+            AdjustHealthAction = OnAdjustHealth;
         }
 
         private bool EvaluateEntity(Player player, WorldEntity entity)
@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return EvaluateEntityFilter(proto.EntityFilter, entity);
         }
 
-        private void OnAdjustHealthAction(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(AdjustHealthGameEvent evt)
         {
             var player = evt.Player;
             var entity = evt.Entity;
