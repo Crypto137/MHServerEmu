@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionGlobalEventComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH09Main1AFrostyReception NotInGame
         }
     }
 }
