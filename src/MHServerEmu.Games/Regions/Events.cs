@@ -269,6 +269,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerFactionChangedGameEvent
+    {
+        public Player Player;
+        public PrototypeId FactionRef;
+
+        public PlayerFactionChangedGameEvent(Player player, PrototypeId factionRef)
+        {
+            Player = player;
+            FactionRef = factionRef;
+        }
+    }
+
     public struct OpenMissionCompleteGameEvent
     {
         public PrototypeId MissionRef;

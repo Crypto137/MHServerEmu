@@ -119,6 +119,7 @@ namespace MHServerEmu.Games.Entities
         public GuildMembership GuildMembership { get; internal set; }
         public string Name { get; internal set; }
         public PrototypeId ActiveChapter { get => Properties[PropertyEnum.ActiveMissionChapter]; }
+        public PrototypeId Faction { get => Properties[PropertyEnum.Faction]; }
 
         public Player(Game game) : base(game)
         {

@@ -154,6 +154,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
         public Event<PartySizeChangedGameEvent> PartySizeChangedEvent = new();
         public Event<PlayerSwitchedToAvatarGameEvent> PlayerSwitchedToAvatarEvent = new();
+        public Event<PlayerFactionChangedGameEvent> PlayerFactionChangedEvent = new();
         public Event<AvatarLeveledUpGameEvent> AvatarLeveledUpEvent = new();
         public Event<CurrencyCollectedGameEvent> CurrencyCollectedEvent = new();
         public Event<EmotePerformedGameEvent> EmotePerformedEvent = new();
