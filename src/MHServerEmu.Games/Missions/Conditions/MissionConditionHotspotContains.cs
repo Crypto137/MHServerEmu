@@ -25,14 +25,10 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         protected override bool Contains()
         {
-            var manager = Game.EntityManager;
-            if (_proto.TargetFilter != null && Mission.GetMissionHotspots(out var hotspots))
-                foreach(var hotspotId in hotspots)
-                {
-                    var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                    if (hotspot != null && EvaluateEntityFilter(_proto.EntityFilter, hotspot))
+            if (_proto.TargetFilter != null)
+                foreach(var hotspot in Mission.GetMissionHotspots())
+                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
                         return true;
-                }
 
             return false;
         }
@@ -41,16 +37,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             long count = 0;
             if (_proto.TargetFilter != null) 
-            {  
-                var manager = Game.EntityManager;
+            {
                 var missionRef = Mission.PrototypeDataRef;
-                if (Mission.GetMissionHotspots(out var hotspots))
-                    foreach (var hotspotId in hotspots)
-                    {
-                        var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                        if (hotspot != null && EvaluateEntityFilter(_proto.EntityFilter, hotspot))
-                            count += hotspot.GetMissionConditionCount(missionRef, _proto);
-                    }
+                foreach (var hotspot in Mission.GetMissionHotspots())
+                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
+                        count += hotspot.GetMissionConditionCount(missionRef, _proto);
             }
 
             SetCount(count);
@@ -83,18 +74,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             var entity = evt.Defender;
             if (entity == null) return;
-            var manager = Game.EntityManager;
 
-            if (Mission.GetMissionHotspots(out var hotspots))
-                foreach (var hotspotId in hotspots)
+            foreach (var hotspot in Mission.GetMissionHotspots())
+                if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
                 {
-                    var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                    if (hotspot != null && EvaluateEntityFilter(_proto.EntityFilter, hotspot))
-                    {
-                        if (hotspot.Physics.IsOverlappingEntity(entity.Id) && EvaluateEntity(entity, hotspot))
-                            Count--;
-                        return;
-                    }
+                    if (hotspot.Physics.IsOverlappingEntity(entity.Id) && EvaluateEntity(entity, hotspot))
+                        Count--;
+                    return;
                 }
         }
 

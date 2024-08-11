@@ -1423,14 +1423,34 @@ namespace MHServerEmu.Games.Missions
             return 0.0f;
         }
 
-        public bool GetMissionHotspots(out List<ulong> outHotspots)
+        public IEnumerable<Hotspot> GetMissionHotspots()
         {
-            outHotspots = new();
             var region = Region;
-            if (region == null) return false;
+            if (region == null) yield return null;
+
             var hotspots = region.EntityTracker.HotspotsForContext(PrototypeDataRef);
-            if (hotspots != null) outHotspots = new(hotspots);
-            return outHotspots.Count > 0;
+            if (hotspots == null) yield return null;
+
+            var manager = Game.EntityManager;
+            List<ulong> hotspotsIds = new(hotspots);
+            foreach (var hotspotId in hotspotsIds)
+            {
+                var hotspot = manager.GetEntity<Hotspot>(hotspotId);
+                if (hotspot != null)
+                    yield return hotspot;
+            }
+        }
+
+        public bool FilterHotspots(Avatar avatar, PrototypeId hotspotRef, EntityFilterPrototype entityFilter)
+        {
+            foreach(var hotspot in GetMissionHotspots())
+            {
+                if (hotspot.ContainsAvatar(avatar) == false) continue;
+                if (hotspotRef != PrototypeId.Invalid && hotspot.PrototypeDataRef != hotspotRef) continue;
+                if (entityFilter != null && entityFilter.Evaluate(hotspot, new(PrototypeDataRef)) == false) continue;
+                return true;
+            }
+            return false;
         }
 
         public bool HasEventMissionChapter()
