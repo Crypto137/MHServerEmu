@@ -25,6 +25,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasApplyEffectsDelay { get; private set; }
 
         private Dictionary<MissionConditionContext, int> _missionConditionEntityCounter;
+        private HashSet<ulong> _missionAvatars;
         private bool _skipCollide;
         private PropertyCollection _directApplyToMissileProperties;
 
@@ -101,6 +102,7 @@ namespace MHServerEmu.Games.Entities
             if (IsMissionHotspot)
             {
                 _missionConditionEntityCounter = new();
+                _missionAvatars = new();
                 MissionEntityTracker();
             }
 
@@ -226,6 +228,8 @@ namespace MHServerEmu.Games.Entities
         {
             // Logger.Trace($"HandleOverlapBegin_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
+            if (targetAvatar) _missionAvatars?.Add(target.Id);
+
             bool missionEvent = false;
             if (_missionConditionEntityCounter.Count > 0)
                 foreach(var context in _missionConditionEntityCounter)
@@ -243,17 +247,16 @@ namespace MHServerEmu.Games.Entities
 
             if (Region == null) return;
             // entered hotspot mision event
-            if (missionEvent || targetAvatar) 
-            {
-                EntityEnteredMissionHotspotGameEvent hotspotEvent = new(target, this);
-                Region.EntityEnteredMissionHotspotEvent.Invoke(hotspotEvent);
-            }
+            if (missionEvent || targetAvatar)
+                Region.EntityEnteredMissionHotspotEvent.Invoke(new(target, this));
         }
 
         private void HandleOverlapEnd_Missions(WorldEntity target)
         {
             // Logger.Trace($"HandleOverlapEnd_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
+            if (targetAvatar) _missionAvatars?.Remove(target.Id);
+
             bool missionEvent = false;
             if (_missionConditionEntityCounter.Count > 0)
                 foreach (var context in _missionConditionEntityCounter)
@@ -272,10 +275,12 @@ namespace MHServerEmu.Games.Entities
             if (Region == null) return;
             // left hotspot mision event
             if (missionEvent || targetAvatar)
-            {
-                EntityLeftMissionHotspotGameEvent hotspotEvent = new(target, this);
-                Region.EntityLeftMissionHotspotEvent.Invoke(hotspotEvent);
-            }
+                Region.EntityLeftMissionHotspotEvent.Invoke(new(target, this));
+        }
+
+        public bool ContainsAvatar(Avatar avatar)
+        {
+            return _missionAvatars != null && _missionAvatars.Contains(avatar.Id);
         }
 
         public int GetMissionConditionCount(PrototypeId missionRef, MissionConditionPrototype conditionProto)
