@@ -9,28 +9,27 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionAvatarLevelUp : MissionPlayerCondition
     {
-        protected MissionConditionAvatarLevelUpPrototype Proto => Prototype as MissionConditionAvatarLevelUpPrototype;
-        public Action<AvatarLeveledUpGameEvent> AvatarLeveledUpAction { get; private set; }
+        private MissionConditionAvatarLevelUpPrototype _proto;
+        private Action<AvatarLeveledUpGameEvent> _avatarLeveledUpAction;
+
         public MissionConditionAvatarLevelUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            AvatarLeveledUpAction = OnAvatarLeveledUp;
+            _proto = prototype as MissionConditionAvatarLevelUpPrototype;
+            _avatarLeveledUpAction = OnAvatarLeveledUp;
         }
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             bool isLevelUp = false;
-            if (proto.Level > 0)
+            if (_proto.Level > 0)
             {
                 var missionProto = Mission.Prototype;
                 if (missionProto == null) return false;
                 bool perAvatar = missionProto.SaveStatePerAvatar;
 
                 foreach (var player in Mission.GetParticipants())
-                    if (TestAvatarLevel(player, proto, perAvatar))
+                    if (TestAvatarLevel(player, _proto, perAvatar))
                     {
                         isLevelUp = true;
                         break;
@@ -69,14 +68,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnAvatarLeveledUp(AvatarLeveledUpGameEvent evt)
         {
-            var proto = Proto;
             var player = evt.Player;
             var avatarRef = evt.AvatarRef;
             int level = evt.Level;
 
-            if (proto == null || player == null || IsMissionPlayer(player) == false) return;
-            if (proto.AvatarPrototype != avatarRef) return;
-            if (proto.Level > level) return;
+            if (player == null || IsMissionPlayer(player) == false) return;
+            if (_proto.AvatarPrototype != avatarRef) return;
+            if (_proto.Level > level) return;
 
             UpdatePlayerContribution(player);
             SetCompleted();
@@ -85,13 +83,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.AvatarLeveledUpEvent.AddActionBack(AvatarLeveledUpAction);
+            region.AvatarLeveledUpEvent.AddActionBack(_avatarLeveledUpAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.AvatarLeveledUpEvent.RemoveAction(AvatarLeveledUpAction);
+            region.AvatarLeveledUpEvent.RemoveAction(_avatarLeveledUpAction);
         }
     }
 }

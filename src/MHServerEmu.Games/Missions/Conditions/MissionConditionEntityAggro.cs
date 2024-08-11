@@ -6,22 +6,22 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionEntityAggro : MissionPlayerCondition
     {
-        protected MissionConditionEntityAggroPrototype Proto => Prototype as MissionConditionEntityAggroPrototype;
-        public Action<EntityAggroedGameEvent> EntityAggroedAction { get; private set; }
-        public Action<AdjustHealthGameEvent> AdjustHealthAction { get; private set; }
+        private MissionConditionEntityAggroPrototype _proto;
+        private Action<EntityAggroedGameEvent> _entityAggroedAction;
+        private Action<AdjustHealthGameEvent> _adjustHealthAction;
 
         public MissionConditionEntityAggro(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            EntityAggroedAction = OnEntityAggroed;
-            AdjustHealthAction = OnAdjustHealth;
+            _proto = prototype as MissionConditionEntityAggroPrototype;
+            _entityAggroedAction = OnEntityAggroed;
+            _adjustHealthAction = OnAdjustHealth;
         }
 
         private bool EvaluateEntity(Player player, WorldEntity entity)
         {
-            var proto = Proto;
-            if (proto == null || player == null || entity == null || IsMissionPlayer(player) == false) return false;
-            return EvaluateEntityFilter(proto.EntityFilter, entity);
+            if (player == null || entity == null || IsMissionPlayer(player) == false) return false;
+            return EvaluateEntityFilter(_proto.EntityFilter, entity);
         }
 
         private void OnAdjustHealth(AdjustHealthGameEvent evt)
@@ -50,15 +50,15 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.EntityAggroedEvent.AddActionBack(EntityAggroedAction);
-            region.AdjustHealthEvent.AddActionBack(AdjustHealthAction);
+            region.EntityAggroedEvent.AddActionBack(_entityAggroedAction);
+            region.AdjustHealthEvent.AddActionBack(_adjustHealthAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.EntityAggroedEvent.RemoveAction(EntityAggroedAction);
-            region.AdjustHealthEvent.RemoveAction(AdjustHealthAction);
+            region.EntityAggroedEvent.RemoveAction(_entityAggroedAction);
+            region.AdjustHealthEvent.RemoveAction(_adjustHealthAction);
         }
     }
 }

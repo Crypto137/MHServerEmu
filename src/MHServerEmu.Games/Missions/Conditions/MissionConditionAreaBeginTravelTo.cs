@@ -5,13 +5,14 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionAreaBeginTravelTo : MissionPlayerCondition
     {
-        protected MissionConditionAreaBeginTravelToPrototype Proto => Prototype as MissionConditionAreaBeginTravelToPrototype;
-        public Action<PlayerBeginTravelToAreaGameEvent> PlayerBeginTravelToAreaAction { get; private set; }
+        private MissionConditionAreaBeginTravelToPrototype _proto;
+        private Action<PlayerBeginTravelToAreaGameEvent> _playerBeginTravelToAreaAction;
 
         public MissionConditionAreaBeginTravelTo(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            PlayerBeginTravelToAreaAction = OnPlayerBeginTravelToArea;
+            _proto = prototype as MissionConditionAreaBeginTravelToPrototype;
+            _playerBeginTravelToAreaAction = OnPlayerBeginTravelToArea;
         }
 
         public override bool OnReset()
@@ -22,12 +23,11 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnPlayerBeginTravelToArea(PlayerBeginTravelToAreaGameEvent evt)
         {
-            var proto = Proto;
             var player = evt.Player;
             var areaRef = evt.AreaRef;
 
-            if (proto == null || player == null || IsMissionPlayer(player) == false) return;
-            if (proto.AreaPrototype != areaRef) return;
+            if (_proto == null || player == null || IsMissionPlayer(player) == false) return;
+            if (_proto.AreaPrototype != areaRef) return;
 
             UpdatePlayerContribution(player);
             SetCompleted();
@@ -36,13 +36,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.PlayerBeginTravelToAreaEvent.AddActionBack(PlayerBeginTravelToAreaAction);
+            region.PlayerBeginTravelToAreaEvent.AddActionBack(_playerBeginTravelToAreaAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.PlayerBeginTravelToAreaEvent.RemoveAction(PlayerBeginTravelToAreaAction);
+            region.PlayerBeginTravelToAreaEvent.RemoveAction(_playerBeginTravelToAreaAction);
         }
     }
 }

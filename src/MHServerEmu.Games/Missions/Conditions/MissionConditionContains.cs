@@ -5,10 +5,11 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionContains : MissionPlayerCondition
     {
-        public Action<PlayerEnteredRegionGameEvent> PlayerEnteredRegionAction { get; private set; }
+        private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
+
         public MissionConditionContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) : base(mission, owner, prototype)
         {
-            PlayerEnteredRegionAction = OnPlayerEnteredRegion;
+            _playerEnteredRegionAction = OnPlayerEnteredRegion;
         }
 
         protected override long RequiredCount => CountMin;
@@ -35,17 +36,15 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-
             if (region.IsPrivate || Mission.MissionManager.IsPlayerMissionManager())
-                region.PlayerEnteredRegionEvent.AddActionBack(PlayerEnteredRegionAction);
+                region.PlayerEnteredRegionEvent.AddActionBack(_playerEnteredRegionAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-
             if (region.IsPrivate || Mission.MissionManager.IsPlayerMissionManager())
-                region.PlayerEnteredRegionEvent.RemoveAction(PlayerEnteredRegionAction);
+                region.PlayerEnteredRegionEvent.RemoveAction(_playerEnteredRegionAction);
         }
     }
 }

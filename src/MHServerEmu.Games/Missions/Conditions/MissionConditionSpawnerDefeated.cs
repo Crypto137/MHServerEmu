@@ -4,12 +4,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionSpawnerDefeated : MissionPlayerCondition
     {
-        protected MissionConditionSpawnerDefeatedPrototype Proto => Prototype as MissionConditionSpawnerDefeatedPrototype;
-        protected override long RequiredCount => Proto.Count;
+        private MissionConditionSpawnerDefeatedPrototype _proto;
+        protected override long RequiredCount => _proto.Count;
 
         public MissionConditionSpawnerDefeated(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionConditionSpawnerDefeatedPrototype;
         }
     }
 }

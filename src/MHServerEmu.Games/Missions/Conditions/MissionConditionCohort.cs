@@ -4,11 +4,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionCohort : MissionPlayerCondition
     {
-        protected MissionConditionCohortPrototype Proto => Prototype as MissionConditionCohortPrototype;
+        private MissionConditionCohortPrototype _proto;
+
         public MissionConditionCohort(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
             // DevelopmentOnly
+            _proto = prototype as MissionConditionCohortPrototype;
         }
     }
 }

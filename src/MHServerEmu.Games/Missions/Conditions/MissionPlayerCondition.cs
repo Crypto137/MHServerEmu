@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionPlayerCondition : MissionCondition
     {
-        protected MissionPlayerConditionPrototype PlayerProto => Prototype as MissionPlayerConditionPrototype;
+        private MissionPlayerConditionPrototype _proto;
         protected virtual PrototypeId MissionProtoRef => PrototypeId.Invalid;
         protected Player Player => Mission.MissionManager.Player;
 
@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionPlayerCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionPlayerConditionPrototype;
             _count = 0;
         }
 
@@ -41,8 +42,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             var missionPlayer = Player;
             if (missionPlayer == null) return false;
             if (player == missionPlayer) return true;
-            var playerProto = PlayerProto;
-            if (playerProto != null && playerProto.PartyMembersGetCredit)
+            if (_proto.PartyMembersGetCredit)
             {
                 var party = missionPlayer.Party;
                 if (party != null && party.IsMember(player.DatabaseUniqueId)) return true;
@@ -55,9 +55,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (count == 0) return;
             if (Mission.IsOpenMission)
             {
-                var playerProto = PlayerProto;
-                if (playerProto != null && playerProto.OpenMissionContributionValue != 0.0f)
-                    SetPlayerContribution(player, (float)playerProto.OpenMissionContributionValue * count);
+                if (_proto.OpenMissionContributionValue != 0.0f)
+                    SetPlayerContribution(player, (float)_proto.OpenMissionContributionValue * count);
             }
         }
 

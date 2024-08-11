@@ -7,33 +7,34 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionEntityDamaged : MissionPlayerCondition
     {
-        protected MissionConditionEntityDamagedPrototype Proto => Prototype as MissionConditionEntityDamagedPrototype;
-        public Action<AdjustHealthGameEvent> AdjustHealthAction { get; private set; }
-        public Action<EntityStatusEffectGameEvent> EntityStatusEffectAction { get; private set; }
+        private MissionConditionEntityDamagedPrototype _proto;
+        private Action<AdjustHealthGameEvent> _adjustHealthAction;
+        private Action<EntityStatusEffectGameEvent> _entityStatusEffectAction;
+
         public MissionConditionEntityDamaged(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            AdjustHealthAction = OnAdjustHealth;
-            EntityStatusEffectAction = OnEntityStatusEffect;
+            _proto = prototype as MissionConditionEntityDamagedPrototype;
+            _adjustHealthAction = OnAdjustHealth;
+            _entityStatusEffectAction = OnEntityStatusEffect;
         }
 
         private bool EvaluateEntity(Player player, WorldEntity entity)
         {
-            var proto = Proto;
-            if (proto == null || entity == null) return false;
+            if (entity == null) return false;
             bool isOpenMission = Mission.IsOpenMission;
 
             if (player == null)
-                if (proto.LimitToDamageFromPlayerOMOnly || isOpenMission == false) return false;
+                if (_proto.LimitToDamageFromPlayerOMOnly || isOpenMission == false) return false;
 
             if (isOpenMission == false && IsMissionPlayer(player) == false) return false;
-            if (EvaluateEntityFilter(proto.EntityFilter, entity) == false) return false;
+            if (EvaluateEntityFilter(_proto.EntityFilter, entity) == false) return false;
 
-            if (proto.EncounterResource != AssetId.Invalid)
+            if (_proto.EncounterResource != AssetId.Invalid)
             {
                 var spawnGroup = entity.SpawnGroup;
                 if (spawnGroup == null) return false;
-                var encounterRef = GameDatabase.GetDataRefByAsset(proto.EncounterResource); 
+                var encounterRef = GameDatabase.GetDataRefByAsset(_proto.EncounterResource); 
                 if (spawnGroup.EncounterRef != encounterRef) return false;
             }
 
@@ -67,15 +68,15 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.AdjustHealthEvent.AddActionBack(AdjustHealthAction);
-            region.EntityStatusEffectEvent.AddActionBack(EntityStatusEffectAction);
+            region.AdjustHealthEvent.AddActionBack(_adjustHealthAction);
+            region.EntityStatusEffectEvent.AddActionBack(_entityStatusEffectAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.AdjustHealthEvent.RemoveAction(AdjustHealthAction);
-            region.EntityStatusEffectEvent.RemoveAction(EntityStatusEffectAction);
+            region.AdjustHealthEvent.RemoveAction(_adjustHealthAction);
+            region.EntityStatusEffectEvent.RemoveAction(_entityStatusEffectAction);
         }
     }
 }

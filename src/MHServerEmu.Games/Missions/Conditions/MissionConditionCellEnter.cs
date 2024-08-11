@@ -1,4 +1,3 @@
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,24 +5,23 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionCellEnter : MissionPlayerCondition
     {
-        protected MissionConditionCellEnterPrototype Proto => Prototype as MissionConditionCellEnterPrototype;
-        public Action<PlayerEnteredCellGameEvent> PlayerEnteredCellAction { get; private set; }
+        private MissionConditionCellEnterPrototype _proto;
+        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
+
         public MissionConditionCellEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            PlayerEnteredCellAction = OnPlayerEnteredCell;
+            _proto = prototype as MissionConditionCellEnterPrototype;
+            _playerEnteredCellAction = OnPlayerEnteredCell;
         }
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             bool cellEnter = false;
             foreach (var player in Mission.GetParticipants())
             {
                 var cell = player.CurrentAvatar?.Cell;
-                if (cell != null && proto.Contains(cell.PrototypeDataRef))
+                if (cell != null && _proto.Contains(cell.PrototypeDataRef))
                 {
                     cellEnter = true;
                     break;
@@ -36,12 +34,11 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnPlayerEnteredCell(PlayerEnteredCellGameEvent evt)
         {
-            var proto = Proto;
             var player = evt.Player;
             var cellRef = evt.CellRef;
 
-            if (proto == null || player == null || IsMissionPlayer(player) == false) return;
-            if (proto.Contains(cellRef) == false) return;
+            if (player == null || IsMissionPlayer(player) == false) return;
+            if (_proto.Contains(cellRef) == false) return;
 
             UpdatePlayerContribution(player);
             SetCompleted();
@@ -50,13 +47,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.PlayerEnteredCellEvent.AddActionBack(PlayerEnteredCellAction);
+            region.PlayerEnteredCellEvent.AddActionBack(_playerEnteredCellAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.PlayerEnteredCellEvent.RemoveAction(PlayerEnteredCellAction);
+            region.PlayerEnteredCellEvent.RemoveAction(_playerEnteredCellAction);
         }
     }
 }

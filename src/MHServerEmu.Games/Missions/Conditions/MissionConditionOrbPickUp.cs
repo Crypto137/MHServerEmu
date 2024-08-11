@@ -4,12 +4,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionOrbPickUp : MissionPlayerCondition
     {
-        protected MissionConditionOrbPickUpPrototype Proto => Prototype as MissionConditionOrbPickUpPrototype;
-        protected override long RequiredCount => Proto.Count;
+        private MissionConditionOrbPickUpPrototype _proto;
+        protected override long RequiredCount => _proto.Count;
 
         public MissionConditionOrbPickUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionConditionOrbPickUpPrototype;
         }
     }
 }

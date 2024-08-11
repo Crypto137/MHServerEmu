@@ -6,12 +6,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionList : MissionCondition
     {
-        public MissionConditionListPrototype MissionConditionListPrototype { get => Prototype as MissionConditionListPrototype; }
-        public List<MissionCondition> Conditions { get; private set; }
+        private MissionConditionListPrototype _proto;
+        protected List<MissionCondition> Conditions { get; private set; }
 
         public MissionConditionList(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionConditionListPrototype;
             Conditions = new();
         }
 
@@ -19,11 +20,8 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             if (base.Initialize(conditionIndex) == false) return false;
 
-            var listProto = MissionConditionListPrototype;
-            if (listProto == null) return false;
-
-            if (listProto.Conditions.HasValue())
-                foreach (var conditionProto in listProto.Conditions)
+            if (_proto.Conditions.HasValue())
+                foreach (var conditionProto in _proto.Conditions)
                 {
                     var condition = CreateCondition(Mission, this, conditionProto);
                     if (condition == null) return false;

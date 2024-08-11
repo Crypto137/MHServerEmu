@@ -4,17 +4,16 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionCount : MissionConditionList
     {
-        protected MissionConditionCountPrototype Proto => Prototype as MissionConditionCountPrototype;
+        private MissionConditionCountPrototype _proto;
+
         public MissionConditionCount(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionConditionCountPrototype;
         }
 
         public override bool IsCompleted()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             long count = 0;
             foreach(var condition in Conditions)
             {
@@ -23,7 +22,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 condition.GetCompletionCount(ref currentCount, ref requiredCount, true);
                 count += currentCount;
 
-                if (count >= proto.Count) 
+                if (count >= _proto.Count) 
                     return true;
             }
 
@@ -32,11 +31,8 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired)
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             base.GetCompletionCount(ref currentCount, ref requiredCount, true);
-            requiredCount = proto.Count;
+            requiredCount = _proto.Count;
 
             return requiredCount > 0;
         }

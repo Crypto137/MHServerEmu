@@ -4,12 +4,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionItemDonate : MissionPlayerCondition
     {
-        protected MissionConditionItemDonatePrototype Proto => Prototype as MissionConditionItemDonatePrototype;
-        protected override long RequiredCount => Proto.Count;
+        private MissionConditionItemDonatePrototype _proto;
+        protected override long RequiredCount => _proto.Count;
 
         public MissionConditionItemDonate(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionConditionItemDonatePrototype;
         }
     }
 }

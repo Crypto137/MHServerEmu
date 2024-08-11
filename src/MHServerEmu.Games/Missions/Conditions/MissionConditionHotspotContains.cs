@@ -6,32 +6,31 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionHotspotContains : MissionConditionContains
     {
-        protected MissionConditionHotspotContainsPrototype Proto => Prototype as MissionConditionHotspotContainsPrototype;
-        public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotAction { get; private set; }
-        public Action<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotAction { get; private set; }
-        public Action<EntityDeadGameEvent> EntityDeadAction { get; private set; }
+        private MissionConditionHotspotContainsPrototype _proto;
+        private Action<EntityEnteredMissionHotspotGameEvent> _entityEnteredMissionHotspotAction;
+        private Action<EntityLeftMissionHotspotGameEvent> _entityLeftMissionHotspotAction;
+        private Action<EntityDeadGameEvent> _entityDeadAction;
 
         public MissionConditionHotspotContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            EntityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
-            EntityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;
-            EntityDeadAction = OnEntityDeadAction;
+            _proto = prototype as MissionConditionHotspotContainsPrototype;
+            _entityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
+            _entityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;
+            _entityDeadAction = OnEntityDeadAction;
         }
 
-        protected override long CountMin => Proto.CountMin;
-        protected override long CountMax => Proto.CountMax;
+        protected override long CountMin => _proto.CountMin;
+        protected override long CountMax => _proto.CountMax;
 
         protected override bool Contains()
         {
-            var proto = Proto;
-            if (proto == null) return false;
             var manager = Game.EntityManager;
-            if (proto.TargetFilter != null && Mission.GetMissionHotspots(out var hotspots))
+            if (_proto.TargetFilter != null && Mission.GetMissionHotspots(out var hotspots))
                 foreach(var hotspotId in hotspots)
                 {
                     var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                    if (hotspot != null && EvaluateEntityFilter(proto.EntityFilter, hotspot))
+                    if (hotspot != null && EvaluateEntityFilter(_proto.EntityFilter, hotspot))
                         return true;
                 }
 
@@ -40,11 +39,8 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             long count = 0;
-            if (proto.TargetFilter != null) 
+            if (_proto.TargetFilter != null) 
             {  
                 var manager = Game.EntityManager;
                 var missionRef = Mission.PrototypeDataRef;
@@ -52,8 +48,8 @@ namespace MHServerEmu.Games.Missions.Conditions
                     foreach (var hotspotId in hotspots)
                     {
                         var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                        if (hotspot != null && EvaluateEntityFilter(proto.EntityFilter, hotspot))
-                            count += hotspot.GetMissionConditionCount(missionRef, proto);
+                        if (hotspot != null && EvaluateEntityFilter(_proto.EntityFilter, hotspot))
+                            count += hotspot.GetMissionConditionCount(missionRef, _proto);
                     }
             }
 
@@ -63,11 +59,10 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private bool EvaluateEntity(WorldEntity target, Hotspot hotspot)
         {
-            var proto = Proto;
-            if (proto == null || target == null || hotspot == null) return false;
-            if (EvaluateEntityFilter(proto.EntityFilter, hotspot) == false) return false;
+            if (target == null || hotspot == null) return false;
+            if (EvaluateEntityFilter(_proto.EntityFilter, hotspot) == false) return false;
             if (target is Hotspot || target is Missile) return false;
-            if (EvaluateEntityFilter(proto.TargetFilter, target) == false) return false;
+            if (EvaluateEntityFilter(_proto.TargetFilter, target) == false) return false;
 
             return true;
         }
@@ -86,8 +81,6 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnEntityDeadAction(EntityDeadGameEvent evt)
         {
-            var proto = Proto;
-            if (proto == null) return;
             var entity = evt.Defender;
             if (entity == null) return;
             var manager = Game.EntityManager;
@@ -96,7 +89,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 foreach (var hotspotId in hotspots)
                 {
                     var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                    if (hotspot != null && EvaluateEntityFilter(proto.EntityFilter, hotspot))
+                    if (hotspot != null && EvaluateEntityFilter(_proto.EntityFilter, hotspot))
                     {
                         if (hotspot.Physics.IsOverlappingEntity(entity.Id) && EvaluateEntity(entity, hotspot))
                             Count--;
@@ -108,17 +101,17 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.EntityEnteredMissionHotspotEvent.AddActionBack(EntityEnteredMissionHotspotAction);
-            region.EntityLeftMissionHotspotEvent.AddActionBack(EntityLeftMissionHotspotAction);
-            region.EntityDeadEvent.AddActionBack(EntityDeadAction);
+            region.EntityEnteredMissionHotspotEvent.AddActionBack(_entityEnteredMissionHotspotAction);
+            region.EntityLeftMissionHotspotEvent.AddActionBack(_entityLeftMissionHotspotAction);
+            region.EntityDeadEvent.AddActionBack(_entityDeadAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.EntityEnteredMissionHotspotEvent.RemoveAction(EntityEnteredMissionHotspotAction);
-            region.EntityLeftMissionHotspotEvent.RemoveAction(EntityLeftMissionHotspotAction);
-            region.EntityDeadEvent.RemoveAction(EntityDeadAction);
+            region.EntityEnteredMissionHotspotEvent.RemoveAction(_entityEnteredMissionHotspotAction);
+            region.EntityLeftMissionHotspotEvent.RemoveAction(_entityLeftMissionHotspotAction);
+            region.EntityDeadEvent.RemoveAction(_entityDeadAction);
         }
     }
 }

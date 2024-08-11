@@ -6,23 +6,21 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionActiveChapter : MissionPlayerCondition
     {
-        protected MissionConditionActiveChapterPrototype Proto => Prototype as MissionConditionActiveChapterPrototype;
-        public Action<ActiveChapterChangedGameEvent> ActiveChapterChangedAction { get; private set; }
+        private MissionConditionActiveChapterPrototype _proto;
+        private Action<ActiveChapterChangedGameEvent> _activeChapterChangedAction;
 
         public MissionConditionActiveChapter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            ActiveChapterChangedAction = OnActiveChapterChanged;
+            _proto = prototype as MissionConditionActiveChapterPrototype;
+            _activeChapterChangedAction = OnActiveChapterChanged;
         }
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             bool isActive = false;
             foreach (var player in Mission.GetParticipants())
-                if (player.ActiveChapter == proto.Chapter)
+                if (player.ActiveChapter == _proto.Chapter)
                 {
                     isActive = true;
                     break;
@@ -34,12 +32,11 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnActiveChapterChanged(ActiveChapterChangedGameEvent evt)
         {
-            var proto = Proto;
             var player = evt.Player;
             var chapter = evt.ChapterRef;
 
-            if (proto == null || player == null || IsMissionPlayer(player) == false) return;
-            if (proto.Chapter != chapter) return;
+            if (_proto == null || player == null || IsMissionPlayer(player) == false) return;
+            if (_proto.Chapter != chapter) return;
 
             UpdatePlayerContribution(player);
             SetCompleted();
@@ -48,13 +45,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.ActiveChapterChangedEvent.AddActionBack(ActiveChapterChangedAction);
+            region.ActiveChapterChangedEvent.AddActionBack(_activeChapterChangedAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.ActiveChapterChangedEvent.RemoveAction(ActiveChapterChangedAction);
+            region.ActiveChapterChangedEvent.RemoveAction(_activeChapterChangedAction);
         }
     }
 }

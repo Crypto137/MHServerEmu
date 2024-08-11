@@ -7,25 +7,26 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionCurrencyCollected : MissionPlayerCondition
     {
-        protected MissionConditionCurrencyCollectedPrototype Proto => Prototype as MissionConditionCurrencyCollectedPrototype;
-        public Action<CurrencyCollectedGameEvent> CurrencyCollectedAction { get; private set; }
+        private MissionConditionCurrencyCollectedPrototype _proto;
+        private Action<CurrencyCollectedGameEvent> _currencyCollectedAction;
+
         public MissionConditionCurrencyCollected(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            CurrencyCollectedAction = OnCurrencyCollected;
+            _proto = prototype as MissionConditionCurrencyCollectedPrototype;
+            _currencyCollectedAction = OnCurrencyCollected;
         }
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null || proto.CurrencyType == PrototypeId.Invalid) return false;
-            PropertyId propId = new(PropertyEnum.Currency, proto.CurrencyType);
+            if (_proto.CurrencyType == PrototypeId.Invalid) return false;
+            PropertyId propId = new(PropertyEnum.Currency, _proto.CurrencyType);
 
             bool collected = false;
             foreach (var player in Mission.GetParticipants())
             {
                 int amount = player.Properties[propId];
-                if (amount >= proto.AmountRequired)
+                if (amount >= _proto.AmountRequired)
                 {
                     collected = true;
                     break;
@@ -38,14 +39,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnCurrencyCollected(CurrencyCollectedGameEvent evt)
         {
-            var proto = Proto;
             var player = evt.Player;
             var currencyType = evt.CurrencyType;
             int amount = evt.Amount;
 
-            if (proto == null || player == null || IsMissionPlayer(player) == false) return;
-            if (currencyType == PrototypeId.Invalid || currencyType != proto.CurrencyType) return;
-            if (proto.AmountRequired != 0 && amount < proto.AmountRequired) return;
+            if (player == null || IsMissionPlayer(player) == false) return;
+            if (currencyType == PrototypeId.Invalid || currencyType != _proto.CurrencyType) return;
+            if (_proto.AmountRequired != 0 && amount < _proto.AmountRequired) return;
 
             UpdatePlayerContribution(player);
             SetCompleted();
@@ -54,13 +54,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.CurrencyCollectedEvent.AddActionBack(CurrencyCollectedAction);
+            region.CurrencyCollectedEvent.AddActionBack(_currencyCollectedAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.CurrencyCollectedEvent.RemoveAction(CurrencyCollectedAction);
+            region.CurrencyCollectedEvent.RemoveAction(_currencyCollectedAction);
         }
     }
 }

@@ -6,40 +6,36 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionRegionContains : MissionConditionContains
     {
-        protected MissionConditionRegionContainsPrototype Proto => Prototype as MissionConditionRegionContainsPrototype;
-        public Action<EntityEnteredWorldGameEvent> EntityEnteredWorldAction { get; private set; }
-        public Action<EntityExitedWorldGameEvent> EntityExitedWorldAction { get; private set; }
-        public Action<EntityDeadGameEvent> EntityDeadAction { get; private set; }
+        private MissionConditionRegionContainsPrototype _proto;
+        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
+        private Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
+        private Action<EntityDeadGameEvent> _entityDeadAction;
 
         public MissionConditionRegionContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            EntityEnteredWorldAction = OnEntityEnteredWorld;
-            EntityExitedWorldAction = OnEntityExitedWorld;
-            EntityDeadAction = OnEntityDead;
+            _proto = prototype as MissionConditionRegionContainsPrototype;
+            _entityEnteredWorldAction = OnEntityEnteredWorld;
+            _entityExitedWorldAction = OnEntityExitedWorld;
+            _entityDeadAction = OnEntityDead;
         }
 
-        protected override long CountMin => Proto.CountMin;
-        protected override long CountMax => Proto.CountMax;
+        protected override long CountMin => _proto.CountMin;
+        protected override long CountMax => _proto.CountMax;
 
         protected override bool Contains()
         {
-            var proto = Proto;
-            if (proto == null) return false; 
             var region = Region;
             if (region == null) return false;
-            return region.FilterRegion(proto.Region, proto.RegionIncludeChildren, proto.RegionsExclude);
+            return region.FilterRegion(_proto.Region, _proto.RegionIncludeChildren, _proto.RegionsExclude);
         }
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             long count = 0;
             if (Contains())
                 foreach (var entity in Region.Entities)
-                    if (EvaluateEntityFilter(proto.TargetFilter, entity as WorldEntity))
+                    if (EvaluateEntityFilter(_proto.TargetFilter, entity as WorldEntity))
                         count++;
 
             SetCount(count);
@@ -48,11 +44,10 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private bool EvaluateEntity(WorldEntity entity, Region region)
         {
-            var proto = Proto;
-            if (proto == null || entity == null || region == null) return false;
-            if (region.FilterRegion(proto.Region, proto.RegionIncludeChildren, proto.RegionsExclude) == false) return false;
+            if (entity == null || region == null) return false;
+            if (region.FilterRegion(_proto.Region, _proto.RegionIncludeChildren, _proto.RegionsExclude) == false) return false;
             if (entity is Hotspot || entity is Missile) return false;
-            if (EvaluateEntityFilter(proto.TargetFilter, entity) == false) return false;
+            if (EvaluateEntityFilter(_proto.TargetFilter, entity) == false) return false;
 
             return true;
         }
@@ -86,17 +81,17 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             base.RegisterEvents(region);
-            region.EntityEnteredWorldEvent.AddActionBack(EntityEnteredWorldAction);
-            region.EntityExitedWorldEvent.AddActionBack(EntityExitedWorldAction);
-            region.EntityDeadEvent.AddActionBack(EntityDeadAction);
+            region.EntityEnteredWorldEvent.AddActionBack(_entityEnteredWorldAction);
+            region.EntityExitedWorldEvent.AddActionBack(_entityExitedWorldAction);
+            region.EntityDeadEvent.AddActionBack(_entityDeadAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             base.UnRegisterEvents(region);
-            region.EntityEnteredWorldEvent.RemoveAction(EntityEnteredWorldAction);
-            region.EntityExitedWorldEvent.RemoveAction(EntityExitedWorldAction);
-            region.EntityDeadEvent.RemoveAction(EntityDeadAction);
+            region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
+            region.EntityExitedWorldEvent.RemoveAction(_entityExitedWorldAction);
+            region.EntityDeadEvent.RemoveAction(_entityDeadAction);
         }
     }
 }

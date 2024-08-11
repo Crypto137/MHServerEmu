@@ -4,12 +4,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionMetaStateComplete : MissionPlayerCondition
     {
-        protected MissionConditionMetaStateCompletePrototype Proto => Prototype as MissionConditionMetaStateCompletePrototype;
-        protected override long RequiredCount => Proto.Count;
+        private MissionConditionMetaStateCompletePrototype _proto;
+        protected override long RequiredCount => _proto.Count;
 
         public MissionConditionMetaStateComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            _proto = prototype as MissionConditionMetaStateCompletePrototype;
         }
     }
 }

@@ -1,4 +1,3 @@
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,25 +5,23 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionAreaEnter : MissionPlayerCondition
     {
-        protected MissionConditionAreaEnterPrototype Proto => Prototype as MissionConditionAreaEnterPrototype;
-        public Action<PlayerEnteredAreaGameEvent> PlayerEnteredAreaAction { get; private set; }
+        private MissionConditionAreaEnterPrototype _proto;
+        private Action<PlayerEnteredAreaGameEvent> _playerEnteredAreaAction;
 
         public MissionConditionAreaEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            PlayerEnteredAreaAction = OnPlayerEnteredArea;
+            _proto = prototype as MissionConditionAreaEnterPrototype;
+            _playerEnteredAreaAction = OnPlayerEnteredArea;
         }
 
         public override bool OnReset()
         {
-            var proto = Proto;
-            if (proto == null) return false;
-
             bool areaEnter = false;
             foreach (var player in Mission.GetParticipants())
             {
                 var area = player.CurrentAvatar?.Area;
-                if (area != null && area.PrototypeDataRef == proto.AreaPrototype)
+                if (area != null && area.PrototypeDataRef == _proto.AreaPrototype)
                 {
                     areaEnter = true;
                     break;
@@ -37,12 +34,11 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void OnPlayerEnteredArea(PlayerEnteredAreaGameEvent evt)
         {
-            var proto = Proto;
             var player = evt.Player;
             var areaRef = evt.AreaRef;
 
-            if (proto == null || player == null || IsMissionPlayer(player) == false) return;
-            if (proto.AreaPrototype != areaRef) return;
+            if (player == null || IsMissionPlayer(player) == false) return;
+            if (_proto.AreaPrototype != areaRef) return;
 
             UpdatePlayerContribution(player);
             SetCompleted();
@@ -51,13 +47,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.PlayerEnteredAreaEvent.AddActionBack(PlayerEnteredAreaAction);
+            region.PlayerEnteredAreaEvent.AddActionBack(_playerEnteredAreaAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.PlayerEnteredAreaEvent.RemoveAction(PlayerEnteredAreaAction);
+            region.PlayerEnteredAreaEvent.RemoveAction(_playerEnteredAreaAction);
         }
     }
 }

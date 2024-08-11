@@ -6,19 +6,21 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionObjectiveComplete : MissionPlayerCondition
     {
-        protected MissionConditionObjectiveCompletePrototype Proto => Prototype as MissionConditionObjectiveCompletePrototype;
-        protected override PrototypeId MissionProtoRef => Proto.MissionPrototype;
-        protected override long RequiredCount => Proto.Count;
-        public Action<AvatarEnteredRegionGameEvent> AvatarEnteredRegionAction { get; private set; }
-        public Action<PlayerCompletedMissionObjectiveGameEvent> PlayerCompletedMissionObjectiveAction { get; private set; }
-        public Action<MissionObjectiveUpdatedGameEvent> MissionObjectiveUpdatedAction { get; private set; }
+        private MissionConditionObjectiveCompletePrototype _proto;
+        protected override PrototypeId MissionProtoRef => _proto.MissionPrototype;
+        protected override long RequiredCount => _proto.Count;
+
+        private Action<AvatarEnteredRegionGameEvent> _avatarEnteredRegionAction;
+        private Action<PlayerCompletedMissionObjectiveGameEvent> _playerCompletedMissionObjectiveAction;
+        private Action<MissionObjectiveUpdatedGameEvent> _missionObjectiveUpdatedAction;
 
         public MissionConditionObjectiveComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            AvatarEnteredRegionAction = OnAvatarEnteredRegion;
-            PlayerCompletedMissionObjectiveAction = OnPlayerCompletedMissionObjective;
-            MissionObjectiveUpdatedAction = OnMissionObjectiveUpdated;
+            _proto = prototype as MissionConditionObjectiveCompletePrototype;
+            _avatarEnteredRegionAction = OnAvatarEnteredRegion;
+            _playerCompletedMissionObjectiveAction = OnPlayerCompletedMissionObjective;
+            _missionObjectiveUpdatedAction = OnMissionObjectiveUpdated;
         }
 
         public override bool OnReset()
@@ -30,15 +32,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private bool GetCompletion(bool creditTo)
         {
-            var proto = Proto;
-            if (proto == null) return false;
             Mission mission = GetMission();
             if (mission == null) return false;
 
             if (creditTo)
             {
                 var player = Player;
-                switch (proto.CreditTo)
+                switch (_proto.CreditTo)
                 {
                     case DistributionType.Participants:
 
@@ -53,42 +53,37 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
 
             var objectiveState = MissionObjectiveState.Invalid;
-            var objective = mission.GetObjectiveByObjectiveID(proto.ObjectiveID);
+            var objective = mission.GetObjectiveByObjectiveID(_proto.ObjectiveID);
             if (objective != null) objectiveState = objective.State;
             return objectiveState == MissionObjectiveState.Completed || mission.State == MissionState.Completed;
         }
 
         public override bool EvaluateOnReset()
         {
-            if (Prototype is not MissionConditionObjectiveCompletePrototype proto) return false;
-            if (proto.Count != 1) return false;
-            return proto.EvaluateOnReset;
+            if (_proto.Count != 1) return false;
+            return _proto.EvaluateOnReset;
         }
 
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            var proto = Proto;
-            if (proto == null) return;
 
-            region.PlayerCompletedMissionObjectiveEvent.AddActionBack(PlayerCompletedMissionObjectiveAction);
-            if (proto.EvaluateOnRegionEnter)
-                region.AvatarEnteredRegionEvent.AddActionBack(AvatarEnteredRegionAction);
-            if (proto.ShowCountFromTargetObjective)
-                region.MissionObjectiveUpdatedEvent.AddActionBack(MissionObjectiveUpdatedAction);
+            region.PlayerCompletedMissionObjectiveEvent.AddActionBack(_playerCompletedMissionObjectiveAction);
+            if (_proto.EvaluateOnRegionEnter)
+                region.AvatarEnteredRegionEvent.AddActionBack(_avatarEnteredRegionAction);
+            if (_proto.ShowCountFromTargetObjective)
+                region.MissionObjectiveUpdatedEvent.AddActionBack(_missionObjectiveUpdatedAction);
         }
 
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            var proto = Proto;
-            if (proto == null) return;
 
-            region.PlayerCompletedMissionObjectiveEvent.RemoveAction(PlayerCompletedMissionObjectiveAction);
-            if (proto.EvaluateOnRegionEnter)
-                region.AvatarEnteredRegionEvent.RemoveAction(AvatarEnteredRegionAction);
-            if (proto.ShowCountFromTargetObjective)
-                region.MissionObjectiveUpdatedEvent.RemoveAction(MissionObjectiveUpdatedAction);
+            region.PlayerCompletedMissionObjectiveEvent.RemoveAction(_playerCompletedMissionObjectiveAction);
+            if (_proto.EvaluateOnRegionEnter)
+                region.AvatarEnteredRegionEvent.RemoveAction(_avatarEnteredRegionAction);
+            if (_proto.ShowCountFromTargetObjective)
+                region.MissionObjectiveUpdatedEvent.RemoveAction(_missionObjectiveUpdatedAction);
         }
 
         private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
