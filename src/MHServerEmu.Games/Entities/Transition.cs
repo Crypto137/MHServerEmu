@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -10,12 +11,6 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
-    public enum WaypointPrototypeId : ulong
-    {
-        NPEAvengersTowerHub = 10137590415717831231,
-        AvengersTowerHub = 15322252936284737788,
-    }
-
     public class Transition : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -100,16 +95,17 @@ namespace MHServerEmu.Games.Entities
 
                     PrototypeId targetRegionProtoRef = destination.RegionRef;
 
-                    // TODO: Additional checks if we need to transfer
+                    // Check if our target is outside of the current region and we need to do a remote teleport
+                    // TODO: Additional checks if we need to transfer (e.g. when transferring to another instance of the same region proto).
                     if (targetRegionProtoRef != PrototypeId.Invalid && region.PrototypeDataRef != targetRegionProtoRef)
-                        return TeleportToTarget(player, destination.TargetRef);
+                        return TeleportToRemoteTarget(player, destination.TargetRef);
 
-                    Transition targetTransition = region.FindTransition(destination.AreaRef, destination.CellRef, destination.EntityRef);
-                    return TeleportToTransition(player, targetTransition);
+                    // No need to transfer if we are already in the target region
+                    return TeleportToLocalTarget(player, destination.TargetRef);
 
                 case RegionTransitionType.TowerUp:
                 case RegionTransitionType.TowerDown:
-                    return TeleportToTransition(player, player.Game.EntityManager.GetEntity<Transition>(_destinationList[0].EntityId));
+                    return TeleportToTransition(player, _destinationList[0].EntityId);
 
                 case RegionTransitionType.Waypoint:
                     // TODO: Unlock waypoint
@@ -123,15 +119,41 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool TeleportToTarget(Player player, PrototypeId targetProtoRef)
+        private static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
         {
-            Logger.Trace($"TeleportToRegion(): Destination region [{targetProtoRef.GetNameFormatted()}]");
+            Logger.Trace($"TeleportToRemoteTarget(): targetProtoRef={targetProtoRef.GetNameFormatted()}");
             player.PlayerConnection.MoveToTarget(targetProtoRef);
             return true;
         }
 
-        private static bool TeleportToTransition(Player player, Transition transition)
+        private static bool TeleportToLocalTarget(Player player, PrototypeId targetProtoRef)
         {
+            var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): targetProto == null");
+
+            Region region = player.GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): region == null");
+
+            Vector3 position = Vector3.Zero;
+            Orientation orientation = Orientation.Zero;
+
+            if (region.FindTargetLocation(ref position, ref orientation,
+                targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity) == false)
+            {
+                return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find target location for target {targetProtoRef.GetName()}");
+            }
+
+            player.SendMessage(NetMessageOneTimeSnapCamera.DefaultInstance);    // Disables camera interpolation for movement
+
+            ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(position, orientation, ChangePositionFlags.Teleport);
+            return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
+        }
+
+        private static bool TeleportToTransition(Player player, ulong transitionEntityId)
+        {
+            // This looks quite similar to TeleportToLocalTarget(), maybe we should merge them
+
+            Transition transition = player.Game.EntityManager.GetEntity<Transition>(transitionEntityId);
             if (transition == null) return Logger.WarnReturn(false, "TeleportToTransition(): transition == null");
 
             TransitionPrototype transitionProto = transition.TransitionPrototype;
@@ -139,7 +161,7 @@ namespace MHServerEmu.Games.Entities
 
             Vector3 targetPos = transition.RegionLocation.Position;
             Orientation targetRot = transition.RegionLocation.Orientation;
-            transitionProto.CalcSpawnOffset(ref targetRot, ref targetPos);
+            targetPos += transitionProto.CalcSpawnOffset(targetRot);
 
             uint cellId = transition.Properties[PropertyEnum.MapCellId];
             uint areaId = transition.Properties[PropertyEnum.MapAreaId];

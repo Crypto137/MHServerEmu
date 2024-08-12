@@ -440,7 +440,7 @@ namespace MHServerEmu.Games.Regions
                 PrototypeId markerEntityProtoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                 if (markerEntityProtoRef == entityProtoRef)
                 {
-                    markerPos = CalcMarkerPosition(marker.Position);
+                    markerPos = CalcMarkerPosition(marker.Position) + TransitionPrototype.CalcSpawnOffset(entityMarker);
                     markerRot = entityMarker.Rotation;
                     return true;
                 }

@@ -89,12 +89,7 @@ namespace MHServerEmu.Games.Network
             }
 
             if (region.FindTargetLocation(ref position, ref orientation, DestTargetAreaProtoRef, DestTargetCellProtoRef, DestTargetEntityProtoRef))
-            {
-                var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(DestTargetEntityProtoRef);
-                if (teleportEntity != null && teleportEntity.SpawnOffset > 0)
-                    teleportEntity.CalcSpawnOffset(ref orientation, ref position);
                 return true;
-            }
 
             // Fall back to the center of the first cell in the start area if all else fails
             position = startArea.Cells.First().Value.RegionBounds.Center;
