@@ -1,5 +1,6 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Regions
@@ -70,6 +71,36 @@ namespace MHServerEmu.Games.Regions
         {
             Broadcaster = broadcaster;
             Blackboard = blackboard;
+        }
+    }
+
+    public struct PlayerCraftedItemGameEvent
+    {
+        public Player Player;
+        public Item Item;
+        public PrototypeId RecipeRef;
+        public int Count;
+
+        public PlayerCraftedItemGameEvent(Player player, Item item, PrototypeId recipeRef, int count)
+        {
+            Player = player;
+            Item = item;
+            RecipeRef = recipeRef;
+            Count = count;
+        }
+    }
+
+    public struct PlayerBoughtItemGameEvent
+    {
+        public Player Player;
+        public Item Item;
+        public int Count;
+
+        public PlayerBoughtItemGameEvent(Player player, Item item, int count)
+        {
+            Player = player;
+            Item = item;
+            Count = count;
         }
     }
 
