@@ -74,6 +74,20 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerDonatedItemGameEvent
+    {
+        public Player Player;
+        public Item Item;
+        public int Count;
+
+        public PlayerDonatedItemGameEvent(Player player, Item item, int count)
+        {
+            Player = player;
+            Item = item;
+            Count = count;
+        }
+    }
+
     public struct PlayerCraftedItemGameEvent
     {
         public Player Player;
