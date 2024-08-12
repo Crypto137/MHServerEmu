@@ -133,6 +133,30 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct LoadingScreenFinishedGameEvent
+    {
+        public Player Player;
+        public PrototypeId RegionRef;
+
+        public LoadingScreenFinishedGameEvent(Player player, PrototypeId regionRef)
+        {
+            Player = player;
+            RegionRef = regionRef;
+        }
+    }
+
+    public struct CinematicFinishedGameEvent
+    {
+        public Player Player;
+        public PrototypeId MovieRef;
+
+        public CinematicFinishedGameEvent(Player player, PrototypeId movieRef)
+        {
+            Player = player;
+            MovieRef = movieRef;
+        }
+    }
+
     public struct ActiveChapterChangedGameEvent
     {
         public Player Player;
