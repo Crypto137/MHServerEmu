@@ -8,7 +8,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -23,8 +22,7 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
-            PrototypeId avengersTowerHubEntryProtoRef = (PrototypeId)16780605467179883619;
-            playerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, avengersTowerHubEntryProtoRef);
+            playerConnection.MoveToTarget((PrototypeId)16780605467179883619);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -41,9 +39,7 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             // Regions/Story/CH04EastSide/UpperEastSide/PoliceDepartment/Portals/JailTarget.prototype
-            PrototypeId startTarget = (PrototypeId)13284513933487907420;
-
-            playerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.UpperEastSideRegion, startTarget);
+            playerConnection.MoveToTarget((PrototypeId)13284513933487907420);
 
             return "Travel to East Side: Detention Facility (old)";
         }

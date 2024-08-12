@@ -896,7 +896,7 @@ namespace MHServerEmu.Games.Entities
 
         #region Loading and Teleports
 
-        public void QueueLoadingScreen(PrototypeId regionProtoRef, bool sendImmediately = false)
+        public void QueueLoadingScreen(PrototypeId regionProtoRef)
         {
             IsOnLoadingScreen = true;
 

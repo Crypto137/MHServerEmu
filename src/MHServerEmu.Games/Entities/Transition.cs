@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Entities
 
                     // TODO: Additional checks if we need to transfer
                     if (targetRegionProtoRef != PrototypeId.Invalid && region.PrototypeDataRef != targetRegionProtoRef)
-                        return TeleportToRegion(player, destination.RegionRef, destination.TargetRef);
+                        return TeleportToTarget(player, destination.TargetRef);
 
                     Transition targetTransition = region.FindTransition(destination.AreaRef, destination.CellRef, destination.EntityRef);
                     return TeleportToTransition(player, targetTransition);
@@ -123,10 +123,10 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool TeleportToRegion(Player player, PrototypeId regionProtoRef, PrototypeId targetProtoRef)
+        private static bool TeleportToTarget(Player player, PrototypeId targetProtoRef)
         {
-            Logger.Trace($"TeleportToRegion(): Destination region {regionProtoRef.GetNameFormatted()} [{targetProtoRef.GetNameFormatted()}]");
-            player.PlayerConnection.MoveToRegion(regionProtoRef, targetProtoRef);
+            Logger.Trace($"TeleportToRegion(): Destination region [{targetProtoRef.GetNameFormatted()}]");
+            player.PlayerConnection.MoveToTarget(targetProtoRef);
             return true;
         }
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO: Teleport to the last saved hub
             Logger.Trace($"TeleportToLastTown(): Destination LastTown");
-            player.PlayerConnection.MoveToRegion((PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub);
+            player.PlayerConnection.MoveToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
             return true;
         }
     }

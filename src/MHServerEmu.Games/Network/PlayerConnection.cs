@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            _dbAccount.Player.RawRegion = (long)TransferParams.DestRegionProtoRef;
+            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // REMOVEME: we no longer use this
             _dbAccount.Player.RawWaypoint = (long)TransferParams.DestTargetProtoRef;
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
@@ -101,7 +101,9 @@ namespace MHServerEmu.Games.Network
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
             // Initialize transfer params
-            TransferParams.SetPersistentData((PrototypeId)_dbAccount.Player.RawRegion, (PrototypeId)_dbAccount.Player.RawWaypoint);
+            // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
+            // We should get rid of saving waypoint refs and just use connection targets.
+            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
@@ -219,15 +221,17 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
 
-        public void MoveToRegion(PrototypeId regionProtoRef, PrototypeId targetProtoRef)
+        public void MoveToTarget(PrototypeId targetProtoRef)
         {
+            // Simulate exiting and re-entering the game on a real GIS
             ExitGame();
 
-            TransferParams.DestRegionProtoRef = regionProtoRef;
-            TransferParams.DestTargetProtoRef = targetProtoRef;
+            // Update our target
+            TransferParams.SetTarget(targetProtoRef);
 
-            Player.QueueLoadingScreen(TransferParams.DestRegionProtoRef, true);
-
+            // The message for the loading screen we are queueing here will be flushed to the client
+            // as soon as we set the connection as pending to keep things nice and responsive.
+            Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
             Game.NetworkManager.SetPlayerConnectionPending(this);
         }
 
@@ -243,7 +247,7 @@ namespace MHServerEmu.Games.Network
             // Clear region interest by setting it to invalid region, we still keep our owned entities
             AOI.SetRegion(0, false, null, null);
 
-            PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
+            PrototypeId regionProtoRef = TransferParams.DestTargetRegionProtoRef;
 
             Player.QueueLoadingScreen(regionProtoRef);
 
@@ -751,10 +755,9 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"Received UseWaypoint message");
             Logger.Trace(useWaypoint.ToString());
 
-            PrototypeId destinationRegion = (PrototypeId)useWaypoint.RegionProtoId;
-            PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
+            // TODO: Do the usual interaction validation
 
-            MoveToRegion(destinationRegion, waypointDataRef);
+            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef);
             return true;
         }
 
