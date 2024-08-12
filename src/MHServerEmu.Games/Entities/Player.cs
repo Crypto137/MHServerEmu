@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
         public bool IsOnLoadingScreen { get; set; }
-
+        public bool IsFullscreenObscured { get => IsFullscreenMoviePlaying || IsOnLoadingScreen; }
         // Network
         public PlayerConnection PlayerConnection { get; private set; }
 
@@ -1034,7 +1034,7 @@ namespace MHServerEmu.Games.Entities
         {
             Avatar avatar = PrimaryAvatar ?? SecondaryAvatar;
             if (avatar != null && allianceProto != null && allianceProto.IsFriendlyTo(avatar.Alliance)) return true;
-            if (IsFullscreenMoviePlaying || IsOnLoadingScreen) return false;
+            if (IsFullscreenObscured) return false;
             if (Properties[PropertyEnum.GracePeriod]) return false;
             return true;
         }

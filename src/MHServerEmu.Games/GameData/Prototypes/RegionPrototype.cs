@@ -283,6 +283,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
 
+        public bool HasKeyword(PrototypeId keywordRef)
+        {
+            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+            return HasKeyword(keywordProto);
+        }
+
         public bool AllowRaids()
         {
             var globalsProto = GameDatabase.GlobalsPrototype;

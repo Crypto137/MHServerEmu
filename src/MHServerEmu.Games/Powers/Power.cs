@@ -2229,7 +2229,7 @@ namespace MHServerEmu.Games.Powers
                     if (regionKeywordRef == PrototypeId.Invalid)
                         Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUsePreventInRegionKwd!\n Power Prototype: {powerProto}");
 
-                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()))
+                    if (regionPrototype.HasKeyword(regionKeywordRef))
                         return false;
                 }
 
@@ -2243,7 +2243,7 @@ namespace MHServerEmu.Games.Powers
                     if (regionKeywordRef == PrototypeId.Invalid)
                         Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUseRequiresRegionKwd!\n Power Prototype: {powerProto}");
 
-                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()) == false)
+                    if (regionPrototype.HasKeyword(regionKeywordRef) == false)
                         return false;
                 }
             }
