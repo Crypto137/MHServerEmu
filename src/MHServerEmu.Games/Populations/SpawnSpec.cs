@@ -298,6 +298,16 @@ namespace MHServerEmu.Games.Populations
             State = SpawnState.Defeated;
             // TODO kill entity
         }
+
+        public Region GetRegion()
+        {
+            return PopulationManager?.Region;
+        }
+
+        public Area GetArea()
+        {
+            return GetRegion()?.GetAreaAtPosition(Transform.Translation);
+        }
     }
 
     public enum SpawnGroupEntityQueryFilterFlags

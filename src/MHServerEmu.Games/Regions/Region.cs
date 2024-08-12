@@ -164,6 +164,7 @@ namespace MHServerEmu.Games.Regions
         public Event<AvatarLeveledUpGameEvent> AvatarLeveledUpEvent = new();
         public Event<CurrencyCollectedGameEvent> CurrencyCollectedEvent = new();
         public Event<EmotePerformedGameEvent> EmotePerformedEvent = new();
+        public Event<ClusterEnemiesClearedGameEvent> ClusterEnemiesClearedEvent = new();
         public Event<EntityStatusEffectGameEvent> EntityStatusEffectEvent = new();
         public Event<PlayerUnlockedAvatarGameEvent> PlayerUnlockedAvatarEvent = new();
         public Event<EntityEnteredWorldGameEvent> EntityEnteredWorldEvent = new();
@@ -1443,6 +1444,14 @@ namespace MHServerEmu.Games.Regions
         {
             if (Prototype == null) return false;
             return Prototype.FilterRegion(filterRegionRef, includeChildren, regionsExclude);
+        }
+
+        public bool FilterRegions(PrototypeId[] filterRegions)
+        {
+            if (Prototype == null || filterRegions.IsNullOrEmpty()) return false; 
+            foreach (var regionRef in filterRegions)
+                if (Prototype.FilterRegion(regionRef, false, null)) return true;
+            return false;
         }
 
         public void OnAddToAOI(Player player)

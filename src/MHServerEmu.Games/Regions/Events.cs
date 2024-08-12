@@ -2,6 +2,7 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Populations;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -20,6 +21,18 @@ namespace MHServerEmu.Games.Regions
     public struct EntityDeadGameEvent
     {
         public WorldEntity Defender;
+    }
+
+    public struct ClusterEnemiesClearedGameEvent
+    {
+        public SpawnGroup SpawnGroup;
+        public WorldEntity Killer;
+
+        public ClusterEnemiesClearedGameEvent(SpawnGroup spawnGroup, WorldEntity killer)
+        {
+            SpawnGroup = spawnGroup;
+            Killer = killer;
+        }
     }
 
     public struct EntityEnteredWorldGameEvent
