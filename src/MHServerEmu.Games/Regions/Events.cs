@@ -118,6 +118,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerEquippedItemGameEvent
+    {
+        public Player Player;
+        public Item Item;
+
+        public PlayerEquippedItemGameEvent(Player player, Item item)
+        {
+            Player = player;
+            Item = item;
+        }
+    }
+
     public struct PlayerInteractGameEvent
     {
         public Player Player;
