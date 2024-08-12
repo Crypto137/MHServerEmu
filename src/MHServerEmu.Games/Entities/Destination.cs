@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Entities
         private PrototypeId _cellRef;
         private PrototypeId _entityRef;
         private PrototypeId _targetRef;
-        private int _unk2;
+        private int _uiSortOrder;
         private string _name;
         private LocaleStringId _nameId;
         private ulong _regionId;
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId CellRef { get => _cellRef; set => _cellRef = value; }
         public PrototypeId EntityRef { get => _entityRef; set => _entityRef = value; }
         public PrototypeId TargetRef { get => _targetRef; set => _targetRef = value; }
-        public int Unk2 { get => _unk2; set => _unk2 = value; }
+        public int UISortOrder { get => _uiSortOrder; set => _uiSortOrder = value; }
         public string Name { get => _name; set => _name = value; }
         public LocaleStringId NameId { get => _nameId; set => _nameId = value; }
         public ulong RegionId { get => _regionId; set => _regionId = value; }
@@ -44,25 +44,6 @@ namespace MHServerEmu.Games.Entities
         {
             _position = Vector3.Zero;
             _name = string.Empty;
-        }
-
-        public Destination(RegionTransitionType type, PrototypeId regionRef, PrototypeId areaRef, PrototypeId cellRef, PrototypeId entityRef, PrototypeId targetRef,
-            int unk2, string name, LocaleStringId nameId, ulong regionId,
-            Vector3 position, ulong entityId, ulong unkId2)
-        {
-            _type = type;
-            _regionRef = regionRef;
-            _areaRef = areaRef;
-            _cellRef = cellRef;
-            _entityRef = entityRef;
-            _targetRef = targetRef;
-            _unk2 = unk2;
-            _name = name;
-            _nameId = nameId;
-            _regionId = regionId;
-            _position = position;
-            _entityId = entityId;
-            _unkId2 = unkId2;
         }
 
         public bool Serialize(Archive archive)
@@ -78,7 +59,7 @@ namespace MHServerEmu.Games.Entities
             success &= Serializer.Transfer(archive, ref _cellRef);
             success &= Serializer.Transfer(archive, ref _entityRef);
             success &= Serializer.Transfer(archive, ref _targetRef);
-            success &= Serializer.Transfer(archive, ref _unk2);
+            success &= Serializer.Transfer(archive, ref _uiSortOrder);
             success &= Serializer.Transfer(archive, ref _name);
             success &= Serializer.Transfer(archive, ref _nameId);
             success &= Serializer.Transfer(archive, ref _regionId);
@@ -94,12 +75,12 @@ namespace MHServerEmu.Games.Entities
             StringBuilder sb = new();
 
             sb.AppendLine($"{nameof(_type)}: {_type}");
-            sb.AppendLine($"{nameof(_regionRef)}: {GameDatabase.GetPrototypeName(_regionRef)}");
-            sb.AppendLine($"{nameof(_areaRef)}: {GameDatabase.GetPrototypeName(_areaRef)}");
-            sb.AppendLine($"{nameof(_cellRef)}: {GameDatabase.GetPrototypeName(_cellRef)}");
-            sb.AppendLine($"{nameof(_entityRef)}: {GameDatabase.GetPrototypeName(_entityRef)}");
-            sb.AppendLine($"{nameof(_targetRef)}: {GameDatabase.GetPrototypeName(_targetRef)}");
-            sb.AppendLine($"{nameof(_unk2)}: {_unk2}");
+            sb.AppendLine($"{nameof(_regionRef)}: {_regionRef.GetName()}");
+            sb.AppendLine($"{nameof(_areaRef)}: {_areaRef.GetName()}");
+            sb.AppendLine($"{nameof(_cellRef)}: {_cellRef.GetName()}");
+            sb.AppendLine($"{nameof(_entityRef)}: {_entityRef.GetName()}");
+            sb.AppendLine($"{nameof(_targetRef)}: {_targetRef.GetName()}");
+            sb.AppendLine($"{nameof(_uiSortOrder)}: {_uiSortOrder}");
             sb.AppendLine($"{nameof(_name)}: {_name}");
             sb.AppendLine($"{nameof(_nameId)}: {_nameId}");
             sb.AppendLine($"{nameof(_regionId)}: {_regionId}");
@@ -113,27 +94,28 @@ namespace MHServerEmu.Games.Entities
         public static Destination FindDestination(Cell cell, TransitionPrototype transitionProto)
         {
             if (cell == null) return null;
+
             PrototypeId area = cell.Area.PrototypeDataRef;
             Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
-            ConnectionNodeList targets = region.Targets;
-            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeDataRef, entityGuid);
-            if (node != null)
-                return DestinationFromTarget(node.TargetId, region, transitionProto);
-            return null;
+
+            TargetObject node = RegionTransition.GetTargetNode(region.Targets, area, cell.PrototypeDataRef, entityGuid);
+            if (node == null) return null;
+
+            return DestinationFromTarget(node.TargetId, region, transitionProto);
         }
 
         public static Destination DestinationFromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
         {
             var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
 
-            var cellAssetId = regionConnectionTarget.Cell;
-            var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
+            AssetId cellAssetId = regionConnectionTarget.Cell;
+            PrototypeId cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
 
-            var targetRegionRef = regionConnectionTarget.Region;
-            var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
+            PrototypeId targetRegionRef = regionConnectionTarget.Region;
+            var targetRegionProto = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
             
-            if (RegionPrototype.Equivalent(targetRegion, region.Prototype))
+            if (RegionPrototype.Equivalent(targetRegionProto, region.Prototype))
                 targetRegionRef = region.PrototypeDataRef;
 
             Destination destination = new()

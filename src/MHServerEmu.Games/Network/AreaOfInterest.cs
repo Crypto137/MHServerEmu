@@ -5,6 +5,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -36,8 +37,8 @@ namespace MHServerEmu.Games.Network
 
         private readonly Stack<EntityTrackingUpdate> _entityUpdateStack = new(64);
 
-        private PlayerConnection _playerConnection;
-        private Game _game;
+        private readonly PlayerConnection _playerConnection;
+        private readonly Game _game;
 
         private ulong _currentFrame = 0;
         private Vector3 _lastUpdatePosition = new();
@@ -52,8 +53,8 @@ namespace MHServerEmu.Games.Network
         private PrototypeId _lastCameraSetting;
 
         public Region Region { get; private set; }
-        public int CellsInRegion { get; set; }
-        public int LoadedCellCount { get; set; } = 0;
+        public ulong RegionId { get => Region != null ? Region.Id : 0; }
+        public int TrackedCellCount { get => _trackedCells.Count; }
         public int TrackedEntitiesCount { get => _trackedEntities.Count; }
         public float AOIVolume { get => _aoiVolume; set => SetAOIVolume(value); }
 
@@ -96,6 +97,7 @@ namespace MHServerEmu.Games.Network
 
         public void Update(Vector3 position, bool forceUpdate = false, bool isStart = false)
         {
+            Region?.UpdateLastVisitedTime();
             _currentFrame++;
 
             // Unless forceUpdate is set, we update only when we move far enough from the last update position.
@@ -166,27 +168,94 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        public void SetRegion(Region region)
+        public bool SetRegion(ulong regionId, bool clearingAllInterest, in Vector3? startPosition = null, in Orientation? startOrientation = null)
         {
-            // TEMP
-            Region = region;
-        }
+            // TODO: Trigger callbacks for
+            // - Mission updates
+            // - Discover avatars in our destination region
 
-        public void Reset()
-        {
-            _trackedAreas.Clear();
-            _trackedCells.Clear();
+            Region region = null;
+            Player player = _playerConnection.Player;
 
-            foreach (var kvp in _trackedEntities)
+            if (regionId != 0)
             {
-                Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
-                if (entity != null)
-                    SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+                // Ignore region set requests unless they are clear requests or they are different from the current region
+                if (regionId == RegionId)
+                    return true;
+
+                // If we are not clearing region interest with an invalid region id, we need to have a valid region here
+                region = _game.RegionManager.GetRegion(regionId);
+                if (region == null) return Logger.WarnReturn(false, "SetRegion(): region == null");
             }
 
-            _currentFrame = 0;
-            CellsInRegion = 0;
-            _lastCameraSetting = 0;
+            // TODO: Notify the current region that we are leaving
+
+            // Reset previous state
+            Region = region;
+            _lastUpdatePosition = Vector3.Zero;
+
+            // FIXME: This is based on our older hacks, check if this works correctly
+            if (clearingAllInterest)
+            {
+                _trackedAreas.Clear();
+                _trackedCells.Clear();
+
+                foreach (var kvp in _trackedEntities)
+                {
+                    Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
+                    if (entity != null)
+                        SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+                }
+
+                _currentFrame = 0;
+                _lastCameraSetting = 0;
+            }
+
+            // Fill in required region change message fields
+            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(regionId)
+                .SetServerGameId(_game.Id)
+                .SetClearingAllInterest(clearingAllInterest);
+
+            // Add additional region metadata if we have a valid region
+            if (region != null)
+            {
+                regionChangeBuilder.SetRegionPrototypeId((ulong)region.PrototypeDataRef)
+                    .SetRegionRandomSeed(region.RandomSeed)
+                    .SetRegionMin(region.Aabb.Min.ToNetStructPoint3())
+                    .SetRegionMax(region.Aabb.Max.ToNetStructPoint3())
+                    .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
+                        .SetLevel((uint)region.RegionLevel)
+                        .SetDifficultyTierProtoId((ulong)region.DifficultyTierRef));
+
+                // Can add EntitiesToDestroy here
+
+                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+                {
+                    region.Serialize(archive);
+                    regionChangeBuilder.SetArchiveData(archive.ToByteString());
+                }
+
+                player.QueueLoadingScreen(region.PrototypeDataRef);
+            }
+
+            SendMessage(regionChangeBuilder.Build());
+
+            // TODO?: Prefetch other regions
+
+            // Teleport the player into our destination region if we have one
+            if (region != null)
+            {
+                if (startPosition == null)
+                    return Logger.WarnReturn(false, "SetRegion(): No valid start position is provided");
+
+                // BeginTeleport() queues another loading screen, so we end up with two in a row. This matches our packet dumps.
+                player.BeginTeleport(regionId, startPosition.Value, startOrientation != null ? startOrientation.Value : Orientation.Zero);
+                Region = region;
+                Update(startPosition.Value, true, true);
+            }
+
+            return true;
         }
 
         public bool InterestedInArea(uint areaId)
@@ -208,20 +277,62 @@ namespace MHServerEmu.Games.Network
             return (interestPolicies & interestFilter) != AOINetworkPolicyValues.AOIChannelNone;
         }
 
-        public bool OnCellLoaded(uint cellId)
+        public bool ContainsPosition(in Vector3 position)
         {
-            if (_trackedCells.TryGetValue(cellId, out CellInterestStatus cell) == false)
-                Logger.WarnReturn(false, $"OnCellLoaded(): Loaded cell id {cell} is not being tracked!");
+            if (Region == null) return false;
 
-            LoadedCellCount++;
+            // Check all tracked areas
+            foreach (var areaKvp in _trackedAreas)
+            {
+                Area area = Region.GetAreaById(areaKvp.Key);
+                if (area == null)
+                {
+                    Logger.Warn("ContainsPosition(): area == null");
+                    continue;
+                }
+
+                // Skip areas that don't contain our position
+                if (area.IntersectsXY(position) == false)
+                    continue;
+
+                foreach (var cellKvp in area.Cells)
+                {
+                    // Skip untracked and unloaded cells
+                    if (InterestedInCell(cellKvp.Key) == false)
+                        continue;
+
+                    // Check if the cell contains requested position
+                    if (cellKvp.Value.IntersectsXY(position))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool OnCellLoaded(uint cellId, ulong regionId)
+        {
+            if (regionId != RegionId)
+                return Logger.WarnReturn(false, $"OnCellLoaded(): Region id=0x{regionId:X} does not match tracked region id 0x{RegionId:X}");
+
+            if (_trackedCells.ContainsKey(cellId) == false)
+                return Logger.WarnReturn(false, $"OnCellLoaded(): Loaded cell id={cellId} is not being tracked!");
+
             _trackedCells[cellId] = new(_currentFrame, true);
             return true;
         }
 
-        public void ForceCellLoad()
+        public int GetLoadedCellCount()
         {
-            foreach (var kvp in _trackedCells.Where(kvp => kvp.Value.IsLoaded == false))
-                _trackedCells[kvp.Key] = new(_currentFrame, true);
+            int numLoaded = 0;
+
+            foreach (CellInterestStatus cellInterest in _trackedCells.Values)
+            {
+                if (cellInterest.IsLoaded)
+                    numLoaded++;
+            }
+
+            return numLoaded;
         }
 
         public string DebugPrint()
@@ -295,7 +406,6 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            CellsInRegion = _trackedCells.Count;
             return environmentUpdate;
         }
 
@@ -439,7 +549,6 @@ namespace MHServerEmu.Games.Network
             }
 
             _trackedCells.Remove(cell.Id);
-            LoadedCellCount--;
         }
 
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
@@ -664,10 +773,6 @@ namespace MHServerEmu.Games.Network
 
             AOINetworkPolicyValues currentInterestPolicies = GetCurrentInterestPolicies(entity.Id);
 
-            // Do not add dead entities to AOI that weren't there already
-            if (entity.IsDead && currentInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
-                return AOINetworkPolicyValues.AOIChannelNone;
-
             // Filter out missiles that are simulated by the client on its own
             if (currentInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelClientIndependent))
                 return AOINetworkPolicyValues.AOIChannelClientIndependent;
@@ -690,6 +795,10 @@ namespace MHServerEmu.Games.Network
 
             if (entity is WorldEntity worldEntity)
             {
+                // Do not add dead non-destructible entities to AOI that weren't there already
+                if (worldEntity.IsDead && worldEntity.IsDestructible == false && currentInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
+                    return AOINetworkPolicyValues.AOIChannelNone;
+
                 // Validate that the entity's location is valid on the client before including it in the proximity channel
                 if (worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false
                     && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))

@@ -51,7 +51,8 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            playerConnection.AOI.Update(playerConnection.LastPosition, true);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            playerConnection.AOI.Update(avatar.RegionLocation.Position, true);
 
             return "AOI updated.";
         }

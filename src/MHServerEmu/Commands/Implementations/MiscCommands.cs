@@ -5,12 +5,9 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -23,7 +20,9 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)WaypointPrototypeId.AvengersTowerHub);
+
+            // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
+            playerConnection.MoveToTarget((PrototypeId)16780605467179883619);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -38,7 +37,9 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, (PrototypeId)RegionPrototypeId.UpperEastSideRegion, (PrototypeId)TargetPrototypeId.JailTarget);
+
+            // Regions/Story/CH04EastSide/UpperEastSide/PoliceDepartment/Portals/JailTarget.prototype
+            playerConnection.MoveToTarget((PrototypeId)13284513933487907420);
 
             return "Travel to East Side: Detention Facility (old)";
         }
@@ -53,8 +54,9 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            return $"Current position: {playerConnection.LastPosition.ToStringNames()}";
+            return $"Current position: {avatar.RegionLocation.Position.ToStringNames()}";
         }
     }
 
@@ -112,6 +114,9 @@ namespace MHServerEmu.Commands.Implementations
             if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
 
             float x = 0f, y = 0f, z = 0f;
             foreach (string param in @params)
@@ -138,11 +143,9 @@ namespace MHServerEmu.Commands.Implementations
             Vector3 teleportPoint = new(x, y, z);
 
             if (@params.Length < 3)
-                teleportPoint += playerConnection.LastPosition;
+                teleportPoint += avatar.RegionLocation.Position;
 
-            EventPointer<OLD_ToTeleportEvent> eventPointer = new();
-            game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-            eventPointer.Get().Initialize(playerConnection, teleportPoint);
+            avatar.ChangeRegionPosition(teleportPoint, null, ChangePositionFlags.Teleport);
 
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }

@@ -1,12 +1,10 @@
-﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.DRAG.Generators.Regions
 {
     public class ConnectionNodeList : List<TargetObject> { }
+
     public class TargetObject
     {
         public PrototypeGuid Entity { get; set; }
@@ -17,48 +15,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
     public class RegionTransition
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public RegionTransition() { }
-
-        public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
-        {
-            targetPos = region.GetStartArea().RegionBounds.Center; // default
-            targetRot = Orientation.Zero;
-            RegionConnectionTargetPrototype targetDest = null;
-
-            // Fall back to default start target for the region
-            if (targetRef == PrototypeId.Invalid)
-            {
-                targetRef = region.Prototype.StartTarget;
-                Logger.Warn($"FindStartPosition(): invalid targetRef, falling back to {GameDatabase.GetPrototypeName(targetRef)}");
-            }
-
-            Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
-
-            if (targetProto is WaypointPrototype waypointProto)
-            {
-                if (GetDestination(waypointProto, out RegionConnectionTargetPrototype targetDestination))
-                {
-                    targetRef = targetDestination.Entity;
-                    targetDest = targetDestination;
-                }
-                else return false;
-            }
-            else if (targetProto is RegionConnectionTargetPrototype targetDestination)
-            {
-                targetRef = targetDestination.Entity;
-                targetDest = targetDestination;
-            }
-
-            if (targetDest != null && region.FindTargetPosition(ref targetPos, ref targetRot, targetDest))
-            {
-                var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(targetRef);
-                if (teleportEntity != null && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
-                return true;
-            }
-            return false;
-        }
 
         public static TargetObject GetTargetNode(ConnectionNodeList targets, PrototypeId area, PrototypeId cell, PrototypeGuid entity)
         {
@@ -165,14 +122,6 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             }
 
             return found;
-        }
-
-        public static bool GetDestination(WaypointPrototype waypointProto, out RegionConnectionTargetPrototype target)
-        {
-            target = null;
-            if (waypointProto == null || waypointProto.Destination == 0) return false;
-            target = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
-            return target != null;
         }
     }
 

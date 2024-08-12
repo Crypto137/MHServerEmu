@@ -388,7 +388,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // Update interest policies for all players in the game (slow).
                 foreach (Player player in new PlayerIterator(Game))
-                    player.PlayerConnection.AOI.ConsiderEntity(this, settings);
+                    player.AOI.ConsiderEntity(this, settings);
             }
             else
             {
@@ -397,7 +397,7 @@ namespace MHServerEmu.Games.Entities
                 foreach (ulong playerId in InterestReferences.PlayerIds)
                 {
                     Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                    player?.PlayerConnection.AOI.ConsiderEntity(this, settings);
+                    player?.AOI.ConsiderEntity(this, settings);
                 }
             }
         }

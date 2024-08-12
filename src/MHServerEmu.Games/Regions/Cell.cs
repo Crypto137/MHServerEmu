@@ -427,22 +427,22 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetLocation(ref Vector3 markerPos, ref Orientation markerRot, PrototypeId entityProtoRef)
         {
-            if (Prototype != null && Prototype.InitializeSet.Markers.HasValue())
+            if (Prototype == null) return false;
+            if (Prototype.InitializeSet.Markers.IsNullOrEmpty()) return false;
+
+            foreach (MarkerPrototype marker in Prototype.InitializeSet.Markers)
             {
-                foreach (var marker in Prototype.InitializeSet.Markers)
+                if (marker is not EntityMarkerPrototype entityMarker)
+                    continue;
+
+                PrototypeId markerEntityProtoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                if (markerEntityProtoRef == entityProtoRef)
                 {
-                    if (marker is EntityMarkerPrototype entityMarker)
-                    {
-                        PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                        if (dataRef == target.Entity)
-                        {
-                            markerPos = CalcMarkerPosition(marker.Position);
-                            markerRot = entityMarker.Rotation;
-                            return true;
-                        }
-                    }
+                    markerPos = CalcMarkerPosition(marker.Position) + TransitionPrototype.CalcSpawnOffset(entityMarker);
+                    markerRot = entityMarker.Rotation;
+                    return true;
                 }
             }
 

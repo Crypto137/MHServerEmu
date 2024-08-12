@@ -4,6 +4,7 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
@@ -21,6 +22,9 @@ namespace MHServerEmu.Commands.Implementations
             PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client);
             if (regionProtoRef == PrototypeId.Invalid) return string.Empty;
 
+            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+            if (regionProto == null) return $"Failed to load region prototype for id {regionProtoRef}";
+
             string regionName = GameDatabase.GetPrototypeName(regionProtoRef);
 
             // Check for unsafe warps (regions that are potentially missing assets and can make the client get stuck)
@@ -29,7 +33,7 @@ namespace MHServerEmu.Commands.Implementations
                 return $"Unsafe warp destination: {regionName}.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, regionProtoRef, PrototypeId.Invalid);
+            playerConnection.MoveToTarget(regionProto.StartTarget);
             return $"Warping to {regionName}.";
         }
 
@@ -39,8 +43,10 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            game.MovePlayerToRegion(playerConnection, playerConnection.RegionDataRef, playerConnection.WaypointDataRef);
-            return $"Reloading region {GameDatabase.GetPrototypeName(playerConnection.RegionDataRef)}.";
+
+            playerConnection.MoveToTarget(playerConnection.TransferParams.DestTargetProtoRef);
+
+            return $"Reloading region {playerConnection.TransferParams.DestTargetRegionProtoRef.GetName()}.";
         }
 
         [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe", AccountUserLevel.Admin)]
