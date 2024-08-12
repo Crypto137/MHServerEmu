@@ -3012,9 +3012,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             }
                         }
                     }
-                    else if (proceduralPowerResult == StaticBehaviorReturnType.Failed || proceduralPowerResult == StaticBehaviorReturnType.Interrupted)
-                        ProceduralAI.Logger.Warn($"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\n" +
-                            $"Healer: {agent}\nObelisk: {assistedEntity}");
+                    //else if (proceduralPowerResult == StaticBehaviorReturnType.Failed || proceduralPowerResult == StaticBehaviorReturnType.Interrupted)
+                    //    ProceduralAI.Logger.Warn($"The obelisk healer's power failed or was interrupted when trying to heal the obelisk!\nResult: {proceduralPowerResult}\n" +
+                    //        $"Healer: {agent}\nObelisk: {assistedEntity}");
 
                     break;
             }
