@@ -73,7 +73,7 @@ namespace MHServerEmu.PlayerManagement
         {
             foreach (var kvp in _gameDict)
             {
-                kvp.Value.Shutdown(GameShutdownReason.ServerShuttingDown);
+                kvp.Value.RequestShutdown();
                 _gameDict.Remove(kvp.Key);  // Should be safe to remove while iterating as long as we use a dictionary
             }
         }

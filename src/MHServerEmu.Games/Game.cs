@@ -165,6 +165,14 @@ namespace MHServerEmu.Games
             HasBeenShutDown = true;
         }
 
+        public void RequestShutdown()
+        {
+            if (IsRunning == false || HasBeenShutDown)
+                return;
+
+            IsRunning = false;
+        }
+
         public void AddClient(FrontendClient client)
         {
             NetworkManager.AsyncAddClient(client);
@@ -268,14 +276,17 @@ namespace MHServerEmu.Games
 
             try
             {
-                while (true)
+                while (IsRunning)
                 {
                     Update();
                 }
+
+                Shutdown(GameShutdownReason.ServerShuttingDown);
             }
             catch (Exception e)
             {
-                HandleGameInstanceCrash(e);           
+                HandleGameInstanceCrash(e);
+                Shutdown(GameShutdownReason.GameInstanceCrash);
             }
         }
 
@@ -396,7 +407,6 @@ namespace MHServerEmu.Games
             }
 
             Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");
-            Shutdown(GameShutdownReason.GameInstanceCrash);
         }
     }
 }
