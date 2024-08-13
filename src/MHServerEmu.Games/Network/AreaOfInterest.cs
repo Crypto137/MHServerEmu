@@ -253,6 +253,15 @@ namespace MHServerEmu.Games.Network
                 player.BeginTeleport(regionId, startPosition.Value, startOrientation != null ? startOrientation.Value : Orientation.Zero);
                 Region = region;
                 Update(startPosition.Value, true, true);
+
+                // DEBUG - output all cells we need to load to find out what's causing infinite loading screens
+                StringBuilder sb = new($"SetRegion(): Requesting 0x{player.DatabaseUniqueId:X} to load {TrackedCellCount} cell(s): ");
+                foreach (var kvp in _trackedCells)
+                {
+                    Cell cell = region.GetCellbyId(kvp.Key);
+                    sb.Append($"{cell.PrototypeName}[{cell.Id}] ");
+                }
+                Logger.Debug(sb.ToString());
             }
 
             return true;
