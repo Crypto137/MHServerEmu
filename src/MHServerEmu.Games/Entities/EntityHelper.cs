@@ -133,29 +133,31 @@ namespace MHServerEmu.Games.Entities
 
             // Hack mode for Off Teleports / Blocker
             List<WorldEntity> blockers = new();
-            foreach (var entity in region.IterateEntitiesInVolume(region.Aabb, new()))
+
+            foreach (WorldEntity entity in region.IterateEntitiesInVolume(region.Aabb, new()))
             {
                 if (entity is Transition teleport)
                 {
-                    if (teleport.Destinations.Count > 0 && teleport.Destinations[0].Type == RegionTransitionType.Transition)
+                    Destination destination = teleport.Destinations.FirstOrDefault();
+                    if (destination == null) continue;
+                    if (destination.Type != RegionTransitionType.Transition) continue;
+
+                    var teleportProto = teleport.TransitionPrototype;
+                    if (teleportProto.VisibleByDefault == false) // To fix
                     {
-                        var teleportProto = teleport.TransitionPrototype;
-                        if (teleportProto.VisibleByDefault == false) // To fix
-                        {
-                            // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
-                            if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].TargetRef) == false)
-                                continue;
-
-                            if ((InvTarget)teleport.Destinations[0].TargetRef == InvTarget.NPEAvengersTowerHubEntry &&
-                                region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.NPERaftRegion)
-                                continue;
-
-                            PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
-                            entity.TEMP_ReplacePrototype(visibleParent);
+                        // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
+                        if (LockedTargets.Contains((InvTarget)destination.TargetRef) == false)
                             continue;
-                        }
-                        // Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
+
+                        if ((InvTarget)destination.TargetRef == InvTarget.NPEAvengersTowerHubEntry &&
+                            region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.NPERaftRegion)
+                            continue;
+
+                        PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
+                        entity.TEMP_ReplacePrototype(visibleParent);
+                        continue;
                     }
+                    // Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                 }
                 else if (Blockers.Contains((BlockerEntity)entity.PrototypeDataRef))
                 {
@@ -163,8 +165,9 @@ namespace MHServerEmu.Games.Entities
                 }
 
             }
-            foreach (var entity in blockers) entity.ExitWorld();
 
+            foreach (WorldEntity entity in blockers)
+                entity.ExitWorld();
         }
 
         private static PrototypeId GetVisibleParentRef(PrototypeId invisibleId)

@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Network
                 if (skipOwner && entity.IsOwnedBy(player.Id)) continue;
                 if (player.PlayerConnection == null) continue;  // This can happen during packet parsing
 
-                if (player.PlayerConnection.AOI.InterestedInEntity(entity.Id, interestFilter))
+                if (player.AOI.InterestedInEntity(entity.Id, interestFilter))
                     yield return player;
             }
         }
@@ -112,10 +112,13 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
-        /// Requests a player to be reloaded.
+        /// Requests a player to be loaded.
         /// </summary>
         public void SetPlayerConnectionPending(PlayerConnection playerConnection)
         {
+            // NOTE: We flush messages when we set the connection as pending so that
+            // we can deliver the loading screen message to the client ASAP.
+            playerConnection.FlushMessages();
             _pendingPlayerConnectionQueue.Enqueue(playerConnection);
         }
 

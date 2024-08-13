@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -122,6 +123,49 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return IsInPendingActionState(PendingActionState.FindingLandingSpot);
 
             return PendingActionState != PendingActionState.VariableActivation && PendingActionState != PendingActionState.AvatarSwitchInProgress;
+        }
+
+        public override ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        {
+            if (RegionLocation.IsValid() == false)
+                return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): Cannot change region position without entering the world first");
+
+            // We only need to do AOI processing if the avatar is changing its position
+            if (position == null)
+            {
+                if (orientation != null)
+                    return base.ChangeRegionPosition(position, orientation, flags);
+                else
+                    return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): No position or orientation provided");
+            }
+
+            // Get player for AOI update
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(ChangePositionResult.NotChanged, "ChangeRegionPosition(): player == null");
+
+            ChangePositionResult result;
+
+            if (player.AOI.ContainsPosition(position.Value))
+            {
+                // Do a normal position change and update AOI if the position is loaded
+                result = base.ChangeRegionPosition(position, orientation, flags);
+                if (result == ChangePositionResult.PositionChanged)
+                    player.AOI.Update(RegionLocation.Position);
+            }
+            else
+            {
+                // If we are moving outside of our AOI, start a teleport and exit world.
+                // The avatar will be put back into the world when all cells at the destination are loaded.
+                if (RegionLocation.Region.GetCellAtPosition(position.Value) == null)
+                    return Logger.WarnReturn(ChangePositionResult.InvalidPosition, $"ChangeRegionPosition(): Invalid position {position.Value}");
+
+                player.BeginTeleport(RegionLocation.RegionId, position.Value, orientation != null ? orientation.Value : Orientation.Zero);
+                ExitWorld();
+                player.AOI.Update(position.Value);
+                result = ChangePositionResult.Teleport;
+            }
+
+            return result;
         }
 
         #endregion
@@ -602,6 +646,42 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Interaction
+
+        public override bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
+
+            if (missionProtoRef != PrototypeId.Invalid)
+            {
+                // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
+                Logger.Debug($"UseInteractableObject(): missionProtoRef={missionProtoRef.GetName()}");
+                player.SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+            }
+
+            var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
+
+            Logger.Debug($"UseInteractableObject(): {this} => {interactableObject}");
+
+            if (interactableObject is Transition transition)
+            {
+                transition.UseTransition(player);
+            }
+            else
+            {
+                // REMOVEME
+                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
+                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
+                eventPointer.Get().Initialize(player, interactableObject);
+            }
+
+            return true;
+        }
+
+        #endregion
+
         #region Inventories
 
         public InventoryResult GetEquipmentInventoryAvailableStatus(PrototypeId invProtoRef)
@@ -792,6 +872,18 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
+
+            // Update AOI of the owner player
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+            {
+                Logger.Warn("OnEnteredWorld(): player == null");
+                return;
+            }
+
+            AreaOfInterest aoi = player.AOI;
+            aoi.Update(RegionLocation.Position, true);
+
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
         }
 

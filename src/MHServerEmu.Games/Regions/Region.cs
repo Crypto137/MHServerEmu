@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -21,7 +19,6 @@ using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -465,70 +462,6 @@ namespace MHServerEmu.Games.Regions
             return success;
         }
 
-        public List<IMessage> OLD_GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
-        {
-            // TODO: Move this to AOI
-
-            List<IMessage> messageList = new();
-
-            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(Id)
-                .SetServerGameId(serverGameId)
-                .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)PrototypeDataRef)
-                .SetRegionRandomSeed(RandomSeed)
-                .SetRegionMin(Aabb.Min.ToNetStructPoint3())
-                .SetRegionMax(Aabb.Max.ToNetStructPoint3())
-                .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
-                    .SetLevel((uint)RegionLevel)
-                    .SetDifficultyTierProtoId((ulong)DifficultyTierRef));
-
-            // can add EntitiesToDestroy here
-
-            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
-            {
-                Serialize(archive);
-                regionChangeBuilder.SetArchiveData(archive.ToByteString());
-            }
-
-            messageList.Add(regionChangeBuilder.Build());
-
-            // mission updates and entity creation happens here
-
-            // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeDataRef).Build());
-
-            // TODO: prefetch other regions
-
-            // Get startArea to load by Waypoint
-            Area startArea = GetStartArea();
-            if (startArea != null)
-            {
-                if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
-                {
-                    Vector3 position = playerConnection.EntityToTeleport.RegionLocation.Position;
-                    Orientation orientation = playerConnection.EntityToTeleport.RegionLocation.Orientation;
-                    if (playerConnection.EntityToTeleport.Prototype is TransitionPrototype teleportEntity
-                        && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(ref orientation, ref position);
-                    playerConnection.StartPosition = position;
-                    playerConnection.StartOrientation = orientation;
-                    playerConnection.EntityToTeleport = null;
-                }
-                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Orientation orientation))
-                {
-                    playerConnection.StartPosition = position;
-                    playerConnection.StartOrientation = orientation;
-                }
-                else
-                {
-                    playerConnection.StartPosition = _startArea.Cells.First().Value.RegionBounds.Center;
-                    playerConnection.StartOrientation = Orientation.Zero;
-                }
-            }
-
-            return messageList;
-        }
-
         #region Area Management
 
         public Area CreateArea(PrototypeId areaRef, Vector3 origin)
@@ -913,47 +846,44 @@ namespace MHServerEmu.Games.Regions
             return markerFilter == filterRef;
         }
 
-        public bool FindTargetPosition(ref Vector3 markerPos, ref Orientation markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetLocation(ref Vector3 markerPos, ref Orientation markerRot, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
+            Logger.Debug($"FindTargetLocation(): areaProtoRef={areaProtoRef.GetName()}, cellProtoRef={cellProtoRef.GetName()}, entityProtoRef={entityProtoRef.GetName()}");
+
             Area targetArea;
-
-            // Fix for the old Avengers Tower
-            if ((AreaPrototypeId)_startArea?.PrototypeDataRef == AreaPrototypeId.AvengersTowerHubArea)
-            {
-                markerPos = new(1589.0f, -2.0f, 180.0f);
-                markerRot = new(3.1415f, 0.0f, 0.0f);
-                return true;
-            }
-
-            var areaRef = target.Area;
 
             bool found = false;
 
-            // Has areaRef
-            if (areaRef != 0)
+            // If we have a valid area ref, search only that area
+            if (areaProtoRef != PrototypeId.Invalid)
             {
-                targetArea = GetArea(areaRef);
+                targetArea = GetArea(areaProtoRef);
                 if (targetArea != null)
-                    found = targetArea.FindTargetPosition(ref markerPos, ref markerRot, target);
+                    found = targetArea.FindTargetLocation(ref markerPos, ref markerRot, cellProtoRef, entityProtoRef);
             }
 
-            // Has the wrong areaRef
+            // Search all areas if we don't have a valid area ref
             if (found == false)
             {
                 foreach (Area area in IterateAreas())
                 {
                     targetArea = area;
-                    if (targetArea.FindTargetPosition(ref markerPos, ref markerRot, target))
+                    if (targetArea.FindTargetLocation(ref markerPos, ref markerRot, cellProtoRef, entityProtoRef))
                         return true;
                 }
             }
 
-            // Has the wrong cellRef // Fix for Upper Eastside
+            // NOTE: The waypoint connection target for the old Avengers Tower points to the NPE version in 1.52, and there may be other cases like this.
+            // We handle them by falling back to searching all cells in the region, which should be fine for small regions.
+
+            // FIXME: Figure out why we fail to find the target in Upper East Side as well.
             if (found == false)
             {
+                Logger.Warn($"FindTargetLocation(): Target {entityProtoRef.GetName()} not found in the cell {cellProtoRef.GetName()}, falling back to searching all cells");
+
                 foreach (Cell cell in Cells)
                 {
-                    if (cell.FindTargetPosition(ref markerPos, ref markerRot, target))
+                    if (cell.FindTargetLocation(ref markerPos, ref markerRot, entityProtoRef))
                         return true;
                 }
             }

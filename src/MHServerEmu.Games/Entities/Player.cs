@@ -13,10 +13,8 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
@@ -87,6 +85,8 @@ namespace MHServerEmu.Games.Entities
         private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
+        private TeleportData _teleportData;
+
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
         public ulong ShardId { get => _shardId; }
@@ -99,10 +99,11 @@ namespace MHServerEmu.Games.Entities
         public AchievementState AchievementState { get => _achievementState; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
-        public bool IsOnLoadingScreen { get; set; }
+        public bool IsOnLoadingScreen { get; private set; }
         public bool IsFullscreenObscured { get => IsFullscreenMoviePlaying || IsOnLoadingScreen; }
         // Network
         public PlayerConnection PlayerConnection { get; private set; }
+        public AreaOfInterest AOI { get => PlayerConnection.AOI; }
 
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
@@ -144,6 +145,9 @@ namespace MHServerEmu.Games.Entities
 
             _community = new(this);
             _community.Initialize();
+
+            // Default loading screen before we start loading into a region
+            QueueLoadingScreen(PrototypeId.Invalid);
 
             return true;
         }
@@ -389,9 +393,7 @@ namespace MHServerEmu.Games.Entities
         public override void ExitGame()
         {
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
-            SendMessage(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build());
-
-            PlayerConnection.AOI.Reset();
+            AOI.SetRegion(0, true, null, null);
 
             base.ExitGame();
         }
@@ -399,7 +401,7 @@ namespace MHServerEmu.Games.Entities
         public Region GetRegion()
         {
             // This shouldn't need any null checks, at least for now
-            return PlayerConnection.AOI.Region;
+            return AOI.Region;
         }
 
         /// <summary>
@@ -642,7 +644,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
                 }
 
-                PlayerConnection.AOI.ConsiderEntity(entity);
+                AOI.ConsiderEntity(entity);
             }
 
             return true;
@@ -839,9 +841,13 @@ namespace MHServerEmu.Games.Entities
             if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SwitchAvatar(): Failed to find pending avatar switch");
             Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
 
-            // Do the switch
+            // Get information about the previous avatar
             ulong lastCurrentAvatarId = CurrentAvatar != null ? CurrentAvatar.Id : InvalidId;
+            ulong prevRegionId = CurrentAvatar.RegionLocation.RegionId;
+            Vector3 prevPosition = CurrentAvatar.RegionLocation.Position;
+            Orientation prevOrientation = CurrentAvatar.RegionLocation.Orientation;
 
+            // Do the switch
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
             Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
 
@@ -853,14 +859,14 @@ namespace MHServerEmu.Games.Entities
             if (result != InventoryResult.Success)
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
 
-            EnableCurrentAvatar(true, lastCurrentAvatarId);
+            EnableCurrentAvatar(true, lastCurrentAvatarId, prevRegionId, prevPosition, prevOrientation);
 
             GetRegion()?.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
 
             return true;
         }
 
-        public bool EnableCurrentAvatar(bool withSwapInPower, ulong lastCurrentAvatarId)
+        public bool EnableCurrentAvatar(bool withSwapInPower, ulong lastCurrentAvatarId, ulong regionId, in Vector3 position, in Orientation orientation)
         {
             // TODO: Use this for teleportation within region as well
 
@@ -869,6 +875,10 @@ namespace MHServerEmu.Games.Entities
 
             if (CurrentAvatar.IsInWorld)
                 return Logger.WarnReturn(false, "EnableCurrentAvatar(): Current avatar is already active");
+
+            Region region = Game.RegionManager.GetRegion(regionId);
+            if (region == null)
+                return Logger.WarnReturn(false, "EnableCurrentAvtar(): region == null");
 
             Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
 
@@ -881,7 +891,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Add new avatar to the world
-            if (CurrentAvatar.EnterWorld(PlayerConnection.AOI.Region, PlayerConnection.LastPosition, PlayerConnection.LastOrientation, settings) == false)
+            if (CurrentAvatar.EnterWorld(region, CurrentAvatar.FloorToCenter(position), orientation, settings) == false)
                 return false;
 
             OnChangeActiveAvatar(0, lastCurrentAvatarId);
@@ -890,22 +900,22 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Messages
+        #region Loading and Teleports
 
-        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
-
-        public void QueueLoadingScreen(PrototypeId regionPrototypeRef)
+        public void QueueLoadingScreen(PrototypeId regionProtoRef)
         {
-            // REMOVEME: Temp workaround for loading screen delay when generating regions
-            Game.NetworkManager.SendMessageImmediate(PlayerConnection, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)regionPrototypeRef)
-                .Build());
+            IsOnLoadingScreen = true;
 
-            /*
             SendMessage(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)regionPrototypeRef)
+                .SetRegionPrototypeId((ulong)regionProtoRef)
                 .Build());
-            */
+        }
+
+        public void QueueLoadingScreen(ulong regionId)
+        {
+            Region region = Game.RegionManager.GetRegion(regionId);
+            PrototypeId regionProtoRef = region != null ? region.PrototypeDataRef : PrototypeId.Invalid;
+            QueueLoadingScreen(regionProtoRef);
         }
 
         public void DequeueLoadingScreen()
@@ -913,7 +923,43 @@ namespace MHServerEmu.Games.Entities
             SendMessage(NetMessageDequeueLoadingScreen.DefaultInstance);
         }
 
+        public void OnLoadingScreenFinished()
+        {
+            IsOnLoadingScreen = false;
+        }
+
+        public void BeginTeleport(ulong regionId, in Vector3 position, in Orientation orientation)
+        {
+            _teleportData.Set(regionId, position, orientation);
+            QueueLoadingScreen(regionId);
+        }
+
+        public void OnCellLoaded(uint cellId, ulong regionId)
+        {
+            AOI.OnCellLoaded(cellId, regionId);
+            int numLoaded = AOI.GetLoadedCellCount();
+
+            Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
+
+            if (_teleportData.IsValid && numLoaded == AOI.TrackedCellCount)
+                FinishTeleport();
+        }
+
+        private bool FinishTeleport()
+        {
+            if (_teleportData.IsValid == false) return Logger.WarnReturn(false, "FinishTeleport(): No valid teleport data");
+
+            EnableCurrentAvatar(false, CurrentAvatar.Id, _teleportData.RegionId, _teleportData.Position, _teleportData.Orientation);
+            _teleportData.Clear();
+            DequeueLoadingScreen();
+            TryPlayIntroKismetSeqForRegion(CurrentAvatar.RegionLocation.RegionId);
+
+            return true;
+        }
+
         #endregion
+
+        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
 
         public override void OnDeallocate()
         {
@@ -921,12 +967,13 @@ namespace MHServerEmu.Games.Entities
             base.OnDeallocate();
         }
 
-        public void TryPlayKismetSeqIntroForRegion(PrototypeId regionPrototypeId)
+        public bool TryPlayIntroKismetSeqForRegion(ulong regionId)
         {
             // TODO/REMOVEME: Remove this when we have working Kismet sequence triggers
-            if (PlayerConnection.RegionDataRef == PrototypeId.Invalid) return;
+            Region region = Game.RegionManager.GetRegion(regionId);
+            if (region == null) return Logger.WarnReturn(false, "TryPlayIntroKismetSeqForRegion(): region == null");
 
-            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)regionPrototypeId switch
+            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)region.PrototypeDataRef switch
             {
                 RegionPrototypeId.NPERaftRegion             => KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart,
                 RegionPrototypeId.TimesSquareTutorialRegion => KismetSeqPrototypeId.Times01CaptainAmericaLanding,
@@ -934,7 +981,11 @@ namespace MHServerEmu.Games.Entities
                 _ => 0
             };
 
-            if (kismetSeqRef != 0) PlayKismetSeq((PrototypeId)kismetSeqRef);
+            if (kismetSeqRef == 0)
+                return false;
+
+            PlayKismetSeq((PrototypeId)kismetSeqRef);
+            return true;
         }
 
         public void PlayKismetSeq(PrototypeId kismetSeqRef)
@@ -1110,6 +1161,29 @@ namespace MHServerEmu.Games.Entities
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
+        }
+
+        private struct TeleportData
+        {
+            public ulong RegionId { get; private set; }
+            public Vector3 Position { get; private set; }
+            public Orientation Orientation { get; private set; }
+
+            public bool IsValid { get => RegionId != 0; }
+
+            public void Set(ulong regionId, in Vector3 position, in Orientation orientation)
+            {
+                RegionId = regionId;
+                Position = position;
+                Orientation = orientation;
+            }
+
+            public void Clear()
+            {
+                RegionId = 0;
+                Position = Vector3.Zero;
+                Orientation = Orientation.Zero;
+            }
         }
     }
 }

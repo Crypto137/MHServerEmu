@@ -315,36 +315,6 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public Transition GetTransitionInRegion(Destination destination, ulong regionId)
-        {
-            PrototypeId areaRef = destination.AreaRef;
-            PrototypeId cellRef = destination.CellRef;
-            PrototypeId entityRef = destination.EntityRef;
-
-            foreach (Entity entity in _entityDict.Values)
-            {
-                if (entity is not WorldEntity worldEntity)
-                    continue;
-
-                if (worldEntity.RegionLocation.RegionId == regionId)
-                {
-                    if (entity is not Transition transition)
-                        continue;
-
-                    if (areaRef != 0 && areaRef != transition.RegionLocation.Area.PrototypeDataRef)
-                        continue;
-
-                    if (cellRef != 0 && cellRef != transition.RegionLocation.Cell.PrototypeDataRef)
-                        continue;
-
-                    if (transition.PrototypeDataRef == entityRef)
-                        return transition;
-                }
-            }
-
-            return default;
-        }
-
         public IEnumerable<Entity> IterateEntities()
         {
             foreach (var entity in _entityDict.Values)

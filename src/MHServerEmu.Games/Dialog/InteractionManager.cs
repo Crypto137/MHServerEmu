@@ -498,7 +498,8 @@ namespace MHServerEmu.Games.Dialog
             var worldEntityProto = entity.WorldEntityPrototype;
 
             if (entity is Transition transition)
-                foreach (var destination in transition.Destinations)
+            {
+                foreach (Destination destination in transition.Destinations)
                 {
                     var regionRef = destination.RegionRef;
                     if (regionRef != PrototypeId.Invalid)
@@ -515,6 +516,7 @@ namespace MHServerEmu.Games.Dialog
                         }
                     }
                 }
+            }
 
             if (entity is KismetSequenceEntity)
             {

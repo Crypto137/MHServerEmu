@@ -7,7 +7,6 @@ using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
-using MHServerEmu.Games.Achievements;
 using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
@@ -341,13 +340,6 @@ namespace MHServerEmu.PlayerManagement
         private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
             client.FinishedPlayerManagerHandshake = true;
-
-            // Queue loading
-            client.SendMessage(MuxChannel, NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build());
-
-            // Send achievement database
-            client.SendMessage(MuxChannel, AchievementDatabase.Instance.GetDump());
-            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
         /// <summary>

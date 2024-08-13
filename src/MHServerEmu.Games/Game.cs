@@ -199,31 +199,6 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
-        public void MovePlayerToRegion(PlayerConnection playerConnection, PrototypeId regionDataRef, PrototypeId waypointDataRef)
-        {
-            playerConnection.ExitGame();
-
-            playerConnection.RegionDataRef = regionDataRef;
-            playerConnection.WaypointDataRef = waypointDataRef;
-
-            NetworkManager.SetPlayerConnectionPending(playerConnection);
-        }
-
-        public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
-        {
-            // TODO change Reload without exit of region
-            var entityManager = playerConnection.Game.EntityManager;
-            var worldEntity = entityManager.GetEntity<WorldEntity>(entityId);
-            if (worldEntity == null) return;
-
-            playerConnection.ExitGame();
-
-            playerConnection.RegionDataRef = worldEntity.Region.PrototypeDataRef;
-            playerConnection.EntityToTeleport = worldEntity;
-
-            NetworkManager.SetPlayerConnectionPending(playerConnection);
-        }
-
         public Entity AllocateEntity(PrototypeId entityRef)
         {
             var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);

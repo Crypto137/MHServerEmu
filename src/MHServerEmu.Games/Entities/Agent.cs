@@ -501,6 +501,12 @@ namespace MHServerEmu.Games.Entities
 
         #region Interaction
 
+        public virtual bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        {
+            // NOTE: This appears to be unused by regular agents.
+            return true;
+        }
+
         public InteractionResult StartInteractionWith(EntityDesc interacteeDesc, InteractionFlags flags, bool inRange, InteractionMethod method)
         {
             if (interacteeDesc.IsValid == false) return InteractionResult.Failure;
@@ -536,7 +542,7 @@ namespace MHServerEmu.Games.Entities
             var player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "RevealEquipmentToOwner(): player == null");
 
-            AreaOfInterest aoi = player.PlayerConnection.AOI;
+            AreaOfInterest aoi = player.AOI;
 
             foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
             {

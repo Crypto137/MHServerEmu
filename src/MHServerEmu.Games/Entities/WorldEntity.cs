@@ -62,6 +62,7 @@ namespace MHServerEmu.Games.Entities
         InvalidPosition,
         PositionChanged,
         NotChanged,
+        Teleport
     }
 
     public partial class WorldEntity : Entity

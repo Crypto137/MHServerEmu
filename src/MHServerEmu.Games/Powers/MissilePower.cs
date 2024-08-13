@@ -455,7 +455,7 @@ namespace MHServerEmu.Games.Powers
                 // were interested in the owner during the activation.
                 foreach (Player player in _interestedPlayers)
                 {
-                    AreaOfInterest aoi = player.PlayerConnection.AOI;
+                    AreaOfInterest aoi = player.AOI;
                     aoi.AddClientIndependentEntity(missile);
                 }
 

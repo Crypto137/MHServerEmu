@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -17,7 +18,6 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Network.Parsing;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -40,29 +40,17 @@ namespace MHServerEmu.Games.Network
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
 
-        private EventPointer<OLD_FinishCellLoadingEvent> _finishCellLoadingEvent = new();
-        private EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
+        private readonly EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
         public Game Game { get; }
 
-        public ulong PlayerDbId { get => _dbAccount.Id; }
+        public AreaOfInterest AOI { get; }
+        public WorldView WorldView { get; }
+        public TransferParams TransferParams { get; }
 
-        // Player State
         public Player Player { get; private set; }
 
-        public PrototypeId RegionDataRef { get; set; }
-        public PrototypeId WaypointDataRef { get; set; }    // May also refer to RegionConnectionTarget
-
-        public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
-        public Vector3 LastPosition { get; set; }
-        public Orientation LastOrientation { get; set; }
-
-        public AreaOfInterest AOI { get; private set; }
-        public WorldView WorldView { get; private set; }
-        public Vector3 StartPosition { get; internal set; }
-        public Orientation StartOrientation { get; internal set; }
-        public WorldEntity EntityToTeleport { get; internal set; }
-
+        public ulong PlayerDbId { get => _dbAccount.Id; }
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
@@ -73,8 +61,21 @@ namespace MHServerEmu.Games.Network
             _frontendClient = frontendClient;
             _dbAccount = _frontendClient.Session.Account;
 
+            AOI = new(this);
             WorldView = new(this);
+            TransferParams = new(this);
+
             InitializeFromDBAccount();
+
+            // Send achievement database
+            SendMessage(AchievementDatabase.Instance.GetDump());
+
+            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+        }
+
+        public override string ToString()
+        {
+            return $"dbGuid=0x{PlayerDbId:X}";
         }
 
         #region Data Management
@@ -84,8 +85,8 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            _dbAccount.Player.RawRegion = (long)RegionDataRef;
-            _dbAccount.Player.RawWaypoint = (long)WaypointDataRef;
+            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // REMOVEME: we no longer use this
+            _dbAccount.Player.RawWaypoint = (long)TransferParams.DestTargetProtoRef;
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
             Player.SaveToDBAccount(_dbAccount);
@@ -99,22 +100,13 @@ namespace MHServerEmu.Games.Network
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
-            // Initialize region
-            RegionDataRef = (PrototypeId)_dbAccount.Player.RawRegion;
-            if (dataDirectory.PrototypeIsA<RegionPrototype>(RegionDataRef) == false)
-            {
-                RegionDataRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
-                Logger.Warn($"PlayerConnection(): Invalid region data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(RegionDataRef)}");
-            }
+            // Initialize transfer params
+            // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
+            // We should get rid of saving waypoint refs and just use connection targets.
+            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint);
 
-            WaypointDataRef = (PrototypeId)_dbAccount.Player.RawWaypoint;
-            if ((dataDirectory.PrototypeIsA<WaypointPrototype>(WaypointDataRef) || dataDirectory.PrototypeIsA<RegionConnectionTargetPrototype>(WaypointDataRef)) == false)
-            {
-                WaypointDataRef = GameDatabase.GetPrototype<RegionPrototype>(RegionDataRef).StartTarget;
-                Logger.Warn($"PlayerConnection(): Invalid waypoint data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(WaypointDataRef)}");
-            }
-
-            AOI = new(this, _dbAccount.Player.AOIVolume);
+            // Initialize AOI
+            AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
             EntitySettings playerSettings = new();
@@ -228,41 +220,55 @@ namespace MHServerEmu.Games.Network
         #endregion
 
         #region Loading and Exiting
-        
+
+        public void MoveToTarget(PrototypeId targetProtoRef)
+        {
+            // Simulate exiting and re-entering the game on a real GIS
+            ExitGame();
+
+            // Update our target
+            TransferParams.SetTarget(targetProtoRef);
+
+            // The message for the loading screen we are queueing here will be flushed to the client
+            // as soon as we set the connection as pending to keep things nice and responsive.
+            Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
+            Game.NetworkManager.SetPlayerConnectionPending(this);
+        }
+
         public void EnterGame()
         {
-            Player.EnterGame();
+            // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
+            // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
+
+            Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
-            // Before changing to the actual destination region the game seems to first change into a transitional region
-            SendMessage(NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build());
+            // Clear region interest by setting it to invalid region, we still keep our owned entities
+            AOI.SetRegion(0, false, null, null);
 
-            Player.QueueLoadingScreen(RegionDataRef);
+            PrototypeId regionProtoRef = TransferParams.DestTargetRegionProtoRef;
 
-            AOI.LoadedCellCount = 0;
-            IsLoading = true;
+            Player.QueueLoadingScreen(regionProtoRef);
 
-            Player.IsOnLoadingScreen = true;
-
-            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionDataRef, this);
+            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
             if (region == null)
             {
-                Logger.Error($"Failed to get or generate region {GameDatabase.GetFormattedPrototypeName(RegionDataRef)}");
+                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetNameFormatted()}");
                 Disconnect();
                 return;
             }
 
-            var messages = region.OLD_GetLoadingMessages(Game.Id, WaypointDataRef, this);
-            foreach (IMessage message in messages)
-                SendMessage(message);
+            TransferParams.DestRegionId = region.Id;
 
-            AOI.SetRegion(region);
-            AOI.Update(StartPosition, true, true);
+            if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)
+            {
+                Logger.Error($"EnterGame(): Failed to find start location");
+                Disconnect();
+                return;
+            }
+
+            AOI.SetRegion(region.Id, false, startPosition, startOrientation);
         }
 
         public void ExitGame()
@@ -271,27 +277,13 @@ namespace MHServerEmu.Games.Network
             // because client UI breaks for some reason when we reuse the same player entity id
             // (e.g. inventory grid stops updating).
             UpdateDBAccount();
+
+            // We need to exit before we destroy so that the player entity can be removed from its AOI
+            Player.ExitGame();
             Player.Destroy();
             Game.EntityManager.ProcessDeferredLists();
+
             InitializeFromDBAccount();
-        }
-
-        public void EnterGameWorld()
-        {
-            var avatar = Player.CurrentAvatar;
-            Vector3 entrancePosition = avatar.FloorToCenter(StartPosition);
-            AOI.Update(entrancePosition, true);
-
-            LastPosition = StartPosition;
-            LastOrientation = StartOrientation;
-            Player.EnableCurrentAvatar(false, Player.CurrentAvatar.Id);
-
-            Player.DequeueLoadingScreen();
-
-            // Play Kismet sequence intro for the region if there is one defined
-            Player.TryPlayKismetSeqIntroForRegion(RegionDataRef);
-
-            IsLoading = false;
         }
 
         #endregion
@@ -430,11 +422,6 @@ namespace MHServerEmu.Games.Network
             if (Serializer.TransferOrientationFixed(archive, ref syncOrientation, yawOnly, 6) == false)
                 return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer syncOrientation");
 
-            // AOI
-            AOI.Region.UpdateLastVisitedTime();
-            if (IsLoading == false)
-                AOI.Update(syncPosition);
-
             // Update locomotion state
             bool canMove = avatar.CanMove();
             bool canRotate = avatar.CanRotate();
@@ -469,9 +456,6 @@ namespace MHServerEmu.Games.Network
                 avatar.Locomotor.SetSyncState(newSyncState, position, orientation);
             }
 
-            LastPosition = avatar.RegionLocation.Position;
-            LastOrientation = avatar.RegionLocation.Orientation;
-
             return true;
         }
 
@@ -480,26 +464,7 @@ namespace MHServerEmu.Games.Network
             var cellLoaded = message.As<NetMessageCellLoaded>();
             if (cellLoaded == null) return Logger.WarnReturn(false, $"OnCellLoaded(): Failed to retrieve message");
 
-            AOI.OnCellLoaded(cellLoaded.CellId);
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{AOI.LoadedCellCount}/{AOI.CellsInRegion}]");
-
-            if (IsLoading)
-            {
-                if (_finishCellLoadingEvent.IsValid)
-                    Game.GameEventScheduler.CancelEvent(_finishCellLoadingEvent);
-
-                if (AOI.LoadedCellCount == AOI.CellsInRegion)
-                {
-                    EnterGameWorld();
-                }
-                else
-                {
-                    // set timer 5 seconds for wait client answer
-                    Game.GameEventScheduler.ScheduleEvent(_finishCellLoadingEvent, TimeSpan.FromSeconds(5));
-                    _finishCellLoadingEvent.Get().Initialize(this, AOI.CellsInRegion);
-                    AOI.ForceCellLoad();
-                }
-            }
+            Player.OnCellLoaded(cellLoaded.CellId, cellLoaded.RegionId);
 
             return true;
         }
@@ -775,74 +740,10 @@ namespace MHServerEmu.Games.Network
             var useInteractableObject = message.As<NetMessageUseInteractableObject>();
             if (useInteractableObject == null) return Logger.WarnReturn(false, $"OnUseInteractableObject(): Failed to retrieve message");
 
-            Logger.Info($"Received UseInteractableObject message");
-            var missionPrototypeRef = (PrototypeId)useInteractableObject.MissionPrototypeRef;
+            Avatar avatar = Player.GetActiveAvatarByIndex(useInteractableObject.AvatarIndex);
+            if (avatar == null) return Logger.WarnReturn(false, "OnUseInteractableObject(): avatar == null");
 
-            if (missionPrototypeRef != PrototypeId.Invalid)
-            {
-                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {GameDatabase.GetPrototypeName(missionPrototypeRef)}");
-                SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
-            }
-
-            var interactableObject = Game.EntityManager.GetEntity<Entity>(useInteractableObject.IdTarget);
-            if (interactableObject == null) return Logger.WarnReturn(false, $"OnUseInteractableObject(): Failed to get entity {useInteractableObject.IdTarget}");
-
-            if (interactableObject is Transition teleport)
-            {
-                if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
-                {
-                    teleport.TeleportToLastTown(this);
-                    return true;
-                }
-                if (teleport.Destinations.Count == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return true;
-                Logger.Trace($"Destination entity {teleport.Destinations[0].EntityRef}");
-
-                if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||
-                    teleport.Destinations[0].Type == RegionTransitionType.TowerDown)
-                {
-                    teleport.TeleportToEntity(this, teleport.Destinations[0].EntityId);
-                    return true;
-                }
-
-                if (RegionDataRef != teleport.Destinations[0].RegionRef)
-                {
-                    teleport.TeleportClient(this);
-                    return true;
-                }
-
-                if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionLocation.RegionId) is not Transition target)
-                    return true;
-
-                if (AOI.InterestedInCell(target.RegionLocation.Cell.Id) == false)
-                {
-                    teleport.TeleportClient(this);
-                    return true;
-                }
-
-                var teleportEntity = target.TransitionPrototype;
-                if (teleportEntity == null) return true;
-                Vector3 targetPos = target.RegionLocation.Position;
-                Orientation targetRot = target.RegionLocation.Orientation;
-
-                teleportEntity.CalcSpawnOffset(ref targetRot, ref targetPos);
-
-                Logger.Trace($"Teleporting to {targetPos}");
-
-                uint cellId = target.Properties[PropertyEnum.MapCellId];
-                uint areaId = target.Properties[PropertyEnum.MapAreaId];
-                Logger.Trace($"Teleporting to areaId={areaId} cellId={cellId}");
-
-                Player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
-
-                LastPosition = targetPos;
-            }
-            else
-            {
-                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(Player, interactableObject);
-            }
-
+            avatar.UseInteractableObject(useInteractableObject.IdTarget, (PrototypeId)useInteractableObject.MissionPrototypeRef);
             return true;
         }
 
@@ -854,10 +755,9 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"Received UseWaypoint message");
             Logger.Trace(useWaypoint.ToString());
 
-            PrototypeId destinationRegion = (PrototypeId)useWaypoint.RegionProtoId;
-            PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
+            // TODO: Do the usual interaction validation
 
-            Game.MovePlayerToRegion(this, destinationRegion, waypointDataRef);
+            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef);
             return true;
         }
 
@@ -962,7 +862,7 @@ namespace MHServerEmu.Games.Network
 
         private void OnNotifyLoadingScreenFinished(MailboxMessage message)  // 86
         {
-            Player.IsOnLoadingScreen = false;
+            Player.OnLoadingScreenFinished();
         }
 
         private bool OnPlayKismetSeqDone(MailboxMessage message)    // 96
