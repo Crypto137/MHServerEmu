@@ -71,7 +71,7 @@ namespace MHServerEmu.Frontend
                     break;
 
                 case MuxCommand.Data:
-                    RouteMessages(packet.MuxId, packet.Messages);
+                    ServerManager.Instance.RouteMessages(this, packet.Messages, ServerType.FrontendServer);
                     break;
 
                 default:
@@ -139,30 +139,5 @@ namespace MHServerEmu.Frontend
         /// Disconnects this <see cref="FrontendClient"/>.
         /// </summary>
         public void Disconnect() => Connection.Disconnect();
-
-        /// <summary>
-        /// Routes <see cref="MessagePackage"/> instances to the appropriate <see cref="IGameService"/>.
-        /// </summary>
-        private void RouteMessages(ushort muxId, IEnumerable<MessagePackage> messages)
-        {
-            ServerType destination;
-
-            switch (muxId)
-            {
-                case 1:
-                    destination = FinishedPlayerManagerHandshake ? ServerType.PlayerManager : ServerType.FrontendServer;
-                    ServerManager.Instance.RouteMessages(this, messages, destination);
-                    break;
-
-                case 2:
-                    destination = FinishedGroupingManagerHandshake ? ServerType.GroupingManager : ServerType.FrontendServer;
-                    ServerManager.Instance.RouteMessages(this, messages, destination);
-                    break;
-
-                default:
-                    Logger.Warn($"{messages.Count()} unhandled messages on muxId {muxId}");
-                    break;
-            }
-        }
     }
 }

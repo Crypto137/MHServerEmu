@@ -20,6 +20,8 @@ namespace MHServerEmu.Core.Network.Tcp
         private bool _isListening;
         private bool _isDisposed;
 
+        protected bool _isRunning;
+
         public int ConnectionCount { get => _connectionDict.Count; }
 
         /// <summary>
@@ -65,6 +67,8 @@ namespace MHServerEmu.Core.Network.Tcp
             // Start accepting connections
             Task.Run(async () => await AcceptConnectionsAsync());
 
+            _isRunning = true;
+
             return true;
         }
 
@@ -86,6 +90,8 @@ namespace MHServerEmu.Core.Network.Tcp
 
             // Disconnect all clients
             DisconnectAllClients();
+
+            _isRunning = false;
         }
 
         /// <summary>
@@ -226,10 +232,10 @@ namespace MHServerEmu.Core.Network.Tcp
                         return;
                     }
 
-                    // Copy the data we received from the buffer to a new array
+                    // Copy the data we received from the buffer to a new array and process it asynchronously
                     byte[] data = new byte[bytesReceived];
                     Array.Copy(connection.ReceiveBuffer, data, bytesReceived);
-                    OnDataReceived(connection, data);
+                    _ = Task.Run(() => OnDataReceived(connection, data));
 
                     if (connection.Connected == false)  // Stop receiving if no longer connected
                     {
