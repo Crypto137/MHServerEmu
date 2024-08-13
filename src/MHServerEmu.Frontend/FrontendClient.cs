@@ -42,42 +42,55 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public void Parse(byte[] data)
         {
-            MuxPacket packet;
-            using (MemoryStream ms = new(data))
-                packet = new(ms);
+            // NOTE: We may receive multiple mux packets at once, so we need to parse data in a loop.
+            // If at any point something goes wrong, we disconnect.
 
-            // We should be receiving packets only from mux channels 1 and 2
-            if (packet.MuxId == 0 || packet.MuxId > 2)
-                Logger.Warn($"Received a MuxPacket with unexpected mux channel {packet.MuxId} from {Connection}");
+            // TODO: Combine fragmented packets using length from mux header.
+            
+            using MemoryStream ms = new(data);
 
-            switch (packet.Command)
+            while (ms.Position < data.Length)
             {
-                case MuxCommand.Connect:
-                    Logger.Trace($"Connected on mux channel {packet.MuxId}");
-                    Connection.Send(new MuxPacket(packet.MuxId, MuxCommand.ConnectAck));
-                    break;
+                MuxPacket packet = new(ms);
 
-                case MuxCommand.ConnectAck:
-                    Logger.Warn($"Accepted connection on mux channel {packet.MuxId}. Is this supposed to happen?");
+                // We should be receiving packets only from mux channels 1 and 2
+                if (packet.MuxId == 0 || packet.MuxId > 2)
+                {
+                    Logger.Warn($"Received a MuxPacket with unexpected mux channel {packet.MuxId} from {Connection}");
                     break;
+                }
 
-                case MuxCommand.Disconnect:
-                    Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
-                    Disconnect();
-                    break;
+                switch (packet.Command)
+                {
+                    case MuxCommand.Connect:
+                        Logger.Trace($"Connected on mux channel {packet.MuxId}");
+                        Connection.Send(new MuxPacket(packet.MuxId, MuxCommand.ConnectAck));
+                        break;
 
-                case MuxCommand.ConnectWithData:
-                    Logger.Warn($"Connected with data on mux channel {packet.MuxId}. Is this supposed to happen?");
-                    break;
+                    case MuxCommand.ConnectAck:
+                        Logger.Warn($"Accepted connection on mux channel {packet.MuxId}. Is this supposed to happen?");
+                        break;
 
-                case MuxCommand.Data:
-                    ServerManager.Instance.RouteMessages(this, packet.Messages, ServerType.FrontendServer);
-                    break;
+                    case MuxCommand.Disconnect:
+                        Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
+                        Disconnect();
+                        break;
 
-                default:
-                    Logger.Error($"Received a malformed MuxPacket with command {packet.Command} from {Connection}");
-                    break;
+                    case MuxCommand.ConnectWithData:
+                        Logger.Warn($"Connected with data on mux channel {packet.MuxId}. Is this supposed to happen?");
+                        break;
+
+                    case MuxCommand.Data:
+                        ServerManager.Instance.RouteMessages(this, packet.Messages, ServerType.FrontendServer);
+                        break;
+
+                    default:
+                        Logger.Error($"Received a malformed MuxPacket with command {packet.Command} from {Connection}");
+                        Disconnect();
+                        return;
+                }
             }
+
         }
 
         /// <summary>
