@@ -241,6 +241,7 @@ namespace GameDatabaseBrowser
             if (prototypeToDisplay == null)
                 return;
 
+            PrototypeNodes[0].PrototypeDetails.Name = $"Prototypes [{prototypeToDisplay.Count}]";
             bool needExpand = searchDetails.NeedExpand || prototypeToDisplay.Count < 21;
             foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype, needExpand);

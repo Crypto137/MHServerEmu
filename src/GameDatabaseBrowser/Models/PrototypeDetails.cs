@@ -9,7 +9,7 @@ namespace GameDatabaseBrowser.Models
 {
     public class PrototypeDetails
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public string FullName { get; private set; }
 
         public PrototypeId PrototypeId => string.IsNullOrEmpty(FullName) ? 0 : GameDatabase.GetPrototypeRefByName(FullName);
