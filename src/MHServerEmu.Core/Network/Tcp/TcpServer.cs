@@ -174,7 +174,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Raised when the server receives data from a client connection.
         /// </summary>
-        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] data);
+        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length);
 
         #endregion
 
@@ -232,10 +232,10 @@ namespace MHServerEmu.Core.Network.Tcp
                         return;
                     }
 
-                    // Copy the data we received from the buffer to a new array and process it asynchronously
-                    byte[] data = new byte[bytesReceived];
-                    Array.Copy(connection.ReceiveBuffer, data, bytesReceived);
-                    _ = Task.Run(() => OnDataReceived(connection, data));
+                    // Parse received data straight from the connection's buffer.
+                    // NOTE: We do it in a somewhat awkward way because we used to copy
+                    // data to a new array and pass it around, maybe we should refactor this more.
+                    OnDataReceived(connection, connection.ReceiveBuffer, bytesReceived);
 
                     if (connection.Connected == false)  // Stop receiving if no longer connected
                     {

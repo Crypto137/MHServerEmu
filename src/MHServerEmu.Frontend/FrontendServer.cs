@@ -94,9 +94,9 @@ namespace MHServerEmu.Frontend
             }
         }
 
-        protected override void OnDataReceived(TcpClientConnection connection, byte[] data)
+        protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)
         {
-            ((FrontendClient)connection.Client).Parse(data);
+            ((FrontendClient)connection.Client).Parse(buffer, length);
         }
 
         #endregion

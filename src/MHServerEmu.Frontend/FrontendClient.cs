@@ -40,16 +40,16 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Parses received data.
         /// </summary>
-        public void Parse(byte[] data)
+        public void Parse(byte[] buffer, int length)
         {
             // NOTE: We may receive multiple mux packets at once, so we need to parse data in a loop.
             // If at any point something goes wrong, we disconnect.
 
             // TODO: Combine fragmented packets using length from mux header.
             
-            using MemoryStream ms = new(data);
+            using MemoryStream ms = new(buffer);
 
-            while (ms.Position < data.Length)
+            while (ms.Position < length)
             {
                 MuxPacket packet = new(ms);
 
