@@ -199,6 +199,9 @@ namespace MHServerEmu.Games.Network
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
+
+            AOI.SetRegion(0, true);
+
             Game.EntityManager.DestroyEntity(Player);
 
             // Destroy all private region instances in the world view since they are not persistent anyway

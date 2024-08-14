@@ -174,8 +174,9 @@ namespace MHServerEmu.Games.Network
             // - Mission updates
             // - Discover avatars in our destination region
 
-            Region region = null;
             Player player = _playerConnection.Player;
+            Region prevRegion = Region;
+            Region newRegion = null;
 
             if (regionId != 0)
             {
@@ -184,22 +185,51 @@ namespace MHServerEmu.Games.Network
                     return true;
 
                 // If we are not clearing region interest with an invalid region id, we need to have a valid region here
-                region = _game.RegionManager.GetRegion(regionId);
-                if (region == null) return Logger.WarnReturn(false, "SetRegion(): region == null");
+                newRegion = _game.RegionManager.GetRegion(regionId);
+                if (newRegion == null) return Logger.WarnReturn(false, "SetRegion(): region == null");
             }
 
             // TODO: Notify the current region that we are leaving
 
             // Reset previous state
-            Region = region;
             _lastUpdatePosition = Vector3.Zero;
+            _lastCameraSetting = PrototypeId.Invalid;
 
-            // FIXME: This is based on our older hacks, check if this works correctly
+            foreach (var kvp in _trackedCells)
+            {
+                Cell cell = prevRegion.GetCellbyId(kvp.Key);
+                
+                if (cell == null)
+                {
+                    _trackedCells.Remove(kvp.Key);
+                    Logger.Warn("SetRegion(): cell == null");
+                    continue;
+                }
+
+                RemoveCell(cell, false);
+            }
+
+            if (_trackedCells.Count > 0) Logger.Warn("SetRegion(): _trackedCells.Count > 0");
+
+            foreach (var kvp in _trackedAreas)
+            {
+                Area area = prevRegion.GetAreaById(kvp.Key);
+
+                if (area == null)
+                {
+                    _trackedAreas.Remove(kvp.Key);
+                    Logger.Warn("SetRegion(): area == null");
+                    continue;
+                }
+
+                RemoveArea(area, false);
+            }
+
+            if (_trackedAreas.Count > 0) Logger.Warn("SetRegion(): _trackedAreas.Count > 0");
+
+            // Clear entities if requested
             if (clearingAllInterest)
             {
-                _trackedAreas.Clear();
-                _trackedCells.Clear();
-
                 foreach (var kvp in _trackedEntities)
                 {
                     Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
@@ -207,8 +237,7 @@ namespace MHServerEmu.Games.Network
                         SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
                 }
 
-                _currentFrame = 0;
-                _lastCameraSetting = 0;
+                if (_trackedEntities.Count > 0) Logger.Warn("SetRegion(): _trackedEntities.Count > 0");
             }
 
             // Fill in required region change message fields
@@ -218,25 +247,25 @@ namespace MHServerEmu.Games.Network
                 .SetClearingAllInterest(clearingAllInterest);
 
             // Add additional region metadata if we have a valid region
-            if (region != null)
+            if (newRegion != null)
             {
-                regionChangeBuilder.SetRegionPrototypeId((ulong)region.PrototypeDataRef)
-                    .SetRegionRandomSeed(region.RandomSeed)
-                    .SetRegionMin(region.Aabb.Min.ToNetStructPoint3())
-                    .SetRegionMax(region.Aabb.Max.ToNetStructPoint3())
+                regionChangeBuilder.SetRegionPrototypeId((ulong)newRegion.PrototypeDataRef)
+                    .SetRegionRandomSeed(newRegion.RandomSeed)
+                    .SetRegionMin(newRegion.Aabb.Min.ToNetStructPoint3())
+                    .SetRegionMax(newRegion.Aabb.Max.ToNetStructPoint3())
                     .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
-                        .SetLevel((uint)region.RegionLevel)
-                        .SetDifficultyTierProtoId((ulong)region.DifficultyTierRef));
+                        .SetLevel((uint)newRegion.RegionLevel)
+                        .SetDifficultyTierProtoId((ulong)newRegion.DifficultyTierRef));
 
                 // Can add EntitiesToDestroy here
 
                 using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
                 {
-                    region.Serialize(archive);
+                    newRegion.Serialize(archive);
                     regionChangeBuilder.SetArchiveData(archive.ToByteString());
                 }
 
-                player.QueueLoadingScreen(region.PrototypeDataRef);
+                player.QueueLoadingScreen(newRegion.PrototypeDataRef);
             }
 
             SendMessage(regionChangeBuilder.Build());
@@ -244,24 +273,15 @@ namespace MHServerEmu.Games.Network
             // TODO?: Prefetch other regions
 
             // Teleport the player into our destination region if we have one
-            if (region != null)
+            if (newRegion != null)
             {
                 if (startPosition == null)
                     return Logger.WarnReturn(false, "SetRegion(): No valid start position is provided");
 
                 // BeginTeleport() queues another loading screen, so we end up with two in a row. This matches our packet dumps.
                 player.BeginTeleport(regionId, startPosition.Value, startOrientation != null ? startOrientation.Value : Orientation.Zero);
-                Region = region;
+                Region = newRegion;
                 Update(startPosition.Value, true, true);
-
-                // DEBUG - output all cells we need to load to find out what's causing infinite loading screens
-                StringBuilder sb = new($"SetRegion(): Requesting 0x{player.DatabaseUniqueId:X} to load {TrackedCellCount} cell(s): ");
-                foreach (var kvp in _trackedCells)
-                {
-                    Cell cell = region.GetCellbyId(kvp.Key);
-                    sb.Append($"{cell.PrototypeName}[{cell.Id}] ");
-                }
-                Logger.Debug(sb.ToString());
             }
 
             return true;
@@ -517,18 +537,22 @@ namespace MHServerEmu.Games.Network
                 .Build());
         }
 
-        private void RemoveArea(Area area)
+        private void RemoveArea(Area area, bool sendToClient = true)
         {
             _trackedAreas.Remove(area.Id);
 
-            SendMessage(NetMessageRemoveArea.CreateBuilder()
-                .SetAreaId(area.Id)
-                .Build());
+            if (sendToClient)
+            {
+                SendMessage(NetMessageRemoveArea.CreateBuilder()
+                    .SetAreaId(area.Id)
+                    .Build());
+            }
         }
 
         private void AddCell(Cell cell)
         {
             _trackedCells.Add(cell.Id, new(_currentFrame, false));
+            cell.OnAddedToAOI();
 
             var builder = NetMessageCellCreate.CreateBuilder()
                 .SetAreaId(cell.Area.Id)
@@ -545,19 +569,20 @@ namespace MHServerEmu.Games.Network
             SendMessage(builder.Build());
         }
 
-        private void RemoveCell(Cell cell)
+        private void RemoveCell(Cell cell, bool sendToClient = true)
         {
+            _trackedCells.Remove(cell.Id);
+            cell.OnRemovedFromAOI();
+
             uint areaId = cell.Area.Id;
 
-            if (_trackedAreas.ContainsKey(areaId))
+            if (sendToClient && _trackedAreas.ContainsKey(areaId))
             {
                 SendMessage(NetMessageCellDestroy.CreateBuilder()
                     .SetAreaId(areaId)
                     .SetCellId(cell.Id)
                     .Build());
             }
-
-            _trackedCells.Remove(cell.Id);
         }
 
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)

@@ -368,8 +368,9 @@ namespace MHServerEmu.Games.Entities
             if (IsTeamUpAgent)
                 return SetSimulated(true);
 
-            // Simulate is there are any player interested in this world entity
-            return SetSimulated(InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelProximity) ||
+            // Simulate is there are any player interested in this world entity or its cell
+            return SetSimulated(Cell?.HasAnyInterest == true ||
+                                InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelProximity) ||
                                 InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelClientIndependent));
         }
 
@@ -1487,7 +1488,7 @@ namespace MHServerEmu.Games.Entities
         public override void OnChangePlayerAOI(Player player, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
             base.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
-            UpdateSimulationState();
+            //UpdateSimulationState();      // We do simulation updates per-cell now
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)

@@ -24,6 +24,8 @@ namespace MHServerEmu.Games.Regions
         private float _playableNavArea;
         private float _spawnableNavArea;
 
+        private int _numInterestedPlayers = 0;
+
         public uint Id { get; }
 
         public CellPrototype Prototype { get; private set; }
@@ -53,6 +55,8 @@ namespace MHServerEmu.Games.Regions
         public Orientation AreaOrientation { get; private set; }
         public Transform3 AreaTransform { get; private set; }
         public Transform3 RegionTransform { get; private set; }
+
+        public bool HasAnyInterest { get => _numInterestedPlayers > 0; }
 
         public Cell(Area area, uint id)
         {
@@ -467,6 +471,36 @@ namespace MHServerEmu.Games.Regions
         public void EnemySpawn()
         {
             PopulationArea.AddEnemyWeight(this);
+        }
+
+        public void OnAddedToAOI()
+        {
+            _numInterestedPlayers++;
+            Logger.Debug($"OnAddedToAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
+
+            if (_numInterestedPlayers == 1)
+            {
+                foreach (WorldEntity worldEntity in Entities)
+                    worldEntity.UpdateSimulationState();
+            }
+        }
+
+        public void OnRemovedFromAOI()
+        {
+            _numInterestedPlayers--;
+            Logger.Debug($"OnRemovedFromAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
+
+            if (_numInterestedPlayers < 0)
+            {
+                Logger.Warn("OnRemovedFromAOI(): _numInterestedPlayers < 0");
+                _numInterestedPlayers = 0;
+            }
+
+            if (_numInterestedPlayers == 0)
+            {
+                foreach (WorldEntity worldEntity in Entities)
+                    worldEntity.UpdateSimulationState();
+            }
         }
 
         #region Enums
