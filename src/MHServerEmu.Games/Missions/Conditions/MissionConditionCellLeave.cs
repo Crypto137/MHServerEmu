@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionCellLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH01Main4VillainousPursuit
             _proto = prototype as MissionConditionCellLeavePrototype;
             _playerLeftCellAction = OnPlayerLeftCell;
         }

@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionOrbPickUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // TimesBehaviorController
             _proto = prototype as MissionConditionOrbPickUpPrototype;
         }
     }

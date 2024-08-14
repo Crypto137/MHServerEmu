@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionMetaStateDeathLimitHit(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // DRMissionBonusChestDeathTracker
             _proto = prototype as MissionConditionMetaStateDeathLimitHitPrototype;
         }
     }

@@ -12,6 +12,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionItemDonate(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // LegendaryCH07SinisterLab1
             _proto = prototype as MissionConditionItemDonatePrototype;
             _playerDonatedItemAction = OnPlayerDonatedItem;
         }

@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionItemEquip(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // DevelopmentOnly
             _proto = prototype as MissionConditionItemEquipPrototype;
             _playerEquippedItemAction = OnPlayerEquippedItem;
         }

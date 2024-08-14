@@ -6,13 +6,13 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionEmotePerformed : MissionPlayerCondition
     {
-        // AchievementAvengersCheer only
         private MissionConditionEmotePerformedPrototype _proto;
         private Action<EmotePerformedGameEvent> _emotePerformedAction;
 
         public MissionConditionEmotePerformed(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // AchievementAvengersCheer
             _proto = prototype as MissionConditionEmotePerformedPrototype;
             _emotePerformedAction = OnEmotePerformed;
         }

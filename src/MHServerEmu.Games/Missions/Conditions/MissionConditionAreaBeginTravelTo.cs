@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAreaBeginTravelTo(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // AxisRaidOnslaughtMovieController
             _proto = prototype as MissionConditionAreaBeginTravelToPrototype;
             _playerBeginTravelToAreaAction = OnPlayerBeginTravelToArea;
         }

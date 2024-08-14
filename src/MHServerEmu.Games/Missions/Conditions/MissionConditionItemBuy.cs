@@ -12,6 +12,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionItemBuy(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // NotInGame
             _proto = prototype as MissionConditionItemBuyPrototype;
             _playerBoughtItemAction = OnPlayerBoughtItem;
         }

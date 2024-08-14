@@ -13,6 +13,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionCurrencyCollected(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // RaftNPETutorialTipsController
             _proto = prototype as MissionConditionCurrencyCollectedPrototype;
             _currencyCollectedAction = OnCurrencyCollected;
         }

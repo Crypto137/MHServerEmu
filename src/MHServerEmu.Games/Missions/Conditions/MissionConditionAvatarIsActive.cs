@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAvatarIsActive(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // TimesBehaviorController
             _proto = prototype as MissionConditionAvatarIsActivePrototype;
             _playerSwitchedToAvatarAction = OnPlayerSwitchedToAvatar;
         }
