@@ -272,6 +272,7 @@ namespace MHServerEmu.Games.Network
             }
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
+            Player.SendMiniMapUpdate();
         }
 
         public void ExitGame()

@@ -22,6 +22,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
@@ -949,6 +950,22 @@ namespace MHServerEmu.Games.Entities
             TryPlayIntroKismetSeqForRegion(CurrentAvatar.RegionLocation.RegionId);
 
             return true;
+        }
+
+        #endregion
+
+        #region Mini Map
+
+        public void SendMiniMapUpdate()
+        {
+            Logger.Trace($"SendMiniMapUpdate(): {this}");
+
+            Region region = GetRegion();
+            if (region == null) return;
+
+            // TODO: keep track of the map server-side
+            LowResMap lowResMap = new(region.Prototype.AlwaysRevealFullMap);
+            SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
         }
 
         #endregion

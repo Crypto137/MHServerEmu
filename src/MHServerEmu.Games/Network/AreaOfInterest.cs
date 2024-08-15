@@ -15,7 +15,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Regions.Maps;
 
 namespace MHServerEmu.Games.Network
 {
@@ -119,14 +118,9 @@ namespace MHServerEmu.Games.Network
 
             UpdateAreas();
 
+            // We notify the client that it needs to regenerate its navi when cell updates change the navigable environment
             if (UpdateCells())
-            {
-                SendMessage(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
-
-                // Mini map (TODO: keep track of the map server-side)
-                LowResMap lowResMap = new(Region.Prototype.AlwaysRevealFullMap);
-                SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
-            }
+                RegenerateClientNavi();
 
             _lastUpdatePosition = position;
         }
@@ -583,6 +577,11 @@ namespace MHServerEmu.Games.Network
                     .SetCellId(cell.Id)
                     .Build());
             }
+        }
+
+        private void RegenerateClientNavi()
+        {
+            SendMessage(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
         }
 
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
