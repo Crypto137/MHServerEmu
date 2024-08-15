@@ -12,6 +12,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionRegionLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // TimesBehaviorController
             _proto = prototype as MissionConditionRegionLeavePrototype;
             _playerLeftRegionAction = OnPlayerLeftRegion;
         }

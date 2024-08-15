@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAvatarIsUnlocked(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // NotInGame UnlockHulk
             _proto = prototype as MissionConditionAvatarIsUnlockedPrototype;
             _playerUnlockedAvatarAction = OnPlayerUnlockedAvatar;
         }

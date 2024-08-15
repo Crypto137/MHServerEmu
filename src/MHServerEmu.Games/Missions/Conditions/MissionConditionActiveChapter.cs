@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionActiveChapter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH02Main1PursuingtheHood
             _proto = prototype as MissionConditionActiveChapterPrototype;
             _activeChapterChangedAction = OnActiveChapterChanged;
         }

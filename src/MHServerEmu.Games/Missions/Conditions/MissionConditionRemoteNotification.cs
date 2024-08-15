@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionRemoteNotification(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // AxisRaidBreadcrumb
         }
     }
 }

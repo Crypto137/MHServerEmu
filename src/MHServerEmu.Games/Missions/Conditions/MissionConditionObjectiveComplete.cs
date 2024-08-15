@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionObjectiveComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH00NPETrainingRoom
             _proto = prototype as MissionConditionObjectiveCompletePrototype;
             _avatarEnteredRegionAction = OnAvatarEnteredRegion;
             _playerCompletedMissionObjectiveAction = OnPlayerCompletedMissionObjective;

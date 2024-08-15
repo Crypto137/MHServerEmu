@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionClusterEnemiesCleared(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH02MinorConstructionSite1
             _proto = prototype as MissionConditionClusterEnemiesClearedPrototype;
             _clusterEnemiesClearedAction = OnClusterEnemiesCleared;
         }

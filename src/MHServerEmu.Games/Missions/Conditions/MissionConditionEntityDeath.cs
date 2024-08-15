@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionEntityDeath(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // TrainingRoomBehaviorController
             _proto = prototype as MissionConditionEntityDeathPrototype;
         }
     }

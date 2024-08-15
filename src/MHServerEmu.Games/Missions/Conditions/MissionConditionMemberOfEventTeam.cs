@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionMemberOfEventTeam(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CivilWarWeeklyCap01
         }
     }
 }

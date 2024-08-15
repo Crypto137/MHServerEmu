@@ -14,6 +14,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionHotspotContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // NotInGame ThanosRaidMissionP7GauntletStage1
             _proto = prototype as MissionConditionHotspotContainsPrototype;
             _entityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
             _entityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;

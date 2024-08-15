@@ -16,6 +16,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionHealthRange(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // FirstHeal
             _proto = prototype as MissionConditionHealthRangePrototype;
             _adjustHealthAction = OnAdjustHealth;
         }

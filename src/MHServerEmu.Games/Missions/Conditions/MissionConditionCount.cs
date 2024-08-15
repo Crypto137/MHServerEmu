@@ -9,6 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionCount(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH02MinorCargoFreighter1
             _proto = prototype as MissionConditionCountPrototype;
         }
 

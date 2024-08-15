@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAreaLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // HoloSimEventEscalatedChest
             _proto = prototype as MissionConditionAreaLeavePrototype;
             _playerLeftAreaAction = OnPlayerLeftArea;
         }

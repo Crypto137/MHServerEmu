@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionItemCraft(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            // NotInGame
+            // NotInGame GenoshaSupply01AtomicElements
             _proto = prototype as MissionConditionItemCraftPrototype;
             _playerCraftedItemAction = OnPlayerCraftedItem;
         }

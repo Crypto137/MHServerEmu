@@ -14,6 +14,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionHotspotLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // RaftNPEQuinjetKismetController
             _proto = prototype as MissionConditionHotspotLeavePrototype;
             _entityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;
         }

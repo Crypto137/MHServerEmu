@@ -14,6 +14,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionEntityDamaged(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH00NPETrainingRoom
             _proto = prototype as MissionConditionEntityDamagedPrototype;
             _adjustHealthAction = OnAdjustHealth;
             _entityStatusEffectAction = OnEntityStatusEffect;

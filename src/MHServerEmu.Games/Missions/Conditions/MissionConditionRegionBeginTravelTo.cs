@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionRegionBeginTravelTo(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // RaftNPEMotionComicRaftEscape
         }
     }
 }

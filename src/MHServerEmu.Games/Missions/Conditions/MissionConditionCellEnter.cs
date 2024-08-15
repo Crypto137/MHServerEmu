@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionCellEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // RaftNPEPathingIndicatorController
             _proto = prototype as MissionConditionCellEnterPrototype;
             _playerEnteredCellAction = OnPlayerEnteredCell;
         }

@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionItemCollect(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // RaftNPETutorialPurpleOrbController
             _proto = prototype as MissionConditionItemCollectPrototype;
         }
     }

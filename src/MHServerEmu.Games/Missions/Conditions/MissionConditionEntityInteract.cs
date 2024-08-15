@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionEntityInteract(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH00NPEEternitySplinter
             _proto = prototype as MissionConditionEntityInteractPrototype;
         }
     }

@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionFaction(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // Faction1PortalController
             _proto = prototype as MissionConditionFactionPrototype;
             _playerFactionChangedAction = OnPlayerFactionChanged;
         }

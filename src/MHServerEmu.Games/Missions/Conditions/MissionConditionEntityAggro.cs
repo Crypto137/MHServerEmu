@@ -13,6 +13,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionEntityAggro(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // RaftNPETutorialPurpleOrbController
             _proto = prototype as MissionConditionEntityAggroPrototype;
             _entityAggroedAction = OnEntityAggroed;
             _adjustHealthAction = OnAdjustHealth;

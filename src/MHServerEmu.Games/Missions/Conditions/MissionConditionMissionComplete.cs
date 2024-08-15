@@ -18,6 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionMissionComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH00RaftTutorial
             _proto = prototype as MissionConditionMissionCompletePrototype;
             _openMissionCompleteAction = OnOpenMissionComplete;
             _playerCompletedMissionAction = OnPlayerCompletedMission;

@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionPartySize(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // AchievementSoloTerminalBossesGreen
             _proto = prototype as MissionConditionPartySizePrototype;
             _partySizeChangedAction = OnPartySizeChanged;
         }

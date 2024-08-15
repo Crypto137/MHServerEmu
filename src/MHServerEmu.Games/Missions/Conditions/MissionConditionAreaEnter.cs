@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAreaEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH01Main2VenomsVengeance
             _proto = prototype as MissionConditionAreaEnterPrototype;
             _playerEnteredAreaAction = OnPlayerEnteredArea;
         }

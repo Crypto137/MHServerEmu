@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAvatarLevelUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH02Side4DiscoverICPatrol
             _proto = prototype as MissionConditionAvatarLevelUpPrototype;
             _avatarLeveledUpAction = OnAvatarLeveledUp;
         }

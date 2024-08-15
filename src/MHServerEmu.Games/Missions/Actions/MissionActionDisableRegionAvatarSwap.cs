@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionDisableRegionAvatarSwap(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // Not Used
         }
     }
 }

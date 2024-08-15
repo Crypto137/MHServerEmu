@@ -16,6 +16,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionRegionEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH00RaftTutorial
             _proto = prototype as MissionConditionRegionEnterPrototype;
             _avatarEnteredRegionAction = OnAvatarEnteredRegion;
             _cinematicFinishedAction = OnCinematicFinished;

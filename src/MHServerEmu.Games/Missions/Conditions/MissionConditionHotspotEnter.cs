@@ -14,6 +14,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionHotspotEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH00NPETrainingRoom
             _proto = prototype as MissionConditionHotspotEnterPrototype;
             _entityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
         }

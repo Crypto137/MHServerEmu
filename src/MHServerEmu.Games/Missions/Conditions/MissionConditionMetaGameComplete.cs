@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionMetaGameComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            // Not Used
+            // PvPDefenderDefeatTier1
             _proto = prototype as MissionConditionMetaGameCompletePrototype;
         }
     }

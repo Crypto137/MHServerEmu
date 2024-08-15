@@ -16,6 +16,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionAreaContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
+            // CH04M2PoisonInTheStreets
             _proto = prototype as MissionConditionAreaContainsPrototype;
             _entityEnteredAreaAction = OnEntityEnteredArea;
             _entityLeftAreaAction = OnEntityLeftArea;

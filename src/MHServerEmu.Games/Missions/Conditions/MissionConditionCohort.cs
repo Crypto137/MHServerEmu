@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public MissionConditionCohort(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
-            // DevelopmentOnly
+            // DevelopmentOnly testCohorts
             _proto = prototype as MissionConditionCohortPrototype;
         }
     }
