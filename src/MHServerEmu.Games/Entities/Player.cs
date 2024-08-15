@@ -86,6 +86,9 @@ namespace MHServerEmu.Games.Entities
         private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
+        // TODO: Serialize on migration
+        private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
+
         private TeleportData _teleportData;
 
         // Accessors
@@ -391,7 +394,7 @@ namespace MHServerEmu.Games.Entities
         public override void ExitGame()
         {
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
-            AOI.SetRegion(0, true, null, null);
+            AOI.SetRegion(0, true);
 
             base.ExitGame();
         }
@@ -954,18 +957,37 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Mini Map
+        #region Discovery
 
-        public void SendMiniMapUpdate()
+        public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
+        {
+            Region region = Game.RegionManager.GetRegion(regionId);
+            if (region == null) return Logger.WarnReturn<MapDiscoveryData>(null, "GetMapDiscoveryData(): region == null");
+
+            if (_mapDiscoveryDict.TryGetValue(regionId, out MapDiscoveryData mapDiscoveryData) == false)
+            {
+                mapDiscoveryData = new(region);
+                _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
+            }
+
+            return mapDiscoveryData;
+        }
+
+        public bool SendMiniMapUpdate()
         {
             Logger.Trace($"SendMiniMapUpdate(): {this}");
 
             Region region = GetRegion();
-            if (region == null) return;
+            if (region == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): region == null");
 
-            // TODO: keep track of the map server-side
-            LowResMap lowResMap = new(region.Prototype.AlwaysRevealFullMap);
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryData(region.Id);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): mapDiscoveryData == null");
+
+            LowResMap lowResMap = mapDiscoveryData.LowResMap;
+            if (lowResMap == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): lowResMap == null");
+
             SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
+            return true;
         }
 
         #endregion
