@@ -1426,10 +1426,10 @@ namespace MHServerEmu.Games.Missions
         public IEnumerable<Hotspot> GetMissionHotspots()
         {
             var region = Region;
-            if (region == null) yield return null;
+            if (region == null) yield break;
 
             var hotspots = region.EntityTracker.HotspotsForContext(PrototypeDataRef);
-            if (hotspots == null) yield return null;
+            if (hotspots == null) yield break;
 
             var manager = Game.EntityManager;
             List<ulong> hotspotsIds = new(hotspots);

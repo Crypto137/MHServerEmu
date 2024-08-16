@@ -651,7 +651,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateAreas(bool log)
         {
-            if (TestStatus(RegionStatus.GenerateAreas) == false) return false;
+            if (TestStatus(RegionStatus.GenerateAreas)) return false;
 
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(Prototype.RegionGenerator);
 
