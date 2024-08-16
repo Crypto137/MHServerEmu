@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Regions.Maps
 {
@@ -8,6 +9,8 @@ namespace MHServerEmu.Games.Regions.Maps
     public class MapDiscoveryData
     {
         // TODO: Serialize on region transfer so that we don't lose minimap / entity discovery data
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
 
@@ -22,11 +25,17 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public bool DiscoverEntity(WorldEntity worldEntity)
         {
+            if (worldEntity.IsDiscoverable == false)
+                return Logger.WarnReturn(false, $"DiscoverEntity(): Entity {worldEntity} is not discoverable");
+
             return _discoveredEntities.Add(worldEntity.Id);
         }
 
         public bool UndiscoverEntity(WorldEntity worldEntity)
         {
+            if (worldEntity.IsDiscoverable == false)
+                return Logger.WarnReturn(false, $"UndiscoverEntity(): Entity {worldEntity} is not discoverable");
+
             return _discoveredEntities.Remove(worldEntity.Id);
         }
 
