@@ -1,5 +1,6 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Populations;
@@ -224,6 +225,22 @@ namespace MHServerEmu.Games.Regions
         {
             Player = player;
             MovieRef = movieRef;
+        }
+    }
+
+    public struct AvatarUsedPowerGameEvent
+    {
+        public Player Player;
+        public Avatar Avatar;
+        public PrototypeId PowerRef;
+        public ulong TargetEntityId;
+
+        public AvatarUsedPowerGameEvent(Player player, Avatar avatar, PrototypeId powerRef, ulong targetEntityId)
+        {
+            Player = player;
+            Avatar = avatar;
+            PowerRef = powerRef;
+            TargetEntityId = targetEntityId;
         }
     }
 
