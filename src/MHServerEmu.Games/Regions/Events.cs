@@ -256,6 +256,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct KismetSeqFinishedGameEvent
+    {
+        public Player Player;
+        public PrototypeId KismetSeqRef;
+
+        public KismetSeqFinishedGameEvent(Player player, PrototypeId kismetSeqRef)
+        {
+            Player = player;
+            KismetSeqRef = kismetSeqRef;
+        }
+    }
+
     public struct CinematicFinishedGameEvent
     {
         public Player Player;
