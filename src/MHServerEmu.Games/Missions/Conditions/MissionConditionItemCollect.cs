@@ -65,14 +65,13 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void CollectItem(Player player, Item item, int count)
+        private void CollectItem(Player player, int count)
         {
             if (count > 0 || (count < 0 && Count > 0))
             {                
                 Count += count;
                 UpdatePlayerContribution(player, count);
             }
-            if (_proto.DestroyOnPickup) item.Properties[PropertyEnum.PickupDestroyPending] = true;
         }
 
         private void OnPlayerPreItemPickup(PlayerPreItemPickupGameEvent evt)
@@ -81,7 +80,11 @@ namespace MHServerEmu.Games.Missions.Conditions
             var item = evt.Item;
             if (EvaluateItem(player, item) == false) return;
             int count = item.CurrentStackSize;
-            if (count > 0) CollectItem(player, item, count);
+            if (count > 0)
+            {
+                CollectItem(player, count);
+                item.Properties[PropertyEnum.PickupDestroyPending] = true;
+            }
         }
 
         private void OnPlayerCollectedItem(PlayerCollectedItemGameEvent evt)
@@ -90,7 +93,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             var item = evt.Item;
             if (EvaluateItem(player, item) == false) return;
             int count = evt.Count;
-            if (count > 0) CollectItem(player, item, count);
+            CollectItem(player, count);
         }
 
         private void OnPlayerLostItem(PlayerLostItemGameEvent evt)
@@ -98,8 +101,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             var player = evt.Player;
             var item = evt.Item;
             if (EvaluateItem(player, item) == false) return;
-            int count = evt.Count;
-            if (count > 0) CollectItem(player, item, -count);
+            int count = -evt.Count;
+            CollectItem(player, count);
         }
 
         public override void RegisterEvents(Region region)
