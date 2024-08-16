@@ -8,5 +8,11 @@ namespace MHServerEmu.Games.Missions.Conditions
             : base(mission, owner, prototype)
         {
         }
+
+        public override bool OnReset()
+        {
+            SetCompleted();
+            return true;
+        }
     }
 }
