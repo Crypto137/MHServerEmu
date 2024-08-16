@@ -132,6 +132,46 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerCollectedItemGameEvent
+    {
+        public Player Player;
+        public Item Item;
+        public int Count;
+
+        public PlayerCollectedItemGameEvent(Player player, Item item, int count)
+        {
+            Player = player;
+            Item = item;
+            Count = count;
+        }
+    }
+
+    public struct PlayerLostItemGameEvent
+    {
+        public Player Player;
+        public Item Item;
+        public int Count;
+
+        public PlayerLostItemGameEvent(Player player, Item item, int count)
+        {
+            Player = player;
+            Item = item;
+            Count = count;
+        }
+    }
+
+    public struct PlayerPreItemPickupGameEvent
+    {
+        public Player Player;
+        public Item Item;
+
+        public PlayerPreItemPickupGameEvent(Player player, Item item)
+        {
+            Player = player;
+            Item = item;
+        }
+    }
+
     public struct PlayerEquippedItemGameEvent
     {
         public Player Player;
