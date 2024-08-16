@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Network
                 if (newRegion == null) return Logger.WarnReturn(false, "SetRegion(): region == null");
             }
 
-            // TODO: Notify the current region that we are leaving
+            prevRegion?.OnRemovedFromAOI(player);
 
             // Reset previous state
             _lastUpdatePosition = Vector3.Zero;
@@ -234,6 +234,9 @@ namespace MHServerEmu.Games.Network
                 if (_trackedEntities.Count > 0) Logger.Warn("SetRegion(): _trackedEntities.Count > 0");
             }
 
+            // Change to the new region
+            Region = newRegion;
+
             // Fill in required region change message fields
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(regionId)
@@ -272,9 +275,10 @@ namespace MHServerEmu.Games.Network
                 if (startPosition == null)
                     return Logger.WarnReturn(false, "SetRegion(): No valid start position is provided");
 
+                newRegion.OnAddedToAOI(player);
+
                 // BeginTeleport() queues another loading screen, so we end up with two in a row. This matches our packet dumps.
                 player.BeginTeleport(regionId, startPosition.Value, startOrientation != null ? startOrientation.Value : Orientation.Zero);
-                Region = newRegion;
                 Update(startPosition.Value, true, true);
             }
 

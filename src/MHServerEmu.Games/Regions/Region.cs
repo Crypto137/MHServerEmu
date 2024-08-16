@@ -1284,6 +1284,16 @@ namespace MHServerEmu.Games.Regions
             LastVisitedTime = Clock.UnixTime;
         }
 
+        public void OnAddedToAOI(Player player)
+        {
+            Logger.Debug($"OnAddedToAOI(): {this} to {player}");
+        }
+
+        public void OnRemovedFromAOI(Player player)
+        {
+            Logger.Debug($"OnRemovedFromAOI(): {this} from {player}");
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && Prototype.HasKeyword(keywordProto);
