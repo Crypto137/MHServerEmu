@@ -973,6 +973,49 @@ namespace MHServerEmu.Games.Entities
             return mapDiscoveryData;
         }
 
+        public MapDiscoveryData GetMapDiscoveryDataForEntity(WorldEntity worldEntity)
+        {
+            Region region = worldEntity?.Region;
+            if (region == null) return null;
+            return GetMapDiscoveryData(region.Id);
+        }
+
+        public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "DiscoverEntity(): mapDiscoveryData == null");
+
+            if (mapDiscoveryData.DiscoverEntity(worldEntity) == false)
+                return false;
+
+            if (updateInterest)
+                AOI.ConsiderEntity(worldEntity);
+
+            Logger.Debug($"DiscoverEntity(): {worldEntity}");
+            return true;
+        }
+
+        public bool UndiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "UndiscoverEntity(): mapDiscoveryData == null");
+
+            if (mapDiscoveryData.UndiscoverEntity(worldEntity) == false)
+                return false;
+
+            if (updateInterest)
+                AOI.ConsiderEntity(worldEntity);
+
+            Logger.Debug($"UndiscoverEntity(): {worldEntity}");
+            return true;
+        }
+
+        public bool IsEntityDiscovered(WorldEntity worldEntity)
+        {
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
+            return mapDiscoveryData != null && mapDiscoveryData.IsEntityDiscovered(worldEntity);
+        }
+
         public bool SendMiniMapUpdate()
         {
             Logger.Trace($"SendMiniMapUpdate(): {this}");

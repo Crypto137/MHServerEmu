@@ -840,7 +840,7 @@ namespace MHServerEmu.Games.Network
 
                     // HACK: Discover
                     if (worldEntity.TrackAfterDiscovery && worldEntity is not Item)
-                        newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
+                        player.DiscoverEntity(worldEntity, false);
                 }
                 else if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
                 {
@@ -848,10 +848,8 @@ namespace MHServerEmu.Games.Network
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
                 }
 
-                // Transfer discovery
-                // TODO: We probably need to keep track of discovered entities somewhere else
-                // so that they can remain discovered when we change regions.
-                if (currentInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery))
+                // Discovery
+                if (player.IsEntityDiscovered(worldEntity))
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
             }
 
@@ -860,7 +858,7 @@ namespace MHServerEmu.Games.Network
             if (entity.IsOwnedBy(player.Id))
                 newInterestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
 
-            // TODO: proper Discovery implementation, Party, Trade
+            // TODO: Party, Trade
 
             // Filter out results that don't match channels specified in the entity prototype
             if ((newInterestPolicies & entity.CompatibleReplicationChannels) == AOINetworkPolicyValues.AOIChannelNone)

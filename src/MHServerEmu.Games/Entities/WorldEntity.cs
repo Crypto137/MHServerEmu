@@ -1506,6 +1506,24 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
+
+            // Undiscover from players
+            if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
+            {
+                foreach (ulong playerId in InterestReferences.PlayerIds)
+                {
+                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
+
+                    if (player == null)
+                    {
+                        Logger.Warn("OnExitedWorld(): player == null");
+                        continue;
+                    }
+
+                    player.UndiscoverEntity(this, false);   // Skip interest update for undiscover because we are doing an update below anyway
+                }
+            }
+
             UpdateInterestPolicies(false);
 
             UpdateSimulationState();
