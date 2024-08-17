@@ -152,6 +152,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerEventTeamChangedGameEvent> PlayerEventTeamChangedEvent = new();
         public Event<PlayerMetaGameCompleteGameEvent> PlayerMetaGameCompleteEvent = new();
         public Event<LoadingScreenFinishedGameEvent> LoadingScreenFinishedEvent = new();
+        public Event<PlayerBeginTravelToRegionGameEvent> PlayerBeginTravelToRegionEvent = new();
         public Event<PlayerBeginTravelToAreaGameEvent> PlayerBeginTravelToAreaEvent = new();
         public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
         public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();

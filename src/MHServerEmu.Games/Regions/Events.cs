@@ -257,6 +257,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerBeginTravelToRegionGameEvent
+    {
+        public Player Player;
+        public PrototypeId RegionRef;
+
+        public PlayerBeginTravelToRegionGameEvent(Player player, PrototypeId regionRef)
+        {
+            Player = player;
+            RegionRef = regionRef;
+        }
+    }
+
     public struct LoadingScreenFinishedGameEvent
     {
         public Player Player;
