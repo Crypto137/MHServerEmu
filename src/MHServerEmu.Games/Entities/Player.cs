@@ -1158,6 +1158,13 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
+        {
+            int eventInstance = eventProto.GetEventInstance();
+            var teamProp = new PropertyId(PropertyEnum.PublicEventTeamAssignment, eventProto.DataRef, eventInstance);
+            return Properties[teamProp];
+        }
+
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();

@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 
@@ -154,10 +153,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 MaximumMissileBoundsSphereRadius = Math.Max(radius, MaximumMissileBoundsSphereRadius);
             }
         }
-    }
-
-    public class PublicEventTeamPrototype : Prototype
-    {
-        public LocaleStringId Name { get; protected set; }
     }
 }
