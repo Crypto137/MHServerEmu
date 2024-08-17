@@ -256,6 +256,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerEventTeamChangedGameEvent
+    {
+        public Player Player;
+        public PrototypeId EventTeamRef;
+
+        public PlayerEventTeamChangedGameEvent(Player player, PrototypeId eventTeamRef)
+        {
+            Player = player;
+            EventTeamRef = eventTeamRef;
+        }
+    }
+
     public struct KismetSeqFinishedGameEvent
     {
         public Player Player;

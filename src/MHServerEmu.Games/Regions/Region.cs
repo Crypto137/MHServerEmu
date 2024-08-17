@@ -149,6 +149,7 @@ namespace MHServerEmu.Games.Regions
         public Event<ActiveChapterChangedGameEvent> ActiveChapterChangedEvent = new();
         public Event<CinematicFinishedGameEvent> CinematicFinishedEvent = new();
         public Event<KismetSeqFinishedGameEvent> KismetSeqFinishedEvent = new();
+        public Event<PlayerEventTeamChangedGameEvent> PlayerEventTeamChangedEvent = new();
         public Event<LoadingScreenFinishedGameEvent> LoadingScreenFinishedEvent = new();
         public Event<PlayerBeginTravelToAreaGameEvent> PlayerBeginTravelToAreaEvent = new();
         public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
