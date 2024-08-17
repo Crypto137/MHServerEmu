@@ -812,6 +812,11 @@ namespace MHServerEmu.Games.Entities
             return teamUpInv.GetMatchingEntity(teamUpProtoRef) as Agent;
         }
 
+        public bool IsTeamUpAgentUnlocked(PrototypeId teamUpPrototype)
+        {
+            return GetTeamUpAgent(teamUpPrototype) != null;
+        }
+
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
         {
             Power avatarSwapChannel = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower);

@@ -89,6 +89,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerUnlockedTeamUpGameEvent
+    {
+        public Player Player;
+        public PrototypeId TeamUpRef;
+
+        public PlayerUnlockedTeamUpGameEvent(Player player, PrototypeId teamUpRef)
+        {
+            Player = player;
+            TeamUpRef = teamUpRef;
+        }
+    }
+
     public struct NotificationInteractGameEvent
     {
         public Player Player;
