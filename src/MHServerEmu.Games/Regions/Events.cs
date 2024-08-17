@@ -101,6 +101,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerDeathLimitHitGameEvent
+    {
+        public Player Player;
+        public PrototypeId MetaStateRef;
+
+        public PlayerDeathLimitHitGameEvent(Player player, PrototypeId metaStateRef)
+        {
+            Player = player;
+            MetaStateRef = metaStateRef;
+        }
+    }
+
     public struct NotificationInteractGameEvent
     {
         public Player Player;
