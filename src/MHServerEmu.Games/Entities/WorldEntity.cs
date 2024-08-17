@@ -138,6 +138,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
+        public TagPlayers TagPlayers;
 
         public WorldEntity(Game game) : base(game)
         {
@@ -180,6 +181,8 @@ namespace MHServerEmu.Games.Entities
             _conditionCollection = new(this);
             _powerCollection = new(this);
             _unkEvent = 0;
+
+            TagPlayers = new(this);
 
             return true;
         }
@@ -1764,6 +1767,17 @@ namespace MHServerEmu.Games.Entities
         public bool IsCloneParent()
         {
             return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
+        }
+
+        public void SetTaggedBy(Player player, PowerPrototype powerProto)
+        {
+            TagPlayers.Add(player, powerProto);
+            var group = SpawnGroup;
+            if (group != null && group.SpawnerId != InvalidId)
+            {
+                var spawner = Game.EntityManager.GetEntity<Spawner>(group.SpawnerId);
+                spawner?.SetTaggedBy(player, null);
+            }            
         }
 
         public override SimulateResult SetSimulated(bool simulated)

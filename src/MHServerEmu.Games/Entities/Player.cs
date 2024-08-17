@@ -81,6 +81,7 @@ namespace MHServerEmu.Games.Entities
         private Community _community;
         private List<PrototypeId> _unlockedInventoryList = new();
         private SortedSet<AvailableBadges> _badges = new();
+        private HashSet<ulong> _tagEntities = new();
         private GameplayOptions _gameplayOptions = new();
         private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
@@ -777,7 +778,8 @@ namespace MHServerEmu.Games.Entities
         /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
         /// </summary>
         public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
-
+        public void AddTag(WorldEntity entity) => _tagEntities.Add(entity.Id);
+        public void RemoveTag(WorldEntity entity) => _tagEntities.Remove(entity.Id);
 
         #region Avatar and Team-Up Management
 
