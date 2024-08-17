@@ -209,6 +209,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct SpawnerDefeatedGameEvent
+    {
+        public Player Player;
+        public Spawner Spawner;
+
+        public SpawnerDefeatedGameEvent(Player player, Spawner spawner)
+        {
+            Player = player;
+            Spawner = spawner;
+        }
+    }
+
     public struct ThrowablePickedUpGameEvent
     {
         public Player Player;
