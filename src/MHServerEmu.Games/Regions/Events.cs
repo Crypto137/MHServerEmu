@@ -209,6 +209,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct ThrowablePickedUpGameEvent
+    {
+        public Player Player;
+        public WorldEntity Throwable;
+
+        public ThrowablePickedUpGameEvent(Player player, WorldEntity throwable)
+        {
+            Player = player;
+            Throwable = throwable;
+        }
+    }
+
     public struct PlayerInteractGameEvent
     {
         public Player Player;
