@@ -122,6 +122,7 @@ namespace MHServerEmu.Games.Regions
 
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
         public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
+        public Event<NotificationInteractGameEvent> NotificationInteractEvent = new();
         public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
         public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
         public Event<AdjustHealthGameEvent> AdjustHealthEvent = new();

@@ -89,6 +89,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct NotificationInteractGameEvent
+    {
+        public Player Player;
+        public PrototypeId MissionRef;
+
+        public NotificationInteractGameEvent(Player player, PrototypeId missionRef)
+        {
+            Player = player;
+            MissionRef = missionRef;
+        }
+    }
+
     public struct PlayerDonatedItemGameEvent
     {
         public Player Player;
