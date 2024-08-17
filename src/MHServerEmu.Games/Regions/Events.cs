@@ -3,6 +3,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
 
 namespace MHServerEmu.Games.Regions
@@ -253,6 +254,20 @@ namespace MHServerEmu.Games.Regions
         {
             Player = player;
             RegionRef = regionRef;
+        }
+    }
+
+    public struct PlayerMetaGameCompleteGameEvent
+    {
+        public Player Player;
+        public PrototypeId MetaGameRef;
+        public MetaGameCompleteType CompleteType;
+
+        public PlayerMetaGameCompleteGameEvent(Player player, PrototypeId metaGameRef, MetaGameCompleteType completeType)
+        {
+            Player = player;
+            MetaGameRef = metaGameRef;
+            CompleteType = completeType;
         }
     }
 
