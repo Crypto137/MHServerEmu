@@ -173,6 +173,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerUnlockedAvatarGameEvent> PlayerUnlockedAvatarEvent = new();
         public Event<EntityEnteredWorldGameEvent> EntityEnteredWorldEvent = new();
         public Event<EntityExitedWorldGameEvent> EntityExitedWorldEvent = new();
+        public Event<OrbPickUpEvent> OrbPickUpEvent = new();
 
         #endregion
 

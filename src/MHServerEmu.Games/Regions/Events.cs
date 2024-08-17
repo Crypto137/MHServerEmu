@@ -197,6 +197,18 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct OrbPickUpEvent
+    {
+        public Player Player;
+        public WorldEntity Orb;
+
+        public OrbPickUpEvent(Player player, WorldEntity orb)
+        {
+            Player = player;
+            Orb = orb;
+        }
+    }
+
     public struct PlayerEnteredAreaGameEvent
     {
         public Player Player;
