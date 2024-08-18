@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -31,14 +32,40 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private bool GetCompletion(bool creditTo)
+        public override bool EvaluateOnReset()
         {
-            Mission mission = GetMission();
+            if (_proto.Count != 1) return false;
+            return _proto.EvaluateOnReset;
+        }
+
+        public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired)
+        {
+            if (_proto.ShowCountFromTargetObjective == false)
+                return base.GetCompletionCount(ref currentCount, ref requiredCount, isRequired);
+
+            var mission = GetMission();
+            if (mission == null) return false;
+
+            var objective = mission.GetObjectiveByObjectiveID(_proto.ObjectiveID);
+            if (objective == null) return false;
+
+            ushort objectiveCount = 0;
+            ushort objectiveReqCount = 0;
+
+            if (objective.GetCompletionCount(ref objectiveCount, ref objectiveReqCount) || isRequired)
+            {
+                currentCount += objectiveCount;
+                requiredCount += objectiveReqCount;
+            }
+            return requiredCount > 0;
+        }
+
+        private bool GetCompletion(bool creditTo, Player player = null)
+        {
+            var mission = GetMission();
             if (mission == null) return false;
 
             if (creditTo)
-            {
-                var player = Player;
                 switch (_proto.CreditTo)
                 {
                     case DistributionType.Participants:
@@ -51,7 +78,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                         if (player == null || mission.GetContribution(player) <= 0.0f) return false;
                         break;
                 }
-            }
 
             var objectiveState = MissionObjectiveState.Invalid;
             var objective = mission.GetObjectiveByObjectiveID(_proto.ObjectiveID);
@@ -59,10 +85,63 @@ namespace MHServerEmu.Games.Missions.Conditions
             return objectiveState == MissionObjectiveState.Completed || mission.State == MissionState.Completed;
         }
 
-        public override bool EvaluateOnReset()
+        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
         {
-            if (_proto.Count != 1) return false;
-            return _proto.EvaluateOnReset;
+            var player = evt.Player;
+            if (player == null || IsMissionPlayer(player) == false) return;
+            if (GetCompletion(true, player) == false) return;
+
+            UpdatePlayerContribution(player);
+            Count++;
+        }
+
+        private void OnPlayerCompletedMissionObjective(PlayerCompletedMissionObjectiveGameEvent evt)
+        {
+            var player = evt.Player;
+            var missionRef = evt.MissionRef;
+            var objectiveId = evt.ObjectiveId;
+            bool participant = evt.Participant;
+            bool contributor = evt.Contributor;
+
+            if (player == null || IsMissionPlayer(player) == false) return;
+
+            if (_proto.MissionPrototype != PrototypeId.Invalid)
+            {            
+                if (_proto.MissionPrototype != missionRef) return; 
+            }
+            else
+            {
+                if (Mission.PrototypeDataRef != missionRef) return;
+            }
+
+            if (_proto.ObjectiveID != objectiveId) return;
+
+            switch (_proto.CreditTo)
+            {
+                case DistributionType.Participants:
+                    if (participant == false) return;
+                    break;
+
+                case DistributionType.Contributors:
+                    if (contributor == false) return;
+                    break;
+            }
+
+            UpdatePlayerContribution(player);
+            Count++;
+        }
+
+        private void OnMissionObjectiveUpdated(MissionObjectiveUpdatedGameEvent evt)
+        {
+            var player = evt.Player;
+            var missionRef = evt.MissionRef;
+            var objectiveId = evt.ObjectiveId;
+
+            if (player == null || IsMissionPlayer(player) == false) return;
+            if (_proto.MissionPrototype != missionRef) return;
+            if (_proto.ObjectiveID != objectiveId) return;
+
+            OnUpdate();
         }
 
         public override void RegisterEvents(Region region)
@@ -85,21 +164,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                 region.AvatarEnteredRegionEvent.RemoveAction(_avatarEnteredRegionAction);
             if (_proto.ShowCountFromTargetObjective)
                 region.MissionObjectiveUpdatedEvent.RemoveAction(_missionObjectiveUpdatedAction);
-        }
-
-        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void OnPlayerCompletedMissionObjective(PlayerCompletedMissionObjectiveGameEvent evt)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void OnMissionObjectiveUpdated(MissionObjectiveUpdatedGameEvent evt)
-        {
-            throw new NotImplementedException();
         }
     }
 }
