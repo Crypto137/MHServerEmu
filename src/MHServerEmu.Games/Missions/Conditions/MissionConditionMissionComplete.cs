@@ -86,18 +86,12 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (area == null || _proto.WithinAreas.Contains(area.PrototypeDataRef) == false) return false;
             }
 
-            switch (_proto.CreditTo)
+            return _proto.CreditTo switch
             {
-                case DistributionType.Participants:
-                    if (participant == false) return false;
-                    break;
-
-                case DistributionType.Contributors:
-                    if (contributor == false) return false;
-                    break;
-            }
-
-            return true;
+                DistributionType.Participants => participant,
+                DistributionType.Contributors => contributor,
+                _ => true
+            };
         }
 
         private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
@@ -152,6 +146,9 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             var player = evt.Player;
             var missionRef = evt.MissionRef;
+
+            if (GameDatabase.GetPrototype<OpenMissionPrototype>(missionRef) != null) return;
+
             bool participant = evt.Participant;
             bool contributor = evt.Contributor;
 
