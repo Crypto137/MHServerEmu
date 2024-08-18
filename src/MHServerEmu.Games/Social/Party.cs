@@ -6,6 +6,11 @@ namespace MHServerEmu.Games.Social
     {
         public int NumMembers { get; internal set; }
 
+        internal IEnumerable<Player> GetMembers()
+        {
+            throw new NotImplementedException();
+        }
+
         internal bool IsLeader(Player interactingPlayer)
         {
             throw new NotImplementedException();

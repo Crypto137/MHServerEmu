@@ -105,9 +105,9 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             if (player == null || IsMissionPlayer(player) == false) return;
 
-            if (_proto.MissionPrototype != PrototypeId.Invalid)
+            if (MissionProtoRef != PrototypeId.Invalid)
             {            
-                if (_proto.MissionPrototype != missionRef) return; 
+                if (MissionProtoRef != missionRef) return; 
             }
             else
             {

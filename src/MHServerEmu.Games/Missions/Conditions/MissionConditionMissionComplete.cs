@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -45,9 +46,137 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (_proto.MissionPrototype == PrototypeId.Invalid) return false;
             if (_proto.WithinRegions.HasValue()) return false;
             if (_proto.WithinAreas.HasValue()) return false;
-            if (GameDatabase.GetPrototype<MissionPrototype>(_proto.MissionPrototype) is OpenMissionPrototype) return false;
+            if (GameDatabase.GetPrototype<MissionPrototype>(MissionProtoRef) is OpenMissionPrototype) return false;
 
             return _proto.EvaluateOnReset;
+        }
+
+        private bool FilterMission(PrototypeId missionRef)
+        {
+            if (MissionProtoRef != PrototypeId.Invalid)
+                return MissionProtoRef == missionRef;
+
+            if (_proto.MissionKeyword != PrototypeId.Invalid)
+            {
+                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (missionProto == null) return false;
+                var missionKeyword = GameDatabase.GetPrototype<KeywordPrototype>(_proto.MissionKeyword);
+                return missionProto.HasKeyword(missionKeyword);
+            }
+
+            return false;
+        }
+
+        private bool EvaluatePlayer(Player player, PrototypeId missionRef, bool participant, bool contributor)
+        {
+            if (player == null || IsMissionPlayer(player) == false) return false;
+
+            if (FilterMission(missionRef) == false) return false;
+
+            var manager = Mission.MissionManager;
+            if (_proto.WithinRegions.HasValue())
+            {
+                var region = manager.GetRegion();
+                if (region == null || region.FilterRegions(_proto.WithinRegions) == false) return false;
+            }
+
+            if (_proto.WithinAreas.HasValue())
+            {
+                var area = player.CurrentAvatar?.Area;
+                if (area == null || _proto.WithinAreas.Contains(area.PrototypeDataRef) == false) return false;
+            }
+
+            switch (_proto.CreditTo)
+            {
+                case DistributionType.Participants:
+                    if (participant == false) return false;
+                    break;
+
+                case DistributionType.Contributors:
+                    if (contributor == false) return false;
+                    break;
+            }
+
+            return true;
+        }
+
+        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        {
+            var missionRef = evt.MissionRef;
+            if (FilterMission(missionRef) == false) return;
+
+            var manager = Mission.MissionManager;
+            if (_proto.WithinRegions.HasValue())
+            {
+                var region = manager.GetRegion();
+                if (region == null || region.FilterRegions(_proto.WithinRegions) == false) return;
+            }
+
+            if (manager.IsPlayerMissionManager())
+            {
+                var player = manager.Player;
+                if (player == null) return;
+                var regionManager = player.GetRegion()?.MissionManager;
+                if (regionManager == null) return;
+                var mission = regionManager.FindMissionByDataRef(missionRef);
+                if (mission == null || mission.IsOpenMission == false) return;
+
+                bool isPartipant = false;
+                bool isContributor = false;
+                List<Entity> participants = new();
+                mission.GetParticipants(participants);
+
+                var party = player.Party;
+                if (party != null)
+                {
+                    foreach (Player member in party.GetMembers())
+                    {
+                        isPartipant |= participants.Contains(member);
+                        isContributor |= mission.GetContribution(member) > 0.0f;
+                    }
+                }
+                else
+                {
+                    isPartipant = participants.Contains(player);
+                    isContributor = mission.GetContribution(player) > 0.0f;
+                }
+
+                if (EvaluatePlayer(player, missionRef, isPartipant, isContributor))
+                    UpdatePlayerContribution(player);
+            }
+            
+            Count++;
+        }
+
+        private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
+        {
+            var player = evt.Player;
+            var missionRef = evt.MissionRef;
+            bool participant = evt.Participant;
+            bool contributor = evt.Contributor;
+
+            if (EvaluatePlayer(player, missionRef, participant, contributor) == false) return;
+
+            UpdatePlayerContribution(player);
+            Count++;
+        }
+
+        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
+        {
+            var player = evt.Player;
+
+            if (player == null || IsMissionPlayer(player) == false) return;
+
+            var missionRef = MissionProtoRef;
+            var region = Mission.MissionManager.GetRegion();
+
+            var manager = MissionManager.FindMissionManagerForMission(Player, region, missionRef);            
+            var mission = manager?.FindMissionByDataRef(missionRef);
+            if (mission == null) return;
+            if (mission.State != MissionState.Completed) return;
+
+            UpdatePlayerContribution(player);
+            Count++;
         }
 
         public override void RegisterEvents(Region region)
@@ -55,9 +184,11 @@ namespace MHServerEmu.Games.Missions.Conditions
             EventsRegistered = true;
 
             var missionProto = GameDatabase.GetPrototype<MissionPrototype>(_proto.MissionPrototype);
-            if (missionProto == null || missionProto is OpenMissionPrototype)
+            bool isOpenMission = missionProto is OpenMissionPrototype;
+
+            if (missionProto == null || isOpenMission)
                 region.OpenMissionCompleteEvent.AddActionBack(_openMissionCompleteAction); 
-            if (missionProto == null || missionProto is not OpenMissionPrototype)
+            if (missionProto == null || isOpenMission == false)
                 region.PlayerCompletedMissionEvent.AddActionBack(_playerCompletedMissionAction);
 
             if (_proto.EvaluateOnRegionEnter)
@@ -69,28 +200,15 @@ namespace MHServerEmu.Games.Missions.Conditions
             EventsRegistered = false;
 
             var missionProto = GameDatabase.GetPrototype<MissionPrototype>(_proto.MissionPrototype);
-            if (missionProto == null || missionProto is OpenMissionPrototype)
+            bool isOpenMission = missionProto is OpenMissionPrototype;
+
+            if (missionProto == null || isOpenMission)
                 region.OpenMissionCompleteEvent.RemoveAction(_openMissionCompleteAction);
-            if (missionProto == null || missionProto is not OpenMissionPrototype)
+            if (missionProto == null || isOpenMission == false)
                 region.PlayerCompletedMissionEvent.RemoveAction(_playerCompletedMissionAction);
 
             if (_proto.EvaluateOnRegionEnter)
                 region.AvatarEnteredRegionEvent.RemoveAction(_avatarEnteredRegionAction);
-        }
-
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
-        {
-            throw new NotImplementedException();
         }
     }
 }
