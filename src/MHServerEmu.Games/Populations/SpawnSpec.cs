@@ -219,6 +219,38 @@ namespace MHServerEmu.Games.Populations
             Specs.Add(spec);
         }
 
+        public bool FilterEntity(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity skipEntity,
+            EntityFilterPrototype entityFilter, EntityFilterContext entityFilterContext, AlliancePrototype allianceProto = null)
+        {
+            allianceProto ??= GameDatabase.GlobalsPrototype.PlayerAlliancePrototype;
+
+            foreach (var spec in Specs)
+            {
+                var activeEntity = spec.ActiveEntity;
+                if (activeEntity == null || activeEntity == skipEntity || activeEntity.IsHotspot) continue;
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled) && activeEntity.IsDestroyed) continue;
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyed)
+                    && (spec.State == SpawnState.Defeated || spec.State == SpawnState.Destroyed)) continue;
+                if (activeEntity.IsHotspot) continue;
+                if (activeEntity is Spawner spawner)
+                {
+                    if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyed)
+                        && (spec.State != SpawnState.Defeated || spec.State != SpawnState.Destroyed)) return true;
+                    if (spawner.IsActive == false) return true;
+                    if (spawner.FilterEntity(filterFlag, entityFilter, entityFilterContext, allianceProto)) return true;
+                }
+                else
+                {
+                    if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled) 
+                        && (activeEntity.IsDead || activeEntity.IsControlledEntity)) continue;
+                    if (entityFilter != null && entityFilter.Evaluate(activeEntity, entityFilterContext) == false) continue;
+                    if (EntityQueryAllianceCheck(filterFlag, activeEntity, allianceProto)) return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool GetEntities(out List<WorldEntity> entities, SpawnGroupEntityQueryFilterFlags filterFlag, AlliancePrototype allianceProto = null)
         {
             entities = new();
@@ -245,7 +277,7 @@ namespace MHServerEmu.Games.Populations
             return entities;
         }
 
-        private static bool EntityQueryAllianceCheck(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity entity, AlliancePrototype allianceProto)
+        public static bool EntityQueryAllianceCheck(SpawnGroupEntityQueryFilterFlags filterFlag, WorldEntity entity, AlliancePrototype allianceProto)
         {
             if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.All))
                 return true;
@@ -316,6 +348,7 @@ namespace MHServerEmu.Games.Populations
         Hostiles = 1 << 1,
         Allies = 1 << 2,
         NotDeadDestroyedControlled = 1 << 3,
+        NotDeadDestroyed = 1 << 4,
         All = Neutrals | Hostiles | Allies
     }
 }

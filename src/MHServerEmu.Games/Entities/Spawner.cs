@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -14,6 +15,7 @@ namespace MHServerEmu.Games.Entities
         public bool DebugLog;
 
         public SpawnerPrototype SpawnerPrototype => Prototype as SpawnerPrototype;
+        public bool IsActive { get; private set; }
 
         // New
         public Spawner(Game game) : base(game) { }
@@ -85,19 +87,55 @@ namespace MHServerEmu.Games.Entities
             populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
         }
 
-        public void Trigger(EntityTriggerEnum trigger)
+        public override void Trigger(EntityTriggerEnum trigger)
         {
             Logger.Debug($"Trigger(): {this}");
+            base.Trigger(trigger);
+
+            // TODO spawn events
+
+            switch (trigger)
+            {
+                case EntityTriggerEnum.Pulse:
+                    Spawn();
+                    break;
+
+                case EntityTriggerEnum.Enabled:
+                    IsActive = true;
+                    break;
+            }
         }
 
         public void KillSummonedInventory()
         {
-            Logger.Debug($"KillSummonedInventory(): {this}");
+            var manager = Game.EntityManager;
+            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
+            {
+                var summoned = manager.GetEntity<WorldEntity>(inventory.Id);
+                if (summoned != null && summoned.IsDead == false)
+                    summoned.Kill();
+            }
         }
 
         public void OnDefeatEntity(WorldEntity activeEntity)
         {
             // TODO NetMessageEntityKill
+        }
+
+        public bool FilterEntity(SpawnGroupEntityQueryFilterFlags filterFlag, EntityFilterPrototype entityFilter, EntityFilterContext entityFilterContext, 
+            AlliancePrototype allianceProto)
+        {
+            var manager = Game.EntityManager;
+            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
+            {
+                var summoned = manager.GetEntity<WorldEntity>(inventory.Id);
+                if (summoned == null) continue;
+                if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled)
+                    && (summoned.IsDead || summoned.IsDestroyed || summoned.IsControlledEntity)) continue;
+                if (entityFilter != null && entityFilter.Evaluate(summoned, entityFilterContext) == false) continue;
+                if (SpawnGroup.EntityQueryAllianceCheck(filterFlag, summoned, allianceProto)) return true;
+            }
+            return false;
         }
     }
 }

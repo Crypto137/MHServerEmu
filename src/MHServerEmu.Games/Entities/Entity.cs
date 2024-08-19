@@ -358,6 +358,19 @@ namespace MHServerEmu.Games.Entities
             return SimulateResult.None;
         }
 
+        public virtual void Trigger(EntityTriggerEnum trigger)
+        {
+            switch (trigger)
+            {
+                case EntityTriggerEnum.Enabled:
+                    Properties[PropertyEnum.Enabled] = true;
+                    break;
+                case EntityTriggerEnum.Disabled:
+                    Properties[PropertyEnum.Enabled] = false;
+                    break;
+            }
+        }
+
         public virtual void Destroy()
         {
             CancelScheduledLifespanExpireEvent();
