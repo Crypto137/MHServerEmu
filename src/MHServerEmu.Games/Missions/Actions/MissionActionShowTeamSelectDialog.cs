@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionShowTeamSelectDialog(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // NotInGame CivilWarEventProgressionMissionPhase02
         }
     }
 }

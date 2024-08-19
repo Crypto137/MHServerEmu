@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionHideHUDTutorial(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // CH00NPETrainingRoom
         }
     }
 }

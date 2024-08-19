@@ -8,6 +8,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionMissionActivate(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // CH03M1MeetInMadripoor
         }
 
         public override bool RunOnStart()

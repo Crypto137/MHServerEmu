@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionRegionShutdown(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // OneShotMissionRedSkull
         }
     }
 }

@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionInventoryRemoveItem(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // CH03Main2TheTabletChase
         }
     }
 }

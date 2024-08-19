@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionEntSelEvtBroadcast(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // HeliInvBehaviorController
         }
 
         public override bool RunOnStart() => false;

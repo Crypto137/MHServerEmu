@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionFactionSet(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // NotInGame JoinPVPFaction1Daily
         }
     }
 }

@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionEnableRegionAvatarSwap(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // TimesBehaviorController
         }
     }
 }

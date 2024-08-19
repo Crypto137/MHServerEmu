@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionStoryNotification(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // KaZarController
         }
     }
 }

@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionEntityKill(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // MGNgaraiInvasion
         }
 
         public override bool RunOnStart() => false;

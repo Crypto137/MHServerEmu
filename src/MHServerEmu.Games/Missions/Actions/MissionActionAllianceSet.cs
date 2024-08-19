@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionAllianceSet(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // TRKillHouseTraining
         }
 
         public override bool RunOnStart() => false;

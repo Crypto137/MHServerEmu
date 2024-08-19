@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionShowHUDTutorial(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // RaftNPETutorialTipsController
         }
     }
 }

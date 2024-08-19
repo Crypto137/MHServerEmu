@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override bool Evaluate(WorldEntity entity)
         {
+            // GenoshaHubNPCAnimController
             if (entity is not Agent) return false;
             return base.Evaluate(entity);
         }

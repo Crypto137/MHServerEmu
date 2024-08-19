@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionScoringEventTimerStop(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // DRMissionChallengeCosmicDoopPhase01
         }
     }
 }

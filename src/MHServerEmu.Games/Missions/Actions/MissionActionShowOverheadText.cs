@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionShowOverheadText(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // PunksLoiteringChurch
         }
 
         public override bool RunOnStart() => false;

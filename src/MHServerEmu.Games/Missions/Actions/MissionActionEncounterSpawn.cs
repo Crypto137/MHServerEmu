@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionEncounterSpawn(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // CH07MrSinisterSpawnController
         }
 
         public override void Run()

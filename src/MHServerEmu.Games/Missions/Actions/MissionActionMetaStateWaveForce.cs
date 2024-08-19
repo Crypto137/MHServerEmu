@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionMetaStateWaveForce(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // NotInGame RaidSurturResetTC
         }
     }
 }

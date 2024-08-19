@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionInventoryGiveTeamUp(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // SHIELDTeamUpController
         }
     }
 }

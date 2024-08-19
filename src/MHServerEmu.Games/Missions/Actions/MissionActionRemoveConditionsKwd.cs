@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionRemoveConditionsKwd(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // AxisRaidP1HighwaySentinels
         }
     }
 }

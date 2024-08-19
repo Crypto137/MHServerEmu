@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Missions.Actions
     {
         public MissionActionEntitySetState(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
+            // TRBambooVillageSerpent
         }
     }
 }
