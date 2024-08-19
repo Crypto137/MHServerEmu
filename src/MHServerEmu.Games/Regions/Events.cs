@@ -23,6 +23,15 @@ namespace MHServerEmu.Games.Regions
     public struct EntityDeadGameEvent
     {
         public WorldEntity Defender;
+        public WorldEntity Attacker;
+        public Player Killer;
+
+        public EntityDeadGameEvent(WorldEntity defender, WorldEntity attacker, Player killer)
+        {
+            Defender = defender;
+            Attacker = attacker;
+            Killer = killer;
+        }
     }
 
     public struct ClusterEnemiesClearedGameEvent

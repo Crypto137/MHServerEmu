@@ -138,7 +138,9 @@ namespace MHServerEmu.Games.Entities
         public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
-        public TagPlayers TagPlayers;
+        public Dictionary<ulong, long> TankingContributors { get; private set; }
+        public Dictionary<ulong, long> DamageContributors { get; private set; }
+        public TagPlayers TagPlayers { get; private set; }
 
         public WorldEntity(Game game) : base(game)
         {
@@ -220,6 +222,26 @@ namespace MHServerEmu.Games.Entities
                 success &= Serializer.Transfer(archive, ref _unkEvent);
 
             return success;
+        }
+
+        public void AddTankingContributor(Player player, long damage)
+        {
+            if (player == null) return;
+            ulong playerUid = player.DatabaseUniqueId;
+
+            TankingContributors ??= new();
+            TankingContributors.TryGetValue(playerUid, out long oldDamage);
+            TankingContributors[playerUid] = oldDamage + damage;
+        }
+
+        public void AddDamageContributor(Player player, long damage)
+        {
+            if (player == null) return;
+            ulong playerUid = player.DatabaseUniqueId;
+
+            DamageContributors ??= new();
+            DamageContributors.TryGetValue(playerUid, out long oldDamage);
+            DamageContributors[playerUid] = oldDamage + damage;
         }
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
