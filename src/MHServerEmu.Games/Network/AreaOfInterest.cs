@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Network
         private Aabb2 _entitiesVolume = new();
         private Aabb2 _visibleVolume = new();
         private Aabb2 _invisibleVolume = new();
-        private PrototypeId _lastCameraSetting;
+        private PrototypeId _lastCameraSettings;
 
         public Region Region { get; private set; }
         public ulong RegionId { get => Region != null ? Region.Id : 0; }
@@ -71,27 +71,30 @@ namespace MHServerEmu.Games.Network
             SetAOIVolume(aoiVolume);
         }
 
-        public void InitializePlayerView(PrototypeId cameraSettingPrototype)
+        public void InitializePlayerView(PrototypeId cameraSettingsProtoRef)
         {
             _cameraView = new Aabb2(new Vector3(_viewOffset, _viewOffset, 0.0f), _aoiVolume);
 
-            if (cameraSettingPrototype == PrototypeId.Invalid) return;
+            if (cameraSettingsProtoRef == PrototypeId.Invalid) return;
 
-            CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype);
-            if (cameraSettingCollectionPrototype == null)
+            var cameraSettingsProto = cameraSettingsProtoRef.As<CameraSettingCollectionPrototype>();
+            if (cameraSettingsProto == null)
             {
-                GlobalsPrototype globalsPrototype = GameDatabase.GlobalsPrototype;
-                if (globalsPrototype == null) return;
-                cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
+                // The input for this generally comes from the client, so we may get something weird here
+                Logger.Warn("InitializePlayerView(): cameraSettingsProto == null");
+                cameraSettingsProtoRef = GameDatabase.GlobalsPrototype.PlayerCameraSettings;
+                cameraSettingsProto = cameraSettingsProtoRef.As<CameraSettingCollectionPrototype>();
             }
 
-            if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
-            _lastCameraSetting = cameraSettingPrototype;
-            CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
+            if (cameraSettingsProto.CameraSettings.IsNullOrEmpty()) return;
+            CameraSettingPrototype cameraSettingProto = cameraSettingsProto.CameraSettings[0];
 
-            var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
-            float angle = Orientation.WrapAngleRadians(Orientation.FromDeltaVector2D(normalizedDirection).Yaw + MathHelper.Pi - MathHelper.PiOver4);
+            Vector3 normalizedDirection = Vector3.Normalize2D(new(cameraSettingProto.DirectionX, cameraSettingProto.DirectionY, cameraSettingProto.DirectionZ));
+            float angleInRadians = Orientation.FromDeltaVector2D(normalizedDirection).Yaw + MathHelper.Pi - MathHelper.PiOver4;
+            float angle = Orientation.WrapAngleRadians(angleInRadians);
             _cameraView = Transform3.RotationZ(angle) * _cameraView;
+
+            _lastCameraSettings = cameraSettingsProtoRef;
         }
 
         public void Update(Vector3 position, bool forceUpdate = false, bool isStart = false)
@@ -187,7 +190,7 @@ namespace MHServerEmu.Games.Network
 
             // Reset previous state
             _lastUpdatePosition = Vector3.Zero;
-            _lastCameraSetting = PrototypeId.Invalid;
+            _lastCameraSettings = PrototypeId.Invalid;
 
             foreach (var kvp in _trackedCells)
             {
@@ -924,7 +927,7 @@ namespace MHServerEmu.Games.Network
         {
             _aoiVolume = volume;
             _viewOffset = _aoiVolume / 8; // 3200 / 8 = 400
-            InitializePlayerView(_lastCameraSetting);
+            InitializePlayerView(_lastCameraSettings);
         }
 
         private void SendMessage(IMessage message)
