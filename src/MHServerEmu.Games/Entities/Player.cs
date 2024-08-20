@@ -991,7 +991,6 @@ namespace MHServerEmu.Games.Entities
             if (updateInterest)
                 AOI.ConsiderEntity(worldEntity);
 
-            Logger.Debug($"DiscoverEntity(): {worldEntity}");
             return true;
         }
 
@@ -1006,7 +1005,6 @@ namespace MHServerEmu.Games.Entities
             if (updateInterest)
                 AOI.ConsiderEntity(worldEntity);
 
-            Logger.Debug($"UndiscoverEntity(): {worldEntity}");
             return true;
         }
 

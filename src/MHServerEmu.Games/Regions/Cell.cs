@@ -476,7 +476,7 @@ namespace MHServerEmu.Games.Regions
         public void OnAddedToAOI()
         {
             _numInterestedPlayers++;
-            Logger.Debug($"OnAddedToAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
+            //Logger.Debug($"OnAddedToAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
 
             if (_numInterestedPlayers == 1)
             {
@@ -488,7 +488,7 @@ namespace MHServerEmu.Games.Regions
         public void OnRemovedFromAOI()
         {
             _numInterestedPlayers--;
-            Logger.Debug($"OnRemovedFromAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
+            //Logger.Debug($"OnRemovedFromAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
 
             if (_numInterestedPlayers < 0)
             {

@@ -655,7 +655,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
             if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
 
-            Logger.Debug($"UseInteractableObject(): {this} => {interactableObject}");
+            Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             if (interactableObject is Transition transition)
             {

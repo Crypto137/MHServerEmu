@@ -783,7 +783,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool FindTargetLocation(ref Vector3 markerPos, ref Orientation markerRot, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            Logger.Debug($"FindTargetLocation(): areaProtoRef={areaProtoRef.GetName()}, cellProtoRef={cellProtoRef.GetName()}, entityProtoRef={entityProtoRef.GetName()}");
+            //Logger.Debug($"FindTargetLocation(): areaProtoRef={areaProtoRef.GetName()}, cellProtoRef={cellProtoRef.GetName()}, entityProtoRef={entityProtoRef.GetName()}");
 
             Area targetArea;
 
@@ -1286,12 +1286,12 @@ namespace MHServerEmu.Games.Regions
 
         public void OnAddedToAOI(Player player)
         {
-            Logger.Debug($"OnAddedToAOI(): {this} to {player}");
+            Logger.Trace($"OnAddedToAOI(): {this} to {player}");
         }
 
         public void OnRemovedFromAOI(Player player)
         {
-            Logger.Debug($"OnRemovedFromAOI(): {this} from {player}");
+            Logger.Trace($"OnRemovedFromAOI(): {this} from {player}");
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

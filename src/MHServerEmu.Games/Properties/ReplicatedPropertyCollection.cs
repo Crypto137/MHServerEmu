@@ -87,7 +87,7 @@ namespace MHServerEmu.Games.Properties
                     continue;
 
                 // Send newly applicable properties
-                Logger.Trace($"OnEntityChangePlayerAOI(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
+                //Logger.Trace($"OnEntityChangePlayerAOI(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
 
                 player.SendMessage(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(ReplicationId)
