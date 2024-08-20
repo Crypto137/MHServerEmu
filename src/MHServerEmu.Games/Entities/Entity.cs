@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Entities
 
     #endregion
 
-    public class Entity : ISerialize, IPropertyChangeWatcher
+    public class Entity : IArchiveMessageDispatcher, ISerialize, IPropertyChangeWatcher
     {
         public const ulong InvalidId = 0;
 
@@ -400,6 +400,11 @@ namespace MHServerEmu.Games.Entities
                     player?.AOI.ConsiderEntity(this, settings);
                 }
             }
+        }
+
+        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
+        {
+            return Game.NetworkManager.GetInterestedClients(this, interestPolicies);
         }
 
         #endregion

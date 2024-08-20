@@ -4,8 +4,6 @@
 
     public interface IArchiveMessageHandler
     {
-        public const ulong InvalidReplicationId = 0;
-
         public ulong ReplicationId { get; set; }
     }
 }

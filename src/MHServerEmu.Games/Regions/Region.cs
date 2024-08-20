@@ -20,6 +20,7 @@ using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -48,7 +49,7 @@ namespace MHServerEmu.Games.Regions
         Remove
     }
 
-    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner
+    public class Region : IArchiveMessageDispatcher, ISerialize, IMissionManagerOwner, IUIDataProviderOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -149,7 +150,7 @@ namespace MHServerEmu.Games.Regions
             PopulationManager = new(Game, this);
 
             Settings = settings;
-            Properties = new(Game.CurrentRepId); // TODO: Bind(this, 0xEF);
+            Properties = new(this, Game.CurrentRepId); // TODO: Bind(this, 0xEF);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return Logger.WarnReturn(false, "Initialize(): settings.InstanceAddress == 0");
@@ -1292,6 +1293,11 @@ namespace MHServerEmu.Games.Regions
         public void OnRemovedFromAOI(Player player)
         {
             Logger.Trace($"OnRemovedFromAOI(): {this} from {player}");
+        }
+
+        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
+        {
+            return Game.NetworkManager.GetInterestedClients(this);
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
