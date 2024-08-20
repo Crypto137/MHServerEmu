@@ -174,4 +174,10 @@ namespace MHServerEmu.Games.Loot
         CategoryArtifacts = 25,
         CategoryOther = 26
     }
+
+    [Flags]
+    public enum LootTypes
+    {
+        None = 0,
+    }
 }
