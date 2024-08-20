@@ -909,6 +909,52 @@ namespace MHServerEmu.Games.Entities
 
         #region Loading and Teleports
 
+        public void OnFullscreenMovieStarted(PrototypeId movieRef)
+        {
+            Logger.Trace($"FullscreenMovieStarted {GameDatabase.GetFormattedPrototypeName(movieRef)} for {Name}");
+        }
+
+        public void OnFullscreenMovieFinished(PrototypeId movieRef, bool userCancelled, uint syncRequestId)
+        {
+            // TODO syncRequestId ?
+
+            var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
+            if (movieProto == null) return;
+
+            if (movieProto.MovieType == MovieType.Cinematic)
+            {
+                FullScreenMovieDequeued(movieRef);
+                GetRegion()?.CinematicFinishedEvent.Invoke(new(this, movieRef));                
+            }
+        }
+
+        private void FullScreenMovieDequeued(PrototypeId movieRef)
+        {
+            var propId = new PropertyId(PropertyEnum.FullScreenMovieQueued, movieRef);
+            Properties.RemoveProperty(propId);
+            if (Properties.HasProperty(PropertyEnum.FullScreenMovieQueued))
+                Properties.RemoveProperty(PropertyEnum.FullScreenMoviePlaying);
+        }
+
+        public void QueueFullscreenMovie(PrototypeId movieRef)
+        {
+            var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
+            if (movieProto == null) return;
+
+            if (movieProto.MovieType == MovieType.Cinematic)
+                FullScreenMovieQueued(movieRef);
+
+            SendMessage(NetMessageQueueFullscreenMovie.CreateBuilder()
+                .SetMoviePrototypeId((ulong)movieRef)
+                .Build());
+        }
+
+        private void FullScreenMovieQueued(PrototypeId movieRef)
+        {
+            Properties[PropertyEnum.FullScreenMovieQueued, movieRef] = true;
+            Properties[PropertyEnum.FullScreenMoviePlaying] = true;
+        }
+
         public void QueueLoadingScreen(PrototypeId regionProtoRef)
         {
             IsOnLoadingScreen = true;

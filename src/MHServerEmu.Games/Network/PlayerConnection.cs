@@ -334,6 +334,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
+                case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
+                case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
@@ -857,6 +859,22 @@ namespace MHServerEmu.Games.Network
             PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
 
             avatar.ActivatePower(bodysliderPowerRef, ref settings);
+            return true;
+        }
+
+        private bool OnNotifyFullscreenMovieStarted(MailboxMessage message)
+        {
+            var movieStarted = message.As<NetMessageNotifyFullscreenMovieStarted>();
+            if (movieStarted == null) return Logger.WarnReturn(false, $"OnNotifyFullscreenMovieStarted(): Failed to retrieve message");
+            Player.OnFullscreenMovieStarted((PrototypeId)movieStarted.MoviePrototypeId);
+            return true;
+        }
+
+        private bool OnNotifyFullscreenMovieFinished(MailboxMessage message)
+        {
+            var movieFinished = message.As<NetMessageNotifyFullscreenMovieFinished>(); 
+            if (movieFinished == null) return Logger.WarnReturn(false, $"OnNotifyFullscreenMovieFinished(): Failed to retrieve message");
+            Player.OnFullscreenMovieFinished((PrototypeId)movieFinished.MoviePrototypeId, movieFinished.UserCancelled, movieFinished.SyncRequestId);
             return true;
         }
 
