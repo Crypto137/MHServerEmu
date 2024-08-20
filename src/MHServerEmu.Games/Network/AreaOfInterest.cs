@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Network
             _lastCameraSettings = cameraSettingsProtoRef;
         }
 
-        public void Update(Vector3 position, bool forceUpdate = false, bool isStart = false)
+        public void Update(Vector3 position, bool forceUpdate = false, bool updateEntities = true)
         {
             Region?.UpdateLastVisitedTime();
             _currentFrame++;
@@ -109,15 +109,8 @@ namespace MHServerEmu.Games.Network
 
             CalcVolumes(position);
 
-            if (isStart)
-            {
-                Area startArea = Region.GetAreaAtPosition(position);
-                AddArea(startArea, true);
-            }
-            else
-            {
-                UpdateEntities();
-            }               
+            if (updateEntities)
+                UpdateEntities();         
 
             UpdateAreas();
 
@@ -167,10 +160,6 @@ namespace MHServerEmu.Games.Network
 
         public bool SetRegion(ulong regionId, bool clearingAllInterest, in Vector3? startPosition = null, in Orientation? startOrientation = null)
         {
-            // TODO: Trigger callbacks for
-            // - Mission updates
-            // - Discover avatars in our destination region
-
             Player player = _playerConnection.Player;
             Region prevRegion = Region;
             Region newRegion = null;
@@ -282,7 +271,12 @@ namespace MHServerEmu.Games.Network
 
                 // BeginTeleport() queues another loading screen, so we end up with two in a row. This matches our packet dumps.
                 player.BeginTeleport(regionId, startPosition.Value, startOrientation != null ? startOrientation.Value : Orientation.Zero);
-                Update(startPosition.Value, true, true);
+
+                Area startArea = Region.GetAreaAtPosition(startPosition.Value);
+                if (startArea == null) return Logger.WarnReturn(false, "SetRegion(): startArea == null");
+                AddArea(startArea, true);
+
+                Update(startPosition.Value, true, false);
             }
 
             return true;
