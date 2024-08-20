@@ -258,11 +258,13 @@ namespace MHServerEmu.Games.Regions
     {
         public Player Player;
         public WorldEntity InteractableObject;
+        public PrototypeId MissionRef;
 
-        public PlayerInteractGameEvent(Player player, WorldEntity interactableObject)
+        public PlayerInteractGameEvent(Player player, WorldEntity interactableObject, PrototypeId missionRef)
         {
             Player = player;
             InteractableObject = interactableObject;
+            MissionRef = missionRef;
         }
     }
 
@@ -397,6 +399,21 @@ namespace MHServerEmu.Games.Regions
         {
             Player = player;
             MovieRef = movieRef;
+        }
+    }
+    public struct PlayerRequestMissionRewardsGameEvent
+    {
+        public Player Player;
+        public PrototypeId MissionRef;
+        public uint ConditionIndex;
+        public ulong EntityId;
+
+        public PlayerRequestMissionRewardsGameEvent(Player player, PrototypeId missionRef, uint conditionIndex, ulong entityId)
+        {
+            Player = player;
+            MissionRef = missionRef;
+            ConditionIndex = conditionIndex;
+            EntityId = entityId;
         }
     }
 

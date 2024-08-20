@@ -670,7 +670,6 @@ namespace MHServerEmu.Games.Entities
             var behaviorProfile = AgentPrototype?.BehaviorProfile;
             if (behaviorProfile == null) return;
             AIController.OnInitAIOverride(behaviorProfile, collection);
-            AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
         }
 
         private bool InitAI(EntitySettings settings)
@@ -1048,6 +1047,7 @@ namespace MHServerEmu.Games.Entities
                     if (brain is not ProceduralAIProfilePrototype profile) return false;
                     InitAIOverride(profile, new());
                     if (AIController == null) return false;
+                    AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
                 }
                 else
                     AIController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = brainRef;

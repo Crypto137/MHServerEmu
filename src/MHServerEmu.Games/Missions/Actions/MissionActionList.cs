@@ -6,13 +6,14 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
-    public class MissionActionList
+    public class MissionActionList : IMissionActionOwner
     {
         public IMissionActionOwner Owner { get; private set; }
         public bool IsInitialized { get; private set; }
         public List<MissionAction> Actions { get; private set; }
         public List<MissionActionEntityTarget> EntityActions { get; private set; }
         public Mission Mission { get => Owner as Mission; }
+        public PrototypeId PrototypeDataRef { get => Owner.PrototypeDataRef; }
         public Region Region { get => Owner.Region; }
         public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public bool IsActive { get; private set; }
@@ -33,7 +34,7 @@ namespace MHServerEmu.Games.Missions.Actions
             if (protoList.IsNullOrEmpty() || IsInitialized || IsActive) return false;
             foreach(var actionProto in protoList)
             {
-                var action = MissionAction.CreateAction(Owner, actionProto);
+                var action = MissionAction.CreateAction(this, actionProto);
                 if (action == null) return false;
                 if (action.Initialize())
                 {

@@ -12,6 +12,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
 using MHServerEmu.Games.Populations;
@@ -130,6 +131,7 @@ namespace MHServerEmu.Games.Missions
         public bool IsAccountMission { get => HasAccountMissionsChapter(); }
         public bool IsSharedQuest { get => IsDailyMission && HasEventMissionChapter() == false; }
         public bool IsRegionEventMission { get => IsOpenMission && HasEventMissionChapter() == false; }
+        public bool IsRepeatable { get => Prototype.Repeatable || Prototype.ResetTimeSeconds > 0; }
         public bool IsChangingState { get; private set; }
         public ulong ResetsWithRegionId { get; private set; }
         public MissionSpawnState SpawnState { get; private set; }
@@ -391,6 +393,12 @@ namespace MHServerEmu.Games.Missions
                 message.SetPowerAssetRef((ulong)visualsProto.DailyMissionCompleteClass);
                 Game.NetworkManager.SendMessageToInterested(message.Build(), avatar, Network.AOINetworkPolicyValues.AOIChannelProximity);
             }
+        }
+
+        public bool HasRewards(Player player, Avatar avatar)
+        {
+            if (IsOpenMission || IsRepeatable) return true;
+            return MissionManager.HasReceivedRewardsForMission(player, avatar, PrototypeDataRef) == false;
         }
 
         private void LoadProgressStatePerAvatar()
@@ -1441,7 +1449,7 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        public bool FilterHotspots(Avatar avatar, PrototypeId hotspotRef, EntityFilterPrototype entityFilter)
+        public bool FilterHotspots(Avatar avatar, PrototypeId hotspotRef, EntityFilterPrototype entityFilter = null)
         {
             foreach(var hotspot in GetMissionHotspots())
             {
@@ -1725,6 +1733,11 @@ namespace MHServerEmu.Games.Missions
         {
             if (missionSpawnEvent == null) return;
             // TODO restart Mission if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
+        }
+
+        internal void LootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
+        {
+            throw new NotImplementedException();
         }
 
         protected class IdleTimeoutEvent : CallMethodEvent<Mission>

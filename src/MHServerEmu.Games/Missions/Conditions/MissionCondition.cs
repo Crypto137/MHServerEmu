@@ -7,6 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionCondition : IMissionConditionOwner
     {
         public Mission Mission { get; private set; }
+        public MissionObjective MissionObjective { get => Owner as MissionObjective; }
         public IMissionConditionOwner Owner { get; private set; }
         public MissionConditionPrototype Prototype { get; private set; }
         public Region Region { get => Mission.Region; }

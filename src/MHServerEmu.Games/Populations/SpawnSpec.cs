@@ -231,7 +231,6 @@ namespace MHServerEmu.Games.Populations
                 if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled) && activeEntity.IsDestroyed) continue;
                 if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyed)
                     && (spec.State == SpawnState.Defeated || spec.State == SpawnState.Destroyed)) continue;
-                if (activeEntity.IsHotspot) continue;
                 if (activeEntity is Spawner spawner)
                 {
                     if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyed)

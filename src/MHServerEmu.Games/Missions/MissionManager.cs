@@ -204,6 +204,12 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
+        public static bool HasReceivedRewardsForMission(Player player, Avatar avatar, PrototypeId missionRef)
+        {
+            if (avatar.Properties[PropertyEnum.MissionRewardReceived, missionRef]) return true;
+            return player.Properties[PropertyEnum.MissionRewardReceived, missionRef];
+        }
+
         public bool IsPlayerMissionManager()
         {
             return (Owner != null) && Owner is Player;
@@ -860,6 +866,11 @@ namespace MHServerEmu.Games.Missions
                     mission?.OnSpawnedPopulation();
                 }
             }
+        }
+
+        internal void SchedulePlayerInteract(Player player, WorldEntity entity)
+        {
+            throw new NotImplementedException();
         }
 
         #region Hardcoded

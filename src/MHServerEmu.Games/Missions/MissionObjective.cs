@@ -160,6 +160,14 @@ namespace MHServerEmu.Games.Missions
             return $"state={_objectiveState}, expireTime={expireTime}, numInteractions={_interactedEntityList.Count}, count={_currentCount}/{_requiredCount}, failCount={_failCurrentCount}/{_failRequiredCount}";
         }
 
+        public void AddInteractedEntity(WorldEntity entity)
+        {
+            if (HasInteractedWithEntity(entity)) return;
+            InteractionTag tag = new(entity.Id, entity.RegionLocation.RegionId);
+            _interactedEntityList.Add(tag);
+            SendToParticipants(MissionObjectiveUpdateFlags.InteractedEntities);
+        }
+
         public bool HasInteractedWithEntity(WorldEntity entity)
         {
             ulong entityId = entity.Id;

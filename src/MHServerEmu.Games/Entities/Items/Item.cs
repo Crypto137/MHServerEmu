@@ -227,5 +227,10 @@ namespace MHServerEmu.Games.Entities.Items
 
             return true;
         }
+
+        internal void RemoveItem()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -168,6 +168,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerDonatedItemGameEvent> PlayerDonatedItemEvent = new();
         public Event<PlayerEquippedItemGameEvent> PlayerEquippedItemEvent = new();
         public Event<PlayerPreItemPickupGameEvent> PlayerPreItemPickupEvent = new();
+        public Event<PlayerRequestMissionRewardsGameEvent> PlayerRequestMissionRewardsEvent = new();
         public Event<AvatarLeveledUpGameEvent> AvatarLeveledUpEvent = new();
         public Event<CurrencyCollectedGameEvent> CurrencyCollectedEvent = new();
         public Event<EmotePerformedGameEvent> EmotePerformedEvent = new();
