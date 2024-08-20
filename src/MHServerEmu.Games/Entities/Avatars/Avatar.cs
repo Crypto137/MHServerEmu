@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<ActivateSwapInPowerEvent> _activateSwapInPowerEvent = new();
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
 
-        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
+        private RepString _playerName;
         private ulong _ownerPlayerDbId;
         private List<AbilityKeyMapping> _abilityKeyMappingList = new();
 

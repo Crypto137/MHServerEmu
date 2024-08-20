@@ -1,13 +1,14 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        private ReplicatedVariable<int> _team1 = new();
-        private ReplicatedVariable<int> _team2 = new();
+        private RepInt _team1 = new();
+        private RepInt _team2 = new();
 
         public PvP(Game game) : base(game) { }
 

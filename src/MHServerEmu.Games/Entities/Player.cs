@@ -62,9 +62,9 @@ namespace MHServerEmu.Games.Entities
         private MissionManager _missionManager = new();
         private ReplicatedPropertyCollection _avatarProperties;
         private ulong _shardId;
-        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
+        private RepString _playerName;
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private ReplicatedVariable<string> _secondaryPlayerName = new(0, string.Empty);
+        private RepString _secondaryPlayerName;
         private MatchQueueStatus _matchQueueStatus = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Entities
         private bool _emailVerified;
         private TimeSpan _accountCreationTimestamp;     // UnixTime
 
-        private ReplicatedVariable<ulong> _partyId = new();
+        private RepULong _partyId;
 
         private ulong _guildId;
         private string _guildName;
