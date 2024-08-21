@@ -87,8 +87,9 @@ namespace MHServerEmu.Games.Regions
         public int MaxCollisionId { get => _collisionIds.Size; }
 
         public bool IsGenerated { get; private set; }
-        public bool AvatarSwapEnabled { get; private set; }
-        public bool RestrictedRosterEnabled { get; private set; }
+        public bool AvatarSwapEnabled { get; set; }
+        public bool RestrictedRosterEnabled { get; set; }
+        public bool IsRestrictedRosterEnabled { get => RestrictedRosterEnabled && Prototype != null && Prototype.RestrictedRoster.HasValue(); }
 
         public TimeSpan CreatedTime { get; private set; }
         public TimeSpan LastVisitedTime { get; private set; }
@@ -181,7 +182,6 @@ namespace MHServerEmu.Games.Regions
         public Event<ThrowablePickedUpGameEvent> ThrowablePickedUpEvent = new();
         public Event<SpawnerDefeatedGameEvent> SpawnerDefeatedEvent = new();
         public Event<OrbPickUpEvent> OrbPickUpEvent = new();
-        private bool _restrictedRosterEnabled;
 
         #endregion
 
@@ -1403,16 +1403,6 @@ namespace MHServerEmu.Games.Regions
         public void OnAddToAOI(Player player)
         {
             player.MissionManager.InitializeForPlayer(player, this);
-        }
-
-        public void SetRestrictedRosterEnabled(bool enabled)
-        {
-            _restrictedRosterEnabled = enabled;
-        }
-
-        public bool IsRestrictedRosterEnabled()
-        {
-            return _restrictedRosterEnabled && Prototype != null && Prototype.RestrictedRoster.HasValue();
         }
     }
 

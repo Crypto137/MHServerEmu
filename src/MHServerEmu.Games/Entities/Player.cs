@@ -1251,6 +1251,12 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        public void SendRegionAvatarSwapUpdate(bool enabled)
+        {
+            var message = NetMessageRegionAvatarSwapUpdate.CreateBuilder().SetEnabled(enabled).Build();
+            SendMessage(message);
+        }
+
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {
             int eventInstance = eventProto.GetEventInstance();

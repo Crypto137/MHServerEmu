@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             var region = Region;
             if (region == null) return;
-            region.SetRestrictedRosterEnabled(false);
+            region.RestrictedRosterEnabled = false;
             foreach (Player player in new PlayerIterator(region))
                 player.SendRegionRestrictedRosterUpdate(false);
         }
