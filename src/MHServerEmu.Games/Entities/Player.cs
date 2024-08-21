@@ -1242,7 +1242,13 @@ namespace MHServerEmu.Games.Entities
             }
 
             var messageRelease = NetMessageMissionInteractRelease.DefaultInstance;
-            Game.NetworkManager.SendMessageToInterested(messageRelease, this, AOINetworkPolicyValues.AOIChannelOwner);             
+            Game.NetworkManager.SendMessageToInterested(messageRelease, this, AOINetworkPolicyValues.AOIChannelOwner);           
+        }
+
+        public void SendRegionRestrictedRosterUpdate(bool enabled)
+        {
+            var message = NetMessageRegionRestrictedRosterUpdate.CreateBuilder().SetEnabled(enabled).Build(); 
+            SendMessage(message);
         }
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
