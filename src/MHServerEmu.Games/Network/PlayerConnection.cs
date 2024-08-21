@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // REMOVEME: we no longer use this
+            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
             _dbAccount.Player.RawWaypoint = (long)TransferParams.DestTargetProtoRef;
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Network
             // Initialize transfer params
             // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
             // We should get rid of saving waypoint refs and just use connection targets.
-            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint);
+            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint, (PrototypeId)_dbAccount.Player.RawRegion);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
@@ -224,13 +224,13 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
 
-        public void MoveToTarget(PrototypeId targetProtoRef)
+        public void MoveToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
         {
             // Simulate exiting and re-entering the game on a real GIS
             ExitGame();
 
             // Update our target
-            TransferParams.SetTarget(targetProtoRef);
+            TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
 
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
@@ -257,7 +257,8 @@ namespace MHServerEmu.Games.Network
             Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
             if (region == null)
             {
-                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetNameFormatted()}");
+                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
+                TransferParams.SetTarget(PrototypeId.Invalid);  // Reset transfer target so that the player can recover on relog
                 Disconnect();
                 return;
             }
@@ -756,12 +757,14 @@ namespace MHServerEmu.Games.Network
             var useWaypoint = message.As<NetMessageUseWaypoint>();
             if (useWaypoint == null) return Logger.WarnReturn(false, $"OnUseWaypoint(): Failed to retrieve message");
 
-            Logger.Info($"Received UseWaypoint message");
-            Logger.Trace(useWaypoint.ToString());
+            Logger.Trace(string.Format("OnUseWaypoint(): waypointDataRef={0}, regionProtoId={1}, difficultyProtoId={2}",
+                GameDatabase.GetPrototypeName((PrototypeId)useWaypoint.WaypointDataRef),
+                GameDatabase.GetPrototypeName((PrototypeId)useWaypoint.RegionProtoId),
+                GameDatabase.GetPrototypeName((PrototypeId)useWaypoint.DifficultyProtoId)));
 
             // TODO: Do the usual interaction validation
 
-            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef);
+            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef, (PrototypeId)useWaypoint.RegionProtoId);
             return true;
         }
 
