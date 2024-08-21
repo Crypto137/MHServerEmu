@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public IMissionActionOwner Owner { get; private set; }
         public PrototypeId MissionRef { get => Owner.PrototypeDataRef; }
         public MissionActionPrototype Prototype { get; private set; }
+        public Mission Mission { get; private set; }
         public Region Region { get => Owner.Region; }
         public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public EntityTracker EntityTracker { get => Owner.Region?.EntityTracker; }
@@ -18,11 +19,24 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             Owner = owner;
             Prototype = prototype;
+            var missionList = owner as MissionActionList;
+            Mission = missionList?.Mission;
         }
 
         public static MissionAction CreateAction(IMissionActionOwner owner, MissionActionPrototype actionProto) 
         {
             return actionProto.AllocateAction(owner);
+        }
+
+        public IEnumerable<Player> GetDistributors(DistributionType distributionType)
+        {
+            return distributionType switch
+            {
+                DistributionType.Participants => Mission.GetParticipants(),
+                DistributionType.Contributors => Mission.GetContributors(),
+                DistributionType.AllInOpenMissionRegion => Mission.GetRegionPlayers(),
+                _ => Enumerable.Empty<Player>(),
+            };
         }
 
         public virtual bool Initialize() => true;

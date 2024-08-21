@@ -68,6 +68,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public PendingActionState PendingActionState { get => _pendingAction.PendingActionState; }
 
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
+        public PrototypeId UltimatePowerRef { get => AvatarPrototype.UltimatePowerRef; }
 
         public Avatar(Game game) : base(game) { }
 

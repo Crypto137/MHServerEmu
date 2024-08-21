@@ -301,15 +301,8 @@ namespace MHServerEmu.Games.Missions
                 players.Add(player);
 
             if (contributors)
-            {
-                var manager = Game.EntityManager;
-                foreach(var playerUID in _contributors.Keys)
-                {
-                    var player = manager.GetEntityByDbGuid<Player>(playerUID);
-                    if (player != null)
-                        players.Add(player);
-                }
-            }
+                foreach (var player in GetContributors())
+                    players.Add(player);
 
             foreach (var player in players)
                 SendUpdateToPlayer(player, missionFlags, objectiveFlags);
@@ -1517,6 +1510,25 @@ namespace MHServerEmu.Games.Missions
                 if (player != null)
                     yield return player;
             }
+        }
+
+        public IEnumerable<Player> GetContributors() 
+        {
+            var manager = Game.EntityManager;
+            List<ulong> contributors = new(_contributors.Keys);
+            foreach (var contributor in contributors)
+            {
+                var player = manager.GetEntityByDbGuid<Player>(contributor);
+                if (player != null)
+                    yield return player;
+            }
+        }
+
+        public IEnumerable<Player> GetRegionPlayers()
+        {
+            if (IsOpenMission)
+                foreach (var player in new PlayerIterator(Region))
+                    yield return player;
         }
 
         public IEnumerable<PlayerActivity> GetPlayerActivities()
