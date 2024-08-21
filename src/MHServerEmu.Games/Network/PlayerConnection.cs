@@ -42,6 +42,8 @@ namespace MHServerEmu.Games.Network
 
         private readonly EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
+        private bool _waitingForRegionIsAvailableResponse = false;
+
         public Game Game { get; }
 
         public AreaOfInterest AOI { get; }
@@ -70,7 +72,13 @@ namespace MHServerEmu.Games.Network
             // Send achievement database
             SendMessage(AchievementDatabase.Instance.GetDump());
 
-            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+            // Query if our initial loading region is available (has assets) on the client.
+            // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
+            SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
+                .SetRegionPrototype((ulong)TransferParams.DestTargetRegionProtoRef)
+                .Build());
+
+            _waitingForRegionIsAvailableResponse = true;
         }
 
         public override string ToString()
@@ -258,7 +266,7 @@ namespace MHServerEmu.Games.Network
             if (region == null)
             {
                 Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
-                TransferParams.SetTarget(PrototypeId.Invalid);  // Reset transfer target so that the player can recover on relog
+                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);  // Reset transfer target so that the player can recover on relog
                 Disconnect();
                 return;
             }
@@ -317,6 +325,7 @@ namespace MHServerEmu.Games.Network
 
             switch ((ClientToGameServerMessage)message.Id)
             {
+                case ClientToGameServerMessage.NetMessageIsRegionAvailable:                 OnIsRegionAvailable(message); break;                // 5
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:                 OnUpdateAvatarState(message); break;                // 6
                 case ClientToGameServerMessage.NetMessageCellLoaded:                        OnCellLoaded(message); break;                       // 7
                 case ClientToGameServerMessage.NetMessageAdminCommand:                      OnAdminCommand(message); break;                     // 9
@@ -379,6 +388,29 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnIsRegionAvailable(MailboxMessage message)    // 5
+        {
+            var isRegionAvailable = message.As<NetMessageIsRegionAvailable>();
+            if (isRegionAvailable == null) return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Failed to retrieve message");
+
+            if (_waitingForRegionIsAvailableResponse == false)
+                return Logger.WarnReturn(false, "OnIsRegionAvailable(): Received RegionIsAvailable when we are not waiting for a response");
+
+            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestTargetRegionProtoRef)
+                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestTargetRegionProtoRef.GetName()}");
+
+            if (isRegionAvailable.IsAvailable == false)
+            {
+                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestTargetRegionProtoRef.GetName()} is not available, resetting start target");
+                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
+            }
+
+            _waitingForRegionIsAvailableResponse = false;
+            Game.NetworkManager.SetPlayerConnectionPending(this);
+
+            return true;
         }
 
         private bool OnUpdateAvatarState(MailboxMessage message)    // 6
