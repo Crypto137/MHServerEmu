@@ -14,6 +14,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Events.Templates;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -345,8 +346,10 @@ namespace MHServerEmu.Games.Missions
             if (player == null) return;
             var target = evt.InteractableObject;
             if (target == null) return;
+            var missionRef = evt.MissionRef;
+            if (missionRef == PrototypeId.Invalid) return;
             
-            // TODO Interact event NetMessageMissionInteractRepeat NetMessageMissionInteractRelease
+            SchedulePlayerInteract(player, target);
         }
 
         private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
@@ -868,10 +871,27 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        internal void SchedulePlayerInteract(Player player, WorldEntity entity)
+        public void SchedulePlayerInteract(Player player, WorldEntity target)
         {
-            throw new NotImplementedException();
+            var scheduler = GameEventScheduler;
+            if (scheduler == null) return;
+            EventPointer<PlayerInteractEvent> playerInteractPointer = new();
+            scheduler.ScheduleEvent(playerInteractPointer, TimeSpan.FromMilliseconds(1), _pendingEvents);
+            playerInteractPointer.Get().Initialize(this, player.Id, target.Id);
         }
+
+        private void SendPlayerInteract(ulong playerId, ulong targetId)
+        {
+            var player = Game.EntityManager.GetEntity<Player>(playerId);
+            if (player == null || targetId == Entity.InvalidId) return;
+            player.SendMissionInteract(targetId);
+        }
+
+        public class PlayerInteractEvent : CallMethodEventParam2<MissionManager, ulong, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (manager, playerId, targetId) => manager.SendPlayerInteract(playerId, targetId);
+        }
+
 
         #region Hardcoded
 

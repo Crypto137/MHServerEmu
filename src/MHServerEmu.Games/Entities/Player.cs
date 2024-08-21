@@ -8,6 +8,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -1209,6 +1210,39 @@ namespace MHServerEmu.Games.Entities
 
                 SendMessage(message);
             }
+        }
+
+        public void SendMissionInteract(ulong targetId)
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+            var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+            if (target != null)
+            {
+                var entityDesc = new EntityDesc(target);
+                var outInteractData = new InteractData { IndicatorType = HUDEntityOverheadIcon.None };
+                var interactionType = InteractionManager.CallGetInteractionStatus(entityDesc, avatar, 0, InteractionFlags.Default, ref outInteractData);           
+                if (interactionType.HasFlag(InteractionMethod.Converse) && outInteractData.IndicatorType.HasValue)
+                {
+                    var indicatorType = outInteractData.IndicatorType.Value;
+                    if (indicatorType == HUDEntityOverheadIcon.DiscoveryBestower
+                        || indicatorType == HUDEntityOverheadIcon.MissionBestower
+                        || indicatorType == HUDEntityOverheadIcon.DiscoveryAdvancer
+                        || indicatorType == HUDEntityOverheadIcon.MissionAdvancer)
+                    {
+                        var message = NetMessageMissionInteractRepeat.CreateBuilder()
+                            .SetTargetEntityId(targetId)
+                            .SetMissionPrototypeId(0).Build(); // client not use MissionPrototype
+
+                        Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelOwner);
+                        return;
+                    }
+                }
+            }
+
+            var messageRelease = NetMessageMissionInteractRelease.CreateBuilder().Build();
+            Game.NetworkManager.SendMessageToInterested(messageRelease, this, AOINetworkPolicyValues.AOIChannelOwner);             
         }
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
