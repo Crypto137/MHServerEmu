@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.MetaGames
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
 
-        protected RepString _name;
+        protected RepString _name = new();
         protected ulong _regionId;
 
         public MetaGame(Game game) : base(game) { }
@@ -62,6 +62,20 @@ namespace MHServerEmu.Games.MetaGames
                 return null;
 
             return Game.RegionManager.GetRegion(_regionId);
+        }
+
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _name.Bind(this);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _name.Unbind();
         }
 
         protected override void BuildString(StringBuilder sb)

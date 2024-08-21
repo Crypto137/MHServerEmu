@@ -15,22 +15,33 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private IArchiveMessageDispatcher _messageDispatcher;
+        private IArchiveMessageDispatcher _messageDispatcher = null;
+        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
 
-        private ulong _replicationId;
+        public ulong ReplicationId { get => _replicationId; }
+        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
-        public ulong ReplicationId { get => _replicationId; set => _replicationId = value; }
+        public ReplicatedPropertyCollection() { }
 
-        public ReplicatedPropertyCollection(ulong replicationId = 0)
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
         {
-            _replicationId = replicationId;
+            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
+
+            if (IsBound)
+                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+
+            _messageDispatcher = messageDispatcher;
+            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
+
+            return true;
         }
 
-        public ReplicatedPropertyCollection(IArchiveMessageDispatcher messageDispatcher, ulong replicationId = 0)
+        public void Unbind()
         {
-            // TODO: Bind()
-            _messageDispatcher = messageDispatcher;
-            _replicationId = replicationId;
+            if (IsBound == false) return;
+
+            _messageDispatcher.UnregisterMessageHandler(this);
+            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         }
 
         public override bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
@@ -115,7 +126,7 @@ namespace MHServerEmu.Games.Properties
 
         private void MarkPropertyChanged(PropertyId id, PropertyValue value, SetPropertyFlags flags)
         {
-            if (_messageDispatcher == null) return;
+            if (_messageDispatcher == null || _messageDispatcher.CanSendArchiveMessages == false) return;
 
             // Get replication policy for this property
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
@@ -139,7 +150,7 @@ namespace MHServerEmu.Games.Properties
 
         private void MarkPropertyRemoved(PropertyId id)
         {
-            if (_messageDispatcher == null) return;
+            if (_messageDispatcher == null || _messageDispatcher.CanSendArchiveMessages == false) return;
 
             // Get replication policy for this property
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);

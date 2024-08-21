@@ -4,6 +4,10 @@
 
     public interface IArchiveMessageHandler
     {
-        public ulong ReplicationId { get; set; }
+        public ulong ReplicationId { get; }
+        public bool IsBound { get; }
+
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher);
+        public void Unbind();
     }
 }

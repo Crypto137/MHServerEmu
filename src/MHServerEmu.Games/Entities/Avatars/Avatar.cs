@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly PendingAction _pendingAction = new();
 
         public uint AvatarWorldInstanceId { get; } = 1;
-        public string PlayerName { get => _playerName.Value; }
+        public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
@@ -80,6 +80,20 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _playerName.Bind(this);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _playerName.Unbind();
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
@@ -103,7 +117,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SetPlayer(Player player)
         {
-            _playerName.Value = player.GetName();
+            _playerName.Set(player.GetName());
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 

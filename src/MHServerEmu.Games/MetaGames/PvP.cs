@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        private RepInt _team1 = new();
-        private RepInt _team2 = new();
+        private RepInt _team1;
+        private RepInt _team2;
 
         public PvP(Game game) : base(game) { }
 
@@ -19,6 +19,22 @@ namespace MHServerEmu.Games.MetaGames
             success &= Serializer.Transfer(archive, ref _team1);
             success &= Serializer.Transfer(archive, ref _team2);
             return success;
+        }
+
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _team1.Bind(this);
+            _team2.Bind(this);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _team1.Unbind();
+            _team2.Unbind();
         }
 
         protected override void BuildString(StringBuilder sb)

@@ -9,17 +9,21 @@ namespace MHServerEmu.Games.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public Game Game { get; }
+        public bool CanSendArchiveMessages { get => true; }
 
-        public ulong RegisterMessageHandler(IArchiveMessageHandler handler)
+        public ulong RegisterMessageHandler(IArchiveMessageHandler handler, ref ulong replicationId)
         {
-            if (handler.ReplicationId == InvalidReplicationId)
-                handler.ReplicationId = Game.CurrentRepId;
+            // NOTE: We pass a ref to the replicationId field along with the handler so that we don't have to expose it via a public setter.
 
-            if (Game.MessageHandlerDict.ContainsKey(handler.ReplicationId))
-                return Logger.WarnReturn(InvalidReplicationId, $"RegisterMessageHandler(): ReplicationId {handler.ReplicationId} is already used by another handler");
+            if (replicationId == InvalidReplicationId)
+                replicationId = Game.CurrentRepId;
 
-            Game.MessageHandlerDict.Add(handler.ReplicationId, handler);
-            return handler.ReplicationId;
+            if (Game.MessageHandlerDict.ContainsKey(replicationId))
+                return Logger.WarnReturn(InvalidReplicationId, $"RegisterMessageHandler(): ReplicationId {replicationId} is already used by another handler");
+
+            //Logger.Debug($"RegisterMessageHandler(): Registered handler id {replicationId} for {this}");
+            Game.MessageHandlerDict.Add(replicationId, handler);
+            return replicationId;
         }
 
         public bool UnregisterMessageHandler(IArchiveMessageHandler handler)
@@ -27,6 +31,7 @@ namespace MHServerEmu.Games.Network
             if (Game.MessageHandlerDict.Remove(handler.ReplicationId) == false)
                 return Logger.WarnReturn(false, $"UnregisterMessageHandler(): ReplicationId {handler.ReplicationId} not found");
 
+            //Logger.Debug($"RegisterMessageHandler(): Unregistered handler id {handler.ReplicationId} from {this}");
             return true;
         }
 

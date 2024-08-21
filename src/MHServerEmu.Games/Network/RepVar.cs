@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Network
@@ -12,28 +13,61 @@ namespace MHServerEmu.Games.Network
 
     public struct RepInt : IArchiveMessageHandler, ISerialize
     {
-        public ulong ReplicationId { get; set; } = 0;
-        public int Value { get; set; } = 0;
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private IArchiveMessageDispatcher _messageDispatcher = null;
+        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
+        private int _value = 0;
+
+        public ulong ReplicationId { get => _replicationId; }
+        public readonly bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
         public RepInt() { }
 
-        public RepInt(ulong replicationId, int value)
+        public readonly int Get()
         {
-            ReplicationId = replicationId;
-            Value = value;
+            return _value;
         }
 
-        public override string ToString() => $"[{ReplicationId}] {Value}";
+        public void Set(int value)
+        {
+            if (_value == value) return;
+            _value = value;
+
+            // TODO: Send archive message
+            if (_messageDispatcher?.CanSendArchiveMessages == true)
+                Logger.Trace($"Set(): {this}");
+        }
+
+        public override string ToString() => $"[{ReplicationId}] {_value}";
+
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        {
+            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
+
+            if (IsBound)
+                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+
+            _messageDispatcher = messageDispatcher;
+            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
+
+            return true;
+        }
+
+        public void Unbind()
+        {
+            if (IsBound == false) return;
+
+            _messageDispatcher.UnregisterMessageHandler(this);
+            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
+        }
 
         public bool Serialize(Archive archive)
         {
             bool success = true;
 
-            ulong replicationId = ReplicationId;
-            success &= Serializer.Transfer(archive, ref replicationId);
-
-            int value = Value;
-            success &= Serializer.Transfer(archive, ref value);
+            success &= Serializer.Transfer(archive, ref _replicationId);
+            success &= Serializer.Transfer(archive, ref _value);
 
             return success;
         }
@@ -41,28 +75,61 @@ namespace MHServerEmu.Games.Network
 
     public struct RepULong : IArchiveMessageHandler, ISerialize
     {
-        public ulong ReplicationId { get; set; } = 0;
-        public ulong Value { get; set; } = 0;
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private IArchiveMessageDispatcher _messageDispatcher = null;
+        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
+        private ulong _value = 0;
+
+        public ulong ReplicationId { get => _replicationId; }
+        public readonly bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
         public RepULong() { }
 
-        public RepULong(ulong replicationId, ulong value)
+        public readonly ulong Get()
         {
-            ReplicationId = replicationId;
-            Value = value;
+            return _value;
         }
 
-        public override string ToString() => $"[{ReplicationId}] {Value}";
+        public void Set(ulong value)
+        {
+            if (_value == value) return;
+            _value = value;
+
+            // TODO: Send archive message
+            if (_messageDispatcher?.CanSendArchiveMessages == true)
+                Logger.Trace($"Set(): {this}");
+        }
+
+        public override string ToString() => $"[{ReplicationId}] {_value}";
+
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        {
+            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
+
+            if (IsBound)
+                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+
+            _messageDispatcher = messageDispatcher;
+            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
+
+            return true;
+        }
+
+        public void Unbind()
+        {
+            if (IsBound == false) return;
+
+            _messageDispatcher.UnregisterMessageHandler(this);
+            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
+        }
 
         public bool Serialize(Archive archive)
         {
             bool success = true;
 
-            ulong replicationId = ReplicationId;
-            success &= Serializer.Transfer(archive, ref replicationId);
-
-            ulong value = Value;
-            success &= Serializer.Transfer(archive, ref value);
+            success &= Serializer.Transfer(archive, ref _replicationId);
+            success &= Serializer.Transfer(archive, ref _value);
 
             return success;
         }
@@ -70,28 +137,61 @@ namespace MHServerEmu.Games.Network
 
     public struct RepString : IArchiveMessageHandler, ISerialize
     {
-        public ulong ReplicationId { get; set; } = 0;
-        public string Value { get; set; } = string.Empty;
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private IArchiveMessageDispatcher _messageDispatcher = null;
+        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
+        private string _value = string.Empty;
+
+        public ulong ReplicationId { get => _replicationId; }
+        public readonly bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
         public RepString() { }
 
-        public RepString(ulong replicationId, string value)
+        public readonly string Get()
         {
-            ReplicationId = replicationId;
-            Value = value;
+            return _value;
         }
 
-        public override string ToString() => $"[{ReplicationId}] {Value}";
+        public void Set(string value)
+        {
+            if (_value == value) return;
+            _value = value;
+
+            // TODO: Send archive message
+            if (_messageDispatcher?.CanSendArchiveMessages == true)
+                Logger.Trace($"Set(): {this}");
+        }
+
+        public override string ToString() => $"[{ReplicationId}] {_value}";
+
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        {
+            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
+
+            if (IsBound)
+                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+
+            _messageDispatcher = messageDispatcher;
+            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
+
+            return true;
+        }
+
+        public void Unbind()
+        {
+            if (IsBound == false) return;
+
+            _messageDispatcher.UnregisterMessageHandler(this);
+            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
+        }
 
         public bool Serialize(Archive archive)
         {
             bool success = true;
 
-            ulong replicationId = ReplicationId;
-            success &= Serializer.Transfer(archive, ref replicationId);
-
-            string value = Value;
-            success &= Serializer.Transfer(archive, ref value);
+            success &= Serializer.Transfer(archive, ref _replicationId);
+            success &= Serializer.Transfer(archive, ref _value);
 
             return success;
         }

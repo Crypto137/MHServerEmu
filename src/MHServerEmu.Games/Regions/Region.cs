@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId DifficultyTierRef { get => Properties[PropertyEnum.DifficultyTier]; }
 
         public RegionPrototype Prototype { get; private set; }
-        public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
+        public PrototypeId PrototypeDataRef { get => Prototype != null ? Prototype.DataRef : PrototypeId.Invalid; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
         public bool IsPublic { get => Prototype != null && Prototype.IsPublic; }
@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
 
         // ArchiveData
-        public ReplicatedPropertyCollection Properties { get; private set; }
+        public ReplicatedPropertyCollection Properties { get; } = new();
         public MissionManager MissionManager { get; private set; }
         public UIDataProvider UIDataProvider { get; private set; }
         public ObjectiveGraph ObjectiveGraph { get; private set; }
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Regions
             PopulationManager = new(Game, this);
 
             Settings = settings;
-            Properties = new(this, Game.CurrentRepId); // TODO: Bind(this, 0xEF);
+            Properties.Bind(this);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return Logger.WarnReturn(false, "Initialize(): settings.InstanceAddress == 0");
@@ -390,6 +390,8 @@ namespace MHServerEmu.Games.Regions
             */
 
             NaviMesh.Release();
+
+            Properties.Unbind();
         }
 
         public bool Serialize(Archive archive)

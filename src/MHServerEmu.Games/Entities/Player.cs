@@ -57,14 +57,12 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
-
         private MissionManager _missionManager = new();
-        private ReplicatedPropertyCollection _avatarProperties;
+        private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
-        private RepString _playerName;
+        private RepString _playerName = new();
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private RepString _secondaryPlayerName;
+        private RepString _secondaryPlayerName = new();
         private MatchQueueStatus _matchQueueStatus = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
@@ -97,7 +95,7 @@ namespace MHServerEmu.Games.Entities
         public MatchQueueStatus MatchQueueStatus { get => _matchQueueStatus; }
         public bool EmailVerified { get => _emailVerified; set => _emailVerified = value; }
         public TimeSpan AccountCreationTimestamp { get => _accountCreationTimestamp; set => _accountCreationTimestamp = value; }
-        public override ulong PartyId { get => _partyId.Value; }
+        public override ulong PartyId { get => _partyId.Get(); }
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get => _gameplayOptions; }
         public AchievementState AchievementState { get => _achievementState; }
@@ -136,11 +134,7 @@ namespace MHServerEmu.Games.Entities
 
             PlayerConnection = settings.PlayerConnection;
 
-            _avatarProperties = new(this, Game.CurrentRepId);
-            _shardId = 3;
-            _playerName = new(Game.CurrentRepId, string.Empty);
-            _secondaryPlayerName = new(0, string.Empty);
-            _partyId = new(Game.CurrentRepId, 0);
+            _shardId = 3;   // value from packet dumps
 
             Game.EntityManager.AddPlayer(this);
             _matchQueueStatus.SetOwner(this);
@@ -152,6 +146,24 @@ namespace MHServerEmu.Games.Entities
             QueueLoadingScreen(PrototypeId.Invalid);
 
             return true;
+        }
+
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _avatarProperties.Bind(this);
+            _playerName.Bind(this);
+            _partyId.Bind(this);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _avatarProperties.Unbind();
+            _playerName.Unbind();
+            _partyId.Unbind();
         }
 
         public override bool Serialize(Archive archive)
@@ -270,7 +282,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Set name
-            _playerName.Value = account.PlayerName;    // NOTE: This is used for highlighting your name in leaderboards
+            _playerName.Set(account.PlayerName);    // NOTE: This is used for highlighting your name in leaderboards
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -414,9 +426,9 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn("GetName(): avatarIndex out of range");
 
             if (avatarIndex == PlayerAvatarIndex.Secondary)
-                return _secondaryPlayerName.Value;
+                return _secondaryPlayerName.Get();
 
-            return _playerName.Value;
+            return _playerName.Get();
         }
 
         /// <summary>
