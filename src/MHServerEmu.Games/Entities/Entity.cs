@@ -286,7 +286,7 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void BindReplicatedFields()
         {
-            Properties.Bind(this);
+            Properties.Bind(this, AOINetworkPolicyValues.AllChannels);
         }
 
         protected virtual void UnbindReplicatedFields()

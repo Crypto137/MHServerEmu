@@ -16,6 +16,7 @@ namespace MHServerEmu.Games.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private IArchiveMessageDispatcher _messageDispatcher = null;
+        private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
         private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         private int _value = 0;
 
@@ -41,7 +42,7 @@ namespace MHServerEmu.Games.Network
 
         public override string ToString() => $"[{ReplicationId}] {_value}";
 
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
             if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
 
@@ -49,6 +50,7 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
 
             _messageDispatcher = messageDispatcher;
+            _interestPolicies = interestPolicies;
             _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
 
             return true;
@@ -78,6 +80,7 @@ namespace MHServerEmu.Games.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private IArchiveMessageDispatcher _messageDispatcher = null;
+        private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
         private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         private ulong _value = 0;
 
@@ -103,7 +106,7 @@ namespace MHServerEmu.Games.Network
 
         public override string ToString() => $"[{ReplicationId}] {_value}";
 
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
             if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
 
@@ -111,6 +114,7 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
 
             _messageDispatcher = messageDispatcher;
+            _interestPolicies = interestPolicies;
             _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
 
             return true;
@@ -140,6 +144,7 @@ namespace MHServerEmu.Games.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private IArchiveMessageDispatcher _messageDispatcher = null;
+        private AOINetworkPolicyValues _interestPolicies = AOINetworkPolicyValues.AOIChannelNone;
         private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         private string _value = string.Empty;
 
@@ -165,7 +170,7 @@ namespace MHServerEmu.Games.Network
 
         public override string ToString() => $"[{ReplicationId}] {_value}";
 
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
             if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
 
@@ -173,6 +178,7 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
 
             _messageDispatcher = messageDispatcher;
+            _interestPolicies = interestPolicies;
             _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
 
             return true;

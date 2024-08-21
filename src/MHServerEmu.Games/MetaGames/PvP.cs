@@ -25,8 +25,8 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.BindReplicatedFields();
 
-            _team1.Bind(this);
-            _team2.Bind(this);
+            _team1.Bind(this, AOINetworkPolicyValues.AOIChannelProximity);
+            _team2.Bind(this, AOINetworkPolicyValues.AOIChannelProximity);
         }
 
         protected override void UnbindReplicatedFields()

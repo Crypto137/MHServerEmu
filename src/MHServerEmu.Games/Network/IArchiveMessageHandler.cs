@@ -7,7 +7,7 @@
         public ulong ReplicationId { get; }
         public bool IsBound { get; }
 
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher);
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies);
         public void Unbind();
     }
 }

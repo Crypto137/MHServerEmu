@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Regions
             PopulationManager = new(Game, this);
 
             Settings = settings;
-            Properties.Bind(this);
+            Properties.Bind(this, AOINetworkPolicyValues.AllChannels);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return Logger.WarnReturn(false, "Initialize(): settings.InstanceAddress == 0");

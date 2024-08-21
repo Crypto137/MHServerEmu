@@ -284,7 +284,7 @@ namespace MHServerEmu.Games.Network
 
                 // Can add EntitiesToDestroy here
 
-                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy))
+                using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
                 {
                     newRegion.Serialize(archive);
                     regionChangeBuilder.SetArchiveData(archive.ToByteString());
@@ -331,7 +331,7 @@ namespace MHServerEmu.Games.Network
             return cellInterest.IsLoaded;
         }
 
-        public bool InterestedInEntity(ulong entityId, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.DefaultPolicy)
+        public bool InterestedInEntity(ulong entityId, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels)
         {
             AOINetworkPolicyValues interestPolicies = GetCurrentInterestPolicies(entityId);
             return (interestPolicies & interestFilter) != AOINetworkPolicyValues.AOIChannelNone;

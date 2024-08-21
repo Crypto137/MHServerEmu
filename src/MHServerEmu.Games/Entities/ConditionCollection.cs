@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Entities
 
             if (_currentConditionDict.TryAdd(condition.Id, condition))
             {
-                condition.Properties.Bind(_owner);
+                condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
                 return true;
             }
 

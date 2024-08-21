@@ -152,9 +152,9 @@ namespace MHServerEmu.Games.Entities
         {
             base.BindReplicatedFields();
 
-            _avatarProperties.Bind(this);
-            _playerName.Bind(this);
-            _partyId.Bind(this);
+            _avatarProperties.Bind(this, AOINetworkPolicyValues.AOIChannelOwner);
+            _playerName.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+            _partyId.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
         }
 
         protected override void UnbindReplicatedFields()

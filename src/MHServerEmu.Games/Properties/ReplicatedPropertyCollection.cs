@@ -16,6 +16,7 @@ namespace MHServerEmu.Games.Properties
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private IArchiveMessageDispatcher _messageDispatcher = null;
+        private AOINetworkPolicyValues _interestPolicies;
         private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
 
         public ulong ReplicationId { get => _replicationId; }
@@ -23,7 +24,7 @@ namespace MHServerEmu.Games.Properties
 
         public ReplicatedPropertyCollection() { }
 
-        public bool Bind(IArchiveMessageDispatcher messageDispatcher)
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
             if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
 
@@ -31,6 +32,7 @@ namespace MHServerEmu.Games.Properties
                 return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
 
             _messageDispatcher = messageDispatcher;
+            _interestPolicies = interestPolicies;
             _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
 
             return true;
@@ -130,7 +132,7 @@ namespace MHServerEmu.Games.Properties
 
             // Get replication policy for this property
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
-            AOINetworkPolicyValues interestFilter = propertyInfo.Prototype.RepNetwork;
+            AOINetworkPolicyValues interestFilter = propertyInfo.Prototype.RepNetwork & _interestPolicies;
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
