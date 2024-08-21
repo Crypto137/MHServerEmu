@@ -10,8 +10,14 @@ namespace MHServerEmu.Games.Missions.Actions
 {
     public class MissionActionEntityPerformPower : MissionActionEntityTarget
     {
+        private MissionActionEntityPerformPowerPrototype _proto;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public MissionActionEntityPerformPower(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype) { }
+
+        public MissionActionEntityPerformPower(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype) 
+        {
+            _proto = prototype as MissionActionEntityPerformPowerPrototype;
+        }
 
         public override bool Evaluate(WorldEntity entity)
         {
@@ -23,35 +29,34 @@ namespace MHServerEmu.Games.Missions.Actions
         public override bool RunEntity(WorldEntity entity)
         {
             if (entity is not Agent agent) return false;
-            if (Prototype is not MissionActionEntityPerformPowerPrototype proto) return false;
             bool canRun = true;
             if (agent.IsControlledEntity == false)
             {
-                if (proto.MissionReferencedPowerRemove)
+                if (_proto.MissionReferencedPowerRemove)
                     agent.RemoveMissionActionReferencedPowers(MissionRef);
 
-                if (proto.PowerPrototype != PrototypeId.Invalid)
+                if (_proto.PowerPrototype != PrototypeId.Invalid)
                 {
-                    if (proto.PowerRemove)
-                        canRun &= agent.UnassignPower(proto.PowerPrototype);
+                    if (_proto.PowerRemove)
+                        canRun &= agent.UnassignPower(_proto.PowerPrototype);
                     else
-                        canRun &= ActivatePerformPower(agent, proto.PowerPrototype);
+                        canRun &= ActivatePerformPower(agent, _proto.PowerPrototype);
                 }
 
-                if (proto.BrainOverride != PrototypeId.Invalid)
+                if (_proto.BrainOverride != PrototypeId.Invalid)
                 {
-                    if (proto.BrainOverrideRemove)
+                    if (_proto.BrainOverrideRemove)
                         canRun &= RemoveOverrideBrain(agent);
                     else
-                        canRun &= OverrideBrain(agent, proto.BrainOverride);
+                        canRun &= OverrideBrain(agent, _proto.BrainOverride);
                 }
 
-                if (proto.EvalProperties != null)
+                if (_proto.EvalProperties != null)
                 {
                     EvalContextData evalContext = new(agent.Game);
                     evalContext.SetVar_EntityPtr(EvalContext.Default, agent);
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, agent.Region.Properties);
-                    Eval.RunBool(proto.EvalProperties, evalContext);
+                    Eval.RunBool(_proto.EvalProperties, evalContext);
                 }
             }
             return canRun;

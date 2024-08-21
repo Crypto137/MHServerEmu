@@ -1241,7 +1241,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            var messageRelease = NetMessageMissionInteractRelease.CreateBuilder().Build();
+            var messageRelease = NetMessageMissionInteractRelease.DefaultInstance;
             Game.NetworkManager.SendMessageToInterested(messageRelease, this, AOINetworkPolicyValues.AOIChannelOwner);             
         }
 

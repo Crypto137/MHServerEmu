@@ -892,7 +892,6 @@ namespace MHServerEmu.Games.Missions
             protected override CallbackDelegate GetCallback() => (manager, playerId, targetId) => manager.SendPlayerInteract(playerId, targetId);
         }
 
-
         #region Hardcoded
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
