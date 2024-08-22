@@ -1,7 +1,9 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Resources;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -667,6 +669,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ScreenPositionY { get; protected set; }
         public int FlashDelayMS { get; protected set; }
         public bool ShowOncePerAccount { get; protected set; }
+
+        public bool ShouldShowTip(Player player)
+        {
+            if (ShowOncePerAccount == false) return true;
+            else return player.Properties[PropertyEnum.TutorialHasSeenTip, DataRef] == false;
+        }
     }
 
     public class SessionImagePrototype : Prototype

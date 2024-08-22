@@ -49,11 +49,12 @@ namespace MHServerEmu.Games.Missions.Actions
             if (cell == null) return;
             spawnPosition = RegionLocation.ProjectToFloor(region, spawnPosition);
 
-            var group = region.PopulationManager.CreateSpawnGroup();
+            var manager = region.PopulationManager;
+            var group = manager.CreateSpawnGroup();
             group.Transform = Transform3.BuildTransform(spawnPosition, Orientation.Zero);
             group.MissionRef = MissionRef;
 
-            var spec = region.PopulationManager.CreateSpawnSpec(group);
+            var spec = manager.CreateSpawnSpec(group);
             spec.EntityRef = _proto.EntityPrototype;
             spec.Transform = Transform3.Identity();
             spec.SnapToFloor = true;
@@ -66,7 +67,7 @@ namespace MHServerEmu.Games.Missions.Actions
             spec.Spawn();
 
             var entity = spec.ActiveEntity;
-            if (entity == null) region.PopulationManager.RemoveSpawnGroup(group.Id);
+            if (entity == null) manager.RemoveSpawnGroup(group.Id);
         }
 
         private static Vector3 ChooseSpawnPosition(Region region, Vector3 position, Bounds bounds, PathFlags pathFlags, float radius)

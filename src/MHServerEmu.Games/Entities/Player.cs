@@ -57,7 +57,9 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly EventGroup _pendingEvents = new();
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
+        private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
 
         private MissionManager _missionManager;
         private ReplicatedPropertyCollection _avatarProperties;
@@ -109,6 +111,7 @@ namespace MHServerEmu.Games.Entities
 
         // Avatars
         public Avatar CurrentAvatar { get; private set; }
+        public HUDTutorialPrototype CurrentHUDTutorial { get; private set; }
 
         // Console stuff - not implemented
         public bool IsConsolePlayer { get => false; }
@@ -1257,6 +1260,14 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        private void SendHUDTutorial(HUDTutorialPrototype hudTutorialProto)
+        {
+            var hudTutorialRef = PrototypeId.Invalid;
+            if (hudTutorialProto != null) hudTutorialRef = hudTutorialProto.DataRef;
+            var message = NetMessageHUDTutorial.CreateBuilder().SetHudTutorialProtoId((ulong)hudTutorialRef).Build();
+            SendMessage(message);
+        }
+
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {
             int eventInstance = eventProto.GetEventInstance();
@@ -1264,9 +1275,77 @@ namespace MHServerEmu.Games.Entities
             return Properties[teamProp];
         }
 
-        private class SwitchAvatarEvent : CallMethodEvent<Entity>
+        public void ShowHUDTutorial(HUDTutorialPrototype hudTutorialProto)
         {
-            protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
+            if (hudTutorialProto != null && hudTutorialProto.ShouldShowTip(this) == false) return;
+
+            if (CurrentHUDTutorial != hudTutorialProto)
+            {
+                var manager = Game.EntityManager;
+                var inventory = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
+                if (inventory == null) return;
+
+                bool send = hudTutorialProto != null;
+                if (CurrentHUDTutorial != null)
+                {
+                    foreach(var entry in inventory)
+                    {
+                        var avatar = manager.GetEntity<Avatar>(entry.Id);
+                        avatar?.ResetTutorialProps();
+                    }
+                    send |= CurrentHUDTutorial.CanDismiss == false && CurrentHUDTutorial.DisplayDurationMS <= 0;
+                }
+                if (send) SendHUDTutorial(hudTutorialProto);
+
+                CurrentHUDTutorial = hudTutorialProto;
+
+                if (hudTutorialProto != null)
+                {
+                    foreach (var entry in inventory)
+                    {
+                        var avatar = manager.GetEntity<Avatar>(entry.Id);
+                        avatar?.SetTutorialProps(hudTutorialProto);
+                    }
+
+                    CancelScheduledHUDTutorialEvent();
+                    if (hudTutorialProto.DisplayDurationMS > 0)
+                        SchedulePlayerEvent(_hudTutorialResetEvent, TimeSpan.FromMilliseconds(hudTutorialProto.DisplayDurationMS));
+                }
+            }
+        }
+
+        private void CancelScheduledHUDTutorialEvent()
+        {
+            if (_hudTutorialResetEvent.IsValid)
+            {
+                var scheduler = Game.GameEventScheduler;
+                scheduler.CancelEvent(_hudTutorialResetEvent);
+            }
+        }
+
+        private void ResetHUDTutorial()
+        {
+            CancelScheduledHUDTutorialEvent();
+            ShowHUDTutorial(null);
+        }
+
+        public void SchedulePlayerEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
+            where TEvent : CallMethodEvent<Player>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this);
+        }
+
+        private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Player>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.ResetHUDTutorial();
+        }
+
+        private class SwitchAvatarEvent : CallMethodEvent<Player>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.SwitchAvatar();
         }
 
         private struct TeleportData

@@ -116,6 +116,23 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto.GetAvatarLevelCap();
         }
 
+        public void SetTutorialProps(HUDTutorialPrototype hudTutorialProto)
+        {
+            if (hudTutorialProto.AllowMovement)
+                Properties[PropertyEnum.TutorialImmobilized] = true;
+            if (hudTutorialProto.AllowPowerUsage)
+                Properties[PropertyEnum.TutorialPowerLock] = true;
+            if (hudTutorialProto.AllowTakingDamage)
+                Properties[PropertyEnum.TutorialInvulnerable] = true;
+        }
+
+        public void ResetTutorialProps()
+        {
+            Properties.RemoveProperty(PropertyEnum.TutorialImmobilized);
+            Properties.RemoveProperty(PropertyEnum.TutorialPowerLock);
+            Properties.RemoveProperty(PropertyEnum.TutorialInvulnerable);
+        }
+
         #region World and Positioning
 
         public override bool CanMove()
