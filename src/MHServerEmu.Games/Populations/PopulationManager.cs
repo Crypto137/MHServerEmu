@@ -272,7 +272,7 @@ namespace MHServerEmu.Games.Populations
             return null;
         }
 
-        private void RemoveSpawnGroup(ulong groupId)
+        public void RemoveSpawnGroup(ulong groupId)
         {
             if (_spawnGroups.TryGetValue(groupId, out var group))
             {

@@ -711,7 +711,13 @@ namespace MHServerEmu.Games.Populations
             }
             if (group == null) return 0;
 
-            foreach (var obj in Objects) obj.Spawn(group, spawner, entities);
+            foreach (var obj in Objects)
+                if (obj.Spawn(group, spawner, entities) == 0)
+                {
+                    if (Parent == null) 
+                        manager.RemoveSpawnGroup(group.Id);
+                    return 0;
+                }
 
             var position = GetAbsolutePosition();
             if (ObjectProto.Riders.HasValue())
