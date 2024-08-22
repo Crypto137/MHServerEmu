@@ -856,9 +856,11 @@ namespace MHServerEmu.Games.Network
                 if (worldEntity.IsDead && worldEntity.IsDestructible == false && currentInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
                     return AOINetworkPolicyValues.AOIChannelNone;
 
-                // Validate that the entity's location is valid on the client before including it in the proximity channel
-                if (worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false
-                    && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                // Make sure this world entity is in the same region as our interest
+                bool isInRegion = worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false && worldEntity.Region == Region;
+
+                // Make sure this world entity is within our interest volume
+                if (isInRegion && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
                 {
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
                 }
@@ -868,8 +870,8 @@ namespace MHServerEmu.Games.Network
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
                 }
 
-                // Discovery: make sure the entity is in the world (e.g. it's not an equipped item on a nearby avatar) and it is not a discovery from another region
-                if (player.IsEntityDiscovered(worldEntity) && worldEntity.IsInWorld && worldEntity.Region == Region)
+                // Discovery - we should not replicate discovered entities not in our region (e.g. saved discoveries from another region or equipped items on nearby avatars)
+                if (isInRegion && player.IsEntityDiscovered(worldEntity))
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
             }
 
