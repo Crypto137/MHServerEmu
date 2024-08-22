@@ -101,7 +101,6 @@ namespace MHServerEmu.Games.Entities
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
-        public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
         public SpawnSpec SpawnSpec { get; private set; }
@@ -305,10 +304,6 @@ namespace MHServerEmu.Games.Entities
 
         public virtual bool EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
-            var proto = WorldEntityPrototype;
-            if (proto.ObjectiveInfo != null)
-                TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
-
             SetStatus(EntityStatus.EnteringWorld, true);
 
             RegionLocation.Region = region;
@@ -1704,12 +1699,20 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
 
-            // Send our entire power collection when we gain proximity (enter game world)
-            if (previousInterestPolicies != AOINetworkPolicyValues.AOIChannelNone
-                && previousInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) == false
-                && newInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+            AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
+
+            if (gainedPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
             {
-                PowerCollection?.SendEntireCollection(player);
+                // Send our entire power collection when we gain proximity and enter game world on the client
+                // (the client needs to already be aware of us through ownership or some other channel)
+                if (previousInterestPolicies != AOINetworkPolicyValues.AOIChannelNone)
+                    PowerCollection?.SendEntireCollection(player);
+
+                // Mark as discovered by the player if needed
+                if (IsDiscoverable && operation == InterestTrackOperation.Add && WorldEntityPrototype.ObjectiveInfo?.TrackAfterDiscovery == true)
+                {
+                    player.DiscoverEntity(this, true);
+                }
             }
         }
 

@@ -606,8 +606,6 @@ namespace MHServerEmu.Games.Network
 
         private void AddEntity(Entity entity, AOINetworkPolicyValues interestPolicies, EntitySettings settings = null)
         {
-            SetEntityInterestPolicies(entity, InterestTrackOperation.Add, interestPolicies, interestPolicies);
-
             // Check inventory for visibility
             Inventory inventory = entity.InventoryLocation.GetInventory();
             bool includeInvLoc = inventory != null && InterestedInEntity(inventory.OwnerId)
@@ -615,6 +613,12 @@ namespace MHServerEmu.Games.Network
 
             // Build and send entity create message
             SendMessage(ArchiveMessageBuilder.BuildEntityCreateMessage(entity, interestPolicies, includeInvLoc, settings));
+
+            // Update interest policies
+            // NOTE: SetEntityInterestPolicies() calls OnPostAOIAddOrRemove(), which may cause this entity to be discovered.
+            // This needs to be sent after the create message so that the client is aware of the entity when it processes
+            // the discovery message.
+            SetEntityInterestPolicies(entity, InterestTrackOperation.Add, interestPolicies, interestPolicies);
 
             // Update contained entities
             ConsiderContainedEntities(entity, InterestTrackOperation.Add);
@@ -857,10 +861,6 @@ namespace MHServerEmu.Games.Network
                     && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
                 {
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
-
-                    // HACK: Discover
-                    if (worldEntity.TrackAfterDiscovery && worldEntity is not Item)
-                        player.DiscoverEntity(worldEntity, false);
                 }
                 else if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
                 {
@@ -868,8 +868,8 @@ namespace MHServerEmu.Games.Network
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
                 }
 
-                // Discovery
-                if (player.IsEntityDiscovered(worldEntity))
+                // Discovery: make sure the entity is in the world (e.g. it's not an equipped item on a nearby avatar) and it is not a discovery from another region
+                if (player.IsEntityDiscovered(worldEntity) && worldEntity.IsInWorld && worldEntity.Region == Region)
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
             }
 
