@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Missions.Actions;
 
@@ -207,9 +208,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SpawnLoot { get; protected set; }
         public bool GivePlayerCredit { get; protected set; }
 
+        [DoNotCopy]
+        public KillFlags KillFlags { get; protected set; }
+
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionEntityKill(owner, this);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            KillFlags = KillFlags.None;
+            if (GivePlayerCredit == false) KillFlags |= KillFlags.NoDeadEvent;
+            if (SpawnLoot == false) KillFlags |= KillFlags.NoLoot | KillFlags.NoExp;
         }
     }
 

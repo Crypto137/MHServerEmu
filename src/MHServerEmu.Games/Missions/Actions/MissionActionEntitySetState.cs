@@ -15,7 +15,6 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override bool RunEntity(WorldEntity entity)
         {
-            if (entity == null) return false;
             entity.SetState(_proto.EntityState);
             if (_proto.Interactable != TriBool.Undefined)
                 entity.Properties[PropertyEnum.Interactable] = (int)_proto.Interactable;

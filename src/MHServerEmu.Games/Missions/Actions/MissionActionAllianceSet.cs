@@ -23,7 +23,6 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override bool RunEntity(WorldEntity entity)
         {
-            if (entity == null) return false;
             if (_proto.Alliance != PrototypeId.Invalid)
                 entity.Properties[PropertyEnum.AllianceOverride] = _proto.Alliance;
             else

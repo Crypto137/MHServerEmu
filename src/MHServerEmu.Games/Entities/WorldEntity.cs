@@ -38,6 +38,9 @@ namespace MHServerEmu.Games.Entities
     public enum KillFlags
     {
         None,
+        NoDeadEvent = 1 << 0,
+        NoExp       = 1 << 1,
+        NoLoot      = 1 << 2,
     }
 
     [Flags]
