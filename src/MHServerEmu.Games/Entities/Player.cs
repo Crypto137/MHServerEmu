@@ -1197,6 +1197,8 @@ namespace MHServerEmu.Games.Entities
             avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
         }
 
+        #region SendMessage
+
         public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player targetPlayer, bool party = false)
         {
             if (party)
@@ -1268,11 +1270,19 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        #endregion
+
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {
             int eventInstance = eventProto.GetEventInstance();
             var teamProp = new PropertyId(PropertyEnum.PublicEventTeamAssignment, eventProto.DataRef, eventInstance);
             return Properties[teamProp];
+        }
+
+        public void OnSetTipSeen(PrototypeId tipDataRef)
+        {
+            if (tipDataRef == PrototypeId.Invalid) return;
+            Properties[PropertyEnum.TutorialHasSeenTip, tipDataRef] = true;
         }
 
         public void ShowHUDTutorial(HUDTutorialPrototype hudTutorialProto)
