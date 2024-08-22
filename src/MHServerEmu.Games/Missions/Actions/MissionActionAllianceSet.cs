@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override bool Evaluate(WorldEntity entity)
         {
-            if (entity == null || base.Evaluate(entity) == false) return false;
+            if (base.Evaluate(entity) == false) return false;
             if (entity.IsDead || entity.IsDestroyed) return false;
             return true;
         }
