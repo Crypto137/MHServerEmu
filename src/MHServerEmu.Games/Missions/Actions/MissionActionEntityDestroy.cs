@@ -20,7 +20,6 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override bool RunEntity(WorldEntity entity)
         {
-            if (entity.IsDestroyed) return false;
             if (entity is Avatar || entity.IsTeamUpAgent) return true;
 
             var spec = entity.SpawnSpec;
