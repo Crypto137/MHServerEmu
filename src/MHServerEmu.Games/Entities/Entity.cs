@@ -333,6 +333,30 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void SetState(PrototypeId stateRef)
+        {
+            PrototypeId oldStateRef = Properties[PropertyEnum.EntityState];
+            if (oldStateRef != stateRef)
+            {
+                ClearState();
+                Properties[PropertyEnum.EntityState] = stateRef;
+                ApplyState(stateRef);
+            }
+        }
+
+        public virtual bool ApplyState(PrototypeId stateRef)
+        {
+            if (stateRef == PrototypeId.Invalid) return true;
+            return GameDatabase.GetPrototype<EntityStatePrototype>(stateRef) != null;
+        }
+
+        public virtual bool ClearState()
+        {
+            PrototypeId stateRef = Properties[PropertyEnum.EntityState];
+            if (stateRef == PrototypeId.Invalid) return true;
+            return GameDatabase.GetPrototype<EntityStatePrototype>(stateRef) != null;
+        }
+
         // NOTE: TestStatus and SetStatus can be potentially replaced with an indexer property
 
         public bool TestStatus(EntityStatus status)

@@ -1,12 +1,12 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
@@ -1789,6 +1789,66 @@ namespace MHServerEmu.Games.Entities
         public bool IsCloneParent()
         {
             return WorldEntityPrototype.ClonePerPlayer && Properties[PropertyEnum.RestrictedToPlayerGuid] == 0;
+        }
+
+        public override bool ApplyState(PrototypeId stateRef)
+        {
+            if (base.ApplyState(stateRef) == false) return false;
+
+            stateRef = Properties[PropertyEnum.EntityState];
+            var entityStateProto = GameDatabase.GetPrototype<EntityStatePrototype>(stateRef);
+            if (entityStateProto == null) return false;
+
+            /*  MoloidInvasionCoverTransition NotInGame
+            if (entityStateProto is DoorEntityStatePrototype doorStateProto)
+            {
+                
+
+                var region = Region;
+                if (doorStateProto.IsOpen == false) 
+                {
+                    if (region != null && _naviDoorHandle == null)
+                        _naviDoorHandle = region.NaviMesh.CreateDoorEdge(RegionLocation.Position, Vector3.Perp2D(Forward), NaviContentTags.Blocking, 1024.0f);
+                }
+                else if (_naviDoorHandle != null)
+                {
+                    if (region != null && _naviDoorHandle != null)
+                    {
+                        _naviDoorHandle = region.NaviMesh.RemoveDoorEdge(_naviDoorHandle);
+                        _naviDoorHandle = null;
+                    }
+                }
+            }*/
+
+            if (entityStateProto.OnActivatePowers.HasValue())
+            {
+                // Not Used
+            }
+            return true;
+        }
+
+        public override bool ClearState()
+        {
+            if (base.ClearState() == false) return false;
+
+            PrototypeId stateRef = Properties[PropertyEnum.EntityState]; 
+            var entityStateProto = GameDatabase.GetPrototype<EntityStatePrototype>(stateRef);
+            if (entityStateProto == null) return false;
+
+            /*  MoloidInvasionCoverTransition NotInGame
+            if (entityStateProto is DoorEntityStatePrototype doorStateProto)
+            {
+                if (doorStateProto.IsOpen == false)
+                { 
+                    var region = Region;
+                    if (region != null && _naviDoorHandle != null)
+                    {
+                        _naviDoorHandle = region.NaviMesh.RemoveDoorEdge(_naviDoorHandle);
+                        _naviDoorHandle = null;
+                    }
+                }
+            }*/
+            return true;
         }
 
         public void SetTaggedBy(Player player, PowerPrototype powerProto)
