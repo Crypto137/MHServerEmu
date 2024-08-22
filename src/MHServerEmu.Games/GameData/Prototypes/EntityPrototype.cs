@@ -303,6 +303,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public int WorldEntityPrototypeEnumValue { get; private set; }
 
+        [DoNotCopy]
+        public bool DiscoverInRegion { get => ObjectiveInfo?.EdgeEnabled == true || HACKDiscoverInRegion; }
+
         public override void PostProcess()
         {
             base.PostProcess();

@@ -57,6 +57,8 @@ namespace MHServerEmu.Games.Regions
         private readonly BitList _collisionBits = new();
         private readonly List<BitList> _collisionBitList = new();
 
+        private readonly HashSet<ulong> _discoveredEntities = new();
+
         private Area _startArea;
 
         private int _playerDeaths;
@@ -583,6 +585,41 @@ namespace MHServerEmu.Games.Regions
         public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
         {
             EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
+        }
+
+        public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            if (worldEntity == null) return Logger.WarnReturn(false, "DiscoverEntity(): worldEntity == null");
+
+            if (_discoveredEntities.Add(worldEntity.Id) == false)
+                return true;    // Already discovered
+
+            foreach (Player player in new PlayerIterator(this))
+                player.DiscoverEntity(worldEntity, updateInterest);
+
+            Logger.Trace($"DiscoverEntity(): {worldEntity}");
+
+            return true;
+        }
+
+        public bool UndiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            if (worldEntity == null) return Logger.WarnReturn(false, "UndiscoverEntity(): worldEntity == null");
+
+            if (_discoveredEntities.Remove(worldEntity.Id) == false)
+                return Logger.WarnReturn(false, $"UndiscoverEntity(): {worldEntity} is not discovered");
+
+            foreach (Player player in new PlayerIterator(this))
+                player.UndiscoverEntity(worldEntity, updateInterest);
+
+            Logger.Trace($"UndiscoverEntity(): {worldEntity}");
+
+            return true;
+        }
+
+        public bool IsEntityDiscovered(WorldEntity worldEntity)
+        {
+            return _discoveredEntities.Contains(worldEntity.Id);
         }
 
         #endregion
@@ -1290,11 +1327,37 @@ namespace MHServerEmu.Games.Regions
         public void OnAddedToAOI(Player player)
         {
             Logger.Trace($"OnAddedToAOI(): {this} to {player}");
+
+            // Sync region discovered entities with the player that has entered this region
+            foreach (ulong entityId in _discoveredEntities)
+            {
+                WorldEntity discoveredEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                if (discoveredEntity == null)
+                {
+                    Logger.Warn("OnAddedToAOI(): discoveredEntity == null");
+                    continue;
+                }
+
+                player.DiscoverEntity(discoveredEntity, true);
+            }
         }
 
         public void OnRemovedFromAOI(Player player)
         {
             Logger.Trace($"OnRemovedFromAOI(): {this} from {player}");
+
+            // Remove synced region discovered entities from the player that has left this region
+            foreach (ulong entityId in _discoveredEntities)
+            {
+                WorldEntity discoveredEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                if (discoveredEntity == null)
+                {
+                    Logger.Warn("OnRemovedFromAOI(): discoveredEntity == null");
+                    continue;
+                }
+
+                player.UndiscoverEntity(discoveredEntity, true);
+            }
         }
 
         public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)

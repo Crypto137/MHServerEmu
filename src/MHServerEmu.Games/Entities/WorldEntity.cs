@@ -1494,6 +1494,9 @@ namespace MHServerEmu.Games.Entities
 
             PowerCollection?.OnOwnerEnteredWorld();
 
+            if (WorldEntityPrototype.DiscoverInRegion)
+                Region.DiscoverEntity(this, false);
+
             UpdateInterestPolicies(true, settings);
 
             UpdateSimulationState();
@@ -1502,6 +1505,10 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
+
+            // Undiscover from region
+            if (WorldEntityPrototype.DiscoverInRegion)
+                Region.UndiscoverEntity(this, true);
 
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
@@ -1710,9 +1717,7 @@ namespace MHServerEmu.Games.Entities
 
                 // Mark as discovered by the player if needed
                 if (IsDiscoverable && operation == InterestTrackOperation.Add && WorldEntityPrototype.ObjectiveInfo?.TrackAfterDiscovery == true)
-                {
                     player.DiscoverEntity(this, true);
-                }
             }
         }
 
