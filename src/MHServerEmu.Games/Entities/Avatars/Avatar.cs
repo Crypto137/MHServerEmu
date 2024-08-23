@@ -620,6 +620,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             return info.IsValid;
         }
 
+        public override int GetLatestPowerProgressionVersion()
+        {
+            if (AvatarPrototype == null) return 0;
+            return AvatarPrototype.PowerProgressionVersion;
+        }
+
         public bool IsValidTargetForCurrentPower(WorldEntity target)
         {
             throw new NotImplementedException();

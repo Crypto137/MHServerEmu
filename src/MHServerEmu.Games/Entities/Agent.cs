@@ -184,6 +184,13 @@ namespace MHServerEmu.Games.Entities
             return info.IsValid;
         }
 
+        public virtual int GetLatestPowerProgressionVersion()
+        {
+            if (IsTeamUpAgent == false) return 0;
+            if (Prototype is not AgentTeamUpPrototype teamUpProto) return 0;
+            return teamUpProto.PowerProgressionVersion;
+        }
+
         public int GetPowerRank(PrototypeId powerRef)
         {
             if (powerRef == PrototypeId.Invalid) return 0;

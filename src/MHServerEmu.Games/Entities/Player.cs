@@ -836,9 +836,41 @@ namespace MHServerEmu.Games.Entities
             return teamUpInv.GetMatchingEntity(teamUpProtoRef) as Agent;
         }
 
-        public bool IsTeamUpAgentUnlocked(PrototypeId teamUpPrototype)
+        public bool IsTeamUpAgentUnlocked(PrototypeId teamUpRef)
         {
-            return GetTeamUpAgent(teamUpPrototype) != null;
+            return GetTeamUpAgent(teamUpRef) != null;
+        }
+
+        public void UnlockTeamUpAgent(PrototypeId teamUpRef)
+        {
+            if (IsTeamUpAgentUnlocked(teamUpRef) == false) return;
+
+            var manager = Game?.EntityManager;
+            if (manager == null) return;
+
+            var teamUpProto = GameDatabase.GetPrototype<AgentTeamUpPrototype>(teamUpRef);
+            if (teamUpProto == null) return;
+
+            var inventory = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (inventory == null) return;
+
+            EntitySettings settings = new()
+            {
+                InventoryLocation = new(Id, inventory.PrototypeDataRef),
+                EntityRef = teamUpRef
+            };
+
+            var teamUp = manager.CreateEntity(settings) as Agent;
+            if (teamUp == null) return;
+
+            teamUp.CombatLevel = 1;
+            // TODO ExperiencePoints
+
+            teamUp.Properties[PropertyEnum.PowerProgressionVersion] = teamUp.GetLatestPowerProgressionVersion();
+
+            SendNewTeamUpAcquired(teamUpRef);
+
+            GetRegion()?.PlayerUnlockedTeamUpEvent.Invoke(new(this, teamUpRef));            
         }
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
@@ -1353,6 +1385,12 @@ namespace MHServerEmu.Games.Entities
         public void SendRegionAvatarSwapUpdate(bool enabled)
         {
             var message = NetMessageRegionAvatarSwapUpdate.CreateBuilder().SetEnabled(enabled).Build();
+            SendMessage(message);
+        }
+
+        private void SendNewTeamUpAcquired(PrototypeId teamUpRef)
+        {
+            var message = NetMessageNewTeamUpAcquired.CreateBuilder().SetPrototypeId((ulong)teamUpRef).Build();
             SendMessage(message);
         }
 
