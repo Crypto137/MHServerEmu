@@ -15,22 +15,35 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private Entity _owner;
+        private IArchiveMessageDispatcher _messageDispatcher = null;
+        private AOINetworkPolicyValues _interestPolicies;
+        private ulong _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
 
-        private ulong _replicationId;
+        public ulong ReplicationId { get => _replicationId; }
+        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
-        public ulong ReplicationId { get => _replicationId; set => _replicationId = value; }
+        public ReplicatedPropertyCollection() { }
 
-        public ReplicatedPropertyCollection(ulong replicationId = 0)
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies)
         {
-            _replicationId = replicationId;
+            if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
+
+            if (IsBound)
+                return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+
+            _messageDispatcher = messageDispatcher;
+            _interestPolicies = interestPolicies;
+            _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
+
+            return true;
         }
 
-        public ReplicatedPropertyCollection(Entity owner, ulong replicationId = 0)
+        public void Unbind()
         {
-            // TODO: ArchiveMessageDispatcher, Bind()
-            _owner = owner;
-            _replicationId = replicationId;
+            if (IsBound == false) return;
+
+            _messageDispatcher.UnregisterMessageHandler(this);
+            _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         }
 
         public override bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
@@ -87,7 +100,7 @@ namespace MHServerEmu.Games.Properties
                     continue;
 
                 // Send newly applicable properties
-                Logger.Trace($"OnEntityChangePlayerAOI(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
+                //Logger.Trace($"OnEntityChangePlayerAOI(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
 
                 player.SendMessage(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(ReplicationId)
@@ -115,16 +128,15 @@ namespace MHServerEmu.Games.Properties
 
         private void MarkPropertyChanged(PropertyId id, PropertyValue value, SetPropertyFlags flags)
         {
-            if (_owner == null) return;
+            if (_messageDispatcher == null || _messageDispatcher.CanSendArchiveMessages == false) return;
 
             // Get replication policy for this property
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
-            AOINetworkPolicyValues interestFilter = propertyInfo.Prototype.RepNetwork;
+            AOINetworkPolicyValues interestFilter = propertyInfo.Prototype.RepNetwork & _interestPolicies;
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
-            var networkManager = _owner.Game.NetworkManager;
-            var interestedClients = networkManager.GetInterestedClients(_owner, interestFilter);
+            IEnumerable<PlayerConnection> interestedClients = _messageDispatcher.GetInterestedClients(interestFilter);
             if (interestedClients.Any() == false) return;
 
             // Send update to interested
@@ -135,12 +147,12 @@ namespace MHServerEmu.Games.Properties
                 .SetValueBits(ConvertValueToBits(value, propertyInfo.DataType))
                 .Build();
 
-            networkManager.SendMessageToMultiple(interestedClients, setPropertyMessage);
+            _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClients, setPropertyMessage);
         }
 
         private void MarkPropertyRemoved(PropertyId id)
         {
-            if (_owner == null) return;
+            if (_messageDispatcher == null || _messageDispatcher.CanSendArchiveMessages == false) return;
 
             // Get replication policy for this property
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
@@ -148,8 +160,7 @@ namespace MHServerEmu.Games.Properties
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
-            var networkManager = _owner.Game.NetworkManager;
-            var interestedClients = networkManager.GetInterestedClients(_owner, interestFilter);
+            IEnumerable<PlayerConnection> interestedClients = _messageDispatcher.GetInterestedClients(interestFilter);
             if (interestedClients.Any() == false) return;
 
             // Send update to interested
@@ -159,7 +170,7 @@ namespace MHServerEmu.Games.Properties
                 .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageRemoveProperty all bits are reversed rather than bytes
                 .Build();
 
-            networkManager.SendMessageToMultiple(interestedClients, removePropertyMessage);
+            _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClients, removePropertyMessage);
         }
     }
 }

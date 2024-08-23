@@ -101,7 +101,6 @@ namespace MHServerEmu.Games.Entities
         public NaviMesh NaviMesh { get => RegionLocation.NaviMesh; }
         public Orientation Orientation { get => RegionLocation.Orientation; }
         public WorldEntityPrototype WorldEntityPrototype { get => Prototype as WorldEntityPrototype; }
-        public bool TrackAfterDiscovery { get; private set; }
         public bool ShouldSnapToFloorOnSpawn { get; private set; }
         public EntityActionComponent EntityActionComponent { get; protected set; }
         public SpawnSpec SpawnSpec { get; private set; }
@@ -137,6 +136,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
         public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
+        public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
 
         public WorldEntity(Game game) : base(game)
         {
@@ -304,10 +304,6 @@ namespace MHServerEmu.Games.Entities
 
         public virtual bool EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
-            var proto = WorldEntityPrototype;
-            if (proto.ObjectiveInfo != null)
-                TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
-
             SetStatus(EntityStatus.EnteringWorld, true);
 
             RegionLocation.Region = region;
@@ -368,8 +364,9 @@ namespace MHServerEmu.Games.Entities
             if (IsTeamUpAgent)
                 return SetSimulated(true);
 
-            // Simulate is there are any player interested in this world entity
-            return SetSimulated(InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelProximity) ||
+            // Simulate is there are any player interested in this world entity or its cell
+            return SetSimulated(Cell?.HasAnyInterest == true ||
+                                InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelProximity) ||
                                 InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelClientIndependent));
         }
 
@@ -1487,7 +1484,7 @@ namespace MHServerEmu.Games.Entities
         public override void OnChangePlayerAOI(Player player, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
             base.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
-            UpdateSimulationState();
+            //UpdateSimulationState();      // We do simulation updates per-cell now
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
@@ -1497,6 +1494,9 @@ namespace MHServerEmu.Games.Entities
 
             PowerCollection?.OnOwnerEnteredWorld();
 
+            if (WorldEntityPrototype.DiscoverInRegion)
+                Region.DiscoverEntity(this, false);
+
             UpdateInterestPolicies(true, settings);
 
             UpdateSimulationState();
@@ -1505,6 +1505,28 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnExitedWorld()
         {
             PowerCollection?.OnOwnerExitedWorld();
+
+            // Undiscover from region
+            if (WorldEntityPrototype.DiscoverInRegion)
+                Region.UndiscoverEntity(this, true);
+
+            // Undiscover from players
+            if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
+            {
+                foreach (ulong playerId in InterestReferences.PlayerIds)
+                {
+                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
+
+                    if (player == null)
+                    {
+                        Logger.Warn("OnExitedWorld(): player == null");
+                        continue;
+                    }
+
+                    player.UndiscoverEntity(this, false);   // Skip interest update for undiscover because we are doing an update below anyway
+                }
+            }
+
             UpdateInterestPolicies(false);
 
             UpdateSimulationState();
@@ -1684,12 +1706,18 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
 
-            // Send our entire power collection when we gain proximity (enter game world)
-            if (previousInterestPolicies != AOINetworkPolicyValues.AOIChannelNone
-                && previousInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) == false
-                && newInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+            AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
+
+            if (gainedPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
             {
-                PowerCollection?.SendEntireCollection(player);
+                // Send our entire power collection when we gain proximity and enter game world on the client
+                // (the client needs to already be aware of us through ownership or some other channel)
+                if (previousInterestPolicies != AOINetworkPolicyValues.AOIChannelNone)
+                    PowerCollection?.SendEntireCollection(player);
+
+                // Mark as discovered by the player if needed
+                if (IsDiscoverable && operation == InterestTrackOperation.Add && WorldEntityPrototype.ObjectiveInfo?.TrackAfterDiscovery == true)
+                    player.DiscoverEntity(this, true);
             }
         }
 

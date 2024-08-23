@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<ActivateSwapInPowerEvent> _activateSwapInPowerEvent = new();
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
 
-        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
+        private RepString _playerName;
         private ulong _ownerPlayerDbId;
         private List<AbilityKeyMapping> _abilityKeyMappingList = new();
 
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly PendingAction _pendingAction = new();
 
         public uint AvatarWorldInstanceId { get; } = 1;
-        public string PlayerName { get => _playerName.Value; }
+        public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
@@ -80,6 +80,20 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _playerName.Bind(this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _playerName.Unbind();
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
@@ -103,7 +117,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SetPlayer(Player player)
         {
-            _playerName.Value = player.GetName();
+            _playerName.Set(player.GetName());
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
@@ -655,7 +669,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
             if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
 
-            Logger.Debug($"UseInteractableObject(): {this} => {interactableObject}");
+            Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             if (interactableObject is Transition transition)
             {

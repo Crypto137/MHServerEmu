@@ -20,6 +20,7 @@ using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -48,13 +49,15 @@ namespace MHServerEmu.Games.Regions
         Remove
     }
 
-    public class Region : IMissionManagerOwner, ISerialize, IUIDataProviderOwner
+    public class Region : IArchiveMessageDispatcher, ISerialize, IMissionManagerOwner, IUIDataProviderOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly BitList _collisionIds = new();
         private readonly BitList _collisionBits = new();
         private readonly List<BitList> _collisionBitList = new();
+
+        private readonly HashSet<ulong> _discoveredEntities = new();
 
         private Area _startArea;
 
@@ -69,7 +72,7 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId DifficultyTierRef { get => Properties[PropertyEnum.DifficultyTier]; }
 
         public RegionPrototype Prototype { get; private set; }
-        public PrototypeId PrototypeDataRef { get => Prototype.DataRef; }
+        public PrototypeId PrototypeDataRef { get => Prototype != null ? Prototype.DataRef : PrototypeId.Invalid; }
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
         public bool IsPublic { get => Prototype != null && Prototype.IsPublic; }
@@ -91,7 +94,7 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
 
         // ArchiveData
-        public ReplicatedPropertyCollection Properties { get; private set; }
+        public ReplicatedPropertyCollection Properties { get; } = new();
         public MissionManager MissionManager { get; private set; }
         public UIDataProvider UIDataProvider { get; private set; }
         public ObjectiveGraph ObjectiveGraph { get; private set; }
@@ -149,7 +152,7 @@ namespace MHServerEmu.Games.Regions
             PopulationManager = new(Game, this);
 
             Settings = settings;
-            Properties = new(Game.CurrentRepId); // TODO: Bind(this, 0xEF);
+            Properties.Bind(this, AOINetworkPolicyValues.AllChannels);
 
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return Logger.WarnReturn(false, "Initialize(): settings.InstanceAddress == 0");
@@ -389,6 +392,8 @@ namespace MHServerEmu.Games.Regions
             */
 
             NaviMesh.Release();
+
+            Properties.Unbind();
         }
 
         public bool Serialize(Archive archive)
@@ -580,6 +585,41 @@ namespace MHServerEmu.Games.Regions
         public void GetEntitiesInVolume<B>(List<WorldEntity> entities, B volume, EntityRegionSPContext context) where B : IBounds
         {
             EntitySpatialPartition?.GetElementsInVolume(entities, volume, context);
+        }
+
+        public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            if (worldEntity == null) return Logger.WarnReturn(false, "DiscoverEntity(): worldEntity == null");
+
+            if (_discoveredEntities.Add(worldEntity.Id) == false)
+                return true;    // Already discovered
+
+            foreach (Player player in new PlayerIterator(this))
+                player.DiscoverEntity(worldEntity, updateInterest);
+
+            Logger.Trace($"DiscoverEntity(): {worldEntity}");
+
+            return true;
+        }
+
+        public bool UndiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            if (worldEntity == null) return Logger.WarnReturn(false, "UndiscoverEntity(): worldEntity == null");
+
+            if (_discoveredEntities.Remove(worldEntity.Id) == false)
+                return Logger.WarnReturn(false, $"UndiscoverEntity(): {worldEntity} is not discovered");
+
+            foreach (Player player in new PlayerIterator(this))
+                player.UndiscoverEntity(worldEntity, updateInterest);
+
+            Logger.Trace($"UndiscoverEntity(): {worldEntity}");
+
+            return true;
+        }
+
+        public bool IsEntityDiscovered(WorldEntity worldEntity)
+        {
+            return _discoveredEntities.Contains(worldEntity.Id);
         }
 
         #endregion
@@ -783,7 +823,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool FindTargetLocation(ref Vector3 markerPos, ref Orientation markerRot, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            Logger.Debug($"FindTargetLocation(): areaProtoRef={areaProtoRef.GetName()}, cellProtoRef={cellProtoRef.GetName()}, entityProtoRef={entityProtoRef.GetName()}");
+            //Logger.Debug($"FindTargetLocation(): areaProtoRef={areaProtoRef.GetName()}, cellProtoRef={cellProtoRef.GetName()}, entityProtoRef={entityProtoRef.GetName()}");
 
             Area targetArea;
 
@@ -1282,6 +1322,47 @@ namespace MHServerEmu.Games.Regions
         public void UpdateLastVisitedTime()
         {
             LastVisitedTime = Clock.UnixTime;
+        }
+
+        public void OnAddedToAOI(Player player)
+        {
+            Logger.Trace($"OnAddedToAOI(): {this} to {player}");
+
+            // Sync region discovered entities with the player that has entered this region
+            foreach (ulong entityId in _discoveredEntities)
+            {
+                WorldEntity discoveredEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                if (discoveredEntity == null)
+                {
+                    Logger.Warn("OnAddedToAOI(): discoveredEntity == null");
+                    continue;
+                }
+
+                player.DiscoverEntity(discoveredEntity, true);
+            }
+        }
+
+        public void OnRemovedFromAOI(Player player)
+        {
+            Logger.Trace($"OnRemovedFromAOI(): {this} from {player}");
+
+            // Remove synced region discovered entities from the player that has left this region
+            foreach (ulong entityId in _discoveredEntities)
+            {
+                WorldEntity discoveredEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                if (discoveredEntity == null)
+                {
+                    Logger.Warn("OnRemovedFromAOI(): discoveredEntity == null");
+                    continue;
+                }
+
+                player.UndiscoverEntity(discoveredEntity, true);
+            }
+        }
+
+        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
+        {
+            return Game.NetworkManager.GetInterestedClients(this);
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

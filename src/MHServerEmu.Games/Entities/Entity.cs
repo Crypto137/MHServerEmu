@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Entities
 
     #endregion
 
-    public class Entity : ISerialize, IPropertyChangeWatcher
+    public class Entity : IArchiveMessageDispatcher, ISerialize, IPropertyChangeWatcher
     {
         public const ulong InvalidId = 0;
 
@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsInGame { get => TestStatus(EntityStatus.InGame); }
         public bool IsDestroyed { get => TestStatus(EntityStatus.Destroyed); }
 
-        public ReplicatedPropertyCollection Properties { get; set; }
+        public ReplicatedPropertyCollection Properties { get; } = new();
 
         public Party Party { get; internal set; }
         public virtual ulong PartyId { get { var ownerPlayer = GetOwnerOfType<Player>(); return ownerPlayer != null ? ownerPlayer.PartyId : 0; } }
@@ -127,6 +127,7 @@ namespace MHServerEmu.Games.Entities
 
         public virtual AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
         public InterestReferences InterestReferences { get; } = new();
+        public bool CanSendArchiveMessages { get => IsInGame; }
 
         public InventoryCollection InventoryCollection { get; } = new();
         public InventoryLocation InventoryLocation { get; private set; } = new();
@@ -229,9 +230,10 @@ namespace MHServerEmu.Games.Entities
             Prototype = PrototypeDataRef.As<EntityPrototype>();
             if (Prototype == null) return Logger.WarnReturn(false, "Initialize(): Prototype == null");
 
+            // Bind fields that use the legacy replication system (RepVar / ReplicatedPropertyCollection)
+            BindReplicatedFields();
+
             // Initialize property collection and copy baseline properties from prototype / settings
-            // TODO: Bind to ArchiveMessageDispatcher
-            Properties = new(this, Game.CurrentRepId);
 
             // We use IPropertyChangeWatcher implementation as a replacement for multiple inheritance
             Attach(Properties);
@@ -280,6 +282,16 @@ namespace MHServerEmu.Games.Entities
             // Temp method for hacks that replace entity prototype after creation - use with caution and remove this later
             Prototype = prototypeRef.As<EntityPrototype>();
             PrototypeDataRef = prototypeRef;
+        }
+
+        protected virtual void BindReplicatedFields()
+        {
+            Properties.Bind(this, AOINetworkPolicyValues.AllChannels);
+        }
+
+        protected virtual void UnbindReplicatedFields()
+        {
+            Properties.Unbind();
         }
 
         protected virtual void BuildString(StringBuilder sb)
@@ -402,6 +414,11 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
+        {
+            return Game.NetworkManager.GetInterestedClients(this, interestPolicies);
+        }
+
         #endregion
 
         #region Event Handlers
@@ -429,6 +446,7 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnDeallocate()
         {
             Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
+            UnbindReplicatedFields();
         }
 
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,
