@@ -62,6 +62,7 @@ namespace MHServerEmu.Games.Regions
         private Area _startArea;
 
         private int _playerDeaths;
+        private PrototypeId _avatarOnKilledInfo = PrototypeId.Invalid;
 
         public Game Game { get; private set; }
         public ulong Id { get; private set; } // InstanceAddress
@@ -1368,6 +1369,22 @@ namespace MHServerEmu.Games.Regions
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && Prototype.HasKeyword(keywordProto);
+        }
+
+        public AvatarOnKilledInfoPrototype GetAvatarOnKilledInfo()
+        {
+            // Return default info if no override is set
+            if (_avatarOnKilledInfo == PrototypeId.Invalid)
+                return GameDatabase.GlobalsPrototype.ResurrectionDefaultInfo.As<AvatarOnKilledInfoPrototype>();
+
+            return _avatarOnKilledInfo.As<AvatarOnKilledInfoPrototype>();
+        }
+
+        public void SetAvatarOnKilledInfo(PrototypeId avatarOnKilledInfo)
+        {
+            _avatarOnKilledInfo = avatarOnKilledInfo == PrototypeId.Invalid
+                ? GameDatabase.GlobalsPrototype.ResurrectionDefaultInfo
+                : avatarOnKilledInfo;
         }
 
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)

@@ -864,8 +864,8 @@ namespace MHServerEmu.Games.Network
 
         private bool OnRequestDeathRelease(MailboxMessage message)  // 48
         {
-            var swapInAbilityBar = message.As<NetMessageRequestDeathRelease>();
-            if (swapInAbilityBar == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");
+            var requestDeathRelease = message.As<NetMessageRequestDeathRelease>();
+            if (requestDeathRelease == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");
 
             Avatar avatar = Player.CurrentAvatar;
             if (avatar == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): avatar == null");
@@ -873,7 +873,18 @@ namespace MHServerEmu.Games.Network
             // Requesting release of an avatar who is no longer dead due to lag
             if (avatar.IsDead == false) return true;
 
-            return avatar.Resurrect();
+            // Validate request
+            var requestType = (DeathReleaseRequestType)requestDeathRelease.RequestType;
+            if (requestType >= DeathReleaseRequestType.NumRequestTypes)
+                return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Invalid request type {requestType} for avatar {avatar}");
+
+            if (requestType == DeathReleaseRequestType.Corpse && avatar.Properties[PropertyEnum.HasResurrectPending] == false)
+                return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Avatar {avatar} attempted to resurrect at corpse without a pending resurrect");
+            else if (requestType == DeathReleaseRequestType.Ally)
+                return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Local coop mode is not implemented");    // Remove this if we ever implement local coop
+
+            // Do the death release (resurrect and move)
+            return avatar.DoDeathRelease(requestType);
         }
 
         private bool OnReturnToHub(MailboxMessage message)  // 55

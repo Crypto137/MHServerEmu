@@ -20,6 +20,7 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
 
 namespace MHServerEmu.Games.Entities.Avatars
@@ -172,6 +173,44 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return result;
+        }
+
+        public bool DoDeathRelease(DeathReleaseRequestType requestType)
+        {
+            // Resurrect
+            if (Resurrect() == false)
+                return Logger.WarnReturn(false, $"DoDeathRelease(): Failed to resurrect avatar {this}");
+
+            // Move to waypoint or some other place depending on the request and the region prototype
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "DoDeathRelease(): region == null");
+
+            Player owner = GetOwnerOfType<Player>();
+            if (owner == null) return Logger.WarnReturn(false, "DoDeathRelease(): owner == null");
+
+            switch (requestType)
+            {
+                case DeathReleaseRequestType.Checkpoint:
+                    AvatarOnKilledInfoPrototype avatarOnKilledInfo = region.GetAvatarOnKilledInfo();
+                    if (avatarOnKilledInfo == null) return Logger.WarnReturn(false, "DoDeathRelease(): avatarOnKilledInfo == null");
+
+                    if (avatarOnKilledInfo.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
+                    {
+                        // TODO: Find the actual waypoint, for now just return to the start target for the region
+                        Transition.TeleportToLocalTarget(owner, region.Prototype.StartTarget);
+                    }
+                    else 
+                    {
+                        return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {avatarOnKilledInfo.DeathReleaseBehavior}");
+                    }
+
+                    break;
+
+                default:
+                    return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented request type {requestType}");
+            }
+
+            return true;
         }
 
         #endregion

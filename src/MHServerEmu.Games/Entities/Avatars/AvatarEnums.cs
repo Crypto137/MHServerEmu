@@ -34,6 +34,15 @@ namespace MHServerEmu.Games.Entities.Avatars
         Type6
     }
 
+    public enum DeathReleaseRequestType : uint
+    {
+        Checkpoint,
+        Town,
+        Corpse,
+        Ally,
+        NumRequestTypes
+    }
+
     public enum AvatarPrototypeId : ulong
     {
         Angela = 13124420519155930214,
