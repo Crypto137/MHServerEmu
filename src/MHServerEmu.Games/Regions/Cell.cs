@@ -31,6 +31,8 @@ namespace MHServerEmu.Games.Regions
         private float _playableNavArea;
         private float _spawnableNavArea;
 
+        private int _numInterestedPlayers = 0;
+
         public uint Id { get; }
 
         public CellPrototype Prototype { get; private set; }
@@ -48,8 +50,6 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); } // TODO: Optimize
 
         public List<uint> CellConnections = new();
-        private int _AOIcount;
-        public bool HasAOI { get => _AOIcount > 0; }
         public List<ReservedSpawn> Encounters { get; } = new();
 
         public float PlayableArea { get => (_playableNavArea != -1.0) ? _playableNavArea : 0.0f; }
@@ -62,6 +62,8 @@ namespace MHServerEmu.Games.Regions
         public Orientation AreaOrientation { get; private set; }
         public Transform3 AreaTransform { get; private set; }
         public Transform3 RegionTransform { get; private set; }
+
+        public bool HasAnyInterest { get => _numInterestedPlayers > 0; }
 
         public Cell(Area area, uint id)
         {
@@ -496,33 +498,35 @@ namespace MHServerEmu.Games.Regions
             InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
         }
 
-        public void OnAddToAOI()
+        
+        public void OnAddedToAOI()
         {
             Generate();
-            _AOIcount++;
+            _numInterestedPlayers++;
+            //Logger.Debug($"OnAddedToAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
 
-            if (_AOIcount == 1)
+            if (_numInterestedPlayers == 1)
             {
-                foreach (var entity in Entities)
-                {
-                    var worldEntity = entity as WorldEntity;
-                    worldEntity?.UpdateSimulationState();
-                }
+                foreach (WorldEntity worldEntity in Entities)
+                    worldEntity.UpdateSimulationState();
             }
         }
 
-        public void OnRemoveFromAOI()
+        public void OnRemovedFromAOI()
         {
-            _AOIcount--;
-            if (_AOIcount < 0) _AOIcount = 0;
+            _numInterestedPlayers--;
+            //Logger.Debug($"OnRemovedFromAOI(): {PrototypeName}[{Id}] (_numInterestedPlayers={_numInterestedPlayers})");
 
-            if (_AOIcount == 0)
+            if (_numInterestedPlayers < 0)
             {
-                foreach (var entity in Entities)
-                {
-                    var worldEntity = entity as WorldEntity;
-                    worldEntity?.UpdateSimulationState();
-                }
+                Logger.Warn("OnRemovedFromAOI(): _numInterestedPlayers < 0");
+                _numInterestedPlayers = 0;
+            }
+
+            if (_numInterestedPlayers == 0)
+            {
+                foreach (WorldEntity worldEntity in Entities)
+                    worldEntity.UpdateSimulationState();
             }
         }
 

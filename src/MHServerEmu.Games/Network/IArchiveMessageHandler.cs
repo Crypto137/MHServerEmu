@@ -4,8 +4,10 @@
 
     public interface IArchiveMessageHandler
     {
-        public const ulong InvalidReplicationId = 0;
+        public ulong ReplicationId { get; }
+        public bool IsBound { get; }
 
-        public ulong ReplicationId { get; set; }
+        public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies);
+        public void Unbind();
     }
 }

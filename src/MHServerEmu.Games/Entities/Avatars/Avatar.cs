@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
         private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
 
-        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
+        private RepString _playerName;
         private ulong _ownerPlayerDbId;
         private List<AbilityKeyMapping> _abilityKeyMappingList = new();
 
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly PendingAction _pendingAction = new();
 
         public uint AvatarWorldInstanceId { get; } = 1;
-        public string PlayerName { get => _playerName.Value; }
+        public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
@@ -82,6 +82,20 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _playerName.Bind(this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _playerName.Unbind();
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
@@ -105,7 +119,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SetPlayer(Player player)
         {
-            _playerName.Value = player.GetName();
+            _playerName.Set(player.GetName());
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
@@ -184,6 +198,44 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return result;
+        }
+
+        public bool DoDeathRelease(DeathReleaseRequestType requestType)
+        {
+            // Resurrect
+            if (Resurrect() == false)
+                return Logger.WarnReturn(false, $"DoDeathRelease(): Failed to resurrect avatar {this}");
+
+            // Move to waypoint or some other place depending on the request and the region prototype
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "DoDeathRelease(): region == null");
+
+            Player owner = GetOwnerOfType<Player>();
+            if (owner == null) return Logger.WarnReturn(false, "DoDeathRelease(): owner == null");
+
+            switch (requestType)
+            {
+                case DeathReleaseRequestType.Checkpoint:
+                    AvatarOnKilledInfoPrototype avatarOnKilledInfo = region.GetAvatarOnKilledInfo();
+                    if (avatarOnKilledInfo == null) return Logger.WarnReturn(false, "DoDeathRelease(): avatarOnKilledInfo == null");
+
+                    if (avatarOnKilledInfo.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
+                    {
+                        // TODO: Find the actual waypoint, for now just return to the start target for the region
+                        Transition.TeleportToLocalTarget(owner, region.Prototype.StartTarget);
+                    }
+                    else 
+                    {
+                        return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {avatarOnKilledInfo.DeathReleaseBehavior}");
+                    }
+
+                    break;
+
+                default:
+                    return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented request type {requestType}");
+            }
+
+            return true;
         }
 
         #endregion
@@ -681,7 +733,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
             if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
 
-            Logger.Debug($"UseInteractableObject(): {this} => {interactableObject}");
+            Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             if (interactableObject is Transition transition)
             {

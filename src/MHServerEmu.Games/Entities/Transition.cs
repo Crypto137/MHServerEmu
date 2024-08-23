@@ -119,14 +119,14 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
+        public static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
         {
             Logger.Trace($"TeleportToRemoteTarget(): targetProtoRef={targetProtoRef.GetNameFormatted()}");
             player.PlayerConnection.MoveToTarget(targetProtoRef);
             return true;
         }
 
-        private static bool TeleportToLocalTarget(Player player, PrototypeId targetProtoRef)
+        public static bool TeleportToLocalTarget(Player player, PrototypeId targetProtoRef)
         {
             var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): targetProto == null");
@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Entities
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        private static bool TeleportToTransition(Player player, ulong transitionEntityId)
+        public static bool TeleportToTransition(Player player, ulong transitionEntityId)
         {
             // This looks quite similar to TeleportToLocalTarget(), maybe we should merge them
 
@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.Entities
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        private static bool TeleportToLastTown(Player player)
+        public static bool TeleportToLastTown(Player player)
         {
             // TODO: Teleport to the last saved hub
             Logger.Trace($"TeleportToLastTown(): Destination LastTown");

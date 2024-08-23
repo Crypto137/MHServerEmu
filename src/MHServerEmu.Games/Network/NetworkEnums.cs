@@ -17,7 +17,7 @@
 
         // From the constructor for ArchiveMessageHandler, 0xEF (all channels except 4)
         // Appears in AddConditionArchive and MiniMapArchive
-        DefaultPolicy           = AOIChannelProximity | AOIChannelParty | AOIChannelOwner | AOIChannelTrader
+        AllChannels             = AOIChannelProximity | AOIChannelParty | AOIChannelOwner | AOIChannelTrader
                                 | AOIChannelDiscovery | AOIChannelClientOnly | AOIChannelClientIndependent
     }
 

@@ -42,6 +42,8 @@ namespace MHServerEmu.Games.Network
 
         private readonly EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
+        private bool _waitingForRegionIsAvailableResponse = false;
+
         public Game Game { get; }
 
         public AreaOfInterest AOI { get; }
@@ -70,7 +72,13 @@ namespace MHServerEmu.Games.Network
             // Send achievement database
             SendMessage(AchievementDatabase.Instance.GetDump());
 
-            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+            // Query if our initial loading region is available (has assets) on the client.
+            // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
+            SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
+                .SetRegionPrototype((ulong)TransferParams.DestTargetRegionProtoRef)
+                .Build());
+
+            _waitingForRegionIsAvailableResponse = true;
         }
 
         public override string ToString()
@@ -85,7 +93,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void UpdateDBAccount()
         {
-            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // REMOVEME: we no longer use this
+            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
             _dbAccount.Player.RawWaypoint = (long)TransferParams.DestTargetProtoRef;
             _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
@@ -103,7 +111,7 @@ namespace MHServerEmu.Games.Network
             // Initialize transfer params
             // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
             // We should get rid of saving waypoint refs and just use connection targets.
-            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint);
+            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint, (PrototypeId)_dbAccount.Player.RawRegion);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
@@ -199,6 +207,9 @@ namespace MHServerEmu.Games.Network
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
+
+            AOI.SetRegion(0, true);
+
             Game.EntityManager.DestroyEntity(Player);
 
             // Destroy all private region instances in the world view since they are not persistent anyway
@@ -221,13 +232,13 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
 
-        public void MoveToTarget(PrototypeId targetProtoRef)
+        public void MoveToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
         {
             // Simulate exiting and re-entering the game on a real GIS
             ExitGame();
 
             // Update our target
-            TransferParams.SetTarget(targetProtoRef);
+            TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
 
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
@@ -254,7 +265,8 @@ namespace MHServerEmu.Games.Network
             Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
             if (region == null)
             {
-                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetNameFormatted()}");
+                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
+                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);  // Reset transfer target so that the player can recover on relog
                 Disconnect();
                 return;
             }
@@ -269,6 +281,7 @@ namespace MHServerEmu.Games.Network
             }
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
+            Player.SendMiniMapUpdate();
         }
 
         public void ExitGame()
@@ -312,6 +325,7 @@ namespace MHServerEmu.Games.Network
 
             switch ((ClientToGameServerMessage)message.Id)
             {
+                case ClientToGameServerMessage.NetMessageIsRegionAvailable:                 OnIsRegionAvailable(message); break;                // 5
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:                 OnUpdateAvatarState(message); break;                // 6
                 case ClientToGameServerMessage.NetMessageCellLoaded:                        OnCellLoaded(message); break;                       // 7
                 case ClientToGameServerMessage.NetMessageAdminCommand:                      OnAdminCommand(message); break;                     // 9
@@ -377,6 +391,29 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnIsRegionAvailable(MailboxMessage message)    // 5
+        {
+            var isRegionAvailable = message.As<NetMessageIsRegionAvailable>();
+            if (isRegionAvailable == null) return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Failed to retrieve message");
+
+            if (_waitingForRegionIsAvailableResponse == false)
+                return Logger.WarnReturn(false, "OnIsRegionAvailable(): Received RegionIsAvailable when we are not waiting for a response");
+
+            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestTargetRegionProtoRef)
+                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestTargetRegionProtoRef.GetName()}");
+
+            if (isRegionAvailable.IsAvailable == false)
+            {
+                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestTargetRegionProtoRef.GetName()} is not available, resetting start target");
+                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
+            }
+
+            _waitingForRegionIsAvailableResponse = false;
+            Game.NetworkManager.SetPlayerConnectionPending(this);
+
+            return true;
         }
 
         private bool OnUpdateAvatarState(MailboxMessage message)    // 6
@@ -755,12 +792,14 @@ namespace MHServerEmu.Games.Network
             var useWaypoint = message.As<NetMessageUseWaypoint>();
             if (useWaypoint == null) return Logger.WarnReturn(false, $"OnUseWaypoint(): Failed to retrieve message");
 
-            Logger.Info($"Received UseWaypoint message");
-            Logger.Trace(useWaypoint.ToString());
+            Logger.Trace(string.Format("OnUseWaypoint(): waypointDataRef={0}, regionProtoId={1}, difficultyProtoId={2}",
+                GameDatabase.GetPrototypeName((PrototypeId)useWaypoint.WaypointDataRef),
+                GameDatabase.GetPrototypeName((PrototypeId)useWaypoint.RegionProtoId),
+                GameDatabase.GetPrototypeName((PrototypeId)useWaypoint.DifficultyProtoId)));
 
             // TODO: Do the usual interaction validation
 
-            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef);
+            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef, (PrototypeId)useWaypoint.RegionProtoId);
             return true;
         }
 
@@ -828,8 +867,8 @@ namespace MHServerEmu.Games.Network
 
         private bool OnRequestDeathRelease(MailboxMessage message)  // 48
         {
-            var swapInAbilityBar = message.As<NetMessageRequestDeathRelease>();
-            if (swapInAbilityBar == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");
+            var requestDeathRelease = message.As<NetMessageRequestDeathRelease>();
+            if (requestDeathRelease == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");
 
             Avatar avatar = Player.CurrentAvatar;
             if (avatar == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): avatar == null");
@@ -837,7 +876,18 @@ namespace MHServerEmu.Games.Network
             // Requesting release of an avatar who is no longer dead due to lag
             if (avatar.IsDead == false) return true;
 
-            return avatar.Resurrect();
+            // Validate request
+            var requestType = (DeathReleaseRequestType)requestDeathRelease.RequestType;
+            if (requestType >= DeathReleaseRequestType.NumRequestTypes)
+                return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Invalid request type {requestType} for avatar {avatar}");
+
+            if (requestType == DeathReleaseRequestType.Corpse && avatar.Properties[PropertyEnum.HasResurrectPending] == false)
+                return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Avatar {avatar} attempted to resurrect at corpse without a pending resurrect");
+            else if (requestType == DeathReleaseRequestType.Ally)
+                return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Local coop mode is not implemented");    // Remove this if we ever implement local coop
+
+            // Do the death release (resurrect and move)
+            return avatar.DoDeathRelease(requestType);
         }
 
         private bool OnReturnToHub(MailboxMessage message)  // 55

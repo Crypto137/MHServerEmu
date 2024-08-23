@@ -79,7 +79,6 @@ namespace MHServerEmu.Games
         public ulong NumQuantumFixedTimeUpdates { get => (ulong)CurrentTime.CalcNumTimeQuantums(FixedTimeBetweenUpdates); }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
-        // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
         public bool OmegaMissionsEnabled { get; set; }
 
@@ -166,6 +165,14 @@ namespace MHServerEmu.Games
 
             // Mark this game as shut down for the player manager
             HasBeenShutDown = true;
+        }
+
+        public void RequestShutdown()
+        {
+            if (IsRunning == false || HasBeenShutDown)
+                return;
+
+            IsRunning = false;
         }
 
         public void AddClient(FrontendClient client)
@@ -271,14 +278,17 @@ namespace MHServerEmu.Games
 
             try
             {
-                while (true)
+                while (IsRunning)
                 {
                     Update();
                 }
+
+                Shutdown(GameShutdownReason.ServerShuttingDown);
             }
             catch (Exception e)
             {
-                HandleGameInstanceCrash(e);           
+                HandleGameInstanceCrash(e);
+                Shutdown(GameShutdownReason.GameInstanceCrash);
             }
         }
 
@@ -399,7 +409,6 @@ namespace MHServerEmu.Games
             }
 
             Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");
-            Shutdown(GameShutdownReason.GameInstanceCrash);
         }
     }
 }

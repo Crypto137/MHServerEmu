@@ -23,6 +23,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
@@ -62,11 +63,11 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
 
         private MissionManager _missionManager;
-        private ReplicatedPropertyCollection _avatarProperties;
+        private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
-        private ReplicatedVariable<string> _playerName = new(0, string.Empty);
+        private RepString _playerName = new();
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
-        private ReplicatedVariable<string> _secondaryPlayerName = new(0, string.Empty);
+        private RepString _secondaryPlayerName = new();
         private MatchQueueStatus _matchQueueStatus = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
@@ -75,7 +76,7 @@ namespace MHServerEmu.Games.Entities
         private bool _emailVerified;
         private TimeSpan _accountCreationTimestamp;     // UnixTime
 
-        private ReplicatedVariable<ulong> _partyId = new();
+        private RepULong _partyId;
 
         private ulong _guildId;
         private string _guildName;
@@ -89,6 +90,9 @@ namespace MHServerEmu.Games.Entities
         private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
+        // TODO: Serialize on migration
+        private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
+
         private TeleportData _teleportData;
 
         // Accessors
@@ -97,7 +101,7 @@ namespace MHServerEmu.Games.Entities
         public MatchQueueStatus MatchQueueStatus { get => _matchQueueStatus; }
         public bool EmailVerified { get => _emailVerified; set => _emailVerified = value; }
         public TimeSpan AccountCreationTimestamp { get => _accountCreationTimestamp; set => _accountCreationTimestamp = value; }
-        public override ulong PartyId { get => _partyId.Value; }
+        public override ulong PartyId { get => _partyId.Get(); }
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get => _gameplayOptions; }
         public AchievementState AchievementState { get => _achievementState; }
@@ -139,11 +143,7 @@ namespace MHServerEmu.Games.Entities
 
             PlayerConnection = settings.PlayerConnection;
 
-            _avatarProperties = new(this, Game.CurrentRepId);
-            _shardId = 3;
-            _playerName = new(Game.CurrentRepId, string.Empty);
-            _secondaryPlayerName = new(0, string.Empty);
-            _partyId = new(Game.CurrentRepId, 0);
+            _shardId = 3;   // value from packet dumps
 
             Game.EntityManager.AddPlayer(this);
             _matchQueueStatus.SetOwner(this);
@@ -155,6 +155,24 @@ namespace MHServerEmu.Games.Entities
             QueueLoadingScreen(PrototypeId.Invalid);
 
             return true;
+        }
+
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _avatarProperties.Bind(this, AOINetworkPolicyValues.AOIChannelOwner);
+            _playerName.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+            _partyId.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _avatarProperties.Unbind();
+            _playerName.Unbind();
+            _partyId.Unbind();
         }
 
         public override bool Serialize(Archive archive)
@@ -274,7 +292,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Set name
-            _playerName.Value = account.PlayerName;    // NOTE: This is used for highlighting your name in leaderboards
+            _playerName.Set(account.PlayerName);    // NOTE: This is used for highlighting your name in leaderboards
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -398,7 +416,7 @@ namespace MHServerEmu.Games.Entities
         public override void ExitGame()
         {
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
-            AOI.SetRegion(0, true, null, null);
+            AOI.SetRegion(0, true);
 
             base.ExitGame();
         }
@@ -418,9 +436,9 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn("GetName(): avatarIndex out of range");
 
             if (avatarIndex == PlayerAvatarIndex.Secondary)
-                return _secondaryPlayerName.Value;
+                return _secondaryPlayerName.Get();
 
-            return _playerName.Value;
+            return _playerName.Get();
         }
 
         /// <summary>
@@ -1011,6 +1029,82 @@ namespace MHServerEmu.Games.Entities
             DequeueLoadingScreen();
             TryPlayIntroKismetSeqForRegion(CurrentAvatar.RegionLocation.RegionId);
 
+            return true;
+        }
+
+        #endregion
+
+        #region Discovery
+
+        public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
+        {
+            Region region = Game.RegionManager.GetRegion(regionId);
+            if (region == null) return Logger.WarnReturn<MapDiscoveryData>(null, "GetMapDiscoveryData(): region == null");
+
+            if (_mapDiscoveryDict.TryGetValue(regionId, out MapDiscoveryData mapDiscoveryData) == false)
+            {
+                mapDiscoveryData = new(region);
+                _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
+            }
+
+            return mapDiscoveryData;
+        }
+
+        public MapDiscoveryData GetMapDiscoveryDataForEntity(WorldEntity worldEntity)
+        {
+            Region region = worldEntity?.Region;
+            if (region == null) return null;
+            return GetMapDiscoveryData(region.Id);
+        }
+
+        public bool DiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "DiscoverEntity(): mapDiscoveryData == null");
+
+            if (mapDiscoveryData.DiscoverEntity(worldEntity) == false)
+                return false;
+
+            if (updateInterest)
+                AOI.ConsiderEntity(worldEntity);
+
+            return true;
+        }
+
+        public bool UndiscoverEntity(WorldEntity worldEntity, bool updateInterest)
+        {
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "UndiscoverEntity(): mapDiscoveryData == null");
+
+            if (mapDiscoveryData.UndiscoverEntity(worldEntity) == false)
+                return false;
+
+            if (updateInterest)
+                AOI.ConsiderEntity(worldEntity);
+
+            return true;
+        }
+
+        public bool IsEntityDiscovered(WorldEntity worldEntity)
+        {
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(worldEntity);
+            return mapDiscoveryData != null && mapDiscoveryData.IsEntityDiscovered(worldEntity);
+        }
+
+        public bool SendMiniMapUpdate()
+        {
+            Logger.Trace($"SendMiniMapUpdate(): {this}");
+
+            Region region = GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): region == null");
+
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryData(region.Id);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): mapDiscoveryData == null");
+
+            LowResMap lowResMap = mapDiscoveryData.LowResMap;
+            if (lowResMap == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): lowResMap == null");
+
+            SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
             return true;
         }
 

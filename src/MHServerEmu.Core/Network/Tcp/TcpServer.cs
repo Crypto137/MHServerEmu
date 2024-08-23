@@ -20,6 +20,8 @@ namespace MHServerEmu.Core.Network.Tcp
         private bool _isListening;
         private bool _isDisposed;
 
+        protected bool _isRunning;
+
         public int ConnectionCount { get => _connectionDict.Count; }
 
         /// <summary>
@@ -65,6 +67,8 @@ namespace MHServerEmu.Core.Network.Tcp
             // Start accepting connections
             Task.Run(async () => await AcceptConnectionsAsync());
 
+            _isRunning = true;
+
             return true;
         }
 
@@ -86,6 +90,8 @@ namespace MHServerEmu.Core.Network.Tcp
 
             // Disconnect all clients
             DisconnectAllClients();
+
+            _isRunning = false;
         }
 
         /// <summary>
@@ -168,7 +174,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Raised when the server receives data from a client connection.
         /// </summary>
-        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] data);
+        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length);
 
         #endregion
 
@@ -226,10 +232,10 @@ namespace MHServerEmu.Core.Network.Tcp
                         return;
                     }
 
-                    // Copy the data we received from the buffer to a new array
-                    byte[] data = new byte[bytesReceived];
-                    Array.Copy(connection.ReceiveBuffer, data, bytesReceived);
-                    OnDataReceived(connection, data);
+                    // Parse received data straight from the connection's buffer.
+                    // NOTE: We do it in a somewhat awkward way because we used to copy
+                    // data to a new array and pass it around, maybe we should refactor this more.
+                    OnDataReceived(connection, connection.ReceiveBuffer, bytesReceived);
 
                     if (connection.Connected == false)  // Stop receiving if no longer connected
                     {

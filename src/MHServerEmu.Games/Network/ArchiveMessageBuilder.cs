@@ -607,7 +607,7 @@ namespace MHServerEmu.Games.Network
         {
             // NOTE: In all of our packets this uses the default policy. This may be different for older versions of the game
             // where condition replication was heavily based on the ArchiveMessageDispatcher/Handler system.
-            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy);
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels);
 
             ulong entityId = owner.Id;
             Serializer.Transfer(archive, ref entityId);
@@ -623,7 +623,7 @@ namespace MHServerEmu.Games.Network
         public static NetMessageUpdateMiniMap BuildUpdateMiniMapMessage(LowResMap lowResMap)
         {
             // NOTE: NetMessageUpdateMiniMap always uses the default policy values
-            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.DefaultPolicy);
+            using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels);
 
             Serializer.Transfer(archive, ref lowResMap);
 

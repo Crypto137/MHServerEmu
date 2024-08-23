@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Network
             PlayerConnection = playerConnection;
         }
 
-        public bool SetTarget(PrototypeId targetProtoRef)
+        public bool SetTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
         {
             // REMOVEME: Convert invalid / waypoint refs to connection target refs
             FindRegionConnectionTarget(ref targetProtoRef);
@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Network
 
             DestTargetProtoRef = targetProtoRef;    // we keep this to save to the database
 
-            DestTargetRegionProtoRef = targetProto.Region;
+            DestTargetRegionProtoRef = regionProtoRefOverride != PrototypeId.Invalid ? regionProtoRefOverride : targetProto.Region;
             DestTargetAreaProtoRef = targetProto.Area;
             DestTargetCellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
             DestTargetEntityProtoRef = targetProto.Entity;

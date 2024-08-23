@@ -6,8 +6,9 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames
 {
@@ -15,7 +16,7 @@ namespace MHServerEmu.Games.MetaGames
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
 
-        protected ReplicatedVariable<string> _name = new(0, string.Empty);
+        protected RepString _name = new();
         protected ulong _regionId;
         public Region Region { get => GetRegion(); }
 
@@ -26,7 +27,7 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.Initialize(settings);
 
-            _name = new(0, "");
+            //_name = new(0, "");
             _regionId = settings.RegionId;
 
             Region region = Game.RegionManager.GetRegion(_regionId);
@@ -63,6 +64,20 @@ namespace MHServerEmu.Games.MetaGames
                 return null;
 
             return Game.RegionManager.GetRegion(_regionId);
+        }
+
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _name.Bind(this, AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _name.Unbind();
         }
 
         protected override void BuildString(StringBuilder sb)

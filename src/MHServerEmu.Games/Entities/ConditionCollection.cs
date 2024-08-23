@@ -208,7 +208,14 @@ namespace MHServerEmu.Games.Entities
         private bool InsertCondition(Condition condition)
         {
             // TODO: ConditionCollection::Handle?
-            return _currentConditionDict.TryAdd(condition.Id, condition);
+
+            if (_currentConditionDict.TryAdd(condition.Id, condition))
+            {
+                condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
+                return true;
+            }
+
+            return false;
         }
 
         private void OnInsertCondition(Condition condition)
@@ -240,6 +247,7 @@ namespace MHServerEmu.Games.Entities
                 networkManager.SendMessageToMultiple(interestedClients, deleteConditionMessage);
             }
 
+            condition.Properties.Unbind();
             return true;
         }
 

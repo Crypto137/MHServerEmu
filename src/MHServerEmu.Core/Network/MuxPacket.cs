@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
@@ -50,7 +51,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public MuxPacket(Stream stream)
         {
-            using (BinaryReader reader = new(stream))
+            using (BinaryReader reader = new(stream, Encoding.UTF8, true))
             {
                 try
                 {
@@ -65,7 +66,7 @@ namespace MHServerEmu.Core.Network
 
                         CodedInputStream cis = CodedInputStream.CreateInstance(reader.ReadBytes(bodyLength));
                         while (cis.IsAtEnd == false)
-                            _messageList.Add(new(cis));
+                            _messageList.Add(new(cis, MuxId));
                     }
                 }
                 catch (Exception e)

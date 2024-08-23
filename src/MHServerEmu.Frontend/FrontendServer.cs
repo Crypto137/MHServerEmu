@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Collections.Concurrent;
+using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -13,6 +14,8 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
+        private readonly ConcurrentQueue<(FrontendClient, MessagePackage)> _pendingMessageQueue = new();
+
         #region IGameService Implementation
 
         public override void Run()
@@ -21,22 +24,28 @@ namespace MHServerEmu.Frontend
 
             if (Start(config.BindIP, int.Parse(config.Port)) == false) return;
             Logger.Info($"FrontendServer is listening on {config.BindIP}:{config.Port}...");
+
+            while (_isRunning)
+            {
+                if (_pendingMessageQueue.IsEmpty == false)
+                {
+                    while (_pendingMessageQueue.TryDequeue(out var pendingMessage))
+                    {
+                        HandlePendingMessage(pendingMessage.Item1, pendingMessage.Item2);
+                    }
+                }
+                else
+                {
+                    Thread.Sleep(1);
+                }
+            }
         }
 
         // Shutdown implemented by TcpServer
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
-            var client = (FrontendClient)tcpClient;
-            message.Protocol = typeof(FrontendProtocolMessage);
-
-            switch ((FrontendProtocolMessage)message.Id)
-            {
-                case FrontendProtocolMessage.ClientCredentials: OnClientCredentials(client, message); break;
-                case FrontendProtocolMessage.InitialClientHandshake: OnInitialClientHandshake(client, message); break;
-
-                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)message.Id} [{message.Id}]"); break;
-            }
+            _pendingMessageQueue.Enqueue(((FrontendClient)tcpClient, message));
         }
 
         public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
@@ -85,14 +94,46 @@ namespace MHServerEmu.Frontend
             }
         }
 
-        protected override void OnDataReceived(TcpClientConnection connection, byte[] data)
+        protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)
         {
-            ((FrontendClient)connection.Client).Parse(data);
+            ((FrontendClient)connection.Client).Parse(buffer, length);
         }
 
         #endregion
 
-        #region Message Self-Handling
+        #region Message Handling
+
+        private bool HandlePendingMessage(FrontendClient client, MessagePackage message)
+        {
+            // Skip messages from clients that have already disconnected
+            if (client.Connection.Connected == false)
+                return Logger.WarnReturn(false, "HandlePendingMessage(): Sender has already disconnected");
+
+            // Route to the destination service if initial frontend business has already been done
+            if (message.MuxId == 1 && client.FinishedPlayerManagerHandshake)
+            {
+                ServerManager.Instance.RouteMessage(client, message, ServerType.PlayerManager);
+                return true;
+            }
+            else if (message.MuxId == 2 && client.FinishedGroupingManagerHandshake)
+            {
+                ServerManager.Instance.RouteMessage(client, message, ServerType.GroupingManager);
+                return true;
+            }
+
+            // Self-handling for initial connection
+            message.Protocol = typeof(FrontendProtocolMessage);
+
+            switch ((FrontendProtocolMessage)message.Id)
+            {
+                case FrontendProtocolMessage.ClientCredentials:         OnClientCredentials(client, message); break;
+                case FrontendProtocolMessage.InitialClientHandshake:    OnInitialClientHandshake(client, message); break;
+
+                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)message.Id} [{message.Id}]"); break;
+            }
+
+            return true;
+        }
 
         /// <summary>
         /// Handles <see cref="ClientCredentials"/>.
