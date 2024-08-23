@@ -554,12 +554,9 @@ namespace MHServerEmu.Games.Network
                 Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
 
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
-                if (bowlingBall == null) return false;
+                if (bowlingBall is not Item item) return false;
 
-                if (bowlingBall.Properties[PropertyEnum.InventoryStackCount] > 1)
-                    bowlingBall.Properties.AdjustProperty(-1, PropertyEnum.InventoryStackCount);
-                else
-                    bowlingBall.Destroy();
+                item.RemoveItem();
             }
 
             return true;

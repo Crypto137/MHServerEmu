@@ -115,6 +115,7 @@ namespace MHServerEmu.Games.Entities
         public EntityStatus Status { get; set; }
         public bool IsInGame { get => TestStatus(EntityStatus.InGame); }
         public bool IsDestroyed { get => TestStatus(EntityStatus.Destroyed); }
+        public bool IsScheduledToDestroy { get => _scheduledDestroyEvent.IsValid; }
 
         public ReplicatedPropertyCollection Properties { get; } = new();
 

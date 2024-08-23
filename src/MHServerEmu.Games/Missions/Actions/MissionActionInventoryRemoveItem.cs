@@ -1,12 +1,55 @@
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
     public class MissionActionInventoryRemoveItem : MissionAction
     {
+        private MissionActionInventoryRemoveItemPrototype _proto;
+        private MissionActionList _onRemoveActions;
+
         public MissionActionInventoryRemoveItem(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype)
         {
             // CH03Main2TheTabletChase
+            _proto = prototype as MissionActionInventoryRemoveItemPrototype;
+        }
+
+        public override void Run()
+        {
+            var itemRef = _proto.ItemPrototype;
+            if (itemRef == PrototypeId.Invalid) return;
+
+            long itemCount = _proto.Count;
+            if (itemCount <= 0) itemCount = 10000;
+            var flags = InventoryIterationFlags.PlayerGeneral 
+                | InventoryIterationFlags.PlayerGeneralExtra 
+                | InventoryIterationFlags.PlayerStashGeneral 
+                | InventoryIterationFlags.SortByPrototypeRef;
+
+            foreach (Player player in Mission.GetParticipants())
+                RemoveItemsFromInventory(new InventoryIterator(player, flags), itemRef, itemCount);
+        }
+
+        private void RemoveItemsFromInventory(InventoryIterator inventoryIterator, PrototypeId itemRef, long count)
+        {           
+            var manager = Game?.EntityManager;
+            if (manager == null) return;
+
+            foreach (var inventory in inventoryIterator)
+                foreach (var entry in inventory)
+                    if (entry.ProtoRef == itemRef)
+                    {
+                        var item = manager.GetEntity<Item>(entry.Id);
+                        if (item == null || item.IsScheduledToDestroy) continue;
+                        item.RemoveItem();
+                        count--;
+
+                        MissionActionList.CreateActionList(ref _onRemoveActions, _proto.OnRemoveActions, Owner);
+                        if (count == 0) return;
+                    }
         }
     }
 }

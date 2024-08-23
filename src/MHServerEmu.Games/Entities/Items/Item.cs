@@ -228,9 +228,14 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        internal void RemoveItem()
+        public void RemoveItem(int count = 1)
         {
-            throw new NotImplementedException();
+            if (count < 1) return;
+            int newCount = Math.Max(0, CurrentStackSize - count);
+            if (newCount > 0)
+                Properties[PropertyEnum.InventoryStackCount] = newCount;
+            else
+                ScheduleDestroyEvent(TimeSpan.Zero);
         }
     }
 }
