@@ -742,7 +742,7 @@ namespace MHServerEmu.Games.Powers
 
             Player player = Owner.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSwitchAvatar(): player == null");
-            player.SwitchAvatar();
+            player.ScheduleSwitchAvatarEvent();
             return true;
         }
 

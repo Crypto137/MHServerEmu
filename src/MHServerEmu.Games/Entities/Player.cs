@@ -57,6 +57,8 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
+
         private MissionManager _missionManager = new();
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
@@ -838,6 +840,12 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.AvatarSwitchPending, avatarProtoRef] = true;
 
             return true;
+        }
+
+        public void ScheduleSwitchAvatarEvent()
+        {
+            // Schedule avatar switch at the end of the current frame to let switch power application finish first
+            ScheduleEntityEvent(_switchAvatarEvent, TimeSpan.Zero);
         }
 
         public bool SwitchAvatar()
