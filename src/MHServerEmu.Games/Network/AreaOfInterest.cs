@@ -568,8 +568,6 @@ namespace MHServerEmu.Games.Network
             _trackedCells.Add(cell.Id, new(_currentFrame, false));
             cell.OnAddedToAOI();
 
-            cell.OnAddToAOI();
-
             var builder = NetMessageCellCreate.CreateBuilder()
                 .SetAreaId(cell.Area.Id)
                 .SetCellId(cell.Id)

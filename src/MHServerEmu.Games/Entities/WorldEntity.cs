@@ -409,10 +409,6 @@ namespace MHServerEmu.Games.Entities
             if (WorldEntityPrototype?.AlwaysSimulated == true)
                 return SetSimulated(true);
 
-            // Simulate for Loaded Cell in AOI
-            if (Cell != null && Cell.HasAOI)
-                return SetSimulated(true);
-
             // Fix for team-up AI getting disabled when they get stuck and you run away too far from them
             if (IsTeamUpAgent)
                 return SetSimulated(true);
