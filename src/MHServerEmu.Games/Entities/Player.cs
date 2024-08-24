@@ -1411,6 +1411,15 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        public void SendWaypointNotification(PrototypeId waypointRef, bool show = true)
+        {
+            if (waypointRef == PrototypeId.Invalid) return;
+            var message = NetMessageWaypointNotification.CreateBuilder()
+                .SetWaypointProtoId((ulong)waypointRef)
+                .SetShow(show).Build();
+            SendMessage(message);
+        }
+
         #endregion
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
