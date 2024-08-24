@@ -691,6 +691,13 @@ namespace MHServerEmu.Games.Missions
                 return null;
         }
 
+        public void ActivateMission(PrototypeId missionProtoRef)
+        {
+            var mission = MissionByDataRef(missionProtoRef);
+            if (mission == null || mission.State == MissionState.Active) return;
+            mission.SetState(MissionState.Active);
+        }
+
         public void AttachDialogDataFromMission(DialogDataCollection collection, Mission mission, DialogStyle dialogStyle, 
             LocaleStringId dialogText, VOCategory voCategory, ulong interactorId, PrototypeId cinematic, ulong interactEntityId, 
             sbyte objectiveIndex, sbyte conditionIndex, bool isTurnInNPC, bool showRewards, bool showGiveItems, 

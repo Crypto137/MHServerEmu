@@ -1140,7 +1140,7 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
-        private bool RestartMission()
+        public bool RestartMission()
         {
             RestartingMission = true;
             if (State != MissionState.Invalid) SetState(MissionState.Invalid);
