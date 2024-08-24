@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                     if (itemsOut[i] is not Item item) return;
                     int count = itemCounts[i];
                     for (int j = 0; j < count; j++)
-                        item.RemoveItem();
+                        item.DecrementStack();
                 }
             }
 

@@ -556,7 +556,7 @@ namespace MHServerEmu.Games.Network
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
                 if (bowlingBall is not Item item) return false;
 
-                item.RemoveItem();
+                item.DecrementStack();
             }
 
             return true;

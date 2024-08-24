@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Missions.Actions
                     {
                         var item = manager.GetEntity<Item>(entry.Id);
                         if (item == null || item.IsScheduledToDestroy) continue;
-                        item.RemoveItem();
+                        item.DecrementStack();
                         count--;
 
                         MissionActionList.CreateActionList(ref _onRemoveActions, _proto.OnRemoveActions, Owner);

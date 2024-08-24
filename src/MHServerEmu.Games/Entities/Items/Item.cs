@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        public void RemoveItem(int count = 1)
+        public void DecrementStack(int count = 1)
         {
             if (count < 1) return;
             int newCount = Math.Max(0, CurrentStackSize - count);
