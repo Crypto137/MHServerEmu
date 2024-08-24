@@ -1445,6 +1445,19 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message.Build());
         }
 
+        public void SendBannerMessage(BannerMessagePrototype bannerMessage)
+        {
+            if (bannerMessage == null) return;
+            var message = NetMessageBannerMessage.CreateBuilder()
+                .SetBannerText((ulong)bannerMessage.BannerText)
+                .SetTextStyle((ulong)bannerMessage.TextStyle)
+                .SetTimeToLiveMS((uint)bannerMessage.TimeToLiveMS)
+                .SetMessageStyle((uint)bannerMessage.MessageStyle)
+                .SetDoNotQueue(bannerMessage.DoNotQueue)
+                .SetShowImmediately(bannerMessage.ShowImmediately).Build();
+            SendMessage(message);
+        }
+
         #endregion
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
