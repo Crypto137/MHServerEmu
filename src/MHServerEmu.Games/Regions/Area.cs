@@ -41,6 +41,7 @@ namespace MHServerEmu.Games.Regions
 
         private GenerateFlag _statusFlag;
         private List<TowerFixupData> _towerFixupList;
+        private PrototypeId _respawnOverride;
 
         public bool GenerateLog { get; private set; }
 
@@ -603,6 +604,38 @@ namespace MHServerEmu.Games.Regions
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && Prototype.HasKeyword(keywordProto);
+        }
+
+        public PrototypeId GetRespawnOverride(Cell cell)
+        {
+            // Explicit area-wide override has the highest priority
+            if (_respawnOverride != PrototypeId.Invalid)
+                return _respawnOverride;
+
+            // Check if we have a per-cell override
+            if (cell != null || Prototype.RespawnCellOverrides.HasValue())
+            {
+                foreach (RespawnCellOverridePrototype cellOverrideProto in Prototype.RespawnCellOverrides)
+                {
+                    if (cellOverrideProto.Cells.IsNullOrEmpty())
+                        continue;
+
+                    foreach (AssetId cellAssetRef in cellOverrideProto.Cells)
+                    {
+                        PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
+                        if (cell.PrototypeDataRef == cellProtoRef)
+                            return cellOverrideProto.RespawnOverride;
+                    }
+                }
+            }
+
+            // Finally, use default area-wide respawn override
+            return Prototype.RespawnOverride;
+        }
+
+        public void SetRespawnOverride(PrototypeId respawnOverride)
+        {
+            _respawnOverride = respawnOverride;
         }
     }
 
