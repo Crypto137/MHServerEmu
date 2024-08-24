@@ -1388,17 +1388,26 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
-        private void SendNewTeamUpAcquired(PrototypeId teamUpRef)
+        public void SendNewTeamUpAcquired(PrototypeId teamUpRef)
         {
             var message = NetMessageNewTeamUpAcquired.CreateBuilder().SetPrototypeId((ulong)teamUpRef).Build();
             SendMessage(message);
         }
 
-        private void SendHUDTutorial(HUDTutorialPrototype hudTutorialProto)
+        public void SendHUDTutorial(HUDTutorialPrototype hudTutorialProto)
         {
             var hudTutorialRef = PrototypeId.Invalid;
             if (hudTutorialProto != null) hudTutorialRef = hudTutorialProto.DataRef;
             var message = NetMessageHUDTutorial.CreateBuilder().SetHudTutorialProtoId((ulong)hudTutorialRef).Build();
+            SendMessage(message);
+        }
+
+        public void SendOpenUIPanel(AssetId panelNameId)
+        {
+            if (panelNameId == AssetId.Invalid) return;
+            string panelName = GameDatabase.GetAssetName(panelNameId);
+            if (panelName == "Unknown") return;
+            var message = NetMessageOpenUIPanel.CreateBuilder().SetPanelName(panelName).Build();
             SendMessage(message);
         }
 
