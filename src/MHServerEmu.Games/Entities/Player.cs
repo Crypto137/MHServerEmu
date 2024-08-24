@@ -1320,6 +1320,12 @@ namespace MHServerEmu.Games.Entities
             return level == 0 ? levelCap : level;
         }
 
+        public void SetActiveChapter(PrototypeId chapterRef)
+        {
+            Properties[PropertyEnum.ActiveMissionChapter] = chapterRef;
+            GetRegion()?.ActiveChapterChangedEvent.Invoke(new(this, chapterRef));
+        }
+
         public bool ChapterIsUnlocked(PrototypeId chapterRef)
         {
             var avatar = CurrentAvatar;
