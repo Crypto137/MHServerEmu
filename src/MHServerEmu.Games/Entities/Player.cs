@@ -1394,6 +1394,12 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        public void SendPlayStoryBanter(AssetId banterRef)
+        {
+            var message = NetMessagePlayStoryBanter.CreateBuilder().SetBanterAssetId((ulong)banterRef).Build();
+            SendMessage(message);
+        }
+
         public void SendHUDTutorial(HUDTutorialPrototype hudTutorialProto)
         {
             var hudTutorialRef = PrototypeId.Invalid;
