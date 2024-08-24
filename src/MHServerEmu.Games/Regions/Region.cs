@@ -122,6 +122,7 @@ namespace MHServerEmu.Games.Regions
         public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
         public EntityTracker EntityTracker { get; private set; }
         public TuningTable TuningTable { get; private set; }    // Difficulty table
+        public bool IsFirstLoaded { get; private set; }
 
         #region Events
 
@@ -1411,6 +1412,8 @@ namespace MHServerEmu.Games.Regions
         {
             Logger.Trace($"OnAddedToAOI(): {this} to {player}");
 
+            player.MissionManager.InitializeForPlayer(player, this);
+
             // Sync region discovered entities with the player that has entered this region
             foreach (ulong entityId in _discoveredEntities)
             {
@@ -1441,6 +1444,19 @@ namespace MHServerEmu.Games.Regions
 
                 player.UndiscoverEntity(discoveredEntity, true);
             }
+        }
+
+        public void OnLoadingFinished()
+        {
+            if (IsFirstLoaded) return;            
+            IsFirstLoaded = true;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))                
+                if (kvp.Value == -1) 
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId timerRef);
+                    ScoringEventTimerStart(timerRef);
+                }
         }
 
         public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
@@ -1499,9 +1515,33 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public void OnAddToAOI(Player player)
+        public void ScoringEventTimerStart(PrototypeId timerRef)
         {
-            player.MissionManager.InitializeForPlayer(player, this);
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            if (IsFirstLoaded == false)
+            {
+                Properties[startPropId] = -1;
+                return;
+            }
+
+            Properties[startPropId] = (int)Clock.GameTime.TotalMilliseconds;
+        }
+
+        public void ScoringEventTimerStop(PrototypeId timerRef)
+        {
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
+            if (Properties.HasProperty(startPropId) == false) return;
+
+            int startTime = Properties[startPropId];
+            if (startTime > 0)
+            {
+                var time = Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
+                Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
+                Properties.RemoveProperty(startPropId);
+            }
         }
     }
 

@@ -1039,7 +1039,14 @@ namespace MHServerEmu.Games.Entities
 
         public void OnLoadingScreenFinished()
         {
-            IsOnLoadingScreen = false;
+            if (IsOnLoadingScreen)
+            {
+                IsOnLoadingScreen = false;
+                var region = GetRegion();
+                if (region == null) return;
+                region.LoadingScreenFinishedEvent.Invoke(new(this, region.PrototypeDataRef));
+                region.OnLoadingFinished();
+            }
         }
 
         public void BeginTeleport(ulong regionId, in Vector3 position, in Orientation orientation)
