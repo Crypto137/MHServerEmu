@@ -425,7 +425,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             area = Region.CreateArea(weightedArea.Area, new());
             if (area == null) return false;
 
-            area.RespawnOverride = weightedArea.RespawnOverride;
+            area.SetRespawnOverride(weightedArea.RespawnOverride);
 
             bool success = false;
 

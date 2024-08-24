@@ -263,6 +263,7 @@ namespace MHServerEmu.Games.Regions
                 */
             }
 
+            // NOTE: Divided start locations are used only in the Age of Ultron game mode
             if (regionProto.DividedStartLocations.HasValue())
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 

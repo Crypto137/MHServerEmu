@@ -99,7 +99,8 @@ namespace MHServerEmu.Games.Events
                 TimeSpan frameEndTime = (_currentFrame + 1) * _quantumSize;
 
                 // Process events for this frame
-                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
+                // NOTE: Events need to be fired in the order they are scheduled for cases like powers that apply and end at the same time.
+                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.SortOrder);
                 while (frameEvents.Any())
                 {
                     foreach (ScheduledEvent @event in frameEvents)

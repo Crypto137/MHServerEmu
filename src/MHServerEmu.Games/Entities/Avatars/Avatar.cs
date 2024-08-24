@@ -221,7 +221,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     if (avatarOnKilledInfo.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
                     {
-                        // TODO: Find the actual waypoint, for now just return to the start target for the region
+                        // Find the target for our respawn teleport
+                        PrototypeId deathReleaseTarget = FindDeathReleaseTarget();
+                        Logger.Debug($"DoDeathRelease(): {deathReleaseTarget.GetName()}");
+                        if (deathReleaseTarget == PrototypeId.Invalid)
+                            return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
+
                         Transition.TeleportToLocalTarget(owner, region.Prototype.StartTarget);
                     }
                     else 
@@ -236,6 +241,32 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private PrototypeId FindDeathReleaseTarget()
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): region == null");
+
+            Area area = Area;
+            if (area == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): area == null");
+
+            Cell cell = Cell;
+            if (cell == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): cell == null");
+
+            // TODO: Add more overrides sources (DividedStartLocations, RegionStartTargetOverride property, etc.)
+
+            // Check if there is an area / cell override
+            PrototypeId areaRespawnOverride = area.GetRespawnOverride(cell);
+            if (areaRespawnOverride != PrototypeId.Invalid)
+                return areaRespawnOverride;
+
+            // Check if there is a region-wide override
+            if (region.Prototype.RespawnOverride != PrototypeId.Invalid)
+                return region.Prototype.RespawnOverride;
+
+            // Fall back to the region's start target as the last resort
+            return region.Prototype.StartTarget;
         }
 
         #endregion

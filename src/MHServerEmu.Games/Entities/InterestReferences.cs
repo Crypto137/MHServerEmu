@@ -83,6 +83,11 @@ namespace MHServerEmu.Games.Entities
             return _accumulatedPolicyCounts[index] > 0;
         }
 
+        public bool IsPlayerInterested(Player player)
+        {
+            return _interestedPlayerIds.Contains(player.DatabaseUniqueId);
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();

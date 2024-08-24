@@ -889,6 +889,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void ScheduleSwitchAvatarEvent()
+        {
+            // Schedule avatar switch at the end of the current frame to let switch power application finish first
+            ScheduleEntityEvent(_switchAvatarEvent, TimeSpan.Zero);
+        }
+
         public bool SwitchAvatar()
         {
             // Retrieve pending avatar proto ref recorded in properties
@@ -1067,7 +1073,17 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Discovery
+        #region AOI & Discovery
+
+        public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)
+        {
+            if (entity == null) return Logger.WarnReturn(false, "InterestedInEntity(): entity == null");
+
+            if (entity.InterestReferences.IsPlayerInterested(this) == false)
+                return false;
+
+            return AOI.InterestedInEntity(entity.Id, interestFilter);
+        }
 
         public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)
         {
