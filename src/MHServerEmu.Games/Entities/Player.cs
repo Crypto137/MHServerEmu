@@ -86,6 +86,7 @@ namespace MHServerEmu.Games.Entities
         private List<PrototypeId> _unlockedInventoryList = new();
         private SortedSet<AvailableBadges> _badges = new();
         private HashSet<ulong> _tagEntities = new();
+        private Queue<PrototypeId> _kismetSeqQueue = new();
         private GameplayOptions _gameplayOptions = new();
         private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
@@ -1059,7 +1060,7 @@ namespace MHServerEmu.Games.Entities
             EnableCurrentAvatar(false, CurrentAvatar.Id, _teleportData.RegionId, _teleportData.Position, _teleportData.Orientation);
             _teleportData.Clear();
             DequeueLoadingScreen();
-            TryPlayIntroKismetSeqForRegion(CurrentAvatar.RegionLocation.RegionId);
+            TryPlayKismetSequences();
 
             return true;
         }
@@ -1067,6 +1068,11 @@ namespace MHServerEmu.Games.Entities
         #endregion
 
         #region Discovery
+
+        public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)
+        {
+            throw new NotImplementedException();
+        }
 
         public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
         {
@@ -1142,40 +1148,34 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
-
         public override void OnDeallocate()
         {
             Game.EntityManager.RemovePlayer(this);
             base.OnDeallocate();
         }
 
-        public bool TryPlayIntroKismetSeqForRegion(ulong regionId)
+        public bool TryPlayKismetSequences()
         {
-            // TODO/REMOVEME: Remove this when we have working Kismet sequence triggers
-            Region region = Game.RegionManager.GetRegion(regionId);
-            if (region == null) return Logger.WarnReturn(false, "TryPlayIntroKismetSeqForRegion(): region == null");
-
-            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)region.PrototypeDataRef switch
+            // play kismetSeq from Queue
+            while (_kismetSeqQueue.Count > 0)
             {
-                RegionPrototypeId.NPERaftRegion             => KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart,
-                RegionPrototypeId.TimesSquareTutorialRegion => KismetSeqPrototypeId.Times01CaptainAmericaLanding,
-                RegionPrototypeId.TutorialBankRegion        => KismetSeqPrototypeId.BlackCatEntrance,
-                _ => 0
-            };
+                var kismetSeq = _kismetSeqQueue.Dequeue();
+                if (kismetSeq != PrototypeId.Invalid)
+                    PlayKismetSeq(kismetSeq);
+            }
 
-            if (kismetSeqRef == 0)
-                return false;
+            // try play kismetSeq for region
+            var region = CurrentAvatar.Region;
+            if (region == null) return Logger.WarnReturn(false, "TryPlayKismetSequences(): region == null");
 
-            PlayKismetSeq((PrototypeId)kismetSeqRef);
+            var startTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(region.Prototype.StartTarget);
+            if (startTarget == null || startTarget.IntroKismetSeq == PrototypeId.Invalid) return false;
+            var targetCellRef = GameDatabase.GetDataRefByAsset(startTarget.Cell);
+            var cellRef = CurrentAvatar.Cell.PrototypeDataRef;
+            if (targetCellRef != cellRef) return false;
+
+            PlayKismetSeq(startTarget.IntroKismetSeq);
             return true;
-        }
-
-        public void PlayKismetSeq(PrototypeId kismetSeqRef)
-        {
-            SendMessage(NetMessagePlayKismetSeq.CreateBuilder()
-                .SetKismetSeqPrototypeId((ulong)kismetSeqRef)
-                .Build());
         }
 
         public void OnPlayKismetSeqDone(PrototypeId kismetSeqPrototypeId)
@@ -1323,7 +1323,78 @@ namespace MHServerEmu.Games.Entities
             avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
         }
 
+        public void LockWaypoint(PrototypeId waypointRef)
+        {
+            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
+            if (waypointProto == null) return;
+
+            PropertyCollection collection;
+            if (waypointProto.IsAccountWaypoint)
+                collection = Properties;
+            else
+                collection = CurrentAvatar.Properties;
+
+            var propId = new PropertyId(PropertyEnum.Waypoint, waypointRef);
+            if (collection[propId])
+                SendOnWaypointUpdated();
+
+            collection[propId] = false;
+        }
+
+        public void UnlockWaypoint(PrototypeId waypointRef)
+        {
+            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
+            if (waypointProto == null) return;
+
+            PropertyCollection collection;
+            if (waypointProto.IsAccountWaypoint)
+                collection = Properties;
+            else
+                collection = CurrentAvatar.Properties;
+
+            var propId = new PropertyId(PropertyEnum.Waypoint, waypointRef);
+            if (collection[propId] == false)
+            {
+                SendWaypointUnlocked();
+                collection[propId] = true;
+            }
+        }
+
+        public void PlayKismetSeq(PrototypeId kismetSeq)
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+
+            var kismetProto = GameDatabase.GetPrototype<KismetSequencePrototype>(kismetSeq);
+            if (kismetProto == null) return;
+
+            if (kismetProto.KismetSeqBlocking)
+            {
+                if (IsFullscreenMoviePlaying) return;
+                FullScreenMovieQueued(kismetSeq);
+            }
+
+            SendPlayKismetSeq(kismetSeq);
+        }
+
+        public void QueuePlayKismetSeq(PrototypeId kismetSeq)
+        {
+            if (_teleportData.IsValid)
+                _kismetSeqQueue.Enqueue(kismetSeq);
+            else
+                PlayKismetSeq(kismetSeq);
+        }
+
         #region SendMessage
+
+        public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
+
+        public void SendPlayKismetSeq(PrototypeId kismetSeqRef)
+        {
+            SendMessage(NetMessagePlayKismetSeq.CreateBuilder()
+                .SetKismetSeqPrototypeId((ulong)kismetSeqRef)
+                .Build());
+        }
 
         public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player targetPlayer, bool party = false)
         {
@@ -1397,6 +1468,21 @@ namespace MHServerEmu.Games.Entities
         public void SendPlayStoryBanter(AssetId banterRef)
         {
             var message = NetMessagePlayStoryBanter.CreateBuilder().SetBanterAssetId((ulong)banterRef).Build();
+            SendMessage(message);
+        }
+
+        private void SendWaypointUnlocked()
+        {
+            SendOnWaypointUpdated();
+            if (InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner) == false) return;
+            var message = NetMessageOnWaypointUpdated.CreateBuilder().SetIdPlayer(Id).Build();
+            SendMessage(message);
+        }
+
+        public void SendOnWaypointUpdated()
+        {
+            if (InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner) == false) return;
+            var message = NetMessageOnWaypointUpdated.CreateBuilder().SetIdPlayer(Id).Build();
             SendMessage(message);
         }
 
