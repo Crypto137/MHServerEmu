@@ -63,10 +63,10 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public virtual bool OnConditionCompleted()
         {
-            var storyNotification = Prototype?.StoryNotification;
+            var storyNotification = Prototype.StoryNotification;
             if (storyNotification != null)
                 foreach (var player in Mission.GetParticipants())
-                    Mission.SendStoryNotificationToPlayer(player, storyNotification);
+                    player.SendStoryNotification(storyNotification, Mission.PrototypeDataRef);
 
             return Owner.OnConditionCompleted();
         }

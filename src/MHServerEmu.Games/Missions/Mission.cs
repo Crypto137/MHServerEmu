@@ -356,25 +356,6 @@ namespace MHServerEmu.Games.Missions
                     objective?.SendUpdateToPlayer(player, objectiveFlags);
         }
 
-        public void SendStoryNotificationToPlayer(Player player, StoryNotificationPrototype storyNotification, bool sendMission = false)
-        {
-            if (player == null || storyNotification == null) return;
-
-            var message = NetMessageStoryNotification.CreateBuilder();
-            message.SetDisplayTextStringId((ulong)storyNotification.DisplayText);
-
-            if (storyNotification.SpeakingEntity != PrototypeId.Invalid)
-                message.SetSpeakingEntityPrototypeId((ulong)storyNotification.SpeakingEntity);
-
-            message.SetTimeToLiveMS((uint)storyNotification.TimeToLiveMS);
-            message.SetVoTriggerAssetId((ulong)storyNotification.VOTrigger);
-
-            if (sendMission)
-                message.SetMissionPrototypeId((ulong)PrototypeDataRef);
-
-            player.SendMessage(message.Build());
-        }
-
         private void SendDailyMissionCompleteToAvatar(Avatar avatar)
         {
             if (avatar == null) return;
@@ -727,7 +708,7 @@ namespace MHServerEmu.Games.Missions
 
             if (isOpenMission)
                 foreach (var player in GetParticipants())
-                    SendStoryNotificationToPlayer(player, openProto.StoryNotification);
+                    player.SendStoryNotification(openProto.StoryNotification);
 
             if (reset)
             {
@@ -1352,7 +1333,7 @@ namespace MHServerEmu.Games.Missions
                         AddContributionValue(player, (float)openProto.ParticipationContributionValue);
 
                 if (State == MissionState.Active) 
-                    SendStoryNotificationToPlayer(player, openProto.StoryNotification);
+                    player.SendStoryNotification(openProto.StoryNotification);
 
                 SendUpdateToPlayer(player, MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.Default);
             }

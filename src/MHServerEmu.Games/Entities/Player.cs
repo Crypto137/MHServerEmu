@@ -1420,6 +1420,25 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        public void SendStoryNotification(StoryNotificationPrototype storyNotification, PrototypeId missionRef = PrototypeId.Invalid)
+        {
+            if (storyNotification == null) return;
+
+            var message = NetMessageStoryNotification.CreateBuilder();
+            message.SetDisplayTextStringId((ulong)storyNotification.DisplayText);
+
+            if (storyNotification.SpeakingEntity != PrototypeId.Invalid)
+                message.SetSpeakingEntityPrototypeId((ulong)storyNotification.SpeakingEntity);
+
+            message.SetTimeToLiveMS((uint)storyNotification.TimeToLiveMS);
+            message.SetVoTriggerAssetId((ulong)storyNotification.VOTrigger);
+
+            if (missionRef != PrototypeId.Invalid)
+                message.SetMissionPrototypeId((ulong)missionRef);
+
+            SendMessage(message.Build());
+        }
+
         #endregion
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
