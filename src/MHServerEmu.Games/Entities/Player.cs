@@ -977,7 +977,17 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Discovery
+        #region AOI & Discovery
+
+        public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)
+        {
+            if (entity == null) return Logger.WarnReturn(false, "InterestedInEntity(): entity == null");
+
+            if (entity.InterestReferences.IsPlayerInterested(this) == false)
+                return false;
+
+            return AOI.InterestedInEntity(entity.Id, interestFilter);
+        }
 
         public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
         {
