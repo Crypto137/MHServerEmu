@@ -892,7 +892,7 @@ namespace MHServerEmu.Games.Entities
         public void ScheduleSwitchAvatarEvent()
         {
             // Schedule avatar switch at the end of the current frame to let switch power application finish first
-            ScheduleEntityEvent(_switchAvatarEvent, TimeSpan.Zero);
+            SchedulePlayerEvent(_switchAvatarEvent, TimeSpan.Zero);
         }
 
         public bool SwitchAvatar()
@@ -1083,11 +1083,6 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             return AOI.InterestedInEntity(entity.Id, interestFilter);
-        }
-
-        public bool InterestedInEntity(Entity entity, AOINetworkPolicyValues interestFilter)
-        {
-            throw new NotImplementedException();
         }
 
         public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
