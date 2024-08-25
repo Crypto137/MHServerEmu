@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Common
 
         public static bool Transfer(Archive archive, ref bool ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref byte ioData) => archive.Transfer(ref ioData);
+        public static bool Transfer(Archive archive, ref sbyte ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref ushort ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref int ioData) => archive.Transfer(ref ioData);
         public static bool Transfer(Archive archive, ref uint ioData) => archive.Transfer(ref ioData);

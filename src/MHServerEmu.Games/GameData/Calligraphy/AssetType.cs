@@ -72,6 +72,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return assetValue.Id;
         }
 
+        public AssetGuid GetAssetGuid(AssetId assetRef)
+        {
+            foreach (AssetValue assetValue in _assets)
+            {
+                if (assetValue.Id == assetRef)
+                    return assetValue.Guid;
+            }
+
+            return AssetGuid.Invalid;
+        }
+
         /// <summary>
         /// Finds an asset id of this type by its name.
         /// </summary>

@@ -195,6 +195,13 @@ namespace MHServerEmu.Games.GameData
             return GetPrototypeRefByName(assetName);
         }
 
+        public static AssetGuid GetAssetGuid(AssetId assetId)
+        {
+            AssetType assetType = DataDirectory.AssetDirectory.GetAssetType(assetId);
+            if (assetType == null) return AssetGuid.Invalid;
+            return assetType.GetAssetGuid(assetId);
+        }
+
         #endregion
 
         #region Search
