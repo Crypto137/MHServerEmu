@@ -406,5 +406,10 @@ namespace MHServerEmu.Games.Powers
 
             return containsNegativeStatusEffects;
         }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return _conditionPrototype.HasKeyword(keywordProto);
+        }
     }
 }
