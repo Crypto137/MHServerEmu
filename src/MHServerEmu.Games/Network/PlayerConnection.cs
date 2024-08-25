@@ -281,6 +281,7 @@ namespace MHServerEmu.Games.Network
             }
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
+            region.PlayerEnteredRegionEvent.Invoke(new(Player, region.PrototypeDataRef));
             Player.SendMiniMapUpdate();
         }
 
