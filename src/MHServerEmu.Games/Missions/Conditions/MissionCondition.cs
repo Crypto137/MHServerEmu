@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,6 +8,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionCondition : IMissionConditionOwner
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public Mission Mission { get; private set; }
         public MissionObjective MissionObjective { get => Owner as MissionObjective; }
         public IMissionConditionOwner Owner { get; private set; }
@@ -27,6 +30,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public static MissionCondition CreateCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype conditionProto)
         {
+            if (MissionManager.Debug) Logger.Debug($"CreateCondition {GameDatabase.GetFormattedPrototypeName(mission.PrototypeDataRef)} {conditionProto}");
             return conditionProto.AllocateCondition(mission, owner);
         }
 

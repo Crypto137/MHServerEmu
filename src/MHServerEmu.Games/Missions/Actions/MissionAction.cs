@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -7,6 +8,7 @@ namespace MHServerEmu.Games.Missions.Actions
 {
     public class MissionAction
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public IMissionActionOwner Owner { get; private set; }
         public PrototypeId MissionRef { get => Owner.PrototypeDataRef; }
         public MissionActionPrototype Prototype { get; private set; }
@@ -29,6 +31,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public static MissionAction CreateAction(IMissionActionOwner owner, MissionActionPrototype actionProto) 
         {
+            if (MissionManager.Debug) Logger.Debug($"CreateAction {GameDatabase.GetFormattedPrototypeName(owner.PrototypeDataRef)} {actionProto}");
             return actionProto.AllocateAction(owner);
         }
 

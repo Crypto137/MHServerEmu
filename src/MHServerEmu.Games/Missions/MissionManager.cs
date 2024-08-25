@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Missions
     public class MissionManager : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        public static bool Debug = false;
 
         private EventGroup _pendingEvents = new();
         private PrototypeId _avatarPrototypeRef;
@@ -111,7 +112,7 @@ namespace MHServerEmu.Games.Missions
                 foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
                     var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                    if (ShouldCreateMission(missionProto))
+                    if (ShouldCreateMission(missionProto) && missionRef == (PrototypeId)14338557339850056095) // RaftNPEMotionComicRaftEscape = 14338557339850056095,
                         if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)
                             CreateMissionByDataRef(missionRef);
                 }
@@ -867,14 +868,16 @@ namespace MHServerEmu.Games.Missions
 
         private void RemoveMissionInterestEntity(ulong entityId, Player player)
         {
-            Logger.Warn($"RemoveMissionInterestEntity [{entityId}] [{player}]");
-            // TODO remove entity from interest
+            var entity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            if (entity?.DiscoveredForPlayer(player) == true)
+                player.UndiscoverEntity(entity, false);
         }
 
         private void AddMissionInterestEntity(ulong entityId, Player player)
         {
-            Logger.Warn($"AddMissionInterestEntity [{entityId}] [{player}]");
-            // TODO add entity to interest
+            var entity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            if (entity == null) return;
+            player.DiscoverEntity(entity, false);
         }
 
         public void OnSpawnedPopulation(PrototypeId missionRef)
