@@ -1,9 +1,11 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -32,6 +34,9 @@ namespace MHServerEmu.Games.Entities
     public class EntityManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        // NOTE: We can use machine id argument if we ever implement multi-GIS architecture
+        private static readonly IdGenerator EntityDbGuidGenerator = new(IdType.Entity, 0);
 
         private readonly Game _game;
 
@@ -72,11 +77,31 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsDestroyingAllEntities) return null;   // Prevent new entities from being created during cleanup
 
-            if (settings.EntityRef == PrototypeId.Invalid)
+            // Pre-process settings
+            PrototypeId entityProtoRef = settings.EntityRef;
+
+            if (entityProtoRef == PrototypeId.Invalid)
                 return Logger.WarnReturn<Entity>(null, "CreateEntity(): Invalid prototype ref provided in settings");
 
-            if (settings.Id == 0) settings.Id = GetNextEntityId();
+            if (DataDirectory.Instance.PrototypeIsA<EntityPrototype>(entityProtoRef) == false)
+                return Logger.WarnReturn<Entity>(null, $"CreateEntity(): {entityProtoRef} is not a valid entity prototype ref");
 
+            if (settings.Id == 0)
+                settings.Id = GetNextEntityId();
+
+            if (settings.DbGuid == 0)
+            {
+                if (DataDirectory.Instance.GetPrototypeClassType(entityProtoRef) == typeof(PlayerPrototype))
+                    return Logger.WarnReturn<Entity>(null, "CreateEntity(): Player entities require a valid database guid generated during account creation");
+
+                settings.DbGuid = EntityDbGuidGenerator.Generate();
+                //Logger.Debug($"CreateEntity(): Generated database guid 0x{settings.DbGuid:X} for entity {entityProtoRef.GetName()}");
+            }
+
+            // Newly created entities are always new on server and not something that simply entered a client's AOI
+            settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
+
+            // Create the entity
             Entity entity;
 
             // If the requested id is already used by an entity that is pending deletion, finish its deletion immediately
@@ -89,12 +114,10 @@ namespace MHServerEmu.Games.Entities
             if (entity != null)
                 return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity id, existing entity found: {entity}");
 
-            if (settings.DbGuid != 0)
-            {
-                entity = GetEntityByDbGuid(settings.DbGuid, GetEntityFlags.UnpackedOnly);
-                if (entity != null)
-                    return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity dbid, existing entity found: {entity}");
-            }
+            // Server entities should always have valid database guids, so we can omit the client-side check for invalid db guid here
+            entity = GetEntityByDbGuid(settings.DbGuid, GetEntityFlags.UnpackedOnly);
+            if (entity != null)
+                return Logger.WarnReturn<Entity>(null, $"CreateEntity(): Collision in entity dbid, existing entity found: {entity}");
 
             entity = _game.AllocateEntity(settings.EntityRef);
 
