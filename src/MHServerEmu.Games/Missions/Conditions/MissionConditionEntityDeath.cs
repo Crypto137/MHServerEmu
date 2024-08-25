@@ -15,7 +15,6 @@ namespace MHServerEmu.Games.Missions.Conditions
         private Action<AdjustHealthGameEvent> _adjustHealthAction;
         private Action<EntityDeadGameEvent> _EntityDeadAction;
         private EventGroup _pendingEvents = new();
-        private EventPointer<DelayDeathEvent> _delayDeathEvent = new();
         private bool _deathEventRegistred;
 
         protected override long RequiredCount => _proto.Count;
@@ -122,9 +121,10 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (_proto.DelayDeathMS > 0)
                 {
                     var scheduler = Mission.GameEventScheduler;
-                    if (scheduler == null) return;
-                    scheduler.ScheduleEvent(_delayDeathEvent, TimeSpan.FromMilliseconds(_proto.DelayDeathMS), _pendingEvents);
-                    _delayDeathEvent.Get().Initialize(this, entity, killer);
+                    if (scheduler == null) return;                    
+                    EventPointer<DelayDeathEvent> delayDeathEvent = new();
+                    scheduler.ScheduleEvent(delayDeathEvent, TimeSpan.FromMilliseconds(_proto.DelayDeathMS), _pendingEvents);
+                    delayDeathEvent.Get().Initialize(this, entity, killer);
                     return;
                 }
 
