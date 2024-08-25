@@ -2158,6 +2158,15 @@ namespace MHServerEmu.Games.Entities
                 Game?.GameEventScheduler?.CancelEvent(_exitWorldEvent);
         }
 
+        public bool DiscoveredForPlayer(Player player)
+        {
+            if (IsDiscoverable == false) return false;
+            var playerRegion = player.GetRegion();
+            if (playerRegion != null && playerRegion == Region && playerRegion.IsEntityDiscovered(this)) return true;
+            if (player.IsEntityDiscovered(this) && WorldEntityPrototype?.ObjectiveInfo?.TrackAfterDiscovery == true) return true;
+            return false;
+        }
+
         protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.ExitWorld();
