@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         private void OnTimedActions()
         {
-            MissionActionList.CreateActionList(ref _actionsToPerform, _proto.ActionsToPerform, Owner);
+            MissionActionList.CreateActionList(ref _actionsToPerform, _proto.ActionsToPerform, Mission);
             if (_proto.Repeat) Run();
             else _actionsToPerform?.Destroy();
         }        

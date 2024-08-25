@@ -497,7 +497,7 @@ namespace MHServerEmu.Games.Missions
             if (_activateNowConditions != null && _activateNowConditions.IsCompleted())
                 return SetState(MissionState.Active);
 
-            if (_prereqConditions == null || _prereqConditions.IsCompleted())
+            if (_activateConditions == null || _activateConditions.IsCompleted())
                 return SetState(MissionState.Active);
 
             return false;

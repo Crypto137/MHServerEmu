@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             agent.InitAIOverride(profile, collection);
-            controller.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+            agent.AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
 
             if (Owner.IsSimulated)
                 Trigger(EntitySelectorActionEventType.OnSimulated);
