@@ -438,10 +438,10 @@ namespace MHServerEmu.Games.Regions
             }
             // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
 
-            /*
-            if (Game != null && MissionManager != null)
-                MissionManager.Shutdown(this);
-            */
+            
+            if (Game != null)
+                MissionManager?.Shutdown(this);
+            
             while (MetaGames.Any())
             {
                 var metaGameId = MetaGames.First();
@@ -473,7 +473,7 @@ namespace MHServerEmu.Games.Regions
 
             NaviMesh.Release();
             PopulationManager.Deallocate();
-
+            MissionManager.Deallocate();
             Properties.Unbind();
         }
 

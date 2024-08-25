@@ -1166,8 +1166,18 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        public override void Destroy()
+        {
+            var region = GetRegion();
+            if (region != null)
+                MissionManager.Shutdown(region);
+
+            base.Destroy();
+        }
+
         public override void OnDeallocate()
         {
+            MissionManager.Deallocate();
             Game.EntityManager.RemovePlayer(this);
             base.OnDeallocate();
         }

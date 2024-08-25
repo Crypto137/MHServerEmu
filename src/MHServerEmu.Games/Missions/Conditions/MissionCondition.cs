@@ -30,6 +30,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             return conditionProto.AllocateCondition(mission, owner);
         }
 
+        public virtual void Destroy() { }
+
         public bool Reset()
         {
             IsReseting = true;

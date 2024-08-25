@@ -212,7 +212,10 @@ namespace MHServerEmu.Games.Missions.Conditions
                     var action = MissionAction.CreateAction(actionList, targetProto);
                     if (action is MissionActionEntityTarget actionTaget && action.Initialize())
                         actionTaget.EvaluateAndRunEntity(entity);
+
+                    action.Destroy();
                 }
+            actionList.Destroy();
         }
 
         private static void InteractBehavior(WorldEntity entity, PrototypeId brainOverride, Player player)

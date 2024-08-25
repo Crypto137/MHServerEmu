@@ -442,8 +442,20 @@ namespace MHServerEmu.Games.Missions
 
         private void DeleteMission(PrototypeId missionRef)
         {
-            if (_missionDict.ContainsKey(missionRef) == false) return;
+            if (_missionDict.TryGetValue(missionRef, out Mission mission) == false) return;
+            mission.Destroy();
             _missionDict.Remove(missionRef);
+        }
+
+        public void Deallocate()
+        {
+            _missionInterestEntities.Clear();
+
+            foreach (var mission in _missionDict.Values)
+                mission.Destroy();
+
+            _missionDict.Clear();
+            _legendaryMissionBlacklist.Clear();
         }
 
         public void Shutdown(Region region)

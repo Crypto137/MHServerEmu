@@ -17,6 +17,11 @@ namespace MHServerEmu.Games.Missions.Actions
             _proto = prototype as MissionActionInventoryRemoveItemPrototype;
         }
 
+        public override void Destroy()
+        {
+            _onRemoveActions?.Destroy();
+        }
+
         public override void Run()
         {
             var itemRef = _proto.ItemPrototype;

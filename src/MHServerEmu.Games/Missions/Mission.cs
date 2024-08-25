@@ -191,6 +191,33 @@ namespace MHServerEmu.Games.Missions
             _objectiveDict.Add(0, new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0));
         }
 
+        public void Destroy()
+        {
+            foreach (var objective in _objectiveDict.Values)
+                objective.Destroy();
+
+            var scheduler = GameEventScheduler;
+            if (scheduler != null)
+            {
+                scheduler.CancelAllEvents(EventGroup);
+                if (_timeLimitEvent.IsValid) scheduler.CancelEvent(_timeLimitEvent);
+                if (_idleTimeoutEvent.IsValid) scheduler.CancelEvent(_idleTimeoutEvent);
+                if (_restartMissionEvent.IsValid) scheduler.CancelEvent(_restartMissionEvent);
+                if (_updateObjectivesEvent.IsValid) scheduler.CancelEvent(_updateObjectivesEvent);
+            }
+
+            _activateConditions?.Destroy();
+            _activateNowConditions?.Destroy();
+            _completeNowConditions?.Destroy();
+            _prereqConditions?.Destroy();
+            _failureConditions?.Destroy();
+
+            _onAvailableActions?.Destroy();
+            _onStartActions?.Destroy();
+            _onSuccessActions?.Destroy();
+            _onFailActions?.Destroy();
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;

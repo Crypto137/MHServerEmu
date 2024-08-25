@@ -16,6 +16,11 @@ namespace MHServerEmu.Games.Missions.Conditions
             Conditions = new();
         }
 
+        public override void Destroy()
+        {
+            foreach(var condtion in Conditions) condtion.Destroy();
+        }
+
         public override bool Initialize(int conditionIndex)
         {
             if (base.Initialize(conditionIndex) == false) return false;

@@ -29,6 +29,12 @@ namespace MHServerEmu.Games.Missions.Actions
             EntityLeaveDormantAction = OnEntityLeaveDormant;
         }
 
+        public void Destroy()
+        {
+            if (IsActive) Deactivate();
+            foreach(var action in Actions) action.Destroy();
+        }
+
         public bool Initialize(MissionActionPrototype[] protoList)
         {
             if (protoList.IsNullOrEmpty() || IsInitialized || IsActive) return false;

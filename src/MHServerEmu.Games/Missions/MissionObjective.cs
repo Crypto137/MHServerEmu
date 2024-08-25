@@ -93,6 +93,18 @@ namespace MHServerEmu.Games.Missions
             _failRequiredCount = failRequiredCount;
         }
 
+        public void Destroy()
+        {
+            _activateConditions?.Destroy();
+            _failureConditions?.Destroy();
+            _successConditions?.Destroy();
+
+            _onAvailableActions?.Destroy();
+            _onStartActions?.Destroy();
+            _onSuccessActions?.Destroy();
+            _onFailActions?.Destroy();
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;

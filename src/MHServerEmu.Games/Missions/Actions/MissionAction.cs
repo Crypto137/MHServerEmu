@@ -25,6 +25,8 @@ namespace MHServerEmu.Games.Missions.Actions
             Mission = missionList?.Mission;
         }
 
+        public virtual void Destroy() { }
+
         public static MissionAction CreateAction(IMissionActionOwner owner, MissionActionPrototype actionProto) 
         {
             return actionProto.AllocateAction(owner);
