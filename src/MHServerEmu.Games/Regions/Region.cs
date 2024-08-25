@@ -123,6 +123,7 @@ namespace MHServerEmu.Games.Regions
         public EntityTracker EntityTracker { get; private set; }
         public TuningTable TuningTable { get; private set; }    // Difficulty table
         public bool IsFirstLoaded { get; private set; }
+        public bool ToShutdown { get; set; }
 
         #region Events
 

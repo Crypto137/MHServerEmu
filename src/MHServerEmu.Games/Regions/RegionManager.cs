@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.Regions
                 else
                 {
                     // TODO: check world views of players this region is relevant to
-                    if (now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
+                    if (region.ToShutdown || now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
                         _regionsToDestroy.Push(region.Id);
                 }
             }
