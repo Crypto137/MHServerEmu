@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Missions
                 foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
                     var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                    if (ShouldCreateMission(missionProto) && missionRef == (PrototypeId)14338557339850056095) // RaftNPEMotionComicRaftEscape = 14338557339850056095,
+                    if (ShouldCreateMission(missionProto))
                         if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)
                             CreateMissionByDataRef(missionRef);
                 }

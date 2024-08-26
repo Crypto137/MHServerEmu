@@ -999,7 +999,7 @@ namespace MHServerEmu.Games.Entities
         {
             var propId = new PropertyId(PropertyEnum.FullScreenMovieQueued, movieRef);
             Properties.RemoveProperty(propId);
-            if (Properties.HasProperty(PropertyEnum.FullScreenMovieQueued))
+            if (Properties.HasProperty(PropertyEnum.FullScreenMovieQueued) == false)
                 Properties.RemoveProperty(PropertyEnum.FullScreenMoviePlaying);
         }
 
