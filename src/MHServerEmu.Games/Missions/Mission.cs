@@ -425,6 +425,7 @@ namespace MHServerEmu.Games.Missions
 
         public bool SetState(MissionState newState, bool sendUpdate = true)
         {
+            if (MissionManager.Debug) Logger.Debug($"SetState {newState} for {PrototypeName}");
             var oldState = _state;
             if (oldState == newState) return false;
 
@@ -455,6 +456,7 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeState()
         {
+            if (MissionManager.Debug) Logger.Debug($"OnChangeState State {State} for {PrototypeName}");
             if (IsSuspended) return false;
 
             return _state switch
@@ -697,6 +699,7 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnSetStateActive(bool reset)
         {
+            if (MissionManager.Debug) Logger.Debug($"OnSetStateActive {State} for {PrototypeName}");
             var missionProto = Prototype;
             if (missionProto == null) return false;
             bool isOpenMission = IsOpenMission;
@@ -1177,6 +1180,7 @@ namespace MHServerEmu.Games.Missions
 
         public MissionObjective CreateObjective(byte objectiveIndex)
         {
+            if (MissionManager.Debug) Logger.Debug($"CreateObjective [{objectiveIndex}] for [{PrototypeName}]");
             return new(this, objectiveIndex);
         }
 
@@ -1191,7 +1195,7 @@ namespace MHServerEmu.Games.Missions
         private void CreateObjectives()
         {
             var missionProto = Prototype;
-            if (missionProto == null || _objectiveDict.Count == 0) return;
+            if (missionProto == null || _objectiveDict.Count != 0) return;
 
             if (missionProto.Objectives.HasValue())
                 for (byte objectiveIndex = 0; objectiveIndex < missionProto.Objectives.Length; objectiveIndex++)
