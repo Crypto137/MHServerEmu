@@ -551,7 +551,6 @@ namespace MHServerEmu.Core.Serialization
         {
             // TODO: Archive::HasError()
             // TODO: FavorSpeed
-            // TODO: IsPersistent
 
             if (IsPacking)
                 return WriteVarint(ioData);
@@ -566,7 +565,6 @@ namespace MHServerEmu.Core.Serialization
         {
             // TODO: Archive::HasError()
             // TODO: FavorSpeed
-            // TODO: IsPersistent
 
             if (IsPacking)
                 return WriteVarint(ioData);

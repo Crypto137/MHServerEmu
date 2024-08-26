@@ -41,18 +41,40 @@ namespace MHServerEmu.Games.Common
         {
             bool success = true;
 
-            // TODO: IsPersistent
-
-            if (archive.IsPacking)
+            if (archive.IsPersistent)
             {
-                ulong dataId = (ulong)ioData;
-                success &= Transfer(archive, ref dataId);
+                ulong guid = 0;
+
+                if (archive.IsPacking)
+                {
+                    guid = (ulong)GameDatabase.GetAssetGuid(ioData);
+                    success |= Transfer(archive, ref guid);
+
+                    if (ioData != AssetId.Invalid && guid == 0)
+                        Logger.Warn($"Transfer(): No GUID for asset data ref {ioData}");
+                }
+                else
+                {
+                    success |= Transfer(archive, ref guid);
+                    ioData = GameDatabase.GetAssetRefFromGuid((AssetGuid)guid);
+
+                    if (guid != 0 && ioData == AssetId.Invalid)
+                        Logger.Warn($"Transfer(): Unpacking AssetDataRef for UNKNOWN GUID {guid}");
+                }
             }
             else
             {
-                ulong dataId = 0;
-                success &= Transfer(archive, ref dataId);
-                ioData = (AssetId)dataId;
+                if (archive.IsPacking)
+                {
+                    ulong dataId = (ulong)ioData;
+                    success &= Transfer(archive, ref dataId);
+                }
+                else
+                {
+                    ulong dataId = 0;
+                    success &= Transfer(archive, ref dataId);
+                    ioData = (AssetId)dataId;
+                }
             }
 
             return success;
@@ -62,18 +84,43 @@ namespace MHServerEmu.Games.Common
         {
             bool success = true;
 
-            // TODO: IsPersistent
-
-            if (archive.IsPacking)
+            if (archive.IsPersistent)
             {
-                uint enumValue = (uint)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>(ioData);
-                success &= Transfer(archive, ref enumValue);
+                ulong guid = 0;
+
+                // In persistent archives prototype refs as stored as guids that are backward compatible with older versions of the game
+                if (archive.IsPacking)
+                {
+                    guid = (ulong)GameDatabase.GetPrototypeGuid(ioData);
+                    success |= Transfer(archive, ref guid);
+
+                    if (ioData != PrototypeId.Invalid && guid == 0)
+                        Logger.Warn($"Transfer(): No GUID for prototype data ref {ioData}");
+                }
+                else
+                {
+                    success |= Transfer(archive, ref guid);
+                    ioData = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)guid);
+
+                    if (guid != 0 && ioData == PrototypeId.Invalid)
+                        Logger.Warn($"Transfer(): Unpacking PrototypeDataRef for UNKNOWN GUID {guid}");
+                }
+
+                // Omitting Calligraphy protection check here since we do not modify the original data
             }
             else
             {
-                uint enumValue = 0;
-                success &= Transfer(archive, ref enumValue);
-                ioData = GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)enumValue);
+                if (archive.IsPacking)
+                {
+                    uint enumValue = (uint)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>(ioData);
+                    success &= Transfer(archive, ref enumValue);
+                }
+                else
+                {
+                    uint enumValue = 0;
+                    success &= Transfer(archive, ref enumValue);
+                    ioData = GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)enumValue);
+                }
             }
 
             return success;
@@ -83,19 +130,9 @@ namespace MHServerEmu.Games.Common
         {
             bool success = true;
 
-            // TODO: IsPersistent
-
-            if (archive.IsPacking)
-            {
-                ulong dataId = (ulong)ioData;
-                success &= Transfer(archive, ref dataId);
-            }
-            else
-            {
-                ulong dataId = 0;
-                success &= Transfer(archive, ref dataId);
-                ioData = (LocaleStringId)dataId;
-            }
+            ulong localeStringId = (ulong)ioData;
+            success &= Transfer(archive, ref localeStringId);
+            ioData = (LocaleStringId)localeStringId;
 
             return success;
         }
@@ -104,7 +141,9 @@ namespace MHServerEmu.Games.Common
         {
             bool success = true;
 
-            // TODO: IsPersistent
+            // Persistent archives always use guids instead of enums
+            if (archive.IsPersistent)
+                return Transfer(archive, ref ioData);
 
             if (archive.IsPacking)
             {
