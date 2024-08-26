@@ -336,7 +336,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public PrototypeId FirstMarker { get; private set; }
         [DoNotCopy]
-        public bool HasClientInterest { get; private set; } = true;
+        public bool HasClientInterest { get; private set; }
         [DoNotCopy]
         public bool HasItemDrops { get; private set; }
         [DoNotCopy]
@@ -400,10 +400,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 FirstMarker = PrototypeId.Invalid;
 
             PopulateMissionActionReferencedPowers();
-            /*
+            
             HasClientInterest = GetHasClientInterest();
             HasItemDrops = GetHasItemDrops();
-            HasMissionLogRewards = GetHasMissionLogRewards();*/
+            // HasMissionLogRewards = GetHasMissionLogRewards();
             
             PopulatePopulationForZoneLookups(PopulationRegions, PopulationAreas);
 
@@ -417,12 +417,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private bool GetHasItemDrops()
         {
-            throw new NotImplementedException();
+            if (Objectives.HasValue())
+                foreach (var objectiveProto in Objectives)
+                    if (objectiveProto.ItemDrops.HasValue()) return true;
+
+            return false;
         }
 
         private bool GetHasClientInterest()
         {
-            throw new NotImplementedException();
+            if (PlayerHUDShowObjs || ShowBannerMessages || ShowInteractIndicators || ShowMapPingOnPortals || ShowNotificationIcon
+                || ShowInMissionLog != MissionShowInLog.Never || ShowInMissionTracker != MissionShowInTracker.Never
+                || InteractionsWhenActive.HasValue() || InteractionsWhenComplete.HasValue() || InteractionsWhenFailed.HasValue()
+                || MusicState != PrototypeId.Invalid) return true;
+
+            if (Objectives.HasValue())
+                foreach (var objectiveProto in Objectives)
+                    if (objectiveProto.InteractionsWhenActive.HasValue() 
+                        || objectiveProto.InteractionsWhenComplete.HasValue()
+                        || objectiveProto.InteractionsWhenFailed.HasValue()
+                        || objectiveProto.MetaGameWidget != PrototypeId.Invalid
+                        || objectiveProto.MetaGameWidgetFail != PrototypeId.Invalid) return true;
+
+            List<MissionConditionPrototype> conditions = new();
+            GetConditionsOfType(typeof(MissionConditionEntityInteractPrototype), conditions);
+            if (conditions.Count > 0) return true;
+
+            if (GetHasWaypointInterest()) return true;
+
+            return false;
+        }
+
+        private bool GetHasWaypointInterest()
+        {
+            foreach (var waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
+                if (waypointProto?.EvalShouldDisplay == null) continue;
+                if (waypointProto.EvalShouldDisplay is MissionIsActivePrototype activeProto && activeProto.Mission == DataRef) return true;
+                if (waypointProto.EvalShouldDisplay is MissionIsCompletePrototype completeProto && completeProto.Mission == DataRef) return true;
+            }
+            return false;
         }
 
         private void PopulateMissionActionReferencedPowers()
