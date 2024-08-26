@@ -395,7 +395,7 @@ namespace MHServerEmu.Games.Powers
             foreach (var kvp in propertyCollection)
             {
                 PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-                PrototypeId propertyPrototypeRef = propertyInfo.PropertyInfoPrototypeRef;
+                PrototypeId propertyPrototypeRef = propertyInfo.PrototypeDataRef;
 
                 if (IsANegativeStatusEffectProperty(propertyPrototypeRef))
                 {

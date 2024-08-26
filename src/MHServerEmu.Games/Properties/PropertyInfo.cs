@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Properties
         public string PropertyName { get; }
 
         public string PropertyInfoName { get; }
-        public PrototypeId PropertyInfoPrototypeRef { get; }
+        public PrototypeId PrototypeDataRef { get; }
         public PropertyInfoPrototype Prototype { get; private set; }
 
         public BlueprintId PropertyMixinBlueprintRef { get; set; } = BlueprintId.Invalid;
@@ -40,6 +40,8 @@ namespace MHServerEmu.Games.Properties
         public bool TruncatePropertyValueToInt { get; private set; }
         public bool IsCurveProperty { get => DataType == PropertyDataType.Curve; }
 
+        public byte PropertyVersion { get => (byte)(Prototype != null ? Prototype.Version : 0); }
+
         // Evals
         public EvalPrototype Eval { get => Prototype?.Eval; }
         public bool IsEvalProperty { get => Eval != null; }
@@ -48,12 +50,12 @@ namespace MHServerEmu.Games.Properties
         public bool HasDependentEvals { get => DependentEvals.Count > 0; }
         public List<PropertyId> EvalDependencies { get; } = new();
 
-        public PropertyInfo(PropertyEnum @enum, string propertyInfoName, PrototypeId propertyInfoPrototypeRef)
+        public PropertyInfo(PropertyEnum @enum, string propertyInfoName, PrototypeId prototypeDataRef)
         {
             Id = new(@enum);
             PropertyInfoName = propertyInfoName;
             PropertyName = $"{PropertyInfoName}Prop";
-            PropertyInfoPrototypeRef = propertyInfoPrototypeRef;
+            PrototypeDataRef = prototypeDataRef;
 
             // Initialize param arrays
             for (int i = 0; i < Property.MaxParamCount; i++)
@@ -91,7 +93,20 @@ namespace MHServerEmu.Games.Properties
                 case 2: return EncodeParameters(propertyEnum, @params[0], @params[1]);
                 case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
                 case 4: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
-                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"Failed to encode params: invalid param count {ParamCount}");
+                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"EncodeParameters(): Invalid param count {ParamCount}");
+            }
+        }
+
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, ReadOnlySpan<PropertyParam> @params)
+        {
+            switch (ParamCount)
+            {
+                case 0: return new(propertyEnum);
+                case 1: return EncodeParameters(propertyEnum, @params[0]);
+                case 2: return EncodeParameters(propertyEnum, @params[0], @params[1]);
+                case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
+                case 4: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
+                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"EncodeParameters(): Invalid param count {ParamCount}");
             }
         }
 
@@ -324,7 +339,7 @@ namespace MHServerEmu.Games.Properties
                 _paramOffsets[i] = offset;
             }
 
-            // NOTE: the client also sets the values of the rest of _paramBitCounts and _paramOffsets to 0 that we don't need to do... probably
+            // NOTE: the client also initializes the values of the rest of _paramBitCounts and _paramOffsets to 0 that we don't need to do
 
             _updatedInfo = true;
             return true;
