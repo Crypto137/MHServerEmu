@@ -40,8 +40,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         protected bool IsMissionPlayer(Player player)
         {
             var missionPlayer = Player;
-            if (missionPlayer == null) return false;
-            if (player == missionPlayer) return true;
+            if (missionPlayer == null || player == missionPlayer) return true;
             if (_proto.PartyMembersGetCredit)
             {
                 var party = missionPlayer.Party;
@@ -81,7 +80,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         }
 
         public override bool IsCompleted() => Count >= RequiredCount;
-        public override void SetCompleted() => SetCount(Count);
+        public override void SetCompleted() => SetCount(RequiredCount);
 
         protected virtual bool GetCompletion() => false;
 
