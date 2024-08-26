@@ -29,7 +29,7 @@
             AccountId = accountId;
             RawRegion = unchecked((long)9142075282174842340);       // Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype
             RawAvatar = unchecked((long)10617813376954079152);      // Entity/Characters/Avatars/Shipping/CaptainAmerica.prototype
-            RawWaypoint = unchecked((long)10137590415717831231);    // Waypoints/HUBS/NPEAvengersTowerHub
+            RawWaypoint = unchecked((long)11334277059865941394);    // Regions/HUBRevamp/NPEAvengersTowerHubEntry.prototype
             AOIVolume = 3200;
         }
 

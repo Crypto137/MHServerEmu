@@ -8,6 +8,7 @@ namespace MHServerEmu.Core.Serialization
 {
     public enum ArchiveSerializeType
     {
+        Invalid = 0,
         Migration = 1,      // Server <-> Server
         Database = 2,       // Server <-> Database
         Replication = 3,    // Server <-> Client

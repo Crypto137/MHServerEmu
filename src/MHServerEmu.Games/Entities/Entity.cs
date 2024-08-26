@@ -275,6 +275,11 @@ namespace MHServerEmu.Games.Entities
             return Properties.SerializeWithDefault(archive, Prototype?.Properties);
         }
 
+        public virtual void OnUnpackComplete(Archive archive)
+        {
+
+        }
+
         public virtual bool ApplyInitialReplicationState(ref EntitySettings settings) => true;
 
         public void TEMP_ReplacePrototype(PrototypeId prototypeRef)

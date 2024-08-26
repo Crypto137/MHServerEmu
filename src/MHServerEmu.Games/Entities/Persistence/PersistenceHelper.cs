@@ -1,0 +1,113 @@
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.GameData;
+
+namespace MHServerEmu.Games.Entities.Persistence
+{
+    public static class PersistenceHelper
+    {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static void StoreInventoryEntities(DBAccount dbAccount, Player player)
+        {
+            dbAccount.TEMP_ItemList.Clear();
+
+            foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral))
+                ArchiveInventory(dbAccount, inventory);
+
+            // TODO: Avatars, team-ups, stash tabs, avatar equipment, team-up equipment, controlled entities
+        }
+
+        public static void RestoreInventoryEntities(DBAccount dbAccount, Player player)
+        {
+            foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral))
+                RestoreInventory(dbAccount, inventory);
+        }
+
+        private static bool ArchiveInventory(DBAccount dbAccount, Inventory inventory)
+        {
+            if (inventory == null) return Logger.WarnReturn(false, "ArchiveInventory(): inventory == null");
+
+            // Common data everything stored in this inventory
+            ulong containerDbGuid = inventory.Owner.DatabaseUniqueId;
+            ulong inventoryProtoGuid = (ulong)GameDatabase.GetPrototypeGuid(inventory.PrototypeDataRef);
+
+            foreach (var entry in inventory)
+            {
+                Entity entity = inventory.Game.EntityManager.GetEntity<Entity>(entry.Id);
+                
+                if (entity == null)
+                {
+                    Logger.Warn("ArchiveInventory(): entity == null");
+                    continue;
+                }
+
+                DBEntity dbEntity = new();
+                dbEntity.DbGuid = entity.DatabaseUniqueId;
+                dbEntity.ContainerDbGuid = containerDbGuid;
+                dbEntity.InventoryProtoGuid = inventoryProtoGuid;
+                dbEntity.Slot = entry.Slot;
+                dbEntity.EntityProtoGuid = (ulong)GameDatabase.GetPrototypeGuid(entity.PrototypeDataRef);
+
+                using (Archive archive = new(ArchiveSerializeType.Database))
+                {
+                    if (Serializer.Transfer(archive, ref entity) == false)
+                    {
+                        Logger.Error($"ArchiveInventory(): Failed to serialize entity {entity}");
+                        continue;
+                    }
+
+                    dbEntity.Blob = archive.AccessAutoBuffer().ToArray();
+                }
+
+                dbAccount.TEMP_ItemList.Add(dbEntity);
+            }
+
+            return true;
+        }
+
+        private static bool RestoreInventory(DBAccount dbAccount, Inventory inventory)
+        {
+            if (inventory.Count > 0) return Logger.WarnReturn(false, "RestoreInventory(): Inventory must be empty to be restored!");
+
+            ulong ownerDbGuid = inventory.Owner.DatabaseUniqueId;
+            ulong containerEntityId = inventory.Owner.Id;
+
+            foreach (DBEntity dbEntity in dbAccount.TEMP_ItemList)
+            {
+                if (dbEntity.ContainerDbGuid != ownerDbGuid)
+                {
+                    Logger.Warn($"RestoreInventory(): Attempting to restore entity belonging to 0x{ownerDbGuid:X}, but the inventory owner is 0x{dbEntity.ContainerDbGuid:X}");
+                    continue;
+                }
+
+                PrototypeId inventoryProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)dbEntity.InventoryProtoGuid);
+                if (inventoryProtoRef != inventory.PrototypeDataRef)
+                {
+                    Logger.Warn($"RestoreInventory(): Inventory prototype mismatch");
+                    continue;
+                }
+
+                PrototypeId entityProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)dbEntity.EntityProtoGuid);
+                if (entityProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"RestoreInventory(): Failed to retrieve entity proto ref for guid {dbEntity.EntityProtoGuid}");
+                }
+
+                EntitySettings settings = new();
+                settings.DbGuid = dbEntity.DbGuid;
+                settings.InventoryLocation = new(containerEntityId, inventoryProtoRef, dbEntity.Slot);
+                settings.EntityRef = entityProtoRef;
+                settings.ArchiveSerializeType = ArchiveSerializeType.Database;
+                settings.ArchiveData = dbEntity.Blob;
+
+                inventory.Game.EntityManager.CreateEntity(settings);
+            }
+
+            return true;
+        }
+    }
+}

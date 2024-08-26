@@ -12,6 +12,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
+using MHServerEmu.Games.Entities.Persistence;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -361,6 +362,9 @@ namespace MHServerEmu.Games.Entities
             }
 
             _gameplayOptions.ResetToDefaults();
+
+            // TEMP - Test item loading
+            PersistenceHelper.RestoreInventoryEntities(account, this);
         }
 
         public void SaveToDBAccount(DBAccount account)
@@ -381,6 +385,9 @@ namespace MHServerEmu.Games.Entities
                     dbAvatar.RawAbilityKeyMapping = archive.AccessAutoBuffer().ToArray();
                 }
             }
+
+            // TEMP - test item saving
+            PersistenceHelper.StoreInventoryEntities(account, this);
         }
 
         public override void EnterGame(EntitySettings settings = null)

@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
@@ -151,9 +153,16 @@ namespace MHServerEmu.Games.Entities
             bool initSuccess = entity.PreInitialize(settings);
             initSuccess &= entity.Initialize(settings);
             
-            // TODO: Archive deserialization
-            if (settings.ArchiveData?.Length > 0)
-                Logger.Warn("CreateEntity(): Archive data is provided, but persistent archives are not yet implemented!");
+            // Deserialize archive data if provided
+            if (settings.ArchiveSerializeType != ArchiveSerializeType.Invalid && settings.ArchiveData?.Length > 0)
+            {
+                using (Archive archive = new(settings.ArchiveSerializeType, settings.ArchiveData))
+                {
+                    Serializer.Transfer(archive, ref entity);
+                    // TODO: entity.Bind() - do we need this server-side?
+                    entity.OnUnpackComplete(archive);
+                }
+            }
 
             // TODO: Apply replication state
             entity.ApplyInitialReplicationState(ref settings);

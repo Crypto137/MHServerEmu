@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -46,6 +47,8 @@ namespace MHServerEmu.Games.Entities
         public ulong RegionId { get; set; }
         public Vector3 Position { get; set; }
         public Orientation Orientation { get; set; }
+
+        public ArchiveSerializeType ArchiveSerializeType { get; set; } = ArchiveSerializeType.Invalid;
         public byte[] ArchiveData { get; set; }
         public DBAccount DBAccount { get; set; }    // TODO: Remove this when we have persistent archives
 
