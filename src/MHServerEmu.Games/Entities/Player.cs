@@ -972,12 +972,17 @@ namespace MHServerEmu.Games.Entities
 
         public void OnFullscreenMovieStarted(PrototypeId movieRef)
         {
-            Logger.Trace($"FullscreenMovieStarted {GameDatabase.GetFormattedPrototypeName(movieRef)} for {Name}");
+            Logger.Trace($"OnFullscreenMovieStarted {GameDatabase.GetFormattedPrototypeName(movieRef)} for {_playerName}");
+            var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
+            if (movieProto == null) return;
+            if (movieProto.MovieType == MovieType.Cinematic)
+                Properties[PropertyEnum.FullScreenMovieSession] = Game.Random.Next();
         }
 
         public void OnFullscreenMovieFinished(PrototypeId movieRef, bool userCancelled, uint syncRequestId)
         {
             // TODO syncRequestId ?
+            Logger.Trace($"OnFullscreenMovieFinished {GameDatabase.GetFormattedPrototypeName(movieRef)} Canceled = {userCancelled} by {_playerName}");
 
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
             if (movieProto == null) return;
@@ -985,7 +990,8 @@ namespace MHServerEmu.Games.Entities
             if (movieProto.MovieType == MovieType.Cinematic)
             {
                 FullScreenMovieDequeued(movieRef);
-                GetRegion()?.CinematicFinishedEvent.Invoke(new(this, movieRef));                
+                GetRegion()?.CinematicFinishedEvent.Invoke(new(this, movieRef));
+                Properties.RemoveProperty(PropertyEnum.FullScreenMovieSession);
             }
         }
 
@@ -1206,29 +1212,16 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public void OnPlayKismetSeqDone(PrototypeId kismetSeqPrototypeId)
+        public void OnPlayKismetSeqDone(PrototypeId kismetSeqRef)
         {
-            if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
-
-            if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
+            if (kismetSeqRef == PrototypeId.Invalid) return;
+            var kismetSeqProto = GameDatabase.GetPrototype<KismetSequencePrototype>(kismetSeqRef);
+            if (kismetSeqProto == null) return;
+            if (kismetSeqProto.KismetSeqBlocking && IsFullscreenMoviePlaying)
             {
-                // TODO trigger by hotspot
-                KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
-                SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-            }
-            else if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.OpDailyBugleVultureKismet)
-            {
-                // TODO trigger by MissionManager
-                foreach (var entity in CurrentAvatar.RegionLocation.Cell.Entities)
-                    if ((KismetBosses)entity.PrototypeDataRef == KismetBosses.EGD15GVulture)
-                        entity.Properties[PropertyEnum.Visible] = true;
-            }
-            else if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.SinisterEntrance)
-            {
-                // TODO trigger by MissionManager
-                foreach (var entity in CurrentAvatar.RegionLocation.Cell.Entities)
-                    if ((KismetBosses)entity.PrototypeDataRef == KismetBosses.MrSinisterCH7)
-                        entity.Properties[PropertyEnum.Visible] = true;
+                FullScreenMovieDequeued(kismetSeqRef);
+                SendMissionInteract(Id);
+                GetRegion()?.KismetSeqFinishedEvent.Invoke(new(this, kismetSeqRef));
             }
         }
 
