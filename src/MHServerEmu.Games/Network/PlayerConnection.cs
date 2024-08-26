@@ -234,15 +234,22 @@ namespace MHServerEmu.Games.Network
 
         public void MoveToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
         {
+            var oldRegion = AOI.Region;
+
             // Simulate exiting and re-entering the game on a real GIS
             ExitGame();
 
             // Update our target
             TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
 
+            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestTargetRegionProtoRef));
+
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
             Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
+
+            oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
+
             Game.NetworkManager.SetPlayerConnectionPending(this);
         }
 

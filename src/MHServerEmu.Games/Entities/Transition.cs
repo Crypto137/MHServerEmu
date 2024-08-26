@@ -143,6 +143,9 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find target location for target {targetProtoRef.GetName()}");
             }
 
+            if (player.CurrentAvatar.Area?.PrototypeDataRef != targetProto.Area)
+                region.PlayerBeginTravelToAreaEvent.Invoke(new(player, targetProto.Area));
+
             player.SendMessage(NetMessageOneTimeSnapCamera.DefaultInstance);    // Disables camera interpolation for movement
 
             ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(position, orientation, ChangePositionFlags.Teleport);

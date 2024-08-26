@@ -972,7 +972,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player == null) return;
 
             oldCell?.Region.PlayerLeftCellEvent.Invoke(new(player, oldCell.PrototypeDataRef));
-            newCell?.Region.PlayerEnteredAreaEvent.Invoke(new(player, newCell.PrototypeDataRef));
+            newCell?.Region.PlayerEnteredCellEvent.Invoke(new(player, newCell.PrototypeDataRef));
         }
 
         public override void OnEnteredWorld(EntitySettings settings)

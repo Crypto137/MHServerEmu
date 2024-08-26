@@ -1721,13 +1721,16 @@ namespace MHServerEmu.Games.Entities
         {
             Area oldArea = oldLocation.Area;
             Area newArea = newLocation.Area;
+            if (oldArea == newArea) return;
+
+            oldArea?.Region.EntityLeftAreaEvent.Invoke(new(this, oldArea));
+
             if (newArea != null)
             {
+                newArea.Region.EntityEnteredAreaEvent.Invoke(new(this, newArea));
                 Properties[PropertyEnum.MapAreaId] = newArea.Id;
                 Properties[PropertyEnum.ContextAreaRef] = newArea.PrototypeDataRef;
             }
-
-            // TODO other events
         }
 
         public virtual void OnRegionChanged(Region oldRegion, Region newRegion)
