@@ -273,6 +273,58 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Powers
 
+        public bool PerformPreInteractPower(WorldEntity target, bool hasDialog)
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return false;
+
+            var targetProto = target.WorldEntityPrototype;
+            if (targetProto == null || IsExecutingPower) return false;
+
+            var powerRef = targetProto.PreInteractPower;
+            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return false;
+
+            if (HasPowerInPowerCollection(powerRef) == false)
+                AssignPower(powerRef, new(0, CharacterLevel, CombatLevel));
+
+            if (powerProto.Activation != PowerActivationType.Passive)
+            {
+                PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
+                settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                var result = ActivatePower(powerRef, ref settings);
+                if (result != PowerUseResult.Success)
+                    return Logger.WarnReturn(false, $"PerformPreInteractPower ActivatePower [{powerRef}] = {result}");
+            }
+            
+            player.Properties[PropertyEnum.InteractTargetId] = target.Id;
+            player.Properties[PropertyEnum.InteractHasDialog] = hasDialog;
+
+            return true;
+        }
+
+        public bool PreInteractPowerEnd()
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return false;
+
+            ulong targetId = player.Properties[PropertyEnum.InteractTargetId];
+            player.Properties.RemoveProperty(PropertyEnum.InteractTargetId);
+            player.Properties.RemoveProperty(PropertyEnum.InteractHasDialog);
+
+            var targetEntity = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+            if (targetEntity == null) return false;
+
+            player.Properties[PropertyEnum.InteractReadyForTargetId] = targetId;
+
+            if (player.InterestedInEntity(targetEntity, AOINetworkPolicyValues.AOIChannelOwner))
+                player.SendMessage(NetMessageOnPreInteractPowerEnd.CreateBuilder()
+                    .SetIdTargetEntity(targetId)
+                    .SetAvatarIndex(0).Build());
+
+            return true;
+        }
+
         public override bool OnPowerAssigned(Power power)
         {
             if (base.OnPowerAssigned(power) == false)

@@ -40,8 +40,6 @@ namespace MHServerEmu.Games.Network
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
 
-        private readonly EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
-
         private bool _waitingForRegionIsAvailableResponse = false;
 
         public Game Game { get; }
@@ -762,22 +760,13 @@ namespace MHServerEmu.Games.Network
             var performPreInteractPower = message.As<NetMessagePerformPreInteractPower>();
             if (performPreInteractPower == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to retrieve message");
 
-            Logger.Trace($"Received PerformPreInteractPower for {performPreInteractPower.IdTarget}");
+            var currentAvatar = Player.CurrentAvatar;
+            if (currentAvatar == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): CurrentAvatar is null");
 
-            var interactableObject = Game.EntityManager.GetEntity<Entity>(performPreInteractPower.IdTarget);
-            if (interactableObject == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to get entity {performPreInteractPower.IdTarget}");
+            var target = Game.EntityManager.GetEntity<WorldEntity>(performPreInteractPower.IdTarget);
+            if (target == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to get terget {performPreInteractPower.IdTarget}");
 
-            if (_preInteractPowerEndEvent.IsValid == false)
-            {
-                EventPointer<OLD_PreInteractPowerEvent> preInteractPowerEventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(preInteractPowerEventPointer, TimeSpan.Zero);
-                preInteractPowerEventPointer.Get().Initialize(this, interactableObject);
-
-                Game.GameEventScheduler.ScheduleEvent(_preInteractPowerEndEvent, TimeSpan.FromMilliseconds(1000));  // ChargingTimeMS
-                _preInteractPowerEndEvent.Get().Initialize(this, interactableObject);
-            }
-
-            return true;
+            return currentAvatar.PerformPreInteractPower(target, performPreInteractPower.HasDialog);
         }
 
         private bool OnUseInteractableObject(MailboxMessage message)    // 38
