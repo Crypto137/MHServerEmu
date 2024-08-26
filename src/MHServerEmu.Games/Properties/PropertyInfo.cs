@@ -68,36 +68,27 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
-        public PropertyParam[] DecodeParameters(PropertyId propertyId)
+        public void DecodeParameters(PropertyId propertyId, ref Span<PropertyParam> @params)
         {
-            if (ParamCount == 0) return new PropertyParam[Property.MaxParamCount];
+            if (ParamCount == 0)
+            {
+                @params.Clear();
+                return;
+            }
 
             ulong encodedParams = propertyId.Raw & Property.ParamMask;
-            PropertyParam[] decodedParams = new PropertyParam[Property.MaxParamCount];
 
             for (int i = 0; i < ParamCount; i++)
-                decodedParams[i] = (PropertyParam)(int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
+                @params[i] = (PropertyParam)(int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
 
-            return decodedParams;
+            for (int i = ParamCount; i < Property.MaxParamCount; i++)
+                @params[i] = 0;
         }
 
         // There's a bunch of (client-accurate) copypasted code here for encoding that allows us to avoid allocating param arrays in some cases.
         // Feel free to make this more DRY if there is a smarter way of doing this without losing performance.
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam[] @params)
-        {
-            switch (ParamCount)
-            {
-                case 0: return new(propertyEnum);
-                case 1: return EncodeParameters(propertyEnum, @params[0]);
-                case 2: return EncodeParameters(propertyEnum, @params[0], @params[1]);
-                case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
-                case 4: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
-                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"EncodeParameters(): Invalid param count {ParamCount}");
-            }
-        }
-
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, ReadOnlySpan<PropertyParam> @params)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, in ReadOnlySpan<PropertyParam> @params)
         {
             switch (ParamCount)
             {
@@ -166,7 +157,9 @@ namespace MHServerEmu.Games.Properties
         {
             StringBuilder sb = new();
             sb.Append(PropertyName);
-            var @params = id.GetParams();
+
+            Span<PropertyParam> @params = stackalloc PropertyParam[Property.MaxParamCount];
+            id.GetParams(ref @params);
 
             for (int i = 0; i < ParamCount; i++)
             {
