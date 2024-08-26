@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public static MissionAction CreateAction(IMissionActionOwner owner, MissionActionPrototype actionProto) 
         {
-            if (MissionManager.Debug) Logger.Debug($"CreateAction {GameDatabase.GetFormattedPrototypeName(owner.PrototypeDataRef)} {actionProto}");
+            if (MissionManager.Debug) Logger.Debug($"CreateAction {GameDatabase.GetFormattedPrototypeName(owner.PrototypeDataRef)} {actionProto.GetType().Name}");
             return actionProto.AllocateAction(owner);
         }
 

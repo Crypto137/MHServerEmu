@@ -251,7 +251,7 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeState()
         {
-            if (MissionManager.Debug) Logger.Debug($"OnChangeState Objective[{_prototypeIndex}] State {State} for {Mission.PrototypeName}");
+            if (MissionManager.Debug) Logger.Trace($"OnChangeState Objective[{_prototypeIndex}] State {State} for {Mission.PrototypeName}");
             if (Mission.IsSuspended) return false;
             return State switch
             {

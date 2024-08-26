@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public static MissionCondition CreateCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype conditionProto)
         {
-            if (MissionManager.Debug) Logger.Debug($"CreateCondition {GameDatabase.GetFormattedPrototypeName(mission.PrototypeDataRef)} {conditionProto}");
+            if (MissionManager.Debug) Logger.Debug($"CreateCondition {GameDatabase.GetFormattedPrototypeName(mission.PrototypeDataRef)} {conditionProto.GetType().Name}");
             return conditionProto.AllocateCondition(mission, owner);
         }
 
