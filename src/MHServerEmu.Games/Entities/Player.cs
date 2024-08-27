@@ -1649,6 +1649,13 @@ namespace MHServerEmu.Games.Entities
             eventPointer.Get().Initialize(this);
         }
 
+        public void MissionInteractRelease(WorldEntity entity, PrototypeId missionRef)
+        {
+            if (missionRef == PrototypeId.Invalid) return;                 
+            if (InterestedInEntity(entity, AOINetworkPolicyValues.AOIChannelOwner))
+                SendMessage(NetMessageMissionInteractRelease.DefaultInstance);            
+        }
+
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Player>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.ResetHUDTutorial();
