@@ -33,13 +33,11 @@ namespace MHServerEmu.DatabaseAccess.Models
         public bool IsPasswordExpired { get; set; }
 
         public DBPlayer Player { get; set; }
-        [JsonInclude]
-        public Dictionary<long, DBAvatar> Avatars { get; private set; } = new();
 
-        [JsonIgnore]
-        public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
-
+        public DBEntityCollection Avatars { get; } = new();
+        public DBEntityCollection TeamUps { get; } = new();
         public DBEntityCollection Items { get; } = new();
+        public DBEntityCollection ControlledEntities { get; } = new();
 
         /// <summary>
         /// Constructs an empty <see cref="DBAccount"/> instance.
@@ -83,24 +81,16 @@ namespace MHServerEmu.DatabaseAccess.Models
             Player.AOIVolume = volume;
         }
 
-        /// <summary>
-        /// Retrieves the <see cref="DBAvatar"/> for the specified prototype id.
-        /// </summary>
-        public DBAvatar GetAvatar(long prototypeId)
-        {
-            if (Avatars.TryGetValue(prototypeId, out DBAvatar avatar) == false)
-            {
-                avatar = new(Id, prototypeId);
-                Avatars.Add(prototypeId, avatar);
-            }
-
-            return avatar;
-        }
-
         public override string ToString()
         {
             string email = HideSensitiveInformation ? $"{Email[0]}****{Email.Substring(Email.IndexOf('@') - 1)}" : Email;
             return $"{PlayerName} (dbId=0x{Id:X}, email={email})";
+        }
+
+        public void ClearEntities()
+        {
+            Avatars.Clear();
+            Items.Clear();
         }
 
         private void InitializeData()

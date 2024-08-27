@@ -66,9 +66,6 @@ namespace MHServerEmu.DatabaseAccess
                     connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar, RawWaypoint, AOIVolume)
                             VALUES (@AccountId, @RawRegion, @RawAvatar, @RawWaypoint, @AOIVolume)", account.Player, transaction);
 
-                    connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume, RawAbilityKeyMapping)
-                            VALUES (@AccountId, @RawPrototype, @RawCostume, @RawAbilityKeyMapping)", account.Avatars.Values, transaction);
-
                     transaction.Commit();
                     return true;
                 }
@@ -111,13 +108,8 @@ namespace MHServerEmu.DatabaseAccess
                     // Update saved player entity
                     connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar, RawWaypoint=@RawWaypoint, AOIVolume=@AOIVolume WHERE AccountId=@AccountId", account.Player, transaction);
 
-                    // Insert any new avatar entities
-                    connection.Execute(@"INSERT OR IGNORE INTO Avatar (AccountId, RawPrototype) VALUES (@AccountId, @RawPrototype)", account.Avatars.Values, transaction);
-
-                    // Update all avatar entities
-                    connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars.Values, transaction);
-
-                    // Update items
+                    // Update inventory entities
+                    UpdateEntityTable(connection, transaction, "Avatar", (long)account.Id, account.Avatars);
                     UpdateEntityTable(connection, transaction, "Item", (long)account.Id, account.Items);
 
                     transaction.Commit();
@@ -156,9 +148,8 @@ namespace MHServerEmu.DatabaseAccess
             var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE AccountId = @AccountId", @params);
             account.Player = players.First();
 
-            var avatars = connection.Query<DBAvatar>("SELECT * FROM Avatar WHERE AccountId = @AccountId", @params);
-            foreach (DBAvatar avatar in avatars)
-                account.Avatars.Add(avatar.RawPrototype, avatar);
+            var avatars = connection.Query<DBEntity>("SELECT * FROM Avatar WHERE ContainerDbGuid = @AccountId", @params);
+            account.Avatars.AddRange(avatars);
 
             var items = connection.Query<DBEntity>("SELECT * FROM Item WHERE ContainerDbGuid = @AccountId", @params);
             account.Items.AddRange(items);

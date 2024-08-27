@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Security.Principal;
+using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
@@ -233,22 +234,6 @@ namespace MHServerEmu.Games.Entities
             // Adjust properties
             Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits] = account.Player.Credits;
 
-            foreach (var accountAvatar in account.Avatars.Values)
-            {
-                var avatarPrototypeRef = (PrototypeId)accountAvatar.RawPrototype;
-
-                // Set library costumes according to account data
-                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarPrototypeRef] = (PrototypeId)accountAvatar.RawCostume;
-
-                // Set avatar levels to 60
-                // Note: setting this to above level 60 sets the prestige level as well
-                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototypeRef] = 60;
-
-                // Unlock extra emotes
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarPrototypeRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
-            }
-
             foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
@@ -271,7 +256,6 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
-            _missionManager.SetAvatar((PrototypeId)account.CurrentAvatar.RawPrototype);
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
@@ -367,26 +351,40 @@ namespace MHServerEmu.Games.Entities
             PersistenceHelper.RestoreInventoryEntities(account, this);
         }
 
+        public void TEMP_FinalizeAvatars()
+        {
+            // TODO: Do this when avatars are added to the library inventory or something
+            if (CurrentAvatar == null)
+            {
+                // We should have a current avatar at this point
+                Logger.Warn("TEMP_FinalizeAvatars(): CurrentAvatar == null");
+                return;
+            }
+
+            foreach (Avatar avatar in new AvatarIterator(this))
+            {
+                PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
+
+                // Set avatar library properties
+                // NOTE: setting AvatarLibraryLevel above level 60 displays as prestige levels in the UI
+                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CostumeCurrent];
+                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CharacterLevel];
+
+                // Unlock extra emotes
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
+            }
+
+            _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
+        }
+
         public void SaveToDBAccount(DBAccount account)
         {
             account.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
 
             account.Player.Credits = Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits];
 
-            foreach (Avatar avatar in new AvatarIterator(this))
-            {
-                DBAvatar dbAvatar = account.GetAvatar((long)avatar.PrototypeDataRef);
-                dbAvatar.RawCostume = avatar.Properties[PropertyEnum.CostumeCurrent];
-
-                // Encode key mapping
-                using (Archive archive = new(ArchiveSerializeType.Database))
-                {
-                    avatar.CurrentAbilityKeyMapping.Serialize(archive);
-                    dbAvatar.RawAbilityKeyMapping = archive.AccessAutoBuffer().ToArray();
-                }
-            }
-
-            // TEMP - test item saving
+            // Save entities stored in this player's inventories
             PersistenceHelper.StoreInventoryEntities(account, this);
         }
 

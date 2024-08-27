@@ -126,28 +126,28 @@ namespace MHServerEmu.Games.Network
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
             Player.LoadFromDBAccount(_dbAccount);
 
-            // Make sure we have a valid current avatar ref
-            var lastCurrentAvatarRef = (PrototypeId)_dbAccount.CurrentAvatar.RawPrototype;
-            if (dataDirectory.PrototypeIsA<AvatarPrototype>(lastCurrentAvatarRef) == false)
+            if (Player.CurrentAvatar == null)
             {
-                lastCurrentAvatarRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
-                Logger.Warn($"PlayerConnection(): Invalid avatar data ref specified in DBAccount, defaulting to {GameDatabase.GetPrototypeName(lastCurrentAvatarRef)}");
+                // If we don't have an avatar after loading from the database it means this is a new player that we need to create avatars for
+                Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+                Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
+
+                PrototypeId defaultAvatarProtoRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
+
+                foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+
+                    EntitySettings avatarSettings = new();
+                    avatarSettings.EntityRef = avatarRef;
+                    avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
+                    avatarSettings.DBAccount = _dbAccount;
+
+                    Game.EntityManager.CreateEntity(avatarSettings);
+                }
             }
 
-            // Create avatars
-            Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
-            Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
-            foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-
-                EntitySettings avatarSettings = new();
-                avatarSettings.EntityRef = avatarRef;
-                avatarSettings.InventoryLocation = new(Player.Id, avatarRef == lastCurrentAvatarRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
-                avatarSettings.DBAccount = _dbAccount;
-
-                Game.EntityManager.CreateEntity(avatarSettings);
-            }
+            Player.TEMP_FinalizeAvatars();
 
             // Create team-up entities
             if (Game.GameOptions.TeamUpSystemEnabled)

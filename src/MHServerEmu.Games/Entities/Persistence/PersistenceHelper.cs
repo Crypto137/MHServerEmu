@@ -13,29 +13,40 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         public static void StoreInventoryEntities(DBAccount dbAccount, Player player)
         {
-            dbAccount.Items.Clear();
+            dbAccount.ClearEntities();
 
-            foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral))
-                ArchiveInventory(dbAccount, inventory);
+            foreach (Inventory inventory in new InventoryIterator(player))
+            {
+                if (inventory.Prototype.PersistedToDatabase == false)
+                    continue;
 
-            // TODO: Avatars, team-ups, stash tabs, avatar equipment, team-up equipment, controlled entities
+                StoreInventory(dbAccount, inventory);
+            }
+
+            // TODO: avatar and team-up equipment
         }
 
         public static void RestoreInventoryEntities(DBAccount dbAccount, Player player)
         {
-            foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral))
-                RestoreInventory(dbAccount, inventory);
+            RestoreContainer(player, dbAccount.Avatars);
+            RestoreContainer(player, dbAccount.Items);
+
+            // TODO: avatar and team-up equipment
         }
 
-        private static bool ArchiveInventory(DBAccount dbAccount, Inventory inventory)
+        private static bool StoreInventory(DBAccount dbAccount, Inventory inventory)
         {
             if (inventory == null) return Logger.WarnReturn(false, "ArchiveInventory(): inventory == null");
 
-            DBEntityCollection entities = null;
+            DBEntityCollection entities;
 
             if (inventory.Category == InventoryCategory.PlayerAvatars)
             {
-                return Logger.WarnReturn(false, $"ArchiveInventory(): Skipping avatar inventory for {inventory.Owner}");
+                entities = dbAccount.Avatars;
+            }
+            else if (inventory.ConvenienceLabel == InventoryConvenienceLabel.TeamUpLibrary)
+            {
+                return Logger.WarnReturn(false, $"ArchiveInventory(): Skipping team-up inventory for {inventory.Owner}");
             }
             else if (inventory.ConvenienceLabel == InventoryConvenienceLabel.Controlled)
             {
@@ -84,32 +95,37 @@ namespace MHServerEmu.Games.Entities.Persistence
             return true;
         }
 
-        private static bool RestoreInventory(DBAccount dbAccount, Inventory inventory)
+        private static bool RestoreContainer(Entity container, DBEntityCollection entities)
         {
-            if (inventory.Count > 0) return Logger.WarnReturn(false, "RestoreInventory(): Inventory must be empty to be restored!");
+            long containerDbGuid = (long)container.DatabaseUniqueId;
+            ulong containerEntityId = container.Id;
 
-            long ownerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
-            ulong containerEntityId = inventory.Owner.Id;
-
-            foreach (DBEntity dbEntity in dbAccount.Items.Entries)
+            foreach (DBEntity dbEntity in entities.GetEntriesForContainer(containerDbGuid))
             {
-                if (dbEntity.ContainerDbGuid != ownerDbGuid)
+                if (dbEntity.ContainerDbGuid != containerDbGuid)
                 {
-                    Logger.Warn($"RestoreInventory(): Attempting to restore entity belonging to 0x{ownerDbGuid:X}, but the inventory owner is 0x{dbEntity.ContainerDbGuid:X}");
+                    Logger.Warn($"RestoreContainer(): Attempting to restore entity belonging to 0x{dbEntity.ContainerDbGuid:X} in 0x{containerDbGuid:X}");
                     continue;
                 }
 
                 PrototypeId inventoryProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)dbEntity.InventoryProtoGuid);
-                if (inventoryProtoRef != inventory.PrototypeDataRef)
+                if (inventoryProtoRef == PrototypeId.Invalid)
                 {
-                    Logger.Warn($"RestoreInventory(): Inventory prototype mismatch");
+                    Logger.Warn($"RestoreContainer(): Failed to retrieve inventory proto ref for guid {dbEntity.InventoryProtoGuid}");
+                    continue;
+                }
+
+                if (container.GetInventoryByRef(inventoryProtoRef) == null)
+                {
+                    Logger.Warn($"RestoreContainer(): Container {container} does not have inventory {inventoryProtoRef.GetName()}");
                     continue;
                 }
 
                 PrototypeId entityProtoRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)dbEntity.EntityProtoGuid);
                 if (entityProtoRef == PrototypeId.Invalid)
                 {
-                    Logger.Warn($"RestoreInventory(): Failed to retrieve entity proto ref for guid {dbEntity.EntityProtoGuid}");
+                    Logger.Warn($"RestoreContainer(): Failed to retrieve entity proto ref for guid {dbEntity.EntityProtoGuid}");
+                    continue;
                 }
 
                 EntitySettings settings = new();
@@ -119,7 +135,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 settings.ArchiveSerializeType = ArchiveSerializeType.Database;
                 settings.ArchiveData = dbEntity.ArchiveData;
 
-                inventory.Game.EntityManager.CreateEntity(settings);
+                container.Game.EntityManager.CreateEntity(settings);
             }
 
             return true;

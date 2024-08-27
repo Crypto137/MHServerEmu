@@ -75,10 +75,111 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.Initialize(settings);
 
-            if (settings.DBAccount != null)
-                InitializeFromDBAccount(settings.DBAccount);
 
             return true;
+        }
+
+        public override void OnPostInit(EntitySettings settings)
+        {
+            base.OnPostInit(settings);
+
+            // TODO: Clean up this hardcoded mess
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+
+            // Properties
+            // AvatarLastActiveTime is needed for missions to show up in the tracker
+            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
+            Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
+
+            Properties[PropertyEnum.CharacterLevel] = 60;
+            Properties[PropertyEnum.CombatLevel] = 60;
+            Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
+
+            // Add base stats to compensate for the lack of equipment
+            Properties[PropertyEnum.DamageRating] = 2500f;
+            Properties[PropertyEnum.DamagePctBonusVsBosses] = 4f;
+            Properties[PropertyEnum.Defense, (int)DamageType.Any] = 15000f;
+            Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
+            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
+            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
+            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 1f + MathF.Max(Game.CustomGameOptions.AvatarHealthMaxMagnitudeBonus, 0f);
+
+            // Set health to max
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
+            // Resources
+            // Ger primary resources defaults from PrimaryResourceBehaviors
+            foreach (PrototypeId manaBehaviorId in avatarProto.PrimaryResourceBehaviors)
+            {
+                var behaviorPrototype = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(manaBehaviorId);
+                Curve manaCurve = GameDatabase.GetCurve(behaviorPrototype.BaseEndurancePerLevel);
+                Properties[PropertyEnum.EnduranceBase, (int)behaviorPrototype.ManaType] = manaCurve.GetAt(60);
+            }
+;
+            // Set primary resources
+            Properties[PropertyEnum.EnduranceMaxOther] = Properties[PropertyEnum.EnduranceBase];
+            Properties[PropertyEnum.EnduranceMax] = Properties[PropertyEnum.EnduranceMaxOther];
+            Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
+            Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceBase, (int)ManaType.Type2];
+            Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2];
+            Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
+
+            // Secondary resource base is already present in the prototype's property collection as a curve property
+            Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
+            Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
+
+            // Stats
+            foreach (PrototypeId entryId in avatarProto.StatProgressionTable)
+            {
+                var entry = entryId.As<StatProgressionEntryPrototype>();
+
+                if (entry.DurabilityValue > 0)
+                    Properties[PropertyEnum.StatDurability] = entry.DurabilityValue;
+
+                if (entry.StrengthValue > 0)
+                    Properties[PropertyEnum.StatStrength] = entry.StrengthValue;
+
+                if (entry.FightingSkillsValue > 0)
+                    Properties[PropertyEnum.StatFightingSkills] = entry.FightingSkillsValue;
+
+                if (entry.SpeedValue > 0)
+                    Properties[PropertyEnum.StatSpeed] = entry.SpeedValue;
+
+                if (entry.EnergyProjectionValue > 0)
+                    Properties[PropertyEnum.StatEnergyProjection] = entry.EnergyProjectionValue;
+
+                if (entry.IntelligenceValue > 0)
+                    Properties[PropertyEnum.StatIntelligence] = entry.IntelligenceValue;
+            }
+
+            // REMOVEME
+            // Unlock all stealable powers for Rogue
+            if (avatarProto.StealablePowersAllowed.HasValue())
+            {
+                foreach (PrototypeId stealablePowerInfoProtoRef in avatarProto.StealablePowersAllowed)
+                {
+                    var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
+                    Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
+                }
+            }
+
+            // REMOVEME
+            // We need 10 synergies active to remove the in-game popup
+            int synergyCount = 0;
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                Properties[PropertyEnum.AvatarSynergySelected, avatarRef] = true;
+                if (++synergyCount >= 10) break;
+            }
+
+            // Initialize AbilityKeyMapping
+            if (_abilityKeyMappingList.Count == 0)
+            {
+                AbilityKeyMapping abilityKeyMapping = new();
+                abilityKeyMapping.SlotDefaultAbilities(this);
+                _abilityKeyMappingList.Add(abilityKeyMapping);
+            }
         }
 
         protected override void BindReplicatedFields()
@@ -970,117 +1071,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             for (int i = 0; i < _abilityKeyMappingList.Count; i++)
                 sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
-        }
-
-        /// <summary>
-        /// Initializes this <see cref="Avatar"/> from data contained in the provided <see cref="DBAccount"/>.
-        /// </summary>
-        private void InitializeFromDBAccount(DBAccount account)
-        {
-            DBAvatar dbAvatar = account.GetAvatar((long)PrototypeDataRef);
-            AvatarPrototype avatarProto = AvatarPrototype;
-
-            // Properties
-            // AvatarLastActiveTime is needed for missions to show up in the tracker
-            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
-            Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
-
-            Properties[PropertyEnum.CostumeCurrent] = dbAvatar.RawCostume;
-            Properties[PropertyEnum.CharacterLevel] = 60;
-            Properties[PropertyEnum.CombatLevel] = 60;
-            Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
-
-            // Add base stats to compensate for the lack of equipment
-            Properties[PropertyEnum.DamageRating] = 2500f;
-            Properties[PropertyEnum.DamagePctBonusVsBosses] = 4f;
-            Properties[PropertyEnum.Defense, (int)DamageType.Any] = 15000f;
-            Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
-            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
-            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
-            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 1f + MathF.Max(Game.CustomGameOptions.AvatarHealthMaxMagnitudeBonus, 0f);
-
-            // Set health to max
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-
-            // Resources
-            // Ger primary resources defaults from PrimaryResourceBehaviors
-            foreach (PrototypeId manaBehaviorId in avatarProto.PrimaryResourceBehaviors)
-            {
-                var behaviorPrototype = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(manaBehaviorId);
-                Curve manaCurve = GameDatabase.GetCurve(behaviorPrototype.BaseEndurancePerLevel);
-                Properties[PropertyEnum.EnduranceBase, (int)behaviorPrototype.ManaType] = manaCurve.GetAt(60);
-            }
-;
-            // Set primary resources
-            Properties[PropertyEnum.EnduranceMaxOther] = Properties[PropertyEnum.EnduranceBase];
-            Properties[PropertyEnum.EnduranceMax] = Properties[PropertyEnum.EnduranceMaxOther];
-            Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
-            Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceBase, (int)ManaType.Type2];
-            Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2];
-            Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
-
-            // Secondary resource base is already present in the prototype's property collection as a curve property
-            Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
-            Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
-
-            // Stats
-            foreach (PrototypeId entryId in avatarProto.StatProgressionTable)
-            {
-                var entry = entryId.As<StatProgressionEntryPrototype>();
-
-                if (entry.DurabilityValue > 0)
-                    Properties[PropertyEnum.StatDurability] = entry.DurabilityValue;
-
-                if (entry.StrengthValue > 0)
-                    Properties[PropertyEnum.StatStrength] = entry.StrengthValue;
-
-                if (entry.FightingSkillsValue > 0)
-                    Properties[PropertyEnum.StatFightingSkills] = entry.FightingSkillsValue;
-
-                if (entry.SpeedValue > 0)
-                    Properties[PropertyEnum.StatSpeed] = entry.SpeedValue;
-
-                if (entry.EnergyProjectionValue > 0)
-                    Properties[PropertyEnum.StatEnergyProjection] = entry.EnergyProjectionValue;
-
-                if (entry.IntelligenceValue > 0)
-                    Properties[PropertyEnum.StatIntelligence] = entry.IntelligenceValue;
-            }
-
-            // Unlock all stealable powers for Rogue
-            if (avatarProto.StealablePowersAllowed.HasValue())
-            {
-                foreach (PrototypeId stealablePowerInfoProtoRef in avatarProto.StealablePowersAllowed)
-                {
-                    var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
-                    Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
-                }
-            }
-
-            // We need 10 synergies active to remove the in-game popup
-            int synergyCount = 0;
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                Properties[PropertyEnum.AvatarSynergySelected, avatarRef] = true;
-                if (++synergyCount >= 10) break;
-            }
-
-            // Initialize AbilityKeyMapping
-            _abilityKeyMappingList.Clear();
-            AbilityKeyMapping abilityKeyMapping = new();
-            if (dbAvatar.RawAbilityKeyMapping != null)
-            {
-                // Deserialize existing saved mapping if there is one
-                using (Archive archive = new(ArchiveSerializeType.Database, dbAvatar.RawAbilityKeyMapping))
-                    abilityKeyMapping.Serialize(archive);
-            }
-            else
-            {
-                // Initialize a new mapping
-                abilityKeyMapping.SlotDefaultAbilities(this);
-            }
-
-            _abilityKeyMappingList.Add(abilityKeyMapping);
         }
 
         #region Scheduled Events
