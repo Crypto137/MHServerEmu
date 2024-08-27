@@ -1094,7 +1094,7 @@ namespace MHServerEmu.Games.Entities
 
             if (entity.InterestReferences.IsPlayerInterested(this) == false)
                 return false;
-            return true;
+
             return AOI.InterestedInEntity(entity.Id, interestFilter);
         }
 

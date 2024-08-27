@@ -319,7 +319,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             player.Properties[PropertyEnum.InteractReadyForTargetId] = targetId;
 
-            if (player.InterestedInEntity(targetEntity, AOINetworkPolicyValues.AOIChannelOwner))
+            if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
                 player.SendMessage(NetMessageOnPreInteractPowerEnd.CreateBuilder()
                     .SetIdTargetEntity(targetId)
                     .SetAvatarIndex(0).Build());
