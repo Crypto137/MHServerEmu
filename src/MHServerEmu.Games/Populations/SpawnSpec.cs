@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        private void Defeat()
+        public void Defeat(WorldEntity killer = null)
         {
             if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return;
             State = SpawnState.Defeated;
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Populations
                 if (manager != null)
                 {
                     var spawner = manager.GetEntity<Spawner>(Group.SpawnerId);
-                    spawner?.OnDefeatEntity(ActiveEntity);
+                    spawner?.OnKilledDefeatSpawner(ActiveEntity, killer);
                 }
             }
         }

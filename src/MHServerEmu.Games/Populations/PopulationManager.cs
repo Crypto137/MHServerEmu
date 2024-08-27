@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Populations
             MarkerSchedule(markerRef);
         }
 
-        public void SpawnObject(PopulationObjectPrototype popObject, RegionLocation location, PropertyCollection properties, SpawnFlags spawnFlags, WorldEntity spawner, out List<WorldEntity> entities)
+        public void SpawnObject(PopulationObjectPrototype popObject, RegionLocation location, PropertyCollection properties, SpawnFlags spawnFlags, WorldEntity spawner, List<WorldEntity> entities)
         {
             var region = location.Region;
             GRandom random = Game.Random;
@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Populations
                 Spawner = spawner,
                 SpawnLocation = spawnLocation,
             };
-            populationObject.SpawnObject(spawnTarget, out entities);
+            populationObject.SpawnObject(spawnTarget, entities);
         }
 
         public ulong SpawnBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)

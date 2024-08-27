@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.Populations
             {
                 Type = SpawnTargetType.Marker
             };
-            return SpawnObject(spawnTarget, out _) != 0;
+            return SpawnObject(spawnTarget, new()) != 0;
         }
 
         public bool SpawnInCell(Cell cell)
@@ -44,13 +44,12 @@ namespace MHServerEmu.Games.Populations
                 Type = SpawnTargetType.RegionBounds,
                 RegionBounds = cell.RegionBounds
             };
-            return SpawnObject(spawnTarget, out _) != 0;
+            return SpawnObject(spawnTarget, new()) != 0;
         }
 
-        public ulong SpawnObject(SpawnTarget spawnTarget, out List<WorldEntity> entities)
+        public ulong SpawnObject(SpawnTarget spawnTarget, List<WorldEntity> entities)
         {
             ulong groupId = 0;
-            entities = new();
 
             ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
             clusterGroup.Initialize();
