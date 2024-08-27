@@ -6,7 +6,11 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -520,6 +524,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             var objectProto = GetPopObject();
             objectProto?.GetContainedEntities( refs );
+        }
+
+        public void EvaluateSpawnProperties(PropertyCollection properties, Region region, MetaGame metaGame)
+        {
+            if (properties == null) return;
+
+            if (RankOverride != PrototypeId.Invalid)
+            {
+                PrototypeId rankRef = RankPrototype.DoOverride(properties[PropertyEnum.Rank], RankOverride);
+                if (rankRef != PrototypeId.Invalid) properties[PropertyEnum.Rank] = rankRef;
+            }
+
+            if (EvalSpawnProperties == null) return;
+            EvalContextData evalContext = new(region.Game);
+            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, metaGame);
+            Eval.RunBool(EvalSpawnProperties, evalContext);
         }
     }
 
