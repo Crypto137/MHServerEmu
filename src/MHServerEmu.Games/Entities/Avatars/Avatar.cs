@@ -1,17 +1,19 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -807,36 +809,146 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Interaction
 
-        public override bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        private bool OLD_HandleBowlingBallItem(Player player)
+        {
+            var bowlingBallProtoRef = (PrototypeId)7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
+            var itemPower = (PrototypeId)18211158277448213692; // BowlingBallItemPower
+                                                               // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
+
+            // Destroy bowling balls that are already present in the player general inventory
+            Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
+
+            // A player can't have more than ten balls
+            if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
+
+            // Give the player a new bowling ball
+            player.Game.LootManager.GiveItem(player, bowlingBallProtoRef);
+
+            // Assign bowling ball power if the player's avatar doesn't have one
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar.HasPowerInPowerCollection(itemPower) == false)
+                avatar.AssignPower(itemPower, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+
+            return true;
+        }
+
+        public override bool UseInteractableObject(ulong entityId, PrototypeId missionRef)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
 
-            if (missionProtoRef != PrototypeId.Invalid)
-            {
+            var region = Region;
+            if (region == null)
+            {   
                 // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
-                Logger.Debug($"UseInteractableObject(): missionProtoRef={missionProtoRef.GetName()}");
-                player.SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+                player.MissionInteractRelease(this, missionRef);
+                return false;
+            }
+
+            if (entityId == InvalidId)
+            {
+                region?.NotificationInteractEvent.Invoke(new(player, missionRef));
+                return true;
             }
 
             var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
-            if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
+            if (interactableObject == null || CanInteract(player, interactableObject) == false)
+            {
+                player.MissionInteractRelease(this, missionRef);
+                return false;
+            }
 
             Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
-            if (interactableObject is Transition transition)
+            // old hardcode
+            if (interactableObject.PrototypeDataRef == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
+                return OLD_HandleBowlingBallItem(player);
+            if (PrototypeName.Contains("DangerRoom")) return false;// fix for scenario crashes                
+            // end
+
+            var objectProto = interactableObject.WorldEntityPrototype;
+            if (objectProto.PreInteractPower != PrototypeId.Invalid)
             {
+                ulong targetId = player.Properties[PropertyEnum.InteractReadyForTargetId];
+                player.Properties.RemoveProperty(PropertyEnum.InteractReadyForTargetId);
+                if (targetId != entityId) return Logger.WarnReturn(false, "UseInteractableObject(): targetId != entityId");
+            }
+
+            if (interactableObject.IsInWorld == false && interactableObject is Item item)
+                item.InteractWithAvatar(this);
+
+            region.PlayerInteractEvent.Invoke(new(player, interactableObject, missionRef));
+
+            if (interactableObject.Properties[PropertyEnum.EntSelActHasInteractOption])
+                interactableObject.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerInteract);
+
+            if (interactableObject is Transition transition)
                 transition.UseTransition(player);
+
+            interactableObject.OnInteractedWith(this);
+
+            return true;
+        }
+
+        private bool CanInteract(Player player, WorldEntity interactableObject)
+        {
+            if (IsAliveInWorld == false) return false;
+
+            if (interactableObject.IsInWorld)
+            {
+                if (InInteractRange(interactableObject, InteractionMethod.Use) == false) return false;
             }
             else
             {
-                // REMOVEME
-                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(player, interactableObject);
+                if (player.Owns(interactableObject.Id) == false) return false;
             }
 
-            return true;
+            InteractData data = null;
+            var iteractionStatus = InteractionManager.CallGetInteractionStatus(new EntityDesc(interactableObject), this, 
+                InteractionOptimizationFlags.None, InteractionFlags.None, ref data);
+            return iteractionStatus != InteractionMethod.None;
+        }
+
+        public override bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
+        {
+            if (IsUsingGamepadInput)
+            {
+                if (IsSingleInteraction(interaction) || interaction.HasFlag(InteractionMethod.Throw) == false) return false;
+                if (IsInWorld == false && interactee.IsInWorld == false) return false;
+                return InGamepadInteractRange(interactee);
+            }
+            return base.InInteractRange(interactee, interaction, interactFallbackRange);
+        }
+
+        public bool InGamepadInteractRange(WorldEntity interactee)
+        {
+            var gamepadGlobals = GameDatabase.GamepadGlobalsPrototype;
+            if (gamepadGlobals == null || RegionLocation.Region == null) return false;
+
+            Vector3 direction = Forward;
+            Vector3 interacteePosition = interactee.RegionLocation.Position;
+            Vector3 avatarPosition = RegionLocation.Position;
+            Vector3 velocity = Vector3.Normalize2D(interacteePosition - avatarPosition);
+
+            float minAngle = Math.Abs(MathHelper.ToDegrees(Vector3.Angle2D(direction, velocity)));
+            float distance = Vector3.Distance2D(interacteePosition, avatarPosition);
+
+            if (distance < Bounds.Radius + gamepadGlobals.GamepadInteractBoundsIncrease)
+                return true;
+
+            if (minAngle < gamepadGlobals.GamepadInteractionHalfAngle)
+            {
+                Bounds capsuleBound = new();
+                capsuleBound.InitializeCapsule(0.0f, 500, BoundsCollisionType.Overlapping, BoundsFlags.None);
+                capsuleBound.Center = avatarPosition + (direction * gamepadGlobals.GamepadInteractionOffset);
+
+                velocity *= gamepadGlobals.GamepadInteractRange + Bounds.Radius;
+                float timeOfIntersection = 1.0f;
+                Vector3? resultNormal = null;
+                return capsuleBound.Sweep(interactee.Bounds, Vector3.Zero, velocity, ref timeOfIntersection, ref resultNormal);
+            }
+
+            return false;
         }
 
         #endregion

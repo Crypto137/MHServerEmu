@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
@@ -236,6 +237,61 @@ namespace MHServerEmu.Games.Entities.Items
                 Properties[PropertyEnum.InventoryStackCount] = newCount;
             else
                 ScheduleDestroyEvent(TimeSpan.Zero);
+        }
+
+        public void InteractWithAvatar(Avatar avatar)
+        {
+            var player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            var itemProto = ItemPrototype;
+
+            if (itemProto.ActionsTriggeredOnItemEvent != null && itemProto.ActionsTriggeredOnItemEvent.Choices.HasValue()) 
+                if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll) // TODO : other pick method
+                {
+                    foreach (var choice in itemProto.ActionsTriggeredOnItemEvent.Choices)
+                    {
+                        if (choice is not ItemActionPrototype itemActionProto) continue;
+                        TriggerActionEvent(itemActionProto, player, avatar);
+                    }
+                }
+        }
+
+        private void TriggerActionEvent(ItemActionPrototype itemActionProto, Player player, Avatar avatar)
+        {
+            if (itemActionProto.TriggeringEvent != ItemEventType.OnUse) return;
+
+            // TODO ItemActionPrototype.ActionType
+
+            if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto)
+                TriggerActionUsePower(avatar, itemActionUsePowerProto.Power);
+        }
+
+        private void TriggerActionUsePower(Avatar avatar, PrototypeId powerRef)
+        {
+            if (avatar.HasPowerInPowerCollection(powerRef) == false)
+                avatar.AssignPower(powerRef, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+
+            // TODO move this to powers
+            Power power = avatar.GetPower(powerRef);
+            if (power == null) return;
+
+            if (power.Prototype is SummonPowerPrototype summonPowerProto)
+            {
+                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
+                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
+                {
+                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
+                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
+                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
+                }
+                else
+                {
+                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto);
+                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = true;
+                    avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
+                }
+            }
         }
     }
 }
