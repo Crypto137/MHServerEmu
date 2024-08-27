@@ -448,6 +448,7 @@ namespace MHServerEmu.Games.Dialog
                         option = CreateOption<MissionConditionMissionCompleteOption>();
                     else
                         option = CreateOption<BaseMissionConditionOption>();
+                    option.Proto = prototype;
 
                     if (missionProto is OpenMissionPrototype openMissionProto)
                         option.EntityFilterWrapper.AddRegionPtrs(openMissionProto.ActiveInRegions);
