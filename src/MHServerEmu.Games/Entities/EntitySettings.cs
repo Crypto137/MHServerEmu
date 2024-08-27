@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -50,7 +49,6 @@ namespace MHServerEmu.Games.Entities
 
         public ArchiveSerializeType ArchiveSerializeType { get; set; } = ArchiveSerializeType.Invalid;
         public byte[] ArchiveData { get; set; }
-        public DBAccount DBAccount { get; set; }    // TODO: Remove this when we have persistent archives
 
         public ulong SourceEntityId { get; set; }
         public Vector3 SourcePosition { get; set; }
@@ -72,6 +70,8 @@ namespace MHServerEmu.Games.Entities
 
         // Class-specific
         public PlayerConnection PlayerConnection { get; set; }      // For Player
+        public string PlayerName { get; set; }
+
         public ItemSpec ItemSpec { get; set; }                      // For Item
         public TimeSpan Lifespan { get; set; }
         public uint VariationSeed { get; set; }

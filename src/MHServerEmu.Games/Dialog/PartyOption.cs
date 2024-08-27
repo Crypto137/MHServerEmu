@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Dialog
                 if (interactingPlayer == null)
                     return Logger.WarnReturn(false, $"PartyInviteOption only works on avatars with a player, but could find one on {interactor.PrototypeName}!");
 
-                isAvailable = interacteeDesc.PlayerName != interactingPlayer.Name;
+                isAvailable = interacteeDesc.PlayerName != interactingPlayer.GetName();
             }
             return isAvailable;
         }

@@ -3,7 +3,6 @@ using System.Data.SQLite;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
-using System.Security.Principal;
 
 namespace MHServerEmu.DatabaseAccess
 {
@@ -56,26 +55,16 @@ namespace MHServerEmu.DatabaseAccess
             using SQLiteConnection connection = new(_connectionString);
             connection.Open();
 
-            // Use a transaction to make sure all data is saved
-            using (var transaction = connection.BeginTransaction())
+            try
             {
-                try
-                {
-                    connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
-                            VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account, transaction);
-
-                    connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar, RawWaypoint, AOIVolume)
-                            VALUES (@AccountId, @RawRegion, @RawAvatar, @RawWaypoint, @AOIVolume)", account.Player, transaction);
-
-                    transaction.Commit();
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorException(e, nameof(InsertAccount));
-                    transaction.Rollback();
-                    return false;
-                }
+                connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
+                        VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(InsertAccount));
+                return false;
             }
         }
 
@@ -106,13 +95,16 @@ namespace MHServerEmu.DatabaseAccess
             {
                 try
                 {
-                    // Update saved player entity
-                    connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar, RawWaypoint=@RawWaypoint, AOIVolume=@AOIVolume WHERE AccountId=@AccountId", account.Player, transaction);
+                    // Update player entity
+                    connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
+                    connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
+                                        StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume",
+                                        account.Player, transaction);
 
                     // Update inventory entities
-                    UpdateEntityTable(connection, transaction, "Avatar", (long)account.Id, account.Avatars);
-                    UpdateEntityTable(connection, transaction, "TeamUp", (long)account.Id, account.TeamUps);
-                    UpdateEntityTable(connection, transaction, "Item", (long)account.Id, account.Items);
+                    UpdateEntityTable(connection, transaction, "Avatar", account.Id, account.Avatars);
+                    UpdateEntityTable(connection, transaction, "TeamUp", account.Id, account.TeamUps);
+                    UpdateEntityTable(connection, transaction, "Item", account.Id, account.Items);
 
                     foreach (DBEntity avatar in account.Avatars)
                     {
@@ -156,14 +148,22 @@ namespace MHServerEmu.DatabaseAccess
         /// </summary>
         private void LoadAccountData(SQLiteConnection connection, DBAccount account)
         {
-            var @params = new { AccountId = account.Id };
+            var @params = new { DbGuid = account.Id };
 
-            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE AccountId = @AccountId", @params);
-            account.Player = players.First();
+            // Load player data
+            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
+            account.Player = players.FirstOrDefault();
+            
+            if (account.Player == null)
+            {
+                account.Player = new(account.Id);
+                Logger.Info($"Initialized player data for account 0x{account.Id:X}");
+            }
 
-            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", (long)account.Id));
-            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", (long)account.Id));
-            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", (long)account.Id));
+            // Load inventory entities
+            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", account.Id));
+            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", account.Id));
+            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", account.Id));
 
             foreach (DBEntity avatar in account.Avatars)
             {

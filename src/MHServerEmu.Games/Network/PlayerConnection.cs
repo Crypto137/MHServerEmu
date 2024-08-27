@@ -14,6 +14,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
+using MHServerEmu.Games.Entities.Persistence;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
@@ -52,7 +53,7 @@ namespace MHServerEmu.Games.Network
 
         public Player Player { get; private set; }
 
-        public ulong PlayerDbId { get => _dbAccount.Id; }
+        public ulong PlayerDbId { get => (ulong)_dbAccount.Id; }
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
@@ -89,19 +90,6 @@ namespace MHServerEmu.Games.Network
         #region Data Management
 
         /// <summary>
-        /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
-        /// </summary>
-        public void UpdateDBAccount()
-        {
-            _dbAccount.Player.RawRegion = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
-            _dbAccount.Player.RawWaypoint = (long)TransferParams.DestTargetProtoRef;
-            _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
-
-            Player.SaveToDBAccount(_dbAccount);
-            Logger.Trace($"Updated DBAccount {_dbAccount}");
-        }
-
-        /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
         private void InitializeFromDBAccount()
@@ -111,20 +99,38 @@ namespace MHServerEmu.Games.Network
             // Initialize transfer params
             // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
             // We should get rid of saving waypoint refs and just use connection targets.
-            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.RawWaypoint, (PrototypeId)_dbAccount.Player.RawRegion);
+            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget, (PrototypeId)_dbAccount.Player.StartTargetRegionOverride);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
             EntitySettings playerSettings = new();
-            playerSettings.DbGuid = _dbAccount.Id;
+            playerSettings.DbGuid = (ulong)_dbAccount.Id;
             playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
             playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
             playerSettings.PlayerConnection = this;
+            playerSettings.PlayerName = _dbAccount.PlayerName;
+            playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
+            playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
 
             Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
-            Player.LoadFromDBAccount(_dbAccount);
+
+            // Add all badges to admin accounts
+            if (_dbAccount.UserLevel == AccountUserLevel.Admin)
+            {
+                for (var badge = AvailableBadges.CanGrantBadges; badge < AvailableBadges.NumberOfBadges; badge++)
+                    Player.AddBadge(badge);
+            }
+
+            PersistenceHelper.RestoreInventoryEntities(Player, _dbAccount);
+
+            // HACK/REMOVEME: Unlock all stash tabs for new players
+            if (_dbAccount.Player.ArchiveData == null)
+            {
+                foreach (PrototypeId stashRef in Player.GetStashInventoryProtoRefs(true, false))
+                    Player.UnlockInventory(stashRef);
+            }
 
             if (Player.CurrentAvatar == null)
             {
@@ -141,7 +147,6 @@ namespace MHServerEmu.Games.Network
                     EntitySettings avatarSettings = new();
                     avatarSettings.EntityRef = avatarRef;
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
-                    avatarSettings.DBAccount = _dbAccount;
 
                     Game.EntityManager.CreateEntity(avatarSettings);
                 }
@@ -166,6 +171,26 @@ namespace MHServerEmu.Games.Network
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
+        /// </summary>
+        private void UpdateDBAccount()
+        {
+            using (Archive archive = new(ArchiveSerializeType.Database))
+            {
+                Player.Serialize(archive);
+                _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+            }
+
+            _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
+            _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+            _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
+
+            PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
+
+            Logger.Trace($"Updated DBAccount {_dbAccount}");
         }
 
         #endregion

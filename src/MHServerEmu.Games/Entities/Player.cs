@@ -12,7 +12,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
-using MHServerEmu.Games.Entities.Persistence;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -123,7 +122,6 @@ namespace MHServerEmu.Games.Entities
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
         public GuildMembership GuildMembership { get; internal set; }
-        public string Name { get; internal set; }
 
         public Player(Game game) : base(game)
         {
@@ -136,6 +134,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             PlayerConnection = settings.PlayerConnection;
+            _playerName.Set(settings.PlayerName);
 
             _shardId = 3;   // value from packet dumps
 
@@ -151,87 +150,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        protected override void BindReplicatedFields()
+        public override void OnPostInit(EntitySettings settings)
         {
-            base.BindReplicatedFields();
+            base.OnPostInit(settings);
 
-            _avatarProperties.Bind(this, AOINetworkPolicyValues.AOIChannelOwner);
-            _playerName.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
-            _partyId.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
-        }
-
-        protected override void UnbindReplicatedFields()
-        {
-            base.UnbindReplicatedFields();
-
-            _avatarProperties.Unbind();
-            _playerName.Unbind();
-            _partyId.Unbind();
-        }
-
-        public override bool Serialize(Archive archive)
-        {
-            bool success = base.Serialize(archive);
-
-            success &= Serializer.Transfer(archive, ref _missionManager);
-            success &= Serializer.Transfer(archive, ref _avatarProperties);
-
-            if (archive.IsTransient)
-            {
-                success &= Serializer.Transfer(archive, ref _shardId);
-                success &= Serializer.Transfer(archive, ref _playerName);
-                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
-                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
-                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
-                success &= Serializer.Transfer(archive, ref _matchQueueStatus);
-                success &= Serializer.Transfer(archive, ref _emailVerified);
-                success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
-
-                if (archive.IsReplication)
-                {
-                    success &= Serializer.Transfer(archive, ref _partyId);
-                    success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
-
-                    // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
-                    string emptyString = string.Empty;
-                    success &= Serializer.Transfer(archive, ref emptyString);
-                    if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
-                }
-            }
-
-            bool hasCommunityData = archive.IsPersistent || archive.IsMigration ||
-                (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner));
-            success &= Serializer.Transfer(archive, ref hasCommunityData);
-            if (hasCommunityData)
-                success &= Serializer.Transfer(archive, ref _community);
-
-            // Unknown bool, always false
-            bool unkBool = false;
-            success &= Serializer.Transfer(archive, ref unkBool);
-            if (unkBool) Logger.Warn($"Serialize(): unkBool is true!");
-
-            success &= Serializer.Transfer(archive, ref _unlockedInventoryList);
-
-            if (archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
-                success &= Serializer.Transfer(archive, ref _badges);
-
-            success &= Serializer.Transfer(archive, ref _gameplayOptions);
-
-            if (archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
-                success &= Serializer.Transfer(archive, ref _achievementState);
-
-            success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
-
-            return success;
-        }
-
-        /// <summary>
-        /// Initializes this <see cref="Player"/> from data contained in the provided <see cref="DBAccount"/>.
-        /// </summary>
-        public void LoadFromDBAccount(DBAccount dbAccount)
-        {
-            // Adjust properties
-            Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits] = dbAccount.Player.Credits;
+            // TODO: Clean this up
+            //---
 
             foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -266,9 +190,6 @@ namespace MHServerEmu.Games.Entities
                     _missionManager.InsertMission(mission);
                 }
             }
-
-            // Set name
-            _playerName.Set(dbAccount.PlayerName);    // NOTE: This is used for highlighting your name in leaderboards
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -332,22 +253,117 @@ namespace MHServerEmu.Games.Entities
                 .Build());
             #endregion
 
-            // Initialize and unlock stash tabs
+            // Initialize
             OnEnterGameInitStashTabOptions();
-            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(true, false))
-                UnlockInventory(stashRef);
-
-            // Add all badges to admin accounts
-            if (dbAccount.UserLevel == AccountUserLevel.Admin)
-            {
-                for (var badge = AvailableBadges.CanGrantBadges; badge < AvailableBadges.NumberOfBadges; badge++)
-                    AddBadge(badge);
-            }
 
             _gameplayOptions.ResetToDefaults();
+        }
 
-            // Restore inventory entities
-            PersistenceHelper.RestoreInventoryEntities(this, dbAccount);
+        public override void OnUnpackComplete(Archive archive)
+        {
+            base.OnUnpackComplete(archive);
+
+            foreach (PrototypeId invProtoRef in _unlockedInventoryList)
+            {
+                PlayerStashInventoryPrototype stashInvProto = GameDatabase.GetPrototype<PlayerStashInventoryPrototype>(invProtoRef);
+                if (stashInvProto == null)
+                {
+                    Logger.Warn("OnUnpackComplete(): stashInvProto == null");
+                    continue;
+                }
+
+                if (stashInvProto.IsPlayerStashInventory && IsUsingUnifiedStash == false && stashInvProto.ConvenienceLabel == InventoryConvenienceLabel.UnifiedStash)
+                    continue;
+
+                Inventory inventory = GetInventoryByRef(invProtoRef);
+                if (inventory == null && AddInventory(invProtoRef) == false)
+                    Logger.Warn($"OnUnpackComplete(): Failed to add inventory, invProtoRef={invProtoRef.GetName()}");
+            }
+        }
+
+        protected override void BindReplicatedFields()
+        {
+            base.BindReplicatedFields();
+
+            _avatarProperties.Bind(this, AOINetworkPolicyValues.AOIChannelOwner);
+            _playerName.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+            _partyId.Bind(this, AOINetworkPolicyValues.AOIChannelParty | AOINetworkPolicyValues.AOIChannelOwner);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _avatarProperties.Unbind();
+            _playerName.Unbind();
+            _partyId.Unbind();
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+
+            if (archive.IsTransient)    // REMOVEME/TODO: Persistent missions
+                success &= Serializer.Transfer(archive, ref _missionManager);
+
+            success &= Serializer.Transfer(archive, ref _avatarProperties);
+
+            if (archive.IsTransient)
+            {
+                success &= Serializer.Transfer(archive, ref _shardId);
+                success &= Serializer.Transfer(archive, ref _playerName);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
+                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+                success &= Serializer.Transfer(archive, ref _matchQueueStatus);
+                success &= Serializer.Transfer(archive, ref _emailVerified);
+                success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
+
+                if (archive.IsReplication)
+                {
+                    success &= Serializer.Transfer(archive, ref _partyId);
+                    success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+
+                    // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
+                    string emptyString = string.Empty;
+                    success &= Serializer.Transfer(archive, ref emptyString);
+                    if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
+                }
+            }
+
+            bool hasCommunityData = /* archive.IsPersistent || */ archive.IsMigration ||    // REMOVEME/TODO: Persistent communities
+                (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner));
+            success &= Serializer.Transfer(archive, ref hasCommunityData);
+            if (hasCommunityData)
+                success &= Serializer.Transfer(archive, ref _community);
+
+            // Unknown bool, always false
+            bool unkBool = false;
+            success &= Serializer.Transfer(archive, ref unkBool);
+            if (unkBool) Logger.Warn($"Serialize(): unkBool is true!");
+
+            success &= Serializer.Transfer(archive, ref _unlockedInventoryList);
+
+            if (archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
+                success &= Serializer.Transfer(archive, ref _badges);
+
+            success &= Serializer.Transfer(archive, ref _gameplayOptions);
+
+            // REMOVEME/TODO?: It seems achievement state is not supposed to be saved within player archives?
+            if (archive.IsPersistent || archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
+                success &= Serializer.Transfer(archive, ref _achievementState);
+
+            success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
+
+            return success;
+        }
+
+        /// <summary>
+        /// Initializes this <see cref="Player"/> from data contained in the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public void LoadFromDBAccount(DBAccount dbAccount)
+        {
+
         }
 
         public void TEMP_FinalizeAvatars()
@@ -375,15 +391,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
-        }
-
-        public void SaveToDBAccount(DBAccount dbAccount)
-        {
-            dbAccount.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
-            dbAccount.Player.Credits = Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits];
-
-            // Save entities stored in this player's inventories
-            PersistenceHelper.StoreInventoryEntities(this, dbAccount);
         }
 
         public override void EnterGame(EntitySettings settings = null)

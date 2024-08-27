@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using MHServerEmu.Core.Config;
+﻿using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
@@ -19,10 +18,9 @@ namespace MHServerEmu.DatabaseAccess.Models
     public class DBAccount
     {
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
+        private static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
 
-        public static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
-
-        public ulong Id { get; set; }
+        public long Id { get; set; }
         public string Email { get; set; }
         public string PlayerName { get; set; }
         public byte[] PasswordHash { get; set; }
@@ -49,7 +47,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         /// </summary>
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
-            Id = IdGenerator.Generate();
+            Id = (long)IdGenerator.Generate();
             Email = email;
             PlayerName = playerName;
             PasswordHash = CryptographyHelper.HashPassword(password, out byte[] salt);
@@ -58,27 +56,18 @@ namespace MHServerEmu.DatabaseAccess.Models
             IsBanned = false;
             IsArchived = false;
             IsPasswordExpired = false;
-
-            InitializeData();
         }
 
         /// <summary>
         /// Constructs a default <see cref="DBAccount"/> instance with the provided data.
         /// </summary>
-        public DBAccount(string playerName, long region, long waypoint, long avatar, int volume)
+        public DBAccount(string playerName)
         {
             // Default account is used when BypassAuth is enabled
             Id = 0x2000000000000001;
             Email = "default@mhserveremu";
             PlayerName = playerName;
             UserLevel = AccountUserLevel.Admin;
-
-            InitializeData();
-
-            Player.RawRegion = region;
-            Player.RawWaypoint = waypoint;
-            Player.RawAvatar = avatar;
-            Player.AOIVolume = volume;
         }
 
         public override string ToString()
@@ -93,11 +82,6 @@ namespace MHServerEmu.DatabaseAccess.Models
             TeamUps.Clear();
             Items.Clear();
             ControlledEntities.Clear();
-        }
-
-        private void InitializeData()
-        {
-            Player = new(Id);
         }
     }
 }

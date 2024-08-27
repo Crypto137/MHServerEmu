@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;

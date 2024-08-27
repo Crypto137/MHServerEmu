@@ -14,21 +14,16 @@ namespace MHServerEmu.PlayerManagement.Configs
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public string PlayerName { get; private set; } = "Player";
-        public string StartingRegion { get; private set; } = "Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype";
-        public string StartingWaypoint { get; private set; } = "Waypoints/HUBS/NPEAvengersTowerHub.prototype";
-        public string StartingAvatar { get; private set; } = "Entity/Characters/Avatars/Shipping/BlackCat.prototype";
-        public int AOIVolume { get; private set; } = 3200;
 
         /// <summary>
         /// Returns a new <see cref="DBAccount"/> instance with data based on this <see cref="DefaultPlayerDataConfig"/>.
         /// </summary>
         public DBAccount InitializeDefaultAccount()
         {
-            ulong regionId = HashHelper.HashPath(StartingRegion.ToCalligraphyPath());
-            ulong waypointId = HashHelper.HashPath(StartingWaypoint.ToCalligraphyPath());
-            ulong avatarId = HashHelper.HashPath(StartingAvatar.ToCalligraphyPath());
+            DBAccount account = new(PlayerName);
+            account.Player = new(account.Id);
 
-            return new(PlayerName, (long)regionId, (long)waypointId, (long)avatarId, AOIVolume);
+            return account;
         }
     }
 }
