@@ -135,6 +135,7 @@ namespace MHServerEmu.Games.Populations
                 Properties.FlattenCopyFrom(properties, false);
                 MissionRef = properties[PropertyEnum.MissionPrototype];
             }
+            Region.EvalRegionProperties(populationObject.EvalSpawnProperties, Properties);
 
             Objects = new();
             SubObjectRadiusMax = 0.0f;
@@ -996,6 +997,7 @@ namespace MHServerEmu.Games.Populations
                 spec.AppendActions(EntityProto.EntitySelectorActions);
             if (EntitySelectorProto != null)
             {
+                Region.EvalRegionProperties(EntitySelectorProto.EvalSpawnProperties, spec.Properties);
                 spec.AppendActions(EntitySelectorProto.EntitySelectorActions);
                 if (EntitySelectorProto.IgnoreMissionOwnerForTargeting)
                     spec.Properties[PropertyEnum.IgnoreMissionOwnerForTargeting] = true;

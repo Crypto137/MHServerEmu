@@ -1544,6 +1544,16 @@ namespace MHServerEmu.Games.Regions
                 Properties.RemoveProperty(startPropId);
             }
         }
+
+        public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
+        {
+            if (evalProto != null) return;
+
+            EvalContextData evalContext = new(Game);
+            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Properties);
+            Eval.RunBool(evalProto, evalContext);
+        }
     }
 
     public class RandomPositionPredicate    // TODO: Change to interface / struct
