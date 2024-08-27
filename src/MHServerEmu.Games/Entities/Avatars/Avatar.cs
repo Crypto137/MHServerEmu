@@ -713,7 +713,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsValidTargetForCurrentPower(WorldEntity target)
         {
-            throw new NotImplementedException();
+            if (_pendingAction.PowerProtoRef != PrototypeId.Invalid && IsInPendingActionState(PendingActionState.Targeting))
+            {
+                var power = GetPower(_pendingAction.PowerProtoRef);
+                if (power == null) return false;
+                return power.IsValidTarget(target);
+            }
+            else
+                return IsHostileTo(target);
         }
 
         private bool AssignDefaultAvatarPowers()
