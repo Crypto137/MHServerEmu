@@ -259,16 +259,22 @@ namespace MHServerEmu.Games.Entities
 
                     Game.LootManager.DropRandomLoot(this, player);
                 }
+
+                if (killer is Avatar avatar)
+                {
+                    Player player = avatar.GetOwnerOfType<Player>();
+                    Region?.EntityDeadEvent.Invoke(new(this, killer, player));
+                }
             }
 
             // HACK: Schedule respawn in public zones using SpawnSpec
-            if (RegionLocation.Region != null && RegionLocation.Region.IsPublic && SpawnSpec != null)
+            /*if (RegionLocation.Region != null && RegionLocation.Region.IsPublic && SpawnSpec != null)
             {
                 Logger.Trace($"Respawn scheduled for {this}");
                 EventPointer<TEMP_SpawnEntityEvent> eventPointer = new();
                 Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
                 eventPointer.Get().Initialize(SpawnSpec);
-            }
+            }*/
 
             // Set death state properties
             Properties[PropertyEnum.IsDead] = true;
