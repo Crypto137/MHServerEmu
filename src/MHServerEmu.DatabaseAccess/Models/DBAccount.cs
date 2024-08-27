@@ -90,7 +90,9 @@ namespace MHServerEmu.DatabaseAccess.Models
         public void ClearEntities()
         {
             Avatars.Clear();
+            TeamUps.Clear();
             Items.Clear();
+            ControlledEntities.Clear();
         }
 
         private void InitializeData()

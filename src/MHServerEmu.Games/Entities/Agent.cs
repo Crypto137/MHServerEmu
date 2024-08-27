@@ -558,8 +558,21 @@ namespace MHServerEmu.Games.Entities
 
         protected override bool InitInventories(bool populateInventories)
         {
-            // TODO
-            return base.InitInventories(populateInventories);
+            bool success = base.InitInventories(populateInventories);
+
+            if (Prototype is AgentTeamUpPrototype teamUpAgentProto && teamUpAgentProto.EquipmentInventories.HasValue())
+            {
+                foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in teamUpAgentProto.EquipmentInventories)
+                {
+                    if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
+                    {
+                        success = false;
+                        Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
+                    }
+                }
+            }
+
+            return success;
         }
 
         #endregion

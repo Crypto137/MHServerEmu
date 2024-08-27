@@ -149,17 +149,21 @@ namespace MHServerEmu.Games.Network
 
             Player.TEMP_FinalizeAvatars();
 
-            // Create team-up entities
+            // Create team-up entities if there are none
+            // REMOVEME: Let players buy team-ups from the store instead
             if (Game.GameOptions.TeamUpSystemEnabled)
             {
                 Inventory teamUpLibrary = Player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-                foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                if (teamUpLibrary.Count == 0)
                 {
-                    EntitySettings teamUpSettings = new();
-                    teamUpSettings.EntityRef = teamUpRef;
-                    teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
+                    foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                    {
+                        EntitySettings teamUpSettings = new();
+                        teamUpSettings.EntityRef = teamUpRef;
+                        teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
-                    Game.EntityManager.CreateEntity(teamUpSettings);
+                        Game.EntityManager.CreateEntity(teamUpSettings);
+                    }
                 }
             }
         }

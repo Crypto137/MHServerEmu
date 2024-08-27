@@ -180,6 +180,11 @@ namespace MHServerEmu.Games.Entities.Avatars
                 abilityKeyMapping.SlotDefaultAbilities(this);
                 _abilityKeyMappingList.Add(abilityKeyMapping);
             }
+
+            // HACK/REMOVEME: Remove team up properties since they are buggy now
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpAgent);
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
         }
 
         protected override void BindReplicatedFields()

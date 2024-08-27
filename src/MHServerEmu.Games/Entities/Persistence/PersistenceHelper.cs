@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.Entities.Persistence
         public static void RestoreInventoryEntities(Player player, DBAccount dbAccount)
         {
             RestoreContainer(player, dbAccount.Avatars);
+            RestoreContainer(player, dbAccount.TeamUps);
             RestoreContainer(player, dbAccount.Items);
 
             foreach (Avatar avatar in new AvatarIterator(player))
@@ -130,7 +131,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
                 entities.Add(dbEntity);
 
-                Logger.Debug($"StoreInventory(): Archived entity {entity}");
+                //Logger.Debug($"StoreInventory(): Archived entity {entity}");
             }
 
             return true;
