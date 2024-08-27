@@ -2134,6 +2134,21 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public bool DiscoveredForPlayer(Player player)
+        {
+            if (IsDiscoverable == false) return false;
+            var playerRegion = player.GetRegion();
+            if (playerRegion != null && playerRegion == Region && playerRegion.IsEntityDiscovered(this)) return true;
+            if (player.IsEntityDiscovered(this) && WorldEntityPrototype?.ObjectiveInfo?.TrackAfterDiscovery == true) return true;
+            return false;
+        }
+
+        public void OnInteractedWith(WorldEntity other)
+        {
+            if (WorldEntityPrototype.PostInteractState != null)
+                ApplyStateFromPrototype(WorldEntityPrototype.PostInteractState);
+        }
+
         #region Scheduled Events
 
         public override bool ScheduleDestroyEvent(TimeSpan delay)
@@ -2159,15 +2174,6 @@ namespace MHServerEmu.Games.Entities
         {
             if (_exitWorldEvent.IsValid)
                 Game?.GameEventScheduler?.CancelEvent(_exitWorldEvent);
-        }
-
-        public bool DiscoveredForPlayer(Player player)
-        {
-            if (IsDiscoverable == false) return false;
-            var playerRegion = player.GetRegion();
-            if (playerRegion != null && playerRegion == Region && playerRegion.IsEntityDiscovered(this)) return true;
-            if (player.IsEntityDiscovered(this) && WorldEntityPrototype?.ObjectiveInfo?.TrackAfterDiscovery == true) return true;
-            return false;
         }
 
         protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>

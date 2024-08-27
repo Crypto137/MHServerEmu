@@ -346,6 +346,21 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void ApplyStateFromPrototype(StateChangePrototype stateProto)
+        {
+            if (stateProto is StateSetPrototype setProto)
+                SetState(setProto.State);
+
+            if (stateProto is StateTogglePrototype toongleProto)
+            {
+                PrototypeId stateRef = Properties[PropertyEnum.EntityState];
+                if (stateRef == toongleProto.StateA)
+                    SetState(toongleProto.StateA);
+                else if (stateRef == toongleProto.StateB)
+                    SetState(toongleProto.StateB);
+            }
+        }
+
         public void SetState(PrototypeId stateRef)
         {
             PrototypeId oldStateRef = Properties[PropertyEnum.EntityState];
