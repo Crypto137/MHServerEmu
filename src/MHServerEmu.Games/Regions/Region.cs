@@ -1547,8 +1547,7 @@ namespace MHServerEmu.Games.Regions
 
         public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
         {
-            if (evalProto != null) return;
-
+            if (evalProto == null) return;
             EvalContextData evalContext = new(Game);
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Properties);
