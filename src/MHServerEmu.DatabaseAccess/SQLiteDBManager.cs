@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
+using System.Security.Principal;
 
 namespace MHServerEmu.DatabaseAccess
 {
@@ -110,7 +111,19 @@ namespace MHServerEmu.DatabaseAccess
 
                     // Update inventory entities
                     UpdateEntityTable(connection, transaction, "Avatar", (long)account.Id, account.Avatars);
+                    UpdateEntityTable(connection, transaction, "TeamUp", (long)account.Id, account.TeamUps);
                     UpdateEntityTable(connection, transaction, "Item", (long)account.Id, account.Items);
+
+                    foreach (DBEntity avatar in account.Avatars)
+                    {
+                        UpdateEntityTable(connection, transaction, "Item", avatar.DbGuid, account.Items);
+                        UpdateEntityTable(connection, transaction, "ControlledEntity", avatar.DbGuid, account.ControlledEntities);
+                    }
+
+                    foreach (DBEntity teamUp in account.TeamUps)
+                    {
+                        UpdateEntityTable(connection, transaction, "Item", teamUp.DbGuid, account.Items);
+                    }
 
                     transaction.Commit();
                     return true;
@@ -148,11 +161,26 @@ namespace MHServerEmu.DatabaseAccess
             var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE AccountId = @AccountId", @params);
             account.Player = players.First();
 
-            var avatars = connection.Query<DBEntity>("SELECT * FROM Avatar WHERE ContainerDbGuid = @AccountId", @params);
-            account.Avatars.AddRange(avatars);
+            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", (long)account.Id));
+            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", (long)account.Id));
+            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", (long)account.Id));
 
-            var items = connection.Query<DBEntity>("SELECT * FROM Item WHERE ContainerDbGuid = @AccountId", @params);
-            account.Items.AddRange(items);
+            foreach (DBEntity avatar in account.Avatars)
+            {
+                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", avatar.DbGuid));
+                account.ControlledEntities.AddRange(LoadEntitiesFromTable(connection, "ControlledEntity", avatar.DbGuid));
+            }
+
+            foreach (DBEntity teamUp in account.TeamUps)
+            {
+                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", teamUp.DbGuid));
+            }
+        }
+
+        private static IEnumerable<DBEntity> LoadEntitiesFromTable(SQLiteConnection connection, string tableName, long containerDbGuid)
+        {
+            var @params = new { ContainerDbGuid = containerDbGuid };
+            return connection.Query<DBEntity>($"SELECT * FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid", @params);
         }
 
         private static void UpdateEntityTable(SQLiteConnection connection, SQLiteTransaction transaction, string tableName,

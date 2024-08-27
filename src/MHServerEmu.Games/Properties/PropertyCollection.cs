@@ -830,7 +830,7 @@ namespace MHServerEmu.Games.Properties
                 PropertyStore propertyStore = new();
                 success |= propertyStore.Serialize(ref id, ref value, this, archive);
 
-                Logger.Debug($"SerializePropertyForPacking(): Packed {id} for persistent storage");
+                //Logger.Debug($"SerializePropertyForPacking(): Packed {id} for persistent storage");
             }
             else
             {

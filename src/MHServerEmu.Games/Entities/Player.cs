@@ -1,5 +1,4 @@
-﻿using System.Security.Principal;
-using System.Text;
+﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
@@ -229,10 +228,10 @@ namespace MHServerEmu.Games.Entities
         /// <summary>
         /// Initializes this <see cref="Player"/> from data contained in the provided <see cref="DBAccount"/>.
         /// </summary>
-        public void LoadFromDBAccount(DBAccount account)
+        public void LoadFromDBAccount(DBAccount dbAccount)
         {
             // Adjust properties
-            Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits] = account.Player.Credits;
+            Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits] = dbAccount.Player.Credits;
 
             foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -269,7 +268,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Set name
-            _playerName.Set(account.PlayerName);    // NOTE: This is used for highlighting your name in leaderboards
+            _playerName.Set(dbAccount.PlayerName);    // NOTE: This is used for highlighting your name in leaderboards
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -339,7 +338,7 @@ namespace MHServerEmu.Games.Entities
                 UnlockInventory(stashRef);
 
             // Add all badges to admin accounts
-            if (account.UserLevel == AccountUserLevel.Admin)
+            if (dbAccount.UserLevel == AccountUserLevel.Admin)
             {
                 for (var badge = AvailableBadges.CanGrantBadges; badge < AvailableBadges.NumberOfBadges; badge++)
                     AddBadge(badge);
@@ -347,8 +346,8 @@ namespace MHServerEmu.Games.Entities
 
             _gameplayOptions.ResetToDefaults();
 
-            // TEMP - Test item loading
-            PersistenceHelper.RestoreInventoryEntities(account, this);
+            // Restore inventory entities
+            PersistenceHelper.RestoreInventoryEntities(this, dbAccount);
         }
 
         public void TEMP_FinalizeAvatars()
@@ -378,14 +377,13 @@ namespace MHServerEmu.Games.Entities
             _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
         }
 
-        public void SaveToDBAccount(DBAccount account)
+        public void SaveToDBAccount(DBAccount dbAccount)
         {
-            account.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
-
-            account.Player.Credits = Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits];
+            dbAccount.Player.RawAvatar = (long)CurrentAvatar.Prototype.DataRef;
+            dbAccount.Player.Credits = Properties[PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits];
 
             // Save entities stored in this player's inventories
-            PersistenceHelper.StoreInventoryEntities(account, this);
+            PersistenceHelper.StoreInventoryEntities(this, dbAccount);
         }
 
         public override void EnterGame(EntitySettings settings = null)

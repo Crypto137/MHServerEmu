@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 
@@ -11,32 +12,70 @@ namespace MHServerEmu.Games.Entities.Persistence
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static void StoreInventoryEntities(DBAccount dbAccount, Player player)
+        public static void StoreInventoryEntities(Player player, DBAccount dbAccount)
         {
             dbAccount.ClearEntities();
 
-            foreach (Inventory inventory in new InventoryIterator(player))
-            {
-                if (inventory.Prototype.PersistedToDatabase == false)
-                    continue;
+            StoreContainer(player, dbAccount);
 
-                StoreInventory(dbAccount, inventory);
+            foreach (Avatar avatar in new AvatarIterator(player))
+            {
+                StoreContainer(avatar, dbAccount);
             }
 
-            // TODO: avatar and team-up equipment
+            foreach (var entry in player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
+            {
+                Agent teamUp = player.Game.EntityManager.GetEntity<Agent>(entry.Id);
+                if (teamUp == null)
+                {
+                    Logger.Warn("StoreInventoryEntities(): teamUp == null");
+                    continue;
+                }
+
+                StoreContainer(teamUp, dbAccount);
+            }
         }
 
-        public static void RestoreInventoryEntities(DBAccount dbAccount, Player player)
+        public static void RestoreInventoryEntities(Player player, DBAccount dbAccount)
         {
             RestoreContainer(player, dbAccount.Avatars);
             RestoreContainer(player, dbAccount.Items);
 
-            // TODO: avatar and team-up equipment
+            foreach (Avatar avatar in new AvatarIterator(player))
+            {
+                RestoreContainer(avatar, dbAccount.Items);
+                RestoreContainer(avatar, dbAccount.ControlledEntities);
+            }
+
+            foreach (var entry in player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
+            {
+                Agent teamUp = player.Game.EntityManager.GetEntity<Agent>(entry.Id);
+                if (teamUp == null)
+                {
+                    Logger.Warn("RestoreInventoryEntities(): teamUp == null");
+                    continue;
+                }
+
+                RestoreContainer(teamUp, dbAccount.Items);
+            }
         }
 
-        private static bool StoreInventory(DBAccount dbAccount, Inventory inventory)
+        private static bool StoreContainer(Entity container, DBAccount dbAccount)
         {
-            if (inventory == null) return Logger.WarnReturn(false, "ArchiveInventory(): inventory == null");
+            foreach (Inventory inventory in new InventoryIterator(container))
+            {
+                if (inventory.Prototype.PersistedToDatabase == false)
+                    continue;
+
+                StoreInventory(inventory, dbAccount);
+            }
+
+            return true;
+        }
+
+        private static bool StoreInventory(Inventory inventory, DBAccount dbAccount)
+        {
+            if (inventory == null) return Logger.WarnReturn(false, "StoreInventory(): inventory == null");
 
             DBEntityCollection entities;
 
@@ -46,11 +85,11 @@ namespace MHServerEmu.Games.Entities.Persistence
             }
             else if (inventory.ConvenienceLabel == InventoryConvenienceLabel.TeamUpLibrary)
             {
-                return Logger.WarnReturn(false, $"ArchiveInventory(): Skipping team-up inventory for {inventory.Owner}");
+                entities = dbAccount.TeamUps;
             }
             else if (inventory.ConvenienceLabel == InventoryConvenienceLabel.Controlled)
             {
-                return Logger.WarnReturn(false, $"ArchiveInventory(): Skipping controlled inventory for {inventory.Owner}");
+                entities = dbAccount.ControlledEntities;
             }
             else
             {
@@ -67,7 +106,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 
                 if (entity == null)
                 {
-                    Logger.Warn("ArchiveInventory(): entity == null");
+                    Logger.Warn("StoreInventory(): entity == null");
                     continue;
                 }
 
@@ -82,7 +121,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 {
                     if (Serializer.Transfer(archive, ref entity) == false)
                     {
-                        Logger.Error($"ArchiveInventory(): Failed to serialize entity {entity}");
+                        Logger.Error($"StoreInventory(): Failed to serialize entity {entity}");
                         continue;
                     }
 
@@ -90,6 +129,8 @@ namespace MHServerEmu.Games.Entities.Persistence
                 }
 
                 entities.Add(dbEntity);
+
+                Logger.Debug($"StoreInventory(): Archived entity {entity}");
             }
 
             return true;
