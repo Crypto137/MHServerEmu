@@ -117,19 +117,19 @@ namespace MHServerEmu.DatabaseAccess
                     // Update all avatar entities
                     connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars.Values, transaction);
 
-                    // TEST - save items
+                    // Update items
                     var @params = new { ContainerDbGuid = account.Id };
 
                     // Delete items that no longer belong to this account
                     var storedItems = connection.Query<long>("SELECT DbGuid FROM Item WHERE ContainerDbGuid = @ContainerDbGuid", @params);
-                    var itemsToDelete = storedItems.Except(account.ItemDict.Keys);
+                    var itemsToDelete = storedItems.Except(account.Items.Guids);
                     connection.Execute($"DELETE FROM Item WHERE DbGuid IN ({string.Join(',', itemsToDelete)})");
 
-                    // Update items
-                    connection.Execute(@"INSERT OR IGNORE INTO Item (DbGuid) VALUES (@DbGuid)", account.ItemDict.Values, transaction);
+                    // Insert and update
+                    connection.Execute(@"INSERT OR IGNORE INTO Item (DbGuid) VALUES (@DbGuid)", account.Items.Entries, transaction);
                     connection.Execute(@"UPDATE Item SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
                                         Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
-                                        account.ItemDict.Values, transaction);
+                                        account.Items.Entries, transaction);
 
                     transaction.Commit();
                     return true;
@@ -172,8 +172,7 @@ namespace MHServerEmu.DatabaseAccess
                 account.Avatars.Add(avatar.RawPrototype, avatar);
 
             var items = connection.Query<DBEntity>("SELECT * FROM Item WHERE ContainerDbGuid = @AccountId", @params);
-            foreach (DBEntity item in items)
-                account.ItemDict.Add(item.DbGuid, item);
+            account.Items.AddRange(items);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         public static void StoreInventoryEntities(DBAccount dbAccount, Player player)
         {
-            dbAccount.ItemDict.Clear();
+            dbAccount.Items.Clear();
 
             foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral))
                 ArchiveInventory(dbAccount, inventory);
@@ -30,6 +30,21 @@ namespace MHServerEmu.Games.Entities.Persistence
         private static bool ArchiveInventory(DBAccount dbAccount, Inventory inventory)
         {
             if (inventory == null) return Logger.WarnReturn(false, "ArchiveInventory(): inventory == null");
+
+            DBEntityCollection entities = null;
+
+            if (inventory.Category == InventoryCategory.PlayerAvatars)
+            {
+                return Logger.WarnReturn(false, $"ArchiveInventory(): Skipping avatar inventory for {inventory.Owner}");
+            }
+            else if (inventory.ConvenienceLabel == InventoryConvenienceLabel.Controlled)
+            {
+                return Logger.WarnReturn(false, $"ArchiveInventory(): Skipping controlled inventory for {inventory.Owner}");
+            }
+            else
+            {
+                entities = dbAccount.Items;
+            }
 
             // Common data everything stored in this inventory
             long containerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
@@ -63,7 +78,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                     dbEntity.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
-                dbAccount.ItemDict.Add(dbEntity.DbGuid, dbEntity);
+                entities.Add(dbEntity);
             }
 
             return true;
@@ -76,7 +91,7 @@ namespace MHServerEmu.Games.Entities.Persistence
             long ownerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
             ulong containerEntityId = inventory.Owner.Id;
 
-            foreach (DBEntity dbEntity in dbAccount.ItemDict.Values)
+            foreach (DBEntity dbEntity in dbAccount.Items.Entries)
             {
                 if (dbEntity.ContainerDbGuid != ownerDbGuid)
                 {
