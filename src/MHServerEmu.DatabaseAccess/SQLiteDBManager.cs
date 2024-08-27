@@ -118,18 +118,7 @@ namespace MHServerEmu.DatabaseAccess
                     connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars.Values, transaction);
 
                     // Update items
-                    var @params = new { ContainerDbGuid = account.Id };
-
-                    // Delete items that no longer belong to this account
-                    var storedItems = connection.Query<long>("SELECT DbGuid FROM Item WHERE ContainerDbGuid = @ContainerDbGuid", @params);
-                    var itemsToDelete = storedItems.Except(account.Items.Guids);
-                    connection.Execute($"DELETE FROM Item WHERE DbGuid IN ({string.Join(',', itemsToDelete)})");
-
-                    // Insert and update
-                    connection.Execute(@"INSERT OR IGNORE INTO Item (DbGuid) VALUES (@DbGuid)", account.Items.Entries, transaction);
-                    connection.Execute(@"UPDATE Item SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
-                                        Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
-                                        account.Items.Entries, transaction);
+                    UpdateEntityTable(connection, transaction, "Item", (long)account.Id, account.Items);
 
                     transaction.Commit();
                     return true;
@@ -173,6 +162,25 @@ namespace MHServerEmu.DatabaseAccess
 
             var items = connection.Query<DBEntity>("SELECT * FROM Item WHERE ContainerDbGuid = @AccountId", @params);
             account.Items.AddRange(items);
+        }
+
+        private static void UpdateEntityTable(SQLiteConnection connection, SQLiteTransaction transaction, string tableName,
+            long containerDbGuid, DBEntityCollection dbEntityCollection)
+        {
+            var @params = new { ContainerDbGuid = containerDbGuid };
+
+            // Delete items that no longer belong to this account
+            var storedEntities = connection.Query<long>($"SELECT DbGuid FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid", @params);
+            var entitiesToDelete = storedEntities.Except(dbEntityCollection.Guids);
+            connection.Execute($"DELETE FROM {tableName} WHERE DbGuid IN ({string.Join(',', entitiesToDelete)})");
+
+            // Insert and update
+            IEnumerable<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
+
+            connection.Execute(@$"INSERT OR IGNORE INTO {tableName} (DbGuid) VALUES (@DbGuid)", entries, transaction);
+            connection.Execute(@$"UPDATE {tableName} SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
+                                Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
+                                entries, transaction);
         }
     }
 }

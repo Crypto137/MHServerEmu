@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
-using System.Collections;
+﻿using System.Collections;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
@@ -12,17 +12,31 @@ namespace MHServerEmu.DatabaseAccess.Models
         // TODO: Calculate checksum for added entities and update only those that changed
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<long, DBEntity> _dbEntityDict = new();
+        private readonly Dictionary<long, DBEntity> _allEntities = new();               // All DBEntity instances stored in this collection
+        private readonly Dictionary<long, List<DBEntity>> _bucketedEntities = new();    // Stored DBEntity bucketed per container
 
-        public IEnumerable<long> Guids { get => _dbEntityDict.Keys; }
-        public IEnumerable<DBEntity> Entries { get => _dbEntityDict.Values; }
+        public IEnumerable<long> Guids { get => _allEntities.Keys; }
+        public IEnumerable<DBEntity> Entries { get => _allEntities.Values; }
 
         public DBEntityCollection() { }
 
+        public DBEntityCollection(IEnumerable<DBEntity> dbEntities)
+        {
+            AddRange(dbEntities);
+        }
+
         public bool Add(DBEntity dbEntity)
         {
-            if (_dbEntityDict.TryAdd(dbEntity.DbGuid, dbEntity) == false)
+            if (_allEntities.TryAdd(dbEntity.DbGuid, dbEntity) == false)
                 return Logger.WarnReturn(false, $"Add(): Guid 0x{dbEntity.DbGuid} is already in use");
+
+            if (_bucketedEntities.TryGetValue(dbEntity.ContainerDbGuid, out List<DBEntity> bucket) == false)
+            {
+                bucket = new();
+                _bucketedEntities.Add(dbEntity.ContainerDbGuid, bucket);
+            }
+
+            bucket.Add(dbEntity);
 
             return true;
         }
@@ -39,12 +53,23 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public void Clear()
         {
-            _dbEntityDict.Clear();
+            _allEntities.Clear();
+
+            foreach (List<DBEntity> bucket in _bucketedEntities.Values)
+                bucket.Clear();
+        }
+
+        public IEnumerable<DBEntity> GetEntriesForContainer(long containerDbGuid)
+        {
+            if (_bucketedEntities.TryGetValue(containerDbGuid, out List<DBEntity> bucket) == false)
+                return Array.Empty<DBEntity>();
+
+            return bucket;
         }
 
         public IEnumerator<DBEntity> GetEnumerator()
         {
-            return _dbEntityDict.Values.GetEnumerator();
+            return _allEntities.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

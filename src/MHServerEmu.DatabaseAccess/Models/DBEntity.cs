@@ -10,5 +10,10 @@
         public uint Slot { get; set; }
         public long EntityProtoGuid { get; set; }
         public byte[] ArchiveData { get; set; }
+
+        public override string ToString()
+        {
+            return $"DbGuid=0x{DbGuid:X}, ContainerDbGuid=0x{ContainerDbGuid:X}, InventoryProtoGuid={InventoryProtoGuid}, Slot={Slot}, EntityProtoGuid={EntityProtoGuid}";
+        }
     }
 }
