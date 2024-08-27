@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Core.Config;
 
-namespace MHServerEmu.PlayerManagement.Configs
+namespace MHServerEmu.PlayerManagement
 {
     /// <summary>
     /// Contains configuration for the <see cref="PlayerManagerService"/>.

@@ -4,7 +4,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
 
-namespace MHServerEmu.DatabaseAccess
+namespace MHServerEmu.DatabaseAccess.SQLite
 {
     public class SQLiteDBManager : IDBManager
     {
@@ -153,7 +153,7 @@ namespace MHServerEmu.DatabaseAccess
             // Load player data
             var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
             account.Player = players.FirstOrDefault();
-            
+
             if (account.Player == null)
             {
                 account.Player = new(account.Id);

@@ -32,10 +32,11 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public DBPlayer Player { get; set; }
 
-        public DBEntityCollection Avatars { get; } = new();
-        public DBEntityCollection TeamUps { get; } = new();
-        public DBEntityCollection Items { get; } = new();
-        public DBEntityCollection ControlledEntities { get; } = new();
+        // NOTE: init is required for collection properties to be compatible with JSON serialization
+        public DBEntityCollection Avatars { get; init; } = new();
+        public DBEntityCollection TeamUps { get; init; } = new();
+        public DBEntityCollection Items { get; init; } = new();
+        public DBEntityCollection ControlledEntities { get; init; } = new();
 
         /// <summary>
         /// Constructs an empty <see cref="DBAccount"/> instance.

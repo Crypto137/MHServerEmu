@@ -52,18 +52,7 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Verify credentials
-            DBAccount account;
-            AuthStatusCode statusCode;
-
-            if (_playerManager.Config.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
-            {
-                account = AccountManager.DefaultAccount;
-                statusCode = AuthStatusCode.Success;
-            }
-            else                                    // Check credentials with AccountManager
-            {
-                statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out account);
-            }
+            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out DBAccount account);
 
             // Create a new session if login data is valid
             if (statusCode == AuthStatusCode.Success)

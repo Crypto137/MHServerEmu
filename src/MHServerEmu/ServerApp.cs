@@ -8,6 +8,8 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Logging.Targets;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
+using MHServerEmu.DatabaseAccess.Json;
+using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -196,11 +198,15 @@ namespace MHServerEmu
         /// </summary>
         private bool InitSystems()
         {
+            // Use JSON-based simplified DBManager implementaion when BypassAuth is enabled
+            var config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
+            IDBManager dbManager = config.BypassAuth ? JsonDBManager.Instance : SQLiteDBManager.Instance;
+
             return PakFileSystem.Instance.Initialize()
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.Instance.Initialize()
-                && AccountManager.Initialize(SQLiteDBManager.Instance);     // TODO: Multiple IDBManager implementations
+                && AccountManager.Initialize(dbManager);
         }
     }
 }

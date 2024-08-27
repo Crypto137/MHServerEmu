@@ -5,6 +5,11 @@ namespace MHServerEmu.DatabaseAccess
     public interface IDBManager
     {
         /// <summary>
+        /// Set this to false to disable password and flag validation for accounts.
+        /// </summary>
+        public bool ValidateAccounts { get => true; }
+
+        /// <summary>
         /// Initializes database connection.
         /// </summary>
         public bool Initialize();
