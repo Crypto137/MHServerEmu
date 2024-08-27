@@ -1470,7 +1470,7 @@ namespace MHServerEmu.Games.Entities
                 checkRange += InteractFallbackRange;
 
             float checkRangeSq = checkRange * checkRange;
-            float rangeSq = Vector3.DistanceSquared(interactee.RegionLocation.Position, RegionLocation.Position);
+            float rangeSq = Vector3.DistanceSquared2D(interactee.RegionLocation.Position, RegionLocation.Position);
 
             return rangeSq <= checkRangeSq;
         }
