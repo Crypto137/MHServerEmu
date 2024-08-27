@@ -49,30 +49,30 @@ namespace MHServerEmu.Games.Properties
 
             bool success = true;
 
-            success |= Serializer.Transfer(archive, ref _propertyVersion);
-            success |= Serializer.Transfer(archive, ref _propertyProtoGuid);
+            success &= Serializer.Transfer(archive, ref _propertyVersion);
+            success &= Serializer.Transfer(archive, ref _propertyProtoGuid);
 
-            success |= Serializer.Transfer(archive, ref _paramCount);
+            success &= Serializer.Transfer(archive, ref _paramCount);
             for (int i = 0; i < _paramCount; i++)
             {
-                success |= Serializer.Transfer(archive, ref _paramTypes[i]);
+                success &= Serializer.Transfer(archive, ref _paramTypes[i]);
 
                 PropertyParamType paramType = (PropertyParamType)_paramTypes[i];
                 switch (paramType)
                 {
                     case PropertyParamType.Integer:
-                        success |= Serializer.Transfer(archive, ref _paramValueInts[i]);
+                        success &= Serializer.Transfer(archive, ref _paramValueInts[i]);
                         break;
 
                     case PropertyParamType.Asset:
                     case PropertyParamType.Prototype:
-                        success |= Serializer.Transfer(archive, ref _paramValueGuids[i]); break;
+                        success &= Serializer.Transfer(archive, ref _paramValueGuids[i]); break;
 
                     default: return Logger.WarnReturn(false, $"Serialize(): Invalid property param type {paramType} for index {i}");
                 }
             }
 
-            success |= Serializer.Transfer(archive, ref _propertyDataType);
+            success &= Serializer.Transfer(archive, ref _propertyDataType);
 
             PropertyDataType dataType = (PropertyDataType)_propertyDataType;
             switch (dataType)
@@ -84,16 +84,16 @@ namespace MHServerEmu.Games.Properties
                 case PropertyDataType.Guid:
                 case PropertyDataType.RegionId:
                 case PropertyDataType.Int21Vector3:
-                    success |= Serializer.Transfer(archive, ref _propertyValueLong);
+                    success &= Serializer.Transfer(archive, ref _propertyValueLong);
                     break;
 
                 case PropertyDataType.Real:
-                    success |= Serializer.Transfer(archive, ref _propertyValueFloat);
+                    success &= Serializer.Transfer(archive, ref _propertyValueFloat);
                     break;
 
                 case PropertyDataType.Prototype:
                 case PropertyDataType.Asset:
-                    success |= Serializer.Transfer(archive, ref _propertyValueGuid);
+                    success &= Serializer.Transfer(archive, ref _propertyValueGuid);
                     break;
 
                 default:

@@ -655,7 +655,7 @@ namespace MHServerEmu.Games.Properties
                     {
                         // TODO: Deprecated property handling
                         PropertyStore propertyStore = new();
-                        success |= propertyStore.Serialize(ref id, ref value, this, archive);
+                        success &= propertyStore.Serialize(ref id, ref value, this, archive);
                         if (success)
                             isValid = success;
                     }
@@ -669,7 +669,7 @@ namespace MHServerEmu.Games.Properties
                         {
                             // Migration archives serialize all values as int64
                             // This is also true for replication in older versions of the game (e.g. 1.10)
-                            success |= Serializer.Transfer(archive, ref value.RawLong);
+                            success &= Serializer.Transfer(archive, ref value.RawLong);
                             isValid = true;
                         }
                         else
@@ -828,7 +828,7 @@ namespace MHServerEmu.Games.Properties
             if (archive.IsPersistent)
             {
                 PropertyStore propertyStore = new();
-                success |= propertyStore.Serialize(ref id, ref value, this, archive);
+                success &= propertyStore.Serialize(ref id, ref value, this, archive);
 
                 //Logger.Debug($"SerializePropertyForPacking(): Packed {id} for persistent storage");
             }
@@ -840,7 +840,7 @@ namespace MHServerEmu.Games.Properties
                 {
                     // Migration archives serialize all values as int64
                     // This is also true for replication in older versions of the game (e.g. 1.10)
-                    success |= Serializer.Transfer(archive, ref value.RawLong);
+                    success &= Serializer.Transfer(archive, ref value.RawLong);
                 }
                 else
                 {
