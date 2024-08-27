@@ -40,7 +40,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
 
         [JsonIgnore]
-        public List<DBEntity> TEMP_ItemList { get; } = new();
+        public Dictionary<long, DBEntity> ItemDict { get; } = new();
 
         /// <summary>
         /// Constructs an empty <see cref="DBAccount"/> instance.

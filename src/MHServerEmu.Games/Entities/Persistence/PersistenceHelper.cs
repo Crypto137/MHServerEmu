@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         public static void StoreInventoryEntities(DBAccount dbAccount, Player player)
         {
-            dbAccount.TEMP_ItemList.Clear();
+            dbAccount.ItemDict.Clear();
 
             foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral))
                 ArchiveInventory(dbAccount, inventory);
@@ -32,8 +32,8 @@ namespace MHServerEmu.Games.Entities.Persistence
             if (inventory == null) return Logger.WarnReturn(false, "ArchiveInventory(): inventory == null");
 
             // Common data everything stored in this inventory
-            ulong containerDbGuid = inventory.Owner.DatabaseUniqueId;
-            ulong inventoryProtoGuid = (ulong)GameDatabase.GetPrototypeGuid(inventory.PrototypeDataRef);
+            long containerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
+            long inventoryProtoGuid = (long)GameDatabase.GetPrototypeGuid(inventory.PrototypeDataRef);
 
             foreach (var entry in inventory)
             {
@@ -46,11 +46,11 @@ namespace MHServerEmu.Games.Entities.Persistence
                 }
 
                 DBEntity dbEntity = new();
-                dbEntity.DbGuid = entity.DatabaseUniqueId;
+                dbEntity.DbGuid = (long)entity.DatabaseUniqueId;
                 dbEntity.ContainerDbGuid = containerDbGuid;
                 dbEntity.InventoryProtoGuid = inventoryProtoGuid;
                 dbEntity.Slot = entry.Slot;
-                dbEntity.EntityProtoGuid = (ulong)GameDatabase.GetPrototypeGuid(entity.PrototypeDataRef);
+                dbEntity.EntityProtoGuid = (long)GameDatabase.GetPrototypeGuid(entity.PrototypeDataRef);
 
                 using (Archive archive = new(ArchiveSerializeType.Database))
                 {
@@ -60,10 +60,10 @@ namespace MHServerEmu.Games.Entities.Persistence
                         continue;
                     }
 
-                    dbEntity.Blob = archive.AccessAutoBuffer().ToArray();
+                    dbEntity.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
-                dbAccount.TEMP_ItemList.Add(dbEntity);
+                dbAccount.ItemDict.Add(dbEntity.DbGuid, dbEntity);
             }
 
             return true;
@@ -73,10 +73,10 @@ namespace MHServerEmu.Games.Entities.Persistence
         {
             if (inventory.Count > 0) return Logger.WarnReturn(false, "RestoreInventory(): Inventory must be empty to be restored!");
 
-            ulong ownerDbGuid = inventory.Owner.DatabaseUniqueId;
+            long ownerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
             ulong containerEntityId = inventory.Owner.Id;
 
-            foreach (DBEntity dbEntity in dbAccount.TEMP_ItemList)
+            foreach (DBEntity dbEntity in dbAccount.ItemDict.Values)
             {
                 if (dbEntity.ContainerDbGuid != ownerDbGuid)
                 {
@@ -98,11 +98,11 @@ namespace MHServerEmu.Games.Entities.Persistence
                 }
 
                 EntitySettings settings = new();
-                settings.DbGuid = dbEntity.DbGuid;
+                settings.DbGuid = (ulong)dbEntity.DbGuid;
                 settings.InventoryLocation = new(containerEntityId, inventoryProtoRef, dbEntity.Slot);
                 settings.EntityRef = entityProtoRef;
                 settings.ArchiveSerializeType = ArchiveSerializeType.Database;
-                settings.ArchiveData = dbEntity.Blob;
+                settings.ArchiveData = dbEntity.ArchiveData;
 
                 inventory.Game.EntityManager.CreateEntity(settings);
             }

@@ -117,6 +117,20 @@ namespace MHServerEmu.DatabaseAccess
                     // Update all avatar entities
                     connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars.Values, transaction);
 
+                    // TEST - save items
+                    var @params = new { ContainerDbGuid = account.Id };
+
+                    // Delete items that no longer belong to this account
+                    var storedItems = connection.Query<long>("SELECT DbGuid FROM Item WHERE ContainerDbGuid = @ContainerDbGuid", @params);
+                    var itemsToDelete = storedItems.Except(account.ItemDict.Keys);
+                    connection.Execute($"DELETE FROM Item WHERE DbGuid IN ({string.Join(',', itemsToDelete)})");
+
+                    // Update items
+                    connection.Execute(@"INSERT OR IGNORE INTO Item (DbGuid) VALUES (@DbGuid)", account.ItemDict.Values, transaction);
+                    connection.Execute(@"UPDATE Item SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
+                                        Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
+                                        account.ItemDict.Values, transaction);
+
                     transaction.Commit();
                     return true;
                 }
@@ -156,6 +170,10 @@ namespace MHServerEmu.DatabaseAccess
             var avatars = connection.Query<DBAvatar>("SELECT * FROM Avatar WHERE AccountId = @AccountId", @params);
             foreach (DBAvatar avatar in avatars)
                 account.Avatars.Add(avatar.RawPrototype, avatar);
+
+            var items = connection.Query<DBEntity>("SELECT * FROM Item WHERE ContainerDbGuid = @AccountId", @params);
+            foreach (DBEntity item in items)
+                account.ItemDict.Add(item.DbGuid, item);
         }
     }
 }
