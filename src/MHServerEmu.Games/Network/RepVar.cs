@@ -68,7 +68,9 @@ namespace MHServerEmu.Games.Network
         {
             bool success = true;
 
-            success &= Serializer.Transfer(archive, ref _replicationId);
+            if (archive.IsReplication)
+                success &= Serializer.Transfer(archive, ref _replicationId);
+
             success &= Serializer.Transfer(archive, ref _value);
 
             return success;
@@ -132,7 +134,9 @@ namespace MHServerEmu.Games.Network
         {
             bool success = true;
 
-            success &= Serializer.Transfer(archive, ref _replicationId);
+            if (archive.IsReplication)
+                success &= Serializer.Transfer(archive, ref _replicationId);
+            
             success &= Serializer.Transfer(archive, ref _value);
 
             return success;
@@ -196,7 +200,9 @@ namespace MHServerEmu.Games.Network
         {
             bool success = true;
 
-            success &= Serializer.Transfer(archive, ref _replicationId);
+            if (archive.IsReplication)
+                success &= Serializer.Transfer(archive, ref _replicationId);
+            
             success &= Serializer.Transfer(archive, ref _value);
 
             return success;

@@ -99,17 +99,20 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             bool success = base.Serialize(archive);
 
-            success &= Serializer.Transfer(archive, ref _playerName);
-            success &= Serializer.Transfer(archive, ref _ownerPlayerDbId);
+            if (archive.IsTransient)
+            {
+                success &= Serializer.Transfer(archive, ref _playerName);
+                success &= Serializer.Transfer(archive, ref _ownerPlayerDbId);
 
-            // There is an unused string here that is always empty
-            string emptyString = string.Empty;
-            success &= Serializer.Transfer(archive, ref emptyString);
-            if (emptyString != string.Empty)
-                Logger.Warn($"Serialize(): emptyString is not empty!");
+                // There is an unused string here that is always empty
+                string emptyString = string.Empty;
+                success &= Serializer.Transfer(archive, ref emptyString);
+                if (emptyString != string.Empty)
+                    Logger.Warn($"Serialize(): emptyString is not empty!");
 
-            //if (archive.IsReplication)
-            success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+                if (archive.IsReplication)
+                    success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
+            }
 
             success &= Serializer.Transfer(archive, ref _abilityKeyMappingList);
 
