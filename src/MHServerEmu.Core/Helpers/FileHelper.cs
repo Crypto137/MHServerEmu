@@ -8,6 +8,8 @@ namespace MHServerEmu.Core.Helpers
     /// </summary>
     public static class FileHelper
     {
+        public const string FileNameDateFormat = "yyyy-MM-dd_HH.mm.ss";
+
         public static readonly string ServerRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         public static readonly string DataDirectory = Path.Combine(ServerRoot, "Data");
 

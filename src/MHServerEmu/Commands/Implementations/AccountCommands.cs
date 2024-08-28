@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -128,7 +129,7 @@ namespace MHServerEmu.Commands.Implementations
 
             client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
                 .SetResponse($"Downloaded account data for {account}")
-                .SetFilerelativepath($"Download/0x{account.Id:X}_{account.PlayerName}_{DateTime.UtcNow:yyyy-dd-MM_HH.mm.ss}.json")
+                .SetFilerelativepath($"Download/0x{account.Id:X}_{account.PlayerName}_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.json")
                 .SetFilecontents(json)
                 .Build());
 

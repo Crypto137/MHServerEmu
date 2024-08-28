@@ -145,7 +145,7 @@ namespace MHServerEmu
                 if (Directory.Exists(crashReportDir) == false)
                     Directory.CreateDirectory(crashReportDir);
 
-                string crashReportFilePath = Path.Combine(crashReportDir, $"ServerCrash_{now:yyyy-dd-MM_HH.mm.ss}.txt");
+                string crashReportFilePath = Path.Combine(crashReportDir, $"ServerCrash_{now.ToString(FileHelper.FileNameDateFormat)}.txt");
 
                 using (StreamWriter writer = new(crashReportFilePath))
                 {
@@ -185,7 +185,7 @@ namespace MHServerEmu
             if (config.EnableFile)
             {
                 FileTarget target = new(config.FileIncludeTimestamps, config.FileMinLevel, config.FileMaxLevel,
-                    $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false);
+                    $"MHServerEmu_{StartupTime.ToString(FileHelper.FileNameDateFormat)}.log", false);
                 LogManager.AttachTarget(target);
             }
 
