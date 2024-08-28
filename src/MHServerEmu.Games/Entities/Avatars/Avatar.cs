@@ -134,11 +134,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SetTutorialProps(HUDTutorialPrototype hudTutorialProto)
         {
-            if (hudTutorialProto.AllowMovement)
+            if (hudTutorialProto.AllowMovement == false)
                 Properties[PropertyEnum.TutorialImmobilized] = true;
-            if (hudTutorialProto.AllowPowerUsage)
+            if (hudTutorialProto.AllowPowerUsage == false)
                 Properties[PropertyEnum.TutorialPowerLock] = true;
-            if (hudTutorialProto.AllowTakingDamage)
+            if (hudTutorialProto.AllowTakingDamage == false)
                 Properties[PropertyEnum.TutorialInvulnerable] = true;
         }
 
