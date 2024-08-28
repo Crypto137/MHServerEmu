@@ -27,7 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\Account.db">
+    <None Update="Data\SQLite\InitializeDatabase.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\SQLite\Migrations\0.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="SQLite.Interop.dll">

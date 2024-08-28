@@ -8,6 +8,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 {
     public class SQLiteDBManager : IDBManager
     {
+        private const int CurrentSchemaVersion = 1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private string _connectionString;
@@ -19,10 +21,20 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         public bool Initialize()
         {
             string dbPath = Path.Combine(FileHelper.DataDirectory, "Account.db");
-            if (File.Exists(dbPath) == false) return Logger.FatalReturn(false, $"Initialize(): {dbPath} not found");
-
             _connectionString = $"Data Source={dbPath}";
-            Logger.Info("Established database connection");
+
+            if (File.Exists(dbPath) == false)
+            {
+                if (InitializeDatabaseFile(dbPath) == false)
+                    return false;
+            }
+            else
+            {
+                if (MigrateDatabaseFileToCurrentSchema(dbPath) == false)
+                    return false;
+            }
+
+            Logger.Info($"Initialized database");
             return true;
         }
 
@@ -44,7 +56,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool QueryIsPlayerNameTaken(string playerName)
         {
-            using SQLiteConnection connection = new(_connectionString);
+            using SQLiteConnection connection = GetConnection();
+
             // This check is case insensitive (COLLATE NOCASE)
             var results = connection.Query<string>("SELECT PlayerName FROM Account WHERE PlayerName = @PlayerName COLLATE NOCASE", new { PlayerName = playerName });
             return results.Any();
@@ -52,8 +65,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool InsertAccount(DBAccount account)
         {
-            using SQLiteConnection connection = new(_connectionString);
-            connection.Open();
+            using SQLiteConnection connection = GetConnection();
 
             try
             {
@@ -70,7 +82,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool UpdateAccount(DBAccount account)
         {
-            using SQLiteConnection connection = new(_connectionString);
+            using SQLiteConnection connection = GetConnection();
 
             try
             {
@@ -87,8 +99,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool UpdateAccountData(DBAccount account)
         {
-            using SQLiteConnection connection = new(_connectionString);
-            connection.Open();
+            using SQLiteConnection connection = GetConnection();
 
             // Use a transaction to make sure all data is saved
             using (var transaction = connection.BeginTransaction())
@@ -144,6 +155,103 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         }
 
         /// <summary>
+        /// Creates and opens a new <see cref="SQLiteConnection"/>.
+        /// </summary>
+        private SQLiteConnection GetConnection()
+        {
+            SQLiteConnection connection = new(_connectionString);
+            connection.Open();
+            return connection;
+        }
+
+        private bool InitializeDatabaseFile(string dbPath)
+        {
+            // Create a new database file if it does not exist
+            string initializationScript = SQLiteScripts.GetInitializationScript();
+            if (initializationScript == string.Empty)
+                return Logger.ErrorReturn(false, "InitializeDatabaseFile(): Failed to get database initialization script");
+
+            SQLiteConnection.CreateFile(dbPath);
+            using SQLiteConnection connection = GetConnection();
+            connection.Execute(initializationScript);
+
+            Logger.Info($"Initialized a new database file at {Path.GetRelativePath(FileHelper.ServerRoot, dbPath)} using schema version {CurrentSchemaVersion}");
+            return true;
+        }
+
+        private bool MigrateDatabaseFileToCurrentSchema(string dbPath)
+        {
+            // Migrate existing database if needed
+            int schemaVersion = GetSchemaVersion();
+            if (schemaVersion > CurrentSchemaVersion)
+                return Logger.ErrorReturn(false, $"Initialize(): Existing database file uses unsupported schema version {schemaVersion} (current = {CurrentSchemaVersion})");
+
+            Logger.Info($"Found existing database file with schema version {schemaVersion} (current = {CurrentSchemaVersion})");
+
+            if (schemaVersion == CurrentSchemaVersion)
+                return true;
+
+            // Create a back to fall back to if something goes wrong
+            string backupDbPath = $"{dbPath}.backup";
+            File.Copy(dbPath, backupDbPath);
+
+            using SQLiteConnection connection = GetConnection();
+            bool success = true;
+
+            while (schemaVersion < CurrentSchemaVersion)
+            {
+                Logger.Info($"Migrating version {schemaVersion} => {schemaVersion + 1}...");
+
+                string migrationScript = SQLiteScripts.GetMigrationScript(schemaVersion);
+                if (migrationScript == string.Empty)
+                {
+                    Logger.Error($"MigrateDatabaseFileToCurrentSchema(): Failed to get database migration script for version {schemaVersion}");
+                    success = false;
+                    break;
+                }
+
+                connection.Execute(migrationScript);
+                connection.Execute($"PRAGMA user_version = {++schemaVersion}");
+            }
+
+            success &= GetSchemaVersion() == CurrentSchemaVersion;
+
+            if (success == false)
+            {
+                // Restore backup
+                File.Delete(dbPath);
+                File.Move(backupDbPath, dbPath);
+                return Logger.ErrorReturn(false, "MigrateDatabaseFileToCurrentSchema(): Migration failed, backup restored");
+            }
+
+            Logger.Info($"Successfully migrated to schema version {CurrentSchemaVersion}");
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the user_version value of the current database.
+        /// </summary>
+        private int GetSchemaVersion()
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            var queryResult = connection.Query<int>("PRAGMA user_version");
+            if (queryResult.Any())
+                return queryResult.First();
+
+            return Logger.WarnReturn(-1, "GetSchemaVersion(): Failed to query user_version from the DB");
+        }
+
+        /// <summary>
+        /// Sets the user_version value of the current database.
+        /// </summary>
+        private void SetSchemaVersion(int version)
+        {
+            using SQLiteConnection connection = GetConnection();
+            connection.Execute($"PRAGMA user_version = {version}");
+        }
+
+        /// <summary>
         /// Loads account data for the specified <see cref="DBAccount"/> and maps relations.
         /// </summary>
         private void LoadAccountData(SQLiteConnection connection, DBAccount account)
@@ -177,12 +285,18 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
         }
 
+        /// <summary>
+        /// Loads <see cref="DBEntity"/> instances belonging to the specified container from the specified table.
+        /// </summary>
         private static IEnumerable<DBEntity> LoadEntitiesFromTable(SQLiteConnection connection, string tableName, long containerDbGuid)
         {
             var @params = new { ContainerDbGuid = containerDbGuid };
             return connection.Query<DBEntity>($"SELECT * FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid", @params);
         }
 
+        /// <summary>
+        /// Updates <see cref="DBEntity"/> instances belonging to the specified container in the specified table using the provided <see cref="DBEntityCollection"/>.
+        /// </summary>
         private static void UpdateEntityTable(SQLiteConnection connection, SQLiteTransaction transaction, string tableName,
             long containerDbGuid, DBEntityCollection dbEntityCollection)
         {

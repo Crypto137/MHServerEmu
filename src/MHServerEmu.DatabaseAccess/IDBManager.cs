@@ -35,7 +35,7 @@ namespace MHServerEmu.DatabaseAccess
         public bool UpdateAccount(DBAccount account);
 
         /// <summary>
-        /// Updates the Player and Avatar tables in the database with the data from the provided <see cref="DBAccount"/>.
+        /// Updates persistent game data for the provided <see cref="DBAccount"/>.
         /// </summary>
         public bool UpdateAccountData(DBAccount account);
 

@@ -12,6 +12,14 @@ namespace MHServerEmu.Core.Helpers
         public static readonly string DataDirectory = Path.Combine(ServerRoot, "Data");
 
         /// <summary>
+        /// Returns a path relative to server root directory.
+        /// </summary>
+        public static string GetRelativePath(string filePath)
+        {
+            return Path.GetRelativePath(ServerRoot, filePath);
+        }
+
+        /// <summary>
         /// Deserializes a <typeparamref name="T"/> from a JSON file located at the specified path.
         /// </summary>
         public static T DeserializeJson<T>(string path, JsonSerializerOptions options = null)
