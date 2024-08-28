@@ -25,14 +25,11 @@ namespace MHServerEmu.DatabaseAccess.Json
             _jsonOptions = new();
             _jsonOptions.Converters.Add(new DBEntityCollectionJsonConverter());
 
-            bool defaultAccountLoaded = false;
-
             if (File.Exists(DefaultAccountFilePath))
             {
                 try
                 {
                     _defaultAccount = FileHelper.DeserializeJson<DBAccount>(DefaultAccountFilePath, _jsonOptions);
-                    defaultAccountLoaded = true;
                 }
                 catch
                 {
@@ -42,18 +39,18 @@ namespace MHServerEmu.DatabaseAccess.Json
 
             var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
 
-            if (defaultAccountLoaded == false)
+            if (_defaultAccount == null)
             {
-                // Initialize default account from config
+                // Initialize a new default account from config
                 _defaultAccount = new(config.PlayerName);
                 _defaultAccount.Player = new(_defaultAccount.Id);
 
-                Logger.Info("Initialized default account");
+                Logger.Info($"Initialized default account {_defaultAccount}");
             }
             else
             {
                 _defaultAccount.PlayerName = config.PlayerName;
-                Logger.Info("Loaded default account");
+                Logger.Info($"Loaded default account {_defaultAccount}");
             }
 
             return _defaultAccount != null;
@@ -86,6 +83,7 @@ namespace MHServerEmu.DatabaseAccess.Json
                 return Logger.WarnReturn(false, "UpdateAccountData(): Attempting to update non-default account when bypass auth is enabled");
 
             FileHelper.SerializeJson(DefaultAccountFilePath, _defaultAccount, _jsonOptions);
+
             return true;
         }
 

@@ -8,7 +8,6 @@ namespace MHServerEmu.DatabaseAccess.Models
     /// </summary>
     public class DBEntityCollection : IEnumerable<DBEntity>
     {
-        // TODO: JSON serialization
         // TODO: Calculate checksum for added entities and update only those that changed
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -17,6 +16,7 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public IEnumerable<long> Guids { get => _allEntities.Keys; }
         public IEnumerable<DBEntity> Entries { get => _allEntities.Values; }
+        public int Count { get => _allEntities.Count; }
 
         public DBEntityCollection() { }
 

@@ -54,9 +54,6 @@ namespace MHServerEmu.DatabaseAccess.Models
             PasswordHash = CryptographyHelper.HashPassword(password, out byte[] salt);
             Salt = salt;
             UserLevel = userLevel;
-            IsBanned = false;
-            IsArchived = false;
-            IsPasswordExpired = false;
         }
 
         /// <summary>
@@ -68,6 +65,8 @@ namespace MHServerEmu.DatabaseAccess.Models
             Id = 0x2000000000000001;
             Email = "default@mhserveremu";
             PlayerName = playerName;
+            PasswordHash = Array.Empty<byte>();
+            Salt = Array.Empty<byte>();
             UserLevel = AccountUserLevel.Admin;
         }
 
