@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using System.Data.SQLite;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
@@ -20,7 +21,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool Initialize()
         {
-            string dbPath = Path.Combine(FileHelper.DataDirectory, "Account.db");
+            var config = ConfigManager.Instance.GetConfig<SQLiteDBManagerConfig>();
+
+            string dbPath = Path.Combine(FileHelper.DataDirectory, config.FileName);
             _connectionString = $"Data Source={dbPath}";
 
             if (File.Exists(dbPath) == false)
@@ -34,7 +37,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     return false;
             }
 
-            Logger.Info($"Initialized database");
+            Logger.Info($"Using database file {FileHelper.GetRelativePath(dbPath)}");
             return true;
         }
 
@@ -191,8 +194,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             if (schemaVersion == CurrentSchemaVersion)
                 return true;
 
-            // Create a back to fall back to if something goes wrong
-            string backupDbPath = $"{dbPath}.backup";
+            // Create a backup to fall back to if something goes wrong
+            string backupDbPath = $"{dbPath}.v{schemaVersion}";
             File.Copy(dbPath, backupDbPath);
 
             using SQLiteConnection connection = GetConnection();
@@ -222,6 +225,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 File.Delete(dbPath);
                 File.Move(backupDbPath, dbPath);
                 return Logger.ErrorReturn(false, "MigrateDatabaseFileToCurrentSchema(): Migration failed, backup restored");
+            }
+            else
+            {
+                // Clean up backup
+                File.Delete(backupDbPath);
             }
 
             Logger.Info($"Successfully migrated to schema version {CurrentSchemaVersion}");

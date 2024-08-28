@@ -9,8 +9,8 @@ namespace MHServerEmu.DatabaseAccess.Json
     public class JsonDBManager : IDBManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly string DefaultAccountFilePath = Path.Combine(FileHelper.DataDirectory, "DefaultPlayer.json");
 
+        private string _defaultAccountFilePath;
         private DBAccount _defaultAccount;
         private JsonSerializerOptions _jsonOptions;
 
@@ -22,22 +22,25 @@ namespace MHServerEmu.DatabaseAccess.Json
 
         public bool Initialize()
         {
+            var config = ConfigManager.Instance.GetConfig<JsonDBManagerConfig>();
+            _defaultAccountFilePath = Path.Combine(FileHelper.DataDirectory, config.FileName);
+
             _jsonOptions = new();
             _jsonOptions.Converters.Add(new DBEntityCollectionJsonConverter());
 
-            if (File.Exists(DefaultAccountFilePath))
+            if (File.Exists(_defaultAccountFilePath))
             {
+                Logger.Info($"Found existing account file {FileHelper.GetRelativePath(_defaultAccountFilePath)}");
+
                 try
                 {
-                    _defaultAccount = FileHelper.DeserializeJson<DBAccount>(DefaultAccountFilePath, _jsonOptions);
+                    _defaultAccount = FileHelper.DeserializeJson<DBAccount>(_defaultAccountFilePath, _jsonOptions);
                 }
                 catch
                 {
-                    Logger.Warn($"Initialize(): Incompatible default player data, resetting");
+                    Logger.Warn($"Initialize(): Failed to load existing account data, resetting");
                 }
             }
-
-            var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
 
             if (_defaultAccount == null)
             {
@@ -82,7 +85,8 @@ namespace MHServerEmu.DatabaseAccess.Json
             if (account != _defaultAccount)
                 return Logger.WarnReturn(false, "UpdateAccountData(): Attempting to update non-default account when bypass auth is enabled");
 
-            FileHelper.SerializeJson(DefaultAccountFilePath, _defaultAccount, _jsonOptions);
+            Logger.Info($"Updated account file {FileHelper.GetRelativePath(_defaultAccountFilePath)}");
+            FileHelper.SerializeJson(_defaultAccountFilePath, _defaultAccount, _jsonOptions);
 
             return true;
         }
