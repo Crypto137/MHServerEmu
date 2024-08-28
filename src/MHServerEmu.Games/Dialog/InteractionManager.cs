@@ -651,6 +651,30 @@ namespace MHServerEmu.Games.Dialog
             }
         }
 
+        public bool GetVisibilityStatus(Player player, WorldEntity interactee)
+        {
+            TriBool visibilityOverride = EvaluateVisibilityOptions(player, interactee);
+            return GetVisibilityStatus(interactee, visibilityOverride);
+        }
+
+        private TriBool EvaluateVisibilityOptions(Player interactingPlayer, WorldEntity interactee)
+        {
+            TriBool result = TriBool.Undefined;
+            if (_interaсtionMap.TryGetValue(interactee.PrototypeDataRef, out InteractionData interactionData))
+            {
+                if (interactionData == null || interactingPlayer.GetRegion() == null) return result;
+                if (interactionData.HasOptionFlags(InteractionOptimizationFlags.Visibility) == false) return result;
+                foreach(var option in interactionData.Options)
+                    if (option is MissionVisibilityOption)
+                    {
+                        TriBool optionResult = EvaluateVisibilityOption(option, interactingPlayer, interactee);
+                        result = TriBoolTrueBias(result, optionResult);
+                        if (result == TriBool.True) break;
+                    }
+            }
+            return result;
+        }
+
         private static bool GetVisibilityStatus(WorldEntity interactee, TriBool visibilityOverride)
         {
             bool visibility = false;

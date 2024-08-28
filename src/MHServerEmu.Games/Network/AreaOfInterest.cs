@@ -7,6 +7,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -846,11 +847,14 @@ namespace MHServerEmu.Games.Network
             if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != player.DatabaseUniqueId)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
-            //      Add more filters here
+            // Add more filters here
+            WorldEntity worldEntity = entity as WorldEntity;
+            if (worldEntity != null && GameDatabase.InteractionManager.GetVisibilityStatus(player, worldEntity) == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
 
             AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
 
-            if (entity is WorldEntity worldEntity)
+            if (worldEntity != null)
             {
                 // Do not add dead non-destructible entities to AOI that weren't there already
                 if (worldEntity.IsDead && worldEntity.IsDestructible == false && currentInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
