@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.DatabaseAccess.SQLite
@@ -13,7 +14,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private string _dbFilePath;
         private string _connectionString;
+
+        private int _maxBackupNumber;
+        private TimeSpan _backupInterval;
+        private TimeSpan _lastBackupTime;
 
         public static SQLiteDBManager Instance { get; } = new();
 
@@ -23,21 +29,27 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             var config = ConfigManager.Instance.GetConfig<SQLiteDBManagerConfig>();
 
-            string dbPath = Path.Combine(FileHelper.DataDirectory, config.FileName);
-            _connectionString = $"Data Source={dbPath}";
+            _dbFilePath = Path.Combine(FileHelper.DataDirectory, config.FileName);
+            _connectionString = $"Data Source={_dbFilePath}";
 
-            if (File.Exists(dbPath) == false)
+            if (File.Exists(_dbFilePath) == false)
             {
-                if (InitializeDatabaseFile(dbPath) == false)
+                // Create a new database file if it does not exist
+                if (InitializeDatabaseFile() == false)
                     return false;
             }
             else
             {
-                if (MigrateDatabaseFileToCurrentSchema(dbPath) == false)
+                // Migrate existing database if needed
+                if (MigrateDatabaseFileToCurrentSchema() == false)
                     return false;
             }
 
-            Logger.Info($"Using database file {FileHelper.GetRelativePath(dbPath)}");
+            _maxBackupNumber = config.MaxBackupNumber;
+            _backupInterval = TimeSpan.FromMinutes(config.BackupIntervalMinutes);
+            _lastBackupTime = Clock.GameTime;
+            
+            Logger.Info($"Using database file {FileHelper.GetRelativePath(_dbFilePath)}");
             return true;
         }
 
@@ -132,6 +144,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     }
 
                     transaction.Commit();
+
+                    TryCreateBackup();
+
                     return true;
                 }
                 catch (Exception e)
@@ -167,24 +182,22 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return connection;
         }
 
-        private bool InitializeDatabaseFile(string dbPath)
+        private bool InitializeDatabaseFile()
         {
-            // Create a new database file if it does not exist
             string initializationScript = SQLiteScripts.GetInitializationScript();
             if (initializationScript == string.Empty)
                 return Logger.ErrorReturn(false, "InitializeDatabaseFile(): Failed to get database initialization script");
 
-            SQLiteConnection.CreateFile(dbPath);
+            SQLiteConnection.CreateFile(_dbFilePath);
             using SQLiteConnection connection = GetConnection();
             connection.Execute(initializationScript);
 
-            Logger.Info($"Initialized a new database file at {Path.GetRelativePath(FileHelper.ServerRoot, dbPath)} using schema version {CurrentSchemaVersion}");
+            Logger.Info($"Initialized a new database file at {Path.GetRelativePath(FileHelper.ServerRoot, _dbFilePath)} using schema version {CurrentSchemaVersion}");
             return true;
         }
 
-        private bool MigrateDatabaseFileToCurrentSchema(string dbPath)
+        private bool MigrateDatabaseFileToCurrentSchema()
         {
-            // Migrate existing database if needed
             int schemaVersion = GetSchemaVersion();
             if (schemaVersion > CurrentSchemaVersion)
                 return Logger.ErrorReturn(false, $"Initialize(): Existing database file uses unsupported schema version {schemaVersion} (current = {CurrentSchemaVersion})");
@@ -195,8 +208,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 return true;
 
             // Create a backup to fall back to if something goes wrong
-            string backupDbPath = $"{dbPath}.v{schemaVersion}";
-            File.Copy(dbPath, backupDbPath);
+            string backupDbPath = $"{_dbFilePath}.v{schemaVersion}";
+            File.Copy(_dbFilePath, backupDbPath);
 
             using SQLiteConnection connection = GetConnection();
             bool success = true;
@@ -222,8 +235,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             if (success == false)
             {
                 // Restore backup
-                File.Delete(dbPath);
-                File.Move(backupDbPath, dbPath);
+                File.Delete(_dbFilePath);
+                File.Move(backupDbPath, _dbFilePath);
                 return Logger.ErrorReturn(false, "MigrateDatabaseFileToCurrentSchema(): Migration failed, backup restored");
             }
             else
@@ -257,6 +270,19 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             using SQLiteConnection connection = GetConnection();
             connection.Execute($"PRAGMA user_version = {version}");
+        }
+
+        private void TryCreateBackup()
+        {
+            TimeSpan now = Clock.GameTime;
+
+            if ((now - _lastBackupTime) < _backupInterval)
+                return;
+
+            if (FileHelper.CreateFileBackup(_dbFilePath, _maxBackupNumber))
+                Logger.Info("Created database file backup");
+
+            _lastBackupTime = now;
         }
 
         /// <summary>
