@@ -360,6 +360,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
+                case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break; // 123
@@ -369,6 +370,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;       // 132
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
+                case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
 
                 // Grouping Manager
                 case ClientToGameServerMessage.NetMessageChat:                                                                                  // 64
@@ -950,6 +952,19 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnHUDTutorialDismissed(MailboxMessage message)
+        {
+            var hudTutorialDismissed = message.As<NetMessageHUDTutorialDismissed>();
+            if (hudTutorialDismissed == null) return Logger.WarnReturn(false, $"OnHUDTutorialDismissed(): Failed to retrieve message");
+
+            PrototypeId hudTutorialRef = (PrototypeId)hudTutorialDismissed.HudTutorialProtoId;
+            var currentHUDTutorial = Player.CurrentHUDTutorial;
+            if (currentHUDTutorial?.DataRef == hudTutorialRef && currentHUDTutorial.CanDismiss)
+                Player.ShowHUDTutorial(null);
+
+            return true;
+        }
+
         private bool OnSetPlayerGameplayOptions(MailboxMessage message) // 113
         {
             var setPlayerGameplayOptions = message.As<NetMessageSetPlayerGameplayOptions>();
@@ -1065,6 +1080,20 @@ namespace MHServerEmu.Games.Network
             if (changeCameraSettings == null) return Logger.WarnReturn(false, $"OnChangeCameraSettings(): Failed to retrieve message");
 
             AOI.InitializePlayerView((PrototypeId)changeCameraSettings.CameraSettings);
+            return true;
+        }
+
+        private bool OnUISystemLockState(MailboxMessage message)
+        {
+            var uiSystemLockState = message.As<NetMessageUISystemLockState>();
+            if (uiSystemLockState == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): Failed to retrieve message");
+            var region = Player.GetRegion();
+            if (region == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): Region is null");
+            PrototypeId uiSystemRef = (PrototypeId)uiSystemLockState.PrototypeId;
+            var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemRef);
+            if (uiSystemLockProto == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): UISystemLockPrototype is null");
+            uint state = uiSystemLockState.State;
+            Player.Properties[PropertyEnum.UISystemLock, uiSystemRef] = state;
             return true;
         }
 
