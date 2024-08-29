@@ -58,3 +58,9 @@ CREATE TABLE "ControlledEntity" (
 	FOREIGN KEY("ContainerDbGuid") REFERENCES "Avatar"("DbGuid") ON DELETE CASCADE,
 	PRIMARY KEY("DbGuid")
 );
+
+-- Create indexes for faster container lookup queries
+CREATE INDEX "IX_Avatar_ContainerDbGuid" ON "Avatar" ("ContainerDbGuid");
+CREATE INDEX "IX_TeamUp_ContainerDbGuid" ON "TeamUp" ("ContainerDbGuid");
+CREATE INDEX "IX_Item_ContainerDbGuid" ON "Item" ("ContainerDbGuid");
+CREATE INDEX "IX_ControlledEntity_ContainerDbGuid" ON "ControlledEntity" ("ContainerDbGuid");
