@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Missions
                             var mission = CreateMissionByDataRef(missionRef);
 
                             // Hardcode Complete
-                            if (CompletedMissions.Contains((MissionPrototypeId)missionRef)) 
+                            if (CompletedMissions.Contains(missionRef)) 
                             {
                                 mission.SetState(MissionState.Completed);
                                 mission.AddParticipant(player);
@@ -925,10 +925,10 @@ namespace MHServerEmu.Games.Missions
 
         #region Hardcoded
 
-        public static MissionPrototypeId[] CompletedMissions = new MissionPrototypeId[]
+        public static HashSet<PrototypeId> CompletedMissions = new HashSet<PrototypeId>
         {
             // MissionPrototypeId.NPE1Flag, // Pre BUE player
-            MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
+            (PrototypeId)MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
         };
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
