@@ -296,7 +296,7 @@ namespace MHServerEmu.Games.Entities
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
             var spec = SpawnSpec;
-            if (spec != null && spec.State == SpawnState.Defeated || spec.State == SpawnState.Destroyed) return;
+            if (spec != null && (spec.State == SpawnState.Defeated || spec.State == SpawnState.Destroyed)) return;
 
             var manager = Game.EntityManager;
             var spawnerProto = SpawnerPrototype;
