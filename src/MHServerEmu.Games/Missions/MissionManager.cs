@@ -927,8 +927,8 @@ namespace MHServerEmu.Games.Missions
 
         public static MissionPrototypeId[] CompletedMissions = new MissionPrototypeId[]
         {
-            MissionPrototypeId.NPE1Flag, // Pre BUE player
-            //MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
+            // MissionPrototypeId.NPE1Flag, // Pre BUE player
+            MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
         };
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
