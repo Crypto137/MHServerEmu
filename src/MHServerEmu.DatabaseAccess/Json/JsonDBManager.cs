@@ -7,6 +7,9 @@ using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.DatabaseAccess.Json
 {
+    /// <summary>
+    /// Provides functionality for storing a single <see cref="DBAccount"/> instance in a JSON file using the <see cref="IDBManager"/> interface.
+    /// </summary>
     public class JsonDBManager : IDBManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -107,6 +110,9 @@ namespace MHServerEmu.DatabaseAccess.Json
             Logger.Warn("CreateTestAccounts(): Operation not supported");
         }
 
+        /// <summary>
+        /// Creates a backup of the account file if enough time has passed since the last one.
+        /// </summary>
         private void TryCreateBackup()
         {
             TimeSpan now = Clock.GameTime;

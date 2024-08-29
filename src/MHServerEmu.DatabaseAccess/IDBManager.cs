@@ -2,6 +2,9 @@
 
 namespace MHServerEmu.DatabaseAccess
 {
+    /// <summary>
+    /// Common interface for <see cref="DBAccount"/> storage implementations.
+    /// </summary>
     public interface IDBManager
     {
         /// <summary>
@@ -35,7 +38,7 @@ namespace MHServerEmu.DatabaseAccess
         public bool UpdateAccount(DBAccount account);
 
         /// <summary>
-        /// Updates persistent game data for the provided <see cref="DBAccount"/>.
+        /// Updates persistent game data stored in the database for the provided <see cref="DBAccount"/>.
         /// </summary>
         public bool UpdateAccountData(DBAccount account);
 

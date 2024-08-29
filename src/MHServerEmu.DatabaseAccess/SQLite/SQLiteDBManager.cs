@@ -8,11 +8,16 @@ using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.DatabaseAccess.SQLite
 {
+    /// <summary>
+    /// Provides functionality for storing <see cref="DBAccount"/> instances in a SQLite database using the <see cref="IDBManager"/> interface.
+    /// </summary>
     public class SQLiteDBManager : IDBManager
     {
         private const int CurrentSchemaVersion = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly object _saveLock = new();
 
         private string _dbFilePath;
         private string _connectionString;
@@ -117,7 +122,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using SQLiteConnection connection = GetConnection();
 
             // Use a transaction to make sure all data is saved
-            using (var transaction = connection.BeginTransaction())
+            using SQLiteTransaction transaction = connection.BeginTransaction();
+            
+            // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
+            lock (_saveLock)
             {
                 try
                 {
@@ -182,6 +190,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return connection;
         }
 
+        /// <summary>
+        /// Initializes a new empty database file using the current schema.
+        /// </summary>
         private bool InitializeDatabaseFile()
         {
             string initializationScript = SQLiteScripts.GetInitializationScript();
@@ -196,9 +207,14 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return true;
         }
 
+        /// <summary>
+        /// Migrates an existing database file to the current schema if needed.
+        /// </summary>
         private bool MigrateDatabaseFileToCurrentSchema()
         {
-            int schemaVersion = GetSchemaVersion();
+            using SQLiteConnection connection = GetConnection();
+
+            int schemaVersion = GetSchemaVersion(connection);
             if (schemaVersion > CurrentSchemaVersion)
                 return Logger.ErrorReturn(false, $"Initialize(): Existing database file uses unsupported schema version {schemaVersion} (current = {CurrentSchemaVersion})");
 
@@ -211,7 +227,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             string backupDbPath = $"{_dbFilePath}.v{schemaVersion}";
             File.Copy(_dbFilePath, backupDbPath);
 
-            using SQLiteConnection connection = GetConnection();
             bool success = true;
 
             while (schemaVersion < CurrentSchemaVersion)
@@ -227,10 +242,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 }
 
                 connection.Execute(migrationScript);
-                connection.Execute($"PRAGMA user_version = {++schemaVersion}");
+                SetSchemaVersion(connection, ++schemaVersion);
             }
 
-            success &= GetSchemaVersion() == CurrentSchemaVersion;
+            success &= GetSchemaVersion(connection) == CurrentSchemaVersion;
 
             if (success == false)
             {
@@ -250,28 +265,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         }
 
         /// <summary>
-        /// Returns the user_version value of the current database.
+        /// Creates a backup of the database file if enough time has passed since the last one.
         /// </summary>
-        private int GetSchemaVersion()
-        {
-            using SQLiteConnection connection = GetConnection();
-
-            var queryResult = connection.Query<int>("PRAGMA user_version");
-            if (queryResult.Any())
-                return queryResult.First();
-
-            return Logger.WarnReturn(-1, "GetSchemaVersion(): Failed to query user_version from the DB");
-        }
-
-        /// <summary>
-        /// Sets the user_version value of the current database.
-        /// </summary>
-        private void SetSchemaVersion(int version)
-        {
-            using SQLiteConnection connection = GetConnection();
-            connection.Execute($"PRAGMA user_version = {version}");
-        }
-
         private void TryCreateBackup()
         {
             TimeSpan now = Clock.GameTime;
@@ -286,9 +281,29 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         }
 
         /// <summary>
+        /// Returns the user_version value of the current database file.
+        /// </summary>
+        private static int GetSchemaVersion(SQLiteConnection connection)
+        {
+            var queryResult = connection.Query<int>("PRAGMA user_version");
+            if (queryResult.Any())
+                return queryResult.First();
+
+            return Logger.WarnReturn(-1, "GetSchemaVersion(): Failed to query user_version from the DB");
+        }
+
+        /// <summary>
+        /// Sets the user_version value of the current database file.
+        /// </summary>
+        private static void SetSchemaVersion(SQLiteConnection connection, int version)
+        {
+            connection.Execute($"PRAGMA user_version = {version}");
+        }
+
+        /// <summary>
         /// Loads account data for the specified <see cref="DBAccount"/> and maps relations.
         /// </summary>
-        private void LoadAccountData(SQLiteConnection connection, DBAccount account)
+        private static void LoadAccountData(SQLiteConnection connection, DBAccount account)
         {
             var @params = new { DbGuid = account.Id };
 
