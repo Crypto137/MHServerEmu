@@ -114,7 +114,9 @@ namespace MHServerEmu.DatabaseAccess.Json
             if ((now - _lastBackupTime) < _backupInterval)
                 return;
 
-            FileHelper.CreateFileBackup(_accountFilePath, _maxBackupNumber);
+            if (FileHelper.CreateFileBackup(_accountFilePath, _maxBackupNumber))
+                Logger.Info("Created account file backup");
+
             _lastBackupTime = now;
         }
 

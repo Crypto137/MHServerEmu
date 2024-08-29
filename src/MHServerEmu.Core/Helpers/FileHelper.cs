@@ -61,11 +61,18 @@ namespace MHServerEmu.Core.Helpers
             if (File.Exists(filePath) == false)
                 return Logger.WarnReturn(false, $"CreateFileBackup(): File not found at {filePath}");
 
+            // Cache backup file names for reuse
+            Span<string> backupPaths = new string[maxBackups];
+
             // Look for a free backup index
             int freeIndex = -1;
             for (int i = 0; i < maxBackups; i++)
             {
-                if (File.Exists($"{filePath}.bak{i}") == false)
+                // Backup path strings are created on demand so that we don't end creating
+                // a lot of unneeded strings when we don't have a lot of backup files.
+                backupPaths[i] = $"{filePath}.bak{i}";
+                
+                if (File.Exists(backupPaths[i]) == false)
                 {
                     freeIndex = i;
                     break;
@@ -76,22 +83,20 @@ namespace MHServerEmu.Core.Helpers
             if (freeIndex == -1)
             {
                 freeIndex = maxBackups - 1;
-                File.Delete($"{filePath}.bak{freeIndex}");
+                File.Delete(backupPaths[freeIndex]);
             }
 
             // Move files to the right until we free up index 0
             for (int i = freeIndex - 1; i >= 0; i--)
             {
-                File.Move($"{filePath}.bak{i}", $"{filePath}.bak{i + 1}");
+                File.Move(backupPaths[i], backupPaths[i + 1]);
             }
 
             // Create our backup at index 0
-            string backupFilePath = $"{filePath}.bak0";
+            if (File.Exists(backupPaths[0]))
+                return Logger.WarnReturn(false, $"CreateFileBackup(): Backup file path is not free {backupPaths[0]}");
 
-            if (File.Exists(backupFilePath))
-                return Logger.WarnReturn(false, $"CreateFileBackup(): Backup file path is not free {backupFilePath}");
-
-            File.Copy(filePath, backupFilePath);
+            File.Copy(filePath, backupPaths[0]);
 
             return true;
         }
