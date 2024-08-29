@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.Dialog
             EntityTrackingFlags |= EntityTrackingFlag.HUD;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.TargetEntity != null && Proto.TargetEntity.Evaluate(entity, new(MissionProto.DataRef))) 
             {
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.Dialog
             EntityTrackingFlags |= EntityTrackingFlag.MissionCondition;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.NoTrackingOptimization)
                 return EntityTrackingFlag.None;
@@ -336,7 +336,7 @@ namespace MHServerEmu.Games.Dialog
             return _missionRefs;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             EntityTrackingFlag trackingFlag = EntityTrackingFlag.None;
 
@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Dialog
             EntityTrackingFlags |= EntityTrackingFlag.TransitionRegion;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (entity is Transition transition && InterestRegions.Any())
             {
@@ -409,7 +409,7 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags |= InteractionOptimizationFlags.Visibility;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new(MissionProto.DataRef)))
             {
@@ -424,7 +424,7 @@ namespace MHServerEmu.Games.Dialog
     {
         public MissionDialogTextPrototype Proto { get; set; }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new(MissionProto.DataRef)))
             {
@@ -444,7 +444,7 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags |= InteractionOptimizationFlags.ConnectionTargetEnable;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.ConnectionTarget != PrototypeId.Invalid)
             {
@@ -474,7 +474,7 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags |= InteractionOptimizationFlags.Appearance;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new(MissionProto.DataRef)))
             {
@@ -494,7 +494,7 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags |= InteractionOptimizationFlags.ActionEntityTarget;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             if (Proto != null && Proto.EntityFilter != null && Proto.EntityFilter.Evaluate(entity, new (MissionProto.DataRef)))
             {

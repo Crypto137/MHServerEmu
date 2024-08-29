@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags |= InteractionOptimizationFlags.Hint;
         }
 
-        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, List<InteractionOption> checkList)
         {
             MetaGameDataPrototype metaGameDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(UIWidgetRef);
             var trackingFlag = EntityTrackingFlag.None;

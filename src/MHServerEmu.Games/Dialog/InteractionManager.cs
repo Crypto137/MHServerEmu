@@ -748,7 +748,7 @@ namespace MHServerEmu.Games.Dialog
 
             if (optionsList.Count > 0 || hasInteractionData || hasKeywords)
             {
-                SortedSet<InteractionOption> sortedOptions = new ();
+                List<InteractionOption> sortedOptions = new ();
                 if (hasInteractionData)
                     if (optimizationFlags == InteractionOptimizationFlags.None || interactionData.HasOptionFlags(optimizationFlags))
                         foreach (var option in interactionData.Options)
@@ -763,6 +763,8 @@ namespace MHServerEmu.Games.Dialog
 
                 foreach (var option in optionsList)
                     sortedOptions.Add(option);
+
+                sortedOptions.Sort();
 
                 bool before = false;
                 bool after = false;
