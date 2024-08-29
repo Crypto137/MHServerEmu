@@ -60,6 +60,12 @@ namespace MHServerEmu.Games.Missions.Conditions
             return result;
         }
 
+        public override void SetCompleted()
+        {
+            foreach (var condition in Conditions)
+                condition?.SetCompleted();
+        }
+
         public override bool OnReset()
         {
             return ResetList(true);           

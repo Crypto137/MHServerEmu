@@ -18,11 +18,5 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             return false;
         }
-
-        public override void SetCompleted()
-        {
-            foreach (var condition in Conditions)
-                condition?.SetCompleted();
-        }
     }
 }

@@ -29,10 +29,10 @@ namespace MHServerEmu.Games.Missions
         private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklist = new();
         private Dictionary<PrototypeId, MissionSpawnEvent> _spawnedMissions = new();
 
-        public Player Player { get; private set; }       
+        public Player Player { get; private set; }
         public Game Game { get; private set; }
         public IMissionManagerOwner Owner { get; set; }
-        public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }        
+        public EventScheduler GameEventScheduler { get => Game.GameEventScheduler; }
         public bool IsInitialized { get; private set; }
         public bool HasMissions { get => _missionDict.Count > 0; }
         public List<PrototypeId> ActiveMissions { get; private set; } = new();
@@ -47,11 +47,11 @@ namespace MHServerEmu.Games.Missions
         public Action<PlayerCompletedMissionGameEvent> PlayerCompletedMissionAction { get; private set; }
         public Action<PlayerFailedMissionGameEvent> PlayerFailedMissionAction { get; private set; }
 
-        private ulong _regionId; 
+        private ulong _regionId;
         private HashSet<ulong> _missionInterestEntities = new();
         private InteractionOptimizationFlags _optimizationFlag;
 
-        public MissionManager() 
+        public MissionManager()
         {
             _optimizationFlag = InteractionOptimizationFlags.Hint | InteractionOptimizationFlags.Visibility;
         }
@@ -114,9 +114,18 @@ namespace MHServerEmu.Games.Missions
                     var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                     if (ShouldCreateMission(missionProto))
                         if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)
-                            CreateMissionByDataRef(missionRef);
+                        {
+                            var mission = CreateMissionByDataRef(missionRef);
+
+                            // Hardcode Complete
+                            if (CompletedMissions.Contains((MissionPrototypeId)missionRef)) 
+                            {
+                                mission.SetState(MissionState.Completed);
+                                mission.AddParticipant(player);
+                            }
+                        }
                 }
-            
+
             // TODO PropertyEnum.LegendaryMissionWasShared
             // PropertyEnum.LastDailyMissionCalendarDay;
 
@@ -916,6 +925,12 @@ namespace MHServerEmu.Games.Missions
 
         #region Hardcoded
 
+        public static MissionPrototypeId[] CompletedMissions = new MissionPrototypeId[]
+        {
+            MissionPrototypeId.NPE1Flag, // Pre BUE player
+            //MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
+        };
+
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
         {
             MissionPrototypeId.CH00TrainingPathingController,
@@ -984,6 +999,9 @@ namespace MHServerEmu.Games.Missions
 
         public enum MissionPrototypeId : ulong
         {
+            NPE1Flag = 10079041614323716371,
+            NPE2Flag = 11142636152886137108,
+
             CH00TrainingPathingController = 3126128604301631533,
             CH00NPETrainingRoom = 17508547083537161214,
 
