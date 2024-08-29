@@ -61,14 +61,16 @@ namespace MHServerEmu.Core.Helpers
             if (File.Exists(filePath) == false)
                 return Logger.WarnReturn(false, $"CreateFileBackup(): File not found at {filePath}");
 
-            // Cache backup file names for reuse
-            Span<string> backupPaths = new string[maxBackups];
+            // Cache backup file names for reuse.
+            // NOTE: We can also reuse the same string array for multiple calls of this function,
+            // but it's probably not going to be called often enough to be worth it.
+            string[] backupPaths = new string[maxBackups];
 
             // Look for a free backup index
             int freeIndex = -1;
             for (int i = 0; i < maxBackups; i++)
             {
-                // Backup path strings are created on demand so that we don't end creating
+                // Backup path strings are created on demand so that we don't end up creating
                 // a lot of unneeded strings when we don't have a lot of backup files.
                 backupPaths[i] = $"{filePath}.bak{i}";
                 
