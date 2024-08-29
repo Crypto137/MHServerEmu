@@ -207,7 +207,7 @@ namespace MHServerEmu.Games.Dialog
         {
             if (entity == null) return false;
 
-            if (_regionRefs.Any())
+            if (_regionRefs.Count > 0)
             {
                 Region region = entity.Region;
                 if (region == null)
@@ -232,25 +232,25 @@ namespace MHServerEmu.Games.Dialog
                 if (found == false) return false;
             }
 
-            if (_encounterRefs.Any())
+            if (_encounterRefs.Count > 0)
             {
                 var ecounterRef = entity.EncounterResourcePrototype;
                 if (ecounterRef == PrototypeId.Invalid || _encounterRefs.Contains(ecounterRef) == false) return false;
             }
 
-            if (_missionRefs.Any())
+            if (_missionRefs.Count > 0)
             {
                 PrototypeId missionRef = entity.MissionPrototype;
                 if (missionRef == PrototypeId.Invalid || _missionRefs.Contains(missionRef) == false) return false;
             }
 
-            if (_clusterRefs.Any())
+            if (_clusterRefs.Count > 0)
             {
                 PrototypeId clusterRef = entity.ClusterPrototype;
                 if (clusterRef == PrototypeId.Invalid || _clusterRefs.Contains(clusterRef) == false) return false;
             }
 
-            if (_entityFilters.Any())
+            if (_entityFilters.Count > 0)
             {
                 foreach (var filter in _entityFilters)
                     if (filter.Evaluate(entity, new (FilterContextMissionRef)) == false) return false;

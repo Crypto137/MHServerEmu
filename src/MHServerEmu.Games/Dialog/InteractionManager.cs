@@ -4,7 +4,6 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -39,14 +38,14 @@ namespace MHServerEmu.Games.Dialog
             {
                 var missionData = kvp.Value;
                 if (missionData == null) continue;
-                if (missionData.CompleteOptions.Any())
+                if (missionData.CompleteOptions.Count > 0)
                 {
                     HashSet<PrototypeId> contexts = new (missionData.Contexts);
-                    if (contexts.Any())
+                    if (contexts.Count > 0)
                     {
                         foreach (var completeOption in missionData.CompleteOptions)
                         {
-                            if (!contexts.Any())
+                            if (contexts.Count == 0)
                             {
                                 Logger.Warn($"Unable to link option to mission. MISSION={GameDatabase.GetFormattedPrototypeName(missionData.MissionRef)} OPTION={completeOption}");
                                 continue;
@@ -71,11 +70,7 @@ namespace MHServerEmu.Games.Dialog
             }
 
             foreach (var kvp in _interaсtionMap)
-            {
-               // if (kvp.Key == (PrototypeId)3318119032142371986)
-               //    Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(kvp.Key)}");
                 kvp.Value?.Sort();
-            }
         }
 
         private void BindOptionToMap(InteractionOption option, HashSet<PrototypeId> contexts)
@@ -748,34 +743,31 @@ namespace MHServerEmu.Games.Dialog
 
             if (optionsList.Count > 0 || hasInteractionData || hasKeywords)
             {
-                List<InteractionOption> sortedOptions = new ();
+                HashSet<InteractionOption> interactionOptions = new ();
                 if (hasInteractionData)
                     if (optimizationFlags == InteractionOptimizationFlags.None || interactionData.HasOptionFlags(optimizationFlags))
                         foreach (var option in interactionData.Options)
-                            sortedOptions.Add(option);
+                            interactionOptions.Add(option);
 
                 if (hasKeywords)
                     foreach (var keyword in worldEntityProto.Keywords)
                         if (_interaсtionMap.TryGetValue(keyword, out var keywordInteractionData))
                             if (optimizationFlags == InteractionOptimizationFlags.None || keywordInteractionData.HasOptionFlags(optimizationFlags))
                                 foreach (var option in keywordInteractionData.Options)
-                                    sortedOptions.Add(option);
+                                    interactionOptions.Add(option);
 
-                foreach (var option in optionsList)
-                    sortedOptions.Add(option);
-
-                sortedOptions.Sort();
+                optionsList.AddRange(interactionOptions);
+                optionsList.Sort((a, b) => a.SortPriority(b));
 
                 bool before = false;
                 bool after = false;
 
-                foreach (var currentOption in sortedOptions)
+                foreach (var currentOption in optionsList)
                     if (CheckOptionFilters(interactee, interactor, currentOption))
                     {
                         int currentOptionPriority = currentOption.Priority;
                         if (!(lastAvailableOptionPriority == startingPriority || currentOptionPriority >= lastAvailableOptionPriority))
                         {
-                            optionsList.Clear();
                             Logger.Warn($"InteractionManager's options for '{interactee.PrototypeName}' must be sorted in ascending order of priority, but the following option isn't!\n{currentOption}");
                             return InteractionMethod.None;
                         }
@@ -798,8 +790,6 @@ namespace MHServerEmu.Games.Dialog
                 if (before && after)
                     interactionsResult |= InteractionMethod.Neutral;
             }
-
-            optionsList.Clear();
 
             return interactionsResult;
         }
@@ -1357,7 +1347,7 @@ namespace MHServerEmu.Games.Dialog
 
         public void Sort()
         {
-            Options.Sort((a, b) => a.CompareTo(b));
+            Options.Sort((a, b) => a.SortPriority(b));
         }
 
         public void AddOption(InteractionOption option)
@@ -1406,9 +1396,9 @@ namespace MHServerEmu.Games.Dialog
     public class ExtraMissionData
     {      
         public PrototypeId MissionRef { get; set; }
-        public SortedSet<BaseMissionOption> Options { get; set; }
+        public HashSet<BaseMissionOption> Options { get; set; }
         public SortedSet<PrototypeId> Contexts { get; set; }
-        public SortedSet<BaseMissionOption> CompleteOptions { get; set; }
+        public HashSet<BaseMissionOption> CompleteOptions { get; set; }
         public bool PlayerHUDShowObjs { get; set; }
 
         public ExtraMissionData(PrototypeId missionRef)
