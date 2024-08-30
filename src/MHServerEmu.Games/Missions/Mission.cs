@@ -302,8 +302,9 @@ namespace MHServerEmu.Games.Missions
 
         public void RemoteNotificationForConditions(MissionConditionListPrototype conditionList)
         {
-            // TODO conditionList.Iterate(MissionConditionRemoteNotificationPrototype)
-            // Send NetMessageRemoteMissionNotification
+            foreach (var condition in conditionList.IteratePrototypes(typeof(MissionConditionRemoteNotificationPrototype)))
+                if (condition is MissionConditionRemoteNotificationPrototype remoteNotificationProto)
+                    SendRemoteMissionNotificationToParticipants(remoteNotificationProto);
         }
 
         private void ResetStateObjectives(bool onlyActive)
@@ -398,6 +399,31 @@ namespace MHServerEmu.Games.Missions
                 message.SetPowerAssetRef((ulong)visualsProto.DailyMissionCompleteClass);
                 Game.NetworkManager.SendMessageToInterested(message.Build(), avatar, Network.AOINetworkPolicyValues.AOIChannelProximity);
             }
+        }
+
+        private void SendRemoteMissionNotificationToParticipants(MissionConditionRemoteNotificationPrototype notificationProto)
+        {
+            var players = GetParticipants().ToArray();
+            if (players.Length == 0) return;
+
+            var messageBuilder = NetMessageRemoteMissionNotification.CreateBuilder();
+            messageBuilder.SetDialogTextStringId((ulong)notificationProto.DialogText);
+            messageBuilder.SetMissionPrototypeId((ulong)PrototypeDataRef);
+
+            var wordlEntityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(notificationProto.WorldEntityPrototype);
+            if (wordlEntityProto != null)
+            {
+                messageBuilder.SetEntityPrototypeId((ulong)wordlEntityProto.DataRef);
+                messageBuilder.SetIconPathOverrideId((ulong)wordlEntityProto.IconPath);
+            }
+
+            if (notificationProto.VOTrigger != AssetId.Invalid)
+                messageBuilder.SetVoTriggerAssetId((ulong)notificationProto.VOTrigger);
+
+            var message = messageBuilder.Build();
+
+            foreach (var player in players)
+                player.SendMessage(message);
         }
 
         public bool HasRewards(Player player, Avatar avatar)
