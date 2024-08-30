@@ -4,10 +4,13 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions
@@ -41,6 +44,8 @@ namespace MHServerEmu.Games.Missions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private EventPointer<TimeLimitEvent> _timeLimitEvent = new();
+
         private byte _prototypeIndex;
 
         private MissionObjectiveState _objectiveState;
@@ -71,6 +76,7 @@ namespace MHServerEmu.Games.Missions
         public TimeSpan TimeExpire { get => _objectiveStateExpireTime; }
         public TimeSpan TimeRemainingForObjective { get => _objectiveStateExpireTime - Clock.GameTime; }
         public bool IsChangingState { get; private set; }
+        public EventGroup EventGroup { get; } = new();
 
         public MissionObjective(Mission mission, byte prototypeIndex)
         {
@@ -95,6 +101,9 @@ namespace MHServerEmu.Games.Missions
 
         public void Destroy()
         {
+            Game.GameEventScheduler?.CancelAllEvents(EventGroup);
+            CancelTimeLimitEvent();
+
             _activateConditions?.Destroy();
             _failureConditions?.Destroy();
             _successConditions?.Destroy();
@@ -331,10 +340,13 @@ namespace MHServerEmu.Games.Missions
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
 
-            if (reset)
-                _interactedEntityList.Clear();
+            if (reset) _interactedEntityList.Clear();
 
-            // TODO objetiveProto.TimeLimitSeconds
+            if (objetiveProto.TimeLimitSeconds > 0 || objetiveProto.TimeLimitSecondsEval != null)
+            {
+                TimeSpan time = EvaluateTimeLimit(objetiveProto.TimeLimitSeconds, objetiveProto.TimeLimitSecondsEval);
+                if (time > TimeSpan.Zero) ScheduleTimeLimit(time);
+            }
 
             if (objetiveProto.SuccessConditions != null)
                 Mission.RemoteNotificationForConditions(objetiveProto.SuccessConditions);
@@ -365,6 +377,41 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
+        private TimeSpan EvaluateTimeLimit(long timeLimitSeconds, EvalPrototype timeLimitSecondsEval)
+        {
+            TimeSpan timeLimit = TimeSpan.Zero;
+            var expireTIme = _objectiveStateExpireTime;
+            if (expireTIme != TimeSpan.Zero)
+            {
+                timeLimit = TimeRemainingForObjective;
+                if (timeLimit.TotalMilliseconds <= 0)
+                    timeLimit = TimeSpan.FromMilliseconds(1);
+            }
+            else
+            {
+                if (timeLimitSecondsEval != null)
+                {
+                    var region = Region;
+                    if (region != null)
+                    {
+                        EvalContextData evalContext = new(Game);
+                        evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
+                        if (region.MetaGames.Count > 0)
+                        {
+                            ulong metaGemeId = region.MetaGames.First();
+                            var metaGame = Game.EntityManager.GetEntity<Entity>(metaGemeId);
+                            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, metaGame);
+                        }
+                        int evalTime = Eval.RunInt(timeLimitSecondsEval, evalContext);
+                        timeLimit = TimeSpan.FromSeconds(evalTime);
+                    }
+                }
+                else if (timeLimitSeconds > 0)
+                    timeLimit = TimeSpan.FromSeconds(timeLimitSeconds);
+            }
+            return timeLimit;
+        }
+
         private bool OnUnsetStateActive()
         {
             var objetiveProto = Prototype;
@@ -375,9 +422,7 @@ namespace MHServerEmu.Games.Missions
             if (_onStartActions != null && _onStartActions.Deactivate() == false) return false;
 
             _interactedEntityList.Clear();
-
-            // TODO clear objetiveProto.TimeLimitSeconds
-
+            CancelTimeLimitEvent();
             RemoveMetaGameWidget(); 
 
             var region = Region;
@@ -456,6 +501,28 @@ namespace MHServerEmu.Games.Missions
                     _successConditions?.ResetList(resetCondition);
                     _failureConditions?.ResetList(resetCondition);
 
+                    break;
+            }
+        }
+
+        public void UnRegisterEvents(Region region)
+        {
+            CancelTimeLimitEvent();
+
+            if (_onAvailableActions?.IsActive == true) _onAvailableActions.Deactivate();
+            if (_onStartActions?.IsActive == true) _onStartActions.Deactivate();
+            if (_onSuccessActions?.IsActive == true) _onSuccessActions.Deactivate();
+            if (_onFailActions?.IsActive == true) _onFailActions.Deactivate();
+
+            switch (State)
+            {
+                case MissionObjectiveState.Available:
+                    if (_activateConditions?.EventsRegistered == true) _activateConditions.UnRegisterEvents(region);
+                    break;
+
+                case MissionObjectiveState.Active:
+                    if (_successConditions?.EventsRegistered == true) _successConditions.UnRegisterEvents(region);
+                    if (_failureConditions?.EventsRegistered == true) _failureConditions.UnRegisterEvents(region);
                     break;
             }
         }
@@ -557,7 +624,10 @@ namespace MHServerEmu.Games.Missions
                 message.SetObjectiveState((uint)State);
 
             if (objectiveFlags.HasFlag(MissionObjectiveUpdateFlags.StateExpireTime))
-                message.SetObjectiveStateExpireTime((ulong)TimeExpire.TotalMilliseconds);
+            {
+                ulong time = (ulong)TimeExpire.TotalMilliseconds;
+                message.SetObjectiveStateExpireTime(time); 
+            }
 
             if (objectiveFlags.HasFlag(MissionObjectiveUpdateFlags.CurrentCount))
             {
@@ -599,6 +669,47 @@ namespace MHServerEmu.Games.Missions
                 message.SetSuspendedState(Mission.IsSuspended);
 
             player.SendMessage(message.Build());
+        }
+
+        private void CancelTimeLimitEvent()
+        {
+            if (_timeLimitEvent.IsValid == false) return;
+            Game.GameEventScheduler?.CancelEvent(_timeLimitEvent);
+            _objectiveStateExpireTime = TimeSpan.Zero;
+        }
+
+        private void OnTimeLimit()
+        {
+            _objectiveStateExpireTime = TimeSpan.Zero;
+            switch(Prototype.TimeExpiredResult)
+            {
+                case MissionTimeExpiredResult.Complete:
+                    SetState(MissionObjectiveState.Completed);
+                    break;
+
+                case MissionTimeExpiredResult.Fail:
+                    SetState(MissionObjectiveState.Failed);
+                    break;
+            }
+        }
+
+        private bool ScheduleTimeLimit(TimeSpan timeLimit)
+        {
+            if (_timeLimitEvent.IsValid) return false;
+
+            _objectiveStateExpireTime = Clock.GameTime + timeLimit;
+
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return false;
+            scheduler.ScheduleEvent(_timeLimitEvent, timeLimit, EventGroup);
+            _timeLimitEvent.Get().Initialize(this);
+
+            return true;
+        }
+
+        protected class TimeLimitEvent : CallMethodEvent<MissionObjective>
+        {
+            protected override CallbackDelegate GetCallback() => (objective) => objective?.OnTimeLimit();
         }
     }
 }

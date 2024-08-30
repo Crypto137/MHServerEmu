@@ -137,6 +137,7 @@ namespace MHServerEmu.Games.Missions
         public MissionSpawnState SpawnState { get; private set; }
         public bool CompleteNowRewards { get; private set; }
         public bool RestartingMission { get; private set; }
+        public bool EventsRegistered { get; set; }
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
@@ -200,8 +201,8 @@ namespace MHServerEmu.Games.Missions
             if (scheduler != null)
             {
                 scheduler.CancelAllEvents(EventGroup);
-                if (_timeLimitEvent.IsValid) scheduler.CancelEvent(_timeLimitEvent);
-                if (_idleTimeoutEvent.IsValid) scheduler.CancelEvent(_idleTimeoutEvent);
+            CancelTimeLimitEvent();
+            CancelIdleTimeoutEvent();
                 if (_restartMissionEvent.IsValid) scheduler.CancelEvent(_restartMissionEvent);
                 if (_updateObjectivesEvent.IsValid) scheduler.CancelEvent(_updateObjectivesEvent);
             }
@@ -349,7 +350,10 @@ namespace MHServerEmu.Games.Missions
                     message.SetMissionState((uint)State);
 
                 if (missionFlags.HasFlag(MissionUpdateFlags.StateExpireTime))
-                    message.SetMissionStateExpireTime((ulong)TimeExpireCurrentState.TotalMilliseconds);
+                {
+                    ulong time = (ulong)(TimeExpireCurrentState.TotalMilliseconds);
+                    message.SetMissionStateExpireTime(time);
+                }
 
                 if (missionFlags.HasFlag(MissionUpdateFlags.Rewards))
                 {
@@ -543,6 +547,7 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnUnsetState(bool reset)
         {
+            CancelTimeLimitEvent();
             return _state switch
             {
                 MissionState.Invalid => OnUnsetStateInvalid(),
@@ -758,8 +763,7 @@ namespace MHServerEmu.Games.Missions
 
             if (_onStartActions != null && _onStartActions.Deactivate() == false) return false;
 
-            if (_idleTimeoutEvent.IsValid)
-                GameEventScheduler?.CancelEvent(_idleTimeoutEvent);
+            CancelIdleTimeoutEvent();
 
             var region = Region;
             if (region != null)
@@ -1613,6 +1617,60 @@ namespace MHServerEmu.Games.Missions
         public void OnPlayerLeftRegion(Player player)
         {
             Logger.Warn($"OnPlayerLeftRegion [{PrototypeName}]");
+        }
+
+        public void UnRegisterEvents(Region region)
+        {
+            EventsRegistered = false;
+            _creationState = MissionCreationState.Loaded;
+            CancelTimeLimitEvent();
+            CancelIdleTimeoutEvent();
+
+            if (_onAvailableActions?.IsActive == true) _onAvailableActions.Deactivate();
+            if (_onStartActions?.IsActive == true) _onStartActions.Deactivate();
+            if (_onSuccessActions?.IsActive == true) _onSuccessActions.Deactivate();
+            if (_onFailActions?.IsActive == true) _onFailActions.Deactivate();
+
+            switch (State)
+            {
+                case MissionState.Inactive:
+
+                    if (_prereqConditions?.EventsRegistered == true) _prereqConditions.UnRegisterEvents(region);
+                    if (_activateNowConditions?.EventsRegistered == true) _activateNowConditions.UnRegisterEvents(region);
+                    if (_completeNowConditions?.EventsRegistered == true) _completeNowConditions.UnRegisterEvents(region);
+
+                    break;
+
+                case MissionState.Available:
+
+                    if (_activateConditions?.EventsRegistered == true) _activateConditions.UnRegisterEvents(region);
+                    if (_activateNowConditions?.EventsRegistered == true) _activateNowConditions.UnRegisterEvents(region);
+                    if (_completeNowConditions?.EventsRegistered == true) _completeNowConditions.UnRegisterEvents(region);
+
+                    break;
+
+                case MissionState.Active:
+
+                    if (_failureConditions?.EventsRegistered == true) _failureConditions.UnRegisterEvents(region);
+                    if (_completeNowConditions?.EventsRegistered == true) _completeNowConditions.UnRegisterEvents(region);
+
+                    break;
+            }
+
+            foreach (var objective in _objectiveDict.Values)
+                objective.UnRegisterEvents(region);
+        }
+
+        private void CancelIdleTimeoutEvent()
+        {
+            if (_idleTimeoutEvent.IsValid) GameEventScheduler?.CancelEvent(_idleTimeoutEvent);
+        }
+
+        private void CancelTimeLimitEvent()
+        {
+            if (_timeLimitEvent.IsValid == false) return;
+            GameEventScheduler?.CancelEvent(_timeLimitEvent);
+            _timeExpireCurrentState = TimeSpan.Zero;
         }
 
         private void OnTimeLimit()

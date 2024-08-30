@@ -271,7 +271,10 @@ namespace MHServerEmu.Games.Missions
                 region.PlayerInteractEvent.AddActionBack(PlayerInteractAction);
                 region.PlayerLeftRegionEvent.AddActionBack(PlayerLeftRegionAction);
             }
-            
+
+            foreach (var mission in _missionDict.Values)
+                mission.EventsRegistered = true;
+
             EventRegistred = true;
         }
 
@@ -292,6 +295,9 @@ namespace MHServerEmu.Games.Missions
                 region.PlayerInteractEvent.RemoveAction(PlayerInteractAction);
                 region.PlayerLeftRegionEvent.RemoveAction(PlayerLeftRegionAction);
             }
+
+            foreach (var mission in _missionDict.Values)
+                if (mission.EventsRegistered) mission.UnRegisterEvents(region);
 
             EventRegistred = false;
         }
