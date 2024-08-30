@@ -625,6 +625,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return regions.Count > 0;
         }
+
+        public bool MatchingKeyword(PrototypeId[] keywords)
+        {
+            if (keywords.HasValue())
+                foreach(var keywordRef in keywords)
+                    if (HasRegionRestrictionKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keywordRef)))
+                        return true;
+            return false;
+        }
+
+        public bool SuspendedMissionState(Region region)
+        {
+            if (region == null) return false;
+            if (ResetsWithRegion != PrototypeId.Invalid && region.FilterRegion(ResetsWithRegion) == false) return true;
+            if (SuspendIfNoMatchingKeyword && RegionRestrictionKeywords.HasValue())
+                if (MatchingKeyword(region.Prototype.Keywords) == false) return true;
+            if (IsLiveTuningEnabled() == false) return true;
+            return false;
+        }
     }
 
     public class OpenMissionPrototype : MissionPrototype

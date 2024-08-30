@@ -992,7 +992,8 @@ namespace MHServerEmu.Games.Missions
         {
             if (MissionManager.IsInitialized == false) return false;
 
-            // TODO suspend
+            bool suspended = Prototype.SuspendedMissionState(Region);
+            SetSuspendedState(suspended);
 
             if (_creationState == MissionCreationState.Initialized) return true;
             _creationState = MissionCreationState.Initialized;
@@ -1005,6 +1006,33 @@ namespace MHServerEmu.Games.Missions
                 MissionCreationState.Changed => OnInitializeChanged(),
                 _ => false,
             };
+        }
+
+        private bool SetSuspendedState(bool suspended)
+        {
+            var region = Region;
+            if (region == null || suspended == IsSuspended) return false;
+
+            _isSuspended = suspended;
+
+            if (suspended)
+            {
+                if (_creationState == MissionCreationState.Initialized) OnUnsetState(false);
+                if (EventsRegistered) UnRegisterEvents(region);
+                SendToParticipants(MissionUpdateFlags.SuspendedState, MissionObjectiveUpdateFlags.SuspendedState);
+            }
+            else
+            {
+                foreach (var objective in _objectiveDict.Values)
+                    objective?.OnLoaded();
+
+                OnSetState(false);
+                if (MissionManager.EventRegistred) EventsRegistered = true;
+                OnChangeState();
+                SendToParticipants(MissionUpdateFlags.SuspendedState | MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.SuspendedState);
+            }
+
+            return true;
         }
 
         private bool OnInitializeCreate()
