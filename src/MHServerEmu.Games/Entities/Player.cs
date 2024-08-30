@@ -131,6 +131,8 @@ namespace MHServerEmu.Games.Entities
         public string Name { get; internal set; }
         public PrototypeId ActiveChapter { get => Properties[PropertyEnum.ActiveMissionChapter]; }
         public PrototypeId Faction { get => Properties[PropertyEnum.Faction]; }
+        public ulong DialogTargetId { get; private set; }
+        public ulong DialogInteractorId { get; private set; }
 
         public Player(Game game) : base(game)
         {
@@ -1296,7 +1298,38 @@ namespace MHServerEmu.Games.Entities
 
         public WorldEntity GetDialogTarget(bool validateTarget = false)
         {
-            throw new NotImplementedException();
+            if (DialogTargetId == InvalidId) return null;
+            var target = Game.EntityManager.GetEntity<WorldEntity>(DialogTargetId);
+            if (validateTarget && ValidateDialogTarget(target, DialogInteractorId) == false) return null;
+            return target;
+        }
+
+        public bool SetDialogTarget(ulong targetId, ulong interactorId)
+        {
+            if (targetId != InvalidId && interactorId != InvalidId)
+            {
+                var interactor = Game.EntityManager.GetEntity<WorldEntity>(interactorId);
+                if (interactor == null || interactor.IsInWorld == false) return false;
+
+                var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+                if (ValidateDialogTarget(target, interactorId) == false)
+                    return Logger.WarnReturn(false, $"ValidateDialogTarget false for {target.PrototypeName} with {interactor.PrototypeName}");
+
+                DialogTargetId = targetId;
+                DialogInteractorId = interactorId;
+            }
+
+            return true;
+        }
+
+        private bool ValidateDialogTarget(WorldEntity target, ulong interactorId)
+        {
+            if (target == null || target.IsInWorld == false) return false;
+            var interactor = Game.EntityManager.GetEntity<WorldEntity>(interactorId);
+            if (interactor == null || interactor.IsInWorld == false) return false;
+            if (interactor.InInteractRange(target, InteractionMethod.Use, false) == false) return false;
+            if (DialogInteractorId != InvalidId && DialogInteractorId != interactorId) return false;
+            return true;
         }
 
         public bool CanAcquireCurrencyItem(WorldEntity item)

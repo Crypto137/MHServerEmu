@@ -14,8 +14,6 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
-using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
@@ -359,6 +357,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
+                case ClientToGameServerMessage.NetMessageSetDialogTarget:                   OnSetDialogTarget(message); break;                  // 100
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
@@ -941,6 +940,14 @@ namespace MHServerEmu.Games.Network
         private bool OnGracefulDisconnect(MailboxMessage message)   // 98
         {
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
+            return true;
+        }
+
+        private bool OnSetDialogTarget(MailboxMessage message)
+        {
+            var setDialogTarget = message.As<NetMessageSetDialogTarget>();
+            if (setDialogTarget == null) return Logger.WarnReturn(false, $"OnSetDialogTarget(): Failed to retrieve message");
+            Player.SetDialogTarget(setDialogTarget.TargetId, setDialogTarget.InteractorId);
             return true;
         }
 
