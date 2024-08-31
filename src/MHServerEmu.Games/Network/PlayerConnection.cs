@@ -125,13 +125,6 @@ namespace MHServerEmu.Games.Network
 
             PersistenceHelper.RestoreInventoryEntities(Player, _dbAccount);
 
-            // HACK/REMOVEME: Unlock all stash tabs for new players
-            if (_dbAccount.Player.ArchiveData == null)
-            {
-                foreach (PrototypeId stashRef in Player.GetStashInventoryProtoRefs(true, false))
-                    Player.UnlockInventory(stashRef);
-            }
-
             if (Player.CurrentAvatar == null)
             {
                 // If we don't have an avatar after loading from the database it means this is a new player that we need to create avatars for

@@ -166,9 +166,12 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            Properties[PropertyEnum.CharacterLevel] = 60;
-            Properties[PropertyEnum.CombatLevel] = 60;
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            if (this is not Avatar) // REMOVEME
+            {
+                Properties[PropertyEnum.CharacterLevel] = 60;
+                Properties[PropertyEnum.CombatLevel] = 60;
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            }
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);

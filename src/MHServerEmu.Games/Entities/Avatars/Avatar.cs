@@ -92,9 +92,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
-            Properties[PropertyEnum.CharacterLevel] = 60;
             Properties[PropertyEnum.CombatLevel] = 60;
-            Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
 
             // Add base stats to compensate for the lack of equipment
             Properties[PropertyEnum.DamageRating] = 2500f;
@@ -162,15 +160,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                     var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
                     Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
                 }
-            }
-
-            // REMOVEME
-            // We need 10 synergies active to remove the in-game popup
-            int synergyCount = 0;
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                Properties[PropertyEnum.AvatarSynergySelected, avatarRef] = true;
-                if (++synergyCount >= 10) break;
             }
 
             // Initialize AbilityKeyMapping

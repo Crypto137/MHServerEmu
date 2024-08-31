@@ -172,11 +172,8 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<UISystemLockPrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
 
-            foreach (PrototypeId tutorialRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<HUDTutorialPrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.TutorialHasSeenTip, tutorialRef] = true;
-
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
-            Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
+            //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
