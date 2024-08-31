@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -19,6 +21,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             _proto = prototype as MissionPlayerConditionPrototype;
             _count = 0;
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            return Serializer.Transfer(archive, ref _count);
         }
 
         public override bool Initialize(int conditionIndex)

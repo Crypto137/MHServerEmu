@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -6,7 +7,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
-    public class MissionCondition : IMissionConditionOwner
+    public class MissionCondition : ISerialize, IMissionConditionOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Mission Mission { get; private set; }
@@ -27,6 +28,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             Prototype = prototype;
             ConditionIndex = -1;
         }
+
+        public virtual bool Serialize(Archive archive) => false;
 
         public static MissionCondition CreateCondition(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype conditionProto)
         {

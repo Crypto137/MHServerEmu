@@ -248,8 +248,57 @@ namespace MHServerEmu.Games.Missions
 
         public bool SerializeConditions(Archive archive)
         {
-            // TODO MissionConditionList.CreateConditionList
-            return true;
+            bool success = true;
+
+            var missionProto = Prototype;
+            switch (_state)
+            {
+                case MissionState.Inactive:
+
+                    if (MissionConditionList.CreateConditionList(ref _prereqConditions, missionProto.PrereqConditions, this, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _activateNowConditions, missionProto.ActivateNowConditions, this, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, false) == false)
+                        return false;
+
+                    if (_prereqConditions != null) success &= Serializer.Transfer(archive, ref _prereqConditions);
+                    if (_activateNowConditions != null) success &= Serializer.Transfer(archive, ref _activateNowConditions);
+                    if (_completeNowConditions != null) success &= Serializer.Transfer(archive, ref _completeNowConditions);
+
+                    break;
+
+                case MissionState.Completed:
+                case MissionState.Failed:
+
+                    if (missionProto.Repeatable) goto case MissionState.Available;
+                    break;
+
+                case MissionState.Available:
+
+                    if (MissionConditionList.CreateConditionList(ref _activateConditions, missionProto.ActivateConditions, this, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _activateNowConditions, missionProto.ActivateNowConditions, this, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, false) == false)
+                        return false;
+
+                    if (_activateConditions != null) success &= Serializer.Transfer(archive, ref _activateConditions);
+                    if (_activateNowConditions != null) success &= Serializer.Transfer(archive, ref _activateNowConditions);
+                    if (_completeNowConditions != null) success &= Serializer.Transfer(archive, ref _completeNowConditions);
+
+                    break;
+
+                case MissionState.Active:
+
+                    if (MissionConditionList.CreateConditionList(ref _failureConditions, missionProto.FailureConditions, this, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, false) == false)
+                        return false;
+
+                    if (_failureConditions != null) success &= Serializer.Transfer(archive, ref _failureConditions);
+                    if (_completeNowConditions != null) success &= Serializer.Transfer(archive, ref _completeNowConditions);
+
+                    success &= SerializeObjectives(archive);
+                    break;
+            }
+
+            return success;
         }
 
         public override string ToString()
@@ -1153,6 +1202,12 @@ namespace MHServerEmu.Games.Missions
 
                     break;
 
+                case MissionState.Completed:
+                case MissionState.Failed:
+
+                    if (Prototype.Repeatable) goto case MissionState.Available;
+                    break;
+
                 case MissionState.Available:
 
                     _activateConditions?.ResetList(resetCondition);
@@ -1693,6 +1748,12 @@ namespace MHServerEmu.Games.Missions
                     if (_activateNowConditions?.EventsRegistered == true) _activateNowConditions.UnRegisterEvents(region);
                     if (_completeNowConditions?.EventsRegistered == true) _completeNowConditions.UnRegisterEvents(region);
 
+                    break;
+
+                case MissionState.Completed:
+                case MissionState.Failed:
+
+                    if (Prototype.Repeatable) goto case MissionState.Available;
                     break;
 
                 case MissionState.Available:

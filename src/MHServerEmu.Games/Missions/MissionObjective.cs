@@ -171,8 +171,33 @@ namespace MHServerEmu.Games.Missions
 
         public bool SerializeConditions(Archive archive)
         {
-            // TODO MissionConditionList.CreateConditionList
-            return true;
+            bool success = true;
+            var objetiveProto = Prototype;
+
+            switch (_objectiveState)
+            {
+                case MissionObjectiveState.Available:
+
+                    if (MissionConditionList.CreateConditionList(ref _activateConditions, objetiveProto.ActivateConditions, Mission, this, false) == false)
+                        return false;
+
+                    if (_activateConditions != null) success &= Serializer.Transfer(archive, ref _activateConditions);
+
+                    break;
+
+                case MissionObjectiveState.Active:
+
+                    if (MissionConditionList.CreateConditionList(ref _successConditions, objetiveProto.SuccessConditions, Mission, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _failureConditions, objetiveProto.FailureConditions, Mission, this, false) == false)
+                        return false;
+
+                    if (_successConditions != null) success &= Serializer.Transfer(archive, ref _successConditions);
+                    if (_failureConditions != null) success &= Serializer.Transfer(archive, ref _failureConditions);
+
+                    break;
+            }
+
+            return success;
         }
 
         public override string ToString()

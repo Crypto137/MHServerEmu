@@ -1,4 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,18 +9,30 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionList : MissionCondition
     {
         private MissionConditionListPrototype _proto;
-        protected List<MissionCondition> Conditions { get; private set; }
+        private List<MissionCondition> _conditions;
+        protected List<MissionCondition> Conditions { get => _conditions; }
 
         public MissionConditionList(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
         {
             _proto = prototype as MissionConditionListPrototype;
-            Conditions = new();
+            _conditions = new();
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = true;
+            foreach (var condition in _conditions)
+            {
+                var missionCondition = condition;
+                success &= Serializer.Transfer(archive, ref missionCondition);
+            }
+            return success;
         }
 
         public override void Destroy()
         {
-            foreach(var condition in Conditions) condition.Destroy();
+            foreach(var condition in _conditions) condition.Destroy();
             base.Destroy();
         }
 
@@ -55,14 +69,14 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired)
         {
             bool result = false;
-            foreach (var condition in Conditions)
+            foreach (var condition in _conditions)
                 result |= condition.GetCompletionCount(ref currentCount, ref requiredCount, isRequired);
             return result;
         }
 
         public override void SetCompleted()
         {
-            foreach (var condition in Conditions)
+            foreach (var condition in _conditions)
                 condition?.SetCompleted();
         }
 
@@ -79,7 +93,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public bool ResetList(bool resetCondition)
         {
             bool result = true;
-            foreach(var condition in Conditions)
+            foreach(var condition in _conditions)
             {
                 if (condition == null)
                 {
@@ -111,13 +125,13 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             if (Mission.IsSuspended) return;
             EventsRegistered = true;
-            foreach(var condition in Conditions)
+            foreach(var condition in _conditions)
                 condition?.RegisterEvents(region);
         }
 
         public override void UnRegisterEvents(Region region)
         {
-            foreach (var condition in Conditions)
+            foreach (var condition in _conditions)
                 condition?.UnRegisterEvents(region);
             EventsRegistered = false;
         }
