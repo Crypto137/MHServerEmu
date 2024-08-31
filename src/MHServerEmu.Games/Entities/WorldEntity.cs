@@ -218,16 +218,10 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            // HACK: LOOT
+            // HACK: LOOT AND XP
             if (this is Agent agent && agent is not Missile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
-                foreach (ulong playerId in InterestReferences.PlayerIds)
-                {
-                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                    if (player == null) continue;
-
-                    Game.LootManager.DropRandomLoot(this, player);
-                }
+                GiveKillRewards(killer, killFlags, directKiller);
             }
 
             // HACK: Schedule respawn in public zones using SpawnSpec
@@ -1732,6 +1726,30 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
         public virtual void OnSkillshotReflected(Missile missile) { }
+
+        #endregion
+
+        #region Rewards
+
+        public void GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            // TODO: Track kill participation somehow to prevent exploits
+            foreach (ulong playerId in InterestReferences.PlayerIds)
+            {
+                Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                if (player == null) continue;
+
+                // Loot
+                Game.LootManager.DropRandomLoot(this, player);
+
+                // XP
+                if (killer is not Avatar avatar)
+                    continue;
+
+                WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
+                avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+            }
+        }
 
         #endregion
 

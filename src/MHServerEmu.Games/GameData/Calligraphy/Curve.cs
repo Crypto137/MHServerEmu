@@ -58,12 +58,32 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Returns the value at the specified position as <see cref="int"/>.
         /// </summary>
-        public int GetIntAt(int position) => (int)MathF.Round(this[position]);
+        public int GetIntAt(int position)
+        {
+            return (int)MathF.Round(this[position]);
+        }
+
+        public bool GetIntAt(int position, out int value)
+        {
+            // TODO
+            value = GetIntAt(position);
+            return true;
+        }
 
         /// <summary>
         /// Returns the value at the specified position as <see cref="long"/>.
         /// </summary>
-        public long GetInt64At(int position) => (long)MathF.Round(this[position]);
+        public long GetInt64At(int position)
+        {
+            return (long)MathF.Round(this[position]);
+        }
+
+        public bool GetInt64At(int position, out long value)
+        {
+            // TODO
+            value = GetInt64At(position);
+            return true;
+        }
 
         /// <summary>
         /// Sums the values within specified range and returns the result as <see cref="float"/>.
