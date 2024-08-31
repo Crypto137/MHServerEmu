@@ -13,7 +13,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 1;
+        private const int CurrentSchemaVersion = 1;     // Increment this when making changes to the database schema
+        private const int NumTestAccounts = 5;          // Number of test accounts to create for new database files
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -166,20 +167,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
         }
 
-        public void CreateTestAccounts(int numAccounts)
-        {
-            for (int i = 0; i < numAccounts; i++)
-            {
-                string email = $"test{i + 1}@test.com";
-                string playerName = $"TestPlayer{i + 1}";
-                string password = "123";
-
-                DBAccount account = new(email, playerName, password);
-                InsertAccount(account);
-                Logger.Info($"Created test account {email}");
-            }
-        }
-
         /// <summary>
         /// Creates and opens a new <see cref="SQLiteConnection"/>.
         /// </summary>
@@ -204,7 +191,27 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             connection.Execute(initializationScript);
 
             Logger.Info($"Initialized a new database file at {Path.GetRelativePath(FileHelper.ServerRoot, _dbFilePath)} using schema version {CurrentSchemaVersion}");
+
+            CreateTestAccounts(NumTestAccounts);
+
             return true;
+        }
+
+        /// <summary>
+        /// Creates the specified number of test accounts.
+        /// </summary>
+        private void CreateTestAccounts(int numAccounts)
+        {
+            for (int i = 0; i < numAccounts; i++)
+            {
+                string email = $"test{i + 1}@test.com";
+                string playerName = $"Player{i + 1}";
+                string password = "123";
+
+                DBAccount account = new(email, playerName, password);
+                InsertAccount(account);
+                Logger.Info($"Created test account {account}");
+            }
         }
 
         /// <summary>

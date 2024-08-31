@@ -105,11 +105,6 @@ namespace MHServerEmu.DatabaseAccess.Json
             return true;
         }
 
-        public void CreateTestAccounts(int numAccounts)
-        {
-            Logger.Warn("CreateTestAccounts(): Operation not supported");
-        }
-
         /// <summary>
         /// Creates a backup of the account file if enough time has passed since the last one.
         /// </summary>

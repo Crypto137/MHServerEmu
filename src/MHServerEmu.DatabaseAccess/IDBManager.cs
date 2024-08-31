@@ -41,10 +41,5 @@ namespace MHServerEmu.DatabaseAccess
         /// Updates persistent game data stored in the database for the provided <see cref="DBAccount"/>.
         /// </summary>
         public bool UpdateAccountData(DBAccount account);
-
-        /// <summary>
-        /// Creates and inserts test accounts into the database for testing.
-        /// </summary>
-        public void CreateTestAccounts(int numAccounts);
     }
 }
