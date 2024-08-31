@@ -355,14 +355,6 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
-        /// <summary>
-        /// Initializes this <see cref="Player"/> from data contained in the provided <see cref="DBAccount"/>.
-        /// </summary>
-        public void LoadFromDBAccount(DBAccount dbAccount)
-        {
-
-        }
-
         public void TEMP_FinalizeAvatars()
         {
             // TODO: Do this when avatars are added to the library inventory or something
@@ -921,6 +913,12 @@ namespace MHServerEmu.Games.Entities
 
             OnChangeActiveAvatar(0, lastCurrentAvatarId);
             return true;
+        }
+
+        public int GetLevelCapForCharacter(PrototypeId agentProtoRef)
+        {
+            // TODO
+            return 60;
         }
 
         #endregion

@@ -65,7 +65,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeId)}.";
         }
 
-        [Command("omegapoints", "Maxes out Omega points.\nUsage: player omegapoints", AccountUserLevel.User)]
+        [Command("omegapoints", "Maxes out Omega points.\nUsage: player omegapoints", AccountUserLevel.Admin)]
         public string OmegaPoints(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -81,7 +81,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Setting Omega points to {value}.";
         }
 
-        [Command("infinitypoints", "Maxes out Infinity points.\nUsage: player infinitypoints", AccountUserLevel.User)]
+        [Command("infinitypoints", "Maxes out Infinity points.\nUsage: player infinitypoints", AccountUserLevel.Admin)]
         public string InfinityPoints(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

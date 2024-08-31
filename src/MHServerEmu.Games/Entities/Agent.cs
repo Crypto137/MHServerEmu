@@ -46,6 +46,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
         public override bool IsWakingUp { get => _wakeEndEvent.IsValid; }
         public override bool IsDormant { get => base.IsDormant || IsWakingUp; }
+        public virtual bool IsAtLevelCap { get => CharacterLevel >= GetTeamUpLevelCap(); }
 
         public Agent(Game game) : base(game) { }
 
@@ -484,6 +485,99 @@ namespace MHServerEmu.Games.Entities
                 return true;
 
             return power.IsInRange(position, RangeCheckType.Activation);
+        }
+
+        #endregion
+
+        #region Progression
+
+        public void InitializeLevel(int level)
+        {
+            CharacterLevel = level;
+            Properties[PropertyEnum.ExperiencePoints] = 0;
+            Properties[PropertyEnum.ExperiencePointsNeeded] = GetLevelUpXPRequirement(level);
+        }
+
+        public virtual long AwardXP(long amount, bool showXPAwardedText)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false)
+                return 0;
+
+            // Only entities owned by players can earn experience
+            Player owner = GetOwnerOfType<Player>();
+            if (owner == null) return Logger.WarnReturn(0, "AwardXP(): owner == null");
+
+            // TODO: Apply PrestigeXPFactor
+
+            if (IsAtLevelCap == false)
+            {
+                Properties[PropertyEnum.ExperiencePoints] += amount;
+                TryLevelUp(owner);
+            }
+
+            if (showXPAwardedText)
+            {
+                owner.SendMessage(NetMessageShowXPAwardedText.CreateBuilder()
+                    .SetXpAwarded(amount)
+                    .SetAgentId(Id)
+                    .Build());
+            }
+
+            return amount;
+        }
+
+        public virtual long GetLevelUpXPRequirement(int level)
+        {
+            // TODO: Handle team-up leveling
+            Logger.Warn("GetLevelUpXPRequirement(): Team-up leveling is not yet implemented");
+            return 0;
+        }
+
+        public virtual int TryLevelUp(Player owner)
+        {
+            int oldLevel = CharacterLevel;
+            int newLevel = oldLevel;
+
+            long xp = Properties[PropertyEnum.ExperiencePoints];
+            long xpNeeded = Properties[PropertyEnum.ExperiencePointsNeeded];
+
+            int levelCap = owner.GetLevelCapForCharacter(PrototypeDataRef);
+            while (newLevel < levelCap && xp >= xpNeeded)
+            {
+                xp -= xpNeeded;
+                newLevel++;
+                xpNeeded = GetLevelUpXPRequirement(newLevel);
+            }
+
+            int levelDelta = newLevel - oldLevel;
+            if (levelDelta != 0)
+            {
+                CharacterLevel = newLevel;
+                Properties[PropertyEnum.ExperiencePoints] = xp;
+                Properties[PropertyEnum.ExperiencePointsNeeded] = xpNeeded;
+
+                OnLevelUp();
+            }
+
+            return levelDelta;
+        }
+
+        protected virtual void OnLevelUp()
+        {
+            // TODO: Handle team-up level ups
+            Logger.Warn("OnLevelUp(): Team-up leveling is not yet implemented");
+        }
+
+        protected void SendLevelUpMessage()
+        {
+            var levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
+            Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        public static int GetTeamUpLevelCap()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            return advancementProto != null ? advancementProto.GetTeamUpLevelCap() : 0;
         }
 
         #endregion

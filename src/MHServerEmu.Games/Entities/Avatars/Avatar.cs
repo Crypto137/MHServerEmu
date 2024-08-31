@@ -5,7 +5,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -51,6 +50,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
+        public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
 
         public bool IsUsingGamepadInput { get; set; } = false;
         public PrototypeId CurrentTransformMode { get; private set; } = PrototypeId.Invalid;
@@ -816,6 +816,36 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        #endregion
+
+        #region Progression
+
+        public override long AwardXP(long amount, bool showXPAwardedText)
+        {
+            // TODO: Avatar-specific XP
+            return base.AwardXP(amount, showXPAwardedText);
+        }
+
+        public static int GetAvatarLevelCap()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            return advancementProto != null ? advancementProto.GetAvatarLevelCap() : 0;
+        }
+
+        public override long GetLevelUpXPRequirement(int level)
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
+
+            return advancementProto.GetAvatarLevelUpXPRequirement(level);
+        }
+
+        protected override void OnLevelUp()
+        {
+            SendLevelUpMessage();
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
         }
 
         #endregion
