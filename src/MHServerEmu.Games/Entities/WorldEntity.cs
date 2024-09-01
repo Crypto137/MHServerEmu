@@ -1703,6 +1703,8 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
 
+            if (IsInWorld == false) return;
+
             AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
 
             if (gainedPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
