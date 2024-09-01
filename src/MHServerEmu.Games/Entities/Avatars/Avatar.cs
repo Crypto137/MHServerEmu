@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
-        public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }
+        public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }   // TODO: Save reference
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
@@ -846,9 +846,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
         }
 
-        protected override bool OnLevelUp()
+        protected override bool OnLevelUp(int oldLevel, int newLevel)
         {
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
+            // Slot unlocked default abilities
+            AbilityKeyMapping currentAbilityKeyMapping = CurrentAbilityKeyMapping;
+            if (CurrentAbilityKeyMapping != null)
+            {
+                foreach (HotkeyData hotkeyData in currentAbilityKeyMapping.GetDefaultAbilities(this, oldLevel))
+                {
+                    Logger.Debug($"OnLevelUp(): {hotkeyData}");
+                    currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                }
+            }
+
             SendLevelUpMessage();
             return true;
         }

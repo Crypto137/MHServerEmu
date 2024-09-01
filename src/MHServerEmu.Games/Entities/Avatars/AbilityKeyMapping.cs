@@ -149,9 +149,15 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public void SlotDefaultAbilities(Avatar avatar)
         {
+            foreach (HotkeyData hotkeyData in GetDefaultAbilities(avatar))
+                SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+        }
+
+        public IEnumerable<HotkeyData> GetDefaultAbilities(Avatar avatar, int startingLevel = -1)
+        {
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
 
-            foreach (PowerProgressionEntryPrototype powerProgEntry in avatarProto.GetPowersUnlockedAtLevel(avatar.CharacterLevel, true))
+            foreach (PowerProgressionEntryPrototype powerProgEntry in avatarProto.GetPowersUnlockedAtLevel(avatar.CharacterLevel, true, startingLevel))
             {
                 if (powerProgEntry.IsTrait) continue;       // Skip traits
                 var autoAssignmentSlot = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
@@ -167,7 +173,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // TODO: Avatar::GetMappedPowerFromOriginalPower()
                 // TODO: Avatar::CheckAbilitySlotRestrictions()
 
-                SetAbilityInAbilitySlot(autoAssignmentSlot.Ability, abilitySlot);
+                yield return new HotkeyData(autoAssignmentSlot.Ability, abilitySlot);
             }
         }
 

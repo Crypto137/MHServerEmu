@@ -155,36 +155,6 @@ namespace MHServerEmu.Games.Entities
             return powerProto.HasKeyword(keywordPrototype);
         }
 
-        public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
-        {
-            if (IsTeamUpAgent)
-                return GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(PrototypeDataRef, powerRef) != null;
-
-            return false;
-        }
-
-        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
-        {
-            // Note: this implementation is meant only for team-up agents
-
-            info = new();
-
-            if (powerProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
-
-            var teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
-            if (teamUpProto == null)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
-
-            var powerProgressionEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
-            if (powerProgressionEntry != null)
-                info.InitForTeamUp(powerProgressionEntry);
-            else
-                info.InitNonProgressionPower(powerProtoRef);
-
-            return info.IsValid;
-        }
-
         public int GetPowerRank(PrototypeId powerRef)
         {
             if (powerRef == PrototypeId.Invalid) return 0;
@@ -491,6 +461,36 @@ namespace MHServerEmu.Games.Entities
 
         #region Progression
 
+        public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (IsTeamUpAgent)
+                return GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(PrototypeDataRef, powerRef) != null;
+
+            return false;
+        }
+
+        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
+        {
+            // Note: this implementation is meant only for team-up agents
+
+            info = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            var teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
+            if (teamUpProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
+
+            var powerProgressionEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
+            if (powerProgressionEntry != null)
+                info.InitForTeamUp(powerProgressionEntry);
+            else
+                info.InitNonProgressionPower(powerProtoRef);
+
+            return info.IsValid;
+        }
+
         public void InitializeLevel(int level)
         {
             CharacterLevel = level;
@@ -559,13 +559,19 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.ExperiencePoints] = xp;
                 Properties[PropertyEnum.ExperiencePointsNeeded] = xpNeeded;
 
-                OnLevelUp();
+                OnLevelUp(oldLevel, newLevel);
             }
 
             return levelDelta;
         }
 
-        protected virtual bool OnLevelUp()
+        public static int GetTeamUpLevelCap()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            return advancementProto != null ? advancementProto.GetTeamUpLevelCap() : 0;
+        }
+
+        protected virtual bool OnLevelUp(int oldLevel, int newLevel)
         {
             if (IsTeamUpAgent == false) return Logger.WarnReturn(false, "OnLevelUp(): IsTeamUpAgent == false");
 
@@ -574,6 +580,7 @@ namespace MHServerEmu.Games.Entities
                 owner.Properties.AdjustProperty(1, PropertyEnum.TeamUpsAtMaxLevelPersistent);
 
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
             SendLevelUpMessage();
             return true;
         }
@@ -582,12 +589,6 @@ namespace MHServerEmu.Games.Entities
         {
             var levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
             Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
-        }
-
-        public static int GetTeamUpLevelCap()
-        {
-            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
-            return advancementProto != null ? advancementProto.GetTeamUpLevelCap() : 0;
         }
 
         #endregion
