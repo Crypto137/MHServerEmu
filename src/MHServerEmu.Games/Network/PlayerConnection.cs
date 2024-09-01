@@ -402,6 +402,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;       // 132
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
+                case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
+                case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
 
                 // Grouping Manager
                 case ClientToGameServerMessage.NetMessageChat:                                                                                  // 64
@@ -1142,6 +1144,22 @@ namespace MHServerEmu.Games.Network
 
             AOI.InitializePlayerView((PrototypeId)changeCameraSettings.CameraSettings);
             return true;
+        }
+
+        private bool OnStashTabInsert(MailboxMessage message)  // 155
+        {
+            var stashTabInsert = message.As<NetMessageStashTabInsert>();
+            if (stashTabInsert == null) return Logger.WarnReturn(false, $"OnStashTabInsert(): Failed to retrieve message");
+
+            return Player.StashTabInsert((PrototypeId)stashTabInsert.InvId, (int)stashTabInsert.InsertIndex);
+        }
+
+        private bool OnStashTabOptions(MailboxMessage message)  // 156
+        {
+            var stashTabOptions = message.As<NetMessageStashTabOptions>();
+            if (stashTabOptions == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
+
+            return Player.UpdateStashTabOptions(stashTabOptions);
         }
 
         #endregion

@@ -446,6 +446,13 @@ namespace MHServerEmu.Games.Entities
             if (Inventory.IsPlayerStashInventory(invProtoRef))
                 StashTabInsert(invProtoRef, 0);
 
+            // Send unlock to the client
+            var inventoryUnlockMessage = NetMessageInventoryUnlock.CreateBuilder()
+                .SetInvProtoId((ulong)invProtoRef)
+                .Build();
+
+            SendMessage(inventoryUnlockMessage);
+
             return true;
         }
 
@@ -490,7 +497,12 @@ namespace MHServerEmu.Games.Entities
 
             // Stash tab names can be up to 30 characters long
             if (optionsMessage.HasDisplayName)
-                options.DisplayName = optionsMessage.DisplayName.Substring(0, 30);
+            {
+                string displayName = optionsMessage.DisplayName;
+                if (displayName.Length > 30)
+                    displayName = displayName.Substring(0, 30);
+                options.DisplayName = displayName;
+            }
 
             if (optionsMessage.HasIconPathAssetId)
                 options.IconPathAssetId = (AssetId)optionsMessage.IconPathAssetId;
