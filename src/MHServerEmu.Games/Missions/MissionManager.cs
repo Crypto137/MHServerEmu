@@ -813,11 +813,12 @@ namespace MHServerEmu.Games.Missions
         {
             if (MMArchive == null) return;
 
+            player.CurrentAvatar.Properties.FlattenCopyFrom(AvatarProperties, false);
+
             using (Archive archive = new(ArchiveSerializeType.Database, MMArchive))
             {
                 player.MissionManager.Serialize(archive);
             }
-
         }
 
         public static void TestSavePlayerMissionManager(Player player)
@@ -840,7 +841,7 @@ namespace MHServerEmu.Games.Missions
             var player = Player;
             if (player == null || avatar == null) return;
 
-            var properties = AvatarProperties;
+            var properties = AvatarProperties; // avatar.Properties
             properties[PropertyEnum.LastActiveMissionChapter] = player.ActiveChapter;
 
             // reset Avatar Missions data
@@ -863,12 +864,12 @@ namespace MHServerEmu.Games.Missions
 
         public void RestoreAvatarMissions(Avatar avatar)
         {
-            if (IsPlayerMissionManager() == false || avatar.PrototypeDataRef == _avatarPrototypeRef) return;
+            if (IsPlayerMissionManager() == false /*|| avatar.PrototypeDataRef == _avatarPrototypeRef*/) return; // TODO fix this
 
             var player = Player;
             if (player == null || avatar == null) return;
 
-            var properties = AvatarProperties; // avatar.Properties;
+            var properties = avatar.Properties;
             player.SetActiveChapter(PrototypeId.Invalid);
 
             // Save suspend state and reset mission state
