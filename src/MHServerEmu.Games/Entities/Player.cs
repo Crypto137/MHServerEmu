@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
@@ -253,7 +254,9 @@ namespace MHServerEmu.Games.Entities
             // Initialize
             OnEnterGameInitStashTabOptions();
 
-            _gameplayOptions.ResetToDefaults();
+            // TODO: Clean up gameplay options init for new players
+            if (settings.ArchiveData.IsNullOrEmpty())
+                _gameplayOptions.ResetToDefaults();
         }
 
         public override void OnUnpackComplete(Archive archive)
@@ -1222,6 +1225,16 @@ namespace MHServerEmu.Games.Entities
                 if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
                     StashTabInsert(stashRef, 0);
             }
+        }
+
+        public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
+        {
+            GameplayOptions newOptions = new(clientOptions.OptionsData);
+            Logger.Debug(newOptions.ToString());
+
+            _gameplayOptions = newOptions;
+
+            // TODO: Process new options
         }
 
         public bool IsTargetable(AlliancePrototype allianceProto)

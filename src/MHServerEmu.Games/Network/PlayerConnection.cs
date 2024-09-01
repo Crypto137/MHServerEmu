@@ -993,8 +993,7 @@ namespace MHServerEmu.Games.Network
             var setPlayerGameplayOptions = message.As<NetMessageSetPlayerGameplayOptions>();
             if (setPlayerGameplayOptions == null) return Logger.WarnReturn(false, $"OnSetPlayerGameplayOptions(): Failed to retrieve message");
 
-            Logger.Info($"Received SetPlayerGameplayOptions message");
-            Logger.Trace(new GameplayOptions(setPlayerGameplayOptions.OptionsData).ToString());
+            Player.SetGameplayOptions(setPlayerGameplayOptions);
             return true;
         }
 
