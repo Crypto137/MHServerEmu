@@ -1137,6 +1137,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (var summoner in summoners)
                     summoner.Destroy();
             }
+
+            // REMOVEME: Clean up kismet hack property
+            Properties.RemovePropertyRange(PropertyEnum.AvatarMissionResetsWithRegionId);
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
