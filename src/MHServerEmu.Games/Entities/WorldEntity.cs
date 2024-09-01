@@ -1747,6 +1747,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
+                xp *= 3;    // REMOVEME: Triple experience gains to compensate for the lack of experience orbs and boosts
                 avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
             }
         }
