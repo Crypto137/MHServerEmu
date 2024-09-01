@@ -6,11 +6,9 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Billing
@@ -139,21 +137,7 @@ namespace MHServerEmu.Billing
             }
 
             PrototypeId itemProtoRef = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
-            if (GameDatabase.DataDirectory.PrototypeIsA<CostumePrototype>(itemProtoRef))
-            {
-                // HACK: change costume when a player "buys" a costume
-                Avatar avatar = player.GetAvatar(itemProtoRef.As<CostumePrototype>().UsableBy);
-                if (avatar == null)
-                {
-                    SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                    return true;
-                }
-
-                // Update player and avatar properties
-                avatar.Properties[PropertyEnum.CostumeCurrent] = itemProtoRef;
-                player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = itemProtoRef;
-            }
-            else if (GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(itemProtoRef))
+            if (GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(itemProtoRef))
             {
                 // Give the player the item they are trying to "buy"
                 player.Game.LootManager.GiveItem(player, itemProtoRef);

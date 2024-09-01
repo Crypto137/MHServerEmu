@@ -930,6 +930,46 @@ namespace MHServerEmu.Games.Entities.Avatars
             return InventoryResult.UnknownFailure;
         }
 
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+
+            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Costume)
+                ChangeCostume(entity.PrototypeDataRef);
+        }
+
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+
+            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Costume)
+                ChangeCostume(PrototypeId.Invalid);
+        }
+
+        public bool ChangeCostume(PrototypeId costumeProtoRef)
+        {
+            CostumePrototype costumeProto = null;
+
+            if (costumeProtoRef != PrototypeId.Invalid)
+            {
+                // Make sure we have a valid costume prototype
+                costumeProto = GameDatabase.GetPrototype<CostumePrototype>(costumeProtoRef);
+                if (costumeProto == null)
+                    return Logger.WarnReturn(false, $"ChangeCostume(): {costumeProtoRef} is not a valid costume prototype ref");
+            }
+
+            Properties[PropertyEnum.CostumeCurrent] = costumeProtoRef;
+
+            // Update avatar library
+            Player owner = GetOwnerOfType<Player>();
+            if (owner == null) return Logger.WarnReturn(false, "ChangeCostume(): owner == null");
+
+            // NOTE: Avatar mode is hardcoded to 0 since hardcore and ladder avatars never got implemented
+            owner.Properties[PropertyEnum.AvatarLibraryCostume, 0, PrototypeDataRef] = costumeProtoRef;
+
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);

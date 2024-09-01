@@ -22,16 +22,16 @@ namespace MHServerEmu.Commands.Implementations
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
 
-            PrototypeId costumeId;
+            PrototypeId costumeProtoRef;
 
             switch (@params[0].ToLower())
             {
                 case "reset":
-                    costumeId = PrototypeId.Invalid;
+                    costumeProtoRef = PrototypeId.Invalid;
                     break;
 
                 case "default": // This undoes visual updates for most heroes
-                    costumeId = (PrototypeId)HardcodedBlueprints.Costume;
+                    costumeProtoRef = (PrototypeId)HardcodedBlueprints.Costume;
                     break;
 
                 default:
@@ -47,7 +47,7 @@ namespace MHServerEmu.Commands.Implementations
                         return string.Empty;
                     }
 
-                    costumeId = matches.First();
+                    costumeProtoRef = matches.First();
                     break;
             }
 
@@ -55,14 +55,12 @@ namespace MHServerEmu.Commands.Implementations
             var player = playerConnection.Player;
             var avatar = player.CurrentAvatar;
 
-            // Update player and avatar properties
-            avatar.Properties[PropertyEnum.CostumeCurrent] = costumeId;
-            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = costumeId;
+            avatar.ChangeCostume(costumeProtoRef);
 
-            if (costumeId == PrototypeId.Invalid)
+            if (costumeProtoRef == PrototypeId.Invalid)
                 return "Resetting costume.";
 
-            return $"Changing costume to {GameDatabase.GetPrototypeName(costumeId)}.";
+            return $"Changing costume to {GameDatabase.GetPrototypeName(costumeProtoRef)}.";
         }
 
         [Command("omegapoints", "Maxes out Omega points.\nUsage: player omegapoints", AccountUserLevel.Admin)]
