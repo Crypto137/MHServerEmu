@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
@@ -121,6 +122,21 @@ namespace MHServerEmu.Games.Network
             {
                 for (var badge = AvailableBadges.CanGrantBadges; badge < AvailableBadges.NumberOfBadges; badge++)
                     Player.AddBadge(badge);
+            }
+
+            // REMOVEME: Set default mission tracker filters for new players
+            // Remove this when we merge missions
+            if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
+            {
+                foreach (PrototypeId missionFilterTrackerProtoRef in
+                    DataDirectory.Instance.IteratePrototypesInHierarchy<MissionTrackerFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    var missionFilterTrackerProto = missionFilterTrackerProtoRef.As<MissionTrackerFilterPrototype>();
+                    if (missionFilterTrackerProto.DisplayByDefault)
+                        Player.Properties[PropertyEnum.MissionTrackerFilter, missionFilterTrackerProtoRef] = true;
+                }
+
+                Logger.Trace($"Initialized default mission filters for {Player}");
             }
 
             PersistenceHelper.RestoreInventoryEntities(Player, _dbAccount);
