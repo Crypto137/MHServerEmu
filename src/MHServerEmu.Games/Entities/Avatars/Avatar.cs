@@ -169,11 +169,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 abilityKeyMapping.SlotDefaultAbilities(this);
                 _abilityKeyMappingList.Add(abilityKeyMapping);
             }
-
-            // HACK/REMOVEME: Remove team up properties since they are buggy now
-            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpAgent);
-            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
-            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
         }
 
         protected override void BindReplicatedFields()
@@ -1119,6 +1114,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
+
+            if (Properties[PropertyEnum.AvatarTeamUpAgent] != PrototypeId.Invalid)
+            {
+                LinkTeamUpAgent(CurrentTeamUpAgent);
+                if (Properties[PropertyEnum.AvatarTeamUpIsSummoned])
+                    SummonTeamUpAgent();
+            }
         }
 
         public override void OnExitedWorld()
