@@ -377,6 +377,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
+                case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break; // 123
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
@@ -976,6 +977,46 @@ namespace MHServerEmu.Games.Network
 
             Logger.Info($"Received SetPlayerGameplayOptions message");
             Logger.Trace(new GameplayOptions(setPlayerGameplayOptions.OptionsData).ToString());
+            return true;
+        }
+
+        private bool OnSelectAvatarSynergies(MailboxMessage message)    // 116
+        {
+            var selectAvatarSynergies = message.As<NetMessageSelectAvatarSynergies>();
+            if (selectAvatarSynergies == null) return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): Failed to retrieve message");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(selectAvatarSynergies.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnSelectAvatarSynergies(): avatar == null");
+
+            // Validate ownership
+            Player owner = avatar.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): {this} is attempting to set synergies of avatar {avatar} that does not belong to it!");
+
+            avatar.Properties.RemovePropertyRange(PropertyEnum.AvatarSynergySelected);
+
+            foreach (ulong avatarProtoId in selectAvatarSynergies.AvatarPrototypesList)
+            {
+                PrototypeId avatarProtoRef = (PrototypeId)avatarProtoId;
+                AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+
+                if (avatarProto == null)
+                {
+                    Logger.Warn("OnSelectAvatarSynergies(): avatarProto == null");
+                    continue;
+                }
+
+                // TODO: Get level from prototypes and take prestige into account
+                Avatar synergyAvatar = owner.GetAvatar(avatarProtoRef);
+                if (synergyAvatar.CharacterLevel < 25)
+                {
+                    Logger.Warn("OnSelectAvatarSynergies(): Attempting to set locked synergy");
+                    continue;
+                }
+
+                avatar.Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] = true;
+            }
+
             return true;
         }
 
