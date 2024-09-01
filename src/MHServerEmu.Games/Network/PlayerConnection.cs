@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            Player.TEMP_FinalizeAvatars();
+            Player.SetAvatarLibraryProperties();
 
             // Create team-up entities if there are none
             // REMOVEME: Let players buy team-ups from the store instead

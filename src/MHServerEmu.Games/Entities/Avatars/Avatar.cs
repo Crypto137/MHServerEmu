@@ -865,6 +865,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        protected override void SetCharacterLevel(int characterLevel)
+        {
+            base.SetCharacterLevel(characterLevel);
+
+            Player owner = GetOwnerOfType<Player>();
+            owner?.OnAvatarCharacterLevelChanged(this);
+        }
+
         #endregion
 
         #region Interaction

@@ -27,6 +27,19 @@ namespace MHServerEmu.Commands.Implementations
             return $"Awarded {xpAmount} experience.";
         }
 
+        [Command("max", "Maxes out the current avatar's level.\nUsage: level max")]
+        public string Max(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            avatar.AwardXP(long.MaxValue, true);
+
+            return $"Awarded {long.MaxValue} experience.";
+        }
+
         [Command("awardxp", "Awards the specified amount of experience.\nUsage: level awardxp [amount]")]
         public string AwardXP(string[] @params, FrontendClient client)
         {

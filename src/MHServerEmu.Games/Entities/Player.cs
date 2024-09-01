@@ -355,33 +355,6 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
-        public void TEMP_FinalizeAvatars()
-        {
-            // TODO: Do this when avatars are added to the library inventory or something
-            if (CurrentAvatar == null)
-            {
-                // We should have a current avatar at this point
-                Logger.Warn("TEMP_FinalizeAvatars(): CurrentAvatar == null");
-                return;
-            }
-
-            foreach (Avatar avatar in new AvatarIterator(this))
-            {
-                PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
-
-                // Set avatar library properties
-                // NOTE: setting AvatarLibraryLevel above level 60 displays as prestige levels in the UI
-                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CostumeCurrent];
-                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CharacterLevel];
-
-                // Unlock extra emotes
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
-            }
-
-            _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
-        }
-
         public override void EnterGame(EntitySettings settings = null)
         {
             SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
@@ -919,6 +892,52 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO
             return 60;
+        }
+
+        public void SetAvatarLibraryProperties()
+        {
+            if (CurrentAvatar == null)
+            {
+                // We should have a current avatar at this point
+                Logger.Warn("SetAvatarLibraryProperties(): CurrentAvatar == null");
+                return;
+            }
+
+            int maxAvatarLevel = 1;
+
+            foreach (Avatar avatar in new AvatarIterator(this))
+            {
+                PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
+
+                // Library Level
+                // NOTE: setting AvatarLibraryLevel above level 60 displays as prestige levels in the UI
+                int characterLevel = avatar.Properties[PropertyEnum.CharacterLevel];
+                maxAvatarLevel = Math.Max(characterLevel, maxAvatarLevel);
+                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarProtoRef] = characterLevel;
+
+                // Costume
+                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CostumeCurrent];
+
+                // Unlock extra emotes
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
+                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
+            }
+
+            Properties[PropertyEnum.PlayerMaxAvatarLevel] = maxAvatarLevel;
+
+            // TODO: Move mission manager somewhere else
+            _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
+        }
+
+        public void OnAvatarCharacterLevelChanged(Avatar avatar)
+        {
+            int characterLevel = avatar.CharacterLevel;
+
+            Properties[PropertyEnum.AvatarLibraryLevel, 0, avatar.PrototypeDataRef] = characterLevel;
+
+            // Update max avatar level for things like mode unlocks
+            if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
+                Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
         }
 
         #endregion
