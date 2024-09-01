@@ -394,6 +394,16 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        private void InitializeMissionTrackerFilters()
+        {
+            foreach (PrototypeId filterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionTrackerFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var filterProto = GameDatabase.GetPrototype<MissionTrackerFilterPrototype>(filterRef);
+                if (filterProto.DisplayByDefault)
+                    Properties[PropertyEnum.MissionTrackerFilter, filterRef] = true;
+            }
+        }
+
         public override void EnterGame(EntitySettings settings = null)
         {
             SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
@@ -414,6 +424,9 @@ namespace MHServerEmu.Games.Entities
 
             // Enter game to become added to the AOI
             base.EnterGame(settings);
+
+            // Set default filters for mission tracker
+            InitializeMissionTrackerFilters();
         }
 
         public override void ExitGame()
