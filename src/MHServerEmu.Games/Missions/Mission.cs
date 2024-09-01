@@ -104,6 +104,7 @@ namespace MHServerEmu.Games.Missions
 
         public MissionCreationState CreationState { get => _creationState; }
         public MissionState State { get => _state; }
+        public float CurrentObjectiveSequence { get => _currentObjectiveSequence; }
         public TimeSpan TimeExpireCurrentState { get => _timeExpireCurrentState; }
         public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Clock.GameTime; }
         public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
@@ -133,11 +134,12 @@ namespace MHServerEmu.Games.Missions
         public bool IsRegionEventMission { get => IsOpenMission && HasEventMissionChapter() == false; }
         public bool IsRepeatable { get => Prototype.Repeatable || Prototype.ResetTimeSeconds > 0; }
         public bool IsChangingState { get; private set; }
-        public ulong ResetsWithRegionId { get; private set; }
+        public ulong ResetsWithRegionId { get; set; }
         public MissionSpawnState SpawnState { get; private set; }
         public bool CompleteNowRewards { get; private set; }
         public bool RestartingMission { get; private set; }
         public bool EventsRegistered { get; set; }
+        public bool ReSuspended { get; set; }
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
@@ -301,6 +303,41 @@ namespace MHServerEmu.Games.Missions
             return success;
         }
 
+        public void StoreAvatarMissionState(PropertyCollection properties)
+        {
+            var missionProto = Prototype;
+            if (missionProto.SaveStatePerAvatar == false) return;
+
+            var missionRef = PrototypeDataRef;
+
+            switch (_state)
+            {
+                case MissionState.Invalid:                    
+                    return;
+
+                case MissionState.Inactive:
+                case MissionState.Available:
+                case MissionState.Completed:
+                case MissionState.Failed:
+
+                    if (IsLegendaryMission == false)
+                        properties[PropertyEnum.AvatarMissionState, missionRef] = (int)_state;
+                    break;
+
+                case MissionState.Active:
+
+                    properties[PropertyEnum.AvatarMissionObjectiveSeq, missionRef] = CurrentObjectiveSequence;
+                    properties[PropertyEnum.AvatarMissionResetsWithRegionId, missionRef] = ResetsWithRegionId;
+
+                    // TODO LegendaryMission
+
+                    break;
+            }
+
+            if (missionProto.Rewards.HasValue() && LootSeed != 0)
+                properties[PropertyEnum.AvatarMissionLootSeed, missionRef] = LootSeed;
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();
@@ -337,16 +374,9 @@ namespace MHServerEmu.Games.Missions
             return sb.ToString();
         }
 
-        private int NextLootSeed(int lootSeed = 0)
-        {
-            while (lootSeed == 0) 
-                lootSeed = Game.Random.Next();
-            return lootSeed;
-        }
-
         private void UpdateLootSeed()
         {
-            _lootSeed = NextLootSeed(_lootSeed);
+            _lootSeed = MissionManager.NextLootSeed(_lootSeed);
         }
 
         public void RemoteNotificationForConditions(MissionConditionListPrototype conditionList)
@@ -536,7 +566,6 @@ namespace MHServerEmu.Games.Missions
         private bool OnChangeState()
         {
             if (MissionManager.Debug) Logger.Trace($"OnChangeState State {State} for {PrototypeName}");
-            if (State == MissionState.Completed) MissionManager.CompletedMissions.Add(PrototypeDataRef);
             if (IsSuspended) return false;
 
             return _state switch
@@ -1057,7 +1086,7 @@ namespace MHServerEmu.Games.Missions
             };
         }
 
-        private bool SetSuspendedState(bool suspended)
+        public bool SetSuspendedState(bool suspended)
         {
             var region = Region;
             if (region == null || suspended == IsSuspended) return false;
@@ -1076,7 +1105,7 @@ namespace MHServerEmu.Games.Missions
                     objective?.OnLoaded();
 
                 OnSetState(false);
-                if (MissionManager.EventRegistred) EventsRegistered = true;
+                if (MissionManager.EventsRegistred) EventsRegistered = true;
                 OnChangeState();
                 SendToParticipants(MissionUpdateFlags.SuspendedState | MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.SuspendedState);
             }

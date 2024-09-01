@@ -15,6 +15,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Events.Templates;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -37,7 +38,7 @@ namespace MHServerEmu.Games.Missions
         public bool HasMissions { get => _missionDict.Count > 0; }
         public List<PrototypeId> ActiveMissions { get; private set; } = new();
 
-        public bool EventRegistred { get; private set; }
+        public bool EventsRegistred { get; private set; }
         public Action<AreaCreatedGameEvent> AreaCreatedAction { get; private set; }
         public Action<CellCreatedGameEvent> CellCreatedAction { get; private set; }
         public Action<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotAction { get; private set; }
@@ -50,6 +51,7 @@ namespace MHServerEmu.Games.Missions
         private ulong _regionId;
         private HashSet<ulong> _missionInterestEntities = new();
         private InteractionOptimizationFlags _optimizationFlag;
+        private Avatar _restoredAvatar;
 
         public MissionManager()
         {
@@ -118,7 +120,7 @@ namespace MHServerEmu.Games.Missions
                             var mission = CreateMissionByDataRef(missionRef);
 
                             // Hardcode Complete
-                            if (CompletedMissions.Contains(missionRef)) 
+                            if (CompletedMissions.Contains(missionRef))
                             {
                                 mission.SetState(MissionState.Completed);
                                 mission.AddParticipant(player);
@@ -165,7 +167,7 @@ namespace MHServerEmu.Games.Missions
                     if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)                    
                     {
                         var mission = FindMissionByDataRef(missionRef);
-                        if (mission != null || mission.State == MissionState.Invalid)
+                        if (mission == null || mission.State == MissionState.Invalid)
                             ResetMissionOrCreate(missionRef);
                     }
             }
@@ -179,18 +181,19 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private Mission ResetMissionOrCreate(PrototypeId missionRef, MissionCreationState creationState = MissionCreationState.Create, int lootSeed = 0)
+        private Mission ResetMissionOrCreate(PrototypeId missionRef, MissionCreationState creationState = MissionCreationState.Create,
+            MissionState state = MissionState.Invalid, float objectiveSeq = -1.0f, int lootSeed = 0)
         {
             var mission = FindMissionByDataRef(missionRef);
             if (mission != null)
             {
-                mission.SetCreationState(creationState);
+                mission.SetCreationState(creationState, state, objectiveSeq);
                 mission.LootSeed = lootSeed;
                 mission.ResetCreationState(creationState);
             }
             else
             {
-                mission = CreateMissionByDataRef(missionRef, creationState);
+                mission = CreateMissionByDataRef(missionRef, creationState, state, objectiveSeq, lootSeed);
             }
             return mission;
         }
@@ -275,7 +278,7 @@ namespace MHServerEmu.Games.Missions
             foreach (var mission in _missionDict.Values)
                 mission.EventsRegistered = true;
 
-            EventRegistred = true;
+            EventsRegistred = true;
         }
 
         public void UnRegisterEvents(Region region)
@@ -299,7 +302,7 @@ namespace MHServerEmu.Games.Missions
             foreach (var mission in _missionDict.Values)
                 if (mission.EventsRegistered) mission.UnRegisterEvents(region);
 
-            EventRegistred = false;
+            EventsRegistred = false;
         }
 
         private void OnAreaCreated(AreaCreatedGameEvent evt)
@@ -412,14 +415,17 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private Mission CreateMissionByDataRef(PrototypeId missionRef, 
-            MissionCreationState creationState = MissionCreationState.Create, MissionState initialState = MissionState.Invalid)
+        private Mission CreateMissionByDataRef(PrototypeId missionRef, MissionCreationState creationState = MissionCreationState.Create, 
+            MissionState initialState = MissionState.Invalid, float objectiveSeq = -1.0f, int lootSeed = 0)
         {
             var mission = CreateMission(missionRef);
             if (mission == null) return null;
+
             InsertMission(mission);
             Logger.Debug($"CreateMissionByDataRef {mission.PrototypeName}");
-            mission.SetCreationState(creationState, initialState);
+
+            mission.SetCreationState(creationState, initialState, objectiveSeq);
+            mission.LootSeed = lootSeed;
 
             if (IsInitialized)
                 if (mission.Initialize(creationState) == false)
@@ -428,7 +434,8 @@ namespace MHServerEmu.Games.Missions
                     return null;
                 }
 
-            // TODO register events
+            if (EventsRegistred && mission.IsSuspended == false)
+                mission.EventsRegistered = true;
 
             return mission;
         }
@@ -478,7 +485,7 @@ namespace MHServerEmu.Games.Missions
         {
             IsInitialized = false;
             Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
-            if (EventRegistred && region != null)
+            if (EventsRegistred && region != null)
                 UnRegisterEvents(region);
         }
 
@@ -792,6 +799,139 @@ namespace MHServerEmu.Games.Missions
             }
 
             return true;
+        }
+
+        public int NextLootSeed(int lootSeed = 0)
+        {
+            while (lootSeed == 0)
+                lootSeed = Game.Random.Next();
+            return lootSeed;
+        }
+
+        // Test Save MissionManager
+
+        public static void TestLoadPlayerMissionManager(Player player)
+        {
+            if (MMArchive == null) return;
+
+            using (Archive archive = new(ArchiveSerializeType.Replication, MMArchive))
+            {
+                player.MissionManager.Serialize(archive);
+            }
+
+        }
+
+        public static void TestSavePlayerMissionManager(Player player)
+        {
+            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
+            {
+                player.MissionManager.Serialize(archive);
+                MMArchive = archive.AccessAutoBuffer().ToArray();
+            }
+        }
+
+        public static byte[] MMArchive;
+        public static PropertyCollection AvatarProperties = new();
+        // ---------------------------
+
+        public void StoreAvatarMissions(Avatar avatar)
+        {
+            if (IsPlayerMissionManager() == false) return;
+
+            var player = Player;
+            if (player == null || avatar == null) return;
+
+            var properties = AvatarProperties;
+            properties[PropertyEnum.LastActiveMissionChapter] = player.ActiveChapter;
+
+            // reset Avatar Missions data
+            properties.RemovePropertyRange(PropertyEnum.AvatarMissionState);
+            properties.RemovePropertyRange(PropertyEnum.AvatarMissionObjectiveSeq);
+            properties.RemovePropertyRange(PropertyEnum.AvatarMissionResetsWithRegionId);
+            properties.RemovePropertyRange(PropertyEnum.AvatarMissionLootSeed);
+
+            // reset Legendary Missions data
+            properties.RemovePropertyRange(PropertyEnum.LegendaryMissionCRC);
+            properties.RemovePropertyRange(PropertyEnum.LegendaryMissionObjsComp);
+            properties.RemovePropertyRange(PropertyEnum.LegendaryMissionSuccCondCnt);
+            properties.RemovePropertyRange(PropertyEnum.LegendaryMissionFailCondCnt);
+
+            foreach (var mission in _missionDict.Values)
+                mission.StoreAvatarMissionState(properties);
+
+            avatar.Properties.FlattenCopyFrom(AvatarProperties, false);
+        }
+
+        public void RestoreAvatarMissions(Avatar avatar)
+        {
+            if (IsPlayerMissionManager() == false || avatar == _restoredAvatar) return;
+
+            var player = Player;
+            if (player == null || avatar == null) return;
+
+            var properties = AvatarProperties; // avatar.Properties;
+            player.SetActiveChapter(PrototypeId.Invalid);
+
+            // Save suspend state and reset mission state
+            foreach(var mission in _missionDict.Values)
+                if (mission.Prototype.SaveStatePerAvatar)
+                {
+                    if (mission.IsSuspended)
+                    {
+                        mission.ReSuspended = true;
+                        mission.SetSuspendedState(false);
+                    }
+
+                    if (mission.State != MissionState.Invalid)
+                        mission.SetState(MissionState.Invalid);
+                }
+
+            player.SetActiveChapter(properties[PropertyEnum.LastActiveMissionChapter]);
+
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (ShouldCreateMission(missionProto))
+                {
+                    if (missionProto.SaveStatePerAvatar == false) continue;
+
+                    var missionStatePropId = new PropertyId(PropertyEnum.AvatarMissionState, missionRef);
+                    var objectiveSeqPropId = new PropertyId(PropertyEnum.AvatarMissionObjectiveSeq, missionRef);
+                    bool hasObjectiveSeq = properties.HasProperty(objectiveSeqPropId);
+                    if (properties.HasProperty(missionStatePropId) || hasObjectiveSeq)
+                    {
+                        MissionState state = hasObjectiveSeq ? MissionState.Active : (MissionState)(int)properties[missionStatePropId];
+                        float objectiveSeq = hasObjectiveSeq ? properties[objectiveSeqPropId] : -1.0f;
+
+                        var lootSeedPropId = new PropertyId(PropertyEnum.AvatarMissionLootSeed, missionRef);
+                        int lootSeed = 0;
+
+                        if (properties.HasProperty(lootSeedPropId))
+                            lootSeed = properties[lootSeedPropId];
+                        else if (missionProto.Rewards.HasValue())
+                            lootSeed = NextLootSeed();
+
+                        var mission = ResetMissionOrCreate(missionRef, MissionCreationState.Changed, state, objectiveSeq, lootSeed);
+
+                        if (mission != null && state == MissionState.Active)
+                            mission.ResetsWithRegionId = properties[PropertyEnum.AvatarMissionResetsWithRegionId, missionRef];
+                    }                    
+                }
+            }
+
+            // TODO Save LegendaryMissions properties
+
+            InitializeMissions();
+
+            // restore suspend state
+            foreach (var mission in _missionDict.Values)
+                if (mission.Prototype.SaveStatePerAvatar && mission.ReSuspended)
+                {
+                    mission.SetSuspendedState(true);
+                    mission.ReSuspended = false;
+                }
+
+            _restoredAvatar = avatar;
         }
 
         public void UpdateMissionEntities(Mission mission)

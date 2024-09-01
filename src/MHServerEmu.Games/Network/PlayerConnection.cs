@@ -16,6 +16,7 @@ using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -294,7 +295,9 @@ namespace MHServerEmu.Games.Network
             // because client UI breaks for some reason when we reuse the same player entity id
             // (e.g. inventory grid stops updating).
             UpdateDBAccount();
-
+            // Test Save
+            MissionManager.TestSavePlayerMissionManager(Player);
+            
             // We need to exit before we destroy so that the player entity can be removed from its AOI
             Player.ExitGame();
             Player.Destroy();

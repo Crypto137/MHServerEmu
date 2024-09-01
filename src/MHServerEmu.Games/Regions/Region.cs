@@ -1413,6 +1413,8 @@ namespace MHServerEmu.Games.Regions
         {
             Logger.Trace($"OnAddedToAOI(): {this} to {player}");
 
+            // Test Load
+            MissionManager.TestLoadPlayerMissionManager(player);
             player.MissionManager.InitializeForPlayer(player, this);
 
             // Sync region discovered entities with the player that has entered this region
@@ -1445,6 +1447,8 @@ namespace MHServerEmu.Games.Regions
 
                 player.UndiscoverEntity(discoveredEntity, true);
             }
+
+            player.MissionManager.Shutdown(this);
         }
 
         public void OnLoadingFinished()

@@ -1148,10 +1148,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void OnEnteredWorld(EntitySettings settings)
         {
-            base.OnEnteredWorld(settings);
-            AssignDefaultAvatarPowers();
-
-            // Update AOI of the owner player
             Player player = GetOwnerOfType<Player>();
             if (player == null)
             {
@@ -1159,8 +1155,19 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
             }
 
+            base.OnEnteredWorld(settings);
+            AssignDefaultAvatarPowers();
+
+            // Restore missions from Avatar
+            player.MissionManager?.RestoreAvatarMissions(this);
+
+            // Update AOI of the owner player
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
+
+            var regionProto = Region?.Prototype;
+            if (regionProto?.Chapter != PrototypeId.Invalid)
+                player.SetActiveChapter(regionProto.Chapter);
 
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
         }
@@ -1179,6 +1186,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (var summoner in summoners)
                     summoner.Destroy();
             }
+
+            // Store missions to Avatar
+            Player player = GetOwnerOfType<Player>();
+            player?.MissionManager?.StoreAvatarMissions(this);
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
