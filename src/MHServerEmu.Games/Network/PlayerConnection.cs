@@ -375,6 +375,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
+                case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break; // 123
@@ -950,6 +951,21 @@ namespace MHServerEmu.Games.Network
         private bool OnGracefulDisconnect(MailboxMessage message)   // 98
         {
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
+            return true;
+        }
+
+        private bool OnSetTipSeen(MailboxMessage message)   // 110
+        {
+            var setTipSeen = message.As<NetMessageSetTipSeen>();
+            if (setTipSeen == null) return Logger.WarnReturn(false, $"OnSetTipSeen(): Failed to retrieve message");
+
+            PrototypeId tipProtoRef = (PrototypeId)setTipSeen.TipDataRefId;
+            if (DataDirectory.Instance.PrototypeIsA<HUDTutorialPrototype>(tipProtoRef) == false)
+                return Logger.WarnReturn(false, $"OnSetTipSeen(): {tipProtoRef} is not a valid tip prototype ref");
+
+            Player.Properties[PropertyEnum.TutorialHasSeenTip, tipProtoRef] = true;
+            Logger.Trace($"OnSetTipSeen(): 0x{Player.DatabaseUniqueId:X} => {tipProtoRef.GetName()}");
+
             return true;
         }
 
