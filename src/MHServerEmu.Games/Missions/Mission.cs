@@ -573,7 +573,7 @@ namespace MHServerEmu.Games.Missions
                 MissionState.Inactive => OnChangeStateInactive(),
                 MissionState.Available => OnChangeStateAvailable(),
                 MissionState.Active => OnChangeStateActive(),
-                MissionState.Completed | MissionState.Failed => OnChangeStateCompleted(),
+                MissionState.Completed or MissionState.Failed => OnChangeStateCompleted(),
                 _ => false,
             };
         }
@@ -1080,7 +1080,7 @@ namespace MHServerEmu.Games.Missions
             {
                 MissionCreationState.Create => OnInitializeCreate(),
                 MissionCreationState.Reset => OnInitializeReset(),
-                MissionCreationState.Initialized | MissionCreationState.Loaded => OnInitializeLoaded(),
+                MissionCreationState.Initialized or MissionCreationState.Loaded => OnInitializeLoaded(),
                 MissionCreationState.Changed => OnInitializeChanged(),
                 _ => false,
             };

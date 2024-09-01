@@ -51,7 +51,6 @@ namespace MHServerEmu.Games.Missions
         private ulong _regionId;
         private HashSet<ulong> _missionInterestEntities = new();
         private InteractionOptimizationFlags _optimizationFlag;
-        private Avatar _restoredAvatar;
 
         public MissionManager()
         {
@@ -814,7 +813,7 @@ namespace MHServerEmu.Games.Missions
         {
             if (MMArchive == null) return;
 
-            using (Archive archive = new(ArchiveSerializeType.Replication, MMArchive))
+            using (Archive archive = new(ArchiveSerializeType.Database, MMArchive))
             {
                 player.MissionManager.Serialize(archive);
             }
@@ -823,7 +822,7 @@ namespace MHServerEmu.Games.Missions
 
         public static void TestSavePlayerMissionManager(Player player)
         {
-            using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
+            using (Archive archive = new(ArchiveSerializeType.Database, (ulong)AOINetworkPolicyValues.AllChannels))
             {
                 player.MissionManager.Serialize(archive);
                 MMArchive = archive.AccessAutoBuffer().ToArray();
@@ -864,7 +863,7 @@ namespace MHServerEmu.Games.Missions
 
         public void RestoreAvatarMissions(Avatar avatar)
         {
-            if (IsPlayerMissionManager() == false || avatar == _restoredAvatar) return;
+            if (IsPlayerMissionManager() == false || avatar.PrototypeDataRef == _avatarPrototypeRef) return;
 
             var player = Player;
             if (player == null || avatar == null) return;
@@ -931,7 +930,7 @@ namespace MHServerEmu.Games.Missions
                     mission.ReSuspended = false;
                 }
 
-            _restoredAvatar = avatar;
+            _avatarPrototypeRef = avatar.PrototypeDataRef;
         }
 
         public void UpdateMissionEntities(Mission mission)
