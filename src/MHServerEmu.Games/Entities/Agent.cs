@@ -528,9 +528,12 @@ namespace MHServerEmu.Games.Entities
 
         public virtual long GetLevelUpXPRequirement(int level)
         {
-            // TODO: Handle team-up leveling
-            Logger.Warn("GetLevelUpXPRequirement(): Team-up leveling is not yet implemented");
-            return 0;
+            if (IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): IsTeamUpAgent == false");
+
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
+
+            return advancementProto.GetTeamUpLevelUpXPRequirement(level);
         }
 
         public virtual int TryLevelUp(Player owner)
@@ -562,10 +565,17 @@ namespace MHServerEmu.Games.Entities
             return levelDelta;
         }
 
-        protected virtual void OnLevelUp()
+        protected virtual bool OnLevelUp()
         {
-            // TODO: Handle team-up level ups
-            Logger.Warn("OnLevelUp(): Team-up leveling is not yet implemented");
+            if (IsTeamUpAgent == false) return Logger.WarnReturn(false, "OnLevelUp(): IsTeamUpAgent == false");
+
+            Player owner = GetOwnerOfType<Player>();
+            if (owner != null && IsAtLevelCap)
+                owner.Properties.AdjustProperty(1, PropertyEnum.TeamUpsAtMaxLevelPersistent);
+
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            SendLevelUpMessage();
+            return true;
         }
 
         protected void SendLevelUpMessage()

@@ -343,6 +343,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
 
+        // ---
+
+        public const long InvalidXPRequirement = -1;
+
         [DoNotCopy]
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
 
@@ -382,8 +386,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public long GetAvatarLevelUpXPRequirement(int level)
         {
+            if (level < 1) return InvalidXPRequirement;
+
             Curve levelingCurve = GetAvatarLevelingCurve();
-            if (levelingCurve == null) return Logger.WarnReturn(-1, "GetAvatarLevelUpXPRequirement(): levelingCurve == null");
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetAvatarLevelUpXPRequirement(): levelingCurve == null");
+
+            return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+
+        public long GetTeamUpLevelUpXPRequirement(int level)
+        {
+            if (level < 1) return InvalidXPRequirement;
+
+            Curve levelingCurve = GetTeamUpLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetTeamUpLevelUpXPRequirement(): levelingCurve == null");
 
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
@@ -391,7 +407,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private static long GetLevelUpXPRequirementFromCurve(int level, Curve curve)
         {
             if (level < curve.MinPosition || level > curve.MaxPosition)
-                return -1;
+                return InvalidXPRequirement;
 
             return curve.GetInt64At(level);
         }

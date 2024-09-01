@@ -161,7 +161,8 @@ namespace MHServerEmu.Games.Network
                         teamUpSettings.EntityRef = teamUpRef;
                         teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
-                        Game.EntityManager.CreateEntity(teamUpSettings);
+                        Agent teamUpAgent = Game.EntityManager.CreateEntity(teamUpSettings) as Agent;
+                        teamUpAgent?.InitializeLevel(1);
                     }
                 }
             }

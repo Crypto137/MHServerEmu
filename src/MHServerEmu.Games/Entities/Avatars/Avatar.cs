@@ -824,8 +824,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override long AwardXP(long amount, bool showXPAwardedText)
         {
-            // TODO: Avatar-specific XP
-            return base.AwardXP(amount, showXPAwardedText);
+            long awardedAmount = base.AwardXP(amount, showXPAwardedText);
+
+            // Award XP to the current team-up as well if there is one
+            CurrentTeamUpAgent?.AwardXP(amount, showXPAwardedText);
+
+            return awardedAmount;
         }
 
         public static int GetAvatarLevelCap()
@@ -842,10 +846,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
         }
 
-        protected override void OnLevelUp()
+        protected override bool OnLevelUp()
         {
-            SendLevelUpMessage();
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            SendLevelUpMessage();
+            return true;
         }
 
         #endregion
