@@ -1040,18 +1040,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             Agent teamUp = CurrentTeamUpAgent;
             if (teamUp == null) return;
             if (teamUp.IsInWorld) return;
+
             Properties[PropertyEnum.AvatarTeamUpIsSummoned] = true;
             Properties[PropertyEnum.AvatarTeamUpStartTime] = (long)Game.CurrentTime.TotalMilliseconds;
             //Power power = GetPower(TeamUpPowerRef);
             //Properties[PropertyEnum.AvatarTeamUpDuration] = power.GetCooldownDuration();
 
-            if (teamUp.IsDead)
-                teamUp.Resurrect();
-
-            EntitySettings setting = new()
-            { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden };
-            teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, setting);
-            teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
+            ActivateTeamUpAgent(true);
         }
 
         public bool ClearSummonedTeamUpAgent(Agent teamUpAgent)
@@ -1095,6 +1090,30 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player?.GetTeamUpAgent(teamUpProtoRef);
         }
 
+        private void ActivateTeamUpAgent(bool playIntro)
+        {
+            Agent teamUp = CurrentTeamUpAgent;
+            if (teamUp == null) return;
+
+            if (teamUp.IsDead)
+                teamUp.Resurrect();
+
+            EntitySettings settings = null;
+            if (playIntro)
+            {
+                settings = new();
+                settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden;
+            }
+            
+            teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, settings);
+            teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
+        }
+
+        private void DeactivateTeamUpAgent()
+        {
+            CurrentTeamUpAgent?.ExitWorld();
+        }
+
         #endregion
 
         #region Event Handlers
@@ -1119,7 +1138,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 LinkTeamUpAgent(CurrentTeamUpAgent);
                 if (Properties[PropertyEnum.AvatarTeamUpIsSummoned])
-                    SummonTeamUpAgent();
+                    ActivateTeamUpAgent(true);  // We may want to disable the intro animation in some cases
             }
         }
 
@@ -1127,16 +1146,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnExitedWorld();
 
-            if (CurrentTeamUpAgent != null) DismissTeamUpAgent();
+            DeactivateTeamUpAgent();
+
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
-            if (summonedInventory != null)
-            {
-                List<WorldEntity> summoners = new();
-                foreach (var entry in summonedInventory)
-                    summoners.Add(Game.EntityManager.GetEntity<WorldEntity>(entry.Id));
-                foreach (var summoner in summoners)
-                    summoner.Destroy();
-            }
+            summonedInventory?.DestroyContained();
 
             // REMOVEME: Clean up kismet hack property
             Properties.RemovePropertyRange(PropertyEnum.AvatarMissionResetsWithRegionId);
