@@ -389,6 +389,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
+                case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
@@ -946,6 +947,23 @@ namespace MHServerEmu.Games.Network
             PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
 
             avatar.ActivatePower(bodysliderPowerRef, ref settings);
+            return true;
+        }
+
+        private bool OnRequestMissionRewards(MailboxMessage message) // 57
+        {
+            var requestMissionRewards = message.As<NetMessageRequestMissionRewards>();
+            if (requestMissionRewards == null) return Logger.WarnReturn(false, $"OnRequestMissionRewards(): Failed to retrieve message");
+
+            var missionRef = (PrototypeId)requestMissionRewards.MissionPrototypeId;
+            if (missionRef == PrototypeId.Invalid) return Logger.WarnReturn(false, $"OnRequestMissionRewards(): MissionPrototypeId == PrototypeId.Invalid");
+            ulong entityId = requestMissionRewards.EntityId;
+
+            if (requestMissionRewards.HasConditionIndex)
+                Player.GetRegion()?.PlayerRequestMissionRewardsEvent.Invoke(new(Player, missionRef, requestMissionRewards.ConditionIndex, entityId));
+            else
+                Player.MissionManager?.OnRequestMissionRewards(missionRef, entityId);
+
             return true;
         }
 

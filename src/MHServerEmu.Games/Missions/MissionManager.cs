@@ -414,6 +414,17 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
+        public void OnRequestMissionRewards(PrototypeId missionRef, ulong entityId)
+        {
+            var mission = FindMissionByDataRef(missionRef);
+            if (mission != null)
+                mission.OnRequestMissionRewards(entityId);
+            else
+            {
+                // NetMessageMissionRewardsResponse
+            }
+        }
+
         private Mission CreateMissionByDataRef(PrototypeId missionRef, MissionCreationState creationState = MissionCreationState.Create, 
             MissionState initialState = MissionState.Invalid, float objectiveSeq = -1.0f, int lootSeed = 0)
         {
@@ -1046,6 +1057,7 @@ namespace MHServerEmu.Games.Missions
         {
             // MissionPrototypeId.NPE1Flag, // Pre BUE player
             (PrototypeId)MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
+            (PrototypeId)MissionPrototypeId.CH00NPETrainingRoom, // Tutorial in TrainingRoom
         };
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]

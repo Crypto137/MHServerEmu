@@ -1751,6 +1751,50 @@ namespace MHServerEmu.Games.Missions
             Logger.Warn($"OnAvatarLeftMission [{PrototypeName}]");
         }
 
+        public void OnSpawnedPopulation()
+        {
+            SpawnState = MissionSpawnState.Spawned;
+            OnChangeState();
+        }
+
+        public void OnUpdateSimulation(MissionSpawnEvent missionSpawnEvent)
+        {
+            if (missionSpawnEvent == null) return;
+            // TODO restart Mission if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
+        }
+
+        public void LootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
+        {
+            string itemName = "Not Found";
+            var choises = rewards[0].Choices;
+            if (choises.HasValue())
+            {
+                var lootDrop = rewards[0].Choices[0] as LootDropItemPrototype;
+                if (lootDrop != null) itemName = lootDrop.Item.GetNameFormatted();
+            }
+            Logger.Warn($"LootSummaryReward [{PrototypeName}] Rewards [{rewards.Length}] Item [{itemName}]");
+        }
+
+        public void OnRequestMissionRewards(ulong entityId)
+        {
+            if (State != MissionState.Active) return;
+
+            var player = MissionManager.Player;
+            if (player == null || Prototype.Rewards.IsNullOrEmpty()) return;
+
+            var message = NetMessageMissionRewardsResponse.CreateBuilder();
+            message.SetMissionPrototypeId((ulong)PrototypeDataRef);
+
+            if (entityId != Entity.InvalidId)
+                message.SetEntityId(entityId);
+
+            // TODO Rewards
+            // NetStructLootResultSummary rewards;
+            // message.SetShowItems(rewards);
+
+            player.SendMessage(message.Build());
+        }
+
         public bool OnConditionCompleted()
         {
             return OnChangeState();
@@ -1952,23 +1996,6 @@ namespace MHServerEmu.Games.Missions
                 scheduler.ScheduleEvent(_delayedUpdateMissionEntitiesEvent, timeOffset, EventGroup);
                 _delayedUpdateMissionEntitiesEvent.Get().Initialize(this);
             }
-        }
-
-        public void OnSpawnedPopulation()
-        {
-            SpawnState = MissionSpawnState.Spawned;
-            OnChangeState();
-        }
-
-        public void OnUpdateSimulation(MissionSpawnEvent missionSpawnEvent)
-        {
-            if (missionSpawnEvent == null) return;
-            // TODO restart Mission if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
-        }
-
-        internal void LootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
-        {
-            throw new NotImplementedException();
         }
 
         protected class IdleTimeoutEvent : CallMethodEvent<Mission>
