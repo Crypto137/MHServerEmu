@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
-        private void InitializeMissionTrackerFilters()
+        public void InitializeMissionTrackerFilters()
         {
             foreach (PrototypeId filterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionTrackerFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -400,9 +400,6 @@ namespace MHServerEmu.Games.Entities
 
             // Enter game to become added to the AOI
             base.EnterGame(settings);
-
-            // Set default filters for mission tracker
-            InitializeMissionTrackerFilters();
         }
 
         public override void ExitGame()
@@ -1689,7 +1686,7 @@ namespace MHServerEmu.Games.Entities
             return Properties[teamProp];
         }
 
-        public void OnSetTipSeen(PrototypeId tipDataRef)
+        public void SetTipSeen(PrototypeId tipDataRef)
         {
             if (tipDataRef == PrototypeId.Invalid) return;
             Properties[PropertyEnum.TutorialHasSeenTip, tipDataRef] = true;

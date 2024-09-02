@@ -105,8 +105,6 @@ namespace MHServerEmu.Games.Entities
 
             // Create the entity
             Entity entity;
-            // REMOVEME
-            settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
 
             // If the requested id is already used by an entity that is pending deletion, finish its deletion immediately
             Entity destroyedEntity = GetDestroyedEntity<Entity>(settings.Id);

@@ -14,13 +14,9 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Entities.Persistence;
-using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -127,14 +123,7 @@ namespace MHServerEmu.Games.Network
             // Remove this when we merge missions
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
-                foreach (PrototypeId missionFilterTrackerProtoRef in
-                    DataDirectory.Instance.IteratePrototypesInHierarchy<MissionTrackerFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                {
-                    var missionFilterTrackerProto = missionFilterTrackerProtoRef.As<MissionTrackerFilterPrototype>();
-                    if (missionFilterTrackerProto.DisplayByDefault)
-                        Player.Properties[PropertyEnum.MissionTrackerFilter, missionFilterTrackerProtoRef] = true;
-                }
-
+                Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
             }
 
@@ -1026,7 +1015,7 @@ namespace MHServerEmu.Games.Network
         {
             var setTipSeen = message.As<NetMessageSetTipSeen>();
             if (setTipSeen == null) return Logger.WarnReturn(false, $"OnSetTipSeen(): Failed to retrieve message");
-            Player.OnSetTipSeen((PrototypeId)setTipSeen.TipDataRefId);
+            Player.SetTipSeen((PrototypeId)setTipSeen.TipDataRefId);
             return true;
         }
 
