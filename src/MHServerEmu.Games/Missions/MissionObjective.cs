@@ -251,7 +251,9 @@ namespace MHServerEmu.Games.Missions
 
         public bool SetState(MissionObjectiveState newState)
         {
-            if (MissionManager.Debug) Logger.Debug($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
+            if (MissionManager.Debug && (State == MissionObjectiveState.Active || State == MissionObjectiveState.Completed)) 
+                Logger.Debug($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
+
             var oldState = _objectiveState;
             if (oldState == newState) return false;
 
@@ -285,7 +287,9 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnChangeState()
         {
-            if (MissionManager.Debug) Logger.Trace($"OnChangeState Objective[{_prototypeIndex}] State {State} for {Mission.PrototypeName}");
+            if (MissionManager.Debug && (State == MissionObjectiveState.Active || State == MissionObjectiveState.Completed)) 
+                Logger.Trace($"OnChangeState Objective[{_prototypeIndex}] State {State} for {Mission.PrototypeName}");
+
             if (Mission.IsSuspended) return false;
             return State switch
             {
