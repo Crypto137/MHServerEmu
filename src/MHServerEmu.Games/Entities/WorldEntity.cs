@@ -338,6 +338,12 @@ namespace MHServerEmu.Games.Entities
             Physics.DetachAllChildren();
             DisableNavigationInfluence();
 
+            if (Locomotor != null)
+            {
+                Locomotor.Stop();
+                Locomotor.SetMethod(LocomotorMethod.Default);
+            }
+
             var entityManager = Game.EntityManager;
             if (entityManager == null) return;
             entityManager.PhysicsManager?.OnExitedWorld(Physics);
