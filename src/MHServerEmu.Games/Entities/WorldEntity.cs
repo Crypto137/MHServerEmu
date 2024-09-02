@@ -166,9 +166,12 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            Properties[PropertyEnum.CharacterLevel] = 60;
-            Properties[PropertyEnum.CombatLevel] = 60;
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            if (this is not Avatar) // REMOVEME
+            {
+                Properties[PropertyEnum.CharacterLevel] = 60;
+                Properties[PropertyEnum.CombatLevel] = 60;
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            }
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);
@@ -215,16 +218,10 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            // HACK: LOOT
+            // HACK: LOOT AND XP
             if (this is Agent agent && agent is not Missile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
-                foreach (ulong playerId in InterestReferences.PlayerIds)
-                {
-                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                    if (player == null) continue;
-
-                    Game.LootManager.DropRandomLoot(this, player);
-                }
+                GiveKillRewards(killer, killFlags, directKiller);
             }
 
             // HACK: Schedule respawn in public zones using SpawnSpec
@@ -302,6 +299,16 @@ namespace MHServerEmu.Games.Entities
 
         #region World and Positioning
 
+        public override void ExitGame()
+        {
+            ExitWorld();
+
+            if (Locomotor?.IsEnabled == true)
+                Logger.Warn($"ExitGame(): Entity is exiting game but locomotor is still enabled {this}");
+
+            base.ExitGame();
+        }
+
         public virtual bool EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             SetStatus(EntityStatus.EnteringWorld, true);
@@ -330,6 +337,12 @@ namespace MHServerEmu.Games.Entities
             // TODO IsAttachedToEntity()
             Physics.DetachAllChildren();
             DisableNavigationInfluence();
+
+            if (Locomotor != null)
+            {
+                Locomotor.Stop();
+                Locomotor.SetMethod(LocomotorMethod.Default);
+            }
 
             var entityManager = Game.EntityManager;
             if (entityManager == null) return;
@@ -1706,6 +1719,8 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
 
+            if (IsInWorld == false) return;
+
             AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
 
             if (gainedPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
@@ -1729,6 +1744,31 @@ namespace MHServerEmu.Games.Entities
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
         public virtual void OnSkillshotReflected(Missile missile) { }
+
+        #endregion
+
+        #region Rewards
+
+        public void GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            // TODO: Track kill participation somehow to prevent exploits
+            foreach (ulong playerId in InterestReferences.PlayerIds)
+            {
+                Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                if (player == null) continue;
+
+                // Loot
+                Game.LootManager.DropRandomLoot(this, player);
+
+                // XP
+                if (killer is not Avatar avatar)
+                    continue;
+
+                WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
+                xp *= 3;    // REMOVEME: Triple experience gains to compensate for the lack of experience orbs and boosts
+                avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+            }
+        }
 
         #endregion
 

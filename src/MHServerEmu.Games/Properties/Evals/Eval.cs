@@ -2425,7 +2425,10 @@ namespace MHServerEmu.Games.Properties.Evals
             PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
             PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(assignPropEvalParamsProto.Prop);
             PropertyInfo propInfo = propInfoTable.LookupPropertyInfo(propEnum);
-            PropertyParam[] paramValues = propInfo.DefaultParamValues;
+
+            Span<PropertyParam> paramValues = stackalloc PropertyParam[Property.MaxParamCount];
+            propInfo.DefaultParamValues.CopyTo(paramValues);
+
             for (int i = 0; i < propInfo.ParamCount; i++)
             {
                 if (i >= 4) break;
@@ -2462,7 +2465,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 }
             }
 
-            PropertyId propId = new (propEnum, paramValues);
+            PropertyId propId = new(propEnum, paramValues);
 
             switch (propInfo.DataType)
             {
@@ -2629,7 +2632,7 @@ namespace MHServerEmu.Games.Properties.Evals
             if (propInfoParams.ParamCount != propInfoValue.ParamCount)
                 return evalVar;
 
-            PropertyParam[] paramValues = new PropertyParam[propInfoParams.ParamCount];
+            Span<PropertyParam> paramValues = stackalloc PropertyParam[propInfoParams.ParamCount];
             for (int i = 0; i < propInfoParams.ParamCount; ++i)
             {
                 if (propInfoParams.GetParamType(i) != propInfoValue.GetParamType(i)) return evalVar;
@@ -2653,7 +2656,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 }
             }
 
-            PropertyId propIdValue = new (propEnum, paramValues);
+            PropertyId propIdValue = new(propEnum, paramValues);
 
             switch (propInfoValue.DataType)
             {
@@ -2704,7 +2707,9 @@ namespace MHServerEmu.Games.Properties.Evals
             PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
             PropertyEnum propEnum = propInfoTable.GetPropertyEnumFromPrototype(loadPropEvalParamsProto.Prop);
             PropertyInfo propInfo = propInfoTable.LookupPropertyInfo(propEnum);
-            PropertyParam[] paramValues = propInfo.DefaultParamValues;
+
+            Span<PropertyParam> paramValues = stackalloc PropertyParam[Property.MaxParamCount];
+            propInfo.DefaultParamValues.CopyTo(paramValues);
 
             for (int i = 0; i < propInfo.ParamCount; ++i)
             {
@@ -2742,7 +2747,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 }
             }
 
-            PropertyId propId = new (propEnum, paramValues);
+            PropertyId propId = new(propEnum, paramValues);
 
             switch (propInfo.DataType)
             {

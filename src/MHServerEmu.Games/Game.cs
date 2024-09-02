@@ -386,7 +386,7 @@ namespace MHServerEmu.Games
             if (Directory.Exists(crashReportDir) == false)
                 Directory.CreateDirectory(crashReportDir);
 
-            string crashReportFilePath = Path.Combine(crashReportDir, $"GameInstanceCrash_{now:yyyy-dd-MM_HH.mm.ss}.txt");
+            string crashReportFilePath = Path.Combine(crashReportDir, $"GameInstanceCrash_{now.ToString(FileHelper.FileNameDateFormat)}.txt");
 
             using (StreamWriter writer = new(crashReportFilePath))
             {

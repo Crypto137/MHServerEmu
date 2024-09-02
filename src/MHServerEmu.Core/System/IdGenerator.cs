@@ -5,11 +5,12 @@ namespace MHServerEmu.Core.System
     public enum IdType
     {
         Generic = 0,
-        Region = 1,
-        Player = 2,
-        Session = 3,
-        Game = 4,
-        Limit = 1 << 4    // 16
+        Region  = 1,        // [Runtime] Region instance id
+        Player  = 2,        // [Database] Accounts and persistent player entities representing those accounts in the game
+        Session = 3,        // [Runtime] Client connection id
+        Game    = 4,        // [Runtime] Game instance id
+        Entity  = 5,        // [Database] Persistent entities (avatars, items, etc.)
+        Limit   = 1 << 4    // 16
     }
 
     /// <summary>
@@ -23,6 +24,8 @@ namespace MHServerEmu.Core.System
         // 12 bits - machine id (for generating ids of the same type in parallel, up to 4096 instances at the same time)
         // 32 bits - unix timestamp in seconds
         // 16 bits - machine sequence number (to avoid collisions if multiple ids are generated in the same second)
+
+        private readonly object _lock = new();
 
         private readonly IdType _type;
         private readonly ushort _machineId;
@@ -45,13 +48,17 @@ namespace MHServerEmu.Core.System
         /// </summary>
         public ulong Generate()
         {
-            ulong id = 0;
-            id |= (ulong)_type << 60;
-            id |= (ulong)_machineId << 48;
-            id |= (ulong)Clock.UnixTime.TotalSeconds << 16;
-            id |= _machineSequenceNumber++;
-
-            return id;
+            // NOTE: Generation needs to be thread-safe because it can be
+            // called by multiple game instances running on the same server. 
+            lock (_lock)
+            {
+                ulong id = 0;
+                id |= (ulong)_type << 60;
+                id |= (ulong)_machineId << 48;
+                id |= (((ulong)Clock.UnixTime.TotalSeconds) & 0xFFFFFFFF) << 16;
+                id |= _machineSequenceNumber++;
+                return id;
+            }
         }
 
         /// <summary>

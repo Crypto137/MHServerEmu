@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using MHServerEmu.Core.Config;
+﻿using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
@@ -19,10 +18,9 @@ namespace MHServerEmu.DatabaseAccess.Models
     public class DBAccount
     {
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
+        private static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
 
-        public static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
-
-        public ulong Id { get; set; }
+        public long Id { get; set; }
         public string Email { get; set; }
         public string PlayerName { get; set; }
         public byte[] PasswordHash { get; set; }
@@ -33,11 +31,12 @@ namespace MHServerEmu.DatabaseAccess.Models
         public bool IsPasswordExpired { get; set; }
 
         public DBPlayer Player { get; set; }
-        [JsonInclude]
-        public Dictionary<long, DBAvatar> Avatars { get; private set; } = new();
 
-        [JsonIgnore]
-        public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
+        // NOTE: init is required for collection properties to be compatible with JSON serialization
+        public DBEntityCollection Avatars { get; init; } = new();
+        public DBEntityCollection TeamUps { get; init; } = new();
+        public DBEntityCollection Items { get; init; } = new();
+        public DBEntityCollection ControlledEntities { get; init; } = new();
 
         /// <summary>
         /// Constructs an empty <see cref="DBAccount"/> instance.
@@ -49,50 +48,26 @@ namespace MHServerEmu.DatabaseAccess.Models
         /// </summary>
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
-            Id = IdGenerator.Generate();
+            Id = (long)IdGenerator.Generate();
             Email = email;
             PlayerName = playerName;
             PasswordHash = CryptographyHelper.HashPassword(password, out byte[] salt);
             Salt = salt;
             UserLevel = userLevel;
-            IsBanned = false;
-            IsArchived = false;
-            IsPasswordExpired = false;
-
-            InitializeData();
         }
 
         /// <summary>
         /// Constructs a default <see cref="DBAccount"/> instance with the provided data.
         /// </summary>
-        public DBAccount(string playerName, long region, long waypoint, long avatar, int volume)
+        public DBAccount(string playerName)
         {
             // Default account is used when BypassAuth is enabled
             Id = 0x2000000000000001;
             Email = "default@mhserveremu";
             PlayerName = playerName;
+            PasswordHash = Array.Empty<byte>();
+            Salt = Array.Empty<byte>();
             UserLevel = AccountUserLevel.Admin;
-
-            InitializeData();
-
-            Player.RawRegion = region;
-            Player.RawWaypoint = waypoint;
-            Player.RawAvatar = avatar;
-            Player.AOIVolume = volume;
-        }
-
-        /// <summary>
-        /// Retrieves the <see cref="DBAvatar"/> for the specified prototype id.
-        /// </summary>
-        public DBAvatar GetAvatar(long prototypeId)
-        {
-            if (Avatars.TryGetValue(prototypeId, out DBAvatar avatar) == false)
-            {
-                avatar = new(Id, prototypeId);
-                Avatars.Add(prototypeId, avatar);
-            }
-
-            return avatar;
         }
 
         public override string ToString()
@@ -101,9 +76,12 @@ namespace MHServerEmu.DatabaseAccess.Models
             return $"{PlayerName} (dbId=0x{Id:X}, email={email})";
         }
 
-        private void InitializeData()
+        public void ClearEntities()
         {
-            Player = new(Id);
+            Avatars.Clear();
+            TeamUps.Clear();
+            Items.Clear();
+            ControlledEntities.Clear();
         }
     }
 }

@@ -181,8 +181,8 @@ namespace MHServerEmu.Games.Entities
 
         #region Property Properties (lol)
 
-        public int CharacterLevel { get => Properties[PropertyEnum.CharacterLevel]; set => Properties[PropertyEnum.CharacterLevel] = value; }
-        public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; set => Properties[PropertyEnum.CombatLevel] = value; }
+        public int CharacterLevel { get => Properties[PropertyEnum.CharacterLevel]; set => SetCharacterLevel(value); }
+        public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; set => SetCombatLevel(value); }
 
         public ulong PowerUserOverrideId { get => HasPowerUserOverride ? Properties[PropertyEnum.PowerUserOverrideID] : 0; }
         public PrototypeId ClusterPrototype { get => HasClusterPrototype ? Properties[PropertyEnum.ClusterPrototype] : PrototypeId.Invalid; }
@@ -273,6 +273,11 @@ namespace MHServerEmu.Games.Entities
         public virtual bool Serialize(Archive archive)
         {
             return Properties.SerializeWithDefault(archive, Prototype?.Properties);
+        }
+
+        public virtual void OnUnpackComplete(Archive archive)
+        {
+
         }
 
         public virtual bool ApplyInitialReplicationState(ref EntitySettings settings) => true;
@@ -1088,5 +1093,18 @@ namespace MHServerEmu.Games.Entities
         }
 
         #endregion
+
+        // Note: SetCharacterLevel() and SetCombatLevel() need dedicated functions so that we can differentiate
+        // level being set during initialization and while in-game (e.g. when leveling up)
+
+        protected virtual void SetCharacterLevel(int characterLevel)
+        {
+            Properties[PropertyEnum.CharacterLevel] = characterLevel;
+        }
+
+        protected virtual void SetCombatLevel(int combatLevel)
+        {
+            Properties[PropertyEnum.CombatLevel] = combatLevel;
+        }
     }
 }

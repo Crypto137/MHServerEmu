@@ -6,11 +6,10 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Billing
@@ -129,7 +128,7 @@ namespace MHServerEmu.Billing
             Logger.Info($"Received NetMessageBuyItemFromCatalog");
             Logger.Trace(buyItemFromCatalog.ToString());
 
-            var player = playerConnection.Player;
+            Player player = playerConnection.Player;
 
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
             if (entry == null || entry.GuidItems.Length == 0)
@@ -138,31 +137,25 @@ namespace MHServerEmu.Billing
                 return true;
             }
 
-            PrototypeId itemProtoRef = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
-            if (GameDatabase.DataDirectory.PrototypeIsA<CostumePrototype>(itemProtoRef))
+            Prototype catalogItemProto = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<Prototype>();
+
+            switch (catalogItemProto)
             {
-                // HACK: change costume when a player "buys" a costume
-                Avatar avatar = player.GetAvatar(itemProtoRef.As<CostumePrototype>().UsableBy);
-                if (avatar == null)
-                {
+                case ItemPrototype itemProto:
+                    // Give the player the item they are trying to "buy"
+                    player.Game.LootManager.GiveItem(player, itemProto.DataRef);
+                    break;
+
+                case PlayerStashInventoryPrototype playerStashInventoryProto:
+                    // Unlock the stash tab
+                    player.UnlockInventory(playerStashInventoryProto.DataRef);
+                    break;
+
+                default:
+                    // Return error for unhandled SKU types
+                    Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}");
                     SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
                     return true;
-                }
-
-                // Update player and avatar properties
-                avatar.Properties[PropertyEnum.CostumeCurrent] = itemProtoRef;
-                player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.PrototypeDataRef] = itemProtoRef;
-            }
-            else if (GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(itemProtoRef))
-            {
-                // Give the player the item they are trying to "buy"
-                player.Game.LootManager.GiveItem(player, itemProtoRef);
-            }
-            else
-            {
-                // Return error if this SKU is not an item
-                SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                return true;
             }
 
             // Send buy response

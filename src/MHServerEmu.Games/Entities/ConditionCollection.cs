@@ -39,34 +39,37 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = true;
 
-            // if (archive.IsTransient) -> This wasn't originally used for persistent serialization, same as individual conditions
-            if (archive.IsPacking)
+            // TODO: Persistent serialization
+            if (archive.IsTransient)
             {
-                if (_currentConditionDict.Count >= MaxConditions)
-                    return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions");
-
-                uint numConditions = (uint)_currentConditionDict.Count;
-                success &= Serializer.Transfer(archive, ref numConditions);
-
-                foreach (Condition condition in _currentConditionDict.Values)
-                    success &= condition.Serialize(archive, _owner);
-            }
-            else
-            {
-                if (_currentConditionDict.Count != 0)
-                    return Logger.ErrorReturn(false, $"Serialize(): _currrentConditionDict is not empty");
-
-                uint numConditions = 0;
-                success &= Serializer.Transfer(archive, ref numConditions);
-
-                if (numConditions >= MaxConditions)
-                    return Logger.ErrorReturn(false, $"Serialize(): numConditions >= MaxConditions");
-
-                for (uint i = 0; i < numConditions; i++)
+                if (archive.IsPacking)
                 {
-                    Condition condition = AllocateCondition();
-                    success &= condition.Serialize(archive, _owner);
-                    InsertCondition(condition);
+                    if (_currentConditionDict.Count >= MaxConditions)
+                        return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions");
+
+                    uint numConditions = (uint)_currentConditionDict.Count;
+                    success &= Serializer.Transfer(archive, ref numConditions);
+
+                    foreach (Condition condition in _currentConditionDict.Values)
+                        success &= condition.Serialize(archive, _owner);
+                }
+                else
+                {
+                    if (_currentConditionDict.Count != 0)
+                        return Logger.ErrorReturn(false, $"Serialize(): _currrentConditionDict is not empty");
+
+                    uint numConditions = 0;
+                    success &= Serializer.Transfer(archive, ref numConditions);
+
+                    if (numConditions >= MaxConditions)
+                        return Logger.ErrorReturn(false, $"Serialize(): numConditions >= MaxConditions");
+
+                    for (uint i = 0; i < numConditions; i++)
+                    {
+                        Condition condition = AllocateCondition();
+                        success &= condition.Serialize(archive, _owner);
+                        InsertCondition(condition);
+                    }
                 }
             }
 

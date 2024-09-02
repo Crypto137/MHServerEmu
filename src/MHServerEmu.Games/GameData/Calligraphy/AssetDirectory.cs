@@ -86,6 +86,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return assetTypeId;
         }
 
+        public AssetId GetAssetRef(AssetGuid assetGuid)
+        {
+            bool found = _assetGuidToIdDict.TryGetValue(assetGuid, out AssetId assetId);
+            
+            while (found == false)
+            {
+                ulong guidReplacement = 0;
+                
+                if (DataDirectory.Instance.GetGuidReplacement((ulong)assetGuid, ref guidReplacement) && guidReplacement != 0)
+                    found = _assetGuidToIdDict.TryGetValue((AssetGuid)guidReplacement, out assetId);
+                else
+                    return AssetId.Invalid;
+            }
+
+            return assetId;
+        }
+
         /// <summary>
         /// Returns the enum value of the specified <see cref="AssetId"/>.
         /// </summary>

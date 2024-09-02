@@ -59,10 +59,11 @@ namespace MHServerEmu.Games.Properties
     [Flags]
     public enum SetPropertyFlags : byte
     {
-        None    = 0,
-        Flag0   = 1 << 0,
-        Flag1   = 1 << 1,
-        Refresh = 1 << 2
+        None            = 0,
+        Deserialized    = 1 << 0,
+        Flag1           = 1 << 1,
+        Refresh         = 1 << 2,
+        Persistent      = 1 << 3
     }
 
     #endregion

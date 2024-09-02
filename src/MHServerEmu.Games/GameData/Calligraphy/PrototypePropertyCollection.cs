@@ -196,8 +196,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             if (paramsSetMask == 0xff) return left == right;
 
-            var leftParams = left.GetParams();
-            var rightParams = right.GetParams();
+            Span<PropertyParam> leftParams = stackalloc PropertyParam[Property.MaxParamCount];
+            Span<PropertyParam> rightParams = stackalloc PropertyParam[Property.MaxParamCount];
+            left.GetParams(ref leftParams);
+            right.GetParams(ref rightParams);
 
             for (int i = 0; i < Property.MaxParamCount; i++)
             {
@@ -218,8 +220,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             if (paramsSetMask == 0xff) return;
 
-            PropertyParam[] destParams = destId.GetParams();
-            PropertyParam[] sourceParams = sourceId.GetParams();
+            Span<PropertyParam> destParams = stackalloc PropertyParam[Property.MaxParamCount];
+            Span<PropertyParam> sourceParams = stackalloc PropertyParam[Property.MaxParamCount];
+            destId.GetParams(ref destParams);
+            sourceId.GetParams(ref sourceParams);
 
             for (int i = 0; i < Property.MaxParamCount; i++)
             {

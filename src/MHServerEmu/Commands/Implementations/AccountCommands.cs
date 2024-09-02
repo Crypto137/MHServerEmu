@@ -1,6 +1,9 @@
 ﻿using System.Text;
+using System.Text.Json;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
@@ -110,6 +113,26 @@ namespace MHServerEmu.Commands.Implementations
             sb.Append($"IsPasswordExpired: {client.Session.Account.IsPasswordExpired}");
 
             ChatHelper.SendMetagameMessageSplit(client, sb.ToString());
+            return string.Empty;
+        }
+
+        [Command("download", "Downloads a JSON copy of the current account.\nUsage: account download", AccountUserLevel.User)]
+        public string Download(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            DBAccount account = client.Session.Account;
+
+            JsonSerializerOptions options = new();
+            options.Converters.Add(new DBEntityCollectionJsonConverter());
+            string json = JsonSerializer.Serialize(account, options);
+
+            client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
+                .SetResponse($"Downloaded account data for {account}")
+                .SetFilerelativepath($"Download/0x{account.Id:X}_{account.PlayerName}_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.json")
+                .SetFilecontents(json)
+                .Build());
+
             return string.Empty;
         }
     }

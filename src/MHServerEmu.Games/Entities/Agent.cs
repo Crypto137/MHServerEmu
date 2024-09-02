@@ -46,6 +46,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
         public override bool IsWakingUp { get => _wakeEndEvent.IsValid; }
         public override bool IsDormant { get => base.IsDormant || IsWakingUp; }
+        public virtual bool IsAtLevelCap { get => CharacterLevel >= GetTeamUpLevelCap(); }
 
         public Agent(Game game) : base(game) { }
 
@@ -152,36 +153,6 @@ namespace MHServerEmu.Games.Entities
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
             if (keywordPrototype == null) return Logger.WarnReturn(false, "HasPowerWithKeyword(): keywordPrototype == null");
             return powerProto.HasKeyword(keywordPrototype);
-        }
-
-        public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
-        {
-            if (IsTeamUpAgent)
-                return GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(PrototypeDataRef, powerRef) != null;
-
-            return false;
-        }
-
-        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
-        {
-            // Note: this implementation is meant only for team-up agents
-
-            info = new();
-
-            if (powerProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
-
-            var teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
-            if (teamUpProto == null)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
-
-            var powerProgressionEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
-            if (powerProgressionEntry != null)
-                info.InitForTeamUp(powerProgressionEntry);
-            else
-                info.InitNonProgressionPower(powerProtoRef);
-
-            return info.IsValid;
         }
 
         public int GetPowerRank(PrototypeId powerRef)
@@ -488,6 +459,140 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Progression
+
+        public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (IsTeamUpAgent)
+                return GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(PrototypeDataRef, powerRef) != null;
+
+            return false;
+        }
+
+        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
+        {
+            // Note: this implementation is meant only for team-up agents
+
+            info = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            var teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
+            if (teamUpProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
+
+            var powerProgressionEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
+            if (powerProgressionEntry != null)
+                info.InitForTeamUp(powerProgressionEntry);
+            else
+                info.InitNonProgressionPower(powerProtoRef);
+
+            return info.IsValid;
+        }
+
+        public void InitializeLevel(int level)
+        {
+            CharacterLevel = level;
+            Properties[PropertyEnum.ExperiencePoints] = 0;
+            Properties[PropertyEnum.ExperiencePointsNeeded] = GetLevelUpXPRequirement(level);
+        }
+
+        public virtual long AwardXP(long amount, bool showXPAwardedText)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false)
+                return 0;
+
+            // Only entities owned by players can earn experience
+            Player owner = GetOwnerOfType<Player>();
+            if (owner == null) return Logger.WarnReturn(0, "AwardXP(): owner == null");
+
+            // TODO: Apply PrestigeXPFactor
+
+            if (IsAtLevelCap == false)
+            {
+                Properties[PropertyEnum.ExperiencePoints] += amount;
+                TryLevelUp(owner);
+            }
+
+            if (showXPAwardedText)
+            {
+                owner.SendMessage(NetMessageShowXPAwardedText.CreateBuilder()
+                    .SetXpAwarded(amount)
+                    .SetAgentId(Id)
+                    .Build());
+            }
+
+            return amount;
+        }
+
+        public virtual long GetLevelUpXPRequirement(int level)
+        {
+            if (IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): IsTeamUpAgent == false");
+
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
+
+            return advancementProto.GetTeamUpLevelUpXPRequirement(level);
+        }
+
+        public virtual int TryLevelUp(Player owner)
+        {
+            int oldLevel = CharacterLevel;
+            int newLevel = oldLevel;
+
+            long xp = Properties[PropertyEnum.ExperiencePoints];
+            long xpNeeded = Properties[PropertyEnum.ExperiencePointsNeeded];
+
+            int levelCap = owner.GetLevelCapForCharacter(PrototypeDataRef);
+            while (newLevel < levelCap && xp >= xpNeeded)
+            {
+                xp -= xpNeeded;
+                newLevel++;
+                xpNeeded = GetLevelUpXPRequirement(newLevel);
+            }
+
+            int levelDelta = newLevel - oldLevel;
+            if (levelDelta != 0)
+            {
+                CharacterLevel = newLevel;
+                Properties[PropertyEnum.ExperiencePoints] = xp;
+                Properties[PropertyEnum.ExperiencePointsNeeded] = xpNeeded;
+
+                OnLevelUp(oldLevel, newLevel);
+            }
+
+            return levelDelta;
+        }
+
+        public static int GetTeamUpLevelCap()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            return advancementProto != null ? advancementProto.GetTeamUpLevelCap() : 0;
+        }
+
+        protected virtual bool OnLevelUp(int oldLevel, int newLevel)
+        {
+            if (IsTeamUpAgent == false) return Logger.WarnReturn(false, "OnLevelUp(): IsTeamUpAgent == false");
+
+            Player owner = GetOwnerOfType<Player>();
+            if (owner != null && IsAtLevelCap)
+                owner.Properties.AdjustProperty(1, PropertyEnum.TeamUpsAtMaxLevelPersistent);
+
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
+            SendLevelUpMessage();
+            return true;
+        }
+
+        protected void SendLevelUpMessage()
+        {
+            var levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
+            Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        #endregion
+
         #region Interaction
 
         public virtual bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
@@ -558,8 +663,21 @@ namespace MHServerEmu.Games.Entities
 
         protected override bool InitInventories(bool populateInventories)
         {
-            // TODO
-            return base.InitInventories(populateInventories);
+            bool success = base.InitInventories(populateInventories);
+
+            if (Prototype is AgentTeamUpPrototype teamUpAgentProto && teamUpAgentProto.EquipmentInventories.HasValue())
+            {
+                foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in teamUpAgentProto.EquipmentInventories)
+                {
+                    if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
+                    {
+                        success = false;
+                        Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
+                    }
+                }
+            }
+
+            return success;
         }
 
         #endregion

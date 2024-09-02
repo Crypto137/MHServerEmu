@@ -2,8 +2,16 @@
 
 namespace MHServerEmu.DatabaseAccess
 {
+    /// <summary>
+    /// Common interface for <see cref="DBAccount"/> storage implementations.
+    /// </summary>
     public interface IDBManager
     {
+        /// <summary>
+        /// Set this to false to disable password and flag validation for accounts.
+        /// </summary>
+        public bool ValidateAccounts { get => true; }
+
         /// <summary>
         /// Initializes database connection.
         /// </summary>
@@ -30,13 +38,8 @@ namespace MHServerEmu.DatabaseAccess
         public bool UpdateAccount(DBAccount account);
 
         /// <summary>
-        /// Updates the Player and Avatar tables in the database with the data from the provided <see cref="DBAccount"/>.
+        /// Updates persistent game data stored in the database for the provided <see cref="DBAccount"/>.
         /// </summary>
         public bool UpdateAccountData(DBAccount account);
-
-        /// <summary>
-        /// Creates and inserts test accounts into the database for testing.
-        /// </summary>
-        public void CreateTestAccounts(int numAccounts);
     }
 }

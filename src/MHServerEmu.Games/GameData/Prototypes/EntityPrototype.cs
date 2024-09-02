@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Dialog;
@@ -282,6 +283,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
 
+        // ---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private KeywordsMask _keywordsMask;
+        private bool _isVacuumable;
+
+        private object _interactionDataLock;
+        private bool _interactionDataCached;
+
         [DoNotCopy]
         public bool IsCurrency { get => Properties != null && Properties.HasProperty(PropertyEnum.ItemCurrency); }
 
@@ -289,12 +300,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AlliancePrototype AlliancePrototype { get => Alliance.As<AlliancePrototype>(); }
         [DoNotCopy]
         public RankPrototype RankPrototype { get => Rank.As<RankPrototype>(); }
-
-        private KeywordsMask _keywordsMask;
-        private bool isVacuumable;
-
-        private object _interactionDataLock;
-        private bool _interactionDataCached;
         [DoNotCopy]
         public InteractionData InteractionData { get; set; }
         [DoNotCopy]
@@ -306,6 +311,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool DiscoverInRegion { get => ObjectiveInfo?.EdgeEnabled == true || HACKDiscoverInRegion; }
 
+        [DoNotCopy]
+        public virtual LocomotorPrototype Locomotor { get => null; }
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -313,7 +321,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
-            isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
+            _isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
 
             // NOTE: This is a hack straight from the client, do not change
             if (DataRef != (PrototypeId)DataDirectory.Instance.GetBlueprintDataRefByGuid((BlueprintGuid)13337309842336122384))  // Entity/PowerAgnostic.blueprint
@@ -344,6 +352,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
 
+        public bool GetXPAwarded(int level, out long xp, out long minXP, bool applyGlobalTuning)
+        {
+            xp = 0;
+            minXP = 0;
+
+            if (XPGrantedCurve == CurveId.Invalid)
+                return Logger.WarnReturn(false, $"GetXPAwarded(): WorldEntity doesn't have XPGrantedCurve! WorldEntity: {this}");
+
+            Curve xpCurve = CurveDirectory.Instance.GetCurve(XPGrantedCurve);
+            if (xpCurve == null) return Logger.WarnReturn(false, "GetXPAwarded(): xpCurve == null");
+
+            if (xpCurve.GetInt64At(level, out long baseXP) == false)
+                Logger.Warn($"GetXPAwarded(): Invalid result returned from XP Curve! Level: {level} WorldEntity: {this}");
+
+            float xpMinPct = Properties != null ? Properties[PropertyEnum.ExperienceAwardMinimumPct] : 0f;
+            minXP = Math.Max(1, (long)(baseXP * xpMinPct));
+
+            float multiplier = LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_MobXP);
+            if (applyGlobalTuning || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalXP) == 0f)
+            {
+                multiplier *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_XPGain);
+            }
+
+            xp = (long)(Math.Max(baseXP, minXP) * multiplier);
+
+            return xp > 0 || minXP > 0;
+        }
+
         public InteractionData GetInteractionData()
         {
             if (_interactionDataCached == false)
@@ -353,6 +389,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 BuildInteractionDataCache();
             }
             return InteractionData;
+        }
+
+        public List<InteractionData> GetKeywordsInteractionData()
+        {
+            if (_interactionDataCached == false) BuildInteractionDataCache();
+            return KeywordsInteractionData;
         }
 
         private void BuildInteractionDataCache()
@@ -366,15 +408,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
         }
-
-        public List<InteractionData> GetKeywordsInteractionData()
-        {
-            if (_interactionDataCached == false) BuildInteractionDataCache();
-            return KeywordsInteractionData;
-        }
-
-        [DoNotCopy]
-        public virtual LocomotorPrototype Locomotor { get => null; }
     }
 
     public class StateChangePrototype : Prototype
