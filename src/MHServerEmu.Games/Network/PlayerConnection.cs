@@ -396,6 +396,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
+                case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
@@ -975,6 +976,25 @@ namespace MHServerEmu.Games.Network
         private bool OnGracefulDisconnect(MailboxMessage message)   // 98
         {
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
+            return true;
+        }
+
+        private bool OnVendorRequestSellItemTo(MailboxMessage message)  // 103
+        {
+            var vendorRequestSellItemTo = message.As<NetMessageVendorRequestSellItemTo>();
+            if (vendorRequestSellItemTo == null) return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): Failed to retrieve message");
+
+            Item item = Game.EntityManager.GetEntity<Item>(vendorRequestSellItemTo.ItemId);
+            if (item == null) return false;     // Multiple request may arrive due to lag
+
+            if (item.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): {this} is attempting to sell item {item} that does not belong to it!");
+
+            // TODO: Sell this item to the specified vendor with the ability to buy back
+            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            Player.Properties[PropertyEnum.Currency, creditsProtoRef] += item.GetSellPrice(Player);
+            item.Destroy();
+
             return true;
         }
 
