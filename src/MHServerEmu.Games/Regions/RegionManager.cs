@@ -199,7 +199,10 @@ namespace MHServerEmu.Games.Regions
 
             _activeRegions.Clear();
             foreach (Player player in new PlayerIterator(Game))
-                _activeRegions.Add(player.GetRegion().Id);
+            {
+                Region region = player.GetRegion();
+                if (region != null) _activeRegions.Add(region.Id);
+            }                
 
             foreach (Region region in AllRegions)
             {
