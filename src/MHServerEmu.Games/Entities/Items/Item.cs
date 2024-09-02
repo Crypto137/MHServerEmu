@@ -41,6 +41,18 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public override bool ApplyInitialReplicationState(ref EntitySettings settings)
+        {
+            if (base.ApplyInitialReplicationState(ref settings) == false)
+                return false;
+
+            // Serialized entities get their ItemSpec from serialized data rather than as a settings field
+            if (settings.ArchiveData != null)
+                ApplyItemSpec(ItemSpec);
+
+            return true;
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
