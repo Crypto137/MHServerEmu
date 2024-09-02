@@ -6,7 +6,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
@@ -316,8 +315,8 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = base.Serialize(archive);
 
-            if (archive.IsTransient)    // REMOVEME/TODO: Persistent missions
-                success &= Serializer.Transfer(archive, ref _missionManager);
+            // Persistent missions
+            success &= Serializer.Transfer(archive, ref _missionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 

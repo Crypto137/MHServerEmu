@@ -218,13 +218,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
-        public static int GetAvatarLevelCap()
-        {
-            var advancementProto = GameDatabase.AdvancementGlobalsPrototype;
-            if (advancementProto == null) return 0;
-            return advancementProto.GetAvatarLevelCap();
-        }
-
         public void SetTutorialProps(HUDTutorialPrototype hudTutorialProto)
         {
             if (hudTutorialProto.AllowMovement == false)

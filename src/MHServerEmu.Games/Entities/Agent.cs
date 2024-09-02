@@ -461,6 +461,13 @@ namespace MHServerEmu.Games.Entities
 
         #region Progression
 
+        public virtual int GetLatestPowerProgressionVersion()
+        {
+            if (IsTeamUpAgent == false) return 0;
+            if (Prototype is not AgentTeamUpPrototype teamUpProto) return 0;
+            return teamUpProto.PowerProgressionVersion;
+        }
+
         public virtual bool HasPowerInPowerProgression(PrototypeId powerRef)
         {
             if (IsTeamUpAgent)

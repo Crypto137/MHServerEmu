@@ -807,33 +807,6 @@ namespace MHServerEmu.Games.Missions
             return lootSeed;
         }
 
-        // Test Save MissionManager
-
-        public static void TestLoadPlayerMissionManager(Player player)
-        {
-            if (MMArchive == null) return;
-
-            player.CurrentAvatar.Properties.FlattenCopyFrom(AvatarProperties, false);
-
-            using (Archive archive = new(ArchiveSerializeType.Database, MMArchive))
-            {
-                player.MissionManager.Serialize(archive);
-            }
-        }
-
-        public static void TestSavePlayerMissionManager(Player player)
-        {
-            using (Archive archive = new(ArchiveSerializeType.Database, (ulong)AOINetworkPolicyValues.AllChannels))
-            {
-                player.MissionManager.Serialize(archive);
-                MMArchive = archive.AccessAutoBuffer().ToArray();
-            }
-        }
-
-        public static byte[] MMArchive;
-        public static PropertyCollection AvatarProperties = new();
-        // ---------------------------
-
         public void StoreAvatarMissions(Avatar avatar)
         {
             if (IsPlayerMissionManager() == false) return;
@@ -841,7 +814,7 @@ namespace MHServerEmu.Games.Missions
             var player = Player;
             if (player == null || avatar == null) return;
 
-            var properties = AvatarProperties; // avatar.Properties
+            var properties = avatar.Properties;
             properties[PropertyEnum.LastActiveMissionChapter] = player.ActiveChapter;
 
             // reset Avatar Missions data
@@ -858,13 +831,11 @@ namespace MHServerEmu.Games.Missions
 
             foreach (var mission in _missionDict.Values)
                 mission.StoreAvatarMissionState(properties);
-
-            avatar.Properties.FlattenCopyFrom(AvatarProperties, false);
         }
 
         public void RestoreAvatarMissions(Avatar avatar)
         {
-            if (IsPlayerMissionManager() == false /*|| avatar.PrototypeDataRef == _avatarPrototypeRef*/) return; // TODO fix this
+            if (IsPlayerMissionManager() == false || avatar.PrototypeDataRef == _avatarPrototypeRef) return; // TODO fix this
 
             var player = Player;
             if (player == null || avatar == null) return;

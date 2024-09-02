@@ -1414,7 +1414,7 @@ namespace MHServerEmu.Games.Regions
             Logger.Trace($"OnAddedToAOI(): {this} to {player}");
 
             // Test Load
-            MissionManager.TestLoadPlayerMissionManager(player);
+            // MissionManager.TestLoadPlayerMissionManager(player);
             player.MissionManager.InitializeForPlayer(player, this);
 
             // Sync region discovered entities with the player that has entered this region
