@@ -299,6 +299,16 @@ namespace MHServerEmu.Games.Entities
 
         #region World and Positioning
 
+        public override void ExitGame()
+        {
+            ExitWorld();
+
+            if (Locomotor?.IsEnabled == true)
+                Logger.Warn($"ExitGame(): Entity is exiting game but locomotor is still enabled {this}");
+
+            base.ExitGame();
+        }
+
         public virtual bool EnterWorld(Region region, Vector3 position, Orientation orientation, EntitySettings settings = null)
         {
             SetStatus(EntityStatus.EnteringWorld, true);

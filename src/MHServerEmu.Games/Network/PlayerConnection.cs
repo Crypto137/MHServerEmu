@@ -326,16 +326,21 @@ namespace MHServerEmu.Games.Network
 
         public void ExitGame()
         {
-            // We need to recreate the player entity when we transfer between regions
-            // because client UI breaks for some reason when we reuse the same player entity id
-            // (e.g. inventory grid stops updating).
+            // We need to recreate the player entity when we transfer between regions because client UI breaks
+            // when we reuse the same player entity id (e.g. inventory grid stops updating).
+            
+            // Player entity exiting the game removes it from its AOI and also removes the current avatar from the world.
+            Player.ExitGame();
+
+            // We need to save data after we exit the game to include data that gets
+            // saved when the current avatar exits world (e.g. mission progress).
             UpdateDBAccount();
 
-            // We need to exit before we destroy so that the player entity can be removed from its AOI
-            Player.ExitGame();
+            // Destroy
             Player.Destroy();
             Game.EntityManager.ProcessDeferredLists();
 
+            // Recreate player
             InitializeFromDBAccount();
         }
 
