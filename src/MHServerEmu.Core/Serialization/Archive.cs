@@ -8,10 +8,21 @@ namespace MHServerEmu.Core.Serialization
 {
     public enum ArchiveSerializeType
     {
+        Invalid = 0,
         Migration = 1,      // Server <-> Server
         Database = 2,       // Server <-> Database
         Replication = 3,    // Server <-> Client
         Disk = 4            // Server <-> File
+    }
+
+    // We are most likely not going to have as much versioning as the original game,
+    // so we will use ArchiveVersion for all archive versioning. At some point when
+    // things get more stable we may want to clear this and force a wipe of everything.
+    public enum ArchiveVersion : uint
+    {
+        Invalid,
+        Initial,
+        // Add more versions here as needed and don't forget to update Archive.CurrentVersion below
     }
 
     /// <summary>
@@ -19,11 +30,12 @@ namespace MHServerEmu.Core.Serialization
     /// </summary>
     public class Archive : IDisposable
     {
-        // The original implementation has different modes (migration, database, replication, disk),
-        // but this reimplementation currently supports only replication (server <-> client).
+        private const ArchiveVersion CurrentVersion = ArchiveVersion.Initial;       // <-- Update this if you add a new version
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
+        // TODO: Reuse some kind of shared AutoBuffer implementation for multiple archives
 
         // C# coded stream implementation is buffered, so we have to use the same stream for the whole archive
         private readonly CodedOutputStream _cos;
@@ -61,8 +73,8 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool FavorSpeed { get => IsDisk; }
 
-        private ulong _replicationPolicy;
-        public ulong ReplicationPolicy { get => _replicationPolicy; }
+        public ArchiveVersion Version { get; private set; } = CurrentVersion;
+        public ulong ReplicationPolicy { get; private set; } = 0;
 
         public bool IsPacking { get; }
         public bool IsUnpacking { get => IsPacking == false; }
@@ -81,7 +93,7 @@ namespace MHServerEmu.Core.Serialization
             _cos = CodedOutputStream.CreateInstance(_bufferStream);
 
             SerializeType = serializeType;
-            _replicationPolicy = replicationPolicy;
+            ReplicationPolicy = replicationPolicy;
             IsPacking = true;
 
             // BuildCurrentGameplayVersionMask()
@@ -138,10 +150,16 @@ namespace MHServerEmu.Core.Serialization
         {
             bool success = true;
 
-            // TODO: Headers for other serialize types
-
-            if (IsReplication)
-                success &= Transfer(ref _replicationPolicy);
+            if (IsPersistent)
+            {
+                uint version = (uint)Version;
+                success &= Transfer(ref version);
+            }
+            else if (IsReplication)
+            {
+                ulong replicationPolicy = ReplicationPolicy;
+                success &= Transfer(ref replicationPolicy);
+            }
 
             return success;
         }
@@ -153,10 +171,18 @@ namespace MHServerEmu.Core.Serialization
         {
             bool success = true;
 
-            // TODO: Headers for other serialize types
-
-            if (IsReplication)
-                success &= Transfer(ref _replicationPolicy);
+            if (IsPersistent)
+            {
+                uint version = 0;
+                success &= Transfer(ref version);
+                Version = (ArchiveVersion)version;
+            }
+            else if (IsReplication)
+            {
+                ulong replicationPolicy = 0;
+                success &= Transfer(ref replicationPolicy);
+                ReplicationPolicy = replicationPolicy;
+            }
 
             return success;
         }
@@ -218,6 +244,17 @@ namespace MHServerEmu.Core.Serialization
                 return WriteSingleByte(ioData);
             else
                 return ReadSingleByte(ref ioData);
+        }
+
+        /// <summary>
+        /// Transfers an <see cref="sbyte"/> value to or from this <see cref="Archive"/> instance. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool Transfer(ref sbyte ioData)
+        {
+            byte unsigned = (byte)ioData;
+            Transfer(ref unsigned);
+            ioData = (sbyte)unsigned;
+            return true;
         }
 
         /// <summary>
@@ -515,7 +552,6 @@ namespace MHServerEmu.Core.Serialization
         {
             // TODO: Archive::HasError()
             // TODO: FavorSpeed
-            // TODO: IsPersistent
 
             if (IsPacking)
                 return WriteVarint(ioData);
@@ -530,7 +566,6 @@ namespace MHServerEmu.Core.Serialization
         {
             // TODO: Archive::HasError()
             // TODO: FavorSpeed
-            // TODO: IsPersistent
 
             if (IsPacking)
                 return WriteVarint(ioData);

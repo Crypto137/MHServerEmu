@@ -343,6 +343,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
 
+        // ---
+
+        public const long InvalidXPRequirement = -1;
+
+        [DoNotCopy]
+        public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
+
         public int GetAvatarLevelCap()
         {
             Curve levelingCurve = GetAvatarLevelingCurve();
@@ -351,24 +358,69 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return levelingCurve.MaxPosition;
         }
 
-        public int GetMaxPrestigeLevel() => PrestigeLevels.Length;
+        public int GetTeamUpLevelCap()
+        {
+            Curve levelingCurve = GetTeamUpLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(0, "GetTeamUpLevelCap(): levelingCurve == null");
+
+            return levelingCurve.MaxPosition;
+        }
 
         public int GetPrestigeLevelIndex(PrestigeLevelPrototype prestigeLevelProto)
         {
             return GetPrestigeLevelIndex(prestigeLevelProto.DataRef);
         }
+
         public int GetPrestigeLevelIndex(PrototypeId prestigeLevel)
         {
             if (PrestigeLevels.IsNullOrEmpty()) return 0;
 
-            for (int i = 0; i < GetMaxPrestigeLevel(); i++)
+            for (int i = 0; i < MaxPrestigeLevel; i++)
+            {
                 if (PrestigeLevels[i] == prestigeLevel)
                     return i + 1;
+            }
 
             return 0;
         }
 
-        private Curve GetAvatarLevelingCurve() => CurveDirectory.Instance.GetCurve(LevelingCurve);
+        public long GetAvatarLevelUpXPRequirement(int level)
+        {
+            if (level < 1) return InvalidXPRequirement;
+
+            Curve levelingCurve = GetAvatarLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetAvatarLevelUpXPRequirement(): levelingCurve == null");
+
+            return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+
+        public long GetTeamUpLevelUpXPRequirement(int level)
+        {
+            if (level < 1) return InvalidXPRequirement;
+
+            Curve levelingCurve = GetTeamUpLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetTeamUpLevelUpXPRequirement(): levelingCurve == null");
+
+            return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+
+        private static long GetLevelUpXPRequirementFromCurve(int level, Curve curve)
+        {
+            if (level < curve.MinPosition || level > curve.MaxPosition)
+                return InvalidXPRequirement;
+
+            return curve.GetInt64At(level);
+        }
+
+        private Curve GetAvatarLevelingCurve()
+        {
+            return CurveDirectory.Instance.GetCurve(LevelingCurve);
+        }
+
+        private Curve GetTeamUpLevelingCurve()
+        {
+            return CurveDirectory.Instance.GetCurve(TeamUpLevelingCurve);
+        }
     }
 
     public class AIGlobalsPrototype : Prototype

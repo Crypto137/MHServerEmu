@@ -1,12 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
-using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -16,53 +14,16 @@ namespace MHServerEmu.PlayerManagement
     public static class AccountManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly string DefaultAccountFilePath = Path.Combine(FileHelper.DataDirectory, "DefaultPlayer.json");
-
+        
         public static IDBManager DBManager { get; private set; }
-        public static DBAccount DefaultAccount { get; private set; }
 
         /// <summary>
         /// Initializes <see cref="AccountManager"/>.
         /// </summary>
         public static bool Initialize(IDBManager dbManager)
         {
-            // Initialize default account if BypassAuth is enabled
-            if (ConfigManager.Instance.GetConfig<PlayerManagerConfig>().BypassAuth)
-            {
-                bool defaultAccountLoaded = false;
-
-                if (File.Exists(DefaultAccountFilePath))
-                {
-                    try
-                    {
-                        var defaultAccount = FileHelper.DeserializeJson<DBAccount>(DefaultAccountFilePath);
-                        DefaultAccount = defaultAccount;
-                        defaultAccountLoaded = true;
-                    }
-                    catch
-                    {
-                        Logger.Warn($"Incompatible default player data, resetting");
-                    }
-                }
-
-                if (defaultAccountLoaded == false)
-                {
-                    // Initialize default account from config
-                    var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
-                    DefaultAccount = config.InitializeDefaultAccount();
-                }
-            }
-
             DBManager = dbManager;
             return DBManager.Initialize();
-        }
-
-        /// <summary>
-        /// Saves the default <see cref="DBAccount"/> to a JSON file.
-        /// </summary>
-        public static void SaveDefaultAccount()
-        {
-            FileHelper.SerializeJson(DefaultAccountFilePath, DefaultAccount);
         }
 
         /// <summary>
@@ -78,13 +39,16 @@ namespace MHServerEmu.PlayerManagement
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
-            // Check the account we queried
-            if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
-                return AuthStatusCode.IncorrectUsernameOrPassword403;
+            // Check the account we queried if our DB manager requires it
+            if (DBManager.ValidateAccounts)
+            {
+                if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
+                    return AuthStatusCode.IncorrectUsernameOrPassword403;
 
-            if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
-            if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;
-            if (accountToCheck.IsPasswordExpired) return AuthStatusCode.PasswordExpired;
+                if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
+                if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;
+                if (accountToCheck.IsPasswordExpired) return AuthStatusCode.PasswordExpired;
+            }
 
             // Output the account and return success if everything is okay
             account = accountToCheck;

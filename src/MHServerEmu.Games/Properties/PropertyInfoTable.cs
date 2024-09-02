@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Properties
                     // Property mixin blueprints are inconsistently named: most have the Prop suffix, but some do not
                     if (propertyInfo.PropertyName == propertyName || propertyInfo.PropertyInfoName == propertyName)
                     {
-                        blueprint.SetPropertyPrototypeDataRef(propertyInfo.PropertyInfoPrototypeRef);
+                        blueprint.SetPropertyPrototypeDataRef(propertyInfo.PrototypeDataRef);
                         propertyInfo.PropertyMixinBlueprintRef = blueprint.Id;
                         infoFound = true;
                         break;
@@ -230,9 +230,9 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Load the property info prototype and assign it to the property info instance
-            if (propertyInfo.PropertyInfoPrototypeRef != PrototypeId.Invalid)
+            if (propertyInfo.PrototypeDataRef != PrototypeId.Invalid)
             {
-                var propertyInfoPrototype = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfo.PropertyInfoPrototypeRef);
+                var propertyInfoPrototype = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfo.PrototypeDataRef);
                 propertyInfo.SetPropertyInfoPrototype(propertyInfoPrototype);
             }
 

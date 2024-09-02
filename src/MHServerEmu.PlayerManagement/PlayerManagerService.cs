@@ -7,7 +7,6 @@ using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
-using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -143,7 +142,7 @@ namespace MHServerEmu.PlayerManagement
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, "AddFrontendClient(): The client has no valid session assigned");
 
-            ulong playerDbId = client.Session.Account.Id;
+            ulong playerDbId = (ulong)client.Session.Account.Id;
 
             lock (_playerDict)
             {
@@ -168,11 +167,11 @@ namespace MHServerEmu.PlayerManagement
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, "RemoveFrontendClient(): The client has no valid session assigned");
 
-            ulong playerDbId = client.Session.Account.Id;
+            ulong playerDbId = (ulong)client.Session.Account.Id;
 
             lock (_playerDict)
             {
-                if (_playerDict.ContainsKey(client.Session.Account.Id) == false)
+                if (_playerDict.ContainsKey(playerDbId) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client} not found");
 
                 _playerDict.Remove(playerDbId);
@@ -228,7 +227,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private async Task AddPlayerToGameAsync(FrontendClient client)
         {
-            ulong playerDbId = client.Session.Account.Id;
+            ulong playerDbId = (ulong)client.Session.Account.Id;
             int numAttempts = 0;
             bool hasSavePending = false;
             bool refreshRequired = false;
@@ -267,7 +266,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private async Task SavePlayerDataAsync(FrontendClient client)
         {
-            ulong playerDbId = client.Session.Account.Id;
+            ulong playerDbId = (ulong)client.Session.Account.Id;
             int numAttempts = 0;
 
             while (true)
@@ -291,10 +290,7 @@ namespace MHServerEmu.PlayerManagement
                 }
 
                 // Save data and remove pending save
-                if (Config.BypassAuth == false)
-                    AccountManager.DBManager.UpdateAccountData(client.Session.Account);    // Save to the database when we have our full account system enabled
-                else
-                    AccountManager.SaveDefaultAccount();                    // Save to a JSON file when we are using bypass auth
+                AccountManager.DBManager.UpdateAccountData(client.Session.Account);
 
                 lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
                 Logger.Info($"Saved data for player {client}");

@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Properties
         public string PropertyName { get; }
 
         public string PropertyInfoName { get; }
-        public PrototypeId PropertyInfoPrototypeRef { get; }
+        public PrototypeId PrototypeDataRef { get; }
         public PropertyInfoPrototype Prototype { get; private set; }
 
         public BlueprintId PropertyMixinBlueprintRef { get; set; } = BlueprintId.Invalid;
@@ -40,6 +40,8 @@ namespace MHServerEmu.Games.Properties
         public bool TruncatePropertyValueToInt { get; private set; }
         public bool IsCurveProperty { get => DataType == PropertyDataType.Curve; }
 
+        public byte PropertyVersion { get => (byte)(Prototype != null ? Prototype.Version : 0); }
+
         // Evals
         public EvalPrototype Eval { get => Prototype?.Eval; }
         public bool IsEvalProperty { get => Eval != null; }
@@ -48,12 +50,12 @@ namespace MHServerEmu.Games.Properties
         public bool HasDependentEvals { get => DependentEvals.Count > 0; }
         public List<PropertyId> EvalDependencies { get; } = new();
 
-        public PropertyInfo(PropertyEnum @enum, string propertyInfoName, PrototypeId propertyInfoPrototypeRef)
+        public PropertyInfo(PropertyEnum @enum, string propertyInfoName, PrototypeId prototypeDataRef)
         {
             Id = new(@enum);
             PropertyInfoName = propertyInfoName;
             PropertyName = $"{PropertyInfoName}Prop";
-            PropertyInfoPrototypeRef = propertyInfoPrototypeRef;
+            PrototypeDataRef = prototypeDataRef;
 
             // Initialize param arrays
             for (int i = 0; i < Property.MaxParamCount; i++)
@@ -66,23 +68,27 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
-        public PropertyParam[] DecodeParameters(PropertyId propertyId)
+        public void DecodeParameters(PropertyId propertyId, ref Span<PropertyParam> @params)
         {
-            if (ParamCount == 0) return new PropertyParam[Property.MaxParamCount];
+            if (ParamCount == 0)
+            {
+                @params.Clear();
+                return;
+            }
 
             ulong encodedParams = propertyId.Raw & Property.ParamMask;
-            PropertyParam[] decodedParams = new PropertyParam[Property.MaxParamCount];
 
             for (int i = 0; i < ParamCount; i++)
-                decodedParams[i] = (PropertyParam)(int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
+                @params[i] = (PropertyParam)(int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
 
-            return decodedParams;
+            for (int i = ParamCount; i < Property.MaxParamCount; i++)
+                @params[i] = 0;
         }
 
         // There's a bunch of (client-accurate) copypasted code here for encoding that allows us to avoid allocating param arrays in some cases.
         // Feel free to make this more DRY if there is a smarter way of doing this without losing performance.
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam[] @params)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, in ReadOnlySpan<PropertyParam> @params)
         {
             switch (ParamCount)
             {
@@ -91,7 +97,7 @@ namespace MHServerEmu.Games.Properties
                 case 2: return EncodeParameters(propertyEnum, @params[0], @params[1]);
                 case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
                 case 4: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
-                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"Failed to encode params: invalid param count {ParamCount}");
+                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"EncodeParameters(): Invalid param count {ParamCount}");
             }
         }
 
@@ -151,7 +157,9 @@ namespace MHServerEmu.Games.Properties
         {
             StringBuilder sb = new();
             sb.Append(PropertyName);
-            var @params = id.GetParams();
+
+            Span<PropertyParam> @params = stackalloc PropertyParam[Property.MaxParamCount];
+            id.GetParams(ref @params);
 
             for (int i = 0; i < ParamCount; i++)
             {
@@ -324,7 +332,7 @@ namespace MHServerEmu.Games.Properties
                 _paramOffsets[i] = offset;
             }
 
-            // NOTE: the client also sets the values of the rest of _paramBitCounts and _paramOffsets to 0 that we don't need to do... probably
+            // NOTE: the client also initializes the values of the rest of _paramBitCounts and _paramOffsets to 0 that we don't need to do
 
             _updatedInfo = true;
             return true;

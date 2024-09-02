@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using System.Diagnostics;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -58,6 +59,7 @@ namespace MHServerEmu.Commands.Implementations
             Game game = playerConnection.Game;
 
             int numRegions = 0;
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             foreach (RegionPrototypeId value in Enum.GetValues<RegionPrototypeId>())
             {
@@ -65,7 +67,8 @@ namespace MHServerEmu.Commands.Implementations
                 numRegions++;
             }
 
-            return $"Generated {numRegions} regions.";
+            stopwatch.Stop();
+            return $"Generated {numRegions} regions in {stopwatch.Elapsed.TotalSeconds} sec.";
         }
     }
 }

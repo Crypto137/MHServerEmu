@@ -50,12 +50,8 @@ namespace MHServerEmu.Games.Properties
         {
             bool success = true;
 
-            // ArchiveMessageHandler::Serialize() -> move this to a common helper class?
             if (archive.IsReplication)
-            {
                 success &= Serializer.Transfer(archive, ref _replicationId);
-                // TODO: register message dispatcher
-            }
             
             success &= base.SerializeWithDefault(archive, defaultCollection);
             return success;
