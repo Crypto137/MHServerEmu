@@ -1,16 +1,16 @@
 # Initial Setup
 
-First, you need to get the `1.52.0.1700` game client. This is the final released version of Marvel Heroes, so if you still have the game in your Steam library, you can download it from there. If you do not have the game in your Steam library, you may be able to find an archived copy of it on websites like Archive.org.
-
-After you acquire the client, make sure to install .NET Desktop Runtime 6 if you do not have it installed already. You can download it [here](https://dotnet.microsoft.com/en-us/download/dotnet/6.0). Download [this version](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-6.0.27-windows-x64-installer) if you are not sure which one to get.
-
-The following instructions are intended for stable builds of the server. If you feel confident in doing everything yourself, please see [Manual Setup](./ManualSetup.md).
+The following instructions are intended for stable builds of the server. If you feel confident in doing everything yourself, you may be interested in [Manual Setup](./ManualSetup.md).
 
 ## Setting Up
 
-1. Download the latest [MHServerEmu stable build](https://github.com/Crypto137/MHServerEmu/releases/latest) and extract it.
+1. Get a copy of version `1.52.0.1700` of the game client. This is the final released version of Marvel Heroes, so if you still have the game in your Steam library, you can download it from there. If you do not have the game in your Steam library, you may be able to find an archived copy of it on websites like Archive.org.
 
-2. Run the included `SetupSorcererSupreme` tool and point it to your Marvel Heroes game files. You can find them by right clicking on the game in your Steam library and choosing `Manage` -> `Browse local files`.
+2. Install .NET Desktop Runtime 6 if you do not have it installed already. You can download it [here](https://dotnet.microsoft.com/en-us/download/dotnet/6.0). Download [this version](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-6.0.33-windows-x64-installer) if you are not sure which one to get.
+
+3. Download the latest [MHServerEmu stable build](https://github.com/Crypto137/MHServerEmu/releases/latest) and extract it.
+
+4. Run the included `SetupSorcererSupreme` tool and point it to your Marvel Heroes game files. If you have the game on Steam, you can find them by right clicking on the game in your library and choosing `Manage` -> `Browse local files`.
 
 ## Running the Server
 
@@ -25,7 +25,5 @@ The following instructions are intended for stable builds of the server. If you 
 ## Updating MHServerEmu
 
 In most cases you can update MHServerEmu simply by downloading the [latest nightly build](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-x64/master?preview) and extracting it into the `MHServerEmu` directory, overwriting all files.
-
-Overwriting all files is going to wipe your account data: if you would like to keep it, make sure to back up and restore the `MHServerEmu\Data\Account.db` file. Please keep in mind that the server is still early in development, and major changes are going to require account wipes.
 
 In some cases migrating to a new version may require additional steps. These are going to be posted on our [Discord server](https://discord.gg/hjR8Bj52t3) in the #news channel.
