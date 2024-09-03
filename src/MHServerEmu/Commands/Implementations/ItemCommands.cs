@@ -1,8 +1,11 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
@@ -60,7 +63,32 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("roll", "Test rolls a loot table.\nUsage: item testloottable")]
+        [Command("destroyindestructible", "Destroys indestructible items contained in the player's general inventory.\nUsage: item destroyindestructible")]
+        public string DestroyIndestructible(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+            Inventory general = player.GetInventory(InventoryConvenienceLabel.General);
+
+            List<Item> indestructibleItemList = new();
+            foreach (var entry in general)
+            {
+                Item item = player.Game.EntityManager.GetEntity<Item>(entry.Id);
+                if (item == null) continue;
+
+                if (item.ItemPrototype.CanBeDestroyed == false)
+                    indestructibleItemList.Add(item);
+            }
+
+            foreach (Item item in indestructibleItemList)
+                item.Destroy();
+
+            return $"Destroyed {indestructibleItemList.Count} indestructible items.";
+        }
+
+        [Command("roll", "Test rolls a loot table.\nUsage: item testloottable", AccountUserLevel.Admin)]
         public string RollLootTable(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
