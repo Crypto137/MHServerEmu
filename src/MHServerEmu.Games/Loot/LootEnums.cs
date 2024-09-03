@@ -178,6 +178,19 @@ namespace MHServerEmu.Games.Loot
     [Flags]
     public enum LootTypes
     {
-        None = 0,
+        None            = 0,
+        PowerPoints     = 1 << 0,
+        Credits         = 1 << 1,
+        EnduranceBonus  = 1 << 2,
+        Experience      = 1 << 3,
+        HealthBonus     = 1 << 4,
+        RealMoney       = 1 << 5,
+        VanityTitle     = 1 << 6,
+        CallbackNode        = 1 << 7,
+        LootMutation    = 1 << 8,
+        VendorXP        = 1 << 9,
+        Currency        = 1 << 10,
+        Item            = 1 << 11,
+        Agent           = 1 << 12,
     }
 }

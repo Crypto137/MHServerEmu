@@ -644,6 +644,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (IsLiveTuningEnabled() == false) return true;
             return false;
         }
+
+        public bool RewardReceived()
+        {
+            var rewards = Rewards;
+            if (rewards.HasValue())
+            {
+                if (ShowInMissionLog != MissionShowInLog.Never) return true;
+                if (LootTableContainsNodeOfType<LootActionFirstTimePrototype>(rewards)
+                    || LootTableContainsNodeOfType<LootDropEnduranceBonusPrototype>(rewards)
+                    || LootTableContainsNodeOfType<LootDropHealthBonusPrototype>(rewards)
+                    || LootTableContainsNodeOfType<LootDropPowerPointsPrototype>(rewards)) return true;
+            }
+            return false;
+        }
+
+        private bool LootTableContainsNodeOfType<T>(LootTablePrototype[] rewards)
+        {
+            foreach (var lootTable in rewards)
+                if (lootTable is T) return true;
+
+            return false;
+        }
     }
 
     public class OpenMissionPrototype : MissionPrototype

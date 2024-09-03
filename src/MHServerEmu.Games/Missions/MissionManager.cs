@@ -1057,7 +1057,7 @@ namespace MHServerEmu.Games.Missions
         {
             // MissionPrototypeId.NPE1Flag, // Pre BUE player
             (PrototypeId)MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
-            (PrototypeId)MissionPrototypeId.CH00NPETrainingRoom, // Tutorial in TrainingRoom
+            // (PrototypeId)MissionPrototypeId.CH00NPETrainingRoom, // Tutorial in TrainingRoom
         };
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]

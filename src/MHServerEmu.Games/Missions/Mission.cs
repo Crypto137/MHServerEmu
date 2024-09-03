@@ -437,9 +437,8 @@ namespace MHServerEmu.Games.Missions
 
                 if (missionFlags.HasFlag(MissionUpdateFlags.Rewards))
                 {
-                    // TODO Rewards
-                    // NetStructLootResultSummary rewards;
-                    // message.SetRewards(rewards);
+                    if (HasLootRewards(player, out LootResultSummary lootSummary))
+                        message.SetRewards(lootSummary.ToProtobuf());
                 }
 
                 if (missionFlags.HasFlag(MissionUpdateFlags.Participants))
@@ -903,7 +902,8 @@ namespace MHServerEmu.Games.Missions
                     SendDailyMissionCompleteToAvatar(player.CurrentAvatar);
                 }
 
-                // TODO rewards
+                // TODO fix problem with Double Rewards
+                // GiveMissionRewards(); 
             }
 
             if (isOpenMission || missionProto.Repeatable == false)
@@ -1760,19 +1760,136 @@ namespace MHServerEmu.Games.Missions
         public void OnUpdateSimulation(MissionSpawnEvent missionSpawnEvent)
         {
             if (missionSpawnEvent == null) return;
-            // TODO restart Mission if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
+            if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
+                ScheduleRestartMission();
         }
 
-        public void LootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
+        #region Rewards
+
+        public void GiveMissionRewards()
         {
-            string itemName = "Not Found";
-            var choises = rewards[0].Choices;
-            if (choises.HasValue())
+            if (_lootSeed != 0)
             {
-                var lootDrop = rewards[0].Choices[0] as LootDropItemPrototype;
-                if (lootDrop != null) itemName = lootDrop.Item.GetNameFormatted();
+                if (IsOpenMission)
+                {
+                    // TODO reward for contributors
+                }
+                else
+                {
+                    int index = 0;
+                    foreach (var player in GetParticipants())
+                        GiveRewardForPlayer(player, index++);
+                }
             }
-            Logger.Warn($"LootSummaryReward [{PrototypeName}] Rewards [{rewards.Length}] Item [{itemName}]");
+
+            if (IsRepeatable)
+                _lootSeed = MissionManager.NextLootSeed();
+            else
+                _lootSeed = 0;
+        }
+
+        private void GiveRewardForPlayer(Player player, int seedOffset)
+        {
+            var avatar = player.CurrentAvatar;       
+            var rewards = GetRewardTables();
+            if (rewards.IsNullOrEmpty()) return;
+
+            LootResultSummary lootSummary = new();
+            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
+                GiveDropLootForPlayer(lootSummary, player);
+
+            OnGiveRewards(avatar);
+        }
+
+        public bool GiveDropLootForPlayer(LootResultSummary lootSummary, Player player, WorldEntity lootDropper = null)
+        {
+            var lootManager = Game.LootManager;
+            var missionProto = Prototype;
+
+            // TODO Rework this!!!
+            var lootType = lootSummary.Types;
+
+            // Test for Item only
+            if (lootType.HasFlag(LootTypes.Item))
+            {
+                if (missionProto.DropLootOnGround || lootDropper != null)
+                {
+                    lootDropper ??= player.CurrentAvatar;
+                    // TODO Drop All Loots on Ground
+                    lootManager.DropItem(lootDropper, lootSummary.ItemSpecs[0], 128); // Test for first Item
+                }
+                else
+                {
+                    lootManager.GiveItem(player, lootSummary.ItemSpecs[0].ItemProtoRef);
+                }
+            }
+            return true;
+        }
+
+        public void OnGiveRewards(Avatar avatar)
+        {
+            var player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return;
+            var missionProto = Prototype;
+
+            SendUpdateToPlayer(player, MissionUpdateFlags.Rewards, MissionObjectiveUpdateFlags.None);
+
+            if (missionProto.RewardReceived())
+            {
+                var recivedPropId = new PropertyId(PropertyEnum.MissionRewardReceived, PrototypeDataRef);
+                if (missionProto.SaveStatePerAvatar)
+                    avatar.Properties[recivedPropId] = true;
+                else
+                    player.Properties[recivedPropId] = true;
+            }
+        }
+
+        private LootTablePrototype[] GetRewardTables()
+        {
+            var missionProto = Prototype;
+            LootTablePrototype[] rewards = null;
+            if (CompleteNowRewards && missionProto.CompleteNowRewards.HasValue())
+                rewards = missionProto.CompleteNowRewards;
+            else if (missionProto.Rewards.HasValue())
+                rewards = missionProto.Rewards;
+            return rewards;
+        }
+
+        private bool HasLootRewards(Player player, out LootResultSummary lootSummary)
+        {
+            lootSummary = new();
+            var rewards = GetRewardTables();
+            RollLootSummaryReward(lootSummary, player, rewards, _lootSeed);
+            return lootSummary.LootResult;
+        }
+
+        public bool RollLootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
+        {
+            if (rewards.IsNullOrEmpty()) return false;
+
+            var avatar = player.CurrentAvatar;
+            int level = GetAvatarLevel(avatar);
+
+            ItemResolver resolver = new(new(lootSeed));
+            LootRollSettings settings = new();
+            settings.UsableAvatar = avatar.AvatarPrototype;
+            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
+            settings.Level = level;
+            settings.LevelForRequirementCheck = level;
+
+            foreach (var reward in rewards)
+                reward.Roll(settings, resolver);
+
+            resolver.LootSummary(lootSummary);
+            Logger.Trace($"RollLootSummaryReward [{PrototypeName}] Rewards {lootSummary}");
+
+            return lootSummary.LootResult;
+        }
+
+        private int GetAvatarLevel(Avatar avatar)
+        {
+            if (avatar != null) return avatar.CharacterLevel;
+            return (int)Prototype.Level;
         }
 
         public void OnRequestMissionRewards(ulong entityId)
@@ -1788,12 +1905,13 @@ namespace MHServerEmu.Games.Missions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            // TODO Rewards
-            // NetStructLootResultSummary rewards;
-            // message.SetShowItems(rewards);
+            if (HasLootRewards(player, out LootResultSummary lootSummary))
+                message.SetShowItems(lootSummary.ToProtobuf());
 
             player.SendMessage(message.Build());
         }
+
+        #endregion
 
         public bool OnConditionCompleted()
         {
