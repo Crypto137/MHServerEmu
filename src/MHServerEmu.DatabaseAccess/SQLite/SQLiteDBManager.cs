@@ -133,7 +133,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     // Update player entity
                     connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
                     connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
-                                        StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume",
+                                        StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
                                         account.Player, transaction);
 
                     // Update inventory entities
