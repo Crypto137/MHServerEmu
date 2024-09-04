@@ -7,6 +7,7 @@ using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Areas;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -40,6 +41,9 @@ namespace MHServerEmu.Games.Regions
         private GenerateFlag _statusFlag;
         private List<TowerFixupData> _towerFixupList;
         private PrototypeId _respawnOverride;
+
+        public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
+        public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
 
         public bool GenerateLog { get; private set; }
 

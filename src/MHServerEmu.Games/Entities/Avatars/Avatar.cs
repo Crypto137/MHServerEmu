@@ -1325,10 +1325,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player == null) return;
 
             if (oldArea != null)
-                oldArea.Region.PlayerLeftAreaEvent.Invoke(new(player, oldArea.PrototypeDataRef));
+            {
+                PlayerLeftAreaGameEvent evt = new(player, oldArea.PrototypeDataRef);
+                oldArea.PlayerLeftAreaEvent.Invoke(evt);
+                oldArea.Region.PlayerLeftAreaEvent.Invoke(evt);
+            }
 
-            if (newArea != null) // TODO Achievement?
-                newArea.Region.PlayerEnteredAreaEvent.Invoke(new(player, newArea.PrototypeDataRef));
+            if (newArea != null)
+            {
+                // TODO Achievement?
+                PlayerEnteredAreaGameEvent evt = new(player, newArea.PrototypeDataRef);
+                newArea.PlayerEnteredAreaEvent.Invoke(evt);
+                newArea.Region.PlayerEnteredAreaEvent.Invoke(evt);
+            }
         }
 
         public override void OnCellChanged(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
@@ -1342,8 +1351,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             var player = GetOwnerOfType<Player>();
             if (player == null) return;
 
-            oldCell?.Region.PlayerLeftCellEvent.Invoke(new(player, oldCell.PrototypeDataRef));
-            newCell?.Region.PlayerEnteredCellEvent.Invoke(new(player, newCell.PrototypeDataRef));
+            if (oldCell != null)
+            {
+                PlayerLeftCellGameEvent evt = new(player, oldCell.PrototypeDataRef);
+                oldCell.PlayerLeftCellEvent.Invoke(evt);
+                oldCell.Region.PlayerLeftCellEvent.Invoke(evt);
+            }
+
+            if (newCell != null)
+            {
+                PlayerEnteredCellGameEvent evt = new(player, newCell.PrototypeDataRef);
+                newCell.PlayerEnteredCellEvent.Invoke(evt);
+                newCell.Region.PlayerEnteredCellEvent.Invoke(evt);
+            }
         }
 
         public override void OnEnteredWorld(EntitySettings settings)
