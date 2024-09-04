@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -88,6 +89,48 @@ namespace MHServerEmu.Games.Loot
             }
 
             return true;
+        }
+
+        public static MutationResults UpdateAffixes(IItemResolver resolver, DropFilterArguments args, AffixCountBehavior affixCountBehavior,
+            ItemSpec itemSpec, LootRollSettings settings)
+        {
+            // TODO: split this into individual validation checks?
+            if (itemSpec.IsValid == false || itemSpec.ItemProtoRef != args.ItemProto.DataRef || itemSpec.RarityProtoRef != args.Rarity)
+            {
+                Logger.Warn(string.Format("UpdateAffixes(): Invalid input parameter(s):\n" +
+                    "ItemSpec is valid: {0} [{1}]\n" +
+                    "rollFor is valid: {2} [{3}]\n" +
+                    "ItemSpec item/rarity matches DropFilterArgs: {4}\n" +
+                    "args.ItemRef=[{5}], args.Rarity=[{6}]",
+                    itemSpec.IsValid.ToString(),            // 0
+                    itemSpec.ToString(),                    // 1
+                    args.RollFor != PrototypeId.Invalid,    // 2
+                    args.RollFor.GetName(),                 // 3
+                    itemSpec.ItemProtoRef == args.ItemProto.DataRef && itemSpec.RarityProtoRef == args.Rarity,  // 4
+                    args.ItemProto.ToString(),              // 5
+                    args.Rarity.GetName()));                // 6
+
+                return MutationResults.Error;
+            }
+
+            MutationResults result = MutationResults.None;
+
+            if (affixCountBehavior == AffixCountBehavior.Roll)
+            {
+                HashSet<(PrototypeId, PrototypeId)> affixSet = new();
+                result = UpdateAffixesHelper(resolver, settings, args, itemSpec, affixSet);
+            }
+
+            if (result.HasFlag(MutationResults.Error) == false)
+                result |= itemSpec.OnAffixesRolled(resolver, args.RollFor);
+
+            return result;
+        }
+
+        private static MutationResults UpdateAffixesHelper(IItemResolver resolver, LootRollSettings settings, DropFilterArguments args,
+            ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet)
+        {
+            return MutationResults.None;
         }
     }
 }

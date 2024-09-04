@@ -1,13 +1,17 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class ItemSpec : ISerialize
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private PrototypeId _itemProtoRef;
         private PrototypeId _rarityProtoRef;
         private int _itemLevel;
@@ -121,6 +125,12 @@ namespace MHServerEmu.Games.Entities.Items
             sb.AppendLine($"{nameof(_seed)}: 0x{_seed:X}");
             sb.AppendLine($"{nameof(_equippableBy)}: {GameDatabase.GetPrototypeName(_equippableBy)}");
             return sb.ToString();
+        }
+
+        public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
+        {
+            Logger.Debug("OnAffixesRolled()");
+            return MutationResults.None;
         }
     }
 }
