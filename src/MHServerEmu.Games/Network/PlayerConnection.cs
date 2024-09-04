@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
-        private void InitializeFromDBAccount()
+        private bool InitializeFromDBAccount()
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
@@ -110,7 +110,13 @@ namespace MHServerEmu.Games.Network
             playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
             playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
 
-            Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
+            Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+
+            if (Player == null)
+            {
+                Disconnect();
+                return Logger.ErrorReturn(false, $"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
+            }
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)
@@ -170,13 +176,17 @@ namespace MHServerEmu.Games.Network
                     }
                 }
             }
+
+            return true;
         }
 
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private void UpdateDBAccount()
+        private bool UpdateDBAccount()
         {
+            if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
+
             using (Archive archive = new(ArchiveSerializeType.Database))
             {
                 Player.Serialize(archive);
@@ -190,6 +200,7 @@ namespace MHServerEmu.Games.Network
             PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");
+            return true;
         }
 
         #endregion
