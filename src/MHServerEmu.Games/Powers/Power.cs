@@ -3046,6 +3046,7 @@ namespace MHServerEmu.Games.Powers
                     ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
                     ambientNpcCondition.StartTime = Game.CurrentTime;
                     Owner.ConditionCollection.AddCondition(ambientNpcCondition);
+                    Owner.Properties[PropertyEnum.NPCAmbientLock] = true;
                 }
             }
             else
@@ -3064,6 +3065,7 @@ namespace MHServerEmu.Games.Powers
                     Owner.ConditionCollection.GetCondition(999) != null)
                 {
                     Owner.ConditionCollection.RemoveCondition(999);
+                    Owner.Properties[PropertyEnum.NPCAmbientLock] = false;
                 }
             }
 
