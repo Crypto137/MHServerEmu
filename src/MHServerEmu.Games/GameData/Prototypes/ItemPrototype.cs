@@ -97,6 +97,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ItemInstrumentedDropGroup InstrumentedDropGroup { get; protected set; }
         public bool IsContainer { get; protected set; }
 
+        // ---
+
+        [DoNotCopy]
+        public bool IsPetItem { get => IsChildBlueprintOf(GameDatabase.GlobalsPrototype.PetItemBlueprint); }
+
         public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
         {
             // TODO
@@ -159,6 +164,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return rollForAvatar;
         }
 
+        public AffixLimitsPrototype GetAffixLimits(PrototypeId rarityProtoRef, LootContext lootContext)
+        {
+            if (AffixLimits.IsNullOrEmpty())
+                return null;
+
+            foreach (AffixLimitsPrototype limits in AffixLimits)
+            {
+                if (limits.Matches(rarityProtoRef, lootContext))
+                    return limits;
+            }
+
+            return null;
+        }
+
         public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)
         {
             if (agentProto == null)
@@ -168,6 +187,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return false;
 
             return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(itemProto, avatarProto) != EquipmentInvUISlot.Invalid;
+        }
+
+        private bool IsChildBlueprintOf(PrototypeId protoRef)
+        {
+            BlueprintId blueprintRef = DataDirectory.Instance.GetPrototypeBlueprintDataRef(protoRef);
+            return DataDirectory.Instance.PrototypeIsChildOfBlueprint(DataRef, blueprintRef);
         }
     }
 
@@ -307,6 +332,124 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float DamageRegionMobToPlayer { get; protected set; }
         public float DamageRegionPlayerToMob { get; protected set; }
         public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; protected set; }
+
+        // ---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private LootContext _lootContextFlags;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            short zero = 0;     // Use a variable to avoid casting all the time
+
+            MaxPrefixes = Math.Max(MaxPrefixes, zero);
+            MinPrefixes = Math.Clamp(MinPrefixes, zero, MaxPrefixes);
+            MaxSuffixes = Math.Max(MaxSuffixes, zero);
+            MinSuffixes = Math.Clamp(MinSuffixes, zero, MaxSuffixes);
+            MaxTeamUps = Math.Max(MaxTeamUps, zero);
+            MinTeamUps = Math.Clamp(MinTeamUps, zero, MaxTeamUps);
+
+            if (AllowedContexts.HasValue())
+            {
+                foreach (LootContext lootContext in AllowedContexts)
+                    _lootContextFlags |= lootContext;
+            }
+        }
+
+        public bool Matches(PrototypeId rarityProtoRef, LootContext lootContext)
+        {
+            return ItemRarity == rarityProtoRef && _lootContextFlags.HasFlag(lootContext);
+        }
+
+        public short GetMin(AffixPosition affixPosition, LootRollSettings settings)
+        {
+            return GetLimit(affixPosition, false, settings);
+        }
+
+        public short GetMax(AffixPosition affixPosition, LootRollSettings settings)
+        {
+            return GetLimit(affixPosition, true, settings);
+        }
+
+        public short GetMax(AffixCategoryPrototype affixCategoryProto, LootRollSettings settings)
+        {
+            if (CategorizedAffixes.IsNullOrEmpty())
+                return short.MaxValue;
+
+            PrototypeId affixCategoryProtoRef = affixCategoryProto.DataRef;
+
+            foreach (CategorizedAffixEntryPrototype entry in CategorizedAffixes)
+            {
+                if (entry.Category != affixCategoryProtoRef)
+                    continue;
+
+                short numAffixes = entry.MinAffixes;
+
+                if (settings != null && settings.AffixLimitByCategoryModifierDict.TryGetValue(affixCategoryProtoRef, out short mod))
+                    numAffixes += mod;
+
+                return numAffixes;
+            }
+
+            return short.MaxValue;
+        }
+
+        public short GetLimit(AffixPosition affixPosition, bool getMax, LootRollSettings settings)
+        {
+            short limit = 0;
+
+            switch (affixPosition)
+            {
+                case AffixPosition.Prefix:      limit = getMax ? MaxPrefixes : MinPrefixes; break;
+                case AffixPosition.Suffix:      limit = getMax ? MaxSuffixes : MinSuffixes; break;
+                case AffixPosition.Ultimate:    limit = NumUltimates; break;
+                case AffixPosition.Cosmic:      limit = NumCosmics; break;
+                case AffixPosition.Unique:      limit = getMax ? MaxUniques : MinUniques; break;
+                case AffixPosition.Blessing:    if (getMax) limit = MaxBlessings; break;
+                case AffixPosition.Runeword:    if (getMax) limit = MaxRunewords; break;
+                case AffixPosition.TeamUp:      limit = getMax ? MaxTeamUps : MinTeamUps; break;
+                case AffixPosition.RegionAffix: limit = getMax ? RegionAffixMax : RegionAffixMin; break;
+                case AffixPosition.Socket1:     limit = NumSocket1; break;
+                case AffixPosition.Socket2:     limit = NumSocket2; break;
+                case AffixPosition.Socket3:     limit = NumSocket3; break;
+
+                case AffixPosition.None:
+                case AffixPosition.Visual:
+                case AffixPosition.Metadata:
+                case AffixPosition.PetTech1:
+                case AffixPosition.PetTech2:
+                case AffixPosition.PetTech3:
+                case AffixPosition.PetTech4:
+                case AffixPosition.PetTech5:    break;  // Keep limit at 0
+
+                default:
+                    return Logger.WarnReturn<short>(0, $"GetLimit(): Unsupported AffixPosition [{affixPosition}]");
+            }
+
+            if (settings != null)
+            {
+                if (getMax)
+                {
+                    if (settings.AffixLimitMaxByPositionModifierDict.TryGetValue(affixPosition, out short maxMod))
+                        limit += maxMod;
+                }
+                else
+                {
+                    if (settings.AffixLimitMinByPositionModifierDict.TryGetValue(affixPosition, out short minMod))
+                        limit += minMod;
+                }
+            }
+
+            // Do not allow min to be over max
+            if (getMax == false)
+                limit = Math.Min(limit, GetMax(affixPosition, settings));
+
+            // Do not allow min or max to be negative
+            return Math.Max(limit, (short)0);
+        }
     }
 
     public class EquipRestrictionPrototype : Prototype

@@ -31,8 +31,8 @@ namespace MHServerEmu.Games.Loot
         public float DropDistanceThresholdSq { get; set; }      // DistanceRestrictionPrototype::Allow()
 
         // LootRollModifyAffixLimitsPrototype
-        public Dictionary<AffixPosition, short> AffixLimitByMinPositionModifierDict { get; } = new();
-        public Dictionary<AffixPosition, short> AffixLimitByMaxPositionModifierDict { get; } = new();
+        public Dictionary<AffixPosition, short> AffixLimitMinByPositionModifierDict { get; } = new();   // Modifies the minimum number of affixes for position
+        public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifierDict { get; } = new();   // Modifies the maximum number of affixes for position
         public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
 
         public LootRollSettings() { }
@@ -64,8 +64,8 @@ namespace MHServerEmu.Games.Loot
 
             DropDistanceThresholdSq = other.DropDistanceThresholdSq;
 
-            AffixLimitByMinPositionModifierDict = new(other.AffixLimitByMinPositionModifierDict);
-            AffixLimitByMaxPositionModifierDict = new(other.AffixLimitByMaxPositionModifierDict);
+            AffixLimitMinByPositionModifierDict = new(other.AffixLimitMinByPositionModifierDict);
+            AffixLimitMaxByPositionModifierDict = new(other.AffixLimitMaxByPositionModifierDict);
             AffixLimitByCategoryModifierDict = new(other.AffixLimitByCategoryModifierDict);
         }
     }
