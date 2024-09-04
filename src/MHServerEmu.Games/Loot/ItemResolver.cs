@@ -177,5 +177,16 @@ namespace MHServerEmu.Games.Loot
             _pendingItemList.Clear();
             return true;
         }
+
+        public void LootSummary(LootResultSummary lootSummary)
+        {
+            // TODO other types
+            if (ProcessedItemCount > 0)
+            {
+                lootSummary.Types |= LootTypes.Item;
+                foreach (ItemSpec itemSpec in _processedItemList)
+                    lootSummary.ItemSpecs.Add(itemSpec);
+            }
+        }
     }
 }

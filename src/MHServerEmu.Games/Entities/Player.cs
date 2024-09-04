@@ -6,7 +6,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;

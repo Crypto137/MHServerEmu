@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool IsPlayerInterested(Player player)
         {
-            return _interestedPlayerIds.Contains(player.DatabaseUniqueId);
+            return _interestedPlayerIds.Contains(player.Id);
         }
 
         public override string ToString()

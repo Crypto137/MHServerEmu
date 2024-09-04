@@ -162,6 +162,23 @@ namespace MHServerEmu.Games.Entities.Items
             }
         }
 
+        public bool DecrementStack(int count = 1)
+        {
+            if (count < 1) return Logger.WarnReturn(false, "DecrementStack(): count < 1");
+
+            int currentStackSize = CurrentStackSize;
+            if (count > currentStackSize) return Logger.WarnReturn(false, "DecrementStack(): count > currentStackSize");
+
+            int newCount = Math.Max(0, currentStackSize - count);
+
+            if (newCount > 0)
+                Properties[PropertyEnum.InventoryStackCount] = newCount;
+            else
+                ScheduleDestroyEvent(TimeSpan.Zero);
+
+            return true;
+        }
+
         private bool ApplyItemSpec(ItemSpec itemSpec)
         {
             if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");

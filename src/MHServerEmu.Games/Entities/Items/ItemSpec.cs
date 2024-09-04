@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.Entities.Items
         private List<AffixSpec> _affixSpecList = new();
         private int _seed;
         private PrototypeId _equippableBy;
+        private int _count = 1;
 
         public PrototypeId ItemProtoRef { get => _itemProtoRef; }
         public PrototypeId RarityProtoRef { get => _rarityProtoRef; }
@@ -78,6 +79,14 @@ namespace MHServerEmu.Games.Entities.Items
                 .AddRangeAffixSpecs(_affixSpecList.Select(affixSpec => affixSpec.ToProtobuf()))
                 .SetSeed((uint)_seed)
                 .SetEquippableBy((ulong)_equippableBy)
+                .Build();
+        }
+
+        public NetStructItemSpecStack ToStackProtobuf()
+        {
+            return NetStructItemSpecStack.CreateBuilder()
+                .SetSpec(ToProtobuf())
+                .SetCount((uint)_count)
                 .Build();
         }
 
