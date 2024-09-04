@@ -531,6 +531,36 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
+        public bool IsInArea(Area area)
+        {
+            var openProto = OpenMissionPrototype;
+            if (openProto != null && openProto.ParticipationBasedOnAreaCell)
+                return openProto.ActiveInCells.IsNullOrEmpty() && openProto.IsActiveInArea(area.PrototypeDataRef);
+            return false;
+        }
+
+        public bool IsInCell(Cell cell)
+        {
+            var openProto = OpenMissionPrototype;
+            if (openProto != null && openProto.ParticipationBasedOnAreaCell)
+                return openProto.ActiveInCells.HasValue() && openProto.IsActiveInCell(cell.PrototypeDataRef);
+            return false;
+        }
+
+        private bool IsActiveForMission(Player player)
+        {
+            var avatar = player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false) return false;
+
+            var area = avatar.Area;
+            if (area != null && IsInArea(area)) return true;
+
+            var cell = avatar.Cell;
+            if (cell != null && IsInCell(cell)) return true;
+
+            return FilterHotspots(avatar, PrototypeId.Invalid);
+        }
+
         public bool SetState(MissionState newState, bool sendUpdate = true)
         {
             if (MissionManager.Debug && (State == MissionState.Active || State == MissionState.Completed))
@@ -685,7 +715,18 @@ namespace MHServerEmu.Games.Missions
 
         private bool OnUnsetStateInvalid()
         {
-            // TODO
+            if (MissionManager.IsPlayerMissionManager())
+            {
+                if (_participants.Count != 1) return false;
+                var player = Game.EntityManager.GetEntity<Player>(_participants.First());
+                if (MissionManager.Owner != player) return false;
+            }
+            else
+            {
+                foreach (var player in new PlayerIterator(Region))
+                    if (IsActiveForMission(player))
+                        AddParticipant(player);
+            }
             return true;
         }
 
@@ -903,7 +944,7 @@ namespace MHServerEmu.Games.Missions
                 }
 
                 // TODO fix problem with Double Rewards
-                // GiveMissionRewards(); 
+                GiveMissionRewards(); 
             }
 
             if (isOpenMission || missionProto.Repeatable == false)
@@ -1522,6 +1563,13 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
+        public void RemovePartipiant(Player player)
+        {
+            if (HasParticipant(player) == false) return;
+            _participants.Remove(player.Id);
+            SendUpdateToPlayer(player, MissionUpdateFlags.Participants, MissionObjectiveUpdateFlags.None);
+        }
+
         public void AddContribution(Player player, float contributionValue)
         {
             AddParticipant(player);
@@ -1535,6 +1583,13 @@ namespace MHServerEmu.Games.Missions
                 _contributors[playerUID] = oldContribution + newContribution;
             else
                 _contributors[playerUID] = newContribution;
+        }
+
+        public void RemoveContributor(Player player)
+        {
+            var playerUID = player.DatabaseUniqueId;
+            if (_contributors.ContainsKey(playerUID))
+                _contributors.Remove(playerUID);
         }
 
         private bool SerializeObjectives(Archive archive)
@@ -1741,14 +1796,19 @@ namespace MHServerEmu.Games.Missions
             return objectiveProto;
         }
 
-        public void OnAvatarEnteredMission(Player player)
+        public void OnPlayerEnteredMission(Player player)
         {
-            Logger.Warn($"OnAvatarEnteredMission [{PrototypeName}]");
+            if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
+            CancelScheduledRemovePartipantEvent(player);
+            AddParticipant(player);
         }
 
-        public void OnAvatarLeftMission(Player player)
+
+        public void OnPlayerLeftMission(Player player)
         {
-            Logger.Warn($"OnAvatarLeftMission [{PrototypeName}]");
+            if (MissionManager.Debug) Logger.Warn($"OnPlayerLeftMission [{PrototypeName}]");
+            if (IsActiveForMission(player))
+                ScheduleRemovePartipantEvent(player);
         }
 
         public void OnSpawnedPopulation()
@@ -1797,6 +1857,8 @@ namespace MHServerEmu.Games.Missions
             LootResultSummary lootSummary = new();
             if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
                 GiveDropLootForPlayer(lootSummary, player);
+
+            // TODO  OpenMissionPrototype.RewardsByContribution
 
             OnGiveRewards(avatar);
         }
@@ -1863,6 +1925,31 @@ namespace MHServerEmu.Games.Missions
             return lootSummary.LootResult;
         }
 
+        private static bool RollLootSummaryForPrototype(Player player, MissionPrototype missionProto, int lootSeed, out LootResultSummary lootSummary)
+        {
+            lootSummary = new();
+            var rewards = missionProto.Rewards;
+            if (rewards.IsNullOrEmpty()) return false;
+
+            var avatar = player.CurrentAvatar;
+            int level = (int)missionProto.Level;
+
+            ItemResolver resolver = new(new(lootSeed));
+            LootRollSettings settings = new();
+            settings.UsableAvatar = avatar.AvatarPrototype;
+            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
+            settings.Level = level;
+            settings.LevelForRequirementCheck = level;
+
+            foreach (var reward in rewards)
+                reward.Roll(settings, resolver);
+
+            resolver.LootSummary(lootSummary);
+            Logger.Trace($"HasLootRewardsForPrototype [{missionProto}] Rewards {lootSummary}");
+
+            return lootSummary.LootResult;
+        }
+
         public bool RollLootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
         {
             if (rewards.IsNullOrEmpty()) return false;
@@ -1892,7 +1979,24 @@ namespace MHServerEmu.Games.Missions
             return (int)Prototype.Level;
         }
 
-        public void OnRequestMissionRewards(ulong entityId)
+        public static void OnRequestRewardsForPrototype(Player player, PrototypeId missionRef, ulong entityId, int lootSeed)
+        {
+            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+            if (missionProto == null || missionProto.Rewards.IsNullOrEmpty()) return;
+
+            var message = NetMessageMissionRewardsResponse.CreateBuilder();
+            message.SetMissionPrototypeId((ulong)missionRef);
+
+            if (entityId != Entity.InvalidId)
+                message.SetEntityId(entityId);
+
+            if (RollLootSummaryForPrototype(player, missionProto, lootSeed, out LootResultSummary lootSummary))
+                message.SetShowItems(lootSummary.ToProtobuf());
+
+            player.SendMessage(message.Build());
+        }
+
+        public void OnRequestRewards(ulong entityId)
         {
             if (State != MissionState.Active) return;
 
@@ -1920,7 +2024,11 @@ namespace MHServerEmu.Games.Missions
 
         public void OnPlayerLeftRegion(Player player)
         {
-            Logger.Warn($"OnPlayerLeftRegion [{PrototypeName}]");
+            if (MissionManager.IsRegionMissionManager())
+            {
+                RemovePartipiant(player);
+                RemoveContributor(player);
+            }
         }
 
         public void UnRegisterEvents(Region region)
@@ -2114,6 +2222,44 @@ namespace MHServerEmu.Games.Missions
                 scheduler.ScheduleEvent(_delayedUpdateMissionEntitiesEvent, timeOffset, EventGroup);
                 _delayedUpdateMissionEntitiesEvent.Get().Initialize(this);
             }
+        }
+
+        public void OnAreaEntered(PlayerEnteredAreaGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            OnPlayerEnteredMission(player);
+        }
+
+        public void OnAreaLeft(PlayerLeftAreaGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            OnPlayerLeftMission(player);
+        }
+
+        public void OnCellEntered(PlayerEnteredCellGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            OnPlayerEnteredMission(player);
+        }
+
+        public void OnCellLeft(PlayerLeftCellGameEvent evt)
+        {
+            var player = evt.Player;
+            if (player == null) return;
+            OnPlayerLeftMission(player);
+        }
+
+        private void CancelScheduledRemovePartipantEvent(Player player)
+        {
+            // TODO cancel event
+        }
+
+        private void ScheduleRemovePartipantEvent(Player player)
+        {
+            // TODO Schedule remove event
         }
 
         protected class IdleTimeoutEvent : CallMethodEvent<Mission>

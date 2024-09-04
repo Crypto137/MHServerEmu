@@ -690,6 +690,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private SortedSet<PrototypeId> _activeRegions = new();
         private SortedSet<PrototypeId> _activeAreas = new();
+        private SortedSet<PrototypeId> _activeCells = new();
 
         public override void PostProcess()
         {
@@ -709,12 +710,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var regionRef in _activeRegions)
                     foreach (var areaRef in RegionPrototype.GetAreasInGenerator(regionRef))
                         _activeAreas.Add(areaRef);
+
+            // cache for mission active cells
+            if (ParticipationBasedOnAreaCell && ActiveInCells.HasValue())
+                foreach (var assetRef in ActiveInCells)
+                    _activeCells.Add(GameDatabase.GetDataRefByAsset(assetRef));
         }
 
         public bool IsActiveInRegion(RegionPrototype regionToMatchProto)
         {
             if (regionToMatchProto == null) return false;
             return _activeRegions.Contains(regionToMatchProto.DataRef);
+        }
+
+        public bool IsActiveInArea(PrototypeId areaRef)
+        {
+            return _activeAreas.Contains(areaRef);
+        }
+
+        public bool IsActiveInCell(PrototypeId cellRef)
+        {
+            return _activeCells.Contains(cellRef);
         }
 
         public override bool HasPopulationInRegion(Region region)

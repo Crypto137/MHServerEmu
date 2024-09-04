@@ -15,7 +15,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Events.Templates;
-using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -309,14 +308,29 @@ namespace MHServerEmu.Games.Missions
             var area = evt.Area;
             if (area == null || area.IsDynamicArea) return;
 
-            // TODO add enter left area events
+            foreach(var mission in _missionDict.Values)
+                if (mission.IsInArea(area))
+                {
+                    Action<PlayerEnteredAreaGameEvent> enterAction = mission.OnAreaEntered;
+                    area.PlayerEnteredAreaEvent.AddActionBack(enterAction);
+                    Action<PlayerLeftAreaGameEvent> leftAction = mission.OnAreaLeft;
+                    area.PlayerLeftAreaEvent.AddActionBack(leftAction);
+                }
         }
 
         private void OnCellCreated(CellCreatedGameEvent evt)
         {
             var cell = evt.Cell;
+            if (cell == null) return;
 
-            // TODO add enter left cell events
+            foreach (var mission in _missionDict.Values)
+                if (mission.IsInCell(cell))
+                {
+                    Action<PlayerEnteredCellGameEvent> enterAction = mission.OnCellEntered;
+                    cell.PlayerEnteredCellEvent.AddActionBack(enterAction);
+                    Action<PlayerLeftCellGameEvent> leftAction = mission.OnCellLeft;
+                    cell.PlayerLeftCellEvent.AddActionBack(leftAction);
+                }
         }
 
         private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
@@ -331,7 +345,7 @@ namespace MHServerEmu.Games.Missions
             var mission = FindMissionByDataRef(missionRef);
             if (mission == null) return;
 
-            mission.OnAvatarEnteredMission(player);
+            mission.OnPlayerEnteredMission(player);
         }
 
         private void OnEntityLeftMissionHotspot(EntityLeftMissionHotspotGameEvent evt)
@@ -346,7 +360,7 @@ namespace MHServerEmu.Games.Missions
             var mission = FindMissionByDataRef(missionRef);
             if (mission == null) return;
 
-            mission.OnAvatarLeftMission(player);
+            mission.OnPlayerLeftMission(player);
         }
 
         private void OnPlayerLeftRegion(PlayerLeftRegionGameEvent evt)
@@ -418,10 +432,11 @@ namespace MHServerEmu.Games.Missions
         {
             var mission = FindMissionByDataRef(missionRef);
             if (mission != null)
-                mission.OnRequestMissionRewards(entityId);
+                mission.OnRequestRewards(entityId);
             else
             {
-                // NetMessageMissionRewardsResponse
+                int lootSeed = NextLootSeed();
+                Mission.OnRequestRewardsForPrototype(Player, missionRef, entityId, lootSeed);
             }
         }
 
