@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
@@ -11,6 +12,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionEntityDeath : MissionPlayerCondition
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private MissionConditionEntityDeathPrototype _proto;
         private Action<AdjustHealthGameEvent> _adjustHealthAction;
         private Action<EntityDeadGameEvent> _EntityDeadAction;
@@ -90,7 +92,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             long damage = -evt.Damage;
 
             if (entity == null || attacker == null || damage == 0) return;
-
+            Logger.Warn($"[{Mission.PrototypeName}] EntityDeath OnAdjustHealth entity [{entity.PrototypeName}]");
             if (entity is Avatar && attacker is not Avatar && damage > 0)
             {
                 var player = entity.GetOwnerOfType<Player>();
@@ -118,6 +120,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             if (EvaluateEntity(killer, entity))
             {
+                Logger.Warn($"[{Mission.PrototypeName}] EntityDeath OnEntityDead entity [{entity.PrototypeName}]");
                 if (_proto.DelayDeathMS > 0)
                 {
                     var scheduler = Mission.GameEventScheduler;
@@ -138,6 +141,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             if (entity != null)
             {
+                Logger.Warn($"[{Mission.PrototypeName}] EntityDeath OnDeath entity [{entity.PrototypeName}]");
                 if (_proto.OpenMissionContribValueDamage != 0.0f)
                     SetContributions(entity.TankingContributors, _proto.OpenMissionContribValueDamage);
                 if (_proto.OpenMissionContribValueTanking != 0.0f)
