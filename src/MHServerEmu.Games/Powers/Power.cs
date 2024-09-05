@@ -2538,9 +2538,10 @@ namespace MHServerEmu.Games.Powers
                 if (movementPowerProto.TeleportMethod == TeleportMethodType.Teleport)
                 {
                     // Instantly teleport to the destination
-                    // TODO: executeTeleport()
-                    Owner.ChangeRegionPosition(powerApplication.TargetPosition, null,
-                        ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.Force);
+                    Vector3 teleportPosition = Owner.FloorToCenter(RegionLocation.ProjectToFloor(Owner.Region, Owner.Cell, powerApplication.TargetPosition));
+
+                    if (ExecuteTeleport(teleportPosition) == false)
+                        return false;
                 }
                 else if (Owner.IsMovementAuthoritative)
                 {
@@ -3577,6 +3578,67 @@ namespace MHServerEmu.Games.Powers
                 settings.MovementSpeed = movementSpeedOverride;
                 settings.MovementTime = TimeSpan.FromSeconds(distance / movementSpeedOverride);
             }
+
+            return true;
+        }
+
+        private bool ExecuteTeleport(Vector3 teleportPosition)
+        {
+            Logger.Debug($"ExecuteTeleport(): {Owner}");
+
+            Region region = Owner.Region;
+            if (region == null) return Logger.WarnReturn(false, "ExecuteTeleport(): region == null");
+
+            Vector3 currentFloorPosition = RegionLocation.ProjectToFloor(region, Owner.Cell, Owner.RegionLocation.Position);
+            Vector3 targetFloorPosition = RegionLocation.ProjectToFloor(region, Owner.Cell, teleportPosition);
+
+            if (Owner.CanPowerTeleportToPosition(targetFloorPosition) == false)
+                return Logger.WarnReturn(false, $"ExecuteTeleport(): Cannot teleport to the requested target position. REGION={region} POSITION={targetFloorPosition} ENTITY={Owner} POWER={this}");
+
+            /* TODO: Uncomment this when Bounds.Intersects() overload for Segment is implemented
+            
+            Vector3 floorOffset = targetFloorPosition - currentFloorPosition;
+            float floorOffsetLength = Vector3.Length(floorOffset);
+
+            if (Segment.IsNearZero(floorOffsetLength) == false)
+            {
+                Bounds teleportPositionBounds = new(Owner.Bounds);
+                teleportPositionBounds.Center = teleportPosition;
+
+                Aabb aabb = Owner.RegionBounds;
+                aabb = aabb.Translate(floorOffset);
+
+                float minIntersection = float.MaxValue;
+
+                foreach (WorldEntity worldEntity in region.IterateEntitiesInRegion(new()))
+                {
+                    if (worldEntity.Properties.HasProperty(PropertyEnum.BlocksTeleports) == false)
+                        continue;
+
+                    Bounds blockingEntityBounds = worldEntity.Bounds;
+
+                    if (blockingEntityBounds.Intersects(teleportPositionBounds) == false)
+                        continue;
+
+                    float intersection = 0f;
+
+                    if (blockingEntityBounds.Intersects(new Segment(currentFloorPosition, targetFloorPosition), ref intersection))
+                    {
+                        if (intersection < minIntersection)
+                            minIntersection = intersection;
+                    }
+                }
+
+                if (minIntersection <= 1f)
+                {
+                    minIntersection -= Owner.Bounds.Radius / floorOffsetLength;
+                    teleportPosition = Owner.FloorToCenter(currentFloorPosition + (floorOffset * minIntersection));
+                }
+            }
+            */
+
+            Owner.ChangeRegionPosition(teleportPosition, null,
+                ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.Force);
 
             return true;
         }
