@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Entities.Items
@@ -131,6 +132,25 @@ namespace MHServerEmu.Games.Entities.Items
         {
             Logger.Debug("OnAffixesRolled()");
             return MutationResults.None;
+        }
+
+        public short NumAffixesOfCategory(AffixCategoryPrototype affixCategoryProto)
+        {
+            short numAffixes = 0;
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                if (affixSpec.AffixProto == null)
+                {
+                    Logger.Warn("NumAffixesOfCategory(): affixSpec.AffixProto == null");
+                    continue;
+                }
+
+                if (affixSpec.AffixProto.HasCategory(affixCategoryProto))
+                    numAffixes++;
+            }
+
+            return numAffixes;
         }
     }
 }

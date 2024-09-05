@@ -34,12 +34,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (keywordsList.HasValue())
             {
-                foreach (var kerwordRef in keywordsList)
+                foreach (PrototypeId keywordRef in keywordsList)
                 {
-                    KeywordPrototype keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(kerwordRef);
+                    KeywordPrototype keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
                     keywordProto?.GetBitMask(ref result);
                 }
             }
+            return result;
+        }
+
+        public static KeywordsMask GetBitMaskForKeywordList(IEnumerable<PrototypeId> keywordsList)
+        {
+            KeywordsMask result = new();
+
+            foreach (PrototypeId keywordRef in keywordsList)
+            {
+                KeywordPrototype keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+                keywordProto?.GetBitMask(ref result);
+            }
+
             return result;
         }
 

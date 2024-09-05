@@ -119,6 +119,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public DropRestrictionPrototype[] DropRestrictions { get; protected set; }
         public DuplicateHandlingBehavior DuplicateHandlingBehavior { get; protected set; }
+
+        //---
+
+        private KeywordsMask _categoryKeywordsMask;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            List<PrototypeId> categoryList = new();
+
+            foreach (var affixCategoryTableEntry in GameDatabase.LootGlobalsPrototype.AffixCategoryTable)
+            {
+                foreach (PrototypeId affixProtoRef in affixCategoryTableEntry.Affixes)
+                {
+                    if (affixProtoRef == DataRef)
+                        categoryList.Add(affixCategoryTableEntry.Category);
+                }
+            }
+
+            _categoryKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(categoryList);
+
+            // Skipping UI stuff since we probably don't need it server-side
+        }
+
+        public bool HasCategory(AffixCategoryPrototype affixCategoryProto)
+        {
+            return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
+        }
     }
 
     public class AffixPowerModifierPrototype : AffixPrototype

@@ -2,38 +2,40 @@
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class AffixSpec : ISerialize
     {
-        private PrototypeId _affixProtoRef;     // Replace with object ref?
         private PrototypeId _scopeProtoRef;
         private int _seed;
 
-        public PrototypeId AffixProtoRef { get => _affixProtoRef; set => _affixProtoRef = value; }
+        public AffixPrototype AffixProto { get; set; }
         public PrototypeId ScopeProtoRef { get => _scopeProtoRef; set => _scopeProtoRef = value; }
         public int Seed { get => _seed; set => _seed = value; }
 
+        public bool IsValid { get => AffixProto != null && _seed != 0; }
+
         public AffixSpec() { }
 
-        public AffixSpec(PrototypeId affixProtoRef, PrototypeId scopeProtoRef, int seed)
+        public AffixSpec(AffixPrototype affixProto, PrototypeId scopeProtoRef, int seed)
         {
-            _affixProtoRef = affixProtoRef;
+            AffixProto = affixProto;
             _scopeProtoRef = scopeProtoRef;
             _seed = seed;
         }
 
         public AffixSpec(AffixSpec other)
         {
-            _affixProtoRef = other._affixProtoRef;
+            AffixProto = other.AffixProto;
             _scopeProtoRef = other._scopeProtoRef;
             _seed = other._seed;
         }
 
         public AffixSpec(NetStructAffixSpec protobuf)
         {
-            _affixProtoRef = (PrototypeId)protobuf.AffixProtoRef;
+            AffixProto = GameDatabase.GetPrototype<AffixPrototype>((PrototypeId)protobuf.AffixProtoRef);
             _scopeProtoRef = (PrototypeId)protobuf.ScopeProtoRef;
             _seed = protobuf.Seed;
         }
@@ -41,7 +43,10 @@ namespace MHServerEmu.Games.Entities.Items
         public bool Serialize(Archive archive)
         {
             bool success = true;
-            success &= Serializer.Transfer(archive, ref _affixProtoRef);
+
+            PrototypeId affixProtoRef = AffixProto != null ? AffixProto.DataRef : PrototypeId.Invalid;
+            success &= Serializer.Transfer(archive, ref affixProtoRef);
+
             success &= Serializer.Transfer(archive, ref _scopeProtoRef);
             success &= Serializer.Transfer(archive, ref _seed);
             return success;
@@ -50,7 +55,7 @@ namespace MHServerEmu.Games.Entities.Items
         public NetStructAffixSpec ToProtobuf()
         {
             return NetStructAffixSpec.CreateBuilder()
-                .SetAffixProtoRef((ulong)_affixProtoRef)
+                .SetAffixProtoRef((ulong)AffixProto.DataRef)
                 .SetScopeProtoRef((ulong)_scopeProtoRef)
                 .SetSeed(_seed)
                 .Build();
@@ -58,10 +63,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public override string ToString()
         {
-            return string.Format("{0}={1}, {2}={3}, {4}=0x{5}",
-                nameof(_affixProtoRef), GameDatabase.GetPrototypeName(_affixProtoRef),
-                nameof(_scopeProtoRef), GameDatabase.GetPrototypeName(_scopeProtoRef),
-                nameof(_seed), _seed.ToString("X"));
+            return $"AffixSpec [{AffixProto}] scope=[{_scopeProtoRef.GetName()}] seed=[{_seed}]";
         }
     }
 }
