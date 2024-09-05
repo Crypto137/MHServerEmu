@@ -10,19 +10,13 @@
         {
             var node = _actionList.Find(handler);
             if (node != null)
-            {
                 _actionList.Remove(node);
-            }
         }
 
         public void Invoke()
         {
-            var node = _actionList.First;
-            while (node != null)
-            {
-                node.Value();
-                node = node.Next;
-            }
+            foreach (var action in _actionList.ToList())
+                action?.Invoke();
         }
 
         public void UnregisterCallbacks() => _actionList.Clear();
@@ -39,20 +33,13 @@
         {
             var node = _actionList.Find(handler);
             if (node != null)
-            {
                 _actionList.Remove(node);
-            }
         }
 
         public void Invoke(T eventType)
         {
-            var node = _actionList.First;
-            while (node != null)
-            {
-                var nextNode = node.Next;
-                node.Value(eventType);
-                node = nextNode;
-            }
+            foreach (var action in _actionList.ToList())
+                action?.Invoke(eventType);
         }
 
         public void UnregisterCallbacks() => _actionList.Clear();
