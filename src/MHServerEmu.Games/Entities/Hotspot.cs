@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missile(Missile missile, Vector3 missilePosition)
         {
-            Logger.Trace($"HandleOverlapBegin_Missile {this} {missile} {missilePosition}");
+            //Logger.Trace($"HandleOverlapBegin_Missile {this} {missile} {missilePosition}");
             var hotspotProto = HotspotPrototype;
             if (hotspotProto == null) return;
 
@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Missile(Missile missile)
         {
-            Logger.Trace($"HandleOverlapEnd_Missile {this} {missile}");
+            //Logger.Trace($"HandleOverlapEnd_Missile {this} {missile}");
             var hotspotProto = HotspotPrototype;
             if (hotspotProto == null) return;
 
@@ -378,22 +378,22 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_PowerEvent(WorldEntity whom)
         {
-            Logger.Trace($"HandleOverlapBegin_PowerEvent {this} {whom}");
+            //Logger.Trace($"HandleOverlapBegin_PowerEvent {this} {whom}");
         }
 
         private void HandleOverlapEnd_PowerEvent(WorldEntity whom)
         {
-            Logger.Trace($"HandleOverlapEnd_PowerEvent {this} {whom}");
+            //Logger.Trace($"HandleOverlapEnd_PowerEvent {this} {whom}");
         }
 
         private void HandleOverlapBegin_Powers(WorldEntity whom)
         {
-            Logger.Trace($"HandleOverlapBegin_Powers {this} {whom}");
+            //Logger.Trace($"HandleOverlapBegin_Powers {this} {whom}");
         }
 
         private void HandleOverlapEnd_Powers(WorldEntity whom)
         {
-            Logger.Trace($"HandleOverlapEnd_Powers {this} {whom}");
+            //Logger.Trace($"HandleOverlapEnd_Powers {this} {whom}");
         }
 
         private void MissionEntityTracker()
