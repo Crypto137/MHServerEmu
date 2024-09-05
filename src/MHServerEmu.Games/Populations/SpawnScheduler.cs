@@ -7,10 +7,12 @@ namespace MHServerEmu.Games.Populations
     {
         public PriorityQueue<PopulationObject, int> ScheduledObjects;
         public SpawnEvent SpawnEvent;
+        public Queue<PopulationObject> FailedObjects;
 
         public SpawnScheduler(SpawnEvent spawnEvent)
         {
             ScheduledObjects = new();
+            FailedObjects = new();
             SpawnEvent = spawnEvent;
         }
 
@@ -30,8 +32,11 @@ namespace MHServerEmu.Games.Populations
         public void ScheduleMarkerObject() // Spawn Entity from Missions, MetaStates
         {
             if (Pop(out PopulationObject populationObject))
+            {
                 if (populationObject.SpawnByMarker()) // cell.SpawnPopulation(population);
                     OnSpawnedPopulation(populationObject);
+                else FailedObjects.Enqueue(populationObject);
+            }
         }
 
         private void OnSpawnedPopulation(PopulationObject populationObject)

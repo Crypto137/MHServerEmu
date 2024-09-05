@@ -173,12 +173,20 @@ namespace MHServerEmu.Games.Populations
         {
             if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler)
                 && Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) > 0)
+            {
+                bool critical = false;
                 foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                    if (scheduler.ScheduledObjects.Count > 0)
+                    if (scheduler.ScheduledObjects.Count > 0 && scheduler.ScheduledObjects.Peek().Critical)
                     {
-                        // Logger.Debug($"ScheduleMarkerObject [{markerRef}] [{scheduler.ScheduledObjects.Count}]");
+                        critical = true;
                         scheduler.ScheduleMarkerObject();
                     }
+
+                if (critical == false)
+                    foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
+                        if (scheduler.ScheduledObjects.Count > 0)
+                            scheduler.ScheduleMarkerObject();
+            }
 
             MarkerSchedule(markerRef);
         }

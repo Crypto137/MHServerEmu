@@ -1798,7 +1798,7 @@ namespace MHServerEmu.Games.Missions
 
         public void OnPlayerEnteredMission(Player player)
         {
-            if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
+            // if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
             CancelScheduledRemovePartipantEvent(player);
             AddParticipant(player);
         }
@@ -1806,7 +1806,7 @@ namespace MHServerEmu.Games.Missions
 
         public void OnPlayerLeftMission(Player player)
         {
-            if (MissionManager.Debug) Logger.Warn($"OnPlayerLeftMission [{PrototypeName}]");
+            // if (MissionManager.Debug) Logger.Warn($"OnPlayerLeftMission [{PrototypeName}]");
             if (IsActiveForMission(player))
                 ScheduleRemovePartipantEvent(player);
         }

@@ -186,7 +186,7 @@ namespace MHServerEmu.Games.Loot
         HealthBonus     = 1 << 4,
         RealMoney       = 1 << 5,
         VanityTitle     = 1 << 6,
-        CallbackNode        = 1 << 7,
+        CallbackNode    = 1 << 7,
         LootMutation    = 1 << 8,
         VendorXP        = 1 << 9,
         Currency        = 1 << 10,
