@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Alliance { get; protected set; }
         public override bool Evaluate(WorldEntity entity, EntityFilterContext context)
         {
-            if (entity == null) return false;
+            if (entity == null || entity.Alliance == null) return false;
             return entity.Alliance.DataRef == Alliance;
         }
     }
