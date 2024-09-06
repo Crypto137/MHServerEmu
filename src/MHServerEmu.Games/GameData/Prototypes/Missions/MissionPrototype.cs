@@ -6,8 +6,6 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    using static MHServerEmu.Games.Missions.MissionManager;
-
     #region Enums
 
     [AssetEnum]

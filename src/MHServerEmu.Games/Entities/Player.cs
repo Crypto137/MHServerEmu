@@ -174,9 +174,6 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
             }
 
-            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.Waypoint, waypointRef] = true;
-
             foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
 
@@ -185,21 +182,6 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
-
-            // Complete all missions
-            
-            if (false) // Off completion
-            foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                if (_missionManager.ShouldCreateMission(missionPrototype))
-                {
-                    Mission mission = _missionManager.CreateMission(missionRef);
-                    mission.SetState(MissionState.Completed);
-                    mission.AddParticipant(this);
-                    _missionManager.InsertMission(mission);
-                }
-            }
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -1456,6 +1438,16 @@ namespace MHServerEmu.Games.Entities
             avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
         }
 
+        public void UnlockChapters()
+        {
+            foreach (PrototypeId chapterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<ChapterPrototype>(PrototypeIterateFlags.NoAbstract))
+            {
+                var ChapterProto = GameDatabase.GetPrototype<ChapterPrototype>(chapterRef);
+                if (ChapterProto.StartLocked == false)
+                    UnlockChapter(chapterRef);
+            }
+        }
+
         public void LockWaypoint(PrototypeId waypointRef)
         {
             var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
@@ -1490,6 +1482,16 @@ namespace MHServerEmu.Games.Entities
             {
                 SendWaypointUnlocked();
                 collection[propId] = true;
+            }
+        }
+
+        public void UnlockWaypoints()
+        {
+            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstract))
+            {
+                var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
+                if (waypointProto.StartLocked == false)
+                    UnlockWaypoint(waypointRef);
             }
         }
 

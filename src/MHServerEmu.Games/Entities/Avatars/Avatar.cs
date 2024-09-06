@@ -1378,6 +1378,22 @@ namespace MHServerEmu.Games.Entities.Avatars
             base.OnEnteredWorld(settings);
             AssignDefaultAvatarPowers();
 
+            // auto unlock chapters and Waypoinst
+            player.UnlockChapters();
+            player.UnlockWaypoints();
+
+            var region = Region;
+            var regionProto = region?.Prototype;
+            if (regionProto != null)
+            {
+                var waypointRef = regionProto.WaypointAutoUnlock;
+                if (waypointRef != PrototypeId.Invalid)
+                    player.UnlockWaypoint(waypointRef);
+                if (regionProto.WaypointAutoUnlockList.HasValue())
+                    foreach(var waypointUnlockRef in regionProto.WaypointAutoUnlockList)
+                        player.UnlockWaypoint(waypointUnlockRef);
+            }
+
             // Restore missions from Avatar
             player.MissionManager?.RestoreAvatarMissions(this);
 
@@ -1392,7 +1408,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                     ActivateTeamUpAgent(true);  // We may want to disable the intro animation in some cases
             }        
 
-            var regionProto = Region?.Prototype;
             if (regionProto?.Chapter != PrototypeId.Invalid)
                 player.SetActiveChapter(regionProto.Chapter);
 
