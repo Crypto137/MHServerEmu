@@ -24,6 +24,7 @@ namespace MHServerEmu.Games.Events
             int index = 0;
             while (node != null)
             {
+                var nextNode = node.Next;
                 node.Value.Invoke();
 
                 // Get valid node
@@ -34,8 +35,8 @@ namespace MHServerEmu.Games.Events
                 }
 
                 // Get valid next node
-                if (node.Next != null)
-                    node = node.Next;
+                if (node.Next != nextNode)
+                    node = nextNode;
                 else if (validNode?.List == _actionList)
                     node = validNode?.Next;
                 else
@@ -72,6 +73,7 @@ namespace MHServerEmu.Games.Events
             int index = 0;
             while (node != null)
             {
+                var nextNode = node.Next;
                 node.Value.Invoke(eventType);
 
                 // Get valid node
@@ -82,8 +84,8 @@ namespace MHServerEmu.Games.Events
                 }
 
                 // Get valid next node
-                if (node.Next != null)
-                    node = node.Next;
+                if (node.Next != nextNode)
+                    node = nextNode;
                 else if (validNode?.List == _actionList)
                     node = validNode?.Next;
                 else
