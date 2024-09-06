@@ -172,7 +172,12 @@ namespace MHServerEmu.Games.Loot
         public bool ProcessPending(LootRollSettings settings)
         {
             foreach (ItemSpec itemSpec in _pendingItemList)
+            {
+                //LootCloneRecord args = new(LootContext, itemSpec, PrototypeId.Invalid);
+                //LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, itemSpec, settings);
+
                 _processedItemList.Add(itemSpec);
+            }
 
             _pendingItemList.Clear();
             return true;

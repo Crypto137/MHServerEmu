@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
@@ -6,6 +7,11 @@ namespace MHServerEmu.Games.Loot
     public class LootCloneRecord : DropFilterArguments
     {
         public LootCloneRecord(DropFilterArguments other) : base(other)
+        {
+        }
+
+        public LootCloneRecord(LootContext lootContext, ItemSpec itemSpec, PrototypeId rollFor)
+            : base(itemSpec.ItemProtoRef.As<Prototype>(), rollFor, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, lootContext)
         {
         }
 

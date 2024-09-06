@@ -152,5 +152,24 @@ namespace MHServerEmu.Games.Entities.Items
 
             return numAffixes;
         }
+
+        public short NumAffixesOfPosition(AffixPosition affixPosition)
+        {
+            short numAffixes = 0;
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                if (affixSpec.AffixProto == null)
+                {
+                    Logger.Warn("NumAffixesOfPosition(): affixSpec.AffixProto == null");
+                    continue;
+                }
+
+                if (affixSpec.AffixProto.Position == affixPosition)
+                    numAffixes++;
+            }
+
+            return numAffixes;
+        }
     }
 }

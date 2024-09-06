@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -130,6 +131,103 @@ namespace MHServerEmu.Games.Loot
         private static MutationResults UpdateAffixesHelper(IItemResolver resolver, LootRollSettings settings, DropFilterArguments args,
             ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet)
         {
+            ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "UpdateAffixesHelper(): itemProto == null");
+
+            if (itemProto.IsPetItem)
+            {
+                // TODO: ItemPrototype::UpdatePetTechAffixes()
+                return Logger.WarnReturn(MutationResults.None, "UpdateAffixesHelper(): Pet affixes are not yet implemented");
+            }
+
+            MutationResults result = MutationResults.None;
+
+            AffixLimitsPrototype affixLimits = itemProto.GetAffixLimits(args.Rarity, args.LootContext);
+
+            // Apply affixes by category
+            if ((affixLimits != null && affixLimits.CategorizedAffixes.HasValue()) ||
+                (settings != null && settings.AffixLimitByCategoryModifierDict.Count > 0))
+            {
+                Dictionary<PrototypeId, short> affixCategoryDict = new();
+
+                // Get category limits from the prototype
+                if (affixLimits != null)
+                {
+                    foreach (CategorizedAffixEntryPrototype entry in affixLimits.CategorizedAffixes)
+                    {
+                        affixCategoryDict.TryGetValue(entry.Category, out short numAffixes);
+                        affixCategoryDict[entry.Category] = (short)(numAffixes + entry.MinAffixes);
+                    }
+                }
+
+                // Apply modifiers from loot roll settings
+                if (settings != null)
+                {
+                    foreach (var kvp in settings.AffixLimitByCategoryModifierDict)
+                    {
+                        affixCategoryDict.TryGetValue(kvp.Key, out short numAffixes);
+                        affixCategoryDict[kvp.Key] = (short)Math.Max(0, numAffixes + kvp.Value);
+                    }
+                }
+
+                // Add categorized affixes
+                foreach (var kvp in affixCategoryDict)
+                {
+                    AffixCategoryPrototype categoryProto = kvp.Key.As<AffixCategoryPrototype>();
+
+                    short numAffixesCurrent = itemSpec.NumAffixesOfCategory(categoryProto);
+                    int numAffixesToAdd = kvp.Value - numAffixesCurrent;
+                    if (numAffixesToAdd > 0)
+                        result |= AddCategorizedAffixesToItemSpec(resolver, args, categoryProto, numAffixesToAdd, itemSpec, affixSet);
+                }
+            }
+
+            // Apply affixes by position
+            if (affixLimits == null)
+                return result;
+
+            for (AffixPosition affixPosition = (AffixPosition)1; affixPosition < AffixPosition.NumPositions; affixPosition++)
+            {
+                // Skip slots that don't have positional affixes
+                switch (affixPosition)
+                {
+                    case AffixPosition.Blessing:
+                    case AffixPosition.Runeword:
+                    case AffixPosition.PetTech1:
+                    case AffixPosition.PetTech2:
+                    case AffixPosition.PetTech3:
+                    case AffixPosition.PetTech4:
+                    case AffixPosition.PetTech5:
+                        continue;
+                }
+
+                short affixLimitsMax = affixLimits.GetMax(affixPosition, settings);
+                if (affixLimitsMax == 0)
+                    continue;
+
+                short affixLimitsMin = affixLimits.GetMin(affixPosition, settings);
+                short numAffixesCurrent = itemSpec.NumAffixesOfPosition(affixPosition);
+                int numAffixesToAdd = resolver.Random.Next(affixLimitsMin, affixLimitsMax + 1) - numAffixesCurrent;
+
+                if (numAffixesToAdd > 0)
+                    result |= AddPositionAffixesToItemSpec(resolver, args, affixPosition, numAffixesToAdd, itemSpec, affixSet);
+            }
+
+            return result;
+        }
+
+        private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
+            int numAffixesToAdd, ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet, IEnumerable<AssetId> keywords = null)
+        {
+            Logger.Debug($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesToAdd})");
+            return MutationResults.None;
+        }
+
+        private static MutationResults AddPositionAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixPosition affixPosition,
+            int numAffixesToAdd,  ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet, IEnumerable<AssetId> keywords = null,
+            IEnumerable<PrototypeId> categories = null)
+        {
+            Logger.Debug($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesToAdd})");
             return MutationResults.None;
         }
     }
