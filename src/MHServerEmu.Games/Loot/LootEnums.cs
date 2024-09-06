@@ -86,6 +86,13 @@ namespace MHServerEmu.Games.Loot
         Roll
     }
 
+    public enum BehaviorOnPowerMatch
+    {
+        Behavior0,
+        Behavior1,
+        Behavior2
+    }
+
     [AssetEnum((int)None)]
     [Flags]
     public enum LootContext

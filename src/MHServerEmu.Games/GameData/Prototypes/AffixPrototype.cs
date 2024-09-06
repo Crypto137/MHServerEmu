@@ -163,6 +163,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool HasAnyCategory(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
         {
+            if (affixCategoryProtos == null || affixCategoryProtos.Any() == false)
+                return true;
+
             return GetFirstCategoryMatch(affixCategoryProtos) != null;
         }
 

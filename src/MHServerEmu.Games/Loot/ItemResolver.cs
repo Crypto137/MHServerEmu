@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -24,6 +25,7 @@ namespace MHServerEmu.Games.Loot
         public GRandom Random { get; }
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
+        public Region Region { get => Player?.GetRegion(); }
 
         public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
         public int ProcessedItemCount { get => _processedItemList.Count; }

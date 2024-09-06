@@ -1,13 +1,19 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class AffixSpec : ISerialize
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private PrototypeId _scopeProtoRef;
         private int _seed;
 
@@ -64,6 +70,68 @@ namespace MHServerEmu.Games.Entities.Items
         public override string ToString()
         {
             return $"AffixSpec [{AffixProto}] scope=[{_scopeProtoRef.GetName()}] seed=[{_seed}]";
+        }
+
+        public MutationResults RollAffix(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
+            Picker<AffixPrototype> affixPicker, HashSet<(PrototypeId, PrototypeId)> affixSet)
+        {
+            Logger.Debug("RollAffix()");
+
+            AffixPrototype prevAffixProto = AffixProto;
+            PrototypeId prevScopeProtoRef = _scopeProtoRef;
+
+            MutationResults result = MutationResults.None;
+
+            while (affixPicker.PickRemove(out AffixPrototype pickedAffixProto))
+            {
+                if (pickedAffixProto == null)
+                {
+                    Logger.Warn("RollAffix(): affixProto == null");
+                    continue;
+                }
+
+                AffixProto = pickedAffixProto;
+                result |= SetScope(random, rollFor, itemSpec, affixSet, BehaviorOnPowerMatch.Behavior0);
+
+                if (result.HasFlag(MutationResults.Error) == false)
+                {
+                    // Skip duplicate affixes
+                    if (affixSet.Contains((AffixProto.DataRef, _scopeProtoRef)))
+                        continue;
+
+                    // Roll seed for this affix
+                    _seed = random.Next(1, int.MaxValue);
+
+                    // Remember this affix / scope combo so we don't get it again
+                    affixSet.Add((AffixProto.DataRef, _scopeProtoRef));
+
+                    // Readd affix to the pool if needed
+                    if (pickedAffixProto.DuplicateHandlingBehavior == DuplicateHandlingBehavior.Append)
+                        affixPicker.Add(pickedAffixProto, pickedAffixProto.Weight);
+
+                    result |= MutationResults.AffixChange;
+                    break;
+                }
+                else
+                {
+                    // Clean up if failed to set scope
+                    AffixProto = prevAffixProto;
+                    ScopeProtoRef = prevScopeProtoRef;
+                }
+            }
+
+            // Final validation
+            if (IsValid == false)
+                result |= MutationResults.Error;
+
+            return result;
+        }
+
+        public MutationResults SetScope(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
+            HashSet<(PrototypeId, PrototypeId)> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
+        {
+            Logger.Debug("SetScope()");
+            return MutationResults.None;
         }
     }
 }

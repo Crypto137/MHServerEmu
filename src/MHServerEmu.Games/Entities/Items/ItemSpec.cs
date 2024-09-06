@@ -128,12 +128,6 @@ namespace MHServerEmu.Games.Entities.Items
             return sb.ToString();
         }
 
-        public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
-        {
-            Logger.Debug("OnAffixesRolled()");
-            return MutationResults.None;
-        }
-
         public short NumAffixesOfCategory(AffixCategoryPrototype affixCategoryProto)
         {
             short numAffixes = 0;
@@ -170,6 +164,21 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             return numAffixes;
+        }
+
+        public bool AddAffixSpec(AffixSpec affixSpec)
+        {
+            if (affixSpec.IsValid == false)
+                return Logger.WarnReturn(false, $"AddAffixSpec(): Trying to add invalid AffixSpec to ItemSpec! ItemSpec: {this}");
+
+            _affixSpecList.Add(affixSpec);
+            return true;
+        }
+
+        public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
+        {
+            Logger.Debug("OnAffixesRolled()");
+            return MutationResults.None;
         }
     }
 }
