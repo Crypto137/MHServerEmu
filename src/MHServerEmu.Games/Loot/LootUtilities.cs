@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -229,6 +230,33 @@ namespace MHServerEmu.Games.Loot
         {
             Logger.Debug($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesToAdd})");
             return MutationResults.None;
+        }
+
+        private static void TryAddAffixesToPicker(DropFilterArguments args, IEnumerable<AffixCategoryPrototype> categories, IEnumerable<AssetId> keywords,
+            Region region, IEnumerable<AffixPrototype> affixPool, Picker<AffixPrototype> affixPicker)
+        {
+            foreach (AffixPrototype affixProto in affixPool)
+            {
+                if (affixProto.Weight <= 0)
+                    continue;
+
+                if (affixProto.AllowAttachment(args) == false)
+                    continue;
+
+                if (affixProto.HasKeywords(keywords, true))
+                    continue;
+
+                if (affixProto.HasAnyCategory(categories) == false)
+                    continue;
+
+                if (affixProto is AffixRegionRestrictedPrototype regionRestrictedAffixProto)
+                {
+                    if (region == null || regionRestrictedAffixProto.MatchesRegion(region) == false)
+                        continue;
+                }
+
+                affixPicker.Add(affixProto, affixProto.Weight);
+            }
         }
     }
 }

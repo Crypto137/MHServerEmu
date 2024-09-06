@@ -4,6 +4,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -148,6 +149,64 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
         }
+
+        public AffixCategoryPrototype GetFirstCategoryMatch(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
+        {
+            foreach (AffixCategoryPrototype affixCategoryProto in affixCategoryProtos)
+            {
+                if (HasCategory(affixCategoryProto))
+                    return affixCategoryProto;
+            }
+
+            return null;
+        }
+
+        public bool HasAnyCategory(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
+        {
+            return GetFirstCategoryMatch(affixCategoryProtos) != null;
+        }
+
+        public bool AllowAttachment(DropFilterArguments args)
+        {
+            if (DropRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in DropRestrictions)
+            {
+                if (dropRestrictionProto.Allow(args, RestrictionTestFlags.None) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool HasKeywords(IEnumerable<AssetId> keywordsToCheck, bool hasAll = false)
+        {
+            if (keywordsToCheck == null || keywordsToCheck.Any() == false)
+                return true;
+
+            if (Keywords.IsNullOrEmpty())
+                return false;
+
+            foreach (AssetId keywordAssetRefToCheck in keywordsToCheck)
+            {
+                bool found = false;
+
+                foreach (AssetId keywordAssetRef in Keywords)
+                {
+                    if (keywordAssetRef == keywordAssetRefToCheck)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found != hasAll)
+                    return found;
+            }
+
+            return hasAll;
+        }
     }
 
     public class AffixPowerModifierPrototype : AffixPrototype
@@ -172,6 +231,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId RequiredRegion { get; protected set; }
         public PrototypeId[] RequiredRegionKeywords { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public bool MatchesRegion(Region region)
+        {
+            if (RequiredRegion != PrototypeId.Invalid && region.PrototypeDataRef == RequiredRegion)
+                return true;
+
+            if (RequiredRegionKeywords.HasValue())
+            {
+                Logger.Warn("MatchesRegion(): Keyword region matching is not yet implemented");
+            }
+
+            return false;
+        }
     }
 
     public class AffixTeamUpPrototype : AffixPrototype
