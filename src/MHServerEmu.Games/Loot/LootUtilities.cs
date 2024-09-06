@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Loot
 
             if (affixCountBehavior == AffixCountBehavior.Roll)
             {
-                HashSet<(PrototypeId, PrototypeId)> affixSet = new();
+                HashSet<ScopedAffixRef> affixSet = new();
                 result = UpdateAffixesHelper(resolver, settings, args, itemSpec, affixSet);
             }
 
@@ -130,7 +130,7 @@ namespace MHServerEmu.Games.Loot
         }
 
         private static MutationResults UpdateAffixesHelper(IItemResolver resolver, LootRollSettings settings, DropFilterArguments args,
-            ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet)
+            ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "UpdateAffixesHelper(): itemProto == null");
@@ -218,7 +218,7 @@ namespace MHServerEmu.Games.Loot
         }
 
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
-            int numAffixesNeeded, ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet, IEnumerable<AssetId> keywords = null)
+            int numAffixesNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, IEnumerable<AssetId> keywords = null)
         {
             Logger.Debug($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesNeeded})");
 
@@ -249,7 +249,7 @@ namespace MHServerEmu.Games.Loot
         }
 
         private static MutationResults AddPositionAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixPosition affixPosition,
-            int numAffixesNeeded,  ItemSpec itemSpec, HashSet<(PrototypeId, PrototypeId)> affixSet, IEnumerable<AssetId> keywords = null,
+            int numAffixesNeeded,  ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, IEnumerable<AssetId> keywords = null,
             IEnumerable<PrototypeId> categories = null)
         {
             Logger.Debug($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesNeeded})");

@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Entities.Items
         }
 
         public MutationResults RollAffix(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
-            Picker<AffixPrototype> affixPicker, HashSet<(PrototypeId, PrototypeId)> affixSet)
+            Picker<AffixPrototype> affixPicker, HashSet<ScopedAffixRef> affixSet)
         {
             Logger.Debug("RollAffix()");
 
@@ -96,14 +96,14 @@ namespace MHServerEmu.Games.Entities.Items
                 if (result.HasFlag(MutationResults.Error) == false)
                 {
                     // Skip duplicate affixes
-                    if (affixSet.Contains((AffixProto.DataRef, _scopeProtoRef)))
+                    if (affixSet.Contains(new(AffixProto.DataRef, _scopeProtoRef)))
                         continue;
 
                     // Roll seed for this affix
                     _seed = random.Next(1, int.MaxValue);
 
                     // Remember this affix / scope combo so we don't get it again
-                    affixSet.Add((AffixProto.DataRef, _scopeProtoRef));
+                    affixSet.Add(new(AffixProto.DataRef, _scopeProtoRef));
 
                     // Readd affix to the pool if needed
                     if (pickedAffixProto.DuplicateHandlingBehavior == DuplicateHandlingBehavior.Append)
@@ -128,9 +128,109 @@ namespace MHServerEmu.Games.Entities.Items
         }
 
         public MutationResults SetScope(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
-            HashSet<(PrototypeId, PrototypeId)> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
+            HashSet<ScopedAffixRef> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
         {
-            Logger.Debug("SetScope()");
+            if (AffixProto == null)
+                return Logger.WarnReturn(MutationResults.Error, "SetScope(): AffixProto == null");
+
+            if (AffixProto is AffixPowerModifierPrototype affixPowerModifierProto)
+            {
+                if (affixPowerModifierProto.IsForSinglePowerOnly)
+                    return SetAffixScopePower(random, rollFor, itemSpec, affixSet, behaviorOnPowerMatch);
+
+                return SetAffixPowerForPowerGroupBonus(affixPowerModifierProto, rollFor, affixSet);
+            }
+            else if (AffixProto is AffixRegionModifierPrototype affixRegionModifierProto)
+            {
+                return SetAffixScopeRegionAffix(random, itemSpec, affixSet);
+            }
+
+            return MutationResults.None;
+        }
+
+        private MutationResults SetAffixScopePower(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
+            HashSet<ScopedAffixRef> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
+        {
+            Logger.Warn("SetAffixScopePower()");
+            return MutationResults.None;
+        }
+
+        private MutationResults SetAffixPowerForPowerGroupBonus(AffixPowerModifierPrototype affixPowerModifierProto,
+            PrototypeId rollFor, HashSet<ScopedAffixRef> affixSet)
+        {
+            Logger.Warn("SetAffixPowerForPowerGroupBonus()");
+
+            if (affixPowerModifierProto.IsForSinglePowerOnly)
+                return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): affixPowerModifierProto.IsForSinglePowerOnly");
+
+            if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+            {
+                // Keyword scope (applies to powers that match the keyword filter)
+
+                // These affixes don't use scope param, so we check for invalid scope
+                if (affixSet.Contains(new(affixPowerModifierProto.DataRef, PrototypeId.Invalid)))
+                    return MutationResults.Error | MutationResults.ErrorReasonPowerGroup;
+
+                if (_scopeProtoRef != PrototypeId.Invalid)
+                {
+                    _scopeProtoRef = PrototypeId.Invalid;
+                    return MutationResults.Changed;
+                }
+            }
+            else if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+            {
+                // Power tab scope (applies to powers in the specified power tab)
+                
+                if (rollFor == PrototypeId.Invalid)
+                {
+                    return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): Trying to SetAffixPower() for a power mod affix that grants a bonus " +
+                        $"to power progression table page, but there is not rollFor avatar!\n[{affixPowerModifierProto}]");
+                }
+
+                var avatarProto = rollFor.As<AvatarPrototype>();
+                if (avatarProto == null) return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): avatarProto == null");
+
+                var powerProgTableTabRefProto = affixPowerModifierProto.PowerProgTableTabRef.As<PowerProgTableTabRefPrototype>();
+                if (powerProgTableTabRefProto == null) return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): powerProgTableTabRefProto == null");
+
+                if (avatarProto.GetPowerProgressionTableAtIndex(powerProgTableTabRefProto.PowerProgTableTabIndex) == null)
+                {
+                    if (avatarProto.ApprovedForUse())
+                    {
+                        Logger.Warn($"SetAffixPowerForPowerGroupBonus(): Trying to SetAffixPower() for a power mod affix that grants a bonus to " +
+                            "power progression table page for a shipping avatar, but the avatar does not have a power progression table " +
+                            $"at the specified index!\nAvatar: [{avatarProto}]\nAffix: [{affixPowerModifierProto}]\nIndex: [{powerProgTableTabRefProto.PowerProgTableTabIndex}]");
+                    }
+
+                    return MutationResults.Error | MutationResults.ErrorReasonPowerGroup;
+                }
+
+                // NOTE: The client checks for invalid scope rather than rollFor, which may be a bug
+                if (affixSet.Contains(new(affixPowerModifierProto.DataRef, PrototypeId.Invalid)))
+                    return MutationResults.Error | MutationResults.ErrorReasonPowerGroup;
+
+                if (_scopeProtoRef != rollFor)
+                {
+                    _scopeProtoRef = rollFor;
+                    return MutationResults.Changed;
+                }
+            }
+            else
+            {
+                // Global scope (applies to all powers)
+                if (_scopeProtoRef != PrototypeId.Invalid)
+                {
+                    _scopeProtoRef = PrototypeId.Invalid;
+                    return MutationResults.Changed;
+                }
+            }
+
+            return MutationResults.None;
+        }
+
+        private MutationResults SetAffixScopeRegionAffix(GRandom random, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
+        {
+            Logger.Warn("SetAffixScopeRegionAffix()");
             return MutationResults.None;
         }
     }

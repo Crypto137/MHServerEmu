@@ -64,20 +64,20 @@ namespace MHServerEmu.Games.Loot
     [Flags]
     public enum MutationResults
     {
-        None            = 0,
-        Error           = 1 << 0,
-        Result1         = 1 << 1,
-        Result2         = 1 << 2,
-        AffixChange     = 1 << 3,   // ItemPrototype::UpdatePetTechAffixes()
-        Result4         = 1 << 4,
-        Result5         = 1 << 5,
-        Result6         = 1 << 6,
-        Result7         = 1 << 7,
-        Result8         = 1 << 8,
-        Result9         = 1 << 9,
-        Result10        = 1 << 10,
-        Result11        = 1 << 11,
-        Result12        = 1 << 12
+        None                    = 0,
+        Error                   = 1 << 0,
+        Changed                 = 1 << 1,
+        Result2                 = 1 << 2,
+        AffixChange             = 1 << 3,   // ItemPrototype::UpdatePetTechAffixes()
+        Result4                 = 1 << 4,
+        Result5                 = 1 << 5,
+        Result6                 = 1 << 6,
+        Result7                 = 1 << 7,
+        Result8                 = 1 << 8,
+        Result9                 = 1 << 9,
+        Result10                = 1 << 10,
+        Result11                = 1 << 11,
+        ErrorReasonPowerGroup   = 1 << 12
     }
 
     public enum AffixCountBehavior
