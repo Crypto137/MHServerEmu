@@ -58,7 +58,7 @@ namespace MHServerEmu.Games.Entities
             if (hotspotRef != PrototypeId.Invalid)
             {
                 if (Region == null) return;
-                EntitySettings hotspotSettiongs = new()
+                EntitySettings hotspotSettings = new()
                 {
                     EntityRef = hotspotRef,
                     RegionId = Region.Id,
@@ -66,8 +66,8 @@ namespace MHServerEmu.Games.Entities
                 };
 
                 var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
-                if (inventory != null) hotspotSettiongs.InventoryLocation = new(Id, inventory.PrototypeDataRef);
-                var hotspot = Game.EntityManager.CreateEntity(hotspotSettiongs);
+                if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+                var hotspot = Game.EntityManager.CreateEntity(hotspotSettings);
                 if (hotspot != null)
                     hotspot.Properties[PropertyEnum.HotspotTriggerEntity, (int)EntityTriggerEnum.Enabled] = Id;
             }

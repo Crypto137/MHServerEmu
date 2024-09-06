@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -35,6 +36,29 @@ namespace MHServerEmu.Games.Entities
                 _destinationList.Add(destination);
 
             return true;
+        }
+
+        public override void OnEnteredWorld(EntitySettings settings)
+        {
+            var transProto = TransitionPrototype;
+            if (transProto.Waypoint != PrototypeId.Invalid)
+            {
+                var waypointHotspotRef = GameDatabase.GlobalsPrototype.WaypointHotspot;
+
+                var hotspotSettings = new EntitySettings()
+                {
+                    EntityRef = waypointHotspotRef,
+                    RegionId = Region.Id,
+                    Position = RegionLocation.Position
+                };
+                var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
+                if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+
+                var hotspot = Game.EntityManager.CreateEntity(hotspotSettings);
+                if (hotspot != null) hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transProto.Waypoint;
+            }
+
+            base.OnEnteredWorld(settings);
         }
 
         public override bool Serialize(Archive archive)
