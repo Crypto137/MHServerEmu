@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Missions.Actions
             }
 
             if (missionProtoRef == PrototypeId.Invalid) return;
-            if (missionProtoRef != MissionRef) return;
+            if (missionProtoRef == MissionRef) return;
 
             var mission = missionManager.FindMissionByDataRef(missionProtoRef);
             if (mission != null)
