@@ -1800,7 +1800,7 @@ namespace MHServerEmu.Games.Missions
         {
             // if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
             CancelScheduledRemovePartipantEvent(player);
-            // AddParticipant(player); // This broke Raft kismetSeq
+            AddParticipant(player); // This broke Raft kismetSeq
         }
 
 
