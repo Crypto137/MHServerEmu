@@ -1540,7 +1540,12 @@ namespace MHServerEmu.Games.Missions
 
         public bool AddParticipant(Player player)
         {
-            if (HasParticipant(player)) return false; // todo reset?
+            if (HasParticipant(player)) 
+            {
+                if (CancelScheduledRemovePartipantEvent(player))
+                    ScheduleRemovePartipantEvent(player);
+                return false;
+            }
 
             _participants.Add(player.Id);
 
@@ -1565,6 +1570,7 @@ namespace MHServerEmu.Games.Missions
 
         public void RemovePartipiant(Player player)
         {
+            CancelScheduledRemovePartipantEvent(player);
             if (HasParticipant(player) == false) return;
             _participants.Remove(player.Id);
             SendUpdateToPlayer(player, MissionUpdateFlags.Participants, MissionObjectiveUpdateFlags.None);
@@ -1807,7 +1813,7 @@ namespace MHServerEmu.Games.Missions
         public void OnPlayerLeftMission(Player player)
         {
             // if (MissionManager.Debug) Logger.Warn($"OnPlayerLeftMission [{PrototypeName}]");
-            if (IsActiveForMission(player))
+            if (IsActiveForMission(player) == false)
                 ScheduleRemovePartipantEvent(player);
         }
 
@@ -2228,7 +2234,7 @@ namespace MHServerEmu.Games.Missions
         {
             var player = evt.Player;
             if (player == null) return;
-            OnPlayerEnteredMission(player);
+            OnPlayerEnteredMission(player); // This broke Rift Venom
         }
 
         public void OnAreaLeft(PlayerLeftAreaGameEvent evt)
@@ -2252,14 +2258,50 @@ namespace MHServerEmu.Games.Missions
             OnPlayerLeftMission(player);
         }
 
-        private void CancelScheduledRemovePartipantEvent(Player player)
+        private Dictionary<ulong, EventPointer<RemovePartipantEvent>> _partipantEvents = new();
+
+        private bool CancelScheduledRemovePartipantEvent(Player player)
         {
-            // TODO cancel event
+            var scheduler = GameEventScheduler;
+            if (scheduler == null) return false;
+            if (_partipantEvents.TryGetValue(player.Id, out var removePartipantEvent))
+            {
+                scheduler.CancelEvent(removePartipantEvent);
+                _partipantEvents.Remove(player.Id); 
+                return true;
+            }
+            return false;
         }
 
-        private void ScheduleRemovePartipantEvent(Player player)
+        private void OnRemovePartipant(Player player)
         {
-            // TODO Schedule remove event
+            if (_partipantEvents.ContainsKey(player.Id))
+                RemovePartipiant(player);
+        }
+
+        private bool ScheduleRemovePartipantEvent(Player player)
+        {
+            if (HasParticipant(player) == false) return false;
+            if (_partipantEvents.ContainsKey(player.Id)) return false;
+            TimeSpan timeLimit = TimeSpan.Zero;
+
+            var openProto = OpenMissionPrototype;
+            if (openProto != null)
+                timeLimit = TimeSpan.FromSeconds(openProto.ParticipantTimeoutInSeconds);
+
+            var scheduler = GameEventScheduler;
+            if (scheduler == null) return false;
+            EventPointer<RemovePartipantEvent> removePartipantEvent = new();
+            scheduler.ScheduleEvent(removePartipantEvent, timeLimit, EventGroup);
+            removePartipantEvent.Get().Initialize(this, player);
+            _partipantEvents[player.Id] = removePartipantEvent;
+
+            return true;
+        }
+
+        protected class RemovePartipantEvent : CallMethodEventParam1<Mission, Player>
+        {
+            protected override CallbackDelegate GetCallback() => (mission, player) => mission?.OnRemovePartipant(player);
         }
 
         protected class IdleTimeoutEvent : CallMethodEvent<Mission>
