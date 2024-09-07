@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.Entities.Items
     /// <summary>
     /// AffixProtoRef + ScopeProtoRef combo used to ensure rolled affix uniqueness.
     /// </summary>
-    public readonly struct ScopedAffixRef
+    public readonly struct ScopedAffixRef : IEquatable<ScopedAffixRef>
     {
         public PrototypeId AffixProtoRef { get; }
         public PrototypeId ScopeProtoRef { get; }
@@ -16,9 +16,34 @@ namespace MHServerEmu.Games.Entities.Items
             ScopeProtoRef = scopeProtoRef;
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj is ScopedAffixRef other && Equals(other);
+        }
+
+        public bool Equals(ScopedAffixRef other)
+        {
+            return AffixProtoRef == other.AffixProtoRef && ScopeProtoRef == other.ScopeProtoRef;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(AffixProtoRef, ScopeProtoRef);
+        }
+
         public override string ToString()
         {
             return $"{nameof(AffixProtoRef)}={AffixProtoRef.GetName()}, {nameof(ScopeProtoRef)}={ScopeProtoRef.GetName()}";
+        }
+
+        public static bool operator ==(ScopedAffixRef left, ScopedAffixRef right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ScopedAffixRef left, ScopedAffixRef right)
+        {
+            return !(left == right);
         }
     }
 }

@@ -53,6 +53,9 @@ namespace MHServerEmu.Games.Entities.Items
             PrototypeId affixProtoRef = AffixProto != null ? AffixProto.DataRef : PrototypeId.Invalid;
             success &= Serializer.Transfer(archive, ref affixProtoRef);
 
+            if (archive.IsUnpacking)
+                AffixProto = affixProtoRef.As<AffixPrototype>();
+
             success &= Serializer.Transfer(archive, ref _scopeProtoRef);
             success &= Serializer.Transfer(archive, ref _seed);
             return success;
@@ -105,7 +108,7 @@ namespace MHServerEmu.Games.Entities.Items
                     // Remember this affix / scope combo so we don't get it again
                     affixSet.Add(new(AffixProto.DataRef, _scopeProtoRef));
 
-                    // Readd affix to the pool if needed
+                    // Re-add affix to the pool if needed
                     if (pickedAffixProto.DuplicateHandlingBehavior == DuplicateHandlingBehavior.Append)
                         affixPicker.Add(pickedAffixProto, pickedAffixProto.Weight);
 
