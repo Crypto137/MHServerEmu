@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Loot
 
         private readonly Picker<AvatarPrototype> _avatarPicker;
 
-        private readonly List<ItemSpec> _pendingItemList = new();
+        private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<ItemSpec> _processedItemList = new();
 
         public GRandom Random { get; }
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Loot
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
-            _pendingItemList.Add(itemSpec);
+            _pendingItemList.Add(new(itemSpec, filterArgs.RollFor));
 
             return LootRollResult.Success;
         }
@@ -173,12 +173,12 @@ namespace MHServerEmu.Games.Loot
 
         public bool ProcessPending(LootRollSettings settings)
         {
-            foreach (ItemSpec itemSpec in _pendingItemList)
+            foreach (PendingItem pendingItem in _pendingItemList)
             {
-                //LootCloneRecord args = new(LootContext, itemSpec, PrototypeId.Invalid);
-                //LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, itemSpec, settings);
+                //LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                //LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
 
-                _processedItemList.Add(itemSpec);
+                _processedItemList.Add(pendingItem.ItemSpec);
             }
 
             _pendingItemList.Clear();
@@ -193,6 +193,18 @@ namespace MHServerEmu.Games.Loot
                 lootSummary.Types |= LootTypes.Item;
                 foreach (ItemSpec itemSpec in _processedItemList)
                     lootSummary.ItemSpecs.Add(itemSpec);
+            }
+        }
+
+        private readonly struct PendingItem
+        {
+            public ItemSpec ItemSpec { get; }
+            public PrototypeId RollFor { get; }
+
+            public PendingItem(ItemSpec itemSpec, PrototypeId rollFor)
+            {
+                ItemSpec = itemSpec;
+                RollFor = rollFor;
             }
         }
     }

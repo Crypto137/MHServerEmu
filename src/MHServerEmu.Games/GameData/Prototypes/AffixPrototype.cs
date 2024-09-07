@@ -176,7 +176,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             foreach (DropRestrictionPrototype dropRestrictionProto in DropRestrictions)
             {
-                if (dropRestrictionProto.Allow(args, RestrictionTestFlags.None) == false)
+                if (dropRestrictionProto.Allow(args) == false)
                     return false;
             }
 
