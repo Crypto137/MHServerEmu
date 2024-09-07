@@ -18,15 +18,17 @@ MHServerEmu is in active development. Currently it features:
 
 - Basic combat mechanics: using powers, dealing direct damage to enemies. More complex powers, such as those that rely on debuff effects or summoned allies, are currently not implemented.
 
+- Leveling from 1 to 60.
+
 - AI system for non-playable characters, such as enemies and team-ups.
 
 - Fully-featured implementation of DRAG (dynamic random area generator) with procedural enemy population spawning.
 
-- Rudimentary loot system: items drop from enemies, and you can pick them up, but they currently do not have stats, and there is no implementation for loot tables.
+- Loot system: items drop from enemies using original loot tables for picking quality and base types. Equipment affixes and stats are currently being implemented.
 
-- Early version of the account system that saves some of your progress, such as your applied costumes and powers slotted in your action bars. Currently most data does not persist when you relog or transition between regions.
+- SQLite-based persistence layer for saving accounts, player data, avatars, items, and more. An optional JSON mode for offline single-player is also available.
 
-- Multiplayer functionality: you can see and interact with other players connected to the same server. Currently there is no instancing, and all regions are shared by all players.
+- Multiplayer functionality: you can see and interact with other players connected to the same server in hubs and public combat zones. Parties and coop in private instances are currently not implemented.
 
 ## Setup
 
