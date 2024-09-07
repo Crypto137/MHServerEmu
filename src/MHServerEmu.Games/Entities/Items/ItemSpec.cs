@@ -166,6 +166,27 @@ namespace MHServerEmu.Games.Entities.Items
             return numAffixes;
         }
 
+        public bool GetBindingState(out PrototypeId agentProtoRef)
+        {
+            // Binding state is stored as an affix scoped to the bound avatar's prototype
+            PrototypeId itemBindingAffixProtoRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                // Skip non-binding affixes
+                if (affixSpec.AffixProto.DataRef != itemBindingAffixProtoRef)
+                    continue;
+
+                // Found binding
+                agentProtoRef = affixSpec.ScopeProtoRef;
+                return true;
+            }
+
+            // No binding
+            agentProtoRef = PrototypeId.Invalid;
+            return false;
+        }
+
         public bool AddAffixSpec(AffixSpec affixSpec)
         {
             if (affixSpec.IsValid == false)

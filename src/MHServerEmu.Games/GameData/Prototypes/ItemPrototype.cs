@@ -50,8 +50,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemPrototype : WorldEntityPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public bool IsUsable { get; protected set; }
         public bool CanBeSoldToVendor { get; protected set; }
         public int MaxVisiblePrefixes { get; protected set; }
@@ -98,6 +96,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsContainer { get; protected set; }
 
         // ---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
         public bool IsPetItem { get => IsChildBlueprintOf(GameDatabase.GlobalsPrototype.PetItemBlueprint); }
@@ -176,6 +176,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return null;
+        }
+
+        public int GetRank(LootContext lootContext)
+        {
+            if (LootDropRestrictions.IsNullOrEmpty())
+                return 0;
+
+            DropFilterArguments args = new(lootContext);
+            RestrictionTestFlags flags = RestrictionTestFlags.None;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)
+                dropRestrictionProto.Adjust(args, ref flags, RestrictionTestFlags.Rank);
+
+            return args.Rank;
         }
 
         public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)

@@ -1,10 +1,13 @@
 ﻿using MHServerEmu.Games.GameData;
 
-namespace MHServerEmu.Games.Entities.Items
+namespace MHServerEmu.Games.Loot
 {
     /// <summary>
     /// AffixProtoRef + ScopeProtoRef combo used to ensure rolled affix uniqueness.
     /// </summary>
+    /// <remarks>
+    /// The client uses an std::pair for this, but we define an explicit struct for readability.
+    /// </remarks>
     public readonly struct ScopedAffixRef : IEquatable<ScopedAffixRef>
     {
         public PrototypeId AffixProtoRef { get; }
