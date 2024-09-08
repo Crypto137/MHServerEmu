@@ -223,6 +223,11 @@ namespace MHServerEmu.Core.Collisions
             return true;
         }
 
+        public bool Intersects(Segment segment, ref float intersection)
+        {
+            return IntersectRay(segment.Start, segment.Direction, ref intersection, out _) && intersection <= 1.0f;
+        }
+
         public static Aabb AabbFromWedge(in Vector3 point, in Vector3 direction, float angle, float radius)
         {
             var wedgeDirection = Vector3.SafeNormalize(direction) * radius;

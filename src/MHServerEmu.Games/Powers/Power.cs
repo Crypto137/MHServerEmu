@@ -3594,8 +3594,6 @@ namespace MHServerEmu.Games.Powers
 
             if (Owner.CanPowerTeleportToPosition(targetFloorPosition) == false)
                 return Logger.WarnReturn(false, $"ExecuteTeleport(): Cannot teleport to the requested target position. REGION={region} POSITION={targetFloorPosition} ENTITY={Owner} POWER={this}");
-
-            /* TODO: Uncomment this when Bounds.Intersects() overload for Segment is implemented
             
             Vector3 floorOffset = targetFloorPosition - currentFloorPosition;
             float floorOffsetLength = Vector3.Length(floorOffset);
@@ -3634,8 +3632,7 @@ namespace MHServerEmu.Games.Powers
                     minIntersection -= Owner.Bounds.Radius / floorOffsetLength;
                     teleportPosition = Owner.FloorToCenter(currentFloorPosition + (floorOffset * minIntersection));
                 }
-            }
-            */
+            }            
 
             Owner.ChangeRegionPosition(teleportPosition, null,
                 ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.Force);
