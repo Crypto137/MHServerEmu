@@ -991,6 +991,26 @@ namespace MHServerEmu.Games.Properties.Evals
             return true;
         }
 
+        public static AssetId RunAssetId(EvalPrototype evalProto, EvalContextData data)
+        {
+            Run(evalProto, data, out AssetId retVal);
+            return retVal;
+        }
+
+        public static bool Run(EvalPrototype evalProto, EvalContextData data, out AssetId resultVal)
+        {
+            EvalVar evalVar = Run(evalProto, data);
+            if (FromValue(evalVar, out resultVal) == false)
+            {
+                Logger.Warn($"Invalid return type [{evalVar.Type}]");
+                if (evalProto != null)
+                    Logger.Warn($"for operator [{evalProto.Op}] EvalPrototype=[{evalProto.GetType().Name}] ExpressionString=[{evalProto.ExpressionString()}] Path=[{evalProto}]");
+                return false;
+            }
+
+            return true;
+        }
+
         public static bool FromValue(EvalVar evalVar, out int resultVal)
         {
             switch (evalVar.Type)
