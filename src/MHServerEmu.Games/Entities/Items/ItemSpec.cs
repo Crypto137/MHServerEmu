@@ -187,6 +187,75 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
+        public bool SetBindingState(bool bound, PrototypeId agentProtoRef = PrototypeId.Invalid, bool? tradeRestricted = null)
+        {
+            if (agentProtoRef != PrototypeId.Invalid && EquippableBy != PrototypeId.Invalid && agentProtoRef != EquippableBy)
+            {
+                Logger.Warn("SetBindingState(): Mismatch between equippable avatar and binding request agent detected, defaulting to account-bound");
+                return SetBindingState(true);
+            }
+
+            if (bound == false && tradeRestricted == true)
+                return Logger.WarnReturn(false, "SetBindingState(): Cannot set ItemSpec to both unbound and trade-restricted, not changing binding");
+
+            // Binding state is stored as an affix scoped to the bound avatar's prototype
+            PrototypeId itemBindingAffixProtoRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
+
+            bool stateChanged = false;
+
+            // Use a regular for loop instead of foreach to be able to remove the binding affix from the list
+            for (int i = 0; i < _affixSpecList.Count; i++)
+            {
+                AffixSpec affixSpec = _affixSpecList[i];
+
+                if (affixSpec.AffixProto.DataRef != itemBindingAffixProtoRef)
+                    continue;
+
+                if (bound == false)
+                {
+                    // Remove binding affix
+                    _affixSpecList.RemoveAt(i);
+                    return true;
+                }
+
+                if (affixSpec.ScopeProtoRef != agentProtoRef)
+                {
+                    // Change bind agent
+                    affixSpec.ScopeProtoRef = agentProtoRef;
+                    stateChanged = true;
+                }
+
+                // Looks like someone at Gazillion had a brilliant idea of storing trade restriction status in the seed field
+                if (tradeRestricted == true && affixSpec.Seed != 2)
+                {
+                    affixSpec.Seed = 2;
+                    stateChanged = true;
+                }
+                
+                if (tradeRestricted == false && affixSpec.Seed == 2)
+                {
+                    affixSpec.Seed = 1;
+                    stateChanged = true;
+                }
+
+                // This return will happen only if there is an existing binding affix in this ItemSpec
+                return stateChanged;
+            }
+
+            if (bound == false)
+                return false;
+
+            // Add a new binding
+            AffixPrototype affixProto = itemBindingAffixProtoRef.As<AffixPrototype>();
+
+            int seed = 1;   // not trade restricted
+            if (tradeRestricted == true)
+                seed = 2;   // trade restricted
+
+            _affixSpecList.Add(new(affixProto, agentProtoRef, seed));
+            return true;
+        }
+
         public bool AddAffixSpec(AffixSpec affixSpec)
         {
             if (affixSpec.IsValid == false)
