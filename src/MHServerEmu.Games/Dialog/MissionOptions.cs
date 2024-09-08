@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Dialog
 
                         case MissionShowObjsSettings.FromTargetMission:
                             objectiveProto = objective?.Prototype;
-                            if (this is not MissionHintOption && objectiveProto != null && objectiveProto.ObjectiveHints != null) return;
+                            if (this is not MissionHintOption && objectiveProto != null && objectiveProto.ObjectiveHints.HasValue()) return;
                             flags |= GetPlayerHUDFlags(mission.Prototype, objectiveProto);
                             outInteractData.PlayerHUDFlags |= flags;
                             outInteractData.PlayerHUDArrowDistanceOverride = Math.Max(outInteractData.PlayerHUDArrowDistanceOverride, GetPlayerHUDArrowDistanceOverride(objectiveProto));
@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Dialog
             if (ObjectiveFlagsAllowed() == false) return;
 
             objectiveProto = objective?.Prototype;
-            if (this is not MissionHintOption && objectiveProto != null && objectiveProto.ObjectiveHints != null) return;
+            if (this is not MissionHintOption && objectiveProto != null && objectiveProto.ObjectiveHints.HasValue()) return;
             flags |= GetPlayerHUDFlags(mission.Prototype, objectiveProto);
             outInteractData.PlayerHUDFlags |= flags;
             outInteractData.PlayerHUDArrowDistanceOverride = Math.Max(outInteractData.PlayerHUDArrowDistanceOverride, GetPlayerHUDArrowDistanceOverride(objectiveProto));
