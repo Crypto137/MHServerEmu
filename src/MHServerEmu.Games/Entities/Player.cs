@@ -957,6 +957,28 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
         }
 
+        public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
+        {
+            DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
+            if (difficultyTierProto == null) return Logger.WarnReturn(false, "CanChangeDifficulty(): difficultyTierProto == null");
+
+            // The game assumes all difficulties to be unlocked if there is no current avatar
+            if (CurrentAvatar != null && CurrentAvatar.CharacterLevel < difficultyTierProto.UnlockLevel)
+                return false;
+
+            return true;
+        }
+
+        public PrototypeId GetDifficultyTierPreference()
+        {
+            // TODO: Party
+
+            if (CurrentAvatar != null)
+                return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
+
+            return GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+        }
+
         #endregion
 
         #region Loading and Teleports

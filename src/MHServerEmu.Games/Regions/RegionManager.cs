@@ -3,9 +3,11 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -166,9 +168,9 @@ namespace MHServerEmu.Games.Regions
 
             if (regionProto.IsPublic)
             {
-                // Currently we have only one instance of each public region.
+                // Currently we have only one instance of each public region, and they all use the default difficulty (normal).
                 if (_publicRegionDict.TryGetValue(regionProtoRef, out region) == false)
-                    region = GenerateAndInitRegion(regionProtoRef);
+                    region = GenerateAndInitRegion(regionProtoRef, GameDatabase.GlobalsPrototype.DifficultyTierDefault);
             }
             else
             {
@@ -178,7 +180,8 @@ namespace MHServerEmu.Games.Regions
                 ulong regionId = playerConnection.WorldView.GetRegionInstanceId(regionProtoRef);
                 if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false)
                 {
-                    region = GenerateAndInitRegion(regionProtoRef);
+                    // Use preferred difficulty for private instances
+                    region = GenerateAndInitRegion(regionProtoRef, playerConnection.Player.GetDifficultyTierPreference());
                     playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
                 }
             }
@@ -225,7 +228,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private Region GenerateAndInitRegion(PrototypeId regionProtoRef)
+        private Region GenerateAndInitRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
         {
             // TODO: Merge this with GenerateRegion?
 
@@ -238,7 +241,7 @@ namespace MHServerEmu.Games.Regions
             try
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                region = GenerateRegion(regionProtoRef);
+                region = GenerateRegion(regionProtoRef, difficultyTierProtoRef);
                 Logger.Info($"Generated region {regionProtoRef.GetNameFormatted()} in {stopwatch.ElapsedMilliseconds} ms");
             }
             catch (Exception e)
@@ -261,14 +264,14 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        private Region GenerateRegion(PrototypeId regionProtoRef)
+        private Region GenerateRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
         {
             RegionSettings settings = new()
             {
                 InstanceAddress = _idGenerator.Generate(),
                 RegionDataRef = regionProtoRef,
                 Level = 60,
-                DifficultyTierRef = (PrototypeId)DifficultyTierPrototypeId.Normal,
+                DifficultyTierRef = difficultyTierProtoRef,
                 Seed = Game.Random.Next(),
                 GenerateAreas = true,
                 GenerateEntities = true,
