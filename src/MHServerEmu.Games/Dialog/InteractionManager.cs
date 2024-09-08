@@ -1383,7 +1383,7 @@ namespace MHServerEmu.Games.Dialog
 
         public bool HasOptionFlags(InteractionOptimizationFlags optimizationFlags)
         {
-            return _optionFlags.HasFlag(optimizationFlags);
+            return (_optionFlags & optimizationFlags) != 0;
         }
 
         public InteractionData()
