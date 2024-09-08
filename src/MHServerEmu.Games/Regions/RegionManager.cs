@@ -3,11 +3,9 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -164,7 +162,7 @@ namespace MHServerEmu.Games.Regions
 
             //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
-            Region region;
+            Region region = null;
 
             if (regionProto.IsPublic)
             {
@@ -178,10 +176,20 @@ namespace MHServerEmu.Games.Regions
                 // Currently each player connection has a world view, and in the future they
                 // will also be sharable for party members by party leaders.
                 ulong regionId = playerConnection.WorldView.GetRegionInstanceId(regionProtoRef);
-                if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false)
+
+                // Use preferred difficulty for private instances
+                PrototypeId difficultyTierPreference = playerConnection.Player.GetDifficultyTierPreference();
+
+                if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false || region.DifficultyTierRef != difficultyTierPreference)
                 {
-                    // Use preferred difficulty for private instances
-                    region = GenerateAndInitRegion(regionProtoRef, playerConnection.Player.GetDifficultyTierPreference());
+                    if (region != null)
+                    {
+                        // Destroy existing private instance if it does not match the player's difficulty preference 
+                        playerConnection.WorldView.RemoveRegion(region.PrototypeDataRef);
+                        DestroyRegion(regionId);
+                    }
+
+                    region = GenerateAndInitRegion(regionProtoRef, difficultyTierPreference);
                     playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
                 }
             }
