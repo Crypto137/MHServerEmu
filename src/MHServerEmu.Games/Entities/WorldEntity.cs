@@ -255,12 +255,13 @@ namespace MHServerEmu.Games.Entities
             if (this is Agent agent && agent is not Missile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
                 GiveKillRewards(killer, killFlags, directKiller);
+            }
 
-                if (killer is Avatar avatar)
-                {
-                    Player player = avatar.GetOwnerOfType<Player>();
-                    Region?.EntityDeadEvent.Invoke(new(this, killer, player));
-                }
+            // Trigger EntityDead Event
+            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && killer is Avatar avatar)
+            {
+                Player player = avatar.GetOwnerOfType<Player>();
+                Region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
 
             // HACK: Schedule respawn in public zones using SpawnSpec
