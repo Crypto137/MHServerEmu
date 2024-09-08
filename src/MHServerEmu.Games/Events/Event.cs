@@ -5,95 +5,144 @@ namespace MHServerEmu.Games.Events
     public class Event
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private readonly LinkedList<Action> _actionList = new();
-        public void AddActionFront(Action handler) => _actionList.AddFirst(handler);
-        public void AddActionBack(Action handler) => _actionList.AddLast(handler);
 
-        public void RemoveAction(Action handler)
+        public const int InfiniteLoopCheckLimit = 5000; // in client 100000
+        private readonly LinkedList<Action> _actionList = new();
+        private readonly List<ActionIterator<Action>> _iteratorList = new();
+        private int _infiniteLoopCheckCount = 0;
+
+        public bool AddActionFront(Action action)
         {
-            var node = _actionList.Find(handler);
-            if (node != null)
-                _actionList.Remove(node);
+            if (action == null) return Logger.ErrorReturn(false, "AddActionFront action == null");
+            if (_infiniteLoopCheckCount >= InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionFront {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+
+            _actionList.AddFirst(action);
+            return _infiniteLoopCheckCount < InfiniteLoopCheckLimit;
+        }
+
+        public bool AddActionBack(Action action)
+        {
+            if (action == null) return Logger.ErrorReturn(false, "AddActionBack action == null");
+            if (_infiniteLoopCheckCount >= InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionBack {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+
+            var newNode = _actionList.AddLast(action);
+            foreach (var iterator in _iteratorList)
+                iterator.CurrentNode ??= newNode;
+
+            return _infiniteLoopCheckCount < InfiniteLoopCheckLimit;
+        }
+
+        public void RemoveAction(Action action)
+        {
+            if (action == null) return;
+            var nodeToRemove = _actionList.Find(action);
+            if (nodeToRemove == null) return;
+
+            foreach (var iterator in _iteratorList)
+                if (iterator.CurrentNode == nodeToRemove)
+                    iterator.MoveNext();
+
+            _actionList.Remove(nodeToRemove);
         }
 
         public void Invoke()
         {
-            var node = _actionList.First;
-            var validNode = node;
-            var prevNode = node?.Previous;
-            int index = 0;
-            while (node != null)
+            if (_actionList.Count == 0) return;
+
+            ActionIterator<Action> iterator = new(_actionList);
+            _iteratorList.Add(iterator);
+
+            while (iterator.CurrentNode != null)
             {
-                var nextNode = node.Next;
-                node.Value.Invoke();
-
-                // Get valid node
-                if (node.List == _actionList)
-                {
-                    validNode = node;
-                    prevNode = node.Previous;
-                }
-
-                // Get valid next node
-                if (node.Next != nextNode)
-                    node = nextNode;
-                else if (validNode?.List == _actionList)
-                    node = validNode?.Next;
-                else
-                    node = prevNode?.Next;
-
-                index++;
+                var action = iterator.Current;
+                iterator.MoveNext();
+                action();
+                _infiniteLoopCheckCount++;
             }
-            if (index < _actionList.Count) Logger.Error($"Invoke is broken after [{index}] in Event");
+
+            _iteratorList.Remove(iterator);
+            if (_iteratorList.Count == 0) _infiniteLoopCheckCount = 0;
         }
 
         public void UnregisterCallbacks() => _actionList.Clear();
+    }
 
+    public class ActionIterator<T>
+    {
+        private readonly LinkedList<T> _list;
+        public LinkedListNode<T> CurrentNode { get; set; }
+        public T Current => CurrentNode.Value;
+
+        public ActionIterator(LinkedList<T> list)
+        {
+            _list = list;
+            CurrentNode = _list.First;
+        }
+
+        public void MoveNext()
+        {
+            if (CurrentNode != null) CurrentNode = CurrentNode.Next;
+        }
     }
 
     public class Event<T>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly LinkedList<Action<T>> _actionList = new();
-        public void AddActionFront(Action<T> handler) => _actionList.AddFirst(handler);
-        public void AddActionBack(Action<T> handler) => _actionList.AddLast(handler);
+        private readonly List<ActionIterator<Action<T>>> _iteratorList = new();
+        private int _infiniteLoopCheckCount = 0;
 
-        public void RemoveAction(Action<T> handler)
+        public bool AddActionFront(Action<T> action)
         {
-            var node = _actionList.Find(handler);
-            if (node != null)
-                _actionList.Remove(node);
+            if (action == null) return Logger.ErrorReturn(false, $"AddActionFront [{typeof(T).Name}]  action == null") ;
+            if (_infiniteLoopCheckCount >= Event.InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionFront [{typeof(T).Name}] {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+
+            _actionList.AddFirst(action);
+            return _infiniteLoopCheckCount < Event.InfiniteLoopCheckLimit;
         }
 
-        public void Invoke(T eventType)
+        public bool AddActionBack(Action<T> action)
         {
-            var node = _actionList.First;
-            var validNode = node;
-            var prevNode = node?.Previous;
-            int index = 0;
-            while (node != null)
+            if (action == null) return Logger.ErrorReturn(false, $"AddActionBack [{typeof(T).Name}]  action == null");
+            if (_infiniteLoopCheckCount >= Event.InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionBack [{typeof(T).Name}] {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
+
+            var newNode = _actionList.AddLast(action);
+            foreach (var iterator in _iteratorList)
+                iterator.CurrentNode ??= newNode;
+
+            return _infiniteLoopCheckCount < Event.InfiniteLoopCheckLimit;
+        }
+
+        public void RemoveAction(Action<T> action)
+        {
+            if (action == null) return;
+            var nodeToRemove = _actionList.Find(action);
+            if (nodeToRemove == null) return;
+
+            foreach (var iterator in _iteratorList)
+                if (iterator.CurrentNode == nodeToRemove)
+                    iterator.MoveNext();
+
+            _actionList.Remove(nodeToRemove);
+        }
+
+        public void Invoke(T eventData)
+        {
+            if (_actionList.Count == 0) return;
+
+            ActionIterator<Action<T>> iterator = new(_actionList);
+            _iteratorList.Add(iterator);
+
+            while (iterator.CurrentNode != null)
             {
-                var nextNode = node.Next;
-                node.Value.Invoke(eventType);
-
-                // Get valid node
-                if (node.List == _actionList)
-                {
-                    validNode = node;
-                    prevNode = node.Previous;
-                }
-
-                // Get valid next node
-                if (node.Next != nextNode)
-                    node = nextNode;
-                else if (validNode?.List == _actionList)
-                    node = validNode?.Next;
-                else
-                    node = prevNode?.Next;
-
-                index++;
+                var action = iterator.Current;
+                iterator.MoveNext();
+                action(eventData);
+                _infiniteLoopCheckCount++;
             }
-            if (index < _actionList.Count) Logger.Error($"Invoke is broken after [{index}] in Event<{typeof(T).Name}>");
+
+            _iteratorList.Remove(iterator);
+            if (_iteratorList.Count == 0) _infiniteLoopCheckCount = 0;
         }
 
         public void UnregisterCallbacks() => _actionList.Clear();
