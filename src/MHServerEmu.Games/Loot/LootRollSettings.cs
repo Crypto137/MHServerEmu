@@ -68,5 +68,21 @@ namespace MHServerEmu.Games.Loot
             AffixLimitMaxByPositionModifierDict = new(other.AffixLimitMaxByPositionModifierDict);
             AffixLimitByCategoryModifierDict = new(other.AffixLimitByCategoryModifierDict);
         }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if these <see cref="LootRollSettings"/> contain any restriction <see cref="LootDropChanceModifiers"/>.
+        /// </summary>
+        public bool IsRestrictedByLootDropChanceModifier()
+        {
+            return DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyModeRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.RegionRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.KillCountRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.WeekdayRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.ConditionRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.LevelRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.DropperRestricted) ||
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.MissionRestricted);
+        }
     }
 }

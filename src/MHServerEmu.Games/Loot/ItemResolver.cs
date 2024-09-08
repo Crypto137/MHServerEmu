@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
@@ -145,6 +146,10 @@ namespace MHServerEmu.Games.Loot
 
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
         {
+            // Do not drop if there are any hard restrictions (this should have already been handled when selecting the loot table node)
+            if (settings.IsRestrictedByLootDropChanceModifier())
+                return Logger.WarnReturn(false, $"CheckDropPercent(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
+
             // Do not drop cooldown-based loot for now
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
                 return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerXHours");
@@ -155,7 +160,19 @@ namespace MHServerEmu.Games.Loot
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
                 return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownByChannel");
 
-            float dropChance = (1f - noDropPercent) * LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_LootDropRate);
+            // Start with a base drop chance based on the specified NoDrop percent
+            float dropChance = 1f - noDropPercent;
+
+            // Apply live tuning multiplier
+            dropChance *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
+
+            // Apply difficulty multiplier
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierNoDropModified))
+                dropChance *= settings.NoDropModifier;
+
+            // Add more multipliers here as needed
+
+            // Check the final chance
             return Random.NextFloat() < dropChance;
         }
 
