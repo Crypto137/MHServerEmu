@@ -737,7 +737,7 @@ namespace MHServerEmu.Games.Dialog
             if (worldEntityProto == null)
                 return InteractionMethod.None;
 
-            var interactionData = worldEntityProto.InteractionData;
+            var interactionData = worldEntityProto.GetInteractionData();
             bool hasInteractionData = interactionData != null;
             bool hasKeywords = worldEntityProto.Keywords != null;
 
