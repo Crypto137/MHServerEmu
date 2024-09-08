@@ -124,7 +124,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
         public bool IsInParty { get; internal set; }
         public static bool IsPlayerTradeEnabled { get; internal set; }
-        public Avatar PrimaryAvatar { get; private set; }
+        public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
         public GuildMembership GuildMembership { get; internal set; }
