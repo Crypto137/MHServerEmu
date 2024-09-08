@@ -75,6 +75,13 @@ namespace MHServerEmu.Core.Collisions
             return aabb.Intersects(otherTriangle);
         }
 
+        public bool Intersects(Segment segment, ref float intersection)
+        {
+            Aabb aabb = new(Center - Extents, Center + Extents);
+            Segment transformSegment = new(TransformPoint(segment.Start), TransformPoint(segment.End));
+            return aabb.Intersects(transformSegment, ref intersection);
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();

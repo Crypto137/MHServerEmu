@@ -132,6 +132,7 @@ namespace MHServerEmu.Games.Loot
             settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = player.CurrentAvatar.CharacterLevel;
             settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
+            settings.DifficultyTier = player.GetRegion().DifficultyTierRef;
 
             _resolver.SetContext(LootContext.Drop, player);
 

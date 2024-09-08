@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -163,6 +164,23 @@ namespace MHServerEmu.Games.Entities.Items
             }
         }
 
+        public bool DecrementStack(int count = 1)
+        {
+            if (count < 1) return Logger.WarnReturn(false, "DecrementStack(): count < 1");
+
+            int currentStackSize = CurrentStackSize;
+            if (count > currentStackSize) return Logger.WarnReturn(false, "DecrementStack(): count > currentStackSize");
+
+            int newCount = Math.Max(0, currentStackSize - count);
+
+            if (newCount > 0)
+                Properties[PropertyEnum.InventoryStackCount] = newCount;
+            else
+                ScheduleDestroyEvent(TimeSpan.Zero);
+
+            return true;
+        }
+
         private bool ApplyItemSpec(ItemSpec itemSpec)
         {
             if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");
@@ -172,11 +190,31 @@ namespace MHServerEmu.Games.Entities.Items
             ItemPrototype itemProto = ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): itemProto == null");
 
-            if (ApplyItemSpecProperties() == false) return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
+            if (ApplyItemSpecProperties() == false)
+                return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
 
             itemProto.OnApplyItemSpec(this, _itemSpec);
 
-            // TODO: Roll affixes
+            GRandom random = new(_itemSpec.Seed);
+
+            if (itemProto.PropertiesBuiltIn.HasValue())
+            {
+                foreach (PropertyEntryPrototype propertyEntryProto in itemProto.PropertiesBuiltIn)
+                {
+                    float randomMult = random.NextFloat();
+
+                    /* Uncomment to enable built-in stats
+                    if (propertyEntryProto is PropertyPickInRangeEntryPrototype pickInRangeProto)
+                        OnBuiltInPropertyRoll(randomMult, pickInRangeProto);
+                    else if (propertyEntryProto is PropertySetEntryPrototype setProto)
+                        OnBuiltInPropertySet(setProto);
+                    else
+                        Logger.Warn($"ApplyItemSpec(): Invalid property entry prototype {propertyEntryProto}");
+                    */
+                }
+            }
+
+            // TODO: Apply affixes
 
             return true;
         }
@@ -304,6 +342,98 @@ namespace MHServerEmu.Games.Entities.Items
                     avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
                 }
             }
+        }
+
+        private bool OnBuiltInPropertyRoll(float randomMult, PropertyPickInRangeEntryPrototype pickInRangeProto)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(pickInRangeProto.Prop.Enum);
+            PropertyDataType propDataType = propertyInfo.DataType;
+
+            if (propDataType != PropertyDataType.Boolean && propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer)
+            {
+                return Logger.WarnReturn(false, "OnBuiltInPropertyRoll(): The following Item has a built-in pick-in-range PropertyEntry with a property " +
+                    $"that is not an int/float/bool prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
+            }
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+
+            float min = 0f;
+            if (pickInRangeProto.ValueMin != null)
+                min = Eval.RunFloat(pickInRangeProto.ValueMin, contextData);
+
+            float max = 0f;
+            if (pickInRangeProto.ValueMax != null)
+                max = Eval.RunFloat(pickInRangeProto.ValueMax, contextData);
+
+            if (propDataType == PropertyDataType.Real)
+            {
+                float value = pickInRangeProto.RollAsInteger
+                    ? GenerateTruncatedFloatWithinRange(randomMult, min, max)
+                    : GenerateFloatWithinRange(randomMult, min, max);
+
+                Properties[pickInRangeProto.Prop] = value;
+            }
+            else if (propDataType == PropertyDataType.Integer)
+            {
+                Properties[pickInRangeProto.Prop] = GenerateIntWithinRange(randomMult, min, max);
+            }
+            else
+            {
+                // The client doesn't have assignment for bool properties here for some reason
+                Logger.Warn($"OnBuiltInPropertyRoll(): Unhandled property data type {propDataType}");
+            }
+
+            return true;
+        }
+
+        private bool OnBuiltInPropertySet(PropertySetEntryPrototype setProto)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(setProto.Prop.Enum);
+            PropertyDataType propDataType = propertyInfo.DataType;
+
+            if (propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer && propDataType != PropertyDataType.Asset)
+            {
+                return Logger.WarnReturn(false, "OnBuiltInPropertyRoll(): The following Item has a built-in set PropertyEntry with a property " +
+                    $"that is not an int/float/asset prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
+            }
+
+            EvalContextData contextData = new();
+            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+
+            switch (propDataType)
+            {
+                case PropertyDataType.Real:
+                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunFloat(setProto.Value, contextData) : 0f;
+                    break;
+
+                case PropertyDataType.Integer:
+                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunInt(setProto.Value, contextData) : 0;
+                    break;
+
+                case PropertyDataType.Asset:
+                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunAssetId(setProto.Value, contextData) : AssetId.Invalid;
+                    break;
+            }
+
+            return true;
+        }
+
+        private float GenerateTruncatedFloatWithinRange(float randomMult, float min, float max)
+        {
+            float result = ((max - min + 1f) * randomMult) + min;
+            result = Math.Clamp(result, min, max);
+            return MathF.Floor(result);
+        }
+
+        private float GenerateFloatWithinRange(float randomMult, float min, float max)
+        {
+            return ((max - min) * randomMult) + min;
+        }
+
+        private int GenerateIntWithinRange(float randomMult, float min, float max)
+        {
+            return (int)GenerateTruncatedFloatWithinRange(randomMult, min, max);
         }
     }
 }

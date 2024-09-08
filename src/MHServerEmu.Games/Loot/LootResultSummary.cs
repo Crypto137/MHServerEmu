@@ -1,8 +1,8 @@
-﻿using Gazillion;
+﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using System.Text;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Loot
         public override string ToString()
         {
             StringBuilder sb = new();
-        
+
             if (Types.HasFlag(LootTypes.Item))
                 sb.AppendLine($"Item {ItemSpecs[0].ItemProtoRef.GetNameFormatted()} [{ItemSpecs.Count}]");
 

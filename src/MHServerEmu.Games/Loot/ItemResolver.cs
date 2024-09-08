@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -18,12 +19,13 @@ namespace MHServerEmu.Games.Loot
 
         private readonly Picker<AvatarPrototype> _avatarPicker;
 
-        private readonly List<ItemSpec> _pendingItemList = new();
+        private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<ItemSpec> _processedItemList = new();
 
         public GRandom Random { get; }
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
+        public Region Region { get => Player?.GetRegion(); }
 
         public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
         public int ProcessedItemCount { get => _processedItemList.Count; }
@@ -61,7 +63,7 @@ namespace MHServerEmu.Games.Loot
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
-            _pendingItemList.Add(itemSpec);
+            _pendingItemList.Add(new(itemSpec, filterArgs.RollFor));
 
             return LootRollResult.Success;
         }
@@ -171,8 +173,13 @@ namespace MHServerEmu.Games.Loot
 
         public bool ProcessPending(LootRollSettings settings)
         {
-            foreach (ItemSpec itemSpec in _pendingItemList)
-                _processedItemList.Add(itemSpec);
+            foreach (PendingItem pendingItem in _pendingItemList)
+            {
+                //LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                //LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+
+                _processedItemList.Add(pendingItem.ItemSpec);
+            }
 
             _pendingItemList.Clear();
             return true;
@@ -186,6 +193,18 @@ namespace MHServerEmu.Games.Loot
                 lootSummary.Types |= LootTypes.Item;
                 foreach (ItemSpec itemSpec in _processedItemList)
                     lootSummary.ItemSpecs.Add(itemSpec);
+            }
+        }
+
+        private readonly struct PendingItem
+        {
+            public ItemSpec ItemSpec { get; }
+            public PrototypeId RollFor { get; }
+
+            public PendingItem(ItemSpec itemSpec, PrototypeId rollFor)
+            {
+                ItemSpec = itemSpec;
+                RollFor = rollFor;
             }
         }
     }

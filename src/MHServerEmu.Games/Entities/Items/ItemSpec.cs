@@ -1,13 +1,18 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class ItemSpec : ISerialize
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private PrototypeId _itemProtoRef;
         private PrototypeId _rarityProtoRef;
         private int _itemLevel;
@@ -90,6 +95,14 @@ namespace MHServerEmu.Games.Entities.Items
                 .Build();
         }
 
+        public NetStructItemSpecStack ToStackProtobuf()
+        {
+            return NetStructItemSpecStack.CreateBuilder()
+                .SetSpec(ToProtobuf())
+                .SetCount((uint)_count)
+                .Build();
+        }
+
         public void Set(ItemSpec other)
         {
             if (other == null) throw new ArgumentException("other == null");
@@ -121,6 +134,80 @@ namespace MHServerEmu.Games.Entities.Items
             sb.AppendLine($"{nameof(_seed)}: 0x{_seed:X}");
             sb.AppendLine($"{nameof(_equippableBy)}: {GameDatabase.GetPrototypeName(_equippableBy)}");
             return sb.ToString();
+        }
+
+        public short NumAffixesOfCategory(AffixCategoryPrototype affixCategoryProto)
+        {
+            short numAffixes = 0;
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                if (affixSpec.AffixProto == null)
+                {
+                    Logger.Warn("NumAffixesOfCategory(): affixSpec.AffixProto == null");
+                    continue;
+                }
+
+                if (affixSpec.AffixProto.HasCategory(affixCategoryProto))
+                    numAffixes++;
+            }
+
+            return numAffixes;
+        }
+
+        public short NumAffixesOfPosition(AffixPosition affixPosition)
+        {
+            short numAffixes = 0;
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                if (affixSpec.AffixProto == null)
+                {
+                    Logger.Warn("NumAffixesOfPosition(): affixSpec.AffixProto == null");
+                    continue;
+                }
+
+                if (affixSpec.AffixProto.Position == affixPosition)
+                    numAffixes++;
+            }
+
+            return numAffixes;
+        }
+
+        public bool GetBindingState(out PrototypeId agentProtoRef)
+        {
+            // Binding state is stored as an affix scoped to the bound avatar's prototype
+            PrototypeId itemBindingAffixProtoRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                // Skip non-binding affixes
+                if (affixSpec.AffixProto.DataRef != itemBindingAffixProtoRef)
+                    continue;
+
+                // Found binding
+                agentProtoRef = affixSpec.ScopeProtoRef;
+                return true;
+            }
+
+            // No binding
+            agentProtoRef = PrototypeId.Invalid;
+            return false;
+        }
+
+        public bool AddAffixSpec(AffixSpec affixSpec)
+        {
+            if (affixSpec.IsValid == false)
+                return Logger.WarnReturn(false, $"AddAffixSpec(): Trying to add invalid AffixSpec to ItemSpec! ItemSpec: {this}");
+
+            _affixSpecList.Add(affixSpec);
+            return true;
+        }
+
+        public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
+        {
+            Logger.Debug("OnAffixesRolled()");
+            return MutationResults.None;
         }
     }
 }

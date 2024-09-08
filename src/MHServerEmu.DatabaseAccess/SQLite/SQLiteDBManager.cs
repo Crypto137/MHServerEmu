@@ -18,7 +18,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly object _saveLock = new();
+        private readonly object _writeLock = new();
 
         private string _dbFilePath;
         private string _connectionString;
@@ -86,48 +86,54 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool InsertAccount(DBAccount account)
         {
-            using SQLiteConnection connection = GetConnection();
+            lock (_writeLock)
+            {
+                using SQLiteConnection connection = GetConnection();
 
-            try
-            {
-                connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
+                try
+                {
+                    connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
                         VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Logger.ErrorException(e, nameof(InsertAccount));
-                return false;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorException(e, nameof(InsertAccount));
+                    return false;
+                }
             }
         }
 
         public bool UpdateAccount(DBAccount account)
         {
-            using SQLiteConnection connection = GetConnection();
+            lock (_writeLock)
+            {
+                using SQLiteConnection connection = GetConnection();
 
-            try
-            {
-                connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
+                try
+                {
+                    connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
                         IsBanned=@IsBanned, IsArchived=@IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Logger.ErrorException(e, nameof(UpdateAccount));
-                return false;
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorException(e, nameof(UpdateAccount));
+                    return false;
+                }
             }
         }
 
         public bool UpdateAccountData(DBAccount account)
         {
-            using SQLiteConnection connection = GetConnection();
-
-            // Use a transaction to make sure all data is saved
-            using SQLiteTransaction transaction = connection.BeginTransaction();
-            
             // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
-            lock (_saveLock)
+            lock (_writeLock)
             {
+                using SQLiteConnection connection = GetConnection();
+
+                // Use a transaction to make sure all data is saved
+                using SQLiteTransaction transaction = connection.BeginTransaction();
+
                 try
                 {
                     // Update player entity
