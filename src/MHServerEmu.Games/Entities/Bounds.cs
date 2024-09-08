@@ -623,6 +623,18 @@ namespace MHServerEmu.Games.Entities
             };
         }
 
+        public bool Intersects(Segment segment, ref float intersection)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB: return ToObb().Intersects(segment, ref intersection);
+                case GeometryType.AABB: return ToAabb().Intersects(segment, ref intersection);
+                case GeometryType.Capsule: return ToCapsule().Intersects(segment, ref intersection);
+                case GeometryType.Sphere: return ToSphere().Intersects(segment, ref intersection);
+                default: return Logger.WarnReturn(false, $"Segment intersect not implemented for bounds geometry={Geometry}"); ;
+            }
+        }
+
         private Sphere ToSphere()
         {
             if (Geometry == GeometryType.Sphere)
