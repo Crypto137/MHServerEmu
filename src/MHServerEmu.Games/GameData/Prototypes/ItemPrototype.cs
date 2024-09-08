@@ -102,6 +102,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsPetItem { get => IsChildBlueprintOf(GameDatabase.GlobalsPrototype.PetItemBlueprint); }
 
+        [DoNotCopy]
+        public bool IsGem { get => IsChildBlueprintOf(GameDatabase.LootGlobalsPrototype.GemBlueprint); }
+
         public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
         {
             // TODO

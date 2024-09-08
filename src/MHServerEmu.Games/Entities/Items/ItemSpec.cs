@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -268,7 +269,70 @@ namespace MHServerEmu.Games.Entities.Items
         public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
         {
             Logger.Debug("OnAffixesRolled()");
-            return MutationResults.None;
+
+            MutationResults result = MutationResults.None;
+            PrototypeId equippableByBefore = _equippableBy;
+
+            ItemPrototype itemProto = _itemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "OnAffixesRolled(): itemProto == null");
+
+            // Change EquippableBy if needed
+            if (itemProto.IsAvatarRestricted)
+            {
+                _equippableBy = rollFor;
+
+                // Validate built-in affixes for the new equippableBy value
+                if (itemProto.AffixesBuiltIn.HasValue())
+                {
+                    foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
+                    {
+                        if (affixEntryProto.Avatar != PrototypeId.Invalid && affixEntryProto.Avatar != _equippableBy)
+                        {
+                            Logger.Warn(string.Format("The Avatar required for this built-in affix is different than the item's equippableBy!\n" +
+                                "Affix: {0}\nAvatar required: {1}\nSpec: {2}\nResolver: {3}",
+                                affixEntryProto.Affix.GetName(),
+                                affixEntryProto.Avatar.GetName(),
+                                this,
+                                resolver));
+                        }
+                    }
+                }
+            }
+            else if (itemProto.IsGem == false) // RIP gems
+            {
+                _equippableBy = PrototypeId.Invalid;
+
+                // Single power affixes and tab-specific affixes make this item bound to the avatar that power or tab belongs to
+                foreach (AffixSpec affixSpec in _affixSpecList)
+                {
+                    if (affixSpec.ScopeProtoRef == PrototypeId.Invalid)
+                        continue;
+
+                    if (affixSpec.AffixProto == null)
+                    {
+                        Logger.Warn("OnAffixesRolled(): affixSpec.AffixProto == null");
+                        continue;
+                    }
+
+                    if (affixSpec.AffixProto is not AffixPowerModifierPrototype affixPowerModifierProto)
+                        continue;
+
+                    if (affixPowerModifierProto.IsForSinglePowerOnly || affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                        _equippableBy = rollFor;
+                }
+            }
+
+            // Finalize EquippableBy change if it happened
+            if (EquippableBy != equippableByBefore)
+            {
+                result |= MutationResults.Changed;
+
+                // Update binding affix
+                if (_equippableBy != PrototypeId.Invalid && GetBindingState(out PrototypeId boundAgentProtoRef) && boundAgentProtoRef != _equippableBy)
+                    SetBindingState(true, _equippableBy);
+            }
+
+            return result;
         }
     }
 }
