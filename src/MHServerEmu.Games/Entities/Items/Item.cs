@@ -279,16 +279,6 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        public void DecrementStack(int count = 1)
-        {
-            if (count < 1) return;
-            int newCount = Math.Max(0, CurrentStackSize - count);
-            if (newCount > 0)
-                Properties[PropertyEnum.InventoryStackCount] = newCount;
-            else
-                ScheduleDestroyEvent(TimeSpan.Zero);
-        }
-
         public void InteractWithAvatar(Avatar avatar)
         {
             var player = avatar.GetOwnerOfType<Player>();

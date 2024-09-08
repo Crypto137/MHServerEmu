@@ -61,14 +61,6 @@ namespace MHServerEmu.Games.Entities.Items
                 _equippableBy = (PrototypeId)protobuf.EquippableBy;
         }
 
-        public NetStructItemSpecStack ToStackProtobuf()
-        {
-            return NetStructItemSpecStack.CreateBuilder()
-                .SetSpec(ToProtobuf())
-                .SetCount((uint)_count)
-                .Build();
-        }
-
         public bool Serialize(Archive archive)
         {
             bool success = true;
