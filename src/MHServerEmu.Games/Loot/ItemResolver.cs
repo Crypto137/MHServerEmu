@@ -145,6 +145,16 @@ namespace MHServerEmu.Games.Loot
 
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
         {
+            // Do not drop cooldown-based loot for now
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerXHours");
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerRollover");
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownByChannel");
+
             float dropChance = (1f - noDropPercent) * LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_LootDropRate);
             return Random.NextFloat() < dropChance;
         }
