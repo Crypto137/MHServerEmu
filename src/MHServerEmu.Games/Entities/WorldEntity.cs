@@ -176,6 +176,8 @@ namespace MHServerEmu.Games.Entities
             {
                 Properties[PropertyEnum.CharacterLevel] = 60;
                 Properties[PropertyEnum.CombatLevel] = 60;
+                long maxHealth = Properties[PropertyEnum.HealthMaxOther];
+                if (maxHealth > 500000) Properties[PropertyEnum.HealthMaxOther] = 500000; // healthMax limit
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
             }
 
