@@ -193,28 +193,33 @@ namespace MHServerEmu.Games.Entities.Items
             if (ApplyItemSpecProperties() == false)
                 return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
 
-            itemProto.OnApplyItemSpec(this, _itemSpec);
+            itemProto.OnApplyItemSpec(this, _itemSpec);     // TODO (needed for PetTech affixes)
+
+            return true;    // CONSTRUCTION ZONE BELOW
 
             GRandom random = new(_itemSpec.Seed);
 
+            // Apply built-in properties
             if (itemProto.PropertiesBuiltIn.HasValue())
             {
                 foreach (PropertyEntryPrototype propertyEntryProto in itemProto.PropertiesBuiltIn)
                 {
                     float randomMult = random.NextFloat();
 
-                    /* Uncomment to enable built-in stats
                     if (propertyEntryProto is PropertyPickInRangeEntryPrototype pickInRangeProto)
                         OnBuiltInPropertyRoll(randomMult, pickInRangeProto);
                     else if (propertyEntryProto is PropertySetEntryPrototype setProto)
                         OnBuiltInPropertySet(setProto);
                     else
                         Logger.Warn($"ApplyItemSpec(): Invalid property entry prototype {propertyEntryProto}");
-                    */
                 }
             }
 
-            // TODO: Apply affixes
+            // Apply built-in affixes
+            foreach (BuiltInAffixDetails builtInAffixDetails in itemProto.GenerateBuiltInAffixDetails(_itemSpec))
+            {
+                Logger.Warn($"ApplyItemSpec(): builtInAffixDetails item={_itemSpec.ItemProtoRef.GetName()}, affix={builtInAffixDetails.AffixEntryProto.Affix.GetName()}");
+            }
 
             return true;
         }

@@ -278,12 +278,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Affix { get; protected set; }
         public PrototypeId Power { get; protected set; }
         public PrototypeId Avatar { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public virtual int LevelRequirement { get => 0; }
     }
 
     public class LeveledAffixEntryPrototype : AffixEntryPrototype
     {
         public int LevelRequired { get; protected set; }
         public LocaleStringId LockedDescriptionText { get; protected set; }
+
+        //--
+
+        [DoNotCopy]
+        public override int LevelRequirement { get => LevelRequired; }
     }
 
     public class AffixDisplaySlotPrototype : Prototype
