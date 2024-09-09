@@ -1,8 +1,7 @@
 name: Nightly Release (Windows x64)
 
 on:
-  schedule:
-    - cron: '15 7 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
