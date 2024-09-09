@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -67,7 +68,8 @@ namespace MHServerEmu.Games.Populations
             Orientation orientation = transform.Orientation;
 
             Region region = Group.PopulationManager.Region;
-            Game game = region.Game;
+            var manager = region?.Game?.EntityManager;
+            if (manager == null) return false;
 
             Cell cell = region.GetCellAtPosition(position);
             if (cell == null) return Logger.WarnReturn(false, "Spawn(): cell == null");
@@ -101,6 +103,17 @@ namespace MHServerEmu.Games.Populations
                 settings.Properties[PropertyEnum.SpawnGroupId] = Group.Id;
                 if (Group.ObjectProto != null)
                     settings.Properties[PropertyEnum.ClusterPrototype] = Group.ObjectProto.DataRef;
+
+                if (Group.SpawnerId != Entity.InvalidId)
+                {
+                    var spawner = manager.GetEntity<Spawner>(Group.SpawnerId);
+                    if (spawner != null)
+                    {
+                        var inventory = spawner.GetInventory(InventoryConvenienceLabel.Summoned);
+                        if (inventory != null)
+                            settings.InventoryLocation = new(spawner.Id, inventory.PrototypeDataRef);
+                    }
+                }
             }
 
             settings.Position = position;
@@ -111,7 +124,7 @@ namespace MHServerEmu.Games.Populations
             settings.Actions = Actions;
             settings.SpawnSpec = this;
 
-            ActiveEntity = game.EntityManager.CreateEntity(settings) as WorldEntity;
+            ActiveEntity = manager.CreateEntity(settings) as WorldEntity;
             State = SpawnState.Live;
             return true;
         }
