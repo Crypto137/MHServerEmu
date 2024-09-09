@@ -1,4 +1,4 @@
-name: Game Database Browser Release (Windows x64)
+name: Nightly Release (Windows x64)
 
 on:
   workflow_dispatch:
@@ -25,6 +25,6 @@ jobs:
       with:
         name: GameDatabaseBrowser-nightly-${{ env.DATE }}-Release-windows-x64
         path: |
-          ./src/GameDatabaseBrowser/bin/x64/Release/net6.0
-          !./src/GameDatabaseBrowser/bin/x64/Release/net6.0/*.pdb
-          !./src/GameDatabaseBrowser/bin/x64/Release/net6.0/*.xml
+          ./src/GameDatabaseBrowser/bin/x64/Release/net6.0-windows
+          !./src/GameDatabaseBrowser/bin/x64/Release/net6.0-windows/*.pdb
+          !./src/GameDatabaseBrowser/bin/x64/Release/net6.0-windows/*.xml
