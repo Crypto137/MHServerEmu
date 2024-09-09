@@ -402,7 +402,9 @@ namespace MHServerEmu.Games
                     writer.WriteLine(region.ToString());
                 writer.WriteLine();
 
-                writer.WriteLine($"Exception:\n{exception}");
+                writer.WriteLine($"Exception:\n{exception}\n");
+
+                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus()}\n");
             }
 
             Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");
