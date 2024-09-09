@@ -301,23 +301,31 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        private void AcceptAndRegisterNewClient(FrontendClient client)
+        private bool AcceptAndRegisterNewClient(FrontendClient client)
         {
-            // NOTE: Potential duping exploits here if a player reconnects before their data is updated in the database.
-            // We have some handling for this in the player manager, but better be safe than sorry.
+            // Before we do anything, make sure this client's account is not being used by another client pending disconnection
+            if (_dbIdConnectionDict.ContainsKey((ulong)client.Session.Account.Id))
+            {
+                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client {client} to {_game}, but its account is already in use by another client");
+                client.Disconnect();
+                return false;
+            }
 
+            // Creating a player sends the achievement database dump and a region availability query
             PlayerConnection connection = new(_game, client);
             client.GameId = _game.Id;
 
+            // Any of these two checks failing is bad time
             if (_clientConnectionDict.TryAdd(client, connection) == false)
-                Logger.Warn($"AcceptAndRegisterNewClient(): Failed to add client {client}");
+                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client {client}");
 
             if (_dbIdConnectionDict.TryAdd(connection.PlayerDbId, connection) == false)
-                Logger.Warn($"AcceptAndRegisterNewClient(): Failed to add player id 0x{connection.PlayerDbId}");
+                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add player id 0x{connection.PlayerDbId}");
 
             //SetPlayerConnectionPending(connection);   // This will be set when we receive region availability query response
 
             Logger.Info($"Accepted and registered client {client} to {_game}");
+            return true;
         }
     }
 }

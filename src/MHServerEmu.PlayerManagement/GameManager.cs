@@ -44,8 +44,11 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public Game GetGameById(ulong id)
         {
+            if (id == 0) return null;   // 0 just means the client is not in a game, this is valid output
+
+            // Having a valid id and not finding a game for it is bad
             if (_gameDict.TryGetValue(id, out Game game) == false)
-                return Logger.WarnReturn<Game>(null, $"GetGameById(): id {id} not found");
+                return Logger.WarnReturn<Game>(null, $"GetGameById(): id 0x{id:X} not found");
 
             return game;
         }

@@ -117,11 +117,14 @@ namespace MHServerEmu.Games.Network
 
             Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
 
+            // Crash the instance if we fail to create a player entity. This happens when there is collision
+            // in dbid caused by the game instance lagging and being unable to process players leaving before
+            // they log back in again.
+            //
+            // This should always be caught by the player connection manager beforehand, so if it got this far,
+            // something must have gone terribly terribly wrong, and we need to bail out.
             if (Player == null)
-            {
-                Disconnect();
-                return Logger.ErrorReturn(false, $"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
-            }
+                throw new($"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)

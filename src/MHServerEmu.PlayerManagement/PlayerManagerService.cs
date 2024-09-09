@@ -171,10 +171,8 @@ namespace MHServerEmu.PlayerManagement
 
             lock (_playerDict)
             {
-                if (_playerDict.ContainsKey(playerDbId) == false)
+                if (_playerDict.Remove(playerDbId) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client} not found");
-
-                _playerDict.Remove(playerDbId);
             }
 
             _sessionManager.RemoveSession(client.Session.Id);
