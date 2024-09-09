@@ -251,14 +251,15 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            bool notMissile = this is not Missile;
             // HACK: LOOT AND XP
-            if (this is Agent agent && agent is not Missile && agent is not Avatar && agent.IsTeamUpAgent == false)
+            if (this is Agent agent && notMissile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
                 GiveKillRewards(killer, killFlags, directKiller);
             }
 
             // Trigger EntityDead Event
-            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && killer is Avatar avatar)
+            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && killer is Avatar avatar && notMissile)
             {
                 Player player = avatar.GetOwnerOfType<Player>();
                 Region?.EntityDeadEvent.Invoke(new(this, killer, player));
