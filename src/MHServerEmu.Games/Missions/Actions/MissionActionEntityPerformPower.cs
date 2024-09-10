@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         private bool ActivatePerformPower(Agent agent, PrototypeId powerPrototype)
         {
-            Logger.Debug($"[{Mission.PrototypeName}] Try ActivatePerformPower {GameDatabase.GetFormattedPrototypeName(powerPrototype)} for {agent.PrototypeName} simulate is {agent.IsSimulated}");
+            // Logger.Debug($"[{Mission.PrototypeName}] Try ActivatePerformPower {GameDatabase.GetFormattedPrototypeName(powerPrototype)} for {agent.PrototypeName} simulate is {agent.IsSimulated}");
             if (agent.IsSimulated == false) return false;
             return agent.ActivatePerformPower(powerPrototype) == PowerUseResult.Success;
         }
