@@ -19,9 +19,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         private EventGroup _pendingEvents = new();
         private bool _deathEventRegistred;
 
-        private bool _fixCH03; // Fix Prototype Mission
-
-        protected override long RequiredCount => _fixCH03 ? 3 : _proto.Count; 
+        protected override long RequiredCount => _proto.Count; 
 
         public MissionConditionEntityDeath(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -30,15 +28,6 @@ namespace MHServerEmu.Games.Missions.Conditions
             _proto = prototype as MissionConditionEntityDeathPrototype;
             _adjustHealthAction = OnAdjustHealth;
             _EntityDeadAction = OnEntityDead;
-
-            // Hardcode fix
-            if (Mission.PrototypeDataRef == (PrototypeId)2379423066362748050) // CH03M3SnakesintheGrass
-            {
-                HashSet<PrototypeId> entities = new();
-                _proto.EntityFilter.GetEntityDataRefs(entities);
-                if (entities.Contains((PrototypeId)17975089509708600783)) // SerpentIdolSmall 
-                    _fixCH03 = true;
-            }
         }
 
         private bool EvaluateEntity(Player killer, WorldEntity entity)

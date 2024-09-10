@@ -98,8 +98,9 @@ namespace MHServerEmu.Games.Missions.Conditions
         }
 
         protected virtual void SetCount(long count)
-        {
-            _count = Math.Clamp(count, 0, RequiredCount);
+        {            
+            if (count < 0) count = 0; //_count = Math.Clamp(count, 0, RequiredCount);
+            _count = count;
             OnUpdate();
         }
 
