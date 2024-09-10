@@ -125,6 +125,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private KeywordsMask _categoryKeywordsMask;
 
+        [DoNotCopy]
+        public virtual bool HasBonusPropertiesToApply { get => Properties != null || PropertyEntries != null; }
+
+        [DoNotCopy]
+        public bool IsGemAffix { get => Position >= AffixPosition.Socket1 && Position <= AffixPosition.Socket3; }
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -223,11 +229,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype PowerBoostMin { get; protected set; }
         public EvalPrototype PowerGrantRankMin { get; protected set; }
         public PrototypeId PowerProgTableTabRef { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override bool HasBonusPropertiesToApply { get => base.HasBonusPropertiesToApply || PowerBoostMax != null || PowerGrantRankMax != null; }
     }
 
     public class AffixRegionModifierPrototype : AffixPrototype
     {
         public PrototypeId AffixTable { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override bool HasBonusPropertiesToApply { get => true; }
     }
 
     public class AffixRegionRestrictedPrototype : AffixPrototype

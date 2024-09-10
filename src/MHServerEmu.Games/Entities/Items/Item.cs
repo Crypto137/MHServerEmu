@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Entities.Items
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ItemSpec _itemSpec = new();
+        private List<AffixPropertiesCopyEntry> _affixProperties = new();
 
         public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
 
@@ -29,6 +30,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool IsBoundToAccount { get; set; }
 
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
+        public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
 
         public Item(Game game) : base(game) { }
 
@@ -356,6 +358,163 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
             }
 
+            return true;
+        }
+
+        private bool OnAffixAdded(GRandom random, AffixPrototype affixProto, PrototypeId scopeProtoRef, PrototypeId avatarProtoRef, int levelRequirement)
+        {
+            if (affixProto.Position == AffixPosition.Metadata)
+                return true;
+
+            bool affixHasBonusPropertiesToApply = affixProto.HasBonusPropertiesToApply;
+
+            if (affixHasBonusPropertiesToApply == false && affixProto.DataRef != GameDatabase.GlobalsPrototype.ItemNoVisualsAffix)
+                return Logger.WarnReturn(false, "OnAffixAdded(): affixHasBonusPropertiesToApply == false && affixProto.DataRef != GameDatabase.GlobalsPrototype.ItemNoVisualsAffix");
+
+            // Copy affix properties to a temporary collection
+            AffixPropertiesCopyEntry entry = new();
+            entry.AffixProto = affixProto;
+            entry.LevelRequirement = levelRequirement;
+            entry.Properties = new();
+
+            if (affixProto.Properties != null)
+                entry.Properties.FlattenCopyFrom(affixProto.Properties, true);
+
+            if (affixProto is AffixPowerModifierPrototype affixPowerModifierProto)
+            {
+                int evalLevelVar = 0;
+
+                if (affixPowerModifierProto.IsForSinglePowerOnly)
+                {
+                    // Verbose validation like in the client
+
+                    if (scopeProtoRef.As<PowerPrototype>() == null)
+                    {
+                        return Logger.WarnReturn(false, string.Format(
+                            $"OnAffixAdded(): AffixPowerModifier IsForSinglePowerOnly but scopeProtoRef is not a power! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            affixProto.ToString(),
+                            scopeProtoRef.GetName(),
+                            _itemSpec.ItemProtoRef.GetName()));
+                    }
+
+                    if (avatarProtoRef == PrototypeId.Invalid && affixProto.IsGemAffix == false)
+                    {
+                        return Logger.WarnReturn(false, string.Format(
+                            $"OnAffixAdded(): Non-gem AffixPowerModifier IsForSinglePowerOnly, but avatarProtoRef is invalid! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            affixProto.ToString(),
+                            scopeProtoRef.GetName(),
+                            _itemSpec.ItemProtoRef.GetName()));
+                    }
+
+                    AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                    if (avatarProto == null)
+                    {
+                        return Logger.WarnReturn(false, string.Format(
+                            $"OnAffixAdded(): Unable to get Avatar=[{0}]. Affix=[{1}] Item=[{2}]",
+                            avatarProtoRef.GetName(),
+                            affixProto.ToString(),
+                            _itemSpec.ItemProtoRef.GetName()));
+                    }
+
+                    PowerProgressionEntryPrototype powerProgEntry = avatarProto.GetPowerProgressionEntryForPower(scopeProtoRef);
+                    if (powerProgEntry == null)
+                    {
+                        return Logger.WarnReturn(false, string.Format(
+                            $"OnAffixAdded(): Unable to get Power[{0}] in Avatar[{1}] Power Progression Table. Affix=[{2}] Item=[{3}]",
+                            scopeProtoRef.GetName(),
+                            avatarProtoRef.GetName(),
+                            affixProto.ToString(),
+                            _itemSpec.ItemProtoRef.GetName()));
+                    }
+
+                                                            //
+                    evalLevelVar = powerProgEntry.Level;    // <------- THIS IS IMPORTANT: we set an actual value here, and not just validating
+                                                            //
+                }
+                else if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                {
+                    if (scopeProtoRef.As<AvatarPrototype>() == null)
+                    {
+                        return Logger.WarnReturn(false, string.Format(
+                            $"OnAffixAdded(): AffixPowerModifier is for PowerProgTableTabRef but scopeProtoRef is not an avatar! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            affixProto.ToString(),
+                            scopeProtoRef.GetName(),
+                            _itemSpec.ItemProtoRef.GetName()));
+                    }
+                }
+                else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                {
+                    if (scopeProtoRef != PrototypeId.Invalid)
+                    {
+                        return Logger.WarnReturn(false, string.Format(
+                            $"OnAffixAdded(): AffixPowerModifier is for PowerKeywordFilter but scopeProtoRef is NOT invalid as expected! Affix=[{0}] Scope=[{1}] Item=[{2}]",
+                            affixProto.ToString(),
+                            scopeProtoRef.GetName(),
+                            _itemSpec.ItemProtoRef.GetName()));
+                    }
+                }
+
+                EvalContextData contextData = new();
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+                contextData.SetVar_Int(EvalContext.Var1, (int)Properties[PropertyEnum.ItemLevel]);
+                contextData.SetVar_Int(EvalContext.Var2, evalLevelVar);
+
+                // NOTE: PowerBoost and PowerGrantRank values are rolled in parallel on the client and the server,
+                // so the order needs to be exact, or we are going to get a desync.
+
+                int powerBoostMax = Eval.RunInt(affixPowerModifierProto.PowerBoostMax, contextData);
+                if (powerBoostMax > 0)
+                {
+                    int powerBoostMin = Eval.RunInt(affixPowerModifierProto.PowerBoostMin, contextData);
+
+                    if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
+                    else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
+                    else
+                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, scopeProtoRef);
+
+                    entry.Properties[entry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerBoostMin, powerBoostMax);
+                }
+
+                int powerGrantMaxRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMax, contextData);
+                if (powerGrantMaxRank > 0)
+                {
+                    int powerGrantMinRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMin, contextData);
+
+                    if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
+                    else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
+                    else
+                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, scopeProtoRef);
+
+                    entry.Properties[entry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerGrantMinRank, powerBoostMax);
+                }
+
+            }
+            else if (affixProto is AffixRegionModifierPrototype affixRegionModifierProto)
+            {
+                // TODO
+            }
+
+            entry.Properties[PropertyEnum.ItemLevel] = Properties[PropertyEnum.ItemLevel];
+
+            if (affixProto.PropertyEntries != null)
+            {
+                // TODO
+            }
+
+            if (IsPetItem)
+            {
+                // TODO
+            }
+            else if (entry.LevelRequirement <= Properties[PropertyEnum.ItemAffixLevel])
+            {
+                // TODO
+            }
+
+            _affixProperties.Add(entry);
             return true;
         }
 
