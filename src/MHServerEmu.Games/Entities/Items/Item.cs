@@ -300,25 +300,25 @@ namespace MHServerEmu.Games.Entities.Items
             EvalContextData contextData = new();
             contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
-            float min = 0f;
+            float valueMin = 0f;
             if (pickInRangeProto.ValueMin != null)
-                min = Eval.RunFloat(pickInRangeProto.ValueMin, contextData);
+                valueMin = Eval.RunFloat(pickInRangeProto.ValueMin, contextData);
 
-            float max = 0f;
+            float valueMax = 0f;
             if (pickInRangeProto.ValueMax != null)
-                max = Eval.RunFloat(pickInRangeProto.ValueMax, contextData);
+                valueMax = Eval.RunFloat(pickInRangeProto.ValueMax, contextData);
 
             if (propDataType == PropertyDataType.Real)
             {
                 float value = pickInRangeProto.RollAsInteger
-                    ? GenerateTruncatedFloatWithinRange(randomMult, min, max)
-                    : GenerateFloatWithinRange(randomMult, min, max);
+                    ? GenerateTruncatedFloatWithinRange(randomMult, valueMin, valueMax)
+                    : GenerateFloatWithinRange(randomMult, valueMin, valueMax);
 
                 Properties[pickInRangeProto.Prop] = value;
             }
             else if (propDataType == PropertyDataType.Integer)
             {
-                Properties[pickInRangeProto.Prop] = GenerateIntWithinRange(randomMult, min, max);
+                Properties[pickInRangeProto.Prop] = GenerateIntWithinRange(randomMult, valueMin, valueMax);
             }
             else
             {
@@ -371,16 +371,17 @@ namespace MHServerEmu.Games.Entities.Items
             if (affixHasBonusPropertiesToApply == false && affixProto.DataRef != GameDatabase.GlobalsPrototype.ItemNoVisualsAffix)
                 return Logger.WarnReturn(false, "OnAffixAdded(): affixHasBonusPropertiesToApply == false && affixProto.DataRef != GameDatabase.GlobalsPrototype.ItemNoVisualsAffix");
 
-            // Copy affix properties to a temporary collection
-            AffixPropertiesCopyEntry entry = new();
-            entry.AffixProto = affixProto;
-            entry.LevelRequirement = levelRequirement;
-            entry.Properties = new();
+            // Initialized affixes are stored in a struct called AffixPropertiesCopyEntry
+            AffixPropertiesCopyEntry affixEntry = new();
+            affixEntry.AffixProto = affixProto;
+            affixEntry.LevelRequirement = levelRequirement;
+            affixEntry.Properties = new();
 
             if (affixProto.Properties != null)
-                entry.Properties.FlattenCopyFrom(affixProto.Properties, true);
+                affixEntry.Properties.FlattenCopyFrom(affixProto.Properties, true);
 
-            if (affixProto is AffixPowerModifierPrototype affixPowerModifierProto)
+            var affixPowerModifierProto = affixProto as AffixPowerModifierPrototype;
+            if (affixPowerModifierProto != null)
             {
                 int evalLevelVar = 0;
 
@@ -468,13 +469,13 @@ namespace MHServerEmu.Games.Entities.Items
                     int powerBoostMin = Eval.RunInt(affixPowerModifierProto.PowerBoostMin, contextData);
 
                     if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
-                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
                     else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
-                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
                     else
-                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, scopeProtoRef);
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, scopeProtoRef);
 
-                    entry.Properties[entry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerBoostMin, powerBoostMax);
+                    affixEntry.Properties[affixEntry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerBoostMin, powerBoostMax);
                 }
 
                 int powerGrantMaxRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMax, contextData);
@@ -483,38 +484,124 @@ namespace MHServerEmu.Games.Entities.Items
                     int powerGrantMinRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMin, contextData);
 
                     if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
-                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
                     else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
-                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerKeywordFilter, PrototypeId.Invalid);
                     else
-                        entry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, scopeProtoRef);
+                        affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, scopeProtoRef);
 
-                    entry.Properties[entry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerGrantMinRank, powerBoostMax);
+                    affixEntry.Properties[affixEntry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerGrantMinRank, powerBoostMax);
                 }
-
             }
             else if (affixProto is AffixRegionModifierPrototype affixRegionModifierProto)
             {
-                // TODO
+                RegionAffixPrototype regionAffixProto = scopeProtoRef.As<RegionAffixPrototype>();
+                if (regionAffixProto == null)
+                {
+                    return Logger.WarnReturn(false,
+                        $"OnAffixAdded(): AffixRegionModifier without a scope ref!\n Affix: {affixProto}\nItem: {_itemSpec.ItemProtoRef.GetName()}");
+                }
+
+                if (regionAffixProto.Difficulty != 0)
+                    affixEntry.Properties[PropertyEnum.RegionAffixDifficulty] = regionAffixProto.Difficulty;
+
+                affixEntry.Properties[PropertyEnum.RegionAffix, scopeProtoRef] = true;
             }
 
-            entry.Properties[PropertyEnum.ItemLevel] = Properties[PropertyEnum.ItemLevel];
+            affixEntry.Properties[PropertyEnum.ItemLevel] = Properties[PropertyEnum.ItemLevel];
 
             if (affixProto.PropertyEntries != null)
             {
-                // TODO
+                foreach (PropertyPickInRangeEntryPrototype propertyEntry in affixProto.PropertyEntries)
+                {
+                    // NOTE: Property entries are rolled in parallel on the client and the server,
+                    // so the order needs to be exact, or we are going to get a desync.
+                    float randomMult = random.NextFloat();
+
+                    PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEntry.Prop.Enum);
+                    PropertyDataType propDataType = propertyInfo.DataType;
+
+                    if (propDataType != PropertyDataType.Boolean && propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer)
+                    {
+                        Logger.Warn("OnAffixAdded(): The following Affix has a built-in pick-in-range PropertyEntry with a property " +
+                            $"that is not an int/float/bool prop, which doesn't work!\nAffix: [{affixProto}]\nProperty: [{propertyInfo.PropertyName}]");
+                        continue;
+                    }
+
+                    EvalContextData contextData = new();
+                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+
+                    float valueMin = 0f;
+                    if (propertyEntry.ValueMin != null)
+                        valueMin = Eval.RunFloat(propertyEntry.ValueMin, contextData);
+
+                    float valueMax = 0f;
+                    if (propertyEntry.ValueMax != null)
+                        valueMax = Eval.RunFloat(propertyEntry.ValueMax, contextData);
+
+                    switch (propDataType)
+                    {
+                        case PropertyDataType.Boolean:
+                            if (valueMin < 0 || valueMax > 1)
+                            {
+                                Logger.Warn("OnAffixAdded(): The following Affix has a built-in pick-in-range PropertyEntry with a boolean property " +
+                                    $"and a range that is not in [0, 1]\nAffix: [{affixProto}]\nProperty: [{propertyInfo.PropertyName}]");
+                                continue;
+                            }
+
+                            affixEntry.Properties[propertyEntry.Prop] = GenerateIntWithinRange(randomMult, valueMin, valueMax);
+
+                            break;
+
+                        case PropertyDataType.Real:
+                            float valueFloat = propertyEntry.RollAsInteger
+                                ? GenerateTruncatedFloatWithinRange(randomMult, valueMin, valueMax)
+                                : GenerateFloatWithinRange(randomMult, valueMin, valueMax);
+
+                            if (affixPowerModifierProto != null && affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                            {
+                                affixEntry.PowerModifierPropertyId = new(propertyEntry.Prop.Enum, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
+                                affixEntry.Properties[affixEntry.PowerModifierPropertyId] = valueFloat;
+                            }
+                            else
+                            {
+                                affixEntry.Properties[propertyEntry.Prop] = valueFloat;
+                            }
+
+                            break;
+
+                        case PropertyDataType.Integer:
+                            int valueInt = GenerateIntWithinRange(randomMult, valueMin, valueMax);
+
+                            if (affixPowerModifierProto != null && affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                            {
+                                affixEntry.PowerModifierPropertyId = new(propertyEntry.Prop.Enum, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
+                                affixEntry.Properties[affixEntry.PowerModifierPropertyId] = valueInt;
+                            }
+                            else
+                            {
+                                affixEntry.Properties[propertyEntry.Prop] = valueInt;
+                            }
+
+                            break;
+                    }
+                }
             }
 
             if (IsPetItem)
             {
-                // TODO
+                Logger.Warn("OnAffixAdded(): Pet items are not yet not implemented");   // TODO
             }
-            else if (entry.LevelRequirement <= Properties[PropertyEnum.ItemAffixLevel])
+            else if (affixEntry.LevelRequirement <= Properties[PropertyEnum.ItemAffixLevel])
             {
-                // TODO
+                if (affixProto is not AffixTeamUpPrototype teamUpAffixProto || teamUpAffixProto.IsAppliedToOwnerAvatar == false)
+                {
+                    if (Properties.AddChildCollection(affixEntry.Properties) == false)
+                        return Logger.WarnReturn(false, "OnAffixAdded(): Properties.AddChildCollection(affixEntry.Properties) == false");
+                }
             }
 
-            _affixProperties.Add(entry);
+            _affixProperties.Add(affixEntry);
             return true;
         }
 

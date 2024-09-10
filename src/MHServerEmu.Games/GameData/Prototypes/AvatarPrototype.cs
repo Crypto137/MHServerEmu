@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -228,6 +229,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PowerProgressionEntryPrototype GetPowerProgressionEntryForPower(PrototypeId powerProtoRef)
         {
+            if (PowerProgressionTables.IsNullOrEmpty())
+                return null;
+
+            foreach (PowerProgressionTablePrototype powerProgTableProto in PowerProgressionTables)
+            {
+                if (powerProgTableProto.PowerProgressionEntries.IsNullOrEmpty())
+                    continue;
+
+                foreach (PowerProgressionEntryPrototype powerProgEntryProto in powerProgTableProto.PowerProgressionEntries)
+                {
+                    if (powerProgEntryProto.PowerAssignment.Ability == powerProtoRef)
+                        return powerProgEntryProto;
+                }    
+            }
+
             return null;
         }
 
