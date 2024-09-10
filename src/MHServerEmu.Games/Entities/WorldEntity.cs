@@ -261,9 +261,9 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Trigger EntityDead Event
-            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && killer is Avatar avatar && notMissile)
+            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && notMissile)
             {
-                Player player = avatar.GetOwnerOfType<Player>();
+                var player = killer?.GetOwnerOfType<Player>();
                 Region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
 
