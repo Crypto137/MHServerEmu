@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -16,6 +17,24 @@ using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Entities.Items
 {
+    public enum ItemActionType
+    {
+        None,
+        AssignPower,
+        DestroySelf,
+        GuildUnlock,
+        PrestigeMode,
+        ReplaceSelfItem,
+        ReplaceSelfLootTable,
+        ResetMissions,
+        Respec,
+        SaveDangerRoomScenario,
+        UnlockPermaBuff,
+        UsePower,
+        AwardTeamUpXP,
+        OpenUIPanel
+    }
+
     public class Item : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -26,9 +45,10 @@ namespace MHServerEmu.Games.Entities.Items
         public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
 
         public ItemSpec ItemSpec { get => _itemSpec; }
-        public PrototypeId OnUsePower { get; set; }
-        public bool IsBoundToAccount { get; set; }
+        public PrototypeId OnUsePower { get; private set; }
+        public PrototypeId OnEquipPower { get; private set; }
 
+        public bool IsBoundToAccount { get => _itemSpec.GetBindingState(); }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
 
@@ -217,10 +237,58 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
+            // NOTE: RNG is reseeded for each affix individually
+
             // Apply built-in affixes
             foreach (BuiltInAffixDetails builtInAffixDetails in itemProto.GenerateBuiltInAffixDetails(_itemSpec))
             {
-                Logger.Warn($"ApplyItemSpec(): builtInAffixDetails item={_itemSpec.ItemProtoRef.GetName()}, affix={builtInAffixDetails.AffixEntryProto.Affix.GetName()}");
+                AffixPrototype affixProto = builtInAffixDetails.AffixEntryProto.Affix.As<AffixPrototype>();
+                if (affixProto == null)
+                {
+                    Logger.Warn("ApplyItemSpec(): affixProto == null");
+                    continue;
+                }
+
+                random.Seed(builtInAffixDetails.Seed);
+                OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
+            }
+
+            // Apply rolled affixes
+            foreach (AffixSpec affixSpec in _itemSpec.AffixSpecs)
+            {
+                if (affixSpec.Seed == 0) return Logger.WarnReturn(false, "ApplyItemSpec(): affixSpec.Seed == 0");
+                random.Seed(affixSpec.Seed);
+                
+                if (affixSpec.AffixProto == null) return Logger.WarnReturn(false, "ApplyItemSpec(): affixSpec.AffixProto == null");
+
+                OnAffixAdded(random, affixSpec.AffixProto, affixSpec.ScopeProtoRef, _itemSpec.EquippableBy, 0);
+            }
+
+            // Pick triggered power
+            ItemActionSetPrototype triggeredActions = itemProto.ActionsTriggeredOnItemEvent;
+            if (triggeredActions != null && triggeredActions.Choices.HasValue())
+            {
+                if (triggeredActions.PickMethod == PickMethod.PickWeight)
+                {
+                    // It seems this is reusing the seed of the last rolled affix?
+                    Picker<int> picker = new(random);
+
+                    for (int i = 0; i < triggeredActions.Choices.Length; i++)
+                    {
+                        ItemActionBasePrototype actionProto = triggeredActions.Choices[i];
+
+                        if (actionProto.Weight <= 0)
+                            continue;
+
+                        picker.Add(i, actionProto.Weight);
+                    }
+
+                    picker.Pick(out int index);
+                    OnItemEventRoll(index);
+                }
+
+                OnUsePower = GetTriggeredPower(ItemEventType.OnUse, ItemActionType.UsePower);
+                OnEquipPower = GetTriggeredPower(ItemEventType.OnEquip, ItemActionType.AssignPower);
             }
 
             return true;
@@ -605,6 +673,11 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        private void OnItemEventRoll(int index)
+        {
+            Properties[PropertyEnum.ItemEventActionIndex] = index;
+        }
+
         private float GenerateTruncatedFloatWithinRange(float randomMult, float min, float max)
         {
             float result = ((max - min + 1f) * randomMult) + min;
@@ -620,6 +693,12 @@ namespace MHServerEmu.Games.Entities.Items
         private int GenerateIntWithinRange(float randomMult, float min, float max)
         {
             return (int)GenerateTruncatedFloatWithinRange(randomMult, min, max);
+        }
+
+        private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
+        {
+            Logger.Warn($"GetTriggeredPower(): Not yet implemented (eventType={eventType}, actionType={actionType})");
+            return PrototypeId.Invalid;
         }
     }
 }

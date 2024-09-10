@@ -188,6 +188,11 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
+        public bool GetBindingState()
+        {
+            return GetBindingState(out _);
+        }
+
         public bool SetBindingState(bool bound, PrototypeId agentProtoRef = PrototypeId.Invalid, bool? tradeRestricted = null)
         {
             if (agentProtoRef != PrototypeId.Invalid && EquippableBy != PrototypeId.Invalid && agentProtoRef != EquippableBy)
