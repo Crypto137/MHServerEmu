@@ -18,8 +18,6 @@ namespace MHServerEmu.Games.Properties
 
         private readonly Dictionary<PropertyId, PropertyValue> _dict = new();
 
-        public delegate bool PropertyEnumFilter(PropertyEnum propertyEnum);
-
         /// <summary>
         /// Gets the number of key/value pairs contained in this <see cref="PropertyList"/>.
         /// </summary>
@@ -196,17 +194,17 @@ namespace MHServerEmu.Games.Properties
         /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
         /// on every key/value pair rather than once per enum.
         /// </remarks>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter filter)
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
         {
-            if (filter == null)
+            if (filterFunc == null)
             {
-                Logger.Warn("IteratePropertyRange(): filter == null");
+                Logger.Warn("IteratePropertyRange(): filterFunc == null");
                 yield break;
             }
 
             foreach (var kvp in this)
             {
-                if (filter(kvp.Key.Enum) == false) continue;
+                if (filterFunc(kvp.Key.Enum) == false) continue;
                 yield return kvp;
             }
         }
