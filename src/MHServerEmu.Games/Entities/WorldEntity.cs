@@ -1565,21 +1565,36 @@ namespace MHServerEmu.Games.Entities
 
             PowerCollection?.OnOwnerEnteredWorld();
 
+            var region = Region;
+
+            region.EntityEnteredWorldEvent.Invoke(new(this));
+
             if (WorldEntityPrototype.DiscoverInRegion)
-                Region.DiscoverEntity(this, false);
+                region.DiscoverEntity(this, false);
+
+            if (Bounds.CollisionType != BoundsCollisionType.None)
+                RegisterForPendingPhysicsResolve();
 
             UpdateInterestPolicies(true, settings);
-            Region.EntityTracker.ConsiderForTracking(this);
+            region.EntityTracker.ConsiderForTracking(this);
             UpdateSimulationState();
         }
 
         public virtual void OnExitedWorld()
         {
-            PowerCollection?.OnOwnerExitedWorld();
+            var region = Region;
+
+            if (region.EntityTracker != null)
+            {
+                region.EntityExitedWorldEvent.Invoke(new(this));
+                region.EntityTracker.RemoveFromTracking(this);
+            }
 
             // Undiscover from region
             if (WorldEntityPrototype.DiscoverInRegion)
-                Region.UndiscoverEntity(this, true);
+                region.UndiscoverEntity(this, true);
+
+            PowerCollection?.OnOwnerExitedWorld();
 
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))

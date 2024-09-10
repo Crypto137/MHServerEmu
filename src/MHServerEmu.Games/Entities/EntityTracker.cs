@@ -91,6 +91,17 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void RemoveFromTracking(WorldEntity entity)
+        {
+            foreach (var kvp in entity.TrackingContextMap)
+            {
+                var contextRef = kvp.Key;
+                if (contextRef == PrototypeId.Invalid) continue;
+                RemoveEntityFromContextMap(contextRef, entity);
+            }
+            entity.TrackingContextMap.Clear();
+        }
+
         private bool ShouldTrackContext(PrototypeId contextRef)
         {
             if (_region == null) return false;
