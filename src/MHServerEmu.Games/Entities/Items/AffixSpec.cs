@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
@@ -234,7 +235,125 @@ namespace MHServerEmu.Games.Entities.Items
         private MutationResults SetAffixScopeRegionAffix(GRandom random, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
         {
             Logger.Warn("SetAffixScopeRegionAffix()");
-            return MutationResults.None;
+
+            // TODO: Cache this?
+            Dictionary<RegionAffixCategoryPrototype, int> regionAffixCategoryPickDict = new();
+            foreach (PrototypeId regionAffixCategoryProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RegionAffixCategoryPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var regionAffixCategoryProto = regionAffixCategoryProtoRef.As<RegionAffixCategoryPrototype>();
+                regionAffixCategoryPickDict[regionAffixCategoryProto] = 0;
+            }
+
+            // Filter out scopes that are already in use or mutually exclusive with existing ones
+            HashSet<PrototypeId> scopeFilter = new();
+            foreach (ScopedAffixRef scopedAffixRef in affixSet)
+            {
+                if (AffixProto.DataRef != scopedAffixRef.AffixProtoRef)
+                    continue;
+
+                scopeFilter.Add(scopedAffixRef.ScopeProtoRef);
+
+                RegionAffixPrototype regionAffixProto = scopedAffixRef.ScopeProtoRef.As<RegionAffixPrototype>();
+                if (regionAffixProto == null)
+                {
+                    Logger.Warn("SetAffixScopeRegionAffix(): regionAffixProto == null");
+                    continue;
+                }
+
+                if (regionAffixProto.RestrictsAffixes.HasValue())
+                {
+                    foreach (PrototypeId restrictedAffixRef in regionAffixProto.RestrictsAffixes)
+                        scopeFilter.Add(restrictedAffixRef);
+                }
+
+                if (regionAffixProto.Category != PrototypeId.Invalid)
+                {
+                    var affixCategoryProto = regionAffixProto.Category.As<RegionAffixCategoryPrototype>();
+                    regionAffixCategoryPickDict[affixCategoryProto]++;
+                }
+                else
+                {
+                    Logger.Warn("SetAffixScopeRegionAffix(): regionAffixProto.Category == PrototypeId.Invalid");
+                }
+            }
+
+            // Pick categories to use
+            List<PrototypeId> essentialCategoryList = new();
+            List<PrototypeId> extraCategoryList = new();
+
+            foreach (var kvp in regionAffixCategoryPickDict)
+            {
+                RegionAffixCategoryPrototype categoryProto = kvp.Key;
+                int numPicks = kvp.Value;
+
+                if (numPicks < categoryProto.MinPicks)
+                    essentialCategoryList.Add(categoryProto.DataRef);
+                else if (numPicks < categoryProto.MaxPicks || categoryProto.MaxPicks == 0)
+                    extraCategoryList.Add(categoryProto.DataRef);
+            }
+
+            // Prioritize essential categories
+            List<PrototypeId> categoryListForPicking = essentialCategoryList.Count != 0
+                ? essentialCategoryList
+                : extraCategoryList;
+
+            // Validation
+            if (AffixProto == null)
+                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): AffixProto == null");
+
+            if (AffixProto is not AffixRegionModifierPrototype affixRegionModifierProto)
+                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): AffixProto is not AffixRegionModifierPrototype affixRegionModifierProto");
+
+            if (affixRegionModifierProto.AffixTable == PrototypeId.Invalid)
+                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): affixRegionModifierProto.AffixTable == PrototypeId.Invalid");
+
+            var regionAffixTableProto = affixRegionModifierProto.AffixTable.As<RegionAffixTablePrototype>();
+            if (regionAffixTableProto == null)
+                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): regionAffixTableProto == null");
+
+            if (regionAffixTableProto.RegionAffixes.IsNullOrEmpty())
+                return Logger.WarnReturn(MutationResults.Error, "SetAffixScopeRegionAffix(): regionAffixTableProto.RegionAffixes.IsNullOrEmpty()");
+
+            // Build affix scope picker
+            Picker<PrototypeId> scopePicker = new(random);
+
+            foreach (RegionAffixWeightedEntryPrototype entryProto in regionAffixTableProto.RegionAffixes)
+            {
+                if (entryProto.Affix == PrototypeId.Invalid)
+                {
+                    Logger.Warn("SetAffixScopeRegionAffix(): entryProto.Affix == PrototypeId.Invalid");
+                    continue;
+                }
+
+                if (entryProto.Weight == 0)
+                {
+                    Logger.Warn("SetAffixScopeRegionAffix(): entryProto.Weight == 0");
+                    continue;
+                }
+
+                if (scopeFilter.Contains(entryProto.Affix))
+                    continue;
+
+                var regionAffixProto = entryProto.Affix.As<RegionAffixPrototype>();
+
+                if (categoryListForPicking.Contains(regionAffixProto.Category) == false)
+                    continue;
+
+                if (regionAffixProto.AffixRarityRestrictions != null && regionAffixProto.AffixRarityRestrictions.Contains(itemSpec.RarityProtoRef))
+                    continue;
+
+                scopePicker.Add(entryProto.Affix, entryProto.Weight);
+            }
+
+            // Pick affix scope
+            PrototypeId scopeProtoRefBefore = _scopeProtoRef;
+            if (scopePicker.Empty() || scopePicker.Pick(out _scopeProtoRef) == false)
+                return MutationResults.Error;
+
+            if (_scopeProtoRef == scopeProtoRefBefore)
+                return MutationResults.None;
+
+            return MutationResults.Changed;
         }
     }
 }
