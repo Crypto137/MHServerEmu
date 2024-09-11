@@ -70,14 +70,16 @@ namespace MHServerEmu.Games.Loot
         Result2                 = 1 << 2,
         AffixChange             = 1 << 3,   // ItemPrototype::UpdatePetTechAffixes()
         Result4                 = 1 << 4,
-        Result5                 = 1 << 5,
-        Result6                 = 1 << 6,
-        Result7                 = 1 << 7,
-        Result8                 = 1 << 8,
-        Result9                 = 1 << 9,
-        Result10                = 1 << 10,
-        Result11                = 1 << 11,
-        ErrorReasonPowerGroup   = 1 << 12
+
+        // Additional flags for marking the reason for error (flag0)
+        ErrorReason8                    = 1 << 8,
+        ErrorReason9                    = 1 << 9,
+        ErrorReason10                   = 1 << 10,
+        ErrorReason11                   = 1 << 11,
+        ErrorReason12                   = 1 << 12,
+        ErrorReason13                   = 1 << 13,
+        ErrorReasonAffixScopePower      = 1 << 14,
+        ErrorReasonAffixScopePowerGroup = 1 << 15
     }
 
     public enum AffixCountBehavior
@@ -88,9 +90,9 @@ namespace MHServerEmu.Games.Loot
 
     public enum BehaviorOnPowerMatch
     {
-        Behavior0,
-        Behavior1,
-        Behavior2
+        Ignore,
+        Cancel,
+        Skip
     }
 
     [AssetEnum((int)None)]
