@@ -251,6 +251,8 @@ namespace MHServerEmu.PlayerManagement
 
                 while (numTicks < AsyncRetryTicksPerAttempt)
                 {
+                    numTicks++;
+
                     lock (_pendingSaveDict)
                         hasSavePending = _pendingSaveDict.ContainsKey(playerDbId);
 
@@ -310,6 +312,8 @@ namespace MHServerEmu.PlayerManagement
 
                 while (numTicks < AsyncRetryTicksPerAttempt)
                 {
+                    numTicks++;
+
                     if (client.IsInGame)
                     {
                         // Do a short wait between ticks equal to target game framerate
