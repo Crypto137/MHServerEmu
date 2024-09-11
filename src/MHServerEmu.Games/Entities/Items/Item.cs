@@ -354,18 +354,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool OnBuiltInPropertyRoll(float randomMult, PropertyPickInRangeEntryPrototype pickInRangeProto)
         {
-            PropertyInfo propertyInfo = null;
-
-            try
-            {
-                propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(pickInRangeProto.Prop.Enum);
-            }
-            catch (Exception e)
-            {
-                Logger.DebugException(e, $"OnBuiltInPropertyRoll(): pickInRangeProto.Prop={pickInRangeProto.Prop}, item={this}");
-                return false;
-            }
-            
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(pickInRangeProto.Prop.Enum);            
             PropertyDataType propDataType = propertyInfo.DataType;
 
             if (propDataType != PropertyDataType.Boolean && propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer)
