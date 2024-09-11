@@ -217,8 +217,6 @@ namespace MHServerEmu.Games.Entities.Items
 
             itemProto.OnApplyItemSpec(this, _itemSpec);     // TODO (needed for PetTech affixes)
 
-            return true;    // CONSTRUCTION ZONE BELOW
-
             GRandom random = new(_itemSpec.Seed);
 
             // Apply built-in properties

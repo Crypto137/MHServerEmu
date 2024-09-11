@@ -202,8 +202,11 @@ namespace MHServerEmu.Games.Loot
         {
             foreach (PendingItem pendingItem in _pendingItemList)
             {
-                //LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
-                //LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+                LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+
+                if (result.HasFlag(MutationResults.Error))
+                    Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
 
                 _processedItemList.Add(pendingItem.ItemSpec);
             }
