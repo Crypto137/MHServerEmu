@@ -808,7 +808,7 @@ namespace MHServerEmu.Games.Entities
                 AIController = new(Game, this);
                 PropertyCollection collection = new();
                 collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
-                SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec();
+                SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec(Game);
                 return AIController.Initialize(behaviorProfile, spec, collection);
             }
             return false;

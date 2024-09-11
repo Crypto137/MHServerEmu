@@ -1,4 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Populations
@@ -76,6 +79,51 @@ namespace MHServerEmu.Games.Populations
                         OnSpawnedPopulation(populationObject);
                 }
             }
+        }
+    }
+
+    public class SpawnSpecScheduler
+    {
+        private readonly List<SpawnSpec> _specs = new ();
+
+        public SpawnSpecScheduler() { }
+
+        public void Schedule(SpawnSpec spec)
+        {
+            _specs.Add(spec);
+        }
+
+        public void Spawn(bool forceSpawn)
+        {
+            foreach (var spec in _specs)
+                Respawn(spec, forceSpawn);
+        }
+
+        private static void Respawn(SpawnSpec spec, bool forseSpawn)
+        {
+            if (spec == null) return;
+
+            var worldEntityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(spec.EntityRef);
+            if (worldEntityProto != null && worldEntityProto.IsLiveTuningEnabled() == false) return;
+
+            var activeEntity = spec.ActiveEntity;
+            if (activeEntity != null)
+            {
+                if (activeEntity.Properties[PropertyEnum.PlaceableDead]) return;
+                int health = activeEntity.Properties[PropertyEnum.Health];
+                if (health >= activeEntity.Properties[PropertyEnum.HealthMax]) return;
+            }
+
+            if (forseSpawn)
+            {
+                var popGlobals = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+                if (popGlobals == null) return;
+                var spawnTime = TimeSpan.FromMilliseconds(popGlobals.DestructiblesForceSpawnMS);
+                var respawnTime = spec.Game.CurrentTime - spec.SpawnedTime;
+                if (respawnTime <= spawnTime) return;
+            }
+
+            spec.Respawn();
         }
     }
 }

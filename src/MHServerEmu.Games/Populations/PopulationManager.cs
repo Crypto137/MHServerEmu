@@ -292,7 +292,7 @@ namespace MHServerEmu.Games.Populations
         public SpawnSpec CreateSpawnSpec(SpawnGroup group)
         {
             ulong id = NextSpawnSpecId();
-            SpawnSpec spec = new(id, group);
+            SpawnSpec spec = new(id, group, Game);
             group.AddSpec(spec);
             _spawnSpecs[id] = spec;
             return spec;

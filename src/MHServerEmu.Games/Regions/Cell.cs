@@ -1,6 +1,4 @@
-﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
@@ -54,7 +52,7 @@ namespace MHServerEmu.Games.Regions
 
         public List<uint> CellConnections = new();
         public List<ReservedSpawn> Encounters { get; } = new();
-
+        public SpawnSpecScheduler SpawnSpecScheduler { get; }
         public float PlayableArea { get => (_playableNavArea != -1.0) ? _playableNavArea : 0.0f; }
         public float SpawnableArea { get => (_spawnableNavArea != -1.0) ? _spawnableNavArea : 0.0f; }
         public PopulationArea PopulationArea { get => Area.PopulationArea ; }
@@ -78,6 +76,7 @@ namespace MHServerEmu.Games.Regions
             _playableNavArea = -1.0f;
             _spawnableNavArea = -1.0f;
             SpatialPartitionLocation = new(this);
+            SpawnSpecScheduler = new();
         }
 
         public bool Initialize(CellSettings settings)
@@ -292,7 +291,7 @@ namespace MHServerEmu.Games.Regions
                 spec.EntityRef = entityProto.DataRef;
                 spec.Transform = Transform3.Identity();
                 spec.SnapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
-                spec.Spawn();
+                SpawnSpecScheduler.Schedule(spec);
                 return;
             }
 
@@ -501,7 +500,7 @@ namespace MHServerEmu.Games.Regions
             InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
         }
 
-        
+
         public void OnAddedToAOI()
         {
             Generate();
@@ -510,9 +509,12 @@ namespace MHServerEmu.Games.Regions
 
             if (_numInterestedPlayers == 1)
             {
+                SpawnSpecScheduler.Spawn(false);
                 foreach (WorldEntity worldEntity in Entities)
                     worldEntity.UpdateSimulationState();
-            }
+            } 
+            else
+                SpawnSpecScheduler.Spawn(true);
         }
 
         public void OnRemovedFromAOI()

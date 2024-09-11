@@ -23,12 +23,13 @@ namespace MHServerEmu.Games.Populations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public Game Game { get; private set; }
         public ulong Id { get; }
         public SpawnGroup Group { get; set; }
         public SpawnState State { get; private set; }
         public PrototypeId EntityRef { get; set; }
         public WorldEntity ActiveEntity { get; set; }
-        public PropertyCollection Properties { get; set; }
+        public PropertyCollection Properties { get; set; } = new();
         public Transform3 Transform { get; set; } = Transform3.Identity();
         public bool? SnapToFloor { get; set; }
         public EntitySelectorPrototype EntitySelectorProto { get; set; }
@@ -47,17 +48,19 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        public SpawnSpec(ulong id, SpawnGroup group)
+        public TimeSpan SpawnedTime { get; private set; }
+
+        public SpawnSpec(ulong id, SpawnGroup group, Game game)
         {
             Id = id;
             Group = group;
-            Properties = new();
+            Game = game;
         }
 
-        public SpawnSpec()
+        public SpawnSpec(Game game)
         {
+            Game = game;
             // TODO check std::shared_ptr<Gazillion::SpawnSpec>
-            Properties = new();
         }
 
         public bool Spawn()
@@ -68,7 +71,8 @@ namespace MHServerEmu.Games.Populations
             Orientation orientation = transform.Orientation;
 
             Region region = Group.PopulationManager.Region;
-            var manager = region?.Game?.EntityManager;
+            if (region == null) return false;
+            var manager = Game.EntityManager;
             if (manager == null) return false;
 
             Cell cell = region.GetCellAtPosition(position);
@@ -126,6 +130,8 @@ namespace MHServerEmu.Games.Populations
 
             ActiveEntity = manager.CreateEntity(settings) as WorldEntity;
             State = SpawnState.Live;
+            SpawnedTime = Game.CurrentTime;
+
             return true;
         }
 
@@ -154,6 +160,8 @@ namespace MHServerEmu.Games.Populations
         {
             if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return;
             State = SpawnState.Defeated;
+
+            SpawnedTime = Game.CurrentTime;
 
             // TODO defeat
 
