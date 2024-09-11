@@ -302,9 +302,11 @@ namespace MHServerEmu.Games.Populations
                     if (spawnMap.TryGetValue(markerRef, out var list) == false || list == null) continue;
                     var spawnArea = spawnCell.Area;
                     foreach (var testReservation in list)
-                        if (spawnAreas.Contains(spawnArea))
-                            if (TestReservation(testReservation, flag))
-                                picker.Add(testReservation);
+                    {
+                        if (spawnAreas.Count > 0 && spawnAreas.Contains(spawnArea) == false) continue;
+                        if (TestReservation(testReservation, flag))
+                            picker.Add(testReservation);
+                    }
                 }
             }
             else if (spawnAreas.Count > 0)
