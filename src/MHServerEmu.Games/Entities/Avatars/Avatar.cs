@@ -100,14 +100,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Add base stats to compensate for the lack of equipment
             Properties[PropertyEnum.DamageRating] = 2500f;
             Properties[PropertyEnum.DamagePctBonusVsBosses] = 100f; // 4f
-            Properties[PropertyEnum.Defense, (int)DamageType.Any] = 15000f;
-            Properties[PropertyEnum.DefenseChangePercent, (int)DamageType.Any] = 5f;
             Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
             Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
             Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 1f + MathF.Max(Game.CustomGameOptions.AvatarHealthMaxMagnitudeBonus, 0f);
 
-            // Set health to max
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            // HACK: Set health to max for new avatars
+            if (Properties[PropertyEnum.Health] == 0)
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
 
             // Resources
             // Ger primary resources defaults from PrimaryResourceBehaviors

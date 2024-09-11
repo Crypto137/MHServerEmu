@@ -102,6 +102,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsPetItem { get => IsChildBlueprintOf(GameDatabase.GlobalsPrototype.PetItemBlueprint); }
 
+        [DoNotCopy]
+        public bool IsGem { get => IsChildBlueprintOf(GameDatabase.LootGlobalsPrototype.GemBlueprint); }
+
         public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
         {
             // TODO
@@ -192,6 +195,62 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return args.Rank;
         }
 
+        public IEnumerable<BuiltInAffixDetails> GenerateBuiltInAffixDetails(ItemSpec itemSpec)
+        {
+            IEnumerable<AffixEntryPrototype> builtInAffixEntries = GetBuiltInAffixEntries(itemSpec.RarityProtoRef);
+            if (builtInAffixEntries.Any() == false) yield break;    // Early break so that we don't create a dictionary instance when we don't have any affix entries
+
+            Dictionary<ulong, int> affixSeedDict = new();
+
+            foreach (AffixEntryPrototype affixEntryProto in builtInAffixEntries)
+            {
+                if (affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid)
+                {
+                    Logger.Warn("affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid");
+                    continue;
+                }
+
+                BuiltInAffixDetails builtInAffixDetails = new(affixEntryProto);
+
+                if (GeneratePowerModifierRefFromBuiltInAffix(affixEntryProto, itemSpec, ref builtInAffixDetails) == false)
+                    continue;
+
+                builtInAffixDetails.Seed = GenAffixRandomSeed(affixSeedDict, itemSpec.Seed, itemSpec.ItemProtoRef, affixEntryProto.Affix, affixEntryProto.Power);
+
+                yield return builtInAffixDetails;
+            }
+        }
+
+        public IEnumerable<AffixEntryPrototype> GetBuiltInAffixEntries(PrototypeId rarityProtoRef)
+        {
+            // This static function is under Item in the client, but it makes more sense for it to be here
+
+            if (rarityProtoRef == PrototypeId.Invalid)
+            {
+                Logger.Warn("GetBuiltInAffixEntries(): rarityProtoRef == PrototypeId.Invalid");
+                yield break;
+            }
+
+            RarityPrototype rarityProto = rarityProtoRef.As<RarityPrototype>();
+            if (rarityProto == null)
+            {
+                Logger.Warn("GetBuiltInAffixEntries(): rarityProto == null");
+                yield break;
+            }
+
+            if (AffixesBuiltIn.HasValue())
+            {
+                foreach (AffixEntryPrototype affixEntryProto in AffixesBuiltIn)
+                    yield return affixEntryProto;
+            }
+
+            if (rarityProto.AffixesBuiltIn.HasValue())
+            {
+                foreach (AffixEntryPrototype affixEntryProto in rarityProto.AffixesBuiltIn)
+                    yield return affixEntryProto;
+            }
+        }
+
         public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)
         {
             if (agentProto == null)
@@ -207,6 +266,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             BlueprintId blueprintRef = DataDirectory.Instance.GetPrototypeBlueprintDataRef(protoRef);
             return DataDirectory.Instance.PrototypeIsChildOfBlueprint(DataRef, blueprintRef);
+        }
+
+        private static bool GeneratePowerModifierRefFromBuiltInAffix(AffixEntryPrototype affixEntryProto, ItemSpec itemSpec, ref BuiltInAffixDetails builtInAffixDetails)
+        {
+            if (affixEntryProto.Affix == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GeneratePowerModifierRefFromBuiltInAffix(): affixEntryProto.Affix == PrototypeId.Invalid");
+
+            builtInAffixDetails.LevelRequirement = affixEntryProto.LevelRequirement;
+            if (builtInAffixDetails.LevelRequirement < 0)
+            {
+                return Logger.WarnReturn(false, "GeneratePowerModifierRefFromBuiltInAffix(): Could not add a builtin Affix with a level requirement " +
+                    $"to an Item because of data errors: Item=[{itemSpec.ItemProtoRef.GetName()}], Affix=[{affixEntryProto.Affix.GetName()}]");
+            }
+
+            AffixPowerModifierPrototype affixPowerModifierProto = affixEntryProto.Affix.As<AffixPowerModifierPrototype>();
+            if (affixPowerModifierProto != null)
+            {
+                builtInAffixDetails.AvatarProtoRef = itemSpec.EquippableBy != PrototypeId.Invalid
+                    ? itemSpec.EquippableBy
+                    : affixEntryProto.Avatar;
+
+                if (affixEntryProto.Avatar != PrototypeId.Invalid && affixEntryProto.Avatar != itemSpec.EquippableBy)
+                {
+                    return Logger.WarnReturn(false, string.Format("GeneratePowerModifierRefFromBuiltInAffix(): An item has an ItemSpec.equippableBy that is different " +
+                        "than one of its built-in Affix entry Avatar settings!\nItem: {0}\nAffix: {1}\nEquippableBy: {2}\nRequired Avatar for Affix: {3}",
+                        itemSpec.ItemProtoRef.GetName(),
+                        affixEntryProto.Affix.GetName(),
+                        itemSpec.EquippableBy.GetName(),
+                        affixEntryProto.Avatar.GetName()));
+                }
+
+                if (affixPowerModifierProto.IsForSinglePowerOnly)
+                {
+                    builtInAffixDetails.ScopeProtoRef = affixEntryProto.Power;
+                }
+                else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                {
+                    builtInAffixDetails.ScopeProtoRef = PrototypeId.Invalid;
+                }
+                else if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                {
+                    builtInAffixDetails.ScopeProtoRef = builtInAffixDetails.AvatarProtoRef;
+                }
+            }
+
+            return true;
+        }
+
+        private static int GenAffixRandomSeed(Dictionary<ulong, int> affixSeedDict, int itemSeed, PrototypeId itemProtoRef, PrototypeId affixProtoRef, PrototypeId scopeProtoRef)
+        {
+            ulong affixSeed = (ulong)GameDatabase.GetPrototypeGuid(itemProtoRef);
+            affixSeed ^= (ulong)GameDatabase.GetPrototypeGuid(affixProtoRef);
+
+            if (scopeProtoRef != PrototypeId.Invalid)
+                affixSeed ^= (ulong)GameDatabase.GetPrototypeGuid(scopeProtoRef);
+
+            affixSeedDict.TryGetValue(affixSeed, out int count);
+            affixSeedDict[affixSeed] = count + 1;
+
+            affixSeed = (affixSeed >> count) & 0xFFFFFFFF;
+
+            return itemSeed ^ (int)affixSeed;
         }
     }
 

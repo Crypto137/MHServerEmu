@@ -46,18 +46,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (LootRollModifierPrototype modifier in Modifiers)
                     modifier.Apply(modifiedSettings);
 
-                if (modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyModeRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.RegionRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.KillCountRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.WeekdayRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.ConditionRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.LevelRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DropperRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.MissionRestricted))
-                {
+                if (modifiedSettings.IsRestrictedByLootDropChanceModifier())
                     return LootRollResult.Failure;
-                }
 
                 return Roll(modifiedSettings, resolver);
             }

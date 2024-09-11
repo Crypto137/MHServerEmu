@@ -1358,6 +1358,11 @@ namespace MHServerEmu.Games.Powers
             return powerProto.IsUltimate;
         }
 
+        public static bool IsTalentPower(PowerPrototype powerProto)
+        {
+            return powerProto is SpecializationPowerPrototype;
+        }
+
         public bool IsTravelPower()
         {
             return Prototype != null && Prototype.IsTravelPower;

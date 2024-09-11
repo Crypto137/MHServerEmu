@@ -72,8 +72,7 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public override string ToString()
         {
-            string email = HideSensitiveInformation ? $"{Email[0]}****{Email.Substring(Email.IndexOf('@') - 1)}" : Email;
-            return $"{PlayerName} (dbId=0x{Id:X}, email={email})";
+            return $"{PlayerName} (0x{Id:X})";
         }
 
         public void ClearEntities()

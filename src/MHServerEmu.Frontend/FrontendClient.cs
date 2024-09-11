@@ -22,6 +22,8 @@ namespace MHServerEmu.Frontend
 
         // Set game id atomically using Interlocked because this is used asynchronously to determine whether the client is in a game.
         public ulong GameId { get => _gameId; set => Interlocked.Exchange(ref _gameId, value); }
+
+        public bool IsConnected { get => Connection.Connected; }
         public bool IsInGame { get => _gameId != 0; }
 
         /// <summary>
@@ -34,7 +36,10 @@ namespace MHServerEmu.Frontend
 
         public override string ToString()
         {
-            return Session != null ? Session.Account.ToString() : "No Session";
+            if (Session == null)
+                return $"SessionId=NONE, Account=NONE";
+
+            return $"SessionId=0x{Session?.Id:X}, Account={Session?.Account}";
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
@@ -145,7 +146,33 @@ namespace MHServerEmu.Games.Loot
 
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
         {
-            float dropChance = (1f - noDropPercent) * LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_LootDropRate);
+            // Do not drop if there are any hard restrictions (this should have already been handled when selecting the loot table node)
+            if (settings.IsRestrictedByLootDropChanceModifier())
+                return Logger.WarnReturn(false, $"CheckDropPercent(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
+
+            // Do not drop cooldown-based loot for now
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerXHours");
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerRollover");
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownByChannel");
+
+            // Start with a base drop chance based on the specified NoDrop percent
+            float dropChance = 1f - noDropPercent;
+
+            // Apply live tuning multiplier
+            dropChance *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
+
+            // Apply difficulty multiplier
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierNoDropModified))
+                dropChance *= settings.NoDropModifier;
+
+            // Add more multipliers here as needed
+
+            // Check the final chance
             return Random.NextFloat() < dropChance;
         }
 
@@ -175,8 +202,11 @@ namespace MHServerEmu.Games.Loot
         {
             foreach (PendingItem pendingItem in _pendingItemList)
             {
-                //LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
-                //LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+                LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+
+                if (result.HasFlag(MutationResults.Error))
+                    Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
 
                 _processedItemList.Add(pendingItem.ItemSpec);
             }

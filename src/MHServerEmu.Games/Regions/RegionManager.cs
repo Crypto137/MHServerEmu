@@ -162,13 +162,13 @@ namespace MHServerEmu.Games.Regions
 
             //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
-            Region region;
+            Region region = null;
 
             if (regionProto.IsPublic)
             {
-                // Currently we have only one instance of each public region.
+                // Currently we have only one instance of each public region, and they all use the default difficulty (normal).
                 if (_publicRegionDict.TryGetValue(regionProtoRef, out region) == false)
-                    region = GenerateAndInitRegion(regionProtoRef);
+                    region = GenerateAndInitRegion(regionProtoRef, GameDatabase.GlobalsPrototype.DifficultyTierDefault);
             }
             else
             {
@@ -176,9 +176,20 @@ namespace MHServerEmu.Games.Regions
                 // Currently each player connection has a world view, and in the future they
                 // will also be sharable for party members by party leaders.
                 ulong regionId = playerConnection.WorldView.GetRegionInstanceId(regionProtoRef);
-                if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false)
+
+                // Use preferred difficulty for private instances
+                PrototypeId difficultyTierPreference = playerConnection.Player.GetDifficultyTierPreference();
+
+                if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false || region.DifficultyTierRef != difficultyTierPreference)
                 {
-                    region = GenerateAndInitRegion(regionProtoRef);
+                    if (region != null)
+                    {
+                        // Destroy existing private instance if it does not match the player's difficulty preference 
+                        playerConnection.WorldView.RemoveRegion(region.PrototypeDataRef);
+                        DestroyRegion(regionId);
+                    }
+
+                    region = GenerateAndInitRegion(regionProtoRef, difficultyTierPreference);
                     playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
                 }
             }
@@ -225,7 +236,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private Region GenerateAndInitRegion(PrototypeId regionProtoRef)
+        private Region GenerateAndInitRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
         {
             // TODO: Merge this with GenerateRegion?
 
@@ -238,7 +249,7 @@ namespace MHServerEmu.Games.Regions
             try
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                region = GenerateRegion(regionProtoRef);
+                region = GenerateRegion(regionProtoRef, difficultyTierProtoRef);
                 Logger.Info($"Generated region {regionProtoRef.GetNameFormatted()} in {stopwatch.ElapsedMilliseconds} ms");
             }
             catch (Exception e)
@@ -261,14 +272,14 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        private Region GenerateRegion(PrototypeId regionProtoRef)
+        private Region GenerateRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
         {
             RegionSettings settings = new()
             {
                 InstanceAddress = _idGenerator.Generate(),
                 RegionDataRef = regionProtoRef,
                 Level = 60,
-                DifficultyTierRef = (PrototypeId)DifficultyTierPrototypeId.Normal,
+                DifficultyTierRef = difficultyTierProtoRef,
                 Seed = Game.Random.Next(),
                 GenerateAreas = true,
                 GenerateEntities = true,

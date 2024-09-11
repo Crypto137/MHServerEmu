@@ -126,6 +126,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private KeywordsMask _categoryKeywordsMask;
 
+        [DoNotCopy]
+        public virtual bool HasBonusPropertiesToApply { get => Properties != null || PropertyEntries != null; }
+
+        [DoNotCopy]
+        public bool IsGemAffix { get => Position >= AffixPosition.Socket1 && Position <= AffixPosition.Socket3; }
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -224,11 +230,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype PowerBoostMin { get; protected set; }
         public EvalPrototype PowerGrantRankMin { get; protected set; }
         public PrototypeId PowerProgTableTabRef { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override bool HasBonusPropertiesToApply { get => base.HasBonusPropertiesToApply || PowerBoostMax != null || PowerGrantRankMax != null; }
     }
 
     public class AffixRegionModifierPrototype : AffixPrototype
     {
         public PrototypeId AffixTable { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override bool HasBonusPropertiesToApply { get => true; }
     }
 
     public class AffixRegionRestrictedPrototype : AffixPrototype
@@ -279,12 +295,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Affix { get; protected set; }
         public PrototypeId Power { get; protected set; }
         public PrototypeId Avatar { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public virtual int LevelRequirement { get => 0; }
     }
 
     public class LeveledAffixEntryPrototype : AffixEntryPrototype
     {
         public int LevelRequired { get; protected set; }
         public LocaleStringId LockedDescriptionText { get; protected set; }
+
+        //--
+
+        [DoNotCopy]
+        public override int LevelRequirement { get => LevelRequired; }
     }
 
     public class AffixDisplaySlotPrototype : Prototype

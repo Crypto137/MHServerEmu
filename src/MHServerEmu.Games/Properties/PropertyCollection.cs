@@ -456,7 +456,7 @@ namespace MHServerEmu.Games.Properties
             // Cache property info lookups for copying multiple properties of the same type in a row
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
-            foreach (var kvp in childCollection)
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;
@@ -601,9 +601,9 @@ namespace MHServerEmu.Games.Properties
         /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
         /// on every key/value pair rather than once per enum.
         /// </remarks>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyList.PropertyEnumFilter filter)
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
         {
-            return _aggregateList.IteratePropertyRange(filter);
+            return _aggregateList.IteratePropertyRange(filterFunc);
         }
 
         #endregion
@@ -973,7 +973,7 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
 
-            foreach (var kvp in childCollection)
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;

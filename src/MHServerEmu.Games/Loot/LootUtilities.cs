@@ -220,7 +220,7 @@ namespace MHServerEmu.Games.Loot
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
             int numAffixesNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, IEnumerable<AssetId> keywords = null)
         {
-            Logger.Debug($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesNeeded})");
+            //Logger.Trace($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesNeeded})");
 
             IEnumerable<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByCategory(categoryProto);
             if (affixPool == null)
@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Loot
             int numAffixesNeeded,  ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, IEnumerable<AssetId> keywords = null,
             IEnumerable<AffixCategoryPrototype> categories = null)
         {
-            Logger.Debug($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesNeeded})");
+            //Logger.Trace($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesNeeded})");
 
             IEnumerable<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(affixPosition);
             if (affixPool == null)

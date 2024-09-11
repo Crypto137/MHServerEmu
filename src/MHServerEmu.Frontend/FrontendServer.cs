@@ -78,20 +78,16 @@ namespace MHServerEmu.Frontend
         {
             var client = (FrontendClient)connection.Client;
 
-            if (client.Session == null)
-            {
-                Logger.Info("Client disconnected");
-            }
-            else
+            if (client.Session != null)
             {
                 var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
                 playerManager?.RemoveFrontendClient(client);
 
                 var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
                 groupingManager?.RemoveFrontendClient(client);
-
-                Logger.Info($"Client {client.Session.Account} disconnected");
             }
+
+            Logger.Info($"Client [{client}] disconnected");
         }
 
         protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)
@@ -107,7 +103,7 @@ namespace MHServerEmu.Frontend
         {
             // Skip messages from clients that have already disconnected
             if (client.Connection.Connected == false)
-                return Logger.WarnReturn(false, "HandlePendingMessage(): Sender has already disconnected");
+                return Logger.WarnReturn(false, $"HandlePendingMessage(): Client [{client}] has already disconnected");
 
             // Route to the destination service if initial frontend business has already been done
             if (message.MuxId == 1 && client.FinishedPlayerManagerHandshake)
@@ -164,7 +160,7 @@ namespace MHServerEmu.Frontend
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
             if (groupingManager == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the grouping manager");
 
-            Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType}");
+            Logger.Trace($"Received InitialClientHandshake for {initialClientHandshake.ServerType}");
 
             if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
                 playerManager.ReceiveFrontendMessage(client, initialClientHandshake);

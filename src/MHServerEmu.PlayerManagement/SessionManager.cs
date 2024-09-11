@@ -104,15 +104,14 @@ namespace MHServerEmu.PlayerManagement
                 }
             }
 
-            Logger.Info($"Verified client for sessionId 0x{session.Id:X} - account {session.Account}");
-
             // Assign the session to the client if the token is valid
             lock (_sessionDict)
             {
                 client.AssignSession(session);
                 _clientDict.Add(session.Id, client);
-                return true;
             }
+
+            return true;
         }
 
         /// <summary>

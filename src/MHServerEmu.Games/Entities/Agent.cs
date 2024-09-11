@@ -679,6 +679,46 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+            InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
+            if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityAddedToMyInventory(): inventoryPrototype == null"); return; }
+
+            if (inventoryPrototype.IsEquipmentInventory)
+            {
+                // Validate and aggregate equipped item's properties
+                if (entity == null) { Logger.Warn("OnOtherEntityAddedToMyInventory(): entity == null"); return; }
+                if (entity is not Item) { Logger.Warn("OnOtherEntityAddedToMyInventory(): entity is not Item"); return; }
+                if (invLoc.ContainerId != Id) { Logger.Warn("OnOtherEntityAddedToMyInventory(): invLoc.ContainerId != Id"); return; }
+
+                // TODO: Assign proc powers
+
+                Properties.AddChildCollection(entity.Properties);
+            }
+
+            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+        }
+
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+            InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
+            if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): inventoryPrototype == null"); return; }
+
+            if (inventoryPrototype.IsEquipmentInventory)
+            {
+                // Validate and remove equipped item's properties
+                if (entity == null) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): entity == null"); return; }
+                if (entity is not Item) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): entity is not Item"); return; }
+                if (invLoc.ContainerId != Id) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): invLoc.ContainerId != Id"); return; }
+
+                entity.Properties.RemoveFromParent(Properties);
+
+                // TODO: Unassign proc powers
+            }
+
+            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);

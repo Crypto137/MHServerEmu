@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -9,8 +10,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class AvatarPrototype : AgentPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public LocaleStringId BioText { get; protected set; }
         public AbilityAssignmentPrototype[] HiddenPassivePowers { get; protected set; }
         public AssetId PortraitPath { get; protected set; }
@@ -53,6 +52,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
         public PrototypeId UltimatePowerRef { get; private set; } = PrototypeId.Invalid;
@@ -222,6 +225,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return Logger.WarnReturn(PrototypeId.Invalid, "GetPowerProgressionTableTabRefForPower(): powerProgTableProto == null");
 
             return powerProgTableProto.PowerProgTableTabRef;
+        }
+
+        public PowerProgressionEntryPrototype GetPowerProgressionEntryForPower(PrototypeId powerProtoRef)
+        {
+            if (PowerProgressionTables.IsNullOrEmpty())
+                return null;
+
+            foreach (PowerProgressionTablePrototype powerProgTableProto in PowerProgressionTables)
+            {
+                if (powerProgTableProto.PowerProgressionEntries.IsNullOrEmpty())
+                    continue;
+
+                foreach (PowerProgressionEntryPrototype powerProgEntryProto in powerProgTableProto.PowerProgressionEntries)
+                {
+                    if (powerProgEntryProto.PowerAssignment.Ability == powerProtoRef)
+                        return powerProgEntryProto;
+                }    
+            }
+
+            return null;
         }
 
         /// <summary>

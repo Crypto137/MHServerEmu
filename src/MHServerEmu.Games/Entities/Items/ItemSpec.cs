@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -187,6 +188,80 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
+        public bool GetBindingState()
+        {
+            return GetBindingState(out _);
+        }
+
+        public bool SetBindingState(bool bound, PrototypeId agentProtoRef = PrototypeId.Invalid, bool? tradeRestricted = null)
+        {
+            if (agentProtoRef != PrototypeId.Invalid && EquippableBy != PrototypeId.Invalid && agentProtoRef != EquippableBy)
+            {
+                Logger.Warn("SetBindingState(): Mismatch between equippable avatar and binding request agent detected, defaulting to account-bound");
+                return SetBindingState(true);
+            }
+
+            if (bound == false && tradeRestricted == true)
+                return Logger.WarnReturn(false, "SetBindingState(): Cannot set ItemSpec to both unbound and trade-restricted, not changing binding");
+
+            // Binding state is stored as an affix scoped to the bound avatar's prototype
+            PrototypeId itemBindingAffixProtoRef = GameDatabase.GlobalsPrototype.ItemBindingAffix;
+
+            bool stateChanged = false;
+
+            // Use a regular for loop instead of foreach to be able to remove the binding affix from the list
+            for (int i = 0; i < _affixSpecList.Count; i++)
+            {
+                AffixSpec affixSpec = _affixSpecList[i];
+
+                if (affixSpec.AffixProto.DataRef != itemBindingAffixProtoRef)
+                    continue;
+
+                if (bound == false)
+                {
+                    // Remove binding affix
+                    _affixSpecList.RemoveAt(i);
+                    return true;
+                }
+
+                if (affixSpec.ScopeProtoRef != agentProtoRef)
+                {
+                    // Change bind agent
+                    affixSpec.ScopeProtoRef = agentProtoRef;
+                    stateChanged = true;
+                }
+
+                // Looks like someone at Gazillion had a brilliant idea of storing trade restriction status in the seed field
+                if (tradeRestricted == true && affixSpec.Seed != 2)
+                {
+                    affixSpec.Seed = 2;
+                    stateChanged = true;
+                }
+                
+                if (tradeRestricted == false && affixSpec.Seed == 2)
+                {
+                    affixSpec.Seed = 1;
+                    stateChanged = true;
+                }
+
+                // This return will happen only if there is an existing binding affix in this ItemSpec
+                return stateChanged;
+            }
+
+            if (bound == false)
+                return false;
+
+            // Add a new binding
+            AffixPrototype affixProto = itemBindingAffixProtoRef.As<AffixPrototype>();
+
+            int seed = 1;   // not trade restricted
+            if (tradeRestricted == true)
+                seed = 2;   // trade restricted
+
+            _affixSpecList.Add(new(affixProto, agentProtoRef, seed));
+            return true;
+        }
+
         public bool AddAffixSpec(AffixSpec affixSpec)
         {
             if (affixSpec.IsValid == false)
@@ -198,8 +273,69 @@ namespace MHServerEmu.Games.Entities.Items
 
         public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
         {
-            Logger.Debug("OnAffixesRolled()");
-            return MutationResults.None;
+            MutationResults result = MutationResults.None;
+            PrototypeId equippableByBefore = _equippableBy;
+
+            ItemPrototype itemProto = _itemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "OnAffixesRolled(): itemProto == null");
+
+            // Change EquippableBy if needed
+            if (itemProto.IsAvatarRestricted)
+            {
+                _equippableBy = rollFor;
+
+                // Validate built-in affixes for the new equippableBy value
+                if (itemProto.AffixesBuiltIn.HasValue())
+                {
+                    foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
+                    {
+                        if (affixEntryProto.Avatar != PrototypeId.Invalid && affixEntryProto.Avatar != _equippableBy)
+                        {
+                            Logger.Warn(string.Format("The Avatar required for this built-in affix is different than the item's equippableBy!\n" +
+                                "Affix: {0}\nAvatar required: {1}\nSpec: {2}\nResolver: {3}",
+                                affixEntryProto.Affix.GetName(),
+                                affixEntryProto.Avatar.GetName(),
+                                this,
+                                resolver));
+                        }
+                    }
+                }
+            }
+            else if (itemProto.IsGem == false) // RIP gems
+            {
+                _equippableBy = PrototypeId.Invalid;
+
+                // Single power affixes and tab-specific affixes make this item bound to the avatar that power or tab belongs to
+                foreach (AffixSpec affixSpec in _affixSpecList)
+                {
+                    if (affixSpec.ScopeProtoRef == PrototypeId.Invalid)
+                        continue;
+
+                    if (affixSpec.AffixProto == null)
+                    {
+                        Logger.Warn("OnAffixesRolled(): affixSpec.AffixProto == null");
+                        continue;
+                    }
+
+                    if (affixSpec.AffixProto is not AffixPowerModifierPrototype affixPowerModifierProto)
+                        continue;
+
+                    if (affixPowerModifierProto.IsForSinglePowerOnly || affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                        _equippableBy = rollFor;
+                }
+            }
+
+            // Finalize EquippableBy change if it happened
+            if (EquippableBy != equippableByBefore)
+            {
+                result |= MutationResults.Changed;
+
+                // Update binding affix
+                if (_equippableBy != PrototypeId.Invalid && GetBindingState(out PrototypeId boundAgentProtoRef) && boundAgentProtoRef != _equippableBy)
+                    SetBindingState(true, _equippableBy);
+            }
+
+            return result;
         }
     }
 }
