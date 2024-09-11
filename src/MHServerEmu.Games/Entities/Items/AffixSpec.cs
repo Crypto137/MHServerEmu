@@ -79,8 +79,6 @@ namespace MHServerEmu.Games.Entities.Items
         public MutationResults RollAffix(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
             Picker<AffixPrototype> affixPicker, HashSet<ScopedAffixRef> affixSet)
         {
-            Logger.Debug("RollAffix()");
-
             AffixPrototype prevAffixProto = AffixProto;
             PrototypeId prevScopeProtoRef = _scopeProtoRef;
 
@@ -155,15 +153,13 @@ namespace MHServerEmu.Games.Entities.Items
         private MutationResults SetAffixScopePower(GRandom random, PrototypeId rollFor, ItemSpec itemSpec,
             HashSet<ScopedAffixRef> affixSet, BehaviorOnPowerMatch behaviorOnPowerMatch)
         {
-            Logger.Warn("SetAffixScopePower()");
+            Logger.Warn("SetAffixScopePower(): Not yet implemented");
             return MutationResults.None;
         }
 
         private MutationResults SetAffixPowerForPowerGroupBonus(AffixPowerModifierPrototype affixPowerModifierProto,
             PrototypeId rollFor, HashSet<ScopedAffixRef> affixSet)
         {
-            Logger.Warn("SetAffixPowerForPowerGroupBonus()");
-
             if (affixPowerModifierProto.IsForSinglePowerOnly)
                 return Logger.WarnReturn(MutationResults.Error, "SetAffixPowerForPowerGroupBonus(): affixPowerModifierProto.IsForSinglePowerOnly");
 
@@ -234,9 +230,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         private MutationResults SetAffixScopeRegionAffix(GRandom random, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet)
         {
-            Logger.Warn("SetAffixScopeRegionAffix()");
-
-            // TODO: Cache this?
+            // TODO: Reuse this dictionary?
             Dictionary<RegionAffixCategoryPrototype, int> regionAffixCategoryPickDict = new();
             foreach (PrototypeId regionAffixCategoryProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RegionAffixCategoryPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {

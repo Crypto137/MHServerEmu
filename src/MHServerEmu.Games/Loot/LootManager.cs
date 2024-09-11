@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.Loot
             // Instance the loot if we have a player provided and instanced loot is not disabled by server config
             ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
 
-            Logger.Trace($"DropRandomLoot(): Rolling loot table {lootTableProto}");
+            //Logger.Trace($"DropRandomLoot(): Rolling loot table {lootTableProto}");
 
             LootRollSettings settings = new();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;

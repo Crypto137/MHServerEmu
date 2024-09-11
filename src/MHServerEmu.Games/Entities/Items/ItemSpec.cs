@@ -273,8 +273,6 @@ namespace MHServerEmu.Games.Entities.Items
 
         public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
         {
-            Logger.Debug("OnAffixesRolled()");
-
             MutationResults result = MutationResults.None;
             PrototypeId equippableByBefore = _equippableBy;
 
