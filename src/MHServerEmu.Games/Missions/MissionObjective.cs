@@ -251,10 +251,14 @@ namespace MHServerEmu.Games.Missions
 
         public bool SetState(MissionObjectiveState newState)
         {
-            if (MissionManager.Debug && (newState == MissionObjectiveState.Completed)) 
-                Logger.Debug($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
-            if (MissionManager.Debug && (newState == MissionObjectiveState.Failed))
-                Logger.Error($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
+            if (MissionManager.Debug) { 
+                if (newState == MissionObjectiveState.Completed)
+                    Logger.Debug($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
+                else if (newState == MissionObjectiveState.Failed)
+                    Logger.Error($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
+                else
+                    Logger.Trace($"Set Objective[{_prototypeIndex}] State {newState} for {Mission.PrototypeName}");
+            }
 
             var oldState = _objectiveState;
             if (oldState == newState) return false;

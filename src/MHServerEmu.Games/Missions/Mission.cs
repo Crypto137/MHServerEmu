@@ -563,10 +563,15 @@ namespace MHServerEmu.Games.Missions
 
         public bool SetState(MissionState newState, bool sendUpdate = true)
         {
-            if (MissionManager.Debug && (newState == MissionState.Completed))
-                Logger.Debug($"SetState {newState} for {PrototypeName}");
-            if (MissionManager.Debug && (newState == MissionState.Failed))
-                Logger.Error($"SetState {newState} for {PrototypeName}");
+            if (MissionManager.Debug) 
+            {
+                if (newState == MissionState.Completed)
+                    Logger.Debug($"SetState {newState} for {PrototypeName}");
+                else if (newState == MissionState.Failed)
+                    Logger.Error($"SetState {newState} for {PrototypeName}");
+                else 
+                    Logger.Trace($"SetState {newState} for {PrototypeName}");
+            }
 
             var oldState = _state;
             if (oldState == newState) return false;
@@ -1823,6 +1828,7 @@ namespace MHServerEmu.Games.Missions
 
         public void OnSpawnedPopulation()
         {
+            if (MissionManager.Debug) Logger.Trace($"OnSpawnedPopulation [{PrototypeName}]");
             SpawnState = MissionSpawnState.Spawned;
             OnChangeState();
         }

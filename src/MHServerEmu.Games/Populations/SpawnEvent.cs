@@ -246,6 +246,7 @@ namespace MHServerEmu.Games.Populations
 
     public class MissionSpawnEvent : SpawnEvent
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public PrototypeId MissionRef;
         public MissionManager MissionManager;
 
@@ -281,8 +282,17 @@ namespace MHServerEmu.Games.Populations
                         AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef);
                 }
         }
+
         public override void OnSpawnedPopulation()
         {
+            /*if (MissionRef == (PrototypeId)7549034767255021523) // Debug mission
+            {
+                string str = "";
+                foreach (var scheduler in SpawnMarkerSchedulers.Values)
+                    str += $"{scheduler.ScheduledObjects.Count} ";
+                Logger.Warn($"OnSpawnedPopulation {MissionRef.GetNameFormatted()} [{str}]");
+            }*/
+
             if (MissionManager.IsRegionMissionManager() && IsSpawned()) 
                 MissionManager.OnSpawnedPopulation(MissionRef);
         }
