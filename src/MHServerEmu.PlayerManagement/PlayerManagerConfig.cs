@@ -7,7 +7,8 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class PlayerManagerConfig : ConfigContainer
     {
-        public bool BypassAuth { get; private set; } = false;
+        public bool UseJsonDBManager { get; private set; } = false;
+        public bool IgnoreSessionToken { get; private set; } = false;
         public bool AllowClientVersionMismatch { get; private set; } = false;
         public bool SimulateQueue { get; private set; } = false;
         public ulong QueuePlaceInLine { get; private set; } = 2023;
