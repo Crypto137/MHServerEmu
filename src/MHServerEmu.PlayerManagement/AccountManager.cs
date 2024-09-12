@@ -40,7 +40,7 @@ namespace MHServerEmu.PlayerManagement
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             // Check the account we queried if our DB manager requires it
-            if (DBManager.ValidateAccounts)
+            if (DBManager.VerifyAccounts)
             {
                 if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
                     return AuthStatusCode.IncorrectUsernameOrPassword403;
@@ -63,7 +63,15 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Queries a <see cref="DBAccount"/> using the provided email. Returns <see langword="true"/> if successful.
         /// </summary>
-        public static bool TryGetAccountByEmail(string email, out DBAccount account) => DBManager.TryQueryAccountByEmail(email, out account);
+        public static bool TryGetAccountByEmail(string email, out DBAccount account)
+        {
+            return DBManager.TryQueryAccountByEmail(email, out account);
+        }
+
+        public static bool LoadPlayerDataForAccount(DBAccount account)
+        {
+            return DBManager.LoadPlayerData(account);
+        }
 
         /// <summary>
         /// Creates a new <see cref="DBAccount"/> and inserts it into the database. Returns <see langword="true"/> if successful.
@@ -158,25 +166,25 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public static (bool, string) SetFlag(string email, AccountFlags flag)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount dbAccount) == false)
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return (false, $"Failed to set flag: account with email {email} not found.");
 
-            return SetFlag(dbAccount, flag);
+            return SetFlag(account, flag);
         }
 
         /// <summary>
         /// Sets the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
         /// </summary>
-        public static (bool, string) SetFlag(DBAccount dbAccount, AccountFlags flag)
+        public static (bool, string) SetFlag(DBAccount account, AccountFlags flag)
         {
-            if (dbAccount.Flags.HasFlag(flag))
-                return (false, $"Failed to set flag: account {dbAccount} already has flag {flag}.");
+            if (account.Flags.HasFlag(flag))
+                return (false, $"Failed to set flag: account {account} already has flag {flag}.");
 
             // Update flags and write to the database
-            Logger.Trace($"Setting flag {flag} for account {dbAccount}");
-            dbAccount.Flags |= flag;
-            DBManager.UpdateAccount(dbAccount);
-            return (true, $"Successfully set flag {flag} for account {dbAccount}.");
+            Logger.Trace($"Setting flag {flag} for account {account}");
+            account.Flags |= flag;
+            DBManager.UpdateAccount(account);
+            return (true, $"Successfully set flag {flag} for account {account}.");
         }
 
         /// <summary>
@@ -184,25 +192,25 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public static (bool, string) ClearFlag(string email, AccountFlags flag)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount dbAccount) == false)
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return (false, $"Failed to clear flag: account with email {email} not found.");
 
-            return ClearFlag(dbAccount, flag);
+            return ClearFlag(account, flag);
         }
 
         /// <summary>
         /// Clears the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
         /// </summary>
-        public static (bool, string) ClearFlag(DBAccount dbAccount, AccountFlags flag)
+        public static (bool, string) ClearFlag(DBAccount account, AccountFlags flag)
         {
-            if (dbAccount.Flags.HasFlag(flag) == false)
-                return (false, $"Failed to clear flag: {flag} is not set for account {dbAccount}.");
+            if (account.Flags.HasFlag(flag) == false)
+                return (false, $"Failed to clear flag: {flag} is not set for account {account}.");
 
             // Update flags and write to the database
-            Logger.Trace($"Clearing flag {flag} for account {dbAccount}");
-            dbAccount.Flags &= ~flag;
-            DBManager.UpdateAccount(dbAccount);
-            return (true, $"Successfully cleared flag {flag} from account {dbAccount}.");
+            Logger.Trace($"Clearing flag {flag} for account {account}");
+            account.Flags &= ~flag;
+            DBManager.UpdateAccount(account);
+            return (true, $"Successfully cleared flag {flag} from account {account}.");
         }
 
         /// <summary>

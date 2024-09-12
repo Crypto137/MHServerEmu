@@ -61,18 +61,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
-            using SQLiteConnection connection = new(_connectionString);
+            using SQLiteConnection connection = GetConnection();
             var accounts = connection.Query<DBAccount>("SELECT * FROM Account WHERE Email = @Email", new { Email = email });
 
-            if (accounts.Any() == false)
-            {
-                account = null;
-                return false;
-            }
-
-            account = accounts.First();
-            LoadAccountData(connection, account);
-            return true;
+            // Associated player data is loaded separately
+            account = accounts.FirstOrDefault();
+            return account != null;
         }
 
         public bool QueryIsPlayerNameTaken(string playerName)
@@ -124,7 +118,46 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
         }
 
-        public bool UpdateAccountData(DBAccount account)
+        public bool LoadPlayerData(DBAccount account)
+        {
+            // Clear existing data
+            account.Player = null;
+            account.ClearEntities();
+
+            // Load fresh data
+            using SQLiteConnection connection = GetConnection();
+
+            var @params = new { DbGuid = account.Id };
+
+            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
+            account.Player = players.FirstOrDefault();
+
+            if (account.Player == null)
+            {
+                account.Player = new(account.Id);
+                Logger.Info($"Initialized player data for account 0x{account.Id:X}");
+            }
+
+            // Load inventory entities
+            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", account.Id));
+            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", account.Id));
+            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", account.Id));
+
+            foreach (DBEntity avatar in account.Avatars)
+            {
+                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", avatar.DbGuid));
+                account.ControlledEntities.AddRange(LoadEntitiesFromTable(connection, "ControlledEntity", avatar.DbGuid));
+            }
+
+            foreach (DBEntity teamUp in account.TeamUps)
+            {
+                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", teamUp.DbGuid));
+            }
+
+            return true;
+        }
+
+        public bool SavePlayerData(DBAccount account)
         {
             // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
             lock (_writeLock)
@@ -166,7 +199,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorException(e, nameof(UpdateAccountData));
+                    Logger.ErrorException(e, nameof(SavePlayerData));
                     transaction.Rollback();
                     return false;
                 }
@@ -311,40 +344,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private static void SetSchemaVersion(SQLiteConnection connection, int version)
         {
             connection.Execute($"PRAGMA user_version = {version}");
-        }
-
-        /// <summary>
-        /// Loads account data for the specified <see cref="DBAccount"/> and maps relations.
-        /// </summary>
-        private static void LoadAccountData(SQLiteConnection connection, DBAccount account)
-        {
-            var @params = new { DbGuid = account.Id };
-
-            // Load player data
-            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
-            account.Player = players.FirstOrDefault();
-
-            if (account.Player == null)
-            {
-                account.Player = new(account.Id);
-                Logger.Info($"Initialized player data for account 0x{account.Id:X}");
-            }
-
-            // Load inventory entities
-            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", account.Id));
-            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", account.Id));
-            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", account.Id));
-
-            foreach (DBEntity avatar in account.Avatars)
-            {
-                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", avatar.DbGuid));
-                account.ControlledEntities.AddRange(LoadEntitiesFromTable(connection, "ControlledEntity", avatar.DbGuid));
-            }
-
-            foreach (DBEntity teamUp in account.TeamUps)
-            {
-                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", teamUp.DbGuid));
-            }
         }
 
         /// <summary>

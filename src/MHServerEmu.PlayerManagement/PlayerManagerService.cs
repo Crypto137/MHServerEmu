@@ -234,7 +234,6 @@ namespace MHServerEmu.PlayerManagement
             ulong playerDbId = (ulong)client.Session.Account.Id;
 
             bool hasSavePending = false;
-            bool refreshRequired = false;
 
             // Wait for the player to finish saving while checking in short bursts
             // [check x10] - [wait 10 sec] - [check x10] - [wait 10 sec], and so on
@@ -259,7 +258,6 @@ namespace MHServerEmu.PlayerManagement
                     if (hasSavePending)
                     {
                         // Flag existing data as out of date and wait a little
-                        refreshRequired = true;
                         await Task.Delay(AsyncRetryTickIntervalMS);
                         continue;
                     }
@@ -271,11 +269,10 @@ namespace MHServerEmu.PlayerManagement
                         return;
                     }
 
-                    // If we had to wait for a pending save, it means our account data is not up to date and needs to be refreshed.
-                    if (refreshRequired)
-                        ((ClientSession)client.Session).RefreshAccount();
+                    // Load player data associated with this account now that any pending saves are resolved
+                    AccountManager.LoadPlayerDataForAccount(client.Session.Account);
 
-                    // Add the client to an available game once pending saves have been resolved
+                    // Add to an available game
                     Game game = _gameManager.GetAvailableGame();
                     game.AddClient(client);
                     Logger.Info($"Queued client [{client}] to be added to game [{game}]");
@@ -322,10 +319,10 @@ namespace MHServerEmu.PlayerManagement
                     }
 
                     // Save data and remove pending save
-                    if (AccountManager.DBManager.UpdateAccountData(client.Session.Account))
+                    if (AccountManager.DBManager.SavePlayerData(client.Session.Account))
                         Logger.Info($"Saved player data for client [{client}]");
                     else
-                        Logger.Warn($"SavePlayerDataAsync(): Failed to save data for player [{client}]");
+                        Logger.Warn($"SavePlayerDataAsync(): Failed to save player data for client [{client}]");
 
                     lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
                     return;
