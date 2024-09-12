@@ -14,7 +14,7 @@ namespace MHServerEmu.PlayerManagement
     public static class AccountManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        
+
         public static IDBManager DBManager { get; private set; }
 
         /// <summary>
@@ -153,42 +153,56 @@ namespace MHServerEmu.PlayerManagement
             return (true, $"Successfully set user level for account {email} to {userLevel}.");
         }
 
-        // Ban and unban are separate methods to make sure we don't accidentally ban or unban someone we didn't intend to.
-
         /// <summary>
-        /// Bans the <see cref="DBAccount"/> with the specified email.
+        /// Sets the specified <see cref="AccountFlags"/> for the <see cref="DBAccount"/> with the provided email.
         /// </summary>
-        public static (bool, string) BanAccount(string email)
+        public static (bool, string) SetFlag(string email, AccountFlags flag)
         {
-            // Checks to make sure we can ban the specified account
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to ban: account {email} not found.");
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount dbAccount) == false)
+                return (false, $"Failed to set flag: account with email {email} not found.");
 
-            if (account.Flags.HasFlag(AccountFlags.IsBanned))
-                return (false, $"Failed to ban: account {email} is already banned.");
-
-            // Write the ban to the database
-            account.Flags |= AccountFlags.IsBanned;
-            DBManager.UpdateAccount(account);
-            return (true, $"Successfully banned account {email}.");
+            return SetFlag(dbAccount, flag);
         }
 
         /// <summary>
-        /// Unbans the <see cref="DBAccount"/> with the specified email.
+        /// Sets the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
         /// </summary>
-        public static (bool, string) UnbanAccount(string email)
+        public static (bool, string) SetFlag(DBAccount dbAccount, AccountFlags flag)
         {
-            // Checks to make sure we can ban the specified account
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-                return (false, $"Failed to unban: account {email} not found.");
+            if (dbAccount.Flags.HasFlag(flag))
+                return (false, $"Failed to set flag: account {dbAccount} already has flag {flag}.");
 
-            if (account.Flags.HasFlag(AccountFlags.IsBanned) == false)
-                return (false, $"Failed to unban: account {email} is not banned.");
+            // Update flags and write to the database
+            Logger.Trace($"Setting flag {flag} for account {dbAccount}");
+            dbAccount.Flags |= flag;
+            DBManager.UpdateAccount(dbAccount);
+            return (true, $"Successfully set flag {flag} for account {dbAccount}.");
+        }
 
-            // Write the unban to the database
-            account.Flags &= ~AccountFlags.IsBanned;
-            DBManager.UpdateAccount(account);
-            return (true, $"Successfully unbanned account {email}.");
+        /// <summary>
+        /// Clears the specified <see cref="AccountFlags"/> for the <see cref="DBAccount"/> with the provided email.
+        /// </summary>
+        public static (bool, string) ClearFlag(string email, AccountFlags flag)
+        {
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount dbAccount) == false)
+                return (false, $"Failed to clear flag: account with email {email} not found.");
+
+            return ClearFlag(dbAccount, flag);
+        }
+
+        /// <summary>
+        /// Clears the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public static (bool, string) ClearFlag(DBAccount dbAccount, AccountFlags flag)
+        {
+            if (dbAccount.Flags.HasFlag(flag) == false)
+                return (false, $"Failed to clear flag: {flag} is not set for account {dbAccount}.");
+
+            // Update flags and write to the database
+            Logger.Trace($"Clearing flag {flag} for account {dbAccount}");
+            dbAccount.Flags &= ~flag;
+            DBManager.UpdateAccount(dbAccount);
+            return (true, $"Successfully cleared flag {flag} from account {dbAccount}.");
         }
 
         /// <summary>

@@ -84,7 +84,8 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn (false, $"VerifyClientCredentials(): SessionId 0x{credentials.Sessionid:X} not found");
 
             // Verify the token if enabled
-            if (_playerManager.Config.IgnoreSessionToken == false && _playerManager.Config.UseJsonDBManager == false)
+            if (_playerManager.Config.UseJsonDBManager == false && _playerManager.Config.IgnoreSessionToken == false &&
+                session.Account.Flags.HasFlag(AccountFlags.LinuxCompatibilityMode) == false)
             {
                 // Try to decrypt the token (we avoid extra allocations and copying by accessing buffers directly with Unsafe.GetBuffer())
                 if (CryptographyHelper.TryDecryptToken(ByteString.Unsafe.GetBuffer(credentials.EncryptedToken), session.Key,
