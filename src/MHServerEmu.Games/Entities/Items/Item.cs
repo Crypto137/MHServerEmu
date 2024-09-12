@@ -697,7 +697,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
         {
-            Logger.Warn($"GetTriggeredPower(): Not yet implemented (eventType={eventType}, actionType={actionType})");
+            //Logger.Warn($"GetTriggeredPower(): Not yet implemented (eventType={eventType}, actionType={actionType})");
             return PrototypeId.Invalid;
         }
     }

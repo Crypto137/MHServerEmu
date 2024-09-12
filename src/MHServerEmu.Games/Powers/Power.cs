@@ -3589,8 +3589,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool ExecuteTeleport(Vector3 teleportPosition)
         {
-            Logger.Debug($"ExecuteTeleport(): {Owner}");
-
             Region region = Owner.Region;
             if (region == null) return Logger.WarnReturn(false, "ExecuteTeleport(): region == null");
 

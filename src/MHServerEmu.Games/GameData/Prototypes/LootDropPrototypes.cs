@@ -8,6 +8,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootDropAgentPrototype : LootDropPrototype
     {
         public PrototypeId Agent { get; protected set; }
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            // TODO (overriding this to reduce log spam)
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropCharacterTokenPrototype : LootNodePrototype

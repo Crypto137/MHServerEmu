@@ -1020,7 +1020,7 @@ namespace MHServerEmu.Games.Entities
             AOI.OnCellLoaded(cellId, regionId);
             int numLoaded = AOI.GetLoadedCellCount();
 
-            Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
+            //Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
 
             if (_teleportData.IsValid && numLoaded == AOI.TrackedCellCount)
                 FinishTeleport();
