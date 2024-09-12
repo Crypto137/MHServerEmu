@@ -62,6 +62,7 @@ namespace MHServerEmu.Frontend
                 if (packet.MuxId == 0 || packet.MuxId > 2)
                 {
                     Logger.Warn($"Received a MuxPacket with unexpected mux channel {packet.MuxId} from {Connection}");
+                    Disconnect();
                     break;
                 }
 
@@ -101,12 +102,13 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Assigns an <see cref="IFrontendSession"/> to this <see cref="FrontendClient"/>.
         /// </summary>
-        public void AssignSession(IFrontendSession session)
+        public bool AssignSession(IFrontendSession session)
         {
-            if (Session == null)
-                Session = session;
-            else
-                Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
+            if (Session != null)
+                return Logger.WarnReturn(false, $"AssignSession(): Failed to assign {session} to a client: already assigned {Session}");
+
+            Session = session;
+            return true;
         }
 
         /// <summary>

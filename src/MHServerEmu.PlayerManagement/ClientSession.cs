@@ -65,6 +65,11 @@ namespace MHServerEmu.PlayerManagement
 
         public override string ToString()
         {
+            return $"sessionId=0x{Id:X}";
+        }
+
+        public string GetClientInfo()
+        {
             StringBuilder sb = new();
             sb.AppendLine($"SessionId: 0x{Id:X}");
             sb.AppendLine($"Account: {Account}");
