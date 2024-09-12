@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
@@ -679,7 +680,8 @@ namespace MHServerEmu.Games.Entities.Items
         private float GenerateTruncatedFloatWithinRange(float randomMult, float min, float max)
         {
             float result = ((max - min + 1f) * randomMult) + min;
-            result = Math.Clamp(result, min, max);
+            // NOTE: Using regular Math.Clamp() doesn't work here because it throws when min > max.
+            result = MathHelper.ClampNoThrow(result, min, max);
             return MathF.Floor(result);
         }
 
