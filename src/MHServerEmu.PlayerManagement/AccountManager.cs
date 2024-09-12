@@ -45,9 +45,14 @@ namespace MHServerEmu.PlayerManagement
                 if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
                     return AuthStatusCode.IncorrectUsernameOrPassword403;
 
-                if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
-                if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;
-                if (accountToCheck.IsPasswordExpired) return AuthStatusCode.PasswordExpired;
+                if (accountToCheck.Flags.HasFlag(AccountFlags.IsBanned))
+                    return AuthStatusCode.AccountBanned;
+                
+                if (accountToCheck.Flags.HasFlag(AccountFlags.IsArchived))
+                    return AuthStatusCode.AccountArchived;
+                
+                if (accountToCheck.Flags.HasFlag(AccountFlags.IsPasswordExpired))
+                    return AuthStatusCode.PasswordExpired;
             }
 
             // Output the account and return success if everything is okay
@@ -128,7 +133,7 @@ namespace MHServerEmu.PlayerManagement
             // Update the password and write the new hash/salt to the database
             account.PasswordHash = CryptographyHelper.HashPassword(newPassword, out byte[] salt);
             account.Salt = salt;
-            account.IsPasswordExpired = false;
+            account.Flags &= ~AccountFlags.IsPasswordExpired;
             DBManager.UpdateAccount(account);
             return (true, $"Successfully changed password for account {email}.");
         }
@@ -159,11 +164,11 @@ namespace MHServerEmu.PlayerManagement
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return (false, $"Failed to ban: account {email} not found.");
 
-            if (account.IsBanned)
+            if (account.Flags.HasFlag(AccountFlags.IsBanned))
                 return (false, $"Failed to ban: account {email} is already banned.");
 
             // Write the ban to the database
-            account.IsBanned = true;
+            account.Flags |= AccountFlags.IsBanned;
             DBManager.UpdateAccount(account);
             return (true, $"Successfully banned account {email}.");
         }
@@ -177,11 +182,11 @@ namespace MHServerEmu.PlayerManagement
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return (false, $"Failed to unban: account {email} not found.");
 
-            if (account.IsBanned == false)
+            if (account.Flags.HasFlag(AccountFlags.IsBanned) == false)
                 return (false, $"Failed to unban: account {email} is not banned.");
 
             // Write the unban to the database
-            account.IsBanned = false;
+            account.Flags &= ~AccountFlags.IsBanned;
             DBManager.UpdateAccount(account);
             return (true, $"Successfully unbanned account {email}.");
         }

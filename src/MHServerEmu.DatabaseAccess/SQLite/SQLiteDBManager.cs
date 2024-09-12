@@ -13,7 +13,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 1;     // Increment this when making changes to the database schema
+        private const int CurrentSchemaVersion = 2;     // Increment this when making changes to the database schema
         private const int NumTestAccounts = 5;          // Number of test accounts to create for new database files
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -92,8 +92,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
                 try
                 {
-                    connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
-                        VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account);
+                    connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, Flags)
+                        VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @Flags)", account);
                     return true;
                 }
                 catch (Exception e)
@@ -112,8 +112,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
                 try
                 {
-                    connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
-                        IsBanned=@IsBanned, IsArchived=@IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account);
+                    connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt,
+                        UserLevel=@UserLevel, Flags=@Flags WHERE Id=@Id", account);
                     return true;
                 }
                 catch (Exception e)

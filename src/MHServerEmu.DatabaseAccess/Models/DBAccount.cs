@@ -12,6 +12,15 @@ namespace MHServerEmu.DatabaseAccess.Models
         Admin
     }
 
+    [Flags]
+    public enum AccountFlags
+    {
+        None                = 0,
+        IsBanned            = 1 << 0,
+        IsArchived          = 1 << 1,
+        IsPasswordExpired   = 1 << 2
+    }
+
     /// <summary>
     /// Represents an account stored in the account database.
     /// </summary>
@@ -26,9 +35,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         public byte[] PasswordHash { get; set; }
         public byte[] Salt { get; set; }
         public AccountUserLevel UserLevel { get; set; }
-        public bool IsBanned { get; set; }
-        public bool IsArchived { get; set; }
-        public bool IsPasswordExpired { get; set; }
+        public AccountFlags Flags { get; set; }
 
         public DBPlayer Player { get; set; }
 

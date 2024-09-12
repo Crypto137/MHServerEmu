@@ -105,12 +105,11 @@ namespace MHServerEmu.Commands.Implementations
 
             StringBuilder sb = new();
             sb.AppendLine($"Account Info:");
+            sb.AppendLine($"Id: 0x{client.Session.Account.Id:X}");
             sb.AppendLine($"Email: {client.Session.Account.Email}");
             sb.AppendLine($"PlayerName: {client.Session.Account.PlayerName}");
             sb.AppendLine($"UserLevel: {client.Session.Account.UserLevel}");
-            sb.AppendLine($"IsBanned: {client.Session.Account.IsArchived}");
-            sb.AppendLine($"IsArchived: {client.Session.Account.IsArchived}");
-            sb.Append($"IsPasswordExpired: {client.Session.Account.IsPasswordExpired}");
+            sb.AppendLine($"Flags: {client.Session.Account.Flags}");
 
             ChatHelper.SendMetagameMessageSplit(client, sb.ToString());
             return string.Empty;
