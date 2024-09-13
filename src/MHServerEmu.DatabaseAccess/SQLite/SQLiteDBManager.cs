@@ -170,10 +170,17 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 try
                 {
                     // Update player entity
-                    connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
-                    connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
-                                        StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
-                                        account.Player, transaction);
+                    if (account.Player != null)
+                    {
+                        connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
+                        connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
+                                            StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
+                                            account.Player, transaction);
+                    }
+                    else
+                    {
+                        Logger.Warn($"SavePlayerData(): Attempted to save null player entity data for account {account}");
+                    }
 
                     // Update inventory entities
                     UpdateEntityTable(connection, transaction, "Avatar", account.Id, account.Avatars);
