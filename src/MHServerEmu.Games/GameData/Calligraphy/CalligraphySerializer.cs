@@ -176,10 +176,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
 
                 // Parse
-                var parser = GetParser(classManager.GetPrototypeFieldTypeEnumValue(fieldInfo));
+                ParseDelegate parse = GetParser(classManager.GetPrototypeFieldTypeEnumValue(fieldInfo));
                 FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, prototypeName, blueprintMemberInfo);
                 
-                if (parser(@params) == false)
+                if (parse(@params) == false)
                 {
                     return Logger.ErrorReturn(false, string.Format("DeserializeFieldGroup(): Failed to parse field {0} of field group {1}, file name {2}",
                         blueprintMemberInfo.Member.FieldName,
