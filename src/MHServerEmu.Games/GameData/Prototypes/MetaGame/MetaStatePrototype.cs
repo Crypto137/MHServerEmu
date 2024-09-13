@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -63,6 +62,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int DeactivateOnMissionCompDelayMS { get; protected set; }
         public PrototypeId[] OnMissionCompletedApplyStates { get; protected set; }
         public PrototypeId[] OnMissionFailedApplyStates { get; protected set; }
+
+        public override bool CanApplyState()
+        {
+            if (base.CanApplyState())
+            {
+                var missionProto = GameDatabase.GetPrototype<MissionPrototype>(Mission);
+                if (missionProto != null)
+                    return missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
+            }
+            return false;
+        }
     }
 
     public class MetaMissionEntryPrototype : Prototype
@@ -85,8 +95,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool CanApplyState()
         {
-            // TODO
-            return true;
+            bool canApply = base.CanApplyState();
+            if (canApply && Sequence.HasValue())
+                foreach (var entryProto in Sequence)
+                {
+                    var missionProto = GameDatabase.GetPrototype<MissionPrototype>(entryProto.Mission);
+                    if (missionProto != null)
+                        canApply &= missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
+                }
+            return canApply;
         }
     }
 

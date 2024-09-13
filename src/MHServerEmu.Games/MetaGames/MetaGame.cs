@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -12,6 +13,7 @@ using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames
@@ -20,16 +22,17 @@ namespace MHServerEmu.Games.MetaGames
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
 
-        protected RepString _name = new();
+        protected RepString _name;
         protected ulong _regionId;
 
         public Region Region { get => GetRegion(); }
         public MetaGamePrototype MetaGamePrototype { get => Prototype as MetaGamePrototype; }
-        public List<MetaState> MetaStates { get; } = new();
-        protected List<MetaGameTeam> Teams { get; } = new();
-        protected List<MetaGameMode> GameModes { get; } = new();
+        public List<MetaState> MetaStates { get; }
+        protected List<MetaGameTeam> Teams { get; }
+        protected List<MetaGameMode> GameModes { get; }
+        protected GRandom Random { get; }
 
-        private HashSet<ulong> _discoveredEntities = new();
+        private HashSet<ulong> _discoveredEntities;
 
         private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnMap;
         private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
@@ -37,9 +40,17 @@ namespace MHServerEmu.Games.MetaGames
         private Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
         private Action<PlayerRegionChangeGameEvent> _playerRegionChangeAction;
         private Action<Entity> _destroyEntityAction;
+        private int _modeIndex;
 
         public MetaGame(Game game) : base(game) 
         {
+            MetaStates = new();
+            GameModes = new();
+            Teams = new();
+            Random = new();
+            _name = new();
+            _discoveredEntities = new();
+            _modeIndex = -1;
             _playerEnteredRegionAction = OnPlayerEnteredRegion;
             _entityEnteredWorldAction = OnEntityEnteredWorld;
             _entityExitedWorldAction = OnEntityExitedWorld;
@@ -91,6 +102,9 @@ namespace MHServerEmu.Games.MetaGames
 
         public override void Destroy()
         {
+            foreach (var mode in GameModes)
+                mode.OnDestroy();
+
             var region = Region;
             if (region != null)
             {
@@ -182,10 +196,86 @@ namespace MHServerEmu.Games.MetaGames
 
         public void ActivateGameMode(int index)
         {
-            // TODO
+            var proto = MetaGamePrototype;
+            var region = Region;
+            if (proto == null || region == null) return;
+
+            if (index < 0 || index >= GameModes.Count) return;
+            var mode = GameModes[index];
+            var modeProto = mode?.Prototype;
+            if (modeProto == null) return;
+
+            // deactivate old mode
+            if (_modeIndex != -1) GameModes[_modeIndex].OnDeactivate();
+
+            // TODO modeProto.EventHandler
+            // TODO lock for proto.SoftLockRegionMode
+
+            _modeIndex = index;
+            Random.Seed(region.RandomSeed + index);
+
+            // activate new mode
+            mode.OnActivate();
+
+            foreach (var player in new PlayerIterator(region))
+                player.Properties[PropertyEnum.PvPMode] = modeProto.DataRef;
+        }
+
+        public void ApplyStates(PrototypeId[] states)
+        {
+            if (states.IsNullOrEmpty()) return;
+            foreach(var stateRef in states)
+                if (CanApplyState(stateRef))
+                    ApplyMetaState(stateRef);
+        }
+
+        private bool CanApplyState(PrototypeId stateRef, bool skipCooldown = false)
+        {
+            var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
+            if (stateProto == null || stateProto.CanApplyState() == false) return false;
+
+            if (skipCooldown == false && stateProto.CooldownMS > 0)
+            {
+                TimeSpan time = Game.CurrentTime - Properties[PropertyEnum.MetaGameTimeStateRemovedMS, stateRef];
+                if (time < TimeSpan.FromMilliseconds(stateProto.CooldownMS)) return false;
+            }
+
+            bool hasPreventStates = stateProto.PreventStates.HasValue();
+            bool hasPreventGroups = stateProto.PreventGroups.HasValue();
+            foreach (var state in MetaStates)
+            {
+                var stateProtoRef = state.PrototypeDataRef;
+                if (hasPreventStates) 
+                    foreach(var preventState in stateProto.PreventStates)
+                        if (preventState == stateProtoRef) return false;
+
+                if (hasPreventGroups)
+                    foreach(var group in stateProto.PreventGroups)
+                        if (state.HasGroup(group)) return false;
+            }
+
+            if (stateProto.EvalCanActivate != null)
+            {
+                EvalContextData contextData = new(Game);
+                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Region.Properties);
+                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
+                if (Eval.RunBool(stateProto.EvalCanActivate, contextData) == false) return false;
+            }
+
+            return true;
         }
 
         public void ApplyMetaState(PrototypeId stateRef)
+        {
+            // TODO
+        }
+
+        public void RemoveStates(PrototypeId[] removeStates)
+        {
+            // TODO
+        }
+
+        public void RemoveGroups(AssetId[] removeGroups)
         {
             // TODO
         }

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -18,5 +19,14 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         }
 
         public virtual void OnRemovedPlayer(Player player) { }
+
+        public bool HasGroup(AssetId group)
+        {
+            if (group != AssetId.Invalid && Prototype.Groups.HasValue())
+                foreach(var stateGroup in Prototype.Groups)
+                    if (stateGroup == group) return true;
+
+            return false;
+        }
     }
 }
