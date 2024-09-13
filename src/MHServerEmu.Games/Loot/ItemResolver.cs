@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
@@ -112,7 +113,8 @@ namespace MHServerEmu.Games.Loot
         {
             Picker<PrototypeId> rarityPicker = new(Random);
 
-            DropFilterArguments filterArgs = itemProto != null ? new() : null;
+            using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            DropFilterArguments.Initialize(filterArgs, LootContext);
 
             foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -202,7 +204,9 @@ namespace MHServerEmu.Games.Loot
         {
             foreach (PendingItem pendingItem in _pendingItemList)
             {
-                LootCloneRecord args = new(LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                LootCloneRecord.Initialize(args, LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+
                 MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
 
                 if (result.HasFlag(MutationResults.Error))

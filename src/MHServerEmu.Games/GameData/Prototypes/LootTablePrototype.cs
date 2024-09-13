@@ -148,7 +148,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         currentPickerAvatarProto = resolvedAvatarProto;
                     }
 
-                    DropFilterArguments pickFilterArgs = new(null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
+                    using DropFilterArguments pickFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                    DropFilterArguments.Initialize(pickFilterArgs, null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                     pickFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
 
                     if (picker.Empty() ||
@@ -164,7 +165,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     pickedItemProto = itemProto;
                 }
 
-                DropFilterArguments pushFilterArgs = new(pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
+                using DropFilterArguments pushFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                DropFilterArguments.Initialize(pushFilterArgs, pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                 pushFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
 
                 if (pickedItemProto.IsCurrency)

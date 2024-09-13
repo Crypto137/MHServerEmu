@@ -187,7 +187,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (LootDropRestrictions.IsNullOrEmpty())
                 return 0;
 
-            DropFilterArguments args = new(lootContext);
+            using DropFilterArguments args = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            DropFilterArguments.Initialize(args, lootContext);
+
             RestrictionTestFlags flags = RestrictionTestFlags.None;
 
             foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)

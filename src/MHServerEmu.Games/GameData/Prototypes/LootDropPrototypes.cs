@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Loot;
 
@@ -109,7 +110,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
 
                 ItemPrototype itemProto = null;
-                DropFilterArguments filterArgs = new(itemProto, rollFor, level, rarityProtoRef.Value, ItemRank, UISlot, resolver.LootContext);
+
+                using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                DropFilterArguments.Initialize(filterArgs, itemProto, rollFor, level, rarityProtoRef.Value, ItemRank, UISlot, resolver.LootContext);
+
                 if (LootUtilities.PickValidItem(resolver, picker, null, filterArgs, ref itemProto, RestrictionTestFlags.All, ref rarityProtoRef) == false)
                 {
                     resolver.ClearPending();

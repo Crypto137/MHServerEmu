@@ -17,14 +17,14 @@ namespace MHServerEmu.Games.Loot
         public float UsablePercent { get; set; }                // LootRollSetUsablePrototype
 
         public int Level { get; set; } = 1;                     // LootRollOffsetLevelPrototype
-        public bool UseLevelVerbatim { get; set; } = false;     // LootRollUseLevelVerbatimPrototype
-        public int LevelForRequirementCheck { get; set; } = 0;  // LootRollRequireLevelPrototype
+        public bool UseLevelVerbatim { get; set; }              // LootRollUseLevelVerbatimPrototype
+        public int LevelForRequirementCheck { get; set; }       // LootRollRequireLevelPrototype
 
         public PrototypeId DifficultyTier { get; set; }
         public PrototypeId RegionScenarioRarity { get; set; }   // LootRollRequireRegionScenarioRarityPrototype
         public PrototypeId RegionAffixTable { get; set; }       // LootRollSetRegionAffixTablePrototype
 
-        public int KillCount { get; set; } = 0;                 // LootRollRequireKillCountPrototype
+        public int KillCount { get; set; }                      // LootRollRequireKillCountPrototype
         public Weekday UsableWeekday { get; set; } = Weekday.All;   // LootRollRequireWeekdayPrototype
 
         public HashSet<PrototypeId> Rarities { get; } = new();  // LootRollSetRarityPrototype
@@ -94,30 +94,30 @@ namespace MHServerEmu.Games.Loot
 
         public void ResetForPool()
         {
-            Depth = 0;
-            DropChanceModifiers = LootDropChanceModifiers.None;
+            Depth = default;
+            DropChanceModifiers = default;
             NoDropModifier = 1f;
 
-            UsableAvatar = null;
-            UsableTeamUp = null;
-            UseSecondaryAvatar = false;
-            ForceUsable = false;
-            UsablePercent = 0f;
+            UsableAvatar = default;
+            UsableTeamUp = default;
+            UseSecondaryAvatar = default;
+            ForceUsable = default;
+            UsablePercent = default;
 
             Level = 1;
-            UseLevelVerbatim = false;
-            LevelForRequirementCheck = 0;
+            UseLevelVerbatim = default;
+            LevelForRequirementCheck = default;
 
-            DifficultyTier = PrototypeId.Invalid;
-            RegionScenarioRarity = PrototypeId.Invalid;
-            RegionAffixTable = PrototypeId.Invalid;
+            DifficultyTier = default;
+            RegionScenarioRarity = default;
+            RegionAffixTable = default;
 
-            KillCount = 0;
+            KillCount = default;
             UsableWeekday = Weekday.All;
 
             Rarities.Clear();
 
-            DropDistanceThresholdSq = 0f;
+            DropDistanceThresholdSq = default;
 
             AffixLimitMinByPositionModifierDict.Clear();
             AffixLimitMaxByPositionModifierDict.Clear();
