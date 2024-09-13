@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -105,7 +106,7 @@ namespace MHServerEmu.Games.Network
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
-            using (EntitySettings playerSettings = Game.ObjectPoolManager.Get<EntitySettings>())
+            using (EntitySettings playerSettings = ObjectPoolManager.Instance.Get<EntitySettings>())
             {
                 playerSettings.DbGuid = (ulong)_dbAccount.Id;
                 playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
@@ -163,7 +164,7 @@ namespace MHServerEmu.Games.Network
                 {
                     if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
-                    using EntitySettings avatarSettings = Game.ObjectPoolManager.Get<EntitySettings>();
+                    using EntitySettings avatarSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                     avatarSettings.EntityRef = avatarRef;
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
@@ -183,7 +184,7 @@ namespace MHServerEmu.Games.Network
                 {
                     foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                     {
-                        using EntitySettings teamUpSettings = Game.ObjectPoolManager.Get<EntitySettings>();
+                        using EntitySettings teamUpSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                         teamUpSettings.EntityRef = teamUpRef;
                         teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 

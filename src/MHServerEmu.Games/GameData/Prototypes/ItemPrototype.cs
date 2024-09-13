@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -114,10 +115,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (EvalExpirationTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetExpirationTime(): EvalExpirationTimeMS == null");
 
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_ProtoRef(EvalContext.Var1, rarityProtoRef);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, rarityProtoRef);
 
-            int expirationTimeMS = Eval.RunInt(EvalExpirationTimeMS, contextData);
+            int expirationTimeMS = Eval.RunInt(EvalExpirationTimeMS, evalContext);
             return TimeSpan.FromMilliseconds(expirationTimeMS);
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -621,7 +622,7 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             entity.OnSelfAddedToOtherInventory();
 
-            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.InventoryLocationPrevious = prevInvLoc;
 
             /*

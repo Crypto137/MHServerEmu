@@ -13,6 +13,7 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Network.Parsing
 {
@@ -40,13 +41,11 @@ namespace MHServerEmu.Games.Network.Parsing
             {
                 Entity entity = DummyGame.AllocateEntity(entityPrototypeRef);
 
-                // NOTE: We can't use using here because this will not be called from a game thread
-                EntitySettings settings = DummyGame.ObjectPoolManager.Get<EntitySettings>();
+                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
                 settings.EntityRef = entityPrototypeRef;
                 settings.Id = entityId;
 
                 entity.Initialize(settings);
-                DummyGame.ObjectPoolManager.Return(settings);
 
                 entity.Serialize(archive);
 

@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -91,13 +92,13 @@ namespace MHServerEmu.Games.Powers
 
             if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
 
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
-            contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
-            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+            evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
 
-            return Eval.RunBool(powerProto.EvalCanTrigger, contextData);
+            return Eval.RunBool(powerProto.EvalCanTrigger, evalContext);
         }
 
         public PowerPositionSweepResult PowerPositionSweep(RegionLocation regionLocation, Vector3 targetPosition, ulong targetId,
@@ -530,13 +531,14 @@ namespace MHServerEmu.Games.Powers
 
             Logger.Debug("TargetPassesRestrictionEval()");
 
-            EvalContextData contextData = new(target.Game);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProto.Properties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, target.Properties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, user.Properties);
-            contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, target);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = target.Game;
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProto.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, target.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, user.Properties);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, target);
 
-            return Eval.RunBool(powerProto.TargetRestrictionEval, contextData);
+            return Eval.RunBool(powerProto.TargetRestrictionEval, evalContext);
         }
 
         private static bool TargetMeetsRestrictionPropertyConstraints(WorldEntity target, PowerPrototype powerProto)

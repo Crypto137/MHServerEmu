@@ -3,7 +3,7 @@
 namespace MHServerEmu.Core.Memory
 {
     /// <summary>
-    /// Stores <see cref="IPoolable"/> for later reuse.
+    /// Stores <see cref="IPoolable"/> instances for later reuse.
     /// </summary>
     public class ObjectPool
     {

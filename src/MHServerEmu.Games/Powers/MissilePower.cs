@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -157,13 +158,14 @@ namespace MHServerEmu.Games.Powers
                     var owner = entityManager.GetEntity<WorldEntity>(powerApplication.UserEntityId);
                     var target = entityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
 
-                    EvalContextData contextData = new(Game);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
-                    contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.Game = Game;
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
+                    evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
 
-                    contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, contextData);
+                    contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, evalContext);
                     if (contextIndex < 0 || contextIndex >= contextsLength)
                         return Logger.WarnReturn(MissileCreateResult.Failure, $"Eval returned an out-of-range missile context index (max {contextsLength - 1}, index {contextIndex}). POWER={this}");
 
@@ -196,7 +198,7 @@ namespace MHServerEmu.Games.Powers
             var missileProto = missileContext.Entity.As<MissilePrototype>();
             if (missileProto == null) return false;
 
-            using EntitySettings creationSettings = Game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings creationSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
             creationSettings.EntityRef = missileContext.Entity;
             creationSettings.RegionId = region.Id;
             creationSettings.IgnoreNavi = missileContext.Ghost;

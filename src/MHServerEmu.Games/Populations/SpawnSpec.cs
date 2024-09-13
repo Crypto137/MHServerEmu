@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -63,7 +64,7 @@ namespace MHServerEmu.Games.Populations
 
             Area area = cell.Area;
 
-            using EntitySettings settings = game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = EntityRef;
             var entityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
             if (SnapToFloor != null)

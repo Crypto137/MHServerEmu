@@ -2,6 +2,7 @@
 using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -1097,7 +1098,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (teamUp.IsDead)
                 teamUp.Resurrect();
 
-            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             if (playIntro)
                 settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden;
 

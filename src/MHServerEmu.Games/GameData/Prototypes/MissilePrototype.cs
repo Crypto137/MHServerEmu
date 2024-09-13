@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -76,9 +77,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             float pctChanceToActivate = 1.0f;
             if (EvalPctChanceToActivate != null)
             {
-                EvalContextData data = new();
-                data.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
-                pctChanceToActivate = Eval.RunFloat(EvalPctChanceToActivate, data);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+                pctChanceToActivate = Eval.RunFloat(EvalPctChanceToActivate, evalContext);
             }
             return pctChanceToActivate;
         }

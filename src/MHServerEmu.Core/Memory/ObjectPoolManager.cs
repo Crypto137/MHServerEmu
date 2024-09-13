@@ -3,7 +3,7 @@
 namespace MHServerEmu.Core.Memory
 {
     /// <summary>
-    /// Manages pools of <see cref="IPoolable"/> instances.
+    /// Provides thread-safe access to pools of <see cref="IPoolable"/> instances.
     /// </summary>
     public class ObjectPoolManager
     {
@@ -11,13 +11,20 @@ namespace MHServerEmu.Core.Memory
 
         private readonly Dictionary<Type, ObjectPool> _poolDict = new();
 
+        public static ObjectPoolManager Instance { get; } = new();
+
+        private ObjectPoolManager() { }
+
         /// <summary>
         /// Creates if needed and returns an instance of <typeparamref name="T"/>.
         /// </summary>
         public T Get<T>() where T: IPoolable, new()
         {
-            ObjectPool pool = GetOrCreatePool<T>();
-            return pool.Get<T>();
+            lock (_poolDict)
+            {
+                ObjectPool pool = GetOrCreatePool<T>();
+                return pool.Get<T>();
+            }
         }
 
         /// <summary>
@@ -25,8 +32,11 @@ namespace MHServerEmu.Core.Memory
         /// </summary>
         public void Return<T>(T @object) where T: IPoolable, new()
         {
-            ObjectPool pool = GetOrCreatePool<T>();
-            pool.Return(@object);
+            lock (_poolDict)
+            {
+                ObjectPool pool = GetOrCreatePool<T>();
+                pool.Return(@object);
+            }
         }
 
         /// <summary>

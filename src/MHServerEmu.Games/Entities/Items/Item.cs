@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
@@ -364,16 +365,16 @@ namespace MHServerEmu.Games.Entities.Items
                     $"that is not an int/float/bool prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
             }
 
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
             float valueMin = 0f;
             if (pickInRangeProto.ValueMin != null)
-                valueMin = Eval.RunFloat(pickInRangeProto.ValueMin, contextData);
+                valueMin = Eval.RunFloat(pickInRangeProto.ValueMin, evalContext);
 
             float valueMax = 0f;
             if (pickInRangeProto.ValueMax != null)
-                valueMax = Eval.RunFloat(pickInRangeProto.ValueMax, contextData);
+                valueMax = Eval.RunFloat(pickInRangeProto.ValueMax, evalContext);
 
             if (propDataType == PropertyDataType.Real)
             {
@@ -407,21 +408,21 @@ namespace MHServerEmu.Games.Entities.Items
                     $"that is not an int/float/asset prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
             }
 
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
             switch (propDataType)
             {
                 case PropertyDataType.Real:
-                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunFloat(setProto.Value, contextData) : 0f;
+                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunFloat(setProto.Value, evalContext) : 0f;
                     break;
 
                 case PropertyDataType.Integer:
-                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunInt(setProto.Value, contextData) : 0;
+                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunInt(setProto.Value, evalContext) : 0;
                     break;
 
                 case PropertyDataType.Asset:
-                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunAssetId(setProto.Value, contextData) : AssetId.Invalid;
+                    Properties[setProto.Prop] = setProto.Value != null ? Eval.RunAssetId(setProto.Value, evalContext) : AssetId.Invalid;
                     break;
             }
 
@@ -522,18 +523,18 @@ namespace MHServerEmu.Games.Entities.Items
                     }
                 }
 
-                EvalContextData contextData = new();
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
-                contextData.SetVar_Int(EvalContext.Var1, (int)Properties[PropertyEnum.ItemLevel]);
-                contextData.SetVar_Int(EvalContext.Var2, evalLevelVar);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+                evalContext.SetVar_Int(EvalContext.Var1, (int)Properties[PropertyEnum.ItemLevel]);
+                evalContext.SetVar_Int(EvalContext.Var2, evalLevelVar);
 
                 // NOTE: PowerBoost and PowerGrantRank values are rolled in parallel on the client and the server,
                 // so the order needs to be exact, or we are going to get a desync.
 
-                int powerBoostMax = Eval.RunInt(affixPowerModifierProto.PowerBoostMax, contextData);
+                int powerBoostMax = Eval.RunInt(affixPowerModifierProto.PowerBoostMax, evalContext);
                 if (powerBoostMax > 0)
                 {
-                    int powerBoostMin = Eval.RunInt(affixPowerModifierProto.PowerBoostMin, contextData);
+                    int powerBoostMin = Eval.RunInt(affixPowerModifierProto.PowerBoostMin, evalContext);
 
                     if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
                         affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerBoost, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
@@ -545,10 +546,10 @@ namespace MHServerEmu.Games.Entities.Items
                     affixEntry.Properties[affixEntry.PowerModifierPropertyId] = GenerateIntWithinRange(random.NextFloat(), powerBoostMin, powerBoostMax);
                 }
 
-                int powerGrantMaxRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMax, contextData);
+                int powerGrantMaxRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMax, evalContext);
                 if (powerGrantMaxRank > 0)
                 {
-                    int powerGrantMinRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMin, contextData);
+                    int powerGrantMinRank = Eval.RunInt(affixPowerModifierProto.PowerGrantRankMin, evalContext);
 
                     if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
                         affixEntry.PowerModifierPropertyId = new(PropertyEnum.PowerGrantRank, affixPowerModifierProto.PowerProgTableTabRef, scopeProtoRef);
@@ -595,16 +596,16 @@ namespace MHServerEmu.Games.Entities.Items
                         continue;
                     }
 
-                    EvalContextData contextData = new();
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
 
                     float valueMin = 0f;
                     if (propertyEntry.ValueMin != null)
-                        valueMin = Eval.RunFloat(propertyEntry.ValueMin, contextData);
+                        valueMin = Eval.RunFloat(propertyEntry.ValueMin, evalContext);
 
                     float valueMax = 0f;
                     if (propertyEntry.ValueMax != null)
-                        valueMax = Eval.RunFloat(propertyEntry.ValueMax, contextData);
+                        valueMax = Eval.RunFloat(propertyEntry.ValueMax, evalContext);
 
                     switch (propDataType)
                     {

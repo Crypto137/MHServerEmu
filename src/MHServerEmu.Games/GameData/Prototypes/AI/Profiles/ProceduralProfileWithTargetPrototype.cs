@@ -8,6 +8,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -1093,7 +1094,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var entityMan = game.EntityManager;
             if (entityMan == null) return;
 
-            using EntitySettings taserHotspotSettings = game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings taserHotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
             var distance = trap.RegionLocation.Position - otherTrap.RegionLocation.Position;
             var center =  distance * 0.5f;
             var delta = Vector3.Normalize2D(Vector3.AxisAngleRotate(center, Vector3.Up, MathHelper.ToRadians(90.0f)));

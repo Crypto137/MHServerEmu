@@ -1,19 +1,19 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Properties.Evals
 {
-    public class EvalContextData
+    public sealed class EvalContextData : IPoolable, IDisposable
     {
-        public Game Game { get; }
+        public Game Game { get; set; }
         public EvalContextVar[] ContextVars { get; } = new EvalContextVar[(int)EvalContext.MaxVars];
 
-        public PropertyCollection CallerStackProperties { get; internal set; }
-        public PropertyCollection LocalStackProperties { get; internal set; }
+        public PropertyCollection CallerStackProperties { get; set; }
+        public PropertyCollection LocalStackProperties { get; set; }
 
-        public EvalContextData(Game game = null)
+        public EvalContextData()    // Use pooling instead of calling this directly
         {
-            Game = game;
             for (int i = 0; i < (int)EvalContext.MaxVars; i++)
                 ContextVars[i] = new EvalContextVar();
         }
@@ -39,144 +39,160 @@ namespace MHServerEmu.Games.Properties.Evals
             ContextVars[(int)context].Var.SetFloat(value);
         }
 
-        public virtual void SetVar_AssetRef(EvalContext context, AssetId value)
+        public void SetVar_AssetRef(EvalContext context, AssetId value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetAssetRef(value);
         }
 
-        public virtual void SetReadOnlyVar_AssetRef(EvalContext context, AssetId value)
+        public void SetReadOnlyVar_AssetRef(EvalContext context, AssetId value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetAssetRef(value);
         }
 
-        public virtual void SetVar_ProtoRef(EvalContext context, PrototypeId value)
+        public void SetVar_ProtoRef(EvalContext context, PrototypeId value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetProtoRef(value);
         }
 
-        public virtual void SetReadOnlyVar_ProtoRef(EvalContext context, PrototypeId value)
+        public void SetReadOnlyVar_ProtoRef(EvalContext context, PrototypeId value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetProtoRef(value);
         }
 
-        public virtual void SetVar_PropertyId(EvalContext context, PropertyId value)
+        public void SetVar_PropertyId(EvalContext context, PropertyId value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetPropertyId(value);
         }
 
-        public virtual void SetReadOnlyVar_PropertyId(EvalContext context, PropertyId value)
+        public void SetReadOnlyVar_PropertyId(EvalContext context, PropertyId value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetPropertyId(value);
         }
 
-        public virtual void SetVar_EntityId(EvalContext context, ulong value)
+        public void SetVar_EntityId(EvalContext context, ulong value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetEntityId(value);
         }
 
-        public virtual void SetReadOnlyVar_EntityId(EvalContext context, ulong value)
+        public void SetReadOnlyVar_EntityId(EvalContext context, ulong value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetEntityId(value);
         }
 
-        public virtual void SetVar_PropertyCollectionPtr(EvalContext context, PropertyCollection value)
+        public void SetVar_PropertyCollectionPtr(EvalContext context, PropertyCollection value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetPropertyCollectionPtr(value);
         }
 
-        public virtual void SetReadOnlyVar_PropertyCollectionPtr(EvalContext context, PropertyCollection value)
+        public void SetReadOnlyVar_PropertyCollectionPtr(EvalContext context, PropertyCollection value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetPropertyCollectionPtr(value);
         }
 
-        public virtual void SetVar_ProtoRefListPtr(EvalContext context, List<PrototypeId> value)
+        public void SetVar_ProtoRefListPtr(EvalContext context, List<PrototypeId> value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetProtoRefListPtr(value);
         }
 
-        public virtual void SetReadOnlyVar_ProtoRefListPtr(EvalContext context, List<PrototypeId> value)
+        public void SetReadOnlyVar_ProtoRefListPtr(EvalContext context, List<PrototypeId> value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetProtoRefListPtr(value);
         }
 
-        public virtual void SetVar_ProtoRefVectorPtr(EvalContext context, PrototypeId[] value)
+        public void SetVar_ProtoRefVectorPtr(EvalContext context, PrototypeId[] value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetProtoRefVectorPtr(value);
         }
 
-        public virtual void SetReadOnlyVar_ProtoRefVectorPtr(EvalContext context, PrototypeId[] value)
+        public void SetReadOnlyVar_ProtoRefVectorPtr(EvalContext context, PrototypeId[] value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetProtoRefVectorPtr(value);
         }
 
-        public virtual void SetVar_ConditionCollectionPtr(EvalContext context, ConditionCollection value)
+        public void SetVar_ConditionCollectionPtr(EvalContext context, ConditionCollection value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetConditionCollectionPtr(value);
         }
 
-        public virtual void SetReadOnlyVar_ConditionCollectionPtr(EvalContext context, ConditionCollection value)
+        public void SetReadOnlyVar_ConditionCollectionPtr(EvalContext context, ConditionCollection value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetConditionCollectionPtr(value);
         }
 
-        public virtual void SetVar_EntityPtr(EvalContext context, Entity value)
+        public void SetVar_EntityPtr(EvalContext context, Entity value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetEntityPtr(value);
         }
 
-        public virtual void SetReadOnlyVar_EntityPtr(EvalContext context, Entity value)
+        public void SetReadOnlyVar_EntityPtr(EvalContext context, Entity value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetEntityPtr(value);
         }
 
-        public virtual void SetVar_EntityGuid(EvalContext context, ulong value)
+        public void SetVar_EntityGuid(EvalContext context, ulong value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = false;
             ContextVars[(int)context].Var.SetEntityGuid(value);
         }
 
-        public virtual void SetReadOnlyVar_EntityGuid(EvalContext context, ulong value)
+        public void SetReadOnlyVar_EntityGuid(EvalContext context, ulong value)
         {
             if (context >= EvalContext.MaxVars) return;
             ContextVars[(int)context].ReadOnly = true;
             ContextVars[(int)context].Var.SetEntityGuid(value);
+        }
+
+        public void Clear()
+        {
+            Game = null;
+
+            for (int i = 0; i < (int)EvalContext.MaxVars; i++)
+                ContextVars[i] = new EvalContextVar();
+
+            CallerStackProperties = null;
+            LocalStackProperties = null;
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

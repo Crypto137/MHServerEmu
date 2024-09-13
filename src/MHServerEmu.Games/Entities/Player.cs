@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -714,7 +715,7 @@ namespace MHServerEmu.Games.Entities
             item.ChangeInventoryLocation(null);
 
             // Drop it
-            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
             settings.SourceEntityId = avatar.Id;
             settings.SourcePosition = avatar.RegionLocation.Position;
@@ -887,7 +888,7 @@ namespace MHServerEmu.Games.Entities
             Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
 
             // Disable initial visibility and schedule swap-in power if requested
-            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             if (withSwapInPower)
             {
                 settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;

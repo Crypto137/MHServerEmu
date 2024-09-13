@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Entities
 
         public void Dispose()
         {
-            Game.Current?.ObjectPoolManager.Return(this);
+            ObjectPoolManager.Instance.Return(this);
         }
     }
 

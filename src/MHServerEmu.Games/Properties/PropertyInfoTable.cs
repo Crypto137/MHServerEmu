@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -163,9 +164,9 @@ namespace MHServerEmu.Games.Properties
             }
 
             PropertyCollection dummyCollection = new();
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, dummyCollection);
-            contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, PropertyId.Invalid);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, dummyCollection);
+            evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, PropertyId.Invalid);
 
             while (evalQueue.Count > 0)
             {
@@ -193,7 +194,7 @@ namespace MHServerEmu.Games.Properties
                 }
 
                 if (info.IsEvalAlwaysCalculated == false)
-                    info.SetEvalDefaultValue(PropertyCollection.EvalProperty(info.Id, contextData));
+                    info.SetEvalDefaultValue(PropertyCollection.EvalProperty(info.Id, evalContext));
 
                 evalDoneList[(int)evalPropertyEnum] = true;
             }

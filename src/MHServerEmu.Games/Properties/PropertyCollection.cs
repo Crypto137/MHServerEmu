@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -323,14 +324,15 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
             if (info.HasDependentEvals)
             {
-                EvalContextData contextData = new(Game.Current);
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game.Current;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
 
                 foreach (PropertyId dependentEvalId in info.DependentEvals)
                 {
                     PropertyInfo dependentEvalInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(dependentEvalId.Enum);
                     PropertyValue oldDependentValue = GetPropertyValue(dependentEvalId);
-                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, contextData);
+                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, evalContext);
 
                     if (newDependentValue.RawLong != oldDependentValue.RawLong)
                     {
@@ -745,10 +747,10 @@ namespace MHServerEmu.Games.Properties
             // First try running eval
             if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
             {
-                EvalContextData contextData = new();
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
-                contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
-                return EvalPropertyValue(info, contextData);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
+                return EvalPropertyValue(info, evalContext);
             }
 
             // Fall back to the default value if no value is specified in the aggregate list

@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -204,16 +205,17 @@ namespace MHServerEmu.Games.Powers
             // Run evals
             if (powerProto.EvalOnCreate.HasValue())
             {
-                EvalContextData contextData = new(owner?.Game);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, primaryCollection);
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
-                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = owner.Game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, primaryCollection);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
 
-                Eval.InitTeamUpEvalContext(contextData, owner);
+                Eval.InitTeamUpEvalContext(evalContext, owner);
 
                 foreach (EvalPrototype evalProto in powerProto.EvalOnCreate)
                 {
-                    if (Eval.RunBool(evalProto, contextData) == false)
+                    if (Eval.RunBool(evalProto, evalContext) == false)
                         Logger.Warn($"GeneratePowerProperties(): The following EvalOnCreate Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
                 }
 
@@ -221,15 +223,16 @@ namespace MHServerEmu.Games.Powers
 
             if (powerProto.EvalPowerSynergies != null)
             {
-                EvalContextData contextData = new(owner?.Game);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, primaryCollection);
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
-                contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, owner?.ConditionCollection);
-                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, owner);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = owner.Game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, primaryCollection);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, owner?.ConditionCollection);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, owner);
 
-                Eval.InitTeamUpEvalContext(contextData, owner);
+                Eval.InitTeamUpEvalContext(evalContext, owner);
 
-                if (Eval.RunBool(powerProto.EvalPowerSynergies, contextData) == false)
+                if (Eval.RunBool(powerProto.EvalPowerSynergies, evalContext) == false)
                     Logger.Warn($"GeneratePowerProperties(): The EvalPowerSynergies in a power failed:\nPower: [{powerProto}]");
             }
         }
@@ -386,39 +389,41 @@ namespace MHServerEmu.Games.Powers
             if (powerProto.EvalOnActivate.HasValue())
             {
                 // Initialize context data
-                EvalContextData contextData = new(Game);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
-                contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
-                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
-                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var3, target);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var3, target);
 
                 if (Owner is Agent agent)
                 {
                     AIController aiController = agent.AIController;
                     if (aiController != null)
-                        contextData.SetVar_PropertyCollectionPtr(EvalContext.EntityBehaviorBlackboard, aiController.Blackboard.PropertyCollection);
+                        evalContext.SetVar_PropertyCollectionPtr(EvalContext.EntityBehaviorBlackboard, aiController.Blackboard.PropertyCollection);
                 }
 
-                Eval.InitTeamUpEvalContext(contextData, Owner);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Other, target != null ? target.Properties : new PropertyCollection());
+                Eval.InitTeamUpEvalContext(evalContext, Owner);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, target != null ? target.Properties : new PropertyCollection());
 
-                if (RunActivateEval(contextData) == false)
+                if (RunActivateEval(evalContext) == false)
                     return Logger.WarnReturn(PowerUseResult.GenericError, $"Activate(): EvalOnActivate failed for Power: {this}.");
             }
 
             // Run power synergy eval if defined
             if (powerProto.EvalPowerSynergies != null)
             {
-                EvalContextData contextData = new(Game);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
-                contextData.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
-                contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
-                Eval.InitTeamUpEvalContext(contextData, Owner);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
+                evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, Owner.ConditionCollection);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, Owner);
+                Eval.InitTeamUpEvalContext(evalContext, Owner);
 
-                if (Eval.RunBool(powerProto.EvalPowerSynergies, contextData) == false)
+                if (Eval.RunBool(powerProto.EvalPowerSynergies, evalContext) == false)
                     return Logger.WarnReturn(PowerUseResult.GenericError, $"Activate(): The EvalPowerSynergies Eval in a power failed:\nPower: [{this}]");
             }
 
@@ -2304,12 +2309,12 @@ namespace MHServerEmu.Games.Powers
             EvalPrototype damageRatingEval = combatGlobals.EvalDamageRatingFormula;
             if (damageRatingEval == null) return Logger.WarnReturn(0f, "GetDamageRatingMult(): damageRatingEval == null");
 
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
-            contextData.SetVar_Float(EvalContext.Var1, damageRating);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            evalContext.SetVar_Float(EvalContext.Var1, damageRating);
 
-            return Eval.RunFloat(damageRatingEval, contextData);
+            return Eval.RunFloat(damageRatingEval, evalContext);
         }
 
         public static float GetCritChance(PowerPrototype powerProto, PropertyCollection userProperties, WorldEntity target,
@@ -2359,15 +2364,15 @@ namespace MHServerEmu.Games.Powers
             int targetLevel = targetLevelOverride >= 0 ? targetLevelOverride : target.CombatLevel;
 
             // Run eval
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
-            contextData.SetVar_Int(EvalContext.Var1, critRating);
-            contextData.SetVar_Int(EvalContext.Var2, critChancePctAddInt);
-            contextData.SetVar_Int(EvalContext.Var3, userLevel);
-            contextData.SetVar_Int(EvalContext.Var4, targetLevel);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            evalContext.SetVar_Int(EvalContext.Var1, critRating);
+            evalContext.SetVar_Int(EvalContext.Var2, critChancePctAddInt);
+            evalContext.SetVar_Int(EvalContext.Var3, userLevel);
+            evalContext.SetVar_Int(EvalContext.Var4, targetLevel);
 
-            return Eval.RunFloat(critEval, contextData);
+            return Eval.RunFloat(critEval, evalContext);
         }
 
         public static float GetSuperCritChance(PowerPrototype powerProto, PropertyCollection userProperties, WorldEntity target, int targetLevelOverride = -1)
@@ -2402,15 +2407,15 @@ namespace MHServerEmu.Games.Powers
             int targetLevel = targetLevelOverride >= 0 ? targetLevelOverride : target.CombatLevel;
 
             // Run eval
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
-            contextData.SetVar_Float(EvalContext.Var1, superCritRating);
-            contextData.SetVar_Int(EvalContext.Var2, superCritChancePctAddInt);
-            contextData.SetVar_Int(EvalContext.Var3, userLevel);
-            contextData.SetVar_Int(EvalContext.Var4, targetLevel);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            evalContext.SetVar_Float(EvalContext.Var1, superCritRating);
+            evalContext.SetVar_Int(EvalContext.Var2, superCritChancePctAddInt);
+            evalContext.SetVar_Int(EvalContext.Var3, userLevel);
+            evalContext.SetVar_Int(EvalContext.Var4, targetLevel);
 
-            return Eval.RunFloat(superCritEval, contextData);
+            return Eval.RunFloat(superCritEval, evalContext);
         }
 
         public static float GetCritDamageMult(PropertyCollection userProperties, WorldEntity target, bool isSuperCrit)
@@ -2438,12 +2443,12 @@ namespace MHServerEmu.Games.Powers
                 critDamageRating += userProperties[PropertyEnum.SuperCritDamageRating];
 
             // Run crit damage rating eval
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
-            contextData.SetVar_Float(EvalContext.Var1, critDamageRating);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, userProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            evalContext.SetVar_Float(EvalContext.Var1, critDamageRating);
 
-            float critDamageRatingBonus = Eval.RunFloat(ratingEval, contextData);
+            float critDamageRatingBonus = Eval.RunFloat(ratingEval, evalContext);
 
             // TODO: target.IsInPvPMatch()
 
@@ -3544,13 +3549,14 @@ namespace MHServerEmu.Games.Powers
             {
                 WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
 
-                EvalContextData contextData = new(Game);
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
-                contextData.SetVar_Float(EvalContext.Var1, defaultRunSpeed);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
+                evalContext.SetVar_Float(EvalContext.Var1, defaultRunSpeed);
 
-                movementSpeedOverride = Eval.RunFloat(movementPowerProto.EvalUserMoveSpeed, contextData);
+                movementSpeedOverride = Eval.RunFloat(movementPowerProto.EvalUserMoveSpeed, evalContext);
             }
 
             if (Segment.IsNearZero(movementSpeedOverride))

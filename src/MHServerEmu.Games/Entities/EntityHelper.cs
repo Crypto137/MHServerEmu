@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -38,7 +39,7 @@ namespace MHServerEmu.Games.Entities
 
             var game = region.Game;
 
-            using EntitySettings settings = game.ObjectPoolManager.Get<EntitySettings>();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = (PrototypeId)orbProto;
             settings.Position = position;
             settings.Orientation = new(3.14f, 0.0f, 0.0f);
@@ -64,7 +65,7 @@ namespace MHServerEmu.Games.Entities
             var summonerProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
 
             Agent summoner;
-            using (EntitySettings settings = avatar.Game.ObjectPoolManager.Get<EntitySettings>())
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
             {
                 settings.EntityRef = summonerRef;
                 settings.Properties = new PropertyCollection
@@ -81,7 +82,7 @@ namespace MHServerEmu.Games.Entities
                 summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
             }
 
-            using (EntitySettings settings = avatar.Game.ObjectPoolManager.Get<EntitySettings>())
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
             {
                 settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer;
                 summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, settings);
