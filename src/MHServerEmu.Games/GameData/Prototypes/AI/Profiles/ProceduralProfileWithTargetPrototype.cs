@@ -1093,7 +1093,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var entityMan = game.EntityManager;
             if (entityMan == null) return;
 
-            EntitySettings taserHotspotSettings = new ();
+            using EntitySettings taserHotspotSettings = game.ObjectPoolManager.Get<EntitySettings>();
             var distance = trap.RegionLocation.Position - otherTrap.RegionLocation.Position;
             var center =  distance * 0.5f;
             var delta = Vector3.Normalize2D(Vector3.AxisAngleRotate(center, Vector3.Up, MathHelper.ToRadians(90.0f)));

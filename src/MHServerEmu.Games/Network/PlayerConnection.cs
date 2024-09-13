@@ -105,16 +105,18 @@ namespace MHServerEmu.Games.Network
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
-            EntitySettings playerSettings = new();
-            playerSettings.DbGuid = (ulong)_dbAccount.Id;
-            playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
-            playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
-            playerSettings.PlayerConnection = this;
-            playerSettings.PlayerName = _dbAccount.PlayerName;
-            playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
-            playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
+            using (EntitySettings playerSettings = Game.ObjectPoolManager.Get<EntitySettings>())
+            {
+                playerSettings.DbGuid = (ulong)_dbAccount.Id;
+                playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
+                playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+                playerSettings.PlayerConnection = this;
+                playerSettings.PlayerName = _dbAccount.PlayerName;
+                playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
+                playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
 
-            Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+                Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+            }
 
             // Crash the instance if we fail to create a player entity. This happens when there is collision
             // in dbid caused by the game instance lagging and being unable to process players leaving before
@@ -161,7 +163,7 @@ namespace MHServerEmu.Games.Network
                 {
                     if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
-                    EntitySettings avatarSettings = new();
+                    using EntitySettings avatarSettings = Game.ObjectPoolManager.Get<EntitySettings>();
                     avatarSettings.EntityRef = avatarRef;
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
@@ -181,7 +183,7 @@ namespace MHServerEmu.Games.Network
                 {
                     foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                     {
-                        EntitySettings teamUpSettings = new();
+                        using EntitySettings teamUpSettings = Game.ObjectPoolManager.Get<EntitySettings>();
                         teamUpSettings.EntityRef = teamUpRef;
                         teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 

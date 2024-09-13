@@ -6,6 +6,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
@@ -70,6 +71,7 @@ namespace MHServerEmu.Games
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
         public LootManager LootManager { get; }
+        public ObjectPoolManager ObjectPoolManager { get; }
 
         public LiveTuningData LiveTuningData { get; private set; } = new();
 
@@ -101,6 +103,7 @@ namespace MHServerEmu.Games
             RegionManager = new();
             EntityManager = new(this);
             LootManager = new(this);
+            ObjectPoolManager = new();
 
             Random = new();
 

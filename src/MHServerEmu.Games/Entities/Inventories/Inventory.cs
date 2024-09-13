@@ -621,7 +621,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             entity.OnSelfAddedToOtherInventory();
 
-            EntitySettings settings = new() { InventoryLocationPrevious = prevInvLoc };
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
+            settings.InventoryLocationPrevious = prevInvLoc;
 
             /*
             settings.PreviousInventoryLocation = prevInvLoc;

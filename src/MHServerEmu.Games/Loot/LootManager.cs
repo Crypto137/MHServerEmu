@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Loot
                 BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
 
             // Create entity
-            EntitySettings settings = new();
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
             settings.EntityRef = itemSpec.ItemProtoRef;
             settings.RegionId = source.RegionLocation.RegionId;
             settings.Position = dropPosition;
@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.Loot
             Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
             if (inventory == null) return Logger.WarnReturn<Item>(null, "GiveItem(): inventory == null");
 
-            EntitySettings settings = new();
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
             settings.EntityRef = itemProtoRef;
             settings.InventoryLocation = new(player.Id, inventory.PrototypeDataRef);
             settings.ItemSpec = CreateItemSpec(itemProtoRef);

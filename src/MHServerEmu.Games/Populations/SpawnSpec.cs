@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Populations
 
             Area area = cell.Area;
 
-            EntitySettings settings = new();
+            using EntitySettings settings = game.ObjectPoolManager.Get<EntitySettings>();
             settings.EntityRef = EntityRef;
             var entityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
             if (SnapToFloor != null)

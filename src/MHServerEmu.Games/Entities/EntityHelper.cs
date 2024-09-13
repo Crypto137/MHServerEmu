@@ -35,20 +35,21 @@ namespace MHServerEmu.Games.Entities
         public static Agent CrateOrb(TestOrb orbProto, Vector3 position, Region region)
         {
             if (DebugOrb == false) return null;
-            var settings = new EntitySettings
-            {
-                EntityRef = (PrototypeId)orbProto,
-                Position = position,
-                Orientation = new(3.14f, 0.0f, 0.0f),
-                RegionId = region.Id,
-                Lifespan = TimeSpan.FromSeconds(3),
-                Properties = new()
-                {
-                    [PropertyEnum.AIStartsEnabled] = false,
-                    [PropertyEnum.NoEntityCollide] = true,
-                }
-            };
+
             var game = region.Game;
+
+            using EntitySettings settings = game.ObjectPoolManager.Get<EntitySettings>();
+            settings.EntityRef = (PrototypeId)orbProto;
+            settings.Position = position;
+            settings.Orientation = new(3.14f, 0.0f, 0.0f);
+            settings.RegionId = region.Id;
+            settings.Lifespan = TimeSpan.FromSeconds(3);
+            settings.Properties = new()
+            {
+                [PropertyEnum.AIStartsEnabled] = false,
+                [PropertyEnum.NoEntityCollide] = true,
+            };
+
             Agent orb = (Agent)game.EntityManager.CreateEntity(settings);
             return orb;
         }
@@ -62,10 +63,11 @@ namespace MHServerEmu.Games.Entities
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
             var summonerProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
 
-            var settings = new EntitySettings
+            Agent summoner;
+            using (EntitySettings settings = avatar.Game.ObjectPoolManager.Get<EntitySettings>())
             {
-                EntityRef = summonerRef,
-                Properties = new PropertyCollection
+                settings.EntityRef = summonerRef;
+                settings.Properties = new PropertyCollection
                 {
                     [PropertyEnum.NoMissileCollide] = true, // EvalOnCreate
                     [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
@@ -74,12 +76,16 @@ namespace MHServerEmu.Games.Entities
                     [PropertyEnum.SummonedByPower] = true,
                     [PropertyEnum.AllianceOverride] = allianceRef,
                     [PropertyEnum.Rank] = summonerProto.Rank,
-                }
-            };
+                };
 
-            Agent summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
-            EntitySettings setting = new() { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer};
-            summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, setting);
+                summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
+            }
+
+            using (EntitySettings settings = avatar.Game.ObjectPoolManager.Get<EntitySettings>())
+            {
+                settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer;
+                summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, settings);
+            }
 
             if (summonPowerProto.ActionsTriggeredOnPowerEvent.HasValue())
                 summoner.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;

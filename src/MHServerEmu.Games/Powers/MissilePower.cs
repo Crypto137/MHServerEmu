@@ -196,12 +196,10 @@ namespace MHServerEmu.Games.Powers
             var missileProto = missileContext.Entity.As<MissilePrototype>();
             if (missileProto == null) return false;
 
-            var creationSettings = new EntitySettings
-            {
-                EntityRef = missileContext.Entity,
-                RegionId = region.Id,
-                IgnoreNavi = missileContext.Ghost
-            };
+            using EntitySettings creationSettings = Game.ObjectPoolManager.Get<EntitySettings>();
+            creationSettings.EntityRef = missileContext.Entity;
+            creationSettings.RegionId = region.Id;
+            creationSettings.IgnoreNavi = missileContext.Ghost;
 
             var ownerPosition = Owner.RegionLocation.Position;
             var targetPosition = powerApplication.TargetPosition;

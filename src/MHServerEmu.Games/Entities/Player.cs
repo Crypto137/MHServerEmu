@@ -714,7 +714,7 @@ namespace MHServerEmu.Games.Entities
             item.ChangeInventoryLocation(null);
 
             // Drop it
-            EntitySettings settings = new();
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
             settings.SourceEntityId = avatar.Id;
             settings.SourcePosition = avatar.RegionLocation.Position;
@@ -887,10 +887,10 @@ namespace MHServerEmu.Games.Entities
             Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
 
             // Disable initial visibility and schedule swap-in power if requested
-            EntitySettings settings = null;
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
             if (withSwapInPower)
             {
-                settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
+                settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;
                 CurrentAvatar.ScheduleSwapInPower();
             }
 

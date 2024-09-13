@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Regions
                 return;
             }
 
-            EntitySettings settings = new();
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
             settings.EntityRef = entityProto.DataRef;
 
             if (entityMarker.OverrideSnapToFloor)

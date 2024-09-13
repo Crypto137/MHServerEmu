@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -12,7 +11,6 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Powers;
 
@@ -41,11 +39,21 @@ namespace MHServerEmu.Games.Network.Parsing
             using (Archive archive = new(ArchiveSerializeType.Replication, entityCreate.ArchiveData))
             {
                 Entity entity = DummyGame.AllocateEntity(entityPrototypeRef);
-                entity.Initialize(new() { EntityRef = entityPrototypeRef, Id = entityId });
+
+                // NOTE: We can't use using here because this will not be called from a game thread
+                EntitySettings settings = DummyGame.ObjectPoolManager.Get<EntitySettings>();
+                settings.EntityRef = entityPrototypeRef;
+                settings.Id = entityId;
+
+                entity.Initialize(settings);
+                DummyGame.ObjectPoolManager.Return(settings);
+
                 entity.Serialize(archive);
 
                 sb.AppendLine().AppendLine("archiveData");
                 sb.AppendLine(entity.ToStringVerbose());
+
+                DummyGame.MessageHandlerDict.Clear();   // Clear handlers to avoid collision errors
             }
 
             return sb.ToString();

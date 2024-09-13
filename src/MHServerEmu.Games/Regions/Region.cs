@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Regions
             {
                 foreach (var metaGameRef in regionProto.MetaGames)
                 {
-                    EntitySettings metaSettings = new();
+                    using EntitySettings metaSettings = Game.ObjectPoolManager.Get<EntitySettings>();
                     metaSettings.RegionId = Id;
                     metaSettings.EntityRef = metaGameRef;
                     MetaGame metagame = Game.EntityManager.CreateEntity(metaSettings) as MetaGame;

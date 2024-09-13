@@ -1097,13 +1097,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (teamUp.IsDead)
                 teamUp.Resurrect();
 
-            EntitySettings settings = null;
+            using EntitySettings settings = Game.ObjectPoolManager.Get<EntitySettings>();
             if (playIntro)
-            {
-                settings = new();
                 settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden;
-            }
-            
+
             teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, settings);
             teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
         }
