@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -41,7 +42,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Do a modified roll
             if (Modifiers.HasValue())
             {
-                LootRollSettings modifiedSettings = new(settings);
+                using LootRollSettings modifiedSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                modifiedSettings.Set(settings);
 
                 foreach (LootRollModifierPrototype modifier in Modifiers)
                     modifier.Apply(modifiedSettings);

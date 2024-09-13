@@ -1,9 +1,10 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class LootRollSettings
+    public class LootRollSettings : IPoolable, IDisposable
     {
         public int Depth { get; set; }
         public LootDropChanceModifiers DropChanceModifiers { get; set; }
@@ -35,9 +36,9 @@ namespace MHServerEmu.Games.Loot
         public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifierDict { get; } = new();   // Modifies the maximum number of affixes for position
         public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
 
-        public LootRollSettings() { }
+        public LootRollSettings() { }   // Use pooling instead of calling this directly
 
-        public LootRollSettings(LootRollSettings other)
+        public void Set(LootRollSettings other)
         {
             Depth = other.Depth;
             DropChanceModifiers = other.DropChanceModifiers;
@@ -60,13 +61,72 @@ namespace MHServerEmu.Games.Loot
             KillCount = other.KillCount;
             UsableWeekday = other.UsableWeekday;
 
-            Rarities = new(other.Rarities);
+            Rarities.Clear();
+            if (other.Rarities.Count > 0)
+            {
+                foreach (PrototypeId rarityProtoRef in other.Rarities)
+                    Rarities.Add(rarityProtoRef);
+            }
 
             DropDistanceThresholdSq = other.DropDistanceThresholdSq;
 
-            AffixLimitMinByPositionModifierDict = new(other.AffixLimitMinByPositionModifierDict);
-            AffixLimitMaxByPositionModifierDict = new(other.AffixLimitMaxByPositionModifierDict);
-            AffixLimitByCategoryModifierDict = new(other.AffixLimitByCategoryModifierDict);
+            AffixLimitMinByPositionModifierDict.Clear();
+            if (other.AffixLimitMinByPositionModifierDict.Count > 0)
+            {
+                foreach (var kvp in other.AffixLimitMinByPositionModifierDict)
+                    AffixLimitMinByPositionModifierDict.Add(kvp.Key, kvp.Value);
+            }
+
+            AffixLimitMaxByPositionModifierDict.Clear();
+            if (other.AffixLimitMaxByPositionModifierDict.Count > 0)
+            {
+                foreach (var kvp in other.AffixLimitMaxByPositionModifierDict)
+                    AffixLimitMaxByPositionModifierDict.Add(kvp.Key, kvp.Value);
+            }
+
+            AffixLimitByCategoryModifierDict.Clear();
+            if (other.AffixLimitByCategoryModifierDict.Count > 0)
+            {
+                foreach (var kvp in other.AffixLimitByCategoryModifierDict)
+                    AffixLimitByCategoryModifierDict.Add(kvp.Key, kvp.Value);
+            }
+        }
+
+        public void ResetForPool()
+        {
+            Depth = 0;
+            DropChanceModifiers = LootDropChanceModifiers.None;
+            NoDropModifier = 1f;
+
+            UsableAvatar = null;
+            UsableTeamUp = null;
+            UseSecondaryAvatar = false;
+            ForceUsable = false;
+            UsablePercent = 0f;
+
+            Level = 1;
+            UseLevelVerbatim = false;
+            LevelForRequirementCheck = 0;
+
+            DifficultyTier = PrototypeId.Invalid;
+            RegionScenarioRarity = PrototypeId.Invalid;
+            RegionAffixTable = PrototypeId.Invalid;
+
+            KillCount = 0;
+            UsableWeekday = Weekday.All;
+
+            Rarities.Clear();
+
+            DropDistanceThresholdSq = 0f;
+
+            AffixLimitMinByPositionModifierDict.Clear();
+            AffixLimitMaxByPositionModifierDict.Clear();
+            AffixLimitByCategoryModifierDict.Clear();
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
 
         /// <summary>

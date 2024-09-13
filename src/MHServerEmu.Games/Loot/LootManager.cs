@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Loot
 
             //Logger.Trace($"DropRandomLoot(): Rolling loot table {lootTableProto}");
 
-            LootRollSettings settings = new();
+            using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
             settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = player.CurrentAvatar.CharacterLevel;
@@ -152,7 +152,7 @@ namespace MHServerEmu.Games.Loot
 
             Logger.Info($"--- Loot Table Test - {lootTableProto} ---");
 
-            LootRollSettings settings = new();
+            using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
             settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = player.CurrentAvatar.CharacterLevel;
