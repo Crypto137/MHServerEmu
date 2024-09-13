@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 rawValue = int.MaxValue;
             }
 
-            @params.FieldInfo.SetValue(@params.OwnerPrototype, (short)rawValue);
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, (int)rawValue);
             return true;
         }
 
