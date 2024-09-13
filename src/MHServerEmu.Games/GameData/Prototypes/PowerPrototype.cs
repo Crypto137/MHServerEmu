@@ -344,17 +344,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Range == null) return Logger.WarnReturn(0f, "GetRange(): Range == null");
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
-            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? new());
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? properties);
 
             return Eval.RunFloat(Range, evalContext);            
         }
 
-        public float GetProjectilesSpeed(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        public float GetProjectileSpeed(PropertyCollection powerProperties, PropertyCollection ownerProperties)
         {
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
-            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? new());
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? properties);
 
             return Eval.RunFloat(ProjectileSpeed, evalContext);
         }

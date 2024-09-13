@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Loot
 
             if (restrictedToPlayerGuid != 0)
             {
-                PropertyCollection properties = new();
+                using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
                 settings.Properties = properties;
             }

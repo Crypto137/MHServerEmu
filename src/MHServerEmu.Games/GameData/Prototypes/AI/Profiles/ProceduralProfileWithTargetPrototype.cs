@@ -1103,7 +1103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             taserHotspotSettings.Position = trap.RegionLocation.ProjectToFloor() - center;
             taserHotspotSettings.RegionId = trap.RegionLocation.RegionId;
 
-            PropertyCollection properties = new ();
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             properties.FlattenCopyFrom(trap.Properties, false);
             taserHotspotSettings.Properties = properties;
 

@@ -405,9 +405,22 @@ namespace MHServerEmu.Games.Powers
                 }
 
                 Eval.InitTeamUpEvalContext(evalContext, Owner);
-                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, target != null ? target.Properties : new PropertyCollection());
 
-                if (RunActivateEval(evalContext) == false)
+                bool evalsSucceeded;
+
+                if (target == null)
+                {
+                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, properties);
+                    evalsSucceeded = RunActivateEval(evalContext);
+                }
+                else
+                {
+                    evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+                    evalsSucceeded = RunActivateEval(evalContext);
+                }
+
+                if (evalsSucceeded == false)
                     return Logger.WarnReturn(PowerUseResult.GenericError, $"Activate(): EvalOnActivate failed for Power: {this}.");
             }
 
@@ -1741,7 +1754,7 @@ namespace MHServerEmu.Games.Powers
             if (powerProto.ProjectileTimeToImpactOverride > 0f)
                 speed = distance / powerProto.ProjectileTimeToImpactOverride;
             else
-                speed = powerProto.GetProjectilesSpeed(powerProperties, ownerProperties);
+                speed = powerProto.GetProjectileSpeed(powerProperties, ownerProperties);
 
             if (ownerProperties != null)
                 speed *= 1f + powerProperties[PropertyEnum.MissileSpeedBonus];

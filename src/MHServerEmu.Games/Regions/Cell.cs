@@ -283,7 +283,8 @@ namespace MHServerEmu.Games.Regions
             if (entityProto.Bounds != null)
                 entityPosition.Z += entityProto.Bounds.GetBoundHalfHeight();
 
-            settings.Properties = new PropertyCollection();
+            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settings.Properties = settingsProperties;
             int level = Area.GetCharacterLevel(entityProto); 
             settings.Properties[PropertyEnum.CharacterLevel] = level;
             settings.Properties[PropertyEnum.CombatLevel] = level;

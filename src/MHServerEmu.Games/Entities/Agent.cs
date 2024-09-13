@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -829,7 +830,7 @@ namespace MHServerEmu.Games.Entities
             if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
             {
                 AIController = new(Game, this);
-                PropertyCollection collection = new();
+                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
                 SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec();
                 return AIController.Initialize(behaviorProfile, spec, collection);
@@ -1195,7 +1196,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
                     if (brain is not ProceduralAIProfilePrototype profile) return false;
-                    InitAIOverride(profile, new());
+                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    InitAIOverride(profile, properties);
                     if (AIController == null) return false;
                 }
                 else

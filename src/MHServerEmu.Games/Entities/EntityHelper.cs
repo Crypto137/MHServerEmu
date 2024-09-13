@@ -45,11 +45,11 @@ namespace MHServerEmu.Games.Entities
             settings.Orientation = new(3.14f, 0.0f, 0.0f);
             settings.RegionId = region.Id;
             settings.Lifespan = TimeSpan.FromSeconds(3);
-            settings.Properties = new()
-            {
-                [PropertyEnum.AIStartsEnabled] = false,
-                [PropertyEnum.NoEntityCollide] = true,
-            };
+
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            properties[PropertyEnum.AIStartsEnabled] = false;
+            properties[PropertyEnum.NoEntityCollide] = true;
+            settings.Properties = properties;
 
             Agent orb = (Agent)game.EntityManager.CreateEntity(settings);
             return orb;
@@ -66,18 +66,18 @@ namespace MHServerEmu.Games.Entities
 
             Agent summoner;
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
             {
                 settings.EntityRef = summonerRef;
-                settings.Properties = new PropertyCollection
-                {
-                    [PropertyEnum.NoMissileCollide] = true, // EvalOnCreate
-                    [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
-                    [PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset,
-                    [PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef,
-                    [PropertyEnum.SummonedByPower] = true,
-                    [PropertyEnum.AllianceOverride] = allianceRef,
-                    [PropertyEnum.Rank] = summonerProto.Rank,
-                };
+
+                properties[PropertyEnum.NoMissileCollide] = true; // EvalOnCreate
+                properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
+                properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
+                properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
+                properties[PropertyEnum.SummonedByPower] = true;
+                properties[PropertyEnum.AllianceOverride] = allianceRef;
+                properties[PropertyEnum.Rank] = summonerProto.Rank;
+                settings.Properties = properties;
 
                 summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
             }

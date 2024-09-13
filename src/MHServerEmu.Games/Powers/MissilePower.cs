@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.Powers
             creationSettings.VariationSeed = powerApplication.FXRandomSeed;
             creationSettings.LocomotorHeightOverride = Math.Max(missileContext.Radius, creationSettings.Position.Z - RegionLocation.ProjectToFloor(region, creationSettings.Position).Z);
 
-            var extraProperties = new PropertyCollection();
+            using var extraProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             SetExtraProperties(extraProperties, creationSettings, powerApplication, missileContext, contextIndex, missileProto);
 
             creationSettings.Properties = extraProperties;

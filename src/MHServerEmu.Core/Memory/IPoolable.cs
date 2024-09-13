@@ -5,6 +5,9 @@
     /// </summary>
     public interface IPoolable
     {
-        public void Clear();
+        /// <summary>
+        /// Resets an <see cref="IPoolable"/> instance before it returns to the pool.
+        /// </summary>
+        public void ResetForPool();
     }
 }

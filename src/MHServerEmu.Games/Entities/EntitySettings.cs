@@ -79,7 +79,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntitySettings() { }     // Use pooling instead of calling this directly
 
-        public void Clear()
+        public void ResetForPool()
         {
             Results = default;
 

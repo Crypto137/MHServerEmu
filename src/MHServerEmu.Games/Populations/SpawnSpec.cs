@@ -80,7 +80,8 @@ namespace MHServerEmu.Games.Populations
                     position.Z += entityProto.Bounds.GetBoundHalfHeight();
             }
 
-            settings.Properties = new PropertyCollection();
+            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settings.Properties = settingsProperties;
             settings.Properties.FlattenCopyFrom(Properties, false);
 
             int level = area.GetCharacterLevel(entityProto);

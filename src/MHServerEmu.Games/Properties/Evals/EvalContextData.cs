@@ -179,7 +179,7 @@ namespace MHServerEmu.Games.Properties.Evals
             ContextVars[(int)context].Var.SetEntityGuid(value);
         }
 
-        public void Clear()
+        public void ResetForPool()
         {
             Game = null;
 

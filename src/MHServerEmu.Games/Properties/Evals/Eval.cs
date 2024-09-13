@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -1754,7 +1755,7 @@ namespace MHServerEmu.Games.Properties.Evals
             var dataCallerStackProps = data.CallerStackProperties;
             var dataLocalStackProps = data.LocalStackProperties;
             data.CallerStackProperties = dataLocalStackProps;
-            var localStackProps = new PropertyCollection();
+            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
             data.LocalStackProperties = localStackProps;
 
             if (forProto.PreLoop != null)
@@ -1824,7 +1825,7 @@ namespace MHServerEmu.Games.Properties.Evals
             var dataCallerStackProps = data.CallerStackProperties;
             var dataLocalStackProps = data.LocalStackProperties;
             data.CallerStackProperties = dataLocalStackProps;
-            var localStackProps = new PropertyCollection();
+            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
             data.LocalStackProperties = localStackProps;
 
             if (forEachProto.PreLoop != null)
@@ -1906,7 +1907,7 @@ namespace MHServerEmu.Games.Properties.Evals
             var dataCallerStackProps = data.CallerStackProperties;
             var dataLocalStackProps = data.LocalStackProperties;
             data.CallerStackProperties = dataLocalStackProps;
-            var localStackProps = new PropertyCollection();
+            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
             data.LocalStackProperties = localStackProps;
 
             if (forEachProto.PreLoop != null)
@@ -2029,7 +2030,7 @@ namespace MHServerEmu.Games.Properties.Evals
 
             var dataCallerStackProps = data.CallerStackProperties;
             var dataLocalStackProps = data.LocalStackProperties;
-            var localStackProps = new PropertyCollection();
+            using var localStackProps = ObjectPoolManager.Instance.Get<PropertyCollection>();
 
             bool errors = false;
             foreach (var evalEach in scopeProto.Scope)

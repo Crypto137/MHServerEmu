@@ -37,7 +37,7 @@ namespace MHServerEmu.Core.Memory
         /// </summary>
         public void Return<T>(T @object) where T: IPoolable, new()
         {
-            @object.Clear();
+            @object.ResetForPool();
             _objects.Push(@object);
         }
     }
