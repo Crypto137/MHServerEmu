@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -179,6 +181,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int BetweenStatesIntervalMS { get; protected set; }
         public long ProgressionStateTimeoutSecs { get; protected set; }
         public bool SaveProgressionStateToDb { get; protected set; }
+
+        public PrototypeId NextState(PrototypeId stateRef)
+        {
+            if (StatesProgression.IsNullOrEmpty()) return PrototypeId.Invalid;
+            if (stateRef == PrototypeId.Invalid) return StatesProgression[0];
+
+            for (int i = 0; i < StatesProgression.Length; i++)
+                if (StatesProgression[i] == stateRef)
+                {
+                    if (i + 1 < StatesProgression.Length) 
+                        return StatesProgression[i + 1];
+                    else break;
+                }
+            return PrototypeId.Invalid;
+        }
     }
 
     public class MetaStateRegionPlayerAccessPrototype : MetaStatePrototype

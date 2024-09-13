@@ -301,6 +301,8 @@ namespace MHServerEmu.Games.Network
             // Teleport the player into our destination region if we have one
             if (newRegion != null)
             {
+                newRegion.PlayerRegionChangeEvent.Invoke(new(player));
+
                 if (startPosition == null)
                     return Logger.WarnReturn(false, "SetRegion(): No valid start position is provided");
 

@@ -15,6 +15,17 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
             Node = default;
         }
 
+        public void Clear()
+        {
+            if (Node != null)
+            {
+                Node.Elements.Remove(this);
+                if (AtTargetLevel) --Node.AtTargetLevelCount;
+                Node = null;
+            } 
+            AtTargetLevel = false;
+        }
+
         public bool IsValid() => Node != null;
         public bool IsUnlinked() => Linked == false;
         public virtual Aabb GetBounds() => default;

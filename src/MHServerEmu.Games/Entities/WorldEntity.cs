@@ -1980,7 +1980,12 @@ namespace MHServerEmu.Games.Entities
 
         public void EmergencyRegionCleanup(Region region)
         {
-            throw new NotImplementedException();
+            if(region == Region)
+            {
+                DisableNavigationInfluence();
+                RegionLocation = null;
+                SpatialPartitionLocation.Clear();
+            }
         }
 
         public bool IsTrackedByContext(PrototypeId context)

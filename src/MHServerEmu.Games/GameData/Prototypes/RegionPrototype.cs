@@ -416,6 +416,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             return false;
         }
+
+        public RegionQueueStateEntryPrototype GetRegionQueueStateEntry(PrototypeId gameStateRef)
+        {
+            if (RegionQueueStates.HasValue())
+                foreach(var entryProto in RegionQueueStates)
+                {
+                    if (entryProto == null) continue;
+                    if (entryProto.State == gameStateRef)
+                        return entryProto;
+                }
+            return null;
+        }
     }
 
     public class RegionConnectionTargetPrototype : Prototype

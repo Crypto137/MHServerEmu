@@ -3,7 +3,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
-using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
@@ -11,30 +10,6 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)Invalid)]
-    public enum ScoreTableValueType
-    {
-        Invalid = 0,
-        Int = 1,
-        Float = 2,
-    }
-
-    [AssetEnum((int)Invalid)]
-    public enum ScoreTableValueEvent
-    {
-        Invalid = 0,
-        DamageTaken = 1,
-        DamageDealt = 2,
-        Deaths = 3,
-        PlayerAssists = 4,
-        PlayerDamageDealt = 5,
-        PlayerKills = 6,
-    }
-
-    #endregion
-
     public struct EntityFilterContext
     {
         public PrototypeId MissionRef;
@@ -528,22 +503,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return item.Properties[PropertyEnum.ItemRarity] == Rarity;
             return false;
         }
-    }
-
-    public class ScoreTableSchemaEntryPrototype : Prototype
-    {
-        public ScoreTableValueType Type { get; protected set; }
-        public LocaleStringId Name { get; protected set; }
-        public EvalPrototype EvalOnPlayerAdd { get; protected set; }
-        public EvalPrototype EvalAuto { get; protected set; }
-        public EntityFilterPrototype OnEntityDeathFilter { get; protected set; }
-        public ScoreTableValueEvent Event { get; protected set; }
-
-
-    }
-
-    public class ScoreTableSchemaPrototype : Prototype
-    {
-        public ScoreTableSchemaEntryPrototype[] Schema { get; protected set; }
     }
 }

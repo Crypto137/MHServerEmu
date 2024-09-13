@@ -569,6 +569,16 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public struct PlayerRegionChangeGameEvent
+    {
+        public Player Player;
+
+        public PlayerRegionChangeGameEvent(Player player)
+        {
+            Player = player;
+        }
+    }
+
     public struct PlayerFactionChangedGameEvent
     {
         public Player Player;

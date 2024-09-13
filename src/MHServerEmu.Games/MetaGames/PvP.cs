@@ -1,6 +1,10 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.MetaGames
@@ -10,7 +14,27 @@ namespace MHServerEmu.Games.MetaGames
         private RepInt _team1;
         private RepInt _team2;
 
+        public PvPPrototype PvPPrototype { get => Prototype as PvPPrototype; }
+        public ScoreTable PvPScore { get; private set; }
         public PvP(Game game) : base(game) { }
+
+        public override bool Initialize(EntitySettings settings)
+        {
+            if (base.Initialize(settings) == false) return false;
+
+            var pvpProto = PvPPrototype;
+            CreateTeams(pvpProto.Teams);
+
+            if (pvpProto.ScoreSchemaRegion != PrototypeId.Invalid || pvpProto.ScoreSchemaPlayer != PrototypeId.Invalid)
+            {
+                PvPScore = new(this);
+                PvPScore.Initialize(pvpProto.ScoreSchemaRegion, pvpProto.ScoreSchemaPlayer);
+            }
+
+            CreateGameModes(pvpProto.GameModes);
+
+            return true;
+        }
 
         public override bool Serialize(Archive archive)
         {
@@ -43,6 +67,12 @@ namespace MHServerEmu.Games.MetaGames
 
             sb.AppendLine($"{nameof(_team1)}: {_team1}");
             sb.AppendLine($"{nameof(_team2)}: {_team2}");
+        }
+
+        public override void OnPostInit(EntitySettings settings)
+        {
+            base.OnPostInit(settings);
+            if (GameModes.Count > 0) ActivateGameMode(0);
         }
     }
 }
