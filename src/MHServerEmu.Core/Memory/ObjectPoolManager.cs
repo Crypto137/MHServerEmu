@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using System.Text;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Memory
 {
@@ -37,6 +38,21 @@ namespace MHServerEmu.Core.Memory
                 ObjectPool pool = GetOrCreatePool<T>();
                 pool.Return(@object);
             }
+        }
+
+        public string GenerateReport()
+        {
+            StringBuilder sb = new();
+
+            sb.AppendLine("ObjectPoolManager Status");
+
+            lock (_poolDict)
+            {
+                foreach (var kvp in _poolDict)
+                    sb.AppendLine($"{kvp.Key.Name}: {kvp.Value.AvailableCount}/{kvp.Value.TotalCount}");
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>
