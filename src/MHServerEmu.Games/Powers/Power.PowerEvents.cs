@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnContactTime, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnContactTime, ref settings);
         }
 
         public void HandleTriggerPowerEventOnCriticalHit()              // 2
@@ -41,14 +41,14 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerApply, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerApply, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerEnd()                 // 5
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerEnd, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerEnd, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerHit()                 // 6
@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerStart, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerStart, ref settings);
         }
 
         public void HandleTriggerPowerEventOnProjectileHit()            // 8
@@ -135,21 +135,21 @@ namespace MHServerEmu.Games.Powers
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
             settings.Flags |= PowerActivationSettingsFlags.ClientCombo;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerPivot, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerPivot, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerToggleOn()            // 22
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOn, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOn, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerToggleOff()           // 23
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOff, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOff, ref settings);
         }
 
         public bool HandleTriggerPowerEventOnPowerStopped(EndPowerFlags flags)             // 24
@@ -189,12 +189,12 @@ namespace MHServerEmu.Games.Powers
 
                 switch (actionType)
                 {
-                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionCancelScheduledActivation(triggeredPowerEvent, in settings); break;
+                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionCancelScheduledActivation(triggeredPowerEvent, ref settings); break;
                     case PowerEventActionType.EndPower:                                     DoPowerEventActionEndPower(triggeredPowerEvent.Power, flags); break;
-                    case PowerEventActionType.CooldownStart:                                DoPowerEventActionCooldownStart(triggeredPowerEvent, in settings); break;
-                    case PowerEventActionType.CooldownEnd:                                  DoPowerEventActionCooldownEnd(triggeredPowerEvent, in settings); break;
-                    case PowerEventActionType.CooldownModifySecs:                           DoPowerEventActionCooldownModifySecs(triggeredPowerEvent, in settings); break;
-                    case PowerEventActionType.CooldownModifyPct:                            DoPowerEventActionCooldownModifyPct(triggeredPowerEvent, in settings); break;
+                    case PowerEventActionType.CooldownStart:                                DoPowerEventActionCooldownStart(triggeredPowerEvent, ref settings); break;
+                    case PowerEventActionType.CooldownEnd:                                  DoPowerEventActionCooldownEnd(triggeredPowerEvent, ref settings); break;
+                    case PowerEventActionType.CooldownModifySecs:                           DoPowerEventActionCooldownModifySecs(triggeredPowerEvent, ref settings); break;
+                    case PowerEventActionType.CooldownModifyPct:                            DoPowerEventActionCooldownModifyPct(triggeredPowerEvent, ref settings); break;
 
                     default: Logger.Warn($"HandleTriggerPowerEventOnPowerStopped(): Power [{this}] contains a triggered event with an unsupported action"); break;
                 }
@@ -207,14 +207,14 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnExtraActivationCooldown, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnExtraActivationCooldown, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerLoopEnd()             // 26
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnPowerLoopEnd, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnPowerLoopEnd, ref settings);
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerAssigned()      // 27
@@ -236,15 +236,15 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
-            HandleTriggerPowerEvent(PowerEventType.OnOutOfRangeActivateMovementPower, in settings);
+            HandleTriggerPowerEvent(PowerEventType.OnOutOfRangeActivateMovementPower, ref settings);
         }
 
         #endregion
 
-        private bool HandleTriggerPowerEvent(PowerEventType eventType, in PowerActivationSettings initialSettings,
+        private bool HandleTriggerPowerEvent(PowerEventType eventType, ref PowerActivationSettings initialSettings,
             int comparisonParam = 0, MathComparisonType comparisonType = MathComparisonType.Invalid)
         {
-            if (CanTriggerPowerEventType(eventType, in initialSettings) == false)
+            if (CanTriggerPowerEventType(eventType, ref initialSettings) == false)
                 return false;
 
             PowerPrototype powerProto = Prototype;
@@ -320,38 +320,38 @@ namespace MHServerEmu.Games.Powers
                 {
                     case PowerEventActionType.BodySlide:                                    DoPowerEventActionBodyslide(); break;
                     case PowerEventActionType.CancelScheduledActivation:
-                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionCancelScheduledActivation(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.ContextCallback:                              DoPowerEventActionContextCallback(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.DespawnTarget:                                DoPowerEventActionDespawnTarget(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.ChargesIncrement:                             DoPowerEventActionChargesIncrement(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.CancelScheduledActivationOnTriggeredPower:    DoPowerEventActionCancelScheduledActivation(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.ContextCallback:                              DoPowerEventActionContextCallback(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.DespawnTarget:                                DoPowerEventActionDespawnTarget(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.ChargesIncrement:                             DoPowerEventActionChargesIncrement(triggeredPowerEvent, ref newSettings); break;
                     case PowerEventActionType.InteractFinish:                               DoPowerEventActionInteractFinish(); break;
-                    case PowerEventActionType.RestoreThrowable:                             DoPowerEventActionRestoreThrowable(in newSettings); break;
+                    case PowerEventActionType.RestoreThrowable:                             DoPowerEventActionRestoreThrowable(ref newSettings); break;
                     case PowerEventActionType.RescheduleActivationInSeconds:
                     case PowerEventActionType.ScheduleActivationAtPercent:
-                    case PowerEventActionType.ScheduleActivationInSeconds:                  DoPowerEventActionScheduleActivation(triggeredPowerEvent, in newSettings, actionType); break;
-                    case PowerEventActionType.ShowBannerMessage:                            DoPowerEventActionShowBannerMessage(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.SpawnLootTable:                               DoPowerEventActionSpawnLootTable(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.ScheduleActivationInSeconds:                  DoPowerEventActionScheduleActivation(triggeredPowerEvent, ref newSettings, actionType); break;
+                    case PowerEventActionType.ShowBannerMessage:                            DoPowerEventActionShowBannerMessage(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.SpawnLootTable:                               DoPowerEventActionSpawnLootTable(triggeredPowerEvent, ref newSettings); break;
                     case PowerEventActionType.SwitchAvatar:                                 DoPowerEventActionSwitchAvatar(); break;
                     case PowerEventActionType.ToggleOnPower:
                     case PowerEventActionType.ToggleOffPower:                               DoPowerEventActionTogglePower(triggeredPowerEvent, ref newSettings, actionType); break;
                     case PowerEventActionType.TransformModeChange:                          DoPowerEventActionTransformModeChange(triggeredPowerEvent); break;
-                    case PowerEventActionType.TransformModeStart:                           DoPowerEventActionTransformModeStart(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.UsePower:                                     DoPowerEventActionUsePower(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.TransformModeStart:                           DoPowerEventActionTransformModeStart(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.UsePower:                                     DoPowerEventActionUsePower(triggeredPowerEvent, ref newSettings); break;
                     case PowerEventActionType.TeleportToPartyMember:                        DoPowerEventActionTeleportToPartyMember(); break;
                     case PowerEventActionType.ControlAgentAI:                               DoPowerEventActionControlAgentAI(newSettings.TargetEntityId); break;
                     case PowerEventActionType.RemoveAndKillControlledAgentsFromInv:         DoPowerEventActionRemoveAndKillControlledAgentsFromInv(); break;
                     case PowerEventActionType.EndPower:                                     DoPowerEventActionEndPower(triggeredPowerEvent.Power, EndPowerFlags.ExplicitCancel | EndPowerFlags.PowerEventAction); break;
-                    case PowerEventActionType.CooldownStart:                                DoPowerEventActionCooldownStart(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.CooldownEnd:                                  DoPowerEventActionCooldownEnd(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.CooldownModifySecs:                           DoPowerEventActionCooldownModifySecs(triggeredPowerEvent, in newSettings); break;
-                    case PowerEventActionType.CooldownModifyPct:                            DoPowerEventActionCooldownModifyPct(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.CooldownStart:                                DoPowerEventActionCooldownStart(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.CooldownEnd:                                  DoPowerEventActionCooldownEnd(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.CooldownModifySecs:                           DoPowerEventActionCooldownModifySecs(triggeredPowerEvent, ref newSettings); break;
+                    case PowerEventActionType.CooldownModifyPct:                            DoPowerEventActionCooldownModifyPct(triggeredPowerEvent, ref newSettings); break;
                     case PowerEventActionType.TeamUpAgentSummon:                            DoPowerEventActionTeamUpAgentSummon(triggeredPowerEvent); break;
-                    case PowerEventActionType.TeleportToRegion:                             DoPowerEventActionTeleportRegion(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.TeleportToRegion:                             DoPowerEventActionTeleportRegion(triggeredPowerEvent, ref newSettings); break;
                     case PowerEventActionType.StealPower:                                   DoPowerEventActionStealPower(newSettings.TargetEntityId); break;
                     case PowerEventActionType.PetItemDonate:                                DoPowerEventActionPetItemDonate(triggeredPowerEvent); break;
                     case PowerEventActionType.MapPowers:                                    DoPowerEventActionMapPowers(triggeredPowerEvent); break;
                     case PowerEventActionType.UnassignMappedPowers:                         DoPowerEventActionUnassignMappedPowers(triggeredPowerEvent); break;
-                    case PowerEventActionType.RemoveSummonedAgentsWithKeywords:             DoPowerEventActionRemoveSummonedAgentsWithKeywords(triggeredPowerEvent, in newSettings); break;
+                    case PowerEventActionType.RemoveSummonedAgentsWithKeywords:             DoPowerEventActionRemoveSummonedAgentsWithKeywords(triggeredPowerEvent, ref newSettings); break;
                     case PowerEventActionType.SpawnControlledAgentWithSummonDuration:       DoPowerEventActionSummonControlledAgentWithDuration(); break;
                     case PowerEventActionType.LocalCoopEnd:                                 DoPowerEventActionLocalCoopEnd(); break;
 
@@ -362,7 +362,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool CanTriggerPowerEventType(PowerEventType eventType, in PowerActivationSettings settings)
+        private bool CanTriggerPowerEventType(PowerEventType eventType, ref PowerActivationSettings settings)
         {
             // TODO: Recheck this when we have a proper PowerEffectsPacket / PowerResults implementation
             if (settings.PowerResults != null && settings.PowerResults.TargetId != Entity.InvalidId)
@@ -389,7 +389,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings initialSettings)
+        private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings initialSettings)
         {
             // Activate combo power - a power triggered by a power event action
             //Logger.Debug($"DoActivateComboPower(): {triggeredPower.Prototype}");
@@ -473,7 +473,7 @@ namespace MHServerEmu.Games.Powers
                         ? settings.OriginalTargetPosition
                         : settings.TargetPosition;
 
-                    triggeredPower.GenerateActualTargetPosition(settings.TargetEntityId, originalTargetPosition, out settings.TargetPosition, in settings);
+                    triggeredPower.GenerateActualTargetPosition(settings.TargetEntityId, originalTargetPosition, out settings.TargetPosition, ref settings);
                 }
 
                 // Refresh FX random seed if needed
@@ -503,7 +503,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         private bool GetPowersToOperateOnForPowerEvent(WorldEntity owner, PowerEventActionPrototype triggeredPowerEvent,
-            in PowerActivationSettings settings, List<Power> outputList)
+            ref PowerActivationSettings settings, List<Power> outputList)
         {
             WorldEntity cooldownPowerOwner = owner;
 
@@ -554,7 +554,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 2, 3
-        private bool DoPowerEventActionCancelScheduledActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private bool DoPowerEventActionCancelScheduledActivation(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             //Logger.Debug($"DoPowerEventActionCancelScheduledActivation(): {triggeredPowerEvent.Power.GetName()}");
 
@@ -615,19 +615,19 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 4
-        private void DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionContextCallback(): Not implemented");
         }
 
         // 5
-        private void DoPowerEventActionDespawnTarget(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionDespawnTarget(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionDespawnTarget(): Not implemented");
         }
 
         // 6
-        private void DoPowerEventActionChargesIncrement(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionChargesIncrement(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionChargesIncrement(): Not implemented");
         }
@@ -639,7 +639,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 9
-        private bool DoPowerEventActionRestoreThrowable(in PowerActivationSettings settings)
+        private bool DoPowerEventActionRestoreThrowable(ref PowerActivationSettings settings)
         {
             Logger.Trace($"DoPowerEventActionRestoreThrowable()");
 
@@ -650,7 +650,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 8, 10, 11
-        private bool DoPowerEventActionScheduleActivation(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings, PowerEventActionType actionType)
+        private bool DoPowerEventActionScheduleActivation(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings, PowerEventActionType actionType)
         {
             //Logger.Debug($"DoPowerEventActionScheduleActivation(): {triggeredPowerEvent.Power.GetName()}");
 
@@ -720,17 +720,17 @@ namespace MHServerEmu.Games.Powers
             if (powerToSchedule == null)
                 return Logger.WarnReturn(false, $"DoPowerEventActionScheduleActivation(): Power to schedule power for activation from power [{this}] could not be found.");
 
-            return triggeringPower.ScheduleScheduledActivation(delay, powerToSchedule, triggeredPowerEvent, in settings);
+            return triggeringPower.ScheduleScheduledActivation(delay, powerToSchedule, triggeredPowerEvent, ref settings);
         }
 
         // 12
-        private void DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionShowBannerMessage(): Not implemented");
         }
 
         // 13
-        private void DoPowerEventActionSpawnLootTable(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionSpawnLootTable(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionSpawnLootTable(): Not implemented");
         }
@@ -774,13 +774,13 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 18
-        private void DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
         }
 
         // 19
-        private bool DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private bool DoPowerEventActionUsePower(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             //Logger.Debug($"DoPowerEventActionUsePower(): {triggeredPowerEvent.Power.GetName()}");
 
@@ -813,7 +813,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Activate
-            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, in settings);            
+            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, ref settings);            
         }
 
         // 20
@@ -856,7 +856,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 24
-        private void DoPowerEventActionCooldownStart(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionCooldownStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             //Logger.Debug($"DoPowerEventActionCooldownStart()");
 
@@ -864,7 +864,7 @@ namespace MHServerEmu.Games.Powers
                 return;
 
             List<Power> powersToOperateOnList = new();
-            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan cooldownDuration = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
                 foreach (Power power in powersToOperateOnList)
@@ -881,12 +881,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 25
-        private void DoPowerEventActionCooldownEnd(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionCooldownEnd(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             //Logger.Debug($"DoPowerEventActionCooldownEnd()");
 
             List<Power> powersToOperateOnList = new();
-            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 foreach (Power power in powersToOperateOnList)
                 {
@@ -902,12 +902,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 26
-        private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             //Logger.Debug($"DoPowerEventActionCooldownModifySecs()");
 
             List<Power> powersToOperateOnList = new();
-            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan offset = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
 
@@ -925,12 +925,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 27
-        private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             //Logger.Debug($"DoPowerEventActionCooldownModifyPct()");
 
             List<Power> powersToOperateOnList = new();
-            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, in settings, powersToOperateOnList))
+            if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
 
@@ -960,7 +960,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 29
-        private void DoPowerEventActionTeleportRegion(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionTeleportRegion(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionTeleportRegion(): Not implemented");
         }
@@ -1053,7 +1053,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 34
-        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             Logger.Warn($"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Not implemented");
         }

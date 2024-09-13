@@ -317,7 +317,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Builds <see cref="NetMessageActivatePower"/> for the provided <see cref="Power"/> and <see cref="PowerActivationSettings"/>.
         /// </summary>
-        public static NetMessageActivatePower BuildActivatePowerMessage(Power power, in PowerActivationSettings settings)
+        public static NetMessageActivatePower BuildActivatePowerMessage(Power power, ref PowerActivationSettings settings)
         {
             // Build flags
             ActivatePowerMessageFlags flags = ActivatePowerMessageFlags.None;

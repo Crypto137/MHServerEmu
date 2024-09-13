@@ -55,11 +55,11 @@ namespace MHServerEmu.Games.Powers
             return base.Activate(ref settings);
         }
 
-        protected override PowerUseResult ActivateInternal(in PowerActivationSettings settings)
+        protected override PowerUseResult ActivateInternal(ref PowerActivationSettings settings)
         {
             if (settings.PowerRandomSeed != 0)
                 _random.Seed((int)settings.PowerRandomSeed);
-            return base.ActivateInternal(settings);
+            return base.ActivateInternal(ref settings);
         }
 
         protected override bool ApplyInternal(PowerApplication powerApplication)

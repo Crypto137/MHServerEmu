@@ -457,7 +457,7 @@ namespace MHServerEmu.Games.Powers
 
             settings.OriginalTargetPosition = settings.TargetPosition;
             // EntityHelper.CrateOrb(EntityHelper.TestOrb.Red, settings.TargetPosition, Owner.Region);
-            GenerateActualTargetPosition(settings.TargetEntityId, settings.OriginalTargetPosition, out settings.TargetPosition, in settings);
+            GenerateActualTargetPosition(settings.TargetEntityId, settings.OriginalTargetPosition, out settings.TargetPosition, ref settings);
             // EntityHelper.CrateOrb(EntityHelper.TestOrb.BigRed, settings.TargetPosition, Owner.Region);
             MovementPowerPrototype movementPowerProto = FindPowerPrototype<MovementPowerPrototype>(powerProto);
             if (movementPowerProto == null || movementPowerProto.TeleportMethod != TeleportMethodType.Teleport)
@@ -486,7 +486,7 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            PowerUseResult result = ActivateInternal(in settings);
+            PowerUseResult result = ActivateInternal(ref settings);
             if (result != PowerUseResult.Success)
                 return result;
 
@@ -512,7 +512,7 @@ namespace MHServerEmu.Games.Powers
                 ScheduleChannelStart();
 
             if (GetActivationType() != PowerActivationType.Passive && powerProto.IsRecurring == false)
-                SchedulePowerEnd(in settings);
+                SchedulePowerEnd(ref settings);
 
             _situationalComponent?.OnPowerActivated(target);
 
@@ -526,7 +526,7 @@ namespace MHServerEmu.Games.Powers
             Activate(ref settings);
         }
 
-        public bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        public bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             if (Game == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): Game == null");
             if (_scheduledActivateEventList == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): _scheduledActivateEventList == null");
@@ -548,7 +548,7 @@ namespace MHServerEmu.Games.Powers
             if (triggeredPower == null) return Logger.WarnReturn(false,
                 $"ScheduledActivateCallback(): Couldn't find the power to activate for a scheduled activation. Owner: {Owner}\nPower ref hash ID: {triggeredPowerProtoRef}");
 
-            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, in settings);
+            return DoActivateComboPower(triggeredPower, triggeredPowerEvent, ref settings);
         }
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
@@ -2452,7 +2452,7 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
-        protected virtual PowerUseResult ActivateInternal(in PowerActivationSettings settings)
+        protected virtual PowerUseResult ActivateInternal(ref PowerActivationSettings settings)
         {
             // Send non-combo activations and combos triggered by the server
             if (IsComboEffect() == false || settings.Flags.HasFlag(PowerActivationSettingsFlags.ServerCombo))
@@ -2465,7 +2465,7 @@ namespace MHServerEmu.Games.Powers
                 IEnumerable<PlayerConnection> interestedClients = networkManager.GetInterestedClients(Owner, AOINetworkPolicyValues.AOIChannelProximity, skipOwner);
                 if (interestedClients.Any())
                 {
-                    NetMessageActivatePower activatePowerMessage = ArchiveMessageBuilder.BuildActivatePowerMessage(this, in settings);
+                    NetMessageActivatePower activatePowerMessage = ArchiveMessageBuilder.BuildActivatePowerMessage(this, ref settings);
                     networkManager.SendMessageToMultiple(interestedClients, activatePowerMessage);
                 }
             }
@@ -2517,7 +2517,7 @@ namespace MHServerEmu.Games.Powers
                 if (settings.TargetEntityId != Entity.InvalidId)
                     target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
 
-                if (FillOutProcEffectPowerApplication(target, in settings, powerApplication) == false)
+                if (FillOutProcEffectPowerApplication(target, ref settings, powerApplication) == false)
                     return PowerUseResult.GenericError;
             }
 
@@ -2865,7 +2865,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         protected virtual void GenerateActualTargetPosition(ulong targetId, Vector3 originalTargetPosition, out Vector3 actualTargetPosition,
-            in PowerActivationSettings settings)
+            ref PowerActivationSettings settings)
         {
             actualTargetPosition = originalTargetPosition;
 
@@ -3643,13 +3643,13 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private void DoRandomTargetSelection(Power triggeredPower, in PowerActivationSettings settings)
+        private void DoRandomTargetSelection(Power triggeredPower, ref PowerActivationSettings settings)
         {
             // TODO
             Logger.Debug("DoRandomTargetSelection()");
         }
 
-        private bool FillOutProcEffectPowerApplication(WorldEntity target, in PowerActivationSettings settings, PowerApplication powerApplication)
+        private bool FillOutProcEffectPowerApplication(WorldEntity target, ref PowerActivationSettings settings, PowerApplication powerApplication)
         {
             // TODO
             Logger.Debug("FillOutProcEffectPowerApplication()");
@@ -3756,7 +3756,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        protected bool SchedulePowerEnd(in PowerActivationSettings settings)
+        protected bool SchedulePowerEnd(ref PowerActivationSettings settings)
         {
             if (Owner == null) return Logger.WarnReturn(false, "SchedulePowerEnd(): Owner == null");
 
@@ -3828,7 +3828,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool ScheduleScheduledActivation(TimeSpan delay, Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+        private bool ScheduleScheduledActivation(TimeSpan delay, Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             if (Game == null) return Logger.WarnReturn(false, "ScheduleScheduledActivation(): Game == null");
 
@@ -3839,7 +3839,7 @@ namespace MHServerEmu.Games.Powers
 
             EventPointer<ScheduledActivateEvent> scheduledActivateEvent = new();
             scheduler.ScheduleEvent(scheduledActivateEvent, delay, _pendingEvents);
-            scheduledActivateEvent.Get().Initialize(this, triggeredPower.PrototypeDataRef, triggeredPowerEvent, in settings);
+            scheduledActivateEvent.Get().Initialize(this, triggeredPower.PrototypeDataRef, triggeredPowerEvent, ref settings);
 
             // Initialize the event pointer list if this is the first scheduled activation for this power
             _scheduledActivateEventList ??= new();
@@ -3904,7 +3904,7 @@ namespace MHServerEmu.Games.Powers
 
             public PrototypeId TriggeredPowerProtoRef { get => _triggeredPowerProtoRef; }
 
-            public void Initialize(Power power, PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, in PowerActivationSettings settings)
+            public void Initialize(Power power, PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
             {
                 _eventTarget = power;
                 _triggeredPowerProtoRef = triggeredPowerProtoRef;
@@ -3916,7 +3916,7 @@ namespace MHServerEmu.Games.Powers
             {
                 if (_eventTarget == null) return Logger.WarnReturn(false, "OnTriggered(): _eventTarget == null");
                 if (_eventTarget.Game == null) return Logger.WarnReturn(false, "OnTriggered(): _eventTarget.Game == null");
-                _eventTarget.ScheduledActivateCallback(_triggeredPowerProtoRef, _triggeredPowerEvent, in _settings);
+                _eventTarget.ScheduledActivateCallback(_triggeredPowerProtoRef, _triggeredPowerEvent, ref _settings);
                 return true;
             }
 
