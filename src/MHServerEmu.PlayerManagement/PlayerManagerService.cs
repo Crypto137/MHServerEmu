@@ -186,7 +186,12 @@ namespace MHServerEmu.PlayerManagement
 
             // Account data is saved asynchronously as a task because it takes some time for a player to leave a game
             lock (_pendingSaveDict)
+            {
+                if (_pendingSaveDict.ContainsKey(playerDbId))
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] already has a pending save task");
+
                 _pendingSaveDict.Add(playerDbId, Task.Run(async () => await SavePlayerDataAsync(client)));
+            } 
             
             return true;
         }
