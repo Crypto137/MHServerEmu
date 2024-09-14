@@ -1,11 +1,12 @@
-﻿using System.Text;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames.GameModes;
@@ -15,6 +16,7 @@ using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
+using System.Text;
 
 namespace MHServerEmu.Games.MetaGames
 {
@@ -31,8 +33,12 @@ namespace MHServerEmu.Games.MetaGames
         protected List<MetaGameTeam> Teams { get; }
         protected List<MetaGameMode> GameModes { get; }
         protected GRandom Random { get; }
+        public MetaGameMode CurrentMode => (_modeIndex > -1 && _modeIndex < GameModes.Count) ? GameModes[_modeIndex] : null;
 
-        private HashSet<ulong> _discoveredEntities;
+        private readonly HashSet<ulong> _discoveredEntities = new();
+        private readonly Queue<ApplyStateRecord> _applyStateStack = new();
+        private readonly Queue<PrototypeId> _removeStateStack = new();
+        private readonly EventPointer<ApplyStateEvent> _scheduledApplyState = new();
 
         private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnMap;
         private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
@@ -49,7 +55,6 @@ namespace MHServerEmu.Games.MetaGames
             Teams = new();
             Random = new();
             _name = new();
-            _discoveredEntities = new();
             _modeIndex = -1;
             _playerEnteredRegionAction = OnPlayerEnteredRegion;
             _entityEnteredWorldAction = OnEntityEnteredWorld;
@@ -206,7 +211,7 @@ namespace MHServerEmu.Games.MetaGames
             if (modeProto == null) return;
 
             // deactivate old mode
-            if (_modeIndex != -1) GameModes[_modeIndex].OnDeactivate();
+            CurrentMode?.OnDeactivate();
 
             // TODO modeProto.EventHandler
             // TODO lock for proto.SoftLockRegionMode
@@ -225,12 +230,12 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (states.IsNullOrEmpty()) return;
             foreach(var stateRef in states)
-                if (CanApplyState(stateRef))
-                    ApplyMetaState(stateRef);
+                ApplyMetaState(stateRef);
         }
 
         private bool CanApplyState(PrototypeId stateRef, bool skipCooldown = false)
         {
+            if (stateRef == PrototypeId.Invalid) return false;
             var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
             if (stateProto == null || stateProto.CanApplyState() == false) return false;
 
@@ -265,19 +270,97 @@ namespace MHServerEmu.Games.MetaGames
             return true;
         }
 
-        public void ApplyMetaState(PrototypeId stateRef)
+        public bool ApplyMetaState(PrototypeId stateRef, bool skipCooldown = false)
         {
-            // TODO
+            if (CanApplyState(stateRef, skipCooldown) == false) return false;
+            var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
+
+            RemoveGroups(stateProto.RemoveGroups);
+            RemoveStates(stateProto.RemoveStates);
+
+            _applyStateStack.Enqueue(new(stateRef, skipCooldown));
+
+            if (_scheduledApplyState.IsValid == false)
+                ScheduleEntityEvent(_scheduledApplyState, TimeSpan.FromMilliseconds(0));
+
+            ApplyStates(stateProto.SubStates);
+
+            Properties[PropertyEnum.MetaGameTimeStateAddedMS, stateRef] = Game.CurrentTime;
+
+            return true;
+        }
+
+        private void OnApplyState()
+        {
+            List<PrototypeId> removed = new();
+            while (_removeStateStack.Count > 0 || _applyStateStack.Count > 0)
+            {
+                if (_removeStateStack.Count > 0)
+                {
+                    var removeState = _removeStateStack.Dequeue();
+                    var state = MetaStates.FirstOrDefault(state => state.PrototypeDataRef == removeState);
+                    if (state != null)
+                    {
+                        Properties[PropertyEnum.MetaGameTimeStateRemovedMS, removeState] = Game.CurrentTime;
+                        state.OnRemove();
+                        CurrentMode?.OnRemoveState(state);
+                        removed.Add(removeState);
+                        MetaStates.Remove(state);
+                    }
+                }
+                else if (_applyStateStack.Count > 0)
+                {
+                    var applyState = _applyStateStack.Dequeue();
+                    var stateRef = applyState.StateRef;
+                    if (HasState(stateRef)) continue;
+                    if (CanApplyState(stateRef, applyState.SkipCooldown) == false) continue;
+                    MetaState state = MetaState.CreateMetaState(this, stateRef);
+                    if (state == null) continue;
+                    MetaStates.Add(state);
+                    state.OnApply();
+                }
+            }
+
+            foreach(var removedState in removed)
+                foreach(var state in MetaStates)
+                    state.OnRemovedState(removedState);
+        }
+
+        public bool HasState(PrototypeId stateRef)
+        {
+            return MetaStates.Any(state => state.PrototypeDataRef == stateRef);
         }
 
         public void RemoveStates(PrototypeId[] removeStates)
         {
-            // TODO
+            if (removeStates.IsNullOrEmpty()) return;
+            foreach (var removeState in removeStates)
+                RemoveState(removeState);
         }
-
         public void RemoveGroups(AssetId[] removeGroups)
         {
-            // TODO
+            if (removeGroups.IsNullOrEmpty()) return;
+            foreach (var removeGroup in removeGroups)
+                RemoveGroup(removeGroup);
+        }
+
+        public void RemoveState(PrototypeId stateRef)
+        {
+            var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
+            if (stateProto == null) return;
+            RemoveStates(stateProto.SubStates);
+            _removeStateStack.Enqueue(stateRef);
+            if (_scheduledApplyState.IsValid == false)
+                ScheduleEntityEvent(_scheduledApplyState, TimeSpan.FromMilliseconds(0));
+            Properties[PropertyEnum.MetaGameTimeStateRemovedMS, stateRef] = Game.CurrentTime;
+        }
+
+        public void RemoveGroup(AssetId removeGroup)
+        {
+            if (removeGroup == AssetId.Invalid) return;
+            foreach (var state in MetaStates)
+                if (state.HasGroup(removeGroup))
+                    RemoveState(state.PrototypeDataRef);
         }
 
         public MetaStateSpawnEvent GetMetaStateEvent(PrototypeId state)
@@ -537,5 +620,21 @@ namespace MHServerEmu.Games.MetaGames
 
         #endregion
 
+        protected class ApplyStateEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as MetaGame)?.OnApplyState();
+        }
+
+        public struct ApplyStateRecord
+        {
+            public PrototypeId StateRef;
+            public bool SkipCooldown;
+
+            public ApplyStateRecord(PrototypeId stateRef, bool skipCooldown)
+            {
+                StateRef = stateRef;
+                SkipCooldown = skipCooldown;
+            }
+        }
     }
 }

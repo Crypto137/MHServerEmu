@@ -7,6 +7,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
@@ -265,6 +266,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var message = NetMessageClearMetaGameInfoNotification.DefaultInstance;
             Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
         }
+
+        public virtual void OnRemoveState(MetaState state) { }
 
         public class ActiveGoalRepeatEvent : CallMethodEvent<MetaGameMode>
         {

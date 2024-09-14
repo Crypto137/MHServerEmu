@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
 {
@@ -7,9 +6,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     {
         private MetaStateLimitPlayerDeathsPerMissionPrototype _proto;
 
-        public MetaStateLimitPlayerDeathsPerMission(MetaGame metaGame, PrototypeId stateRef) : base(metaGame, stateRef)
+        public MetaStateLimitPlayerDeathsPerMission(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
-            _proto = Prototype as MetaStateLimitPlayerDeathsPerMissionPrototype;
+            _proto = prototype as MetaStateLimitPlayerDeathsPerMissionPrototype;
         }
     }
 }

@@ -11,22 +11,28 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         public PrototypeId PrototypeDataRef { get; }
         public MetaStatePrototype Prototype {  get; } 
 
-        public MetaState(MetaGame metaGame, PrototypeId stateRef)
+        public MetaState(MetaGame metaGame, MetaStatePrototype prototype)
         {
             MetaGame = metaGame;
-            PrototypeDataRef = stateRef;
-            Prototype = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
+            Prototype = prototype;
+            PrototypeDataRef = prototype.DataRef;
         }
 
-        public virtual void OnRemovedPlayer(Player player) { }
+        public static MetaState CreateMetaState(MetaGame metaGame, PrototypeId stateRef)
+        {
+            var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
+            return stateProto.AllocateState(metaGame);
+        }
 
         public bool HasGroup(AssetId group)
         {
-            if (group != AssetId.Invalid && Prototype.Groups.HasValue())
-                foreach(var stateGroup in Prototype.Groups)
-                    if (stateGroup == group) return true;
-
-            return false;
+            if (group == AssetId.Invalid || Prototype.Groups.IsNullOrEmpty()) return false;
+            return Prototype.Groups.Any(stateGroup => stateGroup == group);
         }
+
+        public virtual void OnApply() { }
+        public virtual void OnRemove() { }
+        public virtual void OnRemovedState(PrototypeId removedStateRef) { }
+        public virtual void OnRemovedPlayer(Player player) { }
     }
 }

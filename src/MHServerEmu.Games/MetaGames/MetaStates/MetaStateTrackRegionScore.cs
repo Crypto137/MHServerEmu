@@ -1,4 +1,3 @@
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -7,9 +6,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     {
 	    private MetaStateTrackRegionScorePrototype _proto;
 		
-        public MetaStateTrackRegionScore(MetaGame metaGame, PrototypeId stateRef) : base(metaGame, stateRef)
+        public MetaStateTrackRegionScore(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
-            _proto = Prototype as MetaStateTrackRegionScorePrototype;
+            _proto = prototype as MetaStateTrackRegionScorePrototype;
         }
     }
 }

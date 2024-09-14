@@ -1,5 +1,4 @@
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -8,9 +7,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     {
 	    private MetaStateLimitPlayerDeathsPrototype _proto;
 		
-        public MetaStateLimitPlayerDeaths(MetaGame metaGame, PrototypeId stateRef) : base(metaGame, stateRef)
+        public MetaStateLimitPlayerDeaths(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
-            _proto = Prototype as MetaStateLimitPlayerDeathsPrototype;
+            _proto = prototype as MetaStateLimitPlayerDeathsPrototype;
         }
 
         public override void OnRemovedPlayer(Player player)

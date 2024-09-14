@@ -1,4 +1,3 @@
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -7,9 +6,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     {
 	    private MetaStateCombatQueueLockoutPrototype _proto;
 		
-        public MetaStateCombatQueueLockout(MetaGame metaGame, PrototypeId stateRef) : base(metaGame, stateRef)
+        public MetaStateCombatQueueLockout(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
-            _proto = Prototype as MetaStateCombatQueueLockoutPrototype;
+            _proto = prototype as MetaStateCombatQueueLockoutPrototype;
         }
     }
 }

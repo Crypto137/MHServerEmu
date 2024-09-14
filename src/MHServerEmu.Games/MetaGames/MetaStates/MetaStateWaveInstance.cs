@@ -1,4 +1,3 @@
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -7,9 +6,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     {
 	    private MetaStateWaveInstancePrototype _proto;
 		
-        public MetaStateWaveInstance(MetaGame metaGame, PrototypeId stateRef) : base(metaGame, stateRef)
+        public MetaStateWaveInstance(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
-            _proto = Prototype as MetaStateWaveInstancePrototype;
+            _proto = prototype as MetaStateWaveInstancePrototype;
         }
     }
 }
