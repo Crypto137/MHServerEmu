@@ -570,6 +570,10 @@ namespace MHServerEmu.Games.Entities
                     OnMovementPreventionPropertyChange(newValue);
                     break;
 
+                case PropertyEnum.MissileOwnedByPlayer:
+                    SetFlag(EntityFlags.MissileOwnedByPlayer, newValue);
+                    break;
+
                 case PropertyEnum.MissionAllyOfAvatarDbGuid:
                     Properties[PropertyEnum.MissionAllyOfAvatar] = newValue != 0;
                     break;

@@ -53,9 +53,11 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Initialize(EntitySettings settings)
         {
-            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
-            if (agentProto == null) return false;
-            if (agentProto.Locomotion.Immobile == false) Locomotor = new();
+            AgentPrototype agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
+            if (agentProto == null) return Logger.WarnReturn(false, "Initialize(): agentProto == null");
+            
+            if (agentProto.Locomotion.Immobile == false)
+                Locomotor = new();
 
             // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
@@ -63,6 +65,18 @@ namespace MHServerEmu.Games.Entities
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
 
+            // Set mob health curve
+            if (CanBePlayerOwned() == false)
+            {
+                CurveId existingCurve = Properties.GetCurveIdForCurveProperty(PropertyEnum.HealthBase);
+                Logger.Debug($"Overriding health base curve: {existingCurve.GetName()} => {agentProto.MobHealthBaseCurveDCL.GetName()}");
+
+                PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);
+
+                Properties.SetCurveProperty(PropertyEnum.HealthBase, agentProto.MobHealthBaseCurveDCL, PropertyEnum.CombatLevel,
+                    healthBasePropertyInfo, SetPropertyFlags.None, true);
+            }
+ 
             return true;
         }
 

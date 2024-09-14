@@ -93,14 +93,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
-            Properties[PropertyEnum.CombatLevel] = 60;
-
-            // Add base stats to compensate for the lack of equipment
-            Properties[PropertyEnum.DamageRating] = 2500f;
-            Properties[PropertyEnum.DamagePctBonusVsBosses] = 4f;
-            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
-            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
-            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 1f + MathF.Max(Game.CustomGameOptions.AvatarHealthMaxMagnitudeBonus, 0f);
+            Properties[PropertyEnum.CombatLevel] = CharacterLevel;
 
             // HACK: Set health to max for new avatars
             if (Properties[PropertyEnum.Health] == 0)
@@ -839,6 +832,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
 
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
+        }
+
+        public override int TryLevelUp(Player owner)
+        {
+            int levelDelta = base.TryLevelUp(owner);
+
+            if (levelDelta != 0)
+                CombatLevel = Math.Clamp(CombatLevel + levelDelta, 1, GetAvatarLevelCap());
+
+            return levelDelta;
         }
 
         protected override bool OnLevelUp(int oldLevel, int newLevel)

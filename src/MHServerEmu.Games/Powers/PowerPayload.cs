@@ -1,9 +1,11 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -46,14 +48,40 @@ namespace MHServerEmu.Games.Powers
                 mentalDamage *= critDamageMult;
             }
 
+            // Apply level scaling
+
+            // Show unscaled damage client-side
+            results.SetDamageForClient(DamageType.Physical, physicalDamage);
+            results.SetDamageForClient(DamageType.Energy, energyDamage);
+            results.SetDamageForClient(DamageType.Mental, mentalDamage);
+
+            float levelScalingMult = 1f;
+            if (owner.CombatLevel != target.CombatLevel)
+            {
+                if (owner.CanBePlayerOwned())   
+                {
+                    double unscaledTargetHealthMax = (long)target.Properties[PropertyEnum.HealthMax];
+                    double scaledTargetHealthMax = CalculateTargetHealthMaxForCombatLevel(target, owner.CombatLevel);
+                    levelScalingMult = (float)(unscaledTargetHealthMax / scaledTargetHealthMax);
+                    Logger.Debug($"Scaling {unscaledTargetHealthMax} => {scaledTargetHealthMax} ({levelScalingMult} ratio)");
+                }
+                else if (target.CanBePlayerOwned()) // Enemy => Player
+                {
+                    // Effectively disable damage to players for now
+                    physicalDamage = 1f;
+                    energyDamage = 1f;
+                    mentalDamage = 1f;
+                }
+            }
+
+            physicalDamage *= levelScalingMult;
+            energyDamage *= levelScalingMult;
+            mentalDamage *= levelScalingMult;
+
             // Set damage
             results.Properties[PropertyEnum.Damage, (int)DamageType.Physical] = physicalDamage;
             results.Properties[PropertyEnum.Damage, (int)DamageType.Energy] = energyDamage;
             results.Properties[PropertyEnum.Damage, (int)DamageType.Mental] = mentalDamage;
-
-            results.SetDamageForClient(DamageType.Physical, physicalDamage);
-            results.SetDamageForClient(DamageType.Energy, energyDamage);
-            results.SetDamageForClient(DamageType.Mental, mentalDamage);
 
             // Calculate and set healing
             float healing = CalculateHealing(power, target);
@@ -286,6 +314,33 @@ namespace MHServerEmu.Games.Powers
             healing *= 3f;
 
             return healing;
+        }
+
+        private static long CalculateTargetHealthMaxForCombatLevel(WorldEntity target, int combatLevel)
+        {
+            using PropertyCollection healthMaxProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            // Copy all properties involved in calculating HealthMax from the target
+            PropertyInfo healthMaxPropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthMax);
+
+            foreach (PropertyId dependencyPropertyId in healthMaxPropertyInfo.EvalDependencies)
+                healthMaxProperties.CopyProperty(target.Properties, dependencyPropertyId);
+
+            // Set CombatLevel to the level we are scaling to
+            healthMaxProperties[PropertyEnum.CombatLevel] = combatLevel;
+
+            // Set the HealthBase curve used by the target
+            PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);
+            CurveId healthBaseCurveId = target.Properties.GetCurveIdForCurveProperty(PropertyEnum.HealthBase);
+
+            healthMaxProperties.SetCurveProperty(PropertyEnum.HealthBase, healthBaseCurveId, PropertyEnum.CombatLevel,
+                healthBasePropertyInfo, SetPropertyFlags.None, true);
+
+            // Calculate the eval
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, healthMaxProperties);
+
+            return Eval.RunLong(healthMaxPropertyInfo.Eval, evalContext);
         }
 
         #endregion

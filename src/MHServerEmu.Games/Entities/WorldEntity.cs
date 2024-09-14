@@ -169,7 +169,7 @@ namespace MHServerEmu.Games.Entities
             // Old
             Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
 
-            if (this is not Avatar) // REMOVEME
+            if (this is not Avatar && this is not Missile) // REMOVEME
             {
                 Properties[PropertyEnum.CharacterLevel] = 60;
                 Properties[PropertyEnum.CombatLevel] = 60;
