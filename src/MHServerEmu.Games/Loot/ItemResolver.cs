@@ -8,6 +8,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
@@ -20,6 +21,9 @@ namespace MHServerEmu.Games.Loot
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Picker<AvatarPrototype> _avatarPicker;
+
+        private readonly int _itemLevelMin;
+        private readonly int _itemLevelMax;
 
         private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<ItemSpec> _processedItemList = new();
@@ -36,6 +40,7 @@ namespace MHServerEmu.Games.Loot
         {
             Random = random;
 
+            // Cache avatar picker for smart loot
             _avatarPicker = new(random);
             foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -46,6 +51,12 @@ namespace MHServerEmu.Games.Loot
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
                 _avatarPicker.Add(avatarProto);
             }
+
+            // Cache item level limits from the ItemLevel property prototype
+            // For reference, this is 1-75 in 1.52, but it was 1-100 in 1.10
+            PropertyInfoPrototype propertyInfoProto = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ItemLevel).Prototype;
+            _itemLevelMin = (int)propertyInfoProto.Min;
+            _itemLevelMax = (int)propertyInfoProto.Max;
         }
 
         public void SetContext(LootContext lootContext, Player player)
@@ -91,6 +102,9 @@ namespace MHServerEmu.Games.Loot
         {
             // NOTE: In version 1.52 MobLevelToItemLevel.curve is empty, so we can always treat this as if useLevelVerbatim is set.
             // If we were to support older versions (most likely predating level scaling) we would have to properly implement this.
+
+            // Clamp to the range defined in the property info because some modifiers apply a bigger offset (e.g. Doom artifacts with +99 to level)
+            level = Math.Clamp(level, _itemLevelMin, _itemLevelMax);
             return level;
         }
 
