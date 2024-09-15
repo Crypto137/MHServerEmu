@@ -184,6 +184,18 @@ namespace MHServerEmu.Games.Properties
             return curveProperty.CurveId;
         }
 
+        public PropertyId GetIndexPropertyIdForCurveProperty(PropertyId curvePropertyId)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
+            if (propertyInfo.IsCurveProperty == false)
+                return Logger.WarnReturn(PropertyId.Invalid, $"GetIndexPropertyIdForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+
+            if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
+                return PropertyId.Invalid;
+
+            return curveProperty.IndexPropertyId;
+        }
+
         /// <summary>
         /// Adds the specified <see cref="int"/> delta to the <see cref="PropertyValue"/> with the provided <see cref="PropertyId"/>.
         /// </summary>

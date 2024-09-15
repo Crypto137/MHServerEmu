@@ -166,15 +166,7 @@ namespace MHServerEmu.Games.Entities
             RegionLocation.Initialize(this);
             SpawnSpec = settings.SpawnSpec;
 
-            // Old
-            Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
-
-            if (this is not Avatar && this is not Missile) // REMOVEME
-            {
-                Properties[PropertyEnum.CharacterLevel] = 60;
-                Properties[PropertyEnum.CombatLevel] = 60;
-                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            }
+            Properties[PropertyEnum.VariationSeed] = settings.VariationSeed != 0 ? settings.VariationSeed : Game.Random.Next(1, 10000);
 
             if (proto.Bounds != null)
                 Bounds.InitializeFromPrototype(proto.Bounds);
@@ -187,6 +179,18 @@ namespace MHServerEmu.Games.Entities
             _unkEvent = 0;
 
             return true;
+        }
+
+        public override void OnPostInit(EntitySettings settings)
+        {
+            base.OnPostInit(settings);
+
+            if (this is not Avatar && this is not Missile) // REMOVEME
+            {
+                Properties[PropertyEnum.CharacterLevel] = 60;
+                Properties[PropertyEnum.CombatLevel] = 60;
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            }
         }
 
         public override bool Serialize(Archive archive)

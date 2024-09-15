@@ -65,15 +65,19 @@ namespace MHServerEmu.Games.Entities
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
 
-            // Set mob health curve
+            // When Gazillion implemented DCL, it looks like they made it switchable at first (based on Eval::runIsDynamicCombatLevelEnabled),
+            // so all agents need to have their default non-DCL health base curves overriden with new DCL ones.
             if (CanBePlayerOwned() == false)
             {
-                CurveId existingCurve = Properties.GetCurveIdForCurveProperty(PropertyEnum.HealthBase);
-                Logger.Debug($"Overriding health base curve: {existingCurve.GetName()} => {agentProto.MobHealthBaseCurveDCL.GetName()}");
+                CurveId healthBaseCurveDcl = agentProto.MobHealthBaseCurveDCL;
+                if (healthBaseCurveDcl == CurveId.Invalid) return Logger.WarnReturn(false, "Initialize(): healthBaseCurveDcl == CurveId.Invalid");
+
+                PropertyId indexPropertyId = Properties.GetIndexPropertyIdForCurveProperty(PropertyEnum.HealthBase);
+                if (indexPropertyId == PropertyId.Invalid) return Logger.WarnReturn(false, "Initialize(): curveIndexPropertyId == PropertyId.Invalid");
 
                 PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);
 
-                Properties.SetCurveProperty(PropertyEnum.HealthBase, agentProto.MobHealthBaseCurveDCL, PropertyEnum.CombatLevel,
+                Properties.SetCurveProperty(PropertyEnum.HealthBase, healthBaseCurveDcl, indexPropertyId,
                     healthBasePropertyInfo, SetPropertyFlags.None, true);
             }
  
