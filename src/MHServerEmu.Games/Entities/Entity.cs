@@ -656,6 +656,23 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Attached Properties
+        
+        public void ClearAttachedPropertiesOfType(PrototypeId typeProtoRef)
+        {
+            Logger.Debug($"ClearAttachedPropertiesOfType(): {typeProtoRef.GetName()}");
+        }
+
+        protected virtual void OnAttachedPropertiesPreAdd(PropertyCollection properties)
+        {
+        }
+
+        protected virtual void OnAttachedPropertiesPostRemove(PropertyCollection properties)
+        {
+        }
+        
+        #endregion
+
         #region Inventory Management
 
         public RegionLocation GetOwnerLocation()
