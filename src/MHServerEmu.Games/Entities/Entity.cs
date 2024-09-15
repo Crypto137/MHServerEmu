@@ -109,6 +109,8 @@ namespace MHServerEmu.Games.Entities
 
         private EntityFlags _flags;
 
+        private List<AttachedPropertiesEntry> _attachedProperties;
+
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
 
@@ -658,9 +660,128 @@ namespace MHServerEmu.Games.Entities
 
         #region Attached Properties
         
-        public void ClearAttachedPropertiesOfType(PrototypeId typeProtoRef)
+        public void AttachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index,
+            PropertyCollection properties, PropertyCollection indexProperties, int rank = 1, bool overwrite = false)
         {
-            Logger.Debug($"ClearAttachedPropertiesOfType(): {typeProtoRef.GetName()}");
+            Logger.Debug($"AttachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
+
+            // Create the list on demand
+            if (_attachedProperties == null)
+                _attachedProperties = new();
+
+            AttachedPropertiesEntry foundEntry = null;
+            foreach (AttachedPropertiesEntry entry in _attachedProperties)
+            {
+                if (entry.ModTypeRef == modTypeRef && entry.ModRef == modRef && entry.Index == index)
+                {
+                    foundEntry = entry;
+                    break;
+                }
+            }
+
+            if (foundEntry == null)
+            {
+                PropertyCollection newCollection = CreateAndCloneAttachedModCollection(properties, rank, indexProperties, modRef);
+                if (newCollection == null) { Logger.Warn("AttachProperties(): newCollection == null"); return; }
+
+                AttachedPropertiesEntry entry = new();
+                entry.ModTypeRef = modTypeRef;
+                entry.ModRef = modRef;
+                entry.Index = index;
+                entry.Properties = newCollection;
+                entry.Field4 = 0;
+
+                if (IsSimulated == false)
+                {
+                    Logger.Warn("AttachProperties(): Mod is trying to start a PropertyTicker when the owner is not Simulated, over time properties will not work. " +
+                        $"Mod: {modRef.GetName()}\n Owner: {this}");
+                }
+
+                StartPropertyTickingMod(entry);
+
+                _attachedProperties.Add(entry);
+            }
+            else if (overwrite)
+            {
+                if (foundEntry.Properties != null)
+                {
+                    foundEntry.Properties.RemoveFromParent(Properties);
+                    OnAttachedPropertiesPostRemove(foundEntry.Properties);
+                }
+                else
+                {
+                    Logger.Warn("AttachProperties(): foundEntry.Properties == null");
+                }
+
+                StopPropertyTickingMod(foundEntry);
+
+                PropertyCollection newCollection = CreateAndCloneAttachedModCollection(properties, rank, indexProperties, modRef);
+                if (newCollection == null) { Logger.Warn("AttachProperties(): newCollection == null"); return; }
+
+                foundEntry.Properties = newCollection;
+
+                if (IsSimulated == false)
+                {
+                    Logger.Warn("AttachProperties(): Mod is trying to start a PropertyTicker when the owner is not Simulated, over time properties will not work. " +
+                        $"Mod: {modRef.GetName()}\n Owner: {this}");
+                }
+
+                StartPropertyTickingMod(foundEntry);
+            }
+
+        }
+
+        public void DetachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index)
+        {
+            Logger.Debug($"DetachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
+
+            if (_attachedProperties == null) { Logger.Warn("DetachProperties(): _attachedProperties == null"); return; }
+
+            AttachedPropertiesEntry foundEntry = null;
+            foreach (AttachedPropertiesEntry entry in _attachedProperties)
+            {
+                if (entry.ModTypeRef == modTypeRef && entry.ModRef == modRef && entry.Index == index)
+                {
+                    foundEntry = entry;
+                    break;
+                }
+            }
+
+            if (foundEntry != null)
+            {
+                PropertyCollection properties = foundEntry.Properties;
+                if (properties == null) { Logger.Warn("DetachProperties(): properties == null"); return; }
+
+                StopPropertyTickingMod(foundEntry);
+
+                properties.RemoveFromParent(Properties);
+                OnAttachedPropertiesPostRemove(properties);
+
+                _attachedProperties.Remove(foundEntry);
+            }
+        }
+
+        public void ClearAttachedPropertiesOfType(PrototypeId modTypeRef)
+        {
+            Logger.Debug($"ClearAttachedPropertiesOfType(): {modTypeRef.GetName()}");
+
+            // Nothing to clear
+            if (_attachedProperties == null)
+                return;
+
+            for (int i = 0; i < _attachedProperties.Count; i++)
+            {
+                AttachedPropertiesEntry entry = _attachedProperties[i];
+                if (entry.ModTypeRef != modTypeRef)
+                    continue;
+
+                StopPropertyTickingMod(entry);
+
+                entry.Properties.RemoveFromParent(Properties);
+
+                _attachedProperties.RemoveAt(i);
+                i--;
+            }
         }
 
         protected virtual void OnAttachedPropertiesPreAdd(PropertyCollection properties)
@@ -669,6 +790,35 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void OnAttachedPropertiesPostRemove(PropertyCollection properties)
         {
+        }
+
+        private PropertyCollection CreateAndCloneAttachedModCollection(PropertyCollection properties, int rank, 
+            PropertyCollection indexProperties, PrototypeId modRef)
+        {
+            // TODO
+            PropertyCollection modProperties = new();
+            Properties.AddChildCollection(modProperties);
+            return modProperties;
+        }
+
+        private void StartPropertyTickingMod(AttachedPropertiesEntry entry)
+        {
+
+        }
+
+        private void StopPropertyTickingMod(AttachedPropertiesEntry entry)
+        {
+
+        }
+
+        private class AttachedPropertiesEntry
+        {
+            // NOTE: This has to be a class instead of struct so that it can be modified inside a list
+            public PrototypeId ModTypeRef { get; set; }
+            public PrototypeId ModRef { get; set; }
+            public ulong Index { get; set; }
+            public PropertyCollection Properties { get; set; }
+            public ulong Field4 { get; set; }
         }
         
         #endregion

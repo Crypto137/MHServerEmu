@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -1332,9 +1333,39 @@ namespace MHServerEmu.Games.Entities
 
         #region Mods
 
-        protected bool ModChangeModEffects(PrototypeId modProtoRef, int value)
+        protected bool ModChangeModEffects(PrototypeId modRef, int rank)
         {
-            Logger.Debug($"ModChangeModEffects(): {modProtoRef.GetName()} = {value}");
+            if (IsInWorld == false) return Logger.WarnReturn(false, "ModChangeModEffects(): IsInWorld == false");
+            if (modRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ModChangeModEffects(): modRef == PrototypeId.Invalid");
+
+            ModPrototype modProto = GameDatabase.GetPrototype<ModPrototype>(modRef);
+            if (modProto == null) return Logger.WarnReturn(false, "ModChangeModEffects(): modProto == null");
+
+            if (modProto.Type == PrototypeId.Invalid) return Logger.WarnReturn(false, "modProto.Type == PrototypeId.Invalid");
+
+            // No properties to add from this mod
+            if (modProto.Properties == null)
+                return true;
+
+            if (rank > 0)
+            {
+                using PropertyCollection indexProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                indexProperties[PropertyEnum.CharacterLevel] = CharacterLevel;
+                indexProperties[PropertyEnum.CombatLevel] = CombatLevel;
+                indexProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
+
+                if (modProto is OmegaBonusPrototype omegaModProto)
+                    indexProperties.CopyPropertyRange(Properties, PropertyEnum.OmegaRank);
+                else if (modProto is InfinityGemBonusPrototype)
+                    indexProperties.CopyPropertyRange(Properties, PropertyEnum.InfinityGemBonusRank);
+
+                AttachProperties(modProto.Type, modRef, 0, modProto.Properties, indexProperties, rank, true);                
+            }
+            else
+            {
+                DetachProperties(modProto.Type, modRef, 0);
+            }
+
             return true;
         }
 
