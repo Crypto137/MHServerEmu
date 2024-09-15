@@ -62,12 +62,9 @@ namespace MHServerEmu.Games.Loot
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
             settings.ItemSpec = itemSpec;
 
-            if (restrictedToPlayerGuid != 0)
-            {
-                using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
-                settings.Properties = properties;
-            }
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settings.Properties = properties;
+            settings.Properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
 
             Item item = Game.EntityManager.CreateEntity(settings) as Item;
             if (item == null) return Logger.WarnReturn(item, "DropItem(): item == null");

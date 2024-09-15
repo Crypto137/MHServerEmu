@@ -2,6 +2,7 @@
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
@@ -27,7 +28,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Awarded {xpAmount} experience.";
         }
 
-        [Command("max", "Maxes out the current avatar's level.\nUsage: level max")]
+        [Command("max", "Maxes out the current avatar's experience.\nUsage: level max")]
         public string Max(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -35,7 +36,10 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            avatar.AwardXP(long.MaxValue, true);
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ExperiencePoints);
+            long expToAdd = (long)propertyInfo.Prototype.Max - avatar.Properties[PropertyEnum.ExperiencePoints];
+
+            avatar.AwardXP(expToAdd, true);
 
             return $"Awarded {long.MaxValue} experience.";
         }
