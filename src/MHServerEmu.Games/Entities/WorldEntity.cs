@@ -1278,7 +1278,7 @@ namespace MHServerEmu.Games.Entities
 
         public float GetCastSpeedPct(PowerPrototype powerProto)
         {
-            float castSpeedPct = Properties[PropertyEnum.CastSpeedIncrPct] - Properties[PropertyEnum.CastSpeedDecrPct];
+            float castSpeedPct = (float)Properties[PropertyEnum.CastSpeedIncrPct] - (float)Properties[PropertyEnum.CastSpeedDecrPct];
             float castSpeedMult = Properties[PropertyEnum.CastSpeedMult];
 
             if (powerProto != null)
