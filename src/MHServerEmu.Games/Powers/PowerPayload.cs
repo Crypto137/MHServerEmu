@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -60,9 +61,9 @@ namespace MHServerEmu.Games.Powers
             {
                 if (owner.CanBePlayerOwned())   
                 {
-                    double unscaledTargetHealthMax = (long)target.Properties[PropertyEnum.HealthMax];
-                    double scaledTargetHealthMax = CalculateTargetHealthMaxForCombatLevel(target, owner.CombatLevel);
-                    levelScalingMult = (float)(unscaledTargetHealthMax / scaledTargetHealthMax);
+                    long unscaledTargetHealthMax = target.Properties[PropertyEnum.HealthMax];
+                    long scaledTargetHealthMax = CalculateTargetHealthMaxForCombatLevel(target, owner.CombatLevel);
+                    levelScalingMult = MathHelper.Ratio(unscaledTargetHealthMax, scaledTargetHealthMax);
                     Logger.Debug($"Scaling {unscaledTargetHealthMax} => {scaledTargetHealthMax} ({levelScalingMult} ratio)");
                 }
                 else if (target.CanBePlayerOwned()) // Enemy => Player

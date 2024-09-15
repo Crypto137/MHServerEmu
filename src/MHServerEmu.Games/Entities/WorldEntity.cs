@@ -1691,10 +1691,7 @@ namespace MHServerEmu.Games.Entities
                     if (health > 0 && flags.HasFlag(SetPropertyFlags.Deserialized) == false)
                     {
                         long oldHealthMax = oldValue;
-
-                        float ratio = (float)((double)health / (double)oldHealthMax);
-                        ratio = Math.Min(ratio, 1f);
-
+                        float ratio = Math.Min(MathHelper.Ratio(health, oldHealthMax), 1f);
                         long newHealth = (long)Math.Round((long)newValue * ratio);
 
                         Properties[PropertyEnum.Health] = newHealth;

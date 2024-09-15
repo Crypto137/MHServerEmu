@@ -90,7 +90,8 @@
 
         public static float Ratio(long value, long maxValue)
         {
-            return value / (float)maxValue;
+            // NOTE: We need to divide using double because ratio is often used for health, which can reach very high values
+            return (float)((double)value / maxValue);
         }
 
         public static long Modulus(long v1, long v2)
