@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -638,7 +639,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         private static void AssignPointedAtValues(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
-            fieldInfo.SetValue(destPrototype, fieldInfo.GetValue(sourcePrototype));
+            //fieldInfo.SetValue(destPrototype, fieldInfo.GetValue(sourcePrototype));
+            fieldInfo.CopyValue(sourcePrototype, destPrototype);
         }
 
         /// <summary>
