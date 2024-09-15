@@ -237,6 +237,15 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        public static void CopyPowerIndexProperties(PropertyCollection source, PropertyCollection destination)
+        {
+            destination.CopyProperty(source, PropertyEnum.PowerRank);
+            destination.CopyProperty(source, PropertyEnum.CharacterLevel);
+            destination.CopyProperty(source, PropertyEnum.CombatLevel);
+            destination.CopyProperty(source, PropertyEnum.ItemLevel);
+            destination.CopyProperty(source, PropertyEnum.ItemVariation);
+        }
+
         public PowerIndexProperties GetIndexProperties()
         {
             return new(Properties[PropertyEnum.PowerRank],

@@ -1685,6 +1685,21 @@ namespace MHServerEmu.Games.Entities
 
                 case PropertyEnum.HealthMax:
                     Properties[PropertyEnum.HealthMaxOther] = newValue;
+
+                    // Scale current health
+                    long health = Properties[PropertyEnum.Health];
+                    if (health > 0 && flags.HasFlag(SetPropertyFlags.Deserialized) == false)
+                    {
+                        long oldHealthMax = oldValue;
+
+                        float ratio = (float)((double)health / (double)oldHealthMax);
+                        ratio = Math.Min(ratio, 1f);
+
+                        long newHealth = (long)Math.Round((long)newValue * ratio);
+
+                        Properties[PropertyEnum.Health] = newHealth;
+                    }
+
                     break;
 
                 case PropertyEnum.MissileBlockingHotspot:

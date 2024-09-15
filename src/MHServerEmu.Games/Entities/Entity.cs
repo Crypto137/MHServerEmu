@@ -10,6 +10,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Social;
@@ -663,7 +664,7 @@ namespace MHServerEmu.Games.Entities
         public void AttachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index,
             PropertyCollection properties, PropertyCollection indexProperties, int rank = 1, bool overwrite = false)
         {
-            Logger.Debug($"AttachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
+            Logger.Debug($"AttachProperties(): [modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}] to [{this}]");
 
             // Create the list on demand
             if (_attachedProperties == null)
@@ -763,8 +764,6 @@ namespace MHServerEmu.Games.Entities
 
         public void ClearAttachedPropertiesOfType(PrototypeId modTypeRef)
         {
-            Logger.Debug($"ClearAttachedPropertiesOfType(): {modTypeRef.GetName()}");
-
             // Nothing to clear
             if (_attachedProperties == null)
                 return;
@@ -795,9 +794,24 @@ namespace MHServerEmu.Games.Entities
         private PropertyCollection CreateAndCloneAttachedModCollection(PropertyCollection properties, int rank, 
             PropertyCollection indexProperties, PrototypeId modRef)
         {
-            // TODO
+            ModPrototype modProto = GameDatabase.GetPrototype<ModPrototype>(modRef);
+            if (modProto == null) return Logger.WarnReturn<PropertyCollection>(null, "CreateAndCloneAttachedModCollection(): modProto == null");
+
             PropertyCollection modProperties = new();
+
+            modProto.RunEvalOnCreate(this, indexProperties, modProperties);
+
+            // NOTE: In the client cleanCopy is true, which is a bug, but it works out because
+            // FlattenCopyFrom does not clear the aggregate list. We just set it to false as it should be.
+            modProperties.FlattenCopyFrom(properties, false);
+
+            Power.CopyPowerIndexProperties(indexProperties, modProperties);
+
+            // TODO: Procs
+
+            OnAttachedPropertiesPreAdd(modProperties);
             Properties.AddChildCollection(modProperties);
+
             return modProperties;
         }
 

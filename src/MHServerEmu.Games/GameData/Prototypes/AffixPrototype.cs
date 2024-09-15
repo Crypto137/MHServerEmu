@@ -1,9 +1,13 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -333,6 +337,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TooltipTemplateNextRank { get; protected set; }
         public PropertySetEntryPrototype[] PropertiesForTooltips { get; protected set; }
         public AssetId UIIconHiRes { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public void RunEvalOnCreate(Entity entity, PropertyCollection indexProperties, PropertyCollection modProperties)
+        {
+            if (EvalOnCreate.HasValue())
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, modProperties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, entity.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, indexProperties);
+
+                foreach (EvalPrototype evalProto in EvalOnCreate)
+                {
+                    bool curEvalSucceeded = Eval.RunBool(evalProto, evalContext);
+                    if (curEvalSucceeded == false)
+                        Logger.Warn($"RunEvalOnCreate(): The following EvalOnCreate Eval in a mod failed:\nEval: [{evalProto.ExpressionString}]\n Mod: [{this}]");
+                }
+            }
+
+            if (PropertiesForTooltips.HasValue())
+            {
+                // TODO for Omega/Infinity
+                Logger.Warn("RunEvalOnCreate(): PropertiesForTooltips not yet implemented");
+            }
+        }
     }
 
     public class ModTypePrototype : Prototype
