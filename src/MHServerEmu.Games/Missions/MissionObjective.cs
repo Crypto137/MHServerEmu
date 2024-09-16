@@ -340,7 +340,7 @@ namespace MHServerEmu.Games.Missions
         {
             return _objectiveState switch
             {
-                MissionObjectiveState.Invalid | MissionObjectiveState.Skipped => true,
+                MissionObjectiveState.Invalid or MissionObjectiveState.Skipped => true,
                 MissionObjectiveState.Available => OnUnsetStateAvailable(),
                 MissionObjectiveState.Active => OnUnsetStateActive(),
                 MissionObjectiveState.Completed => OnUnsetStateCompleted(),
