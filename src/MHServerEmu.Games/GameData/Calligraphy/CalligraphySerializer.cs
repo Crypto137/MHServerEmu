@@ -572,11 +572,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (sourceType != destType)
                 return Logger.ErrorReturn(false, $"CopyPrototypeFields(): source type ({sourceType.Name}) does not match destination type ({destType.Name})");
 
-            foreach (var fieldInfo in destType.GetProperties())
+            foreach (PrototypeClassManager.CopyablePrototypeField copyableField in GameDatabase.PrototypeClassManager.GetCopyablePrototypeFields(destType))
             {
-                if (fieldInfo.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
+                System.Reflection.PropertyInfo fieldInfo = copyableField.FieldInfo;
 
-                switch (GameDatabase.PrototypeClassManager.GetPrototypeFieldTypeEnumValue(fieldInfo))
+                switch (copyableField.FieldType)
                 {
                     case PrototypeFieldType.Bool:
                     case PrototypeFieldType.Int8:
@@ -624,7 +624,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         CopyPrototypePropertyCollection(destPrototype, sourcePrototype, fieldInfo);
                         break;
 
-                    case PrototypeFieldType.Invalid: continue;
                     default:
                         Logger.Warn($"CopyPrototypeFields(): Trying to copy unhandled prototype field type {fieldInfo.PropertyType.Name}");
                         continue;

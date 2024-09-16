@@ -1,10 +1,12 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
+﻿using System.Reflection;
+using System.Reflection.Emit;
 
 namespace MHServerEmu.Core.Extensions
 {
     public static class ReflectionExtensions
     {
+        private static readonly Type[] CopyValueArgs = new Type[] { typeof(object), typeof(object) }; 
+
         private static readonly Dictionary<PropertyInfo, Delegate> CopyPropertyValueDelegateDict = new();
 
         private delegate void CopyValueDelegate(object source, object destination);
@@ -14,22 +16,25 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static void CopyValue<T>(this PropertyInfo propertyInfo, T source, T destination)
         {
-            // Use compiled lambda expressions to avoid doing expensive reflection every time
+            // Cache copy delegates to avoid expensive reflection every time.
+            // Emit IL directly because it's faster than doing expression trees.
             if (CopyPropertyValueDelegateDict.TryGetValue(propertyInfo, out Delegate copyValueDelegate) == false)
             {
-                ParameterExpression sourceParam = Expression.Parameter(typeof(object));
-                ParameterExpression destinationParam = Expression.Parameter(typeof(object));
-
                 // We assume source and destination are going to be the same type
                 Type type = propertyInfo.DeclaringType;
 
-                UnaryExpression castSourceParam = Expression.Convert(sourceParam, type);
-                UnaryExpression castDestinationParam = Expression.Convert(destinationParam, type);
+                DynamicMethod dm = new("CopyValue", null, CopyValueArgs);
+                ILGenerator il = dm.GetILGenerator();
 
-                MethodCallExpression getCall = Expression.Call(castSourceParam, propertyInfo.GetGetMethod());
-                MethodCallExpression setCall = Expression.Call(castDestinationParam, propertyInfo.GetSetMethod(true), getCall);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Castclass, type);
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, type);
+                il.Emit(OpCodes.Callvirt, propertyInfo.GetGetMethod());
+                il.Emit(OpCodes.Callvirt, propertyInfo.GetSetMethod(true));
+                il.Emit(OpCodes.Ret);
 
-                copyValueDelegate = Expression.Lambda<CopyValueDelegate>(setCall, sourceParam, destinationParam).Compile();
+                copyValueDelegate = dm.CreateDelegate<CopyValueDelegate>();
                 CopyPropertyValueDelegateDict.Add(propertyInfo, copyValueDelegate);
             }
 

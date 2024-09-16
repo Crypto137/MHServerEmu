@@ -19,6 +19,8 @@ namespace MHServerEmu.Games.GameData
         private readonly Dictionary<Type, Func<Prototype>> _prototypeConstructorDict;
         private readonly Dictionary<System.Reflection.PropertyInfo, PrototypeFieldType> _prototypeFieldTypeDict = new();
 
+        private readonly Dictionary<Type, List<CopyablePrototypeField>> _copyableFieldDict = new();
+
         private static readonly Dictionary<Type, PrototypeFieldType> TypeToPrototypeFieldTypeEnumDict = new()
         {
             { typeof(bool),                         PrototypeFieldType.Bool },
@@ -233,6 +235,36 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns copyable fields for a given prototype type.
+        /// </summary>
+        public IEnumerable<CopyablePrototypeField> GetCopyablePrototypeFields(Type type)
+        {
+            // Cache copyable fields for reuse
+            if (_copyableFieldDict.TryGetValue(type, out List<CopyablePrototypeField> copyableFieldList) == false)
+            {
+                copyableFieldList = new();
+                _copyableFieldDict.Add(type, copyableFieldList);
+
+                // Populate the the new list
+                foreach (var fieldInfo in type.GetProperties())
+                {
+                    // Skip base prototype properties
+                    if (fieldInfo.DeclaringType == typeof(Prototype))
+                        continue;
+
+                    // Skip uncopyable fields (e.g. DoNotCopy)
+                    PrototypeFieldType fieldType = GetPrototypeFieldTypeEnumValue(fieldInfo);
+                    if (fieldType == PrototypeFieldType.Invalid)
+                        continue;
+
+                    copyableFieldList.Add(new(fieldInfo, fieldType));
+                }
+            }
+
+            return copyableFieldList;
+        }
+
+        /// <summary>
         /// Calls PostProcess() on all prototypes embedded in the provided one.
         /// </summary>
         public void PostProcessContainedPrototypes(Prototype prototype)
@@ -318,6 +350,18 @@ namespace MHServerEmu.Games.GameData
                 return PrototypeFieldType.Invalid;
 
             return prototypeFieldTypeEnumValue;
+        }
+
+        public readonly struct CopyablePrototypeField
+        {
+            public readonly System.Reflection.PropertyInfo FieldInfo;
+            public readonly PrototypeFieldType FieldType;
+
+            public CopyablePrototypeField(System.Reflection.PropertyInfo fieldInfo, PrototypeFieldType fieldType)
+            {
+                FieldInfo = fieldInfo;
+                FieldType = fieldType;
+            }
         }
     }
 }
