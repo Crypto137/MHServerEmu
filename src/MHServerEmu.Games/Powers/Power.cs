@@ -140,6 +140,12 @@ namespace MHServerEmu.Games.Powers
                     RemoveKeyword(keywordProtoRef);
             }
 
+            TimeSpan cooldownTimeRemaining = GetCooldownTimeRemaining();
+            if (cooldownTimeRemaining > TimeSpan.Zero)
+            {
+                StartCooldown(cooldownTimeRemaining);
+            }
+
             if (IsRecurring())
                 Logger.Debug($"IsRecurring - {Prototype}");
 
