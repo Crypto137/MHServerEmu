@@ -361,8 +361,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (PropertiesForTooltips.HasValue())
             {
-                // TODO for Omega/Infinity
-                Logger.Warn("RunEvalOnCreate(): PropertiesForTooltips not yet implemented");
+                foreach (PropertySetEntryPrototype propEntryProto in PropertiesForTooltips)
+                {
+                    if (propEntryProto.Value == null)
+                    {
+                        Logger.Warn("RunEvalOnCreate(): propEntryProto.Value == null");
+                        continue;
+                    }
+
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, entity.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, indexProperties);
+
+                    PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propEntryProto.Prop.Enum);
+                    
+                    switch (propertyInfo.DataType)
+                    {
+                        case PropertyDataType.Boolean:
+                            Properties[propEntryProto.Prop] = Eval.RunBool(propEntryProto.Value, evalContext);
+                            break;
+
+                        case PropertyDataType.Real:
+                            Properties[propEntryProto.Prop] = Eval.RunFloat(propEntryProto.Value, evalContext);
+                            break;
+
+                        case PropertyDataType.Integer:
+                            Properties[propEntryProto.Prop] = Eval.RunInt(propEntryProto.Value, evalContext);
+                            break;
+
+                        default:
+                            Logger.Warn("The following Mod has a built-in PropertySetEntry with a property that is not an int/float/bool prop, which doesn't work!\n" +
+                                $"Mod: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
+                            break;
+                    }
+                }
             }
         }
     }

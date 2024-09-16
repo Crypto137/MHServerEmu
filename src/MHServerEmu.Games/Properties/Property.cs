@@ -92,6 +92,13 @@ namespace MHServerEmu.Games.Properties
         public const ulong EnumMask = EnumMax << ParamBitCount;
         public const ulong ParamMask = ParamMax;
 
+        public static readonly PropertyEnum[] ProcPropertyTypesAll = new PropertyEnum[]
+        {
+            PropertyEnum.Proc,
+            PropertyEnum.ProcKeyword,
+            PropertyEnum.ProcNotKeyword
+        };
+
         public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out AssetId assetId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);

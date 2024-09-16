@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -1344,7 +1345,7 @@ namespace MHServerEmu.Games.Entities
             if (modProto.Type == PrototypeId.Invalid) return Logger.WarnReturn(false, "modProto.Type == PrototypeId.Invalid");
 
             // No properties to add from this mod
-            if (modProto.Properties == null)
+            if ((modProto.Properties == null || modProto.Properties.Any() == false) && modProto.EvalOnCreate.IsNullOrEmpty())
                 return true;
 
             if (rank > 0)
