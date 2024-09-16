@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -23,6 +24,8 @@ namespace MHServerEmu.Games.Populations
         public HashSet<ulong> SpawnedEntities;
         public Dictionary<PrototypeId, SpawnScheduler> SpawnMarkerSchedulers;
         public Dictionary<SpawnLocation, SpawnScheduler> SpawnLocationSchedulers;
+        public bool RespawnObject;
+        public int RespawnDelayMS;
 
         public SpawnEvent(Region region)
         {
@@ -41,6 +44,7 @@ namespace MHServerEmu.Games.Populations
             var group = PopulationManager.GetSpawnGroup(groupId);
             if (group != null) group.SpawnEvent = this;
             SpawnGroups.Add(groupId);
+           
             foreach (var entity in entities)
                 SpawnedEntities.Add(entity.Id);
         }
@@ -48,9 +52,9 @@ namespace MHServerEmu.Games.Populations
         public bool IsSpawned()
         {
             foreach(var spawnScheduler in SpawnMarkerSchedulers.Values)
-                if (spawnScheduler.ScheduledObjects.Count > 0) return false;
+                if (spawnScheduler.Any) return false;
             foreach (var spawnScheduler in SpawnLocationSchedulers.Values)
-                if (spawnScheduler.ScheduledObjects.Count > 0) return false;
+                if (spawnScheduler.Any) return false;
             return true;
         }
 
@@ -64,7 +68,7 @@ namespace MHServerEmu.Games.Populations
         }
 
         public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, bool critical,
-            SpawnLocation spawnLocation, PrototypeId missionRef, TimeSpan time = default)
+            SpawnLocation spawnLocation, PrototypeId missionRef, TimeSpan time = default, bool removeOnSpawnFail = false)
         {
             /*HashSet<PrototypeId> entities = new();
             population.GetContainedEntities(entities);
@@ -77,7 +81,12 @@ namespace MHServerEmu.Games.Populations
                 properties = new PropertyCollection();
                 properties[PropertyEnum.MissionPrototype] = missionRef;
             }
-            if (time == default) time = TimeSpan.Zero;
+
+            if (time == default) 
+                time = TimeSpan.Zero;
+            else 
+                time = Game.CurrentTime + time;
+
             PopulationObject populationObject = new()
             {
                 SpawnEvent = this,
@@ -91,13 +100,14 @@ namespace MHServerEmu.Games.Populations
                 SpawnFlags = SpawnFlags.IgnoreSimulated,
                 Object = population,
                 SpawnLocation = spawnLocation,
+                RemoveOnSpawnFail = removeOnSpawnFail
             };
 
             populationObject.Scheduler = AddToScheduler(populationObject);
             return populationObject;
         }
 
-        private SpawnScheduler AddToScheduler(PopulationObject populationObject)
+        public SpawnScheduler AddToScheduler(PopulationObject populationObject)
         {
             SpawnScheduler scheduler;
             if (populationObject.IsMarker)
@@ -156,7 +166,8 @@ namespace MHServerEmu.Games.Populations
                 var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(objectInstance.Object);
                 if (objectProto == null) continue;
                 int weight = objectInstance.Weight;
-                picker.Add(objectProto, weight);
+                if (weight > 0)
+                    picker.Add(objectProto, weight);
             }
 
             return picker;
@@ -181,7 +192,7 @@ namespace MHServerEmu.Games.Populations
             int markerCount = 0;
             var manager = PopulationManager;
             float spawnableNavArea = Area.SpawnableNavArea;
-            //if (populationProto.SpawnMapEnabled || (populationProto.SpawnMapDensityMin > 0.0 && populationProto.SpawnMapDensityMax > 0.0f)) return;
+            if (spawnableNavArea <= 0.0f || populationProto.UseSpawnMap) return; // TODO SpawnMap
             if (populationProto.Themes == null || populationProto.Themes.List.IsNullOrEmpty()) return;
 
             var spawnLocation = new SpawnLocation(Region, Area);
@@ -264,6 +275,7 @@ namespace MHServerEmu.Games.Populations
             if (missionProto.PopulationSpawns.HasValue())            
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
+                    if (entry.AllowedInDifficulty(Region.DifficultyTierRef) == false) continue;
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
                         bool foundArea = false;
@@ -306,38 +318,37 @@ namespace MHServerEmu.Games.Populations
     
     public class MetaStateSpawnEvent : SpawnEvent
     {
-        public MetaGame MetaGame;
+        public MetaState MetaState;
 
-        public MetaStateSpawnEvent(MetaGame metaGame, Region region) : base(region)
+        public MetaStateSpawnEvent(MetaState metaState, Region region) : base(region)
         {
-            MetaGame = metaGame;
+            MetaState = metaState;
         }
 
-        public void AddRequiredObjects(PopulationRequiredObjectPrototype[] populationObjects, SpawnLocation spawnLocation)
+        public void AddRequiredObjects(PopulationRequiredObjectPrototype[] populationObjects, SpawnLocation spawnLocation, bool removeOnSpawnFail)
         {
-            Picker<PopulationRequiredObjectPrototype> popPicker = new(Game.Random);
             float spawnableArea = spawnLocation.CalcSpawnableArea();
+            var random = Game.Random;
 
             foreach (var reqObject in populationObjects)
-                popPicker.Add(reqObject);
+            {
+                if (reqObject.AllowedInDifficulty(Region.DifficultyTierRef) == false) continue;
+                int count = reqObject.Count;
+                var objectProto = reqObject.GetPopObject();
+                if (count <= 0 && reqObject.Density > 0.0f)
+                {                        
+                    float averageSize = objectProto.GetAverageSize();
+                    count = (int)(reqObject.Density / averageSize * (spawnableArea / PopulationPrototype.PopulationClusterSq));
+                }                
 
-            if (popPicker.Empty() == false)
-                while (popPicker.PickRemove(out var reqObject))
+                var spawnLocationReq = new SpawnLocation(spawnLocation, reqObject.RestrictToAreas, reqObject.RestrictToCells);
+
+                for (int i = 0; i < count; i++)
                 {
-                    int count = reqObject.Count;
-                    var objectProto = reqObject.GetPopObject();
-                    if (reqObject.Density > 0.0f)
-                    {                        
-                        float averageSize = objectProto.GetAverageSize();
-                        count = (int)(reqObject.Density / averageSize * (spawnableArea / PopulationPrototype.PopulationClusterSq));
-                    }
-                    if (RegionHelper.TEMP_IsPatrolRegion(Region.PrototypeDataRef)) count = 1;
-
-                    var spawnLocationReq = new SpawnLocation(spawnLocation, reqObject.RestrictToAreas, reqObject.RestrictToCells);
-
-                    for (int i = 0; i < count; i++)
-                        AddPopulationObject(objectProto.UsePopulationMarker, objectProto, reqObject.Critical, spawnLocationReq, PrototypeId.Invalid);
+                    AddPopulationObject(objectProto.UsePopulationMarker, objectProto, reqObject.Critical, spawnLocationReq,
+                        PrototypeId.Invalid, TimeSpan.FromMilliseconds(random.Next(0, 1000)), removeOnSpawnFail);
                 }
+            }
         }
     }
 }

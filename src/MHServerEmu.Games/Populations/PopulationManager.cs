@@ -22,24 +22,26 @@ namespace MHServerEmu.Games.Populations
         public GRandom Random { get; }
         public Dictionary<PrototypeId, MarkerEventScheduler> MarkerSchedulers { get; }
         public List<SpawnScheduler> LocationSchedulers { get; }
-        private List<SpawnEvent> _spawnEvents { get; }
+
         private ulong _scheduledCount;
-        private EventGroup _pendingEvents = new();
-        private ulong _blackOutId;
+        private readonly List<SpawnEvent> _spawnEvents = new();
+        private readonly EventGroup _pendingEvents = new();
+        private readonly EventPointer<LocationSpawnEvent> _locationSpawnEvent = new();
+
         private BlackOutSpatialPartition _blackOutSpatialPartition;
-        private Dictionary<ulong, BlackOutZone> _blackOutZones;
-        private Dictionary<KeyValuePair<PrototypeId, PrototypeId>, ulong> _encounterSpawnPhases;
-        private ulong NextBlackOutId() => _blackOutId++;
+        private readonly Dictionary<KeyValuePair<PrototypeId, PrototypeId>, ulong> _encounterSpawnPhases = new();
+
+        private ulong _nextBlackOutId;
+        private ulong NextBlackOutId() => _nextBlackOutId++;
+        private readonly Dictionary<ulong, BlackOutZone> _blackOutZones = new();
 
         private ulong _nextSpawnGroupId;
-        private Dictionary<ulong, SpawnGroup> _spawnGroups;
         private ulong NextSpawnGroupId() => _nextSpawnGroupId++;
+        private readonly Dictionary<ulong, SpawnGroup> _spawnGroups = new();
 
         private ulong _nextSpawnSpecId;
-        private Dictionary<ulong, SpawnSpec> _spawnSpecs;
         private ulong NextSpawnSpecId() => _nextSpawnSpecId++;
-
-        private EventPointer<LocationSpawnEvent> _locationSpawnEvent = new();
+        private readonly Dictionary<ulong, SpawnSpec> _spawnSpecs = new();
 
         public PopulationManager(Game game, Region region)
         {
@@ -48,13 +50,8 @@ namespace MHServerEmu.Games.Populations
             Random = new(region.RandomSeed);
             MarkerSchedulers = new();
             LocationSchedulers = new();
-            _encounterSpawnPhases = new();
-            _blackOutZones = new();
-            _blackOutId = 1;
-            _spawnGroups = new();
+            _nextBlackOutId = 1;
             _nextSpawnGroupId = 1;
-            _spawnSpecs = new();
-            _spawnEvents = new();
             _nextSpawnSpecId = 1;
             _scheduledCount = 0;
         }
@@ -96,73 +93,80 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        private static bool GetEventTime(List<SpawnScheduler> schedulers, TimeSpan maxTime, out TimeSpan eventTime)
+        private bool GetEventTime(List<SpawnScheduler> schedulers, TimeSpan maxTimeOffset, out TimeSpan eventTime, out TimeSpan timeOffset)
         {
             eventTime = TimeSpan.MaxValue;
-            foreach (var scheduler in schedulers)
-                if (scheduler.ScheduledObjects.Count > 0)
-                    eventTime = Clock.Min(eventTime, scheduler.ScheduledObjects.Peek().Time);
+            timeOffset = TimeSpan.Zero;
 
-            bool haveTime = eventTime != TimeSpan.MaxValue;
-            eventTime = Clock.Max(eventTime, maxTime);
-            return haveTime;
+            foreach (var scheduler in schedulers)
+                eventTime = scheduler.GetEventTime(eventTime);
+
+            if (eventTime == TimeSpan.MaxValue) return false;
+
+            if (eventTime != TimeSpan.Zero)
+                timeOffset = Clock.Max(Game.CurrentTime - eventTime, maxTimeOffset);
+            else
+                timeOffset = maxTimeOffset;
+
+            return true;
         }
 
-        private void LocationSchedule()
+        public void LocationSchedule()
         {
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;
 
-            if (GetEventTime(LocationSchedulers, TimeSpan.FromMilliseconds(500), out var eventTime))
+            if (GetEventTime(LocationSchedulers, TimeSpan.FromMilliseconds(500), out var eventTime, out var timeOffset))
             {
                 if (_locationSpawnEvent.IsValid == false)
                 {
-                    scheduler.ScheduleEvent(_locationSpawnEvent, eventTime, _pendingEvents);
+                    scheduler.ScheduleEvent(_locationSpawnEvent, timeOffset, _pendingEvents);
                     _locationSpawnEvent.Get().Initialize(this); _scheduledCount++;
                     // Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
                 }
-                else if (_locationSpawnEvent.Get().FireTime > Game.CurrentTime + eventTime)
-                    scheduler.RescheduleEvent(_locationSpawnEvent, eventTime);
+                else if (_locationSpawnEvent.Get().FireTime > eventTime)
+                    scheduler.RescheduleEvent(_locationSpawnEvent, timeOffset);
             }
         }
 
-        private void MarkerSchedule(PrototypeId markerRef)
+        public void MarkerSchedule(PrototypeId markerRef)
         {
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;
             if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler) == false) return;
             if (Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) == 0) return;
 
-            if (GetEventTime(markerEventScheduler.SpawnSchedulers, TimeSpan.FromMilliseconds(20), out var eventTime))
+            if (GetEventTime(markerEventScheduler.SpawnSchedulers, TimeSpan.FromMilliseconds(20), out var eventTime, out var timeOffset))
             {
                 var markerEvent = markerEventScheduler.MarkerSpawnEvent;
                 if (markerEvent.IsValid == false)
                 {
-                    scheduler.ScheduleEvent(markerEvent, eventTime, _pendingEvents);
+                    scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
                     markerEvent.Get().Initialize(this, markerRef);
                     // Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
                 }
-                else if (markerEvent.Get().FireTime > Game.CurrentTime + eventTime)
-                    scheduler.RescheduleEvent(markerEvent, eventTime);
+                else if (markerEvent.Get().FireTime > eventTime)
+                    scheduler.RescheduleEvent(markerEvent, timeOffset);
             }
         }
 
         private void ScheduleLocationObject()
         {
+            var currentTime = Game.CurrentTime;
             Picker<SpawnScheduler> schedulerPicker = new(Game.Random);
             foreach (var scheduler in LocationSchedulers)
-                if (scheduler.ScheduledObjects.Count > 0)
+                if (scheduler.CanAnySpawn(currentTime))
                     schedulerPicker.Add(scheduler);
 
             while (schedulerPicker.Empty() == false)
             {
                 schedulerPicker.PickRemove(out var scheduler);
-                if (scheduler.ScheduledObjects.Count > 0)
+                if (scheduler.CanAnySpawn(currentTime))
                 {
                     // Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");
                     scheduler.ScheduleLocationObject();
                 }
-                if (scheduler.ScheduledObjects.Count > 0)
+                if (scheduler.CanAnySpawn(currentTime))
                     schedulerPicker.Add(scheduler);
             }
 
@@ -174,18 +178,14 @@ namespace MHServerEmu.Games.Populations
             if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler)
                 && Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) > 0)
             {
-                bool critical = false;
+                var currentTime = Game.CurrentTime;
                 foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                    if (scheduler.ScheduledObjects.Count > 0 && scheduler.ScheduledObjects.Peek().Critical)
-                    {
-                        critical = true;
-                        scheduler.ScheduleMarkerObject();
-                    }
+                    if (scheduler.CanSpawn(currentTime, true))
+                        scheduler.ScheduleMarkerObject(true);
 
-                if (critical == false)
-                    foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                        if (scheduler.ScheduledObjects.Count > 0)
-                            scheduler.ScheduleMarkerObject();
+                foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
+                    if (scheduler.CanSpawn(currentTime, false))
+                        scheduler.ScheduleMarkerObject(false);
             }
 
             MarkerSchedule(markerRef);
@@ -222,15 +222,35 @@ namespace MHServerEmu.Games.Populations
             populationObject.SpawnObject(spawnTarget, entities);
         }
 
-        public ulong SpawnBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
+        #region BlackOutZone
+
+        public void SpawnBlackOutZoneForGroup(SpawnGroup group, PrototypeId blackOutZone)
+        {
+            if (group == null || group.BlackOutId != BlackOutZone.InvalidId) return;
+            var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(blackOutZone);
+            var position = group.Transform.Translation;
+            group.BlackOutId = CreateBlackOutZone(position, blackout.BlackOutRadius, group.MissionRef);
+        }
+
+        public ulong CreateBlackOutZone(Vector3 position, float radius, PrototypeId missionRef)
         {
             var id = NextBlackOutId();
-            BlackOutZone zone = new(id, position, radius, missionRef);
+            var zone = new BlackOutZone(id, position, radius, missionRef);
             _blackOutZones[id] = zone;
             _blackOutSpatialPartition.Insert(zone);
-            // TODO BlackOutZonesRebuild
+            Region.RebuildBlackOutZone(zone);
             Region.SpawnMarkerRegistry.AddBlackOutZone(zone);
             return id;
+        }
+
+        public void RemoveBlackOutZone(ulong id)
+        {
+            if (_blackOutZones.TryGetValue(id, out var zone))
+            {
+                _blackOutZones.Remove(id);
+                Region.RebuildBlackOutZone(zone);
+                Region.SpawnMarkerRegistry.RemoveBlackOutZone(zone);
+            }
         }
 
         public IEnumerable<BlackOutZone> IterateBlackOutZoneInVolume<B>(B bound) where B : IBounds
@@ -264,6 +284,8 @@ namespace MHServerEmu.Games.Populations
 
             return true;
         }
+
+        #endregion
 
         public SpawnGroup CreateSpawnGroup()
         {

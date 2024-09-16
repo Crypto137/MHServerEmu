@@ -27,6 +27,7 @@ namespace MHServerEmu.Games.Populations
         public SpawnEvent SpawnEvent;
         public SpawnScheduler Scheduler;
         public ulong SpawnGroupId;
+        public bool RemoveOnSpawnFail;
 
         public bool SpawnByMarker()
         {
@@ -34,7 +35,7 @@ namespace MHServerEmu.Games.Populations
             {
                 Type = SpawnTargetType.Marker
             };
-            return SpawnObject(spawnTarget, new()) != 0;
+            return SpawnObject(spawnTarget, new());
         }
 
         public bool SpawnInCell(Cell cell)
@@ -44,13 +45,11 @@ namespace MHServerEmu.Games.Populations
                 Type = SpawnTargetType.RegionBounds,
                 RegionBounds = cell.RegionBounds
             };
-            return SpawnObject(spawnTarget, new()) != 0;
+            return SpawnObject(spawnTarget, new());
         }
 
-        public ulong SpawnObject(SpawnTarget spawnTarget, List<WorldEntity> entities)
+        public bool SpawnObject(SpawnTarget spawnTarget, List<WorldEntity> entities)
         {
-            ulong groupId = 0;
-
             ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
             clusterGroup.Initialize();
 
@@ -65,22 +64,30 @@ namespace MHServerEmu.Games.Populations
                     reservation.MissionRef = MissionRef;
                     spawnTarget.Reservation = reservation;
                 }
-                else return groupId;
+                else return false;
             }
 
             bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
-            if (success) groupId = clusterGroup.Spawn(null, Spawner, entities);
-            SpawnGroupId = groupId;
-            SpawnEvent?.SetSpawnData(groupId, entities);
-            return groupId;
+            if (success)
+            {
+                SpawnGroupId = clusterGroup.Spawn(null, Spawner, entities);
+                success = SpawnGroupId != SpawnGroup.InvalidId;
+            }
+
+            if (success == false && spawnTarget.Reservation != null) 
+                spawnTarget.Reservation.State = MarkerState.Free;
+
+            if (success && SpawnEvent != null)
+                SpawnEvent.SetSpawnData(SpawnGroupId, entities);
+
+            return success;
         }
 
         public int GetPriority()
         {
-            int priority = Critical ? 10000 : 0;
             if (Time > TimeSpan.Zero)
-                return priority + (int)Time.TotalMilliseconds;
-            return priority + SpawnLocation.SpawnAreas.Count;
+                return (int)Time.TotalMilliseconds;
+            return SpawnLocation.SpawnAreas.Count;
         }
     }
 
@@ -113,8 +120,9 @@ namespace MHServerEmu.Games.Populations
             switch (Type)
             {
                 case SpawnTargetType.Marker:
+                    clusterGroup.Reservation = Reservation;
                     clusterGroup.SetParentRelativePosition(Reservation.GetRegionPosition());
-                    clusterGroup.SetParentRelativeOrientation(Reservation.MarkerRot); // can be random?                    
+                    clusterGroup.SetParentRelativeOrientation(Reservation.MarkerRot); // can be random?
                     clusterGroup.TestLayout();
                     success = true;
                     break;

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -6,35 +7,96 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Populations
 {
+    public class PopulationObjectQueue
+    {
+        private readonly PriorityQueue<PopulationObject, int> _queue = new();
+        public int Count => _queue.Count;
+
+        public void Push(PopulationObject popObject)
+        {
+            _queue.Enqueue(popObject, popObject.GetPriority());
+        }
+
+        public PopulationObject Pop()
+        {
+            return _queue.Count > 0 ? _queue.Dequeue() : null;
+        }
+
+        public bool CanSpawn(TimeSpan currentTime)
+        {
+            if (_queue.Count == 0) return false;
+            return _queue.Peek().Time <= currentTime;
+        }
+
+        public TimeSpan GetEventTime(TimeSpan eventTime)
+        {
+            if (_queue.Count == 0) return eventTime;
+            return Clock.Min(eventTime, _queue.Peek().Time);
+        }
+    }
+
     public class SpawnScheduler
     {
-        public PriorityQueue<PopulationObject, int> ScheduledObjects;
+        private readonly PopulationObjectQueue _criticalQueue = new();
+        private readonly PopulationObjectQueue _regularQueue = new();
+
+        public Queue<PopulationObject> FailedObjects { get; }
+        public int Count => _criticalQueue.Count + _regularQueue.Count;
+        public bool Any => _criticalQueue.Count > 0 || _regularQueue.Count > 0;
+
         public SpawnEvent SpawnEvent;
-        public Queue<PopulationObject> FailedObjects;
 
         public SpawnScheduler(SpawnEvent spawnEvent)
         {
-            ScheduledObjects = new();
             FailedObjects = new();
             SpawnEvent = spawnEvent;
         }
 
-        public void Push(PopulationObject populationObject)
+        public void Push(PopulationObject popObject)
         {
-            ScheduledObjects.Enqueue(populationObject, populationObject.GetPriority());
+            if (popObject.Critical)
+                _criticalQueue.Push(popObject);
+            else
+                _regularQueue.Push(popObject);
         }
 
-        public bool Pop(out PopulationObject populationObject)
+        public PopulationObject Pop(bool critical)
         {
-            populationObject = null;
-            if (ScheduledObjects.Count == 0) return false;
-            populationObject = ScheduledObjects.Dequeue();
-            return true;
+            return critical ? _criticalQueue.Pop() : _regularQueue.Pop();
         }
 
-        public void ScheduleMarkerObject() // Spawn Entity from Missions, MetaStates
+        public PopulationObject PopAny()
         {
-            if (Pop(out PopulationObject populationObject))
+            return _criticalQueue.Pop() ?? _regularQueue.Pop();
+        }
+
+        public bool CanSpawn(TimeSpan currentTime, bool critical)
+        {
+            if (critical)
+                return _criticalQueue.CanSpawn(currentTime);
+            else
+                return _regularQueue.CanSpawn(currentTime);
+        }
+
+        public bool CanAnySpawn(TimeSpan currentTime)
+        {
+            return _criticalQueue.CanSpawn(currentTime) || _regularQueue.CanSpawn(currentTime);
+        }
+
+        public TimeSpan GetEventTime(TimeSpan currentMinTime)
+        {
+            TimeSpan eventTime = currentMinTime;
+
+            eventTime = _criticalQueue.GetEventTime(eventTime);
+            eventTime = _regularQueue.GetEventTime(eventTime);
+
+            return eventTime;
+        }
+
+        public void ScheduleMarkerObject(bool critical) // Spawn Entity from Missions, MetaStates
+        {
+            var populationObject = Pop(critical);
+            if (populationObject != null)
             {
                 if (populationObject.SpawnByMarker()) // cell.SpawnPopulation(population);
                     OnSpawnedPopulation(populationObject);
@@ -44,7 +106,7 @@ namespace MHServerEmu.Games.Populations
 
         private void OnSpawnedPopulation(PopulationObject populationObject)
         {
-            if (populationObject == null || populationObject.SpawnGroupId == 0) return;
+            if (populationObject == null || populationObject.SpawnGroupId == SpawnGroup.InvalidId) return;
 
             var group = SpawnEvent.PopulationManager.GetSpawnGroup(populationObject.SpawnGroupId);
             if (group != null) group.PopulationObject = populationObject;
@@ -53,7 +115,8 @@ namespace MHServerEmu.Games.Populations
 
         public void ScheduleLocationObject() // Spawn Themes
         {
-            if (Pop(out PopulationObject populationObject))
+            var populationObject = PopAny();
+            if (populationObject != null)
             {
                 Picker<Cell> picker = new(SpawnEvent.Game.Random);
                 var region = populationObject.SpawnLocation.Region;

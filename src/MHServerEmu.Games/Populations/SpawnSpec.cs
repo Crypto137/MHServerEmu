@@ -23,8 +23,9 @@ namespace MHServerEmu.Games.Populations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Game Game { get; private set; }
+        public const ulong Invalid = 0;
         public ulong Id { get; }
+        public Game Game { get; private set; }
         public SpawnGroup Group { get; set; }
         public SpawnState State { get; private set; }
         public PrototypeId EntityRef { get; set; }
@@ -215,6 +216,7 @@ namespace MHServerEmu.Games.Populations
 
     public class SpawnGroup
     {
+        public const ulong InvalidId = 0;
         public ulong Id { get; }
         public SpawnState State { get; private set; }
         public Transform3 Transform { get; set; }
@@ -226,6 +228,8 @@ namespace MHServerEmu.Games.Populations
         public PopulationObjectPrototype ObjectProto { get; set; }
         public PopulationObject PopulationObject { get; set; }
         public SpawnEvent SpawnEvent { get; set; }
+        public SpawnReservation Reservation { get; set; }
+        public ulong BlackOutId { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
@@ -233,6 +237,7 @@ namespace MHServerEmu.Games.Populations
             PopulationManager = populationManager;
             Specs = new();
             State = SpawnState.Live;
+            BlackOutId = BlackOutZone.InvalidId;
         }
 
         public void AddSpec(SpawnSpec spec)
@@ -328,6 +333,8 @@ namespace MHServerEmu.Games.Populations
             if (State == SpawnState.Destroyed) return;
             if (State == SpawnState.Live) Defeat();
             State = SpawnState.Destroyed;
+
+            ReleaseRespawn();
             
             while (Specs.Count > 0)
             {
@@ -342,6 +349,33 @@ namespace MHServerEmu.Games.Populations
             {
                 SpawnEvent.SpawnGroups.Remove(Id);
                 SpawnEvent = null;
+            }
+        }
+
+        private void ReleaseRespawn()
+        {
+            var manager = PopulationManager;
+
+            // Clear reserved place
+            if (Reservation != null) Reservation.State = MarkerState.Free;
+            if (BlackOutId != BlackOutZone.InvalidId)
+            {
+                manager.RemoveBlackOutZone(BlackOutId);
+                BlackOutId = BlackOutZone.InvalidId;
+            }
+
+            // Reschedule SpawnEvent
+            if (SpawnEvent != null && SpawnEvent.RespawnObject)
+            {
+                var game = manager.Game;
+                int spawnTimeMS = game.Random.Next(SpawnEvent.RespawnDelayMS, 1000);
+                PopulationObject.Time = game.CurrentTime + TimeSpan.FromMilliseconds(spawnTimeMS);
+                SpawnEvent.AddToScheduler(PopulationObject);
+
+                if (PopulationObject.IsMarker)
+                    manager.MarkerSchedule(PopulationObject.MarkerRef);
+                else
+                    manager.LocationSchedule();
             }
         }
 

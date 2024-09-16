@@ -107,7 +107,7 @@ namespace MHServerEmu.Games.Populations
         public virtual void SetLocationDirty() { }
         public virtual bool IsFormationObject() => false;
         public virtual bool Initialize() => false;
-        public virtual ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities) { return 0; }
+        public virtual ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities) { return SpawnGroup.InvalidId; }
         public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes) { }
         public virtual bool TestLayout() => false;
@@ -121,7 +121,8 @@ namespace MHServerEmu.Games.Populations
         public SpawnFlags SpawnFlags { get; set; }
         public List<ClusterObject> Objects { get; private set; }
         public PrototypeId MissionRef { get; private set; }
-        public KeyValuePair<PrototypeId, Vector3> BlackOutZone { get; internal set; }
+        public KeyValuePair<PrototypeId, Vector3> BlackOutZone { get; set; }
+        public SpawnReservation Reservation { get; set; }
 
         public ClusterGroup(Region region, GRandom random, PopulationObjectPrototype populationObject,
             ClusterGroup parent, PropertyCollection properties, SpawnFlags flags)
@@ -708,32 +709,27 @@ namespace MHServerEmu.Games.Populations
                     group.EncounterRef = populationEncounter.GetEncounterRef();
                 group.ObjectProto = ObjectProto;
                 group.MissionRef = MissionRef;
-                group.SpawnerId = spawner != null ? spawner.Id : 0;
+                group.Reservation = Reservation;
+                group.SpawnerId = spawner != null ? spawner.Id : Entity.InvalidId;
             }
-            if (group == null) return 0;
+            if (group == null) return SpawnGroup.InvalidId;
 
             foreach (var obj in Objects)
-                if (obj.Spawn(group, spawner, entities) == 0)
+                if (obj.Spawn(group, spawner, entities) == SpawnGroup.InvalidId)
                 {
                     if (Parent == null) 
                         manager.RemoveSpawnGroup(group.Id);
                     return 0;
                 }
 
-            var position = GetAbsolutePosition();
             if (ObjectProto.Riders.HasValue())
                 foreach (var rider in ObjectProto.Riders)
                     if (rider is PopulationRiderBlackOutPrototype blackOutProto)
-                    {
-                        var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(blackOutProto.BlackOutZone);
-                        manager.SpawnBlackOutZone(position, blackout.BlackOutRadius, MissionRef);
-                    }
+                        manager.SpawnBlackOutZoneForGroup(group, blackOutProto.BlackOutZone);
 
             if (BlackOutZone.Key != PrototypeId.Invalid)
-            {
-                var blackout = GameDatabase.GetPrototype<BlackOutZonePrototype>(BlackOutZone.Key);
-                manager.SpawnBlackOutZone(position, blackout.BlackOutRadius, MissionRef);
-            }
+                manager.SpawnBlackOutZoneForGroup(group, BlackOutZone.Key);
+
             return group.Id;
         }
 
@@ -969,7 +965,7 @@ namespace MHServerEmu.Games.Populations
         public override ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities)
         {
             var manager = Region.PopulationManager;
-            if (group == null) return 0;
+            if (group == null) return SpawnGroup.InvalidId;
             // PropertyCollection, events
 
             var pos = GetAbsolutePosition();

@@ -47,6 +47,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapDistributeDistance { get; protected set; }
         public int SpawnMapDistributeSpread { get; protected set; }
         public bool SpawnMapEnabled { get; protected set; }
+        [DoNotCopy]
+        public bool UseSpawnMap { get => SpawnMapEnabled || (SpawnMapDensityMin > 0.0 && SpawnMapDensityMax > 0.0f); }
 
         public const float PopulationClusterSq = 3200.0f; 
 
