@@ -14,17 +14,65 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public void Init(ulong powerOwnerId, ulong ultimateOwnerId, ulong targetId, Vector3 powerOwnerPosition, PowerPrototype powerProto)
+        public Game Game { get; private set; }
+
+        public Vector3 TargetPosition { get; private set; }
+        public TimeSpan MovementTime { get; private set; }
+        public uint PowerRandomSeed { get; private set; }
+        public uint FXRandomSeed { get; private set; }
+
+        public float Range { get; private set; }
+        public ulong RegionId { get; private set; }
+        public AlliancePrototype OwnerAlliance { get; private set; }
+        public int BeamSweepSlice { get; private set; }
+        public TimeSpan ExecutionTime { get; private set; }
+
+        public bool Initialize(Power power, PowerApplication powerApplication)
         {
-            PowerOwnerId = powerOwnerId;
-            UltimateOwnerId = ultimateOwnerId;
-            TargetId = targetId;
-            PowerOwnerPosition = powerOwnerPosition;
-            PowerPrototype = powerProto;
+            Game = power.Game;
+            PowerPrototype = power.Prototype;
+
+            PowerOwnerId = powerApplication.UserEntityId;
+            TargetId = powerApplication.TargetEntityId;
+            PowerOwnerPosition = powerApplication.UserPosition;
+            TargetPosition = powerApplication.TargetPosition;
+            MovementTime = powerApplication.MovementTime;
+            PowerRandomSeed = powerApplication.PowerRandomSeed;
+            FXRandomSeed = powerApplication.FXRandomSeed;
+
+            // All payloads have to have valid owners on initialization
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+            if (powerOwner == null) return Logger.WarnReturn(false, "powerOwner == null");
+
+            WorldEntity ultimateOwner = power.GetUltimateOwner();
+            UltimateOwnerId = ultimateOwner != null ? ultimateOwner.Id : power.Owner.Id;
+
+            // NOTE: Due to how physics work, user may no longer be where they were when collision / combo / proc activated.
+            // In these cases we use application position for validation checks to work.
+            PowerOwnerPosition = power.IsMissileEffect() || power.IsComboEffect() || power.IsProcEffect()
+                ? powerApplication.UserPosition
+                : powerOwner.RegionLocation.Position;
+
+            // Snapshot properties of the power and its owner
+            Power.SerializeEntityPropertiesForPowerPayload(powerOwner, Properties);
+            Power.SerializePowerPropertiesForPowerPayload(power, Properties);
+
+            Logger.Debug($"Initialize(): Properties for {power}:\n{Properties}");
+
+            // Snapshot additional data used to determine targets
+            Range = power.GetApplicationRange();
+            RegionId = powerOwner.Region.Id;
+            OwnerAlliance = powerOwner.Alliance;
+            BeamSweepSlice = -1;        // TODO
+            ExecutionTime = power.GetFullExecutionTime();
+
+            return true;
         }
 
         public PowerResults GenerateResults(Power power, WorldEntity owner, WorldEntity target)
         {
+            // TODO: Use snapshotted data for calculations
+
             bool isHostile = target != null && owner.IsHostileTo(target);
 
             PowerResults results = new();

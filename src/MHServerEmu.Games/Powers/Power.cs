@@ -1113,6 +1113,15 @@ namespace MHServerEmu.Games.Powers
                 GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
         }
 
+        public bool GetTargets(List<WorldEntity> targetList, PowerPayload payload)
+        {
+            WorldEntity primaryTarget = Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
+
+            return GetTargets(targetList, Game, Prototype, payload.Properties, primaryTarget, payload.TargetPosition, payload.PowerOwnerPosition,
+                payload.Range, payload.RegionId, payload.PowerOwnerId, payload.UltimateOwnerId, payload.OwnerAlliance, payload.BeamSweepSlice,
+                payload.ExecutionTime, (int)payload.PowerRandomSeed);
+        }
+
         public static bool GetTargets(List<WorldEntity> targetList, Game game, PowerPrototype powerProto, PropertyCollection properties,
             WorldEntity target, in Vector3 targetPosition, in Vector3 userPosition, float range, ulong regionId, ulong ownerId,
             ulong ultimateOwnerId, AlliancePrototype userAllianceProto, int beamSweepSlice, TimeSpan executionTime, int randomSeed)
@@ -2485,6 +2494,36 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
+        #region Payload
+        
+        // Payload Serialization is the term the game uses for the snapshotting of properties that happens when a power is applied
+
+        public static void SerializeEntityPropertiesForPowerPayload(WorldEntity worldEntity, PropertyCollection destinationProperties)
+        {
+            SerializePropertiesForPowerPayload(worldEntity.Properties, destinationProperties, PowerSerializeType.Entity);
+        }
+
+        public static void SerializePowerPropertiesForPowerPayload(Power power, PropertyCollection destinationProperties)
+        {
+            SerializePropertiesForPowerPayload(power.Properties, destinationProperties, PowerSerializeType.Power);
+        }
+
+        private static void SerializePropertiesForPowerPayload(PropertyCollection sourceProperties, PropertyCollection destinationProperties, PowerSerializeType serializeType)
+        {
+            if (serializeType == PowerSerializeType.Entity)
+            {
+                foreach (var kvp in sourceProperties.IteratePropertyRange(PropertyEnumFilter.SerializeEntityToPowerPayload))
+                    destinationProperties[kvp.Key] = kvp.Value;
+            }
+            else if (serializeType == PowerSerializeType.Power)
+            {
+                foreach (var kvp in sourceProperties.IteratePropertyRange(PropertyEnumFilter.SerializePowerToPowerPayload))
+                    destinationProperties[kvp.Key] = kvp.Value;
+            }
+        }
+
+        #endregion
+
         protected virtual PowerUseResult ActivateInternal(ref PowerActivationSettings settings)
         {
             // Send non-combo activations and combos triggered by the server
@@ -2619,41 +2658,53 @@ namespace MHServerEmu.Games.Powers
             // Avatar may exit world as a result of the application of this power
             if (Owner.IsInWorld == false) return true;
 
+            // Create a payload
+            PowerPayload payload = new();
+            payload.Initialize(this, powerApplication);     // Payload stores a snapshot of the state of this power and its owner at the moment of application
+
+            // Pay costs (TODO: mana costs)
+            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+            {
+                // Doctors hate him! BUE fixed with one simple trick
+                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
+                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
+            }
+
+            // Deliver payload
+            // TODO: Delivery delay (e.g. when throwing throwables)
             // Find targets for this power application
             List<WorldEntity> targetList = new();
-            WorldEntity primaryTarget = Game.EntityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
-
-            // NOTE: Due to how physics work, user may no longer be where they were when collision / combo / proc activated.
-            // In these cases we use pass in application position for validation checks to work.
-            PowerPrototype powerProto = Prototype;
-            Vector3 userPosition = IsMissileEffect() || IsComboEffect() || IsProcEffect()
-                ? powerApplication.UserPosition
-                : Owner.RegionLocation.Position;
-
-            GetTargets(targetList, Game, powerProto, Owner.Properties, primaryTarget, powerApplication.TargetPosition, userPosition,
-                GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, -1, GetFullExecutionTime(), (int)powerApplication.PowerRandomSeed);
+            GetTargets(targetList, payload);
 
             for (int i = 0; i < targetList.Count; i++)
             {
                 WorldEntity target = targetList[i];
-
-                //Logger.Debug($"targetList[{i}]: {target}");
-
-                // Create a payload and calculate results
-                PowerPayload payload = new();
-                WorldEntity ultimateOwner = GetUltimateOwner();
-                payload.Init(powerApplication.UserEntityId, ultimateOwner != null ? ultimateOwner.Id : 0, powerApplication.TargetEntityId, powerApplication.UserPosition, Prototype);
 
                 // Apply results to the target
                 PowerResults results = payload.GenerateResults(this, Owner, target);
                 target.ApplyPowerResults(results);
             }
 
-            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+            // HACK: Old conditions hacks
+            // TODO: Proper power condition implementation
+            if (IsTravelPower() && Prototype.AppliesConditions != null && Owner.ConditionCollection.GetCondition(666) == null)
             {
-                // Doctors hate him! BUE fixed with one simple trick
-                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
-                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
+                // Bikes and other vehicles
+                Condition travelPowerCondition = Owner.ConditionCollection.AllocateCondition();
+                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
+                Owner.ConditionCollection.AddCondition(travelPowerCondition);
+            }
+            else if (PrototypeDataRef == (PrototypeId)5394038587225345882 && Owner.ConditionCollection.GetCondition(777) == null)
+            {
+                // Magik - Ultimate
+                Condition magikUltimateCondition = Owner.ConditionCollection.AllocateCondition();
+                magikUltimateCondition.InitializeFromPowerMixinPrototype(777, PrototypeDataRef, 0, TimeSpan.Zero);
+                Owner.ConditionCollection.AddCondition(magikUltimateCondition);
+
+                // Schedule condition end
+                EventPointer<TEMP_RemoveConditionEvent> removeConditionEvent = new();
+                Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
+                removeConditionEvent.Get().Initialize(Owner.Id, 777);
             }
 
             if (IsThrowablePower())
@@ -2683,28 +2734,6 @@ namespace MHServerEmu.Games.Powers
 
                 Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
                 Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
-            }
-
-            // HACK: Old conditions hacks
-            // TODO: Proper power condition implementation
-            if (IsTravelPower() && Prototype.AppliesConditions != null && Owner.ConditionCollection.GetCondition(666) == null)
-            {
-                // Bikes and other vehicles
-                Condition travelPowerCondition = Owner.ConditionCollection.AllocateCondition();
-                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(travelPowerCondition);
-            }
-            else if (PrototypeDataRef == (PrototypeId)5394038587225345882 && Owner.ConditionCollection.GetCondition(777) == null)
-            {
-                // Magik - Ultimate
-                Condition magikUltimateCondition = Owner.ConditionCollection.AllocateCondition();
-                magikUltimateCondition.InitializeFromPowerMixinPrototype(777, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(magikUltimateCondition);
-
-                // Schedule condition end
-                EventPointer<TEMP_RemoveConditionEvent> removeConditionEvent = new();
-                Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
-                removeConditionEvent.Get().Initialize(Owner.Id, 777);
             }
 
             return true;

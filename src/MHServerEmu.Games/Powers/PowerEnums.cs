@@ -116,6 +116,12 @@ namespace MHServerEmu.Games.Powers
         LessThan
     }
 
+    public enum PowerSerializeType
+    {
+        Entity,
+        Power
+    }
+
     [AssetEnum((int)Physical)]
     public enum DamageType
     {
