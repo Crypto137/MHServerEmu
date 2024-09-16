@@ -543,6 +543,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, metaGame);
             Eval.RunBool(EvalSpawnProperties, evalContext);
         }
+
+        public bool AllowedInDifficulty(PrototypeId difficultyRef)
+        {
+            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
+        }
     }
 
     public class PopulationRequiredObjectListPrototype : Prototype
