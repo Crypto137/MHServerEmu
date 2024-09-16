@@ -79,9 +79,7 @@ namespace MHServerEmu.Games.Regions
         public float SpawnableNavArea { get; set; }
 
         public List<AreaConnectionPoint> AreaConnections { get; set; } = new();
-
         public List<RandomInstanceRegionPrototype> RandomInstances { get; } = new();
-
         public Dictionary<uint, Cell> Cells { get; } = new();
 
         public Area(Game game, Region region)
@@ -149,7 +147,7 @@ namespace MHServerEmu.Games.Regions
             {
                 GRandom random = new(RandomSeed);
                 PrototypeId regionPopulation = populationOverrides[random.Next(0, populationOverrides.Length)];
-                if (regionPopulation != GameData.PrototypeId.Invalid)
+                if (regionPopulation != PrototypeId.Invalid)
                     PopulationRef = regionPopulation;
                 else
                     PopulationRef = Prototype.Population;
@@ -286,16 +284,24 @@ namespace MHServerEmu.Games.Regions
         private bool GeneratePopulation()
         {
             if (TestStatus(GenerateFlag.Background) == false)
+                return Logger.WarnReturn(false, $"Generate population should have background generator \nRegion:{Region}\nArea:{this}");
+
+            if (TestStatus(GenerateFlag.Population)) return true;
+
+            var populationProto = PopulationArea.PopulationPrototype;
+            if (populationProto?.UseSpawnMap == true)
             {
-                return Logger.WarnReturn(false, $"Generate population should have background generator \nRegion:{Region}\nArea:{ToString()}");
+                // TODO add SpawnMap
+                /*
+                populationProto.SpawnMapDensityMin
+                populationProto.SpawnMapDensityMax
+                populationProto.SpawnMapDensityStep
+                populationProto.SpawnMapCrowdSupression
+                populationProto.SpawnMapCrowdSupressionStart*/
             }
 
-            if (TestStatus(GenerateFlag.Population))
-                return true;
-
-            SetStatus(GenerateFlag.Population, true);
-
             BlackOutZonesRebuild();
+            SetStatus(GenerateFlag.Population, true);            
 
             Region.AreaCreatedEvent.Invoke(new(this));
 
@@ -314,13 +320,17 @@ namespace MHServerEmu.Games.Regions
                 cell.BlackOutZonesRebuild();
         }
 
+        public void RebuildBlackOutZone(BlackOutZone zone)
+        {
+            foreach (var cell in CellIterator())
+                if (zone.Sphere.Intersects(cell.RegionBounds))
+                    cell.BlackOutZonesRebuild();
+        }
+
         private bool GenerateNavi()
         {
             if (TestStatus(GenerateFlag.Background) == false)
-            {
-                return Logger.WarnReturn(false,
-                    $"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{this}");
-            }
+                return Logger.WarnReturn(false, $"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{this}");
 
             if (TestStatus(GenerateFlag.Navi))
                 return true;

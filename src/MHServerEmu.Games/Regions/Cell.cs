@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Regions
         private void SpawnBlackOutZone(EntityMarkerPrototype entityMarker, BlackOutZonePrototype blackOutZone, in Transform3 transform, MarkerSetOptions options)
         {
             CalcMarkerTransform(entityMarker, transform, options, out Vector3 position, out _);
-            PopulationManager.SpawnBlackOutZone(position, blackOutZone.BlackOutRadius, PrototypeId.Invalid);
+            PopulationManager.CreateBlackOutZone(position, blackOutZone.BlackOutRadius, PrototypeId.Invalid);
         }
 
         public void SpawnEntityMarker(EntityMarkerPrototype entityMarker, WorldEntityPrototype entityProto, in Transform3 transform, MarkerSetOptions options)
@@ -465,11 +465,11 @@ namespace MHServerEmu.Games.Regions
         {
             if (PlayableArea == 0.0f) return;
 
-            Region region = Region;
-            NaviMesh naviMesh = region.NaviMesh;
-            IEnumerable<BlackOutZone> zones = region.PopulationManager.IterateBlackOutZoneInVolume(RegionBounds);
+            var region = Region;
+            var naviMesh = region.NaviMesh;
+            if (naviMesh.IsMeshValid == false) return;
 
-            foreach (BlackOutZone zone in zones)
+            foreach (var zone in region.PopulationManager.IterateBlackOutZoneInVolume(RegionBounds))
                 naviMesh.SetBlackOutZone(zone.Sphere.Center, zone.Sphere.Radius);
 
             _spawnableNavArea = naviMesh.CalcSpawnableArea(RegionBounds);

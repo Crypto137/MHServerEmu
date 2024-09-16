@@ -533,11 +533,9 @@ namespace MHServerEmu.Games.Regions
 
         public Area GetArea(PrototypeId prototypeId)
         {
-            foreach (var area in Areas)
-            {
-                if (area.Value.PrototypeDataRef == prototypeId)
-                    return area.Value;
-            }
+            foreach (var area in Areas.Values)
+                if (area.PrototypeDataRef == prototypeId)
+                    return area;
 
             return null;
         }
@@ -552,12 +550,9 @@ namespace MHServerEmu.Games.Regions
 
         public Area GetAreaAtPosition(Vector3 position)
         {
-            foreach (var itr in Areas)
-            {
-                Area area = itr.Value;
+            foreach (Area area in Areas.Values)
                 if (area.IntersectsXY(position))
                     return area;
-            }
 
             return null;
         }
@@ -579,6 +574,13 @@ namespace MHServerEmu.Games.Regions
                 if (bound == null || area.RegionBounds.Intersects(bound.Value))
                     yield return area;
             }
+        }
+
+        public void RebuildBlackOutZone(BlackOutZone zone)
+        {
+            foreach (var area in IterateAreas())
+                if (area.TestStatus(GenerateFlag.Population) && zone.Sphere.Intersects(area.RegionBounds))
+                    area.RebuildBlackOutZone(zone);
         }
 
         public int GetAreaLevel(Area area)
