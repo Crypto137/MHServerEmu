@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -81,10 +81,13 @@ namespace MHServerEmu.Games.GameData
             if (_prototypeConstructorDict.TryGetValue(type, out var constructorDelegate) == false)
             {
                 // Cache constructor delegate for future use
-                var constructor = type.GetConstructor(Type.EmptyTypes);
-                var newExpression = Expression.New(constructor);
-                var lambdaExpression = Expression.Lambda<Func<Prototype>>(newExpression);
-                constructorDelegate = lambdaExpression.Compile();
+                DynamicMethod dm = new("ConstructPrototype", typeof(Prototype), null);
+                ILGenerator il = dm.GetILGenerator();
+
+                il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Ret);
+
+                constructorDelegate = dm.CreateDelegate<Func<Prototype>>();
                 _prototypeConstructorDict.Add(type, constructorDelegate);
             }
 
