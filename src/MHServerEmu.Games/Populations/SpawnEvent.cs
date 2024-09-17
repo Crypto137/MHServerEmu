@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.Populations
         }
 
         public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, bool critical,
-            SpawnLocation spawnLocation, PrototypeId missionRef, TimeSpan time = default, bool removeOnSpawnFail = false)
+            SpawnLocation spawnLocation, PrototypeId missionRef, bool spawnCleanup = false, TimeSpan time = default, bool removeOnSpawnFail = false)
         {
             /*HashSet<PrototypeId> entities = new();
             population.GetContainedEntities(entities);
@@ -100,6 +100,7 @@ namespace MHServerEmu.Games.Populations
                 SpawnFlags = SpawnFlags.IgnoreSimulated,
                 Object = population,
                 SpawnLocation = spawnLocation,
+                SpawnCleanup = spawnCleanup,
                 RemoveOnSpawnFail = removeOnSpawnFail
             };
 
@@ -203,7 +204,7 @@ namespace MHServerEmu.Games.Populations
             while (density > 0.0f && picker.Pick(out var objectProto))
             {
                 density -= objectProto.GetAverageSize();
-                AddPopulationObject(PrototypeId.Invalid, objectProto, false, spawnLocation, PrototypeId.Invalid);
+                AddPopulationObject(PrototypeId.Invalid, objectProto, false, spawnLocation, PrototypeId.Invalid, true);
                 objCount++;
             }
 
@@ -248,7 +249,7 @@ namespace MHServerEmu.Games.Populations
                 if (spawnPicker.Picker == null) continue;
                 var objectProto = spawnPicker.Picker.Pick();
                 for (int i = 0; i < spawnPicker.Count; i++)
-                    AddPopulationObject(markerRef, objectProto, false, spawnLocation, PrototypeId.Invalid);
+                    AddPopulationObject(markerRef, objectProto, false, spawnLocation, PrototypeId.Invalid, true);
                 markerCount++;
             }
             Logger.Debug($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(populationProto.DataRef)}][{objCount}][{markerCount}]");
@@ -270,7 +271,9 @@ namespace MHServerEmu.Games.Populations
         public void MissionRegistry(MissionPrototype missionProto)
         {
             if (missionProto == null) return;
-            bool critical = missionProto is not OpenMissionPrototype || missionProto.PopulationRequired;
+            bool notOpen = missionProto is not OpenMissionPrototype;
+            bool spawnCleanup = notOpen;
+            bool critical = notOpen || missionProto.PopulationRequired;
 
             if (missionProto.PopulationSpawns.HasValue())            
                 foreach (var entry in missionProto.PopulationSpawns)
@@ -291,7 +294,7 @@ namespace MHServerEmu.Games.Populations
 
                     var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
                     for (var i = 0; i < entry.Count; i++)                        
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef);
+                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef, spawnCleanup);
                 }
         }
 
@@ -346,7 +349,7 @@ namespace MHServerEmu.Games.Populations
                 for (int i = 0; i < count; i++)
                 {
                     AddPopulationObject(objectProto.UsePopulationMarker, objectProto, reqObject.Critical, spawnLocationReq,
-                        PrototypeId.Invalid, TimeSpan.FromMilliseconds(random.Next(0, 1000)), removeOnSpawnFail);
+                        PrototypeId.Invalid, true, TimeSpan.FromMilliseconds(random.Next(0, 1000)), removeOnSpawnFail);
                 }
             }
         }

@@ -63,6 +63,7 @@ namespace MHServerEmu.Games.Regions
         private readonly BitList _collisionIds = new();
         private readonly BitList _collisionBits = new();
         private readonly List<BitList> _collisionBitList = new();
+        private Dictionary<PrototypeId, ulong> _uniqueSelectorIndexes = new();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
 
@@ -1577,6 +1578,28 @@ namespace MHServerEmu.Games.Regions
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Properties);
             Eval.RunBool(evalProto, evalContext);
+        }
+
+        public void GetUnuqueSelectorIndex(ref int index, int size, PrototypeId dataRef)
+        {
+            if (_uniqueSelectorIndexes.TryGetValue(dataRef, out ulong mask) == false) return;
+            int start = index;
+            do
+            {
+                index = (index + 1) % size;
+                if ((mask & (1UL << index)) == 0) return;
+            }
+            while (index != start);
+        }
+
+        public void SetUnuqueSelectorIndex(int index, bool setUnique, PrototypeId dataRef)
+        {
+            if (_uniqueSelectorIndexes.ContainsKey(dataRef) == false) return;
+
+            if (setUnique)
+                _uniqueSelectorIndexes[dataRef] |= 1UL << index;
+            else
+                _uniqueSelectorIndexes[dataRef] &= ~(1UL << index);
         }
     }
 

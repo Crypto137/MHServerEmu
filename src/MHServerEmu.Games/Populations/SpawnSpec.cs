@@ -2,7 +2,10 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -37,19 +40,19 @@ namespace MHServerEmu.Games.Populations
         public PrototypeId MissionRef { get; set; }
         public int EncounterSpawnPhase { get; set; }
         public List<EntitySelectorActionPrototype> Actions { get; private set; }
-        public ScriptRoleKeyEnum RoleKey { get; internal set; }
+        public ScriptRoleKeyEnum RoleKey { get; set; }
+        public TimeSpan SpawnedTime { get; private set; } = TimeSpan.Zero;
+        public TimeSpan PostContactDelayMS { get; set; } = TimeSpan.Zero;
         public float LeashDistance
         {
             get
             {
-                PopulationObjectPrototype objectProto = Group?.ObjectProto;
+                var objectProto = Group?.ObjectProto;
                 if (objectProto != null)
                     return objectProto.LeashDistance;
                 return 3000.0f; // Default LeashDistance in PopulationObject
             }
         }
-
-        public TimeSpan SpawnedTime { get; private set; }
 
         public SpawnSpec(ulong id, SpawnGroup group, Game game)
         {
@@ -61,7 +64,6 @@ namespace MHServerEmu.Games.Populations
         public SpawnSpec(Game game)
         {
             Game = game;
-            // TODO check std::shared_ptr<Gazillion::SpawnSpec>
         }
 
         public bool Spawn()
@@ -133,6 +135,8 @@ namespace MHServerEmu.Games.Populations
             State = SpawnState.Live;
             SpawnedTime = Game.CurrentTime;
 
+            EntitySelectorProto?.SetUniqueEntity(EntityRef, region, true);
+
             return true;
         }
 
@@ -157,24 +161,33 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        public void Defeat(WorldEntity killer = null)
+        public void OnDefeat(WorldEntity killer)
         {
-            if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return;
+            if (State == SpawnState.Respawning) return;
+            if (Defeat(killer)) Group?.ScheduleClearCluster(ActiveEntity, killer);
+        }
+
+        private bool Defeat(WorldEntity killer = null)
+        {
+            if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return false;
             State = SpawnState.Defeated;
 
             SpawnedTime = Game.CurrentTime;
 
-            // TODO defeat
-
-            if (Group != null && Group.SpawnerId != 0)
+            if (Group != null)
             {
-                EntityManager manager = ActiveEntity?.Game.EntityManager;
-                if (manager != null)
+                if (killer != null) Group.SaveKiller(killer);
+                if (Group.SpawnerId != Entity.InvalidId)
                 {
-                    var spawner = manager.GetEntity<Spawner>(Group.SpawnerId);
-                    spawner?.OnKilledDefeatSpawner(ActiveEntity, killer);
+                    var manager = Game.EntityManager;
+                    if (manager != null)
+                    {
+                        var spawner = manager.GetEntity<Spawner>(Group.SpawnerId);
+                        spawner?.OnKilledDefeatSpawner(ActiveEntity, killer);
+                    }
                 }
             }
+            return true;
         }
 
         public void Destroy()
@@ -183,16 +196,17 @@ namespace MHServerEmu.Games.Populations
             if (State == SpawnState.Live || State == SpawnState.Pending) Defeat();
             State = SpawnState.Destroyed;
             var entity = ActiveEntity;
-            if (entity != null)
-            {
-                var proto = entity.WorldEntityPrototype;
-                entity.ClearSpawnSpec();
-                TimeSpan time = TimeSpan.Zero;
-                if (entity.IsSimulated && entity.IsDead && proto.RemoveFromWorldTimerMS > 0)
-                    time = TimeSpan.FromMilliseconds(proto.RemoveFromWorldTimerMS);
-                entity.ScheduleDestroyEvent(time);
-                ActiveEntity = null;
-            }
+            if (entity == null) return;
+            
+            var proto = entity.WorldEntityPrototype;
+            entity.ClearSpawnSpec();
+            TimeSpan time = TimeSpan.Zero;
+            if (entity.IsSimulated && entity.IsDead && proto.RemoveFromWorldTimerMS > 0)
+                time = TimeSpan.FromMilliseconds(proto.RemoveFromWorldTimerMS);
+            entity.ScheduleDestroyEvent(time);
+            ActiveEntity = null;
+
+            EntitySelectorProto?.SetUniqueEntity(EntityRef, entity.Region, false);
         }
 
         public void Respawn()
@@ -212,12 +226,28 @@ namespace MHServerEmu.Games.Populations
         {
             Group?.SpawnEvent?.OnUpdateSimulation();
         }
+
+        public bool PreventsSpawnCleanup()
+        {
+            if (State == SpawnState.Destroyed || State == SpawnState.Defeated || ActiveEntity == null) return false;
+            if (ActiveEntity is not Agent)
+            {
+                if (ActiveEntity.Prototype is PropPrototype propProto && propProto.PreventsSpawnCleanup == false) return false;
+                if (ActiveEntity.Properties[PropertyEnum.Interactable] && ActiveEntity.Properties[PropertyEnum.InteractableUsesLeft] == 0) return false;
+            }
+            return true;
+        }
     }
 
     public class SpawnGroup
     {
         public const ulong InvalidId = 0;
+        private EventPointer<ClearClusterEvent> _clearClusterEvent = new();
+        private Vector3 _killPosition;
+        private readonly EventGroup _pendingEvents = new();
+
         public ulong Id { get; }
+        public Game Game { get; }
         public SpawnState State { get; private set; }
         public Transform3 Transform { get; set; }
         public List<SpawnSpec> Specs { get; set; }
@@ -230,14 +260,21 @@ namespace MHServerEmu.Games.Populations
         public SpawnEvent SpawnEvent { get; set; }
         public SpawnReservation Reservation { get; set; }
         public ulong BlackOutId { get; set; }
+        public List<ulong> Killers { get; }
+        public bool SpawnCleanup { get; set; }
+        public Region Region { get; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
             Id = id;
             PopulationManager = populationManager;
+            Game = populationManager.Game;
+            Region = populationManager.Region;
             Specs = new();
             State = SpawnState.Live;
             BlackOutId = BlackOutZone.InvalidId;
+            Killers = new();
+            SpawnCleanup = true;
         }
 
         public void AddSpec(SpawnSpec spec)
@@ -328,12 +365,20 @@ namespace MHServerEmu.Games.Populations
                 spec.Respawn();
         }
 
+        public void SaveKiller(WorldEntity killer)
+        {
+            var player = killer?.GetOwnerOfType<Player>();
+            if (player != null) Killers.Add(player.Id);
+        }
+
         public void Destroy()
         {
             if (State == SpawnState.Destroyed) return;
-            if (State == SpawnState.Live) Defeat();
+            if (State == SpawnState.Live) Defeat(false);
             State = SpawnState.Destroyed;
 
+            Game.GameEventScheduler.CancelEvent(_clearClusterEvent);
+            
             ReleaseRespawn();
             
             while (Specs.Count > 0)
@@ -379,20 +424,85 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        private void Defeat()
+        private void Defeat(bool loot, ulong entityId = Entity.InvalidId, ulong killerId = Entity.InvalidId)
         {
+            if (State == SpawnState.Defeated || State == SpawnState.Destroyed) return;
             State = SpawnState.Defeated;
-            // TODO kill entity
-        }
 
-        public Region GetRegion()
-        {
-            return PopulationManager?.Region;
+            Game.GameEventScheduler.CancelEvent(_clearClusterEvent);            
+            Region.ClusterEnemiesClearedEvent.Invoke(new(this, killerId));
+
+            if (loot && Killers.Count > 0 && ObjectProto?.OnDefeatLootTable != PrototypeId.Invalid)
+            {
+                var killer = Game.EntityManager.GetEntity<Avatar>(killerId);
+                var entity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                // TODO Loot for Killers
+            }
         }
 
         public Area GetArea()
         {
-            return GetRegion()?.GetAreaAtPosition(Transform.Translation);
+            return Region.GetAreaAtPosition(Transform.Translation);
+        }
+
+        public void ScheduleClearCluster(WorldEntity entity, WorldEntity killer)
+        {
+            var scheduler = Game.GameEventScheduler;
+            var timeOffset = TimeSpan.Zero;
+            if (entity.SpawnSpec != null)
+                timeOffset = entity.SpawnSpec.PostContactDelayMS;
+
+            if (_clearClusterEvent.IsValid)
+            {
+                if (_clearClusterEvent.Get().FireTime - Game.CurrentTime < timeOffset)
+                    scheduler.RescheduleEvent(_clearClusterEvent, timeOffset);
+            }
+            else
+                scheduler.ScheduleEvent(_clearClusterEvent, timeOffset, _pendingEvents);
+
+            ulong entityId = Entity.InvalidId;
+            if (entity != null)
+            {
+                entityId = entity.Id;
+                _killPosition = entity.RegionLocation.Position;
+            }
+
+            ulong killerId = Entity.InvalidId;
+            if (killer != null) 
+            {
+                var avatar = killer.GetMostResponsiblePowerUser<Avatar>();
+                if (avatar != null)
+                killerId = avatar.Id;
+            }
+
+            _clearClusterEvent.Get().Initialize(this, entityId, killerId);
+        }
+
+        private void OnClearCluster(ulong entityId, ulong killerId)
+        {
+            var filterFlag = SpawnGroupEntityQueryFilterFlags.Hostiles | SpawnGroupEntityQueryFilterFlags.NotDeadDestroyed | SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled;
+            if (FilterEntity(filterFlag, null, null, default)) return;
+
+            Defeat(true, entityId, killerId);
+            if (State != SpawnState.Defeated) return;
+
+            foreach (var spec in Specs)
+            {
+                bool alive = false;
+                if ((spec.State == SpawnState.Live || spec.State == SpawnState.Pending) && spec.ActiveEntity != null)
+                {
+                    if (spec.ActiveEntity is Agent agent)
+                        agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnClusterEnemiesCleared);
+                    alive |= spec.PreventsSpawnCleanup();
+                }
+                if (alive == false && SpawnCleanup)
+                    PopulationManager.RemoveSpawnGroup(Id);
+            }
+        }
+
+        public class ClearClusterEvent : CallMethodEventParam2<SpawnGroup, ulong, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (group, entityId, killerId) => group.OnClearCluster(entityId, killerId);
         }
     }
 

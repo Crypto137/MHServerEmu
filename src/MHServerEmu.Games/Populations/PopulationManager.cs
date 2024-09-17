@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.Populations
             timeOffset = TimeSpan.Zero;
 
             foreach (var scheduler in schedulers)
-                eventTime = scheduler.GetEventTime(eventTime);
+                scheduler.GetMinEventTime(ref eventTime);
 
             if (eventTime == TimeSpan.MaxValue) return false;
 

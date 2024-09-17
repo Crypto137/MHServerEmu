@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using System.Collections.Generic;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -47,6 +46,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapDistributeDistance { get; protected set; }
         public int SpawnMapDistributeSpread { get; protected set; }
         public bool SpawnMapEnabled { get; protected set; }
+
         [DoNotCopy]
         public bool UseSpawnMap { get => SpawnMapEnabled || (SpawnMapDensityMin > 0.0 && SpawnMapDensityMax > 0.0f); }
 

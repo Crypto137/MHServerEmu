@@ -286,6 +286,7 @@ namespace MHServerEmu.Games.Regions
             {
                 SpawnGroup group = PopulationManager.CreateSpawnGroup();
                 group.Transform = Transform3.BuildTransform(entityPosition, entityOrientation);
+                group.SpawnCleanup = false;
 
                 SpawnSpec spec = PopulationManager.CreateSpawnSpec(group);
                 spec.EntityRef = entityProto.DataRef;

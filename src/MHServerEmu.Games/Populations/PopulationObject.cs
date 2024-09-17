@@ -27,6 +27,7 @@ namespace MHServerEmu.Games.Populations
         public SpawnEvent SpawnEvent;
         public SpawnScheduler Scheduler;
         public ulong SpawnGroupId;
+        public bool SpawnCleanup;
         public bool RemoveOnSpawnFail;
 
         public bool SpawnByMarker()
@@ -50,6 +51,7 @@ namespace MHServerEmu.Games.Populations
 
         public bool SpawnObject(SpawnTarget spawnTarget, List<WorldEntity> entities)
         {
+            if (SpawnCleanup) SpawnFlags |= SpawnFlags.Cleanup;
             ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
             clusterGroup.Initialize();
 

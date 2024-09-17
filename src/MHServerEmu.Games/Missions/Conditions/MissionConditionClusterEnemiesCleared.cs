@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -23,11 +24,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         private void OnClusterEnemiesCleared(ClusterEnemiesClearedGameEvent evt)
         {
             var spawnGroup = evt.SpawnGroup;
-            var killer = evt.Killer;
+            var killer = evt.KillerId;
             var region = Region;
             if (region == null) return;
 
-            if (_proto.PlayerKillerRequired && killer == null) return;
+            if (_proto.PlayerKillerRequired && killer == Entity.InvalidId) return;
             if (EvaluateSpawnGroup(spawnGroup))
                 Count++;
         }
@@ -38,7 +39,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             if (_proto.WithinRegions.HasValue())
             {
-                var spawnRegion = spawnGroup.GetRegion();
+                var spawnRegion = spawnGroup.Region;
                 if (spawnRegion == null || spawnRegion.FilterRegions(_proto.WithinRegions) == false) return false;
             }
 

@@ -28,10 +28,9 @@ namespace MHServerEmu.Games.Populations
             return _queue.Peek().Time <= currentTime;
         }
 
-        public TimeSpan GetEventTime(TimeSpan eventTime)
+        public void GetEventTime(ref TimeSpan eventTime)
         {
-            if (_queue.Count == 0) return eventTime;
-            return Clock.Min(eventTime, _queue.Peek().Time);
+            if (_queue.Count > 0) eventTime = Clock.Min(eventTime, _queue.Peek().Time);
         }
     }
 
@@ -83,14 +82,10 @@ namespace MHServerEmu.Games.Populations
             return _criticalQueue.CanSpawn(currentTime) || _regularQueue.CanSpawn(currentTime);
         }
 
-        public TimeSpan GetEventTime(TimeSpan currentMinTime)
+        public void GetMinEventTime(ref TimeSpan eventTime)
         {
-            TimeSpan eventTime = currentMinTime;
-
-            eventTime = _criticalQueue.GetEventTime(eventTime);
-            eventTime = _regularQueue.GetEventTime(eventTime);
-
-            return eventTime;
+            _criticalQueue.GetEventTime(ref eventTime);
+            _regularQueue.GetEventTime(ref eventTime);
         }
 
         public void ScheduleMarkerObject(bool critical) // Spawn Entity from Missions, MetaStates

@@ -38,6 +38,7 @@ namespace MHServerEmu.Games.Populations
         flag8           = 1 << 3,
         IgnoreBlackout  = 1 << 4,
         IgnoreSpawned   = 1 << 5,
+        Cleanup         = 1 << 6,
     }
     #endregion
 
@@ -710,6 +711,7 @@ namespace MHServerEmu.Games.Populations
                 group.ObjectProto = ObjectProto;
                 group.MissionRef = MissionRef;
                 group.Reservation = Reservation;
+                group.SpawnCleanup = SpawnFlags.HasFlag(SpawnFlags.Cleanup);
                 group.SpawnerId = spawner != null ? spawner.Id : Entity.InvalidId;
             }
             if (group == null) return SpawnGroup.InvalidId;

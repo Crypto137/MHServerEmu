@@ -577,13 +577,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (Entities.HasValue())
             {
-                // SelectUniqueEntities region ???
-
                 int index = random.Next(0, Entities.Length);
+                if (SelectUniqueEntities)
+                {
+                    if (region == null) return PrototypeId.Invalid;
+                    region.GetUnuqueSelectorIndex(ref index, Entities.Length, DataRef);
+                }
                 return Entities[index];
             }
 
             return PrototypeId.Invalid;
+        }
+
+        public void SetUniqueEntity(PrototypeId entityRef, Region region, bool set)
+        {
+            if (Entities.IsNullOrEmpty() || SelectUniqueEntities == false || region == null) return;
+            int index = Array.IndexOf(Entities, entityRef);
+            if (index != -1) region.SetUnuqueSelectorIndex(index, set, DataRef);
         }
     }
 

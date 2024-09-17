@@ -37,12 +37,12 @@ namespace MHServerEmu.Games.Regions
     public struct ClusterEnemiesClearedGameEvent
     {
         public SpawnGroup SpawnGroup;
-        public WorldEntity Killer;
+        public ulong KillerId;
 
-        public ClusterEnemiesClearedGameEvent(SpawnGroup spawnGroup, WorldEntity killer)
+        public ClusterEnemiesClearedGameEvent(SpawnGroup spawnGroup, ulong killerId)
         {
             SpawnGroup = spawnGroup;
-            Killer = killer;
+            KillerId = killerId;
         }
     }
 

@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            spec?.Defeat(killer);
+            spec?.OnDefeat(killer);
 
             if (killer != null)
             {
