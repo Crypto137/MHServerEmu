@@ -572,7 +572,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (sourceType != destType)
                 return Logger.ErrorReturn(false, $"CopyPrototypeFields(): source type ({sourceType.Name}) does not match destination type ({destType.Name})");
 
-            foreach (PrototypeClassManager.CopyablePrototypeField copyableField in GameDatabase.PrototypeClassManager.GetCopyablePrototypeFields(destType))
+            foreach (PrototypeClassManager.CachedPrototypeField copyableField in GameDatabase.PrototypeClassManager.GetCopyablePrototypeFields(destType))
             {
                 System.Reflection.PropertyInfo fieldInfo = copyableField.FieldInfo;
 
