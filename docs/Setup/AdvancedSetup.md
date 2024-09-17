@@ -42,10 +42,6 @@ Client version `1.52.0.1700` currently has a compatibility issue with Wine/Proto
 
 Keep in mind that disabling session token verification makes your account potentially more vulnerable for session hijacking. For this reason we recommend you to use locally hosted servers when playing on Linux.
 
-## Running the server on Linux
-
-While we provide only Windows binaries of MHServerEmu, it will work on a Linux host if you build the source code yourself. For SQLite integration to work you will need to replace the `SQLite.Interop.dll` file in [MHServerEmu.DatabaseAccess](./../../src/MHServerEmu.DatabaseAccess/) with `SQLite.Interop.Linux.dll`.
-
 ## Setting Up In-Game Store and News
 
 The client uses an embedded web browser for some of its UI panels. MHServerEmu provides some options that allow you to make use of this feature.
