@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -18,6 +19,7 @@ namespace MHServerEmu.Games.Powers
 
         public Vector3 TargetPosition { get; private set; }
         public TimeSpan MovementTime { get; private set; }
+        public TimeSpan VariableActivationTime { get; private set; }
         public uint PowerRandomSeed { get; private set; }
         public uint FXRandomSeed { get; private set; }
 
@@ -37,6 +39,7 @@ namespace MHServerEmu.Games.Powers
             PowerOwnerPosition = powerApplication.UserPosition;
             TargetPosition = powerApplication.TargetPosition;
             MovementTime = powerApplication.MovementTime;
+            VariableActivationTime = powerApplication.VariableActivationTime;
             PowerRandomSeed = powerApplication.PowerRandomSeed;
             FXRandomSeed = powerApplication.FXRandomSeed;
 
@@ -68,6 +71,78 @@ namespace MHServerEmu.Games.Powers
 
             return true;
         }
+
+        public void CalculateDamage(PropertyCollection powerProperties)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+
+            for (int damageType = 0; damageType < (int)DamageType.NumDamageTypes; damageType++)
+            {
+                // Calculate base damage
+                float damageBase = powerProperties[PropertyEnum.DamageBase, damageType];
+                damageBase += powerProperties[PropertyEnum.DamageBaseBonus];
+                damageBase += (float)powerProperties[PropertyEnum.DamageBasePerLevel, damageType] * (int)Properties[PropertyEnum.CombatLevel];
+
+                // Calculate variable activation time bonus (for hold and release powers)
+                if (VariableActivationTime > TimeSpan.Zero)
+                {
+                    SecondaryActivateOnReleasePrototype secondaryActivateProto = GetSecondaryActivateOnReleasePrototype();
+
+                    if (secondaryActivateProto != null &&
+                        secondaryActivateProto.DamageIncreaseType == (DamageType)damageType &&
+                        secondaryActivateProto.DamageIncreasePerSecond != CurveId.Invalid)
+                    {
+                        Curve damageIncreaseCurve = secondaryActivateProto.DamageIncreasePerSecond.AsCurve();
+                        if (damageIncreaseCurve != null)
+                        {
+                            float damageIncrease = damageIncreaseCurve.GetAt(Properties[PropertyEnum.PowerRank]);
+                            float timeMult = (float)Math.Min(VariableActivationTime.TotalMilliseconds, secondaryActivateProto.MaxReleaseTimeMS) * 0.001f;
+                            damageBase += damageIncrease * timeMult;
+                        }
+                    }
+                }
+
+                // Calculate variance / tuning score multipliers
+                float damageVariance = powerProperties[PropertyEnum.DamageVariance];
+                float damageVarianceMult = (1f - damageVariance) + (damageVariance * 2f * Game.Random.NextFloat());
+
+                float damageTuningScore = powerProto.DamageTuningScore;
+
+                // Calculate damage
+                float damage = damageBase * damageTuningScore * damageVarianceMult;
+                if (damage > 0f)
+                    Properties[PropertyEnum.Damage, damageType] = damage;
+
+                // Calculate unmodified damage (flat damage unaffected by bonuses)
+                float damageBaseUnmodified = powerProperties[PropertyEnum.DamageBaseUnmodified, damageType];
+                damageBaseUnmodified += (float)powerProperties[PropertyEnum.DamageBaseUnmodifiedPerRank, damageType] * (int)Properties[PropertyEnum.PowerRank];
+
+                Properties[PropertyEnum.DamageBaseUnmodified, damageType] = damageBaseUnmodified;
+            }
+        }
+
+        private SecondaryActivateOnReleasePrototype GetSecondaryActivateOnReleasePrototype()
+        {
+            if (PowerPrototype == null) return null;
+
+            var secondaryActivateProto = PowerPrototype.ExtraActivation as SecondaryActivateOnReleasePrototype;
+            if (secondaryActivateProto == null && VariableActivationTime > TimeSpan.Zero)
+            {
+                // Missiles will need to look for their creator power for their secondary activate effect
+                PrototypeId creatorPowerProtoRef = Properties[PropertyEnum.CreatorPowerPrototype];
+                if (creatorPowerProtoRef != PrototypeId.Invalid)
+                {
+                    PowerPrototype creatorPowerProto = creatorPowerProtoRef.As<PowerPrototype>();
+                    secondaryActivateProto = creatorPowerProto.ExtraActivation as SecondaryActivateOnReleasePrototype;
+                }
+            }
+
+            return secondaryActivateProto;
+        }
+
+        //
+        // OLD CODE BELOW
+        //
 
         public PowerResults GenerateResults(Power power, WorldEntity owner, WorldEntity target)
         {
