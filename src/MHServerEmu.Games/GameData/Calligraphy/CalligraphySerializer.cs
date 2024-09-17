@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         fieldOwnerPrototype = (Prototype)mixinFieldInfo.GetValue(prototype);
                         if (fieldOwnerPrototype == null)
                         {
-                            fieldOwnerPrototype = (Prototype)Activator.CreateInstance(mixinType);
+                            fieldOwnerPrototype = GameDatabase.PrototypeClassManager.AllocatePrototype(mixinType);
                             mixinFieldInfo.SetValue(prototype, fieldOwnerPrototype);
                         }
 
@@ -665,7 +665,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (sourceMixin == null) return;
 
             // Create the mixin instance on the destination prototype if there is something to copy and copy data to it
-            var destMixin = (Prototype)Activator.CreateInstance(fieldInfo.PropertyType);
+            var destMixin = GameDatabase.PrototypeClassManager.AllocatePrototype(fieldInfo.PropertyType);
             fieldInfo.SetValue(destPrototype, destMixin);
 
             CopyPrototypeFields(destMixin, sourceMixin);
@@ -732,7 +732,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 var element = (Prototype)mixinFieldInfo.GetValue(ownerPrototype);
                 if (element == null)
                 {
-                    element = (Prototype)Activator.CreateInstance(mixinFieldInfo.PropertyType);
+                    element = GameDatabase.PrototypeClassManager.AllocatePrototype(mixinFieldInfo.PropertyType);
                     mixinFieldInfo.SetValue(ownerPrototype, element);
                 }
 
