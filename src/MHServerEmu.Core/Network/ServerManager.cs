@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
@@ -185,6 +186,7 @@ namespace MHServerEmu.Core.Network
 
             sb.AppendLine($"Uptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}");
 
+            sb.AppendLine("Service Status:");
             for (int i = 0; i < _services.Length; i++)
             {
                 if (_services[i] == null) continue;
@@ -195,6 +197,9 @@ namespace MHServerEmu.Core.Network
                 else
                     sb.AppendLine("Not running");
             }
+
+            sb.AppendLine("Performance Metrics:");
+            sb.AppendLine(MetricsManager.Instance.GenerateReport());
 
             return sb.ToString();
         }
