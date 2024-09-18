@@ -720,6 +720,20 @@ namespace GameDatabaseBrowser
                 {
                     ConstructPropertyNodeHierarchy(node.Childs.Last(), propValue, needExpand);
                 }
+                else if (propInfo.PropertyType == typeof(LocaleStringId))
+                {
+                    LocaleStringId localeStringId = (LocaleStringId)propValue;
+
+                    if (localeStringId != LocaleStringId.Invalid)
+                    {
+                        string localeString = LocaleManager.Instance.CurrentLocale.GetLocaleString(localeStringId);
+                        if (localeString != string.Empty)
+                        {
+                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Name = "", Value = localeString, TypeName = "" }, IsExpanded = needExpand });
+                            node.Childs.Last().IsExpanded = true;
+                        }
+                    }
+                }
             }
         }
 
