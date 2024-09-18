@@ -85,8 +85,8 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
 
-            (bool, string) result = AccountManager.BanAccount(@params[0].ToLower());
-            return result.Item2;
+            (_, string message) = AccountManager.SetFlag(@params[0].ToLower(), AccountFlags.IsBanned);
+            return message;
         }
 
         [Command("unban", "Unbans the specified account.\nUsage: account unban [email]", AccountUserLevel.Moderator)]
@@ -94,8 +94,40 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
 
-            (bool, string) result = AccountManager.UnbanAccount(@params[0].ToLower());
-            return result.Item2;
+            (_, string message) = AccountManager.ClearFlag(@params[0].ToLower(), AccountFlags.IsBanned);
+            return message;
+        }
+
+        [Command("togglelinuxmode", "Toggles Linux compatibility mode on or off for this account.\nUsage: account togglelinuxmode [confirmation]")]
+        public string ToggleLinuxMode(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            DBAccount account = client.Session.Account;
+            string message = string.Empty;
+
+            if (account.Flags.HasFlag(AccountFlags.LinuxCompatibilityMode) == false)
+            {
+                // Toggle on
+                if (@params.Length == 0)
+                {
+                    return "This is an experimental feature that can potentially reduce your account's security. " +
+                        "If you still would like to enable it, type '!account togglelinuxmode yesiunderstandtherisk'";
+                }
+
+                if (@params[0].ToLower() != "yesiunderstandtherisk")
+                    return "Make sure you have typed the command correctly.";
+
+                (_, message) = AccountManager.SetFlag(account, AccountFlags.LinuxCompatibilityMode);
+
+            }
+            else
+            {
+                // Toggle off
+                (_, message) = AccountManager.ClearFlag(account, AccountFlags.LinuxCompatibilityMode);
+            }
+
+            return message;
         }
 
         [Command("info", "Shows information for the logged in account.\nUsage: account info", AccountUserLevel.User)]
@@ -105,12 +137,11 @@ namespace MHServerEmu.Commands.Implementations
 
             StringBuilder sb = new();
             sb.AppendLine($"Account Info:");
+            sb.AppendLine($"Id: 0x{client.Session.Account.Id:X}");
             sb.AppendLine($"Email: {client.Session.Account.Email}");
             sb.AppendLine($"PlayerName: {client.Session.Account.PlayerName}");
             sb.AppendLine($"UserLevel: {client.Session.Account.UserLevel}");
-            sb.AppendLine($"IsBanned: {client.Session.Account.IsArchived}");
-            sb.AppendLine($"IsArchived: {client.Session.Account.IsArchived}");
-            sb.Append($"IsPasswordExpired: {client.Session.Account.IsPasswordExpired}");
+            sb.AppendLine($"Flags: {client.Session.Account.Flags}");
 
             ChatHelper.SendMetagameMessageSplit(client, sb.ToString());
             return string.Empty;

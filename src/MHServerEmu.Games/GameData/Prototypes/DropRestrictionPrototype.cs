@@ -9,17 +9,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class DropRestrictionPrototype : Prototype
     {
-        public virtual bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        //---
+
+        public virtual bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
         {
             return restrictionFlags.HasFlag(RestrictionTestFlags.Output) || Allow(filterArgs, restrictionFlags);
         }
 
-        public virtual bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
+        public virtual bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
         {
             return (filterArgs.LootContext & LootContext.CashShop) == filterArgs.LootContext;
         }
 
-        public virtual bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionFlags)
+        public virtual bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
         {
             return Allow(lootCloneRecord, restrictionFlags);
         }
@@ -27,11 +29,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionalRestrictionPrototype : DropRestrictionPrototype
     {
-        private LootContext _lootContextFlags = LootContext.None;
-
         public DropRestrictionPrototype[] Apply { get; protected set; }
         public LootContext[] ApplyFor { get; protected set; }
         public DropRestrictionPrototype[] Else { get; protected set; }
+
+        //---
+
+        private LootContext _lootContextFlags = LootContext.None;
 
         public override void PostProcess()
         {
@@ -103,9 +107,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ContextRestrictionPrototype : DropRestrictionPrototype
     {
-        private LootContext _lootContextFlags = LootContext.None;
-
         public LootContext[] UsableFor { get; protected set; }
+
+        //---
+
+        private LootContext _lootContextFlags = LootContext.None;
 
         public override void PostProcess()
         {
@@ -126,9 +132,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemTypeRestrictionPrototype : DropRestrictionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId[] AllowedTypes { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
@@ -161,9 +169,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemParentRestrictionPrototype : DropRestrictionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId[] AllowedParents { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
@@ -189,9 +199,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class HasAffixInPositionRestrictionPrototype : DropRestrictionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public AffixPosition Position { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
@@ -207,10 +219,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class HasVisualAffixRestrictionPrototype : DropRestrictionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public bool MustHaveNoVisualAffixes { get; protected set; }
         public bool MustHaveVisualAffix { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
@@ -228,6 +242,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int LevelMin { get; protected set; }
         public int LevelRange { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -274,6 +290,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int Value { get; protected set; }
         public bool UseAsFilter { get; protected set; }
 
+        //---
+
         public override void PostProcess()
         {
             base.PostProcess();
@@ -306,6 +324,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int Value { get; protected set; }
         public bool UseAsFilter { get; protected set; }
 
+        //---
+
         public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
         {
             if (restrictionFlags.HasFlag(RestrictionTestFlags.Rank))
@@ -334,6 +354,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Value { get; protected set; }
         public bool UseAsFilter { get; protected set; }
 
+        //---
+
         public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
         {
             if (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity))
@@ -358,20 +380,69 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RarityRestrictionPrototype : DropRestrictionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId[] AllowedRarities { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override void PostProcess()
         {
             base.PostProcess();
-            // TODO
+
+            if (AllowedRarities.HasValue())
+                Array.Sort(AllowedRarities, CompareRarityRefs);
         }
 
-        public override bool Adjust(DropFilterArguments dropFilterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
         {
-            // TODO
-            Logger.Warn("Adjust(): Not implemented");
+            if (Allow(filterArgs, restrictionFlags))
+                return true;
+
+            if (outputRestrictionFlags.HasFlag(RestrictionTestFlags.OutputRarity) || restrictionFlags.HasFlag(RestrictionTestFlags.Output))
+                return true;
+
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false)
+                return false;
+
+            outputRestrictionFlags |= RestrictionTestFlags.Rarity;
+
+            RarityPrototype rarityProto = filterArgs.Rarity.As<RarityPrototype>();
+            if (rarityProto != null)
+            {
+                int tier = rarityProto.Tier;
+                RarityPrototype lowestRarityProto = AllowedRarities[0].As<RarityPrototype>();
+                
+                // Clamp args rarity to the range defined in this prototype
+                if (tier < lowestRarityProto.Tier)
+                {
+                    filterArgs.Rarity = AllowedRarities[0];
+                }
+                else
+                {
+                    RarityPrototype highestRarityProto = AllowedRarities[^1].As<RarityPrototype>();
+                    if (tier > highestRarityProto.Tier)
+                    {
+                        filterArgs.Rarity = AllowedRarities[^1];
+                    }
+                    else
+                    {
+                        while (rarityProto != null)
+                        {
+                            filterArgs.Rarity = rarityProto.DowngradeTo;
+                            
+                            if (AllowedRarities.Contains(filterArgs.Rarity))
+                                break;
+
+                            rarityProto = filterArgs.Rarity.As<RarityPrototype>();
+                        }
+                    }
+                }
+            }
+
+            if (rarityProto == null || filterArgs.Rarity == PrototypeId.Invalid)
+                filterArgs.Rarity = AllowedRarities[0];
+
             return true;
         }
 
@@ -382,11 +453,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return AllowedRarities != null && AllowedRarities.Contains(filterArgs.Rarity);
         }
+
+        private static int CompareRarityRefs(PrototypeId leftProtoRef, PrototypeId rightProtoRef)
+        {
+            RarityPrototype leftProto = leftProtoRef.As<RarityPrototype>();
+            RarityPrototype rightProto = rightProtoRef.As<RarityPrototype>();
+
+            // Left downgrades to right: left > right
+            if (RarityDowngradesTo(leftProto, rightProto))
+                return 1;
+            
+            // Right downgrades to left: left < right
+            if (RarityDowngradesTo(rightProto, leftProto))
+                return -1;
+
+            // Rarities don't downgrade to one or the other: left == right
+            return 0;
+        }
+
+        private static bool RarityDowngradesTo(RarityPrototype left, RarityPrototype right)
+        {
+            while (left != null)
+            {
+                if (left == right)
+                    return true;
+
+                left = left.DowngradeTo.As<RarityPrototype>();
+            }
+
+            return false;
+        }
+
     }
 
     public class RankRestrictionPrototype : DropRestrictionPrototype
     {
         public int AllowedRanks { get; protected set; }
+
+        //---
 
         public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
         {
@@ -414,6 +518,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class RestrictionListPrototype : DropRestrictionPrototype
     {
         public DropRestrictionPrototype[] Children { get; protected set; }
+
+        //---
 
         public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
         {
@@ -448,6 +554,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EquipmentInvUISlot[] AllowedSlots { get; protected set; }
 
+        //---
+
         public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
         {
             if (Allow(filterArgs, restrictionFlags) == false)
@@ -476,9 +584,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId[] Avatars { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
@@ -515,22 +625,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DistanceRestrictionPrototype : DropRestrictionPrototype
     {
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
-            Logger.Debug("Allow()");
+            if (Segment.IsNearZero(filterArgs.DropDistanceSq))
+                return true;
 
-            if (Segment.IsNearZero(filterArgs.DropDistanceSq) == false)
-            {
-                LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
-                if (lootGlobalsProto == null) return Logger.WarnReturn(false, "Allow(): lootGlobalsProto == null");
+            LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
+            if (lootGlobalsProto == null) return Logger.WarnReturn(false, "Allow(): lootGlobalsProto == null");
 
-                float dropDistanceThresholdSq = lootGlobalsProto.DropDistanceThreshold * lootGlobalsProto.DropDistanceThreshold;
-                return dropDistanceThresholdSq > filterArgs.DropDistanceSq;
-            }
-
-            return true;
+            float dropDistanceThresholdSq = lootGlobalsProto.DropDistanceThreshold * lootGlobalsProto.DropDistanceThreshold;
+            return dropDistanceThresholdSq > filterArgs.DropDistanceSq;
         }
     }
 }

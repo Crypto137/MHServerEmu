@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -15,10 +16,8 @@ namespace MHServerEmu.Games.Properties
     /// <summary>
     /// An aggregatable collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/>.
     /// </summary>
-    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize
+    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize, IPoolable, IDisposable
     {
-        // TODO: Consider implementing IDisposable for optimization
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly PropertyList _baseList = new();
@@ -127,6 +126,8 @@ namespace MHServerEmu.Games.Properties
         }
 
         #endregion
+
+        public PropertyCollection() { }
 
         // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
         // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
@@ -323,14 +324,15 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
             if (info.HasDependentEvals)
             {
-                EvalContextData contextData = new(Game.Current);
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game.Current;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
 
                 foreach (PropertyId dependentEvalId in info.DependentEvals)
                 {
                     PropertyInfo dependentEvalInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(dependentEvalId.Enum);
                     PropertyValue oldDependentValue = GetPropertyValue(dependentEvalId);
-                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, contextData);
+                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, evalContext);
 
                     if (newDependentValue.RawLong != oldDependentValue.RawLong)
                     {
@@ -456,7 +458,7 @@ namespace MHServerEmu.Games.Properties
             // Cache property info lookups for copying multiple properties of the same type in a row
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
-            foreach (var kvp in childCollection)
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;
@@ -601,12 +603,22 @@ namespace MHServerEmu.Games.Properties
         /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
         /// on every key/value pair rather than once per enum.
         /// </remarks>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyList.PropertyEnumFilter filter)
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
         {
-            return _aggregateList.IteratePropertyRange(filter);
+            return _aggregateList.IteratePropertyRange(filterFunc);
         }
 
         #endregion
+
+        public virtual void ResetForPool()
+        {
+            Clear();
+        }
+
+        public virtual void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
+        }
 
         public virtual bool Serialize(Archive archive)
         {
@@ -745,10 +757,10 @@ namespace MHServerEmu.Games.Properties
             // First try running eval
             if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
             {
-                EvalContextData contextData = new();
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
-                contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
-                return EvalPropertyValue(info, contextData);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
+                return EvalPropertyValue(info, evalContext);
             }
 
             // Fall back to the default value if no value is specified in the aggregate list
@@ -973,7 +985,7 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
 
-            foreach (var kvp in childCollection)
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;

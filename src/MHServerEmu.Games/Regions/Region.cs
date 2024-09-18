@@ -4,6 +4,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -231,9 +232,10 @@ namespace MHServerEmu.Games.Regions
 
                             if (regionAffixProto.Eval != null)
                             {
-                                EvalContextData contextData = new(Game);
-                                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-                                Eval.RunBool(regionAffixProto.Eval, contextData);
+                                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                                evalContext.Game = Game;
+                                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                                Eval.RunBool(regionAffixProto.Eval, evalContext);
                             }
                         }
                     }
@@ -252,7 +254,7 @@ namespace MHServerEmu.Games.Regions
             {
                 foreach (var metaGameRef in regionProto.MetaGames)
                 {
-                    EntitySettings metaSettings = new();
+                    using EntitySettings metaSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                     metaSettings.RegionId = Id;
                     metaSettings.EntityRef = metaGameRef;
                     MetaGame metagame = Game.EntityManager.CreateEntity(metaSettings) as MetaGame;
@@ -289,9 +291,9 @@ namespace MHServerEmu.Games.Regions
                         }
                     }
 
-                    EvalContextData contextData = new();
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
-                    int affixTier = Eval.RunInt(affixTableProto.EvalTier, contextData);
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                    int affixTier = Eval.RunInt(affixTableProto.EvalTier, evalContext);
 
                     RegionAffixTableTierEntryPrototype tierEntryProto = affixTableProto.GetByTier(affixTier);
                     if (tierEntryProto != null)

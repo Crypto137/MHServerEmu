@@ -1,11 +1,15 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -18,12 +22,16 @@ namespace MHServerEmu.Games.Loot
 
         private readonly Picker<AvatarPrototype> _avatarPicker;
 
-        private readonly List<ItemSpec> _pendingItemList = new();
+        private readonly int _itemLevelMin;
+        private readonly int _itemLevelMax;
+
+        private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<ItemSpec> _processedItemList = new();
 
         public GRandom Random { get; }
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
+        public Region Region { get => Player?.GetRegion(); }
 
         public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
         public int ProcessedItemCount { get => _processedItemList.Count; }
@@ -32,6 +40,7 @@ namespace MHServerEmu.Games.Loot
         {
             Random = random;
 
+            // Cache avatar picker for smart loot
             _avatarPicker = new(random);
             foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -42,6 +51,12 @@ namespace MHServerEmu.Games.Loot
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
                 _avatarPicker.Add(avatarProto);
             }
+
+            // Cache item level limits from the ItemLevel property prototype
+            // For reference, this is 1-75 in 1.52, but it was 1-100 in 1.10
+            PropertyInfoPrototype propertyInfoProto = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ItemLevel).Prototype;
+            _itemLevelMin = (int)propertyInfoProto.Min;
+            _itemLevelMax = (int)propertyInfoProto.Max;
         }
 
         public void SetContext(LootContext lootContext, Player player)
@@ -61,7 +76,7 @@ namespace MHServerEmu.Games.Loot
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
-            _pendingItemList.Add(itemSpec);
+            _pendingItemList.Add(new(itemSpec, filterArgs.RollFor));
 
             return LootRollResult.Success;
         }
@@ -87,6 +102,9 @@ namespace MHServerEmu.Games.Loot
         {
             // NOTE: In version 1.52 MobLevelToItemLevel.curve is empty, so we can always treat this as if useLevelVerbatim is set.
             // If we were to support older versions (most likely predating level scaling) we would have to properly implement this.
+
+            // Clamp to the range defined in the property info because some modifiers apply a bigger offset (e.g. Doom artifacts with +99 to level)
+            level = Math.Clamp(level, _itemLevelMin, _itemLevelMax);
             return level;
         }
 
@@ -109,7 +127,8 @@ namespace MHServerEmu.Games.Loot
         {
             Picker<PrototypeId> rarityPicker = new(Random);
 
-            DropFilterArguments filterArgs = itemProto != null ? new() : null;
+            using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            DropFilterArguments.Initialize(filterArgs, LootContext);
 
             foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -143,7 +162,33 @@ namespace MHServerEmu.Games.Loot
 
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
         {
-            float dropChance = (1f - noDropPercent) * LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_LootDropRate);
+            // Do not drop if there are any hard restrictions (this should have already been handled when selecting the loot table node)
+            if (settings.IsRestrictedByLootDropChanceModifier())
+                return Logger.WarnReturn(false, $"CheckDropPercent(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
+
+            // Do not drop cooldown-based loot for now
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerXHours");
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerRollover");
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
+                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownByChannel");
+
+            // Start with a base drop chance based on the specified NoDrop percent
+            float dropChance = 1f - noDropPercent;
+
+            // Apply live tuning multiplier
+            dropChance *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
+
+            // Apply difficulty multiplier
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierNoDropModified))
+                dropChance *= settings.NoDropModifier;
+
+            // Add more multipliers here as needed
+
+            // Check the final chance
             return Random.NextFloat() < dropChance;
         }
 
@@ -171,11 +216,44 @@ namespace MHServerEmu.Games.Loot
 
         public bool ProcessPending(LootRollSettings settings)
         {
-            foreach (ItemSpec itemSpec in _pendingItemList)
-                _processedItemList.Add(itemSpec);
+            foreach (PendingItem pendingItem in _pendingItemList)
+            {
+                using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                LootCloneRecord.Initialize(args, LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+
+                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+
+                if (result.HasFlag(MutationResults.Error))
+                    Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
+
+                _processedItemList.Add(pendingItem.ItemSpec);
+            }
 
             _pendingItemList.Clear();
             return true;
+        }
+
+        public void LootSummary(LootResultSummary lootSummary)
+        {
+            // TODO other types
+            if (ProcessedItemCount > 0)
+            {
+                lootSummary.Types |= LootTypes.Item;
+                foreach (ItemSpec itemSpec in _processedItemList)
+                    lootSummary.ItemSpecs.Add(itemSpec);
+            }
+        }
+
+        private readonly struct PendingItem
+        {
+            public ItemSpec ItemSpec { get; }
+            public PrototypeId RollFor { get; }
+
+            public PendingItem(ItemSpec itemSpec, PrototypeId rollFor)
+            {
+                ItemSpec = itemSpec;
+                RollFor = rollFor;
+            }
         }
     }
 }

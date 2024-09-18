@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -41,23 +42,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Do a modified roll
             if (Modifiers.HasValue())
             {
-                LootRollSettings modifiedSettings = new(settings);
+                using LootRollSettings modifiedSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                modifiedSettings.Set(settings);
 
                 foreach (LootRollModifierPrototype modifier in Modifiers)
                     modifier.Apply(modifiedSettings);
 
-                if (modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyModeRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.RegionRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.KillCountRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.WeekdayRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.ConditionRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.LevelRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DropperRestricted) ||
-                    modifiedSettings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.MissionRestricted))
-                {
+                if (modifiedSettings.IsRestrictedByLootDropChanceModifier())
                     return LootRollResult.Failure;
-                }
 
                 return Roll(modifiedSettings, resolver);
             }
@@ -156,7 +148,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         currentPickerAvatarProto = resolvedAvatarProto;
                     }
 
-                    DropFilterArguments pickFilterArgs = new(null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
+                    using DropFilterArguments pickFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                    DropFilterArguments.Initialize(pickFilterArgs, null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                     pickFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
 
                     if (picker.Empty() ||
@@ -172,7 +165,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     pickedItemProto = itemProto;
                 }
 
-                DropFilterArguments pushFilterArgs = new(pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
+                using DropFilterArguments pushFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                DropFilterArguments.Initialize(pushFilterArgs, pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
                 pushFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
 
                 if (pickedItemProto.IsCurrency)

@@ -47,9 +47,7 @@ namespace MHServerEmu.DatabaseAccess.Json
                 WriteByteArray(writer, dbAccount.PasswordHash);
                 WriteByteArray(writer, dbAccount.Salt);
                 writer.Write((byte)dbAccount.UserLevel);
-                writer.Write(dbAccount.IsBanned);
-                writer.Write(dbAccount.IsArchived);
-                writer.Write(dbAccount.IsPasswordExpired);
+                writer.Write((int)dbAccount.Flags);
 
                 WriteDBPlayer(writer, dbAccount.Player);
 
@@ -77,9 +75,7 @@ namespace MHServerEmu.DatabaseAccess.Json
                     dbAccount.PasswordHash = ReadByteArray(reader);
                     dbAccount.Salt = ReadByteArray(reader);
                     dbAccount.UserLevel = (AccountUserLevel)reader.ReadByte();
-                    dbAccount.IsBanned = reader.ReadBoolean();
-                    dbAccount.IsArchived = reader.ReadBoolean();
-                    dbAccount.IsPasswordExpired = reader.ReadBoolean();
+                    dbAccount.Flags = (AccountFlags)reader.ReadInt32();
 
                     dbAccount.Player = ReadDBPlayer(reader);
 

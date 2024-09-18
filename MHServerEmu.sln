@@ -25,9 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Leaderboards", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Grouping", "src\MHServerEmu.Grouping\MHServerEmu.Grouping.csproj", "{75020CEA-FA28-4D62-A39B-F6A0E06CA640}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu.Core.Tests", "src\MHServerEmu.Core.Tests\MHServerEmu.Core.Tests.csproj", "{E650FD2B-D145-43FE-B3A5-4E03E986DED4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MHServerEmu.Games.Tests", "src\MHServerEmu.Games.Tests\MHServerEmu.Games.Tests.csproj", "{3921B039-7911-49D4-9AE2-727168015157}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameDatabaseBrowser", "src\GameDatabaseBrowser\GameDatabaseBrowser.csproj", "{B3193B64-6282-4A14-A7F0-F51BA785AC76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -79,14 +77,10 @@ Global
 		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Debug|x64.Build.0 = Debug|x64
 		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Release|x64.ActiveCfg = Release|x64
 		{75020CEA-FA28-4D62-A39B-F6A0E06CA640}.Release|x64.Build.0 = Release|x64
-		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Debug|x64.ActiveCfg = Debug|x64
-		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Debug|x64.Build.0 = Debug|x64
-		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Release|x64.ActiveCfg = Release|x64
-		{E650FD2B-D145-43FE-B3A5-4E03E986DED4}.Release|x64.Build.0 = Release|x64
-		{3921B039-7911-49D4-9AE2-727168015157}.Debug|x64.ActiveCfg = Debug|x64
-		{3921B039-7911-49D4-9AE2-727168015157}.Debug|x64.Build.0 = Debug|x64
-		{3921B039-7911-49D4-9AE2-727168015157}.Release|x64.ActiveCfg = Release|x64
-		{3921B039-7911-49D4-9AE2-727168015157}.Release|x64.Build.0 = Release|x64
+		{B3193B64-6282-4A14-A7F0-F51BA785AC76}.Debug|x64.ActiveCfg = Debug|x64
+		{B3193B64-6282-4A14-A7F0-F51BA785AC76}.Debug|x64.Build.0 = Debug|x64
+		{B3193B64-6282-4A14-A7F0-F51BA785AC76}.Release|x64.ActiveCfg = Release|x64
+		{B3193B64-6282-4A14-A7F0-F51BA785AC76}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

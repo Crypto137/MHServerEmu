@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -14,7 +15,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Entities.Persistence;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.LegacyImplementations;
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
-        private void InitializeFromDBAccount()
+        private bool InitializeFromDBAccount()
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
@@ -106,16 +106,27 @@ namespace MHServerEmu.Games.Network
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
-            EntitySettings playerSettings = new();
-            playerSettings.DbGuid = (ulong)_dbAccount.Id;
-            playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
-            playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
-            playerSettings.PlayerConnection = this;
-            playerSettings.PlayerName = _dbAccount.PlayerName;
-            playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
-            playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
+            using (EntitySettings playerSettings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            {
+                playerSettings.DbGuid = (ulong)_dbAccount.Id;
+                playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
+                playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+                playerSettings.PlayerConnection = this;
+                playerSettings.PlayerName = _dbAccount.PlayerName;
+                playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
+                playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
 
-            Player = (Player)Game.EntityManager.CreateEntity(playerSettings);
+                Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+            }
+
+            // Crash the instance if we fail to create a player entity. This happens when there is collision
+            // in dbid caused by the game instance lagging and being unable to process players leaving before
+            // they log back in again.
+            //
+            // This should always be caught by the player connection manager beforehand, so if it got this far,
+            // something must have gone terribly terribly wrong, and we need to bail out.
+            if (Player == null)
+                throw new($"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)
@@ -153,7 +164,7 @@ namespace MHServerEmu.Games.Network
                 {
                     if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
-                    EntitySettings avatarSettings = new();
+                    using EntitySettings avatarSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                     avatarSettings.EntityRef = avatarRef;
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
@@ -173,7 +184,7 @@ namespace MHServerEmu.Games.Network
                 {
                     foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                     {
-                        EntitySettings teamUpSettings = new();
+                        using EntitySettings teamUpSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                         teamUpSettings.EntityRef = teamUpRef;
                         teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
@@ -182,13 +193,17 @@ namespace MHServerEmu.Games.Network
                     }
                 }
             }
+
+            return true;
         }
 
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private void UpdateDBAccount()
+        private bool UpdateDBAccount()
         {
+            if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
+
             using (Archive archive = new(ArchiveSerializeType.Database))
             {
                 Player.Serialize(archive);
@@ -202,6 +217,7 @@ namespace MHServerEmu.Games.Network
             PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");
+            return true;
         }
 
         #endregion
@@ -388,6 +404,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:             OnUseInteractableObject(message); break;            // 38
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;                      // 40
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;                     // 42
+                case ClientToGameServerMessage.NetMessageChangeDifficulty:                  OnChangeDifficulty(message); break;                 // 43
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;          // 46
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;      // 47
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
@@ -855,12 +872,28 @@ namespace MHServerEmu.Games.Network
             var switchAvatar = message.As<NetMessageSwitchAvatar>();
             if (switchAvatar == null) return Logger.WarnReturn(false, $"OnSwitchAvatar(): Failed to retrieve message");
 
-            Logger.Info($"Received NetMessageSwitchAvatar");
-            Logger.Trace(switchAvatar.ToString());
+            PrototypeId avatarProtoRef = (PrototypeId)switchAvatar.AvatarPrototypeId;
+            Logger.Info($"OnSwitchAvatar(): player=[{this}], avatarProtoRef=[{avatarProtoRef.GetName()}]");
 
             // Start the avatar switching process
             if (Player.BeginSwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to begin avatar switch");
+
+            return true;
+        }
+
+        private bool OnChangeDifficulty(MailboxMessage message) // 43
+        {
+            var changeDifficulty = message.As<NetMessageChangeDifficulty>();
+            if (changeDifficulty == null) return Logger.WarnReturn(false, $"OnChangeDifficulty(): Failed to retrieve message");
+
+            PrototypeId difficultyTierProtoRef = (PrototypeId)changeDifficulty.DifficultyTierProtoId;
+
+            if (Player.CanChangeDifficulty(difficultyTierProtoRef) == false)
+                return Logger.WarnReturn(false, $"{this} is trying to change difficulty to {difficultyTierProtoRef}, which is not allowed");
+
+            Logger.Trace($"OnChangeDifficulty(): Setting preferred difficulty for {Player.CurrentAvatar} to {difficultyTierProtoRef.GetName()}");
+            Player.CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference] = difficultyTierProtoRef;
 
             return true;
         }

@@ -3,10 +3,10 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -715,7 +715,7 @@ namespace MHServerEmu.Games.Entities
             item.ChangeInventoryLocation(null);
 
             // Drop it
-            EntitySettings settings = new();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
             settings.SourceEntityId = avatar.Id;
             settings.SourcePosition = avatar.RegionLocation.Position;
@@ -888,10 +888,10 @@ namespace MHServerEmu.Games.Entities
             Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
 
             // Disable initial visibility and schedule swap-in power if requested
-            EntitySettings settings = null;
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             if (withSwapInPower)
             {
-                settings = new() { OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden };
+                settings.OptionFlags = EntitySettingsOptionFlags.IsClientEntityHidden;
                 CurrentAvatar.ScheduleSwapInPower();
             }
 
@@ -958,6 +958,28 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
         }
 
+        public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
+        {
+            DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
+            if (difficultyTierProto == null) return Logger.WarnReturn(false, "CanChangeDifficulty(): difficultyTierProto == null");
+
+            // The game assumes all difficulties to be unlocked if there is no current avatar
+            if (CurrentAvatar != null && CurrentAvatar.CharacterLevel < difficultyTierProto.UnlockLevel)
+                return false;
+
+            return true;
+        }
+
+        public PrototypeId GetDifficultyTierPreference()
+        {
+            // TODO: Party
+
+            if (CurrentAvatar != null)
+                return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
+
+            return GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+        }
+
         #endregion
 
         #region Loading and Teleports
@@ -999,7 +1021,7 @@ namespace MHServerEmu.Games.Entities
             AOI.OnCellLoaded(cellId, regionId);
             int numLoaded = AOI.GetLoadedCellCount();
 
-            Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
+            //Logger.Trace($"Player {this} loaded cell id={cellId} in region id=0x{regionId:X} ({numLoaded}/{AOI.TrackedCellCount})");
 
             if (_teleportData.IsValid && numLoaded == AOI.TrackedCellCount)
                 FinishTeleport();

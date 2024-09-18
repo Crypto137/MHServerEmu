@@ -22,6 +22,8 @@ namespace MHServerEmu.Frontend
 
         // Set game id atomically using Interlocked because this is used asynchronously to determine whether the client is in a game.
         public ulong GameId { get => _gameId; set => Interlocked.Exchange(ref _gameId, value); }
+
+        public bool IsConnected { get => Connection.Connected; }
         public bool IsInGame { get => _gameId != 0; }
 
         /// <summary>
@@ -34,7 +36,10 @@ namespace MHServerEmu.Frontend
 
         public override string ToString()
         {
-            return Session != null ? Session.Account.ToString() : "No Session";
+            if (Session == null)
+                return $"SessionId=NONE, Account=NONE";
+
+            return $"SessionId=0x{Session?.Id:X}, Account={Session?.Account}";
         }
 
         /// <summary>
@@ -57,6 +62,7 @@ namespace MHServerEmu.Frontend
                 if (packet.MuxId == 0 || packet.MuxId > 2)
                 {
                     Logger.Warn($"Received a MuxPacket with unexpected mux channel {packet.MuxId} from {Connection}");
+                    Disconnect();
                     break;
                 }
 
@@ -96,12 +102,13 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Assigns an <see cref="IFrontendSession"/> to this <see cref="FrontendClient"/>.
         /// </summary>
-        public void AssignSession(IFrontendSession session)
+        public bool AssignSession(IFrontendSession session)
         {
-            if (Session == null)
-                Session = session;
-            else
-                Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
+            if (Session != null)
+                return Logger.WarnReturn(false, $"AssignSession(): Failed to assign {session} to a client: already assigned {Session}");
+
+            Session = session;
+            return true;
         }
 
         /// <summary>

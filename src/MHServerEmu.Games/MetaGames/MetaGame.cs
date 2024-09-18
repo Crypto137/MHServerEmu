@@ -110,6 +110,12 @@ namespace MHServerEmu.Games.MetaGames
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
                     int wave = Game.Random.Next(0, stateMode.States.Length);
+
+                    // HACK/REMOVEME: Skip laggy brood wave
+                    while (wave == 5)
+                        wave = Game.Random.Next(0, stateMode.States.Length);
+
+                    Logger.Trace($"RegisterStates(): Picked Holo-Sim wave [{wave}] [{stateMode.States[wave].GetName()}]");
                     popManager.RegisterMetaState(stateMode.States[wave]);
                 } 
                 else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo

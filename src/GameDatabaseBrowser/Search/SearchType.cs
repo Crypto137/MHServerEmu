@@ -1,0 +1,10 @@
+﻿
+namespace GameDatabaseBrowser.Search
+{
+    public enum SearchType
+    {
+        ByText = 0,
+        ByPrototypeClass = 1,
+        ByPrototypeBlueprint = 2
+    }
+}

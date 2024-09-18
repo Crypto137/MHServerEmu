@@ -18,8 +18,14 @@ namespace MHServerEmu.PlayerManagement
         // TODO: Implement a way to request saves from the game without disconnecting.
 
         private const ushort MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
-        private const int MaxAsyncRetryAttempts = 10;
-        private const int GameFrameTimeMS = 50;
+
+        // Async retry consts for saving and adding players
+        private const int AsyncRetryAttemptIntervalMS = 10 * 1000;  // Retry window every 10 sec
+        private const int AsyncRetryTicksPerAttempt = 10;           // Do 10 ticks per attempt window
+        private const int AsyncRetryTickIntervalMS = 50;            // Wait at least target game frame time between each tick
+
+        private const int AsyncRetryNumAttemptsSavePlayer = 3;
+        private const int AsyncRetryNumAttemptsAddPlayer = AsyncRetryNumAttemptsSavePlayer + 1;   // Do an extra attempt when adding players
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -140,7 +146,7 @@ namespace MHServerEmu.PlayerManagement
         public bool AddFrontendClient(FrontendClient client)
         {
             if (client.Session == null || client.Session.Account == null)
-                return Logger.WarnReturn(false, "AddFrontendClient(): The client has no valid session assigned");
+                return Logger.WarnReturn(false, $"AddFrontendClient(): Client [{client}] has no valid session assigned");
 
             ulong playerDbId = (ulong)client.Session.Account.Id;
 
@@ -149,7 +155,7 @@ namespace MHServerEmu.PlayerManagement
                 // Handle duplicate login by disconnecting the existing player
                 if (_playerDict.TryGetValue(playerDbId, out FrontendClient existingClient))
                 {
-                    Logger.Info($"Duplicate login for {client}, terminating existing session 0x{existingClient.Session.Id:X}");
+                    Logger.Info($"Duplicate login for client [{client}], terminating existing session 0x{existingClient.Session.Id:X}");
                     existingClient.Disconnect();
                 }
 
@@ -165,16 +171,14 @@ namespace MHServerEmu.PlayerManagement
         public bool RemoveFrontendClient(FrontendClient client)
         {
             if (client.Session == null || client.Session.Account == null)
-                return Logger.WarnReturn(false, "RemoveFrontendClient(): The client has no valid session assigned");
+                return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] has no valid session assigned");
 
             ulong playerDbId = (ulong)client.Session.Account.Id;
 
             lock (_playerDict)
             {
-                if (_playerDict.ContainsKey(playerDbId) == false)
-                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client} not found");
-
-                _playerDict.Remove(playerDbId);
+                if (_playerDict.Remove(playerDbId) == false)
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] not found");
             }
 
             _sessionManager.RemoveSession(client.Session.Id);
@@ -182,7 +186,12 @@ namespace MHServerEmu.PlayerManagement
 
             // Account data is saved asynchronously as a task because it takes some time for a player to leave a game
             lock (_pendingSaveDict)
+            {
+                if (_pendingSaveDict.ContainsKey(playerDbId))
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] already has a pending save task");
+
                 _pendingSaveDict.Add(playerDbId, Task.Run(async () => await SavePlayerDataAsync(client)));
+            } 
             
             return true;
         }
@@ -228,37 +237,59 @@ namespace MHServerEmu.PlayerManagement
         private async Task AddPlayerToGameAsync(FrontendClient client)
         {
             ulong playerDbId = (ulong)client.Session.Account.Id;
-            int numAttempts = 0;
-            bool hasSavePending = false;
-            bool refreshRequired = false;
 
-            while (true)
+            bool hasSavePending = false;
+
+            // Wait for the player to finish saving while checking in short bursts
+            // [check x10] - [wait 10 sec] - [check x10] - [wait 10 sec], and so on
+            // Time out after a few long pauses.
+
+            int numAttempts = 0;
+
+            while (numAttempts < AsyncRetryNumAttemptsAddPlayer)
             {
                 numAttempts++;
+                Logger.Info($"Adding client [{client}] to a game (attempt {numAttempts}/{AsyncRetryNumAttemptsAddPlayer})...");
 
-                lock (_pendingSaveDict)
-                    hasSavePending = _pendingSaveDict.ContainsKey(playerDbId);
+                int numTicks = 0;
 
-                if (hasSavePending == false) break;
-
-                refreshRequired = true;
-
-                if (numAttempts >= MaxAsyncRetryAttempts)
+                while (numTicks < AsyncRetryTicksPerAttempt)
                 {
-                    Logger.Warn($"AddPlayerToGameAsync(): Failed to add player to a game after {numAttempts} attempts, disconnecting");
-                    client.Disconnect();
+                    numTicks++;
+
+                    lock (_pendingSaveDict)
+                        hasSavePending = _pendingSaveDict.ContainsKey(playerDbId);
+
+                    if (hasSavePending)
+                    {
+                        // Flag existing data as out of date and wait a little
+                        await Task.Delay(AsyncRetryTickIntervalMS);
+                        continue;
+                    }
+
+                    // Make sure the client is still connected after waiting
+                    if (client.IsConnected == false)
+                    {
+                        Logger.Warn($"AddPlayerToGameAsync(): Client [{client}] disconnected while waiting for a pending save");
+                        return;
+                    }
+
+                    // Load player data associated with this account now that any pending saves are resolved
+                    AccountManager.LoadPlayerDataForAccount(client.Session.Account);
+
+                    // Add to an available game
+                    Game game = _gameManager.GetAvailableGame();
+                    game.AddClient(client);
+                    Logger.Info($"Queued client [{client}] to be added to game [{game}]");
                     return;
                 }
 
-                await Task.Delay(GameFrameTimeMS);
+                // Do a longer wait between attempts
+                await Task.Delay(AsyncRetryAttemptIntervalMS);
             }
 
-            // If we had to wait for a pending save, it means our account data is not up to date and needs to be refreshed.
-            if (refreshRequired)
-                ((ClientSession)client.Session).RefreshAccount();
-
-            // Add the client to an available game once pending saves have been resolved
-            _gameManager.GetAvailableGame().AddClient(client);
+            Logger.Warn($"AddPlayerToGameAsync(): Timed out trying to add client [{client}] to a game after {numAttempts} attempts, disconnecting");
+            client.Disconnect();
         }
 
         /// <summary>
@@ -267,35 +298,47 @@ namespace MHServerEmu.PlayerManagement
         private async Task SavePlayerDataAsync(FrontendClient client)
         {
             ulong playerDbId = (ulong)client.Session.Account.Id;
+
+            // Wait for the player to leave the game while checking in short bursts
+            // [check x10] - [wait 10 sec] - [check x10] - [wait 10 sec], and so on
+            // Time out after a few long pauses.
+
             int numAttempts = 0;
 
-            while (true)
+            while (numAttempts < AsyncRetryNumAttemptsSavePlayer)
             {
                 numAttempts++;
+                Logger.Info($"Saving player data for client [{client}] (attempt {numAttempts}/{AsyncRetryNumAttemptsSavePlayer})...");
 
-                // Wait for the client to leave the game they are in
-                if (client.IsInGame)
+                int numTicks = 0;
+
+                while (numTicks < AsyncRetryTicksPerAttempt)
                 {
-                    // Players should generally leave games during the next game update.
-                    // If it didn't happen, something must have gone terribly wrong.
-                    if (numAttempts >= MaxAsyncRetryAttempts)
+                    numTicks++;
+
+                    if (client.IsInGame)
                     {
-                        Logger.Warn($"SavePlayerDataAsync(): Failed to save player data after {numAttempts} attempts, bailing out");
-                        lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
-                        return;
+                        // Do a short wait between ticks equal to target game framerate
+                        await Task.Delay(AsyncRetryTickIntervalMS);
+                        continue;
                     }
 
-                    await Task.Delay(GameFrameTimeMS);
-                    continue;
+                    // Save data and remove pending save
+                    if (AccountManager.DBManager.SavePlayerData(client.Session.Account))
+                        Logger.Info($"Saved player data for client [{client}]");
+                    else
+                        Logger.Warn($"SavePlayerDataAsync(): Failed to save player data for client [{client}]");
+
+                    lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
+                    return;
                 }
 
-                // Save data and remove pending save
-                AccountManager.DBManager.UpdateAccountData(client.Session.Account);
-
-                lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
-                Logger.Info($"Saved data for player {client}");
-                return;
+                // Do a longer wait between attempts
+                await Task.Delay(AsyncRetryAttemptIntervalMS);
             }
+
+            Logger.Warn($"SavePlayerDataAsync(): Timed out trying to save player data for client [{client}] after {numAttempts} attempts");
+            lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
         }
 
         #endregion
@@ -343,32 +386,30 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
         {
-            Logger.Info($"Received ClientCredentials");
-
-            if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
-            {
-                Logger.Warn($"Failed to verify client credentials, disconnecting client on {client.Connection}");
-                client.Disconnect();
-                return;
-            }
-
-            // Respond on successful auth
             if (Config.SimulateQueue)
             {
-                Logger.Info("Responding with LoginQueueStatus message");
+                Logger.Debug("Responding with LoginQueueStatus message");
                 client.SendMessage(MuxChannel, LoginQueueStatus.CreateBuilder()
                     .SetPlaceInLine(Config.QueuePlaceInLine)
                     .SetNumberOfPlayersInLine(Config.QueueNumberOfPlayersInLine)
                     .Build());
+
+                return;
             }
-            else
+
+            if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
             {
-                Logger.Info("Responding with SessionEncryptionChanged message");
-                client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
-                    .SetRandomNumberIndex(0)
-                    .SetEncryptedRandomNumber(ByteString.Empty)
-                    .Build());
+                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client on {client.Connection}");
+                client.Disconnect();
+                return;
             }
+
+            // Success!
+            Logger.Info($"Successful auth for client [{client}]");
+            client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
+                .SetRandomNumberIndex(0)
+                .SetEncryptedRandomNumber(ByteString.Empty)
+                .Build());
         }
 
         /// <summary>
@@ -388,11 +429,10 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.ErrorReturn(false, "OnReadyForGameJoin(): Failed to deserialize");
             }
 
-            Logger.Info($"Received NetMessageReadyForGameJoin from {client.Session.Account}");
-            Logger.Trace(readyForGameJoin.ToString());
+            Logger.Info($"Received NetMessageReadyForGameJoin from client [{client}], logging in");
+            //Logger.Trace(readyForGameJoin.ToString());
 
             // Log the player in
-            Logger.Info($"Logging in player {client.Session.Account}");
             client.SendMessage(MuxChannel, NetMessageReadyAndLoggedIn.DefaultInstance); // add report defect (bug) config here
 
             // Sync time

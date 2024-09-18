@@ -61,6 +61,40 @@ namespace MHServerEmu.Games.Loot
         OutputRank      = 1 << 18,
     }
 
+    [Flags]
+    public enum MutationResults
+    {
+        None                    = 0,
+        Error                   = 1 << 0,
+        Changed                 = 1 << 1,
+        Result2                 = 1 << 2,
+        AffixChange             = 1 << 3,   // ItemPrototype::UpdatePetTechAffixes()
+        Result4                 = 1 << 4,
+
+        // Additional flags for marking the reason for error (flag0)
+        ErrorReason8                    = 1 << 8,
+        ErrorReason9                    = 1 << 9,
+        ErrorReason10                   = 1 << 10,
+        ErrorReason11                   = 1 << 11,
+        ErrorReason12                   = 1 << 12,
+        ErrorReason13                   = 1 << 13,
+        ErrorReasonAffixScopePower      = 1 << 14,
+        ErrorReasonAffixScopePowerGroup = 1 << 15
+    }
+
+    public enum AffixCountBehavior
+    {
+        Keep,
+        Roll
+    }
+
+    public enum BehaviorOnPowerMatch
+    {
+        Ignore,
+        Cancel,
+        Skip
+    }
+
     [AssetEnum((int)None)]
     [Flags]
     public enum LootContext
@@ -173,5 +207,24 @@ namespace MHServerEmu.Games.Loot
         CategoryGear = 24,
         CategoryArtifacts = 25,
         CategoryOther = 26
+    }
+
+    [Flags]
+    public enum LootTypes
+    {
+        None            = 0,
+        PowerPoints     = 1 << 0,
+        Credits         = 1 << 1,
+        EnduranceBonus  = 1 << 2,
+        Experience      = 1 << 3,
+        HealthBonus     = 1 << 4,
+        RealMoney       = 1 << 5,
+        VanityTitle     = 1 << 6,
+        CallbackNode    = 1 << 7,
+        LootMutation    = 1 << 8,
+        VendorXP        = 1 << 9,
+        Currency        = 1 << 10,
+        Item            = 1 << 11,
+        Agent           = 1 << 12,
     }
 }

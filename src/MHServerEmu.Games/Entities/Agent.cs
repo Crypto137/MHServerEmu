@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -661,6 +662,46 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
+        {
+            InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
+            if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityAddedToMyInventory(): inventoryPrototype == null"); return; }
+
+            if (inventoryPrototype.IsEquipmentInventory)
+            {
+                // Validate and aggregate equipped item's properties
+                if (entity == null) { Logger.Warn("OnOtherEntityAddedToMyInventory(): entity == null"); return; }
+                if (entity is not Item) { Logger.Warn("OnOtherEntityAddedToMyInventory(): entity is not Item"); return; }
+                if (invLoc.ContainerId != Id) { Logger.Warn("OnOtherEntityAddedToMyInventory(): invLoc.ContainerId != Id"); return; }
+
+                // TODO: Assign proc powers
+
+                Properties.AddChildCollection(entity.Properties);
+            }
+
+            base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
+        }
+
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+            InventoryPrototype inventoryPrototype = invLoc.InventoryPrototype;
+            if (inventoryPrototype == null) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): inventoryPrototype == null"); return; }
+
+            if (inventoryPrototype.IsEquipmentInventory)
+            {
+                // Validate and remove equipped item's properties
+                if (entity == null) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): entity == null"); return; }
+                if (entity is not Item) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): entity is not Item"); return; }
+                if (invLoc.ContainerId != Id) { Logger.Warn("OnOtherEntityRemovedFromMyInventory(): invLoc.ContainerId != Id"); return; }
+
+                entity.Properties.RemoveFromParent(Properties);
+
+                // TODO: Unassign proc powers
+            }
+
+            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);
@@ -789,7 +830,7 @@ namespace MHServerEmu.Games.Entities
             if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
             {
                 AIController = new(Game, this);
-                PropertyCollection collection = new();
+                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
                 SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec();
                 return AIController.Initialize(behaviorProfile, spec, collection);
@@ -1155,7 +1196,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
                     if (brain is not ProceduralAIProfilePrototype profile) return false;
-                    InitAIOverride(profile, new());
+                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    InitAIOverride(profile, properties);
                     if (AIController == null) return false;
                 }
                 else

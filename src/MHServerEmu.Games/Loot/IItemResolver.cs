@@ -2,6 +2,7 @@
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -13,6 +14,7 @@ namespace MHServerEmu.Games.Loot
         public GRandom Random { get; }
         public LootContext LootContext { get; }
         public Player Player { get; }
+        public Region Region { get; }
 
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             int stackCount, IEnumerable<LootMutationPrototype> mutations);

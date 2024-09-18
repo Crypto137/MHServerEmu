@@ -4,6 +4,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -12,26 +13,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [AssetEnum((int)None)]
     public enum AffixPosition
     {
-        None = 0,
-        Prefix = 1,
-        Suffix = 2,
-        Visual = 3,
-        Cosmic = 5,
-        Unique = 6,
-        Ultimate = 4,
-        Blessing = 7,
-        Runeword = 8,
-        TeamUp = 9,
-        Metadata = 10,
-        PetTech1 = 11,
-        PetTech2 = 12,
-        PetTech3 = 13,
-        PetTech4 = 14,
-        PetTech5 = 15,
-        RegionAffix = 16,
-        Socket1 = 17,
-        Socket2 = 18,
-        Socket3 = 19,
+        None,
+        Prefix,
+        Suffix,
+        Visual,
+        Ultimate,
+        Cosmic,
+        Unique,
+        Blessing,
+        Runeword,
+        TeamUp,
+        Metadata,
+        PetTech1,
+        PetTech2,
+        PetTech3,
+        PetTech4,
+        PetTech5,
+        RegionAffix,
+        Socket1,
+        Socket2,
+        Socket3,
+        NumPositions
     }
 
     [AssetEnum((int)Fail)]
@@ -118,6 +120,102 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public DropRestrictionPrototype[] DropRestrictions { get; protected set; }
         public DuplicateHandlingBehavior DuplicateHandlingBehavior { get; protected set; }
+
+        //---
+
+        private KeywordsMask _categoryKeywordsMask;
+
+        [DoNotCopy]
+        public virtual bool HasBonusPropertiesToApply { get => Properties != null || PropertyEntries != null; }
+
+        [DoNotCopy]
+        public bool IsGemAffix { get => Position >= AffixPosition.Socket1 && Position <= AffixPosition.Socket3; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            List<PrototypeId> categoryList = new();
+
+            foreach (var affixCategoryTableEntry in GameDatabase.LootGlobalsPrototype.AffixCategoryTable)
+            {
+                foreach (PrototypeId affixProtoRef in affixCategoryTableEntry.Affixes)
+                {
+                    if (affixProtoRef == DataRef)
+                        categoryList.Add(affixCategoryTableEntry.Category);
+                }
+            }
+
+            _categoryKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(categoryList);
+
+            // Skipping UI stuff since we probably don't need it server-side
+        }
+
+        public bool HasCategory(AffixCategoryPrototype affixCategoryProto)
+        {
+            return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
+        }
+
+        public AffixCategoryPrototype GetFirstCategoryMatch(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
+        {
+            foreach (AffixCategoryPrototype affixCategoryProto in affixCategoryProtos)
+            {
+                if (HasCategory(affixCategoryProto))
+                    return affixCategoryProto;
+            }
+
+            return null;
+        }
+
+        public bool HasAnyCategory(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
+        {
+            if (affixCategoryProtos == null || affixCategoryProtos.Any() == false)
+                return true;
+
+            return GetFirstCategoryMatch(affixCategoryProtos) != null;
+        }
+
+        public bool AllowAttachment(DropFilterArguments args)
+        {
+            if (DropRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in DropRestrictions)
+            {
+                if (dropRestrictionProto.Allow(args) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool HasKeywords(IEnumerable<AssetId> keywordsToCheck, bool hasAll = false)
+        {
+            if (keywordsToCheck == null || keywordsToCheck.Any() == false)
+                return true;
+
+            if (Keywords.IsNullOrEmpty())
+                return false;
+
+            foreach (AssetId keywordAssetRefToCheck in keywordsToCheck)
+            {
+                bool found = false;
+
+                foreach (AssetId keywordAssetRef in Keywords)
+                {
+                    if (keywordAssetRef == keywordAssetRefToCheck)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found != hasAll)
+                    return found;
+            }
+
+            return hasAll;
+        }
     }
 
     public class AffixPowerModifierPrototype : AffixPrototype
@@ -131,17 +229,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype PowerBoostMin { get; protected set; }
         public EvalPrototype PowerGrantRankMin { get; protected set; }
         public PrototypeId PowerProgTableTabRef { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override bool HasBonusPropertiesToApply { get => base.HasBonusPropertiesToApply || PowerBoostMax != null || PowerGrantRankMax != null; }
     }
 
     public class AffixRegionModifierPrototype : AffixPrototype
     {
         public PrototypeId AffixTable { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override bool HasBonusPropertiesToApply { get => true; }
     }
 
     public class AffixRegionRestrictedPrototype : AffixPrototype
     {
         public PrototypeId RequiredRegion { get; protected set; }
         public PrototypeId[] RequiredRegionKeywords { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public bool MatchesRegion(Region region)
+        {
+            if (RequiredRegion != PrototypeId.Invalid && region.PrototypeDataRef == RequiredRegion)
+                return true;
+
+            if (RequiredRegionKeywords.HasValue())
+            {
+                Logger.Warn("MatchesRegion(): Keyword region matching is not yet implemented");
+            }
+
+            return false;
+        }
     }
 
     public class AffixTeamUpPrototype : AffixPrototype
@@ -169,12 +294,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Affix { get; protected set; }
         public PrototypeId Power { get; protected set; }
         public PrototypeId Avatar { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public virtual int LevelRequirement { get => 0; }
     }
 
     public class LeveledAffixEntryPrototype : AffixEntryPrototype
     {
         public int LevelRequired { get; protected set; }
         public LocaleStringId LockedDescriptionText { get; protected set; }
+
+        //--
+
+        [DoNotCopy]
+        public override int LevelRequirement { get => LevelRequired; }
     }
 
     public class AffixDisplaySlotPrototype : Prototype

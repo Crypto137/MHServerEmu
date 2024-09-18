@@ -236,7 +236,14 @@ namespace MHServerEmu.Games.Populations
             Picker<PopulationRequiredObjectPrototype> popPicker = new(Game.Random);
 
             foreach (var popObject in populationObjects)
+            {
+                // REMOVEME/HACK: Skip laggy brood populations
+                if (popObject.ObjectTemplate == (PrototypeId)4239171229817577531 ||
+                    popObject.ObjectTemplate == (PrototypeId)1180098775035486483)
+                    continue;
+
                 popPicker.Add(popObject);
+            }
 
             if (popPicker.Empty() == false)
             {

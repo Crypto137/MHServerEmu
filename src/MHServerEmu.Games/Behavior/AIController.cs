@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -552,7 +553,8 @@ namespace MHServerEmu.Games.Behavior
             var throwPowerProto = GameDatabase.GetPrototype<PowerPrototype>(throwPowerRef);
             if (throwPowerProto != null)
             {
-                float range = throwPowerProto.GetRange(new(), Owner.Properties);
+                using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                float range = throwPowerProto.GetRange(properties, Owner.Properties);
                 Vector3 targetPosition = Owner.RegionLocation.Position + (Owner.Forward * range);
                 AttemptActivatePower(throwPowerRef, Owner.Id, targetPosition);
             }

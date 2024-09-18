@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -36,7 +37,7 @@ namespace MHServerEmu.Games.Entities
     /// <summary>
     /// Contains parameters for <see cref="Entity"/> creation.
     /// </summary>
-    public class EntitySettings
+    public sealed class EntitySettings : IPoolable, IDisposable
     {
         public EntityCreateResults Results;
 
@@ -75,6 +76,53 @@ namespace MHServerEmu.Games.Entities
         public ItemSpec ItemSpec { get; set; }                      // For Item
         public TimeSpan Lifespan { get; set; }
         public uint VariationSeed { get; set; }
+
+        public EntitySettings() { }     // Use pooling instead of calling this directly
+
+        public void ResetForPool()
+        {
+            Results = default;
+
+            Id = 0;
+            DbGuid = 0;
+            EntityRef = 0;
+            RegionId = 0;
+            Position = default;
+            Orientation = default;
+
+            ArchiveSerializeType = ArchiveSerializeType.Invalid;
+            ArchiveData = null;
+
+            SourceEntityId = 0;
+            SourcePosition = default;
+            BoundsScaleOverride = 1f;
+            IgnoreNavi = false;
+
+            InventoryLocation = null;
+            InventoryLocationPrevious = InventoryLocation.Invalid;
+
+            OptionFlags = EntitySettingsOptionFlags.DefaultOptions;
+
+            HotspotSkipCollide = false;
+            Properties = null;
+            Cell = null;
+            Actions = null;
+            ActionsTarget = PrototypeId.Invalid;
+            SpawnSpec = null;
+            LocomotorHeightOverride = 0f;
+
+            PlayerConnection = null;
+            PlayerName = null;
+
+            ItemSpec = null;
+            Lifespan = default;
+            VariationSeed = 0;
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
+        }
     }
 
     public struct EntityCreateResults

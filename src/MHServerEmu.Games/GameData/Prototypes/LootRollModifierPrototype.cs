@@ -201,11 +201,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (Position != AffixPosition.None)
             {
-                settings.AffixLimitByMinPositionModifierDict.TryGetValue(Position, out short currentMinValue);
-                settings.AffixLimitByMinPositionModifierDict[Position] = (short)(currentMinValue + ModifyMinBy);
+                settings.AffixLimitMinByPositionModifierDict.TryGetValue(Position, out short currentMinValue);
+                settings.AffixLimitMinByPositionModifierDict[Position] = (short)(currentMinValue + ModifyMinBy);
 
-                settings.AffixLimitByMinPositionModifierDict.TryGetValue(Position, out short currentMaxValue);
-                settings.AffixLimitByMaxPositionModifierDict[Position] = (short)(currentMaxValue + ModifyMaxBy);
+                settings.AffixLimitMinByPositionModifierDict.TryGetValue(Position, out short currentMaxValue);
+                settings.AffixLimitMaxByPositionModifierDict[Position] = (short)(currentMaxValue + ModifyMaxBy);
             }
             else if (Category != PrototypeId.Invalid)
             {

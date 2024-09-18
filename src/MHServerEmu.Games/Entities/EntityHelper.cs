@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -35,20 +36,21 @@ namespace MHServerEmu.Games.Entities
         public static Agent CrateOrb(TestOrb orbProto, Vector3 position, Region region)
         {
             if (DebugOrb == false) return null;
-            var settings = new EntitySettings
-            {
-                EntityRef = (PrototypeId)orbProto,
-                Position = position,
-                Orientation = new(3.14f, 0.0f, 0.0f),
-                RegionId = region.Id,
-                Lifespan = TimeSpan.FromSeconds(3),
-                Properties = new()
-                {
-                    [PropertyEnum.AIStartsEnabled] = false,
-                    [PropertyEnum.NoEntityCollide] = true,
-                }
-            };
+
             var game = region.Game;
+
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = (PrototypeId)orbProto;
+            settings.Position = position;
+            settings.Orientation = new(3.14f, 0.0f, 0.0f);
+            settings.RegionId = region.Id;
+            settings.Lifespan = TimeSpan.FromSeconds(3);
+
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            properties[PropertyEnum.AIStartsEnabled] = false;
+            properties[PropertyEnum.NoEntityCollide] = true;
+            settings.Properties = properties;
+
             Agent orb = (Agent)game.EntityManager.CreateEntity(settings);
             return orb;
         }
@@ -62,24 +64,29 @@ namespace MHServerEmu.Games.Entities
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
             var summonerProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
 
-            var settings = new EntitySettings
+            Agent summoner;
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
             {
-                EntityRef = summonerRef,
-                Properties = new PropertyCollection
-                {
-                    [PropertyEnum.NoMissileCollide] = true, // EvalOnCreate
-                    [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
-                    [PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset,
-                    [PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef,
-                    [PropertyEnum.SummonedByPower] = true,
-                    [PropertyEnum.AllianceOverride] = allianceRef,
-                    [PropertyEnum.Rank] = summonerProto.Rank,
-                }
-            };
+                settings.EntityRef = summonerRef;
 
-            Agent summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
-            EntitySettings setting = new() { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer};
-            summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, setting);
+                properties[PropertyEnum.NoMissileCollide] = true; // EvalOnCreate
+                properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
+                properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
+                properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
+                properties[PropertyEnum.SummonedByPower] = true;
+                properties[PropertyEnum.AllianceOverride] = allianceRef;
+                properties[PropertyEnum.Rank] = summonerProto.Rank;
+                settings.Properties = properties;
+
+                summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
+            }
+
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            {
+                settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer;
+                summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, settings);
+            }
 
             if (summonPowerProto.ActionsTriggeredOnPowerEvent.HasValue())
                 summoner.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;

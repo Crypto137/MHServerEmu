@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -13,6 +14,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
+using System.Reflection.Metadata.Ecma335;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -34,6 +36,18 @@ namespace MHServerEmu.Commands.Implementations
             GC.WaitForPendingFinalizers();
             
             return "Manual garbage collection successfully requested.";
+        }
+
+        [Command("objectpoolreport", "Generates object pool report.")]
+        public string ObjectPoolReport(string[] @params, FrontendClient client)
+        {
+            string report = ObjectPoolManager.Instance.GenerateReport();
+            
+            if (client == null)
+                return report;
+
+            ChatHelper.SendMetagameMessageSplit(client, report);
+            return string.Empty;
         }
 
         [Command("cell", "Shows current cell.", AccountUserLevel.User)]

@@ -1,8 +1,7 @@
 name: Nightly Release (Windows x64)
 
 on:
-  schedule:
-    - cron: '15 7 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,18 +15,16 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore MHServerEmu.sln
+      run: dotnet restore ./src/GameDatabaseBrowser/GameDatabaseBrowser.csproj 
     - name: Build
-      run: dotnet build MHServerEmu.sln --no-restore --configuration Release
-    - name: Run tests
-      run: dotnet test MHServerEmu.sln --no-restore --no-build --configuration Release
+      run: dotnet build ./src/GameDatabaseBrowser/GameDatabaseBrowser.csproj --no-restore --configuration Release
     - name: Get current date
       run: echo "DATE=$(date +'%Y%m%d')" >> $env:GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: MHServerEmu-nightly-${{ env.DATE }}-Release-windows-x64
+        name: GameDatabaseBrowser-nightly-${{ env.DATE }}-Release-windows-x64
         path: |
-          ./src/MHServerEmu/bin/x64/Release/net6.0
-          !./src/MHServerEmu/bin/x64/Release/net6.0/*.pdb
-          !./src/MHServerEmu/bin/x64/Release/net6.0/*.xml
+          ./src/GameDatabaseBrowser/bin/Release/net6.0-windows
+          !./src/GameDatabaseBrowser/bin/Release/net6.0-windows/*.pdb
+          !./src/GameDatabaseBrowser/bin/Release/net6.0-windows/*.xml

@@ -8,9 +8,9 @@ namespace MHServerEmu.DatabaseAccess
     public interface IDBManager
     {
         /// <summary>
-        /// Set this to false to disable password and flag validation for accounts.
+        /// Set this to false to disable password and flag verification for accounts.
         /// </summary>
-        public bool ValidateAccounts { get => true; }
+        public bool VerifyAccounts { get => true; }
 
         /// <summary>
         /// Initializes database connection.
@@ -38,8 +38,13 @@ namespace MHServerEmu.DatabaseAccess
         public bool UpdateAccount(DBAccount account);
 
         /// <summary>
-        /// Updates persistent game data stored in the database for the provided <see cref="DBAccount"/>.
+        /// Loads persistent game data stored in the database for the provided <see cref="DBAccount"/>.
         /// </summary>
-        public bool UpdateAccountData(DBAccount account);
+        public bool LoadPlayerData(DBAccount account);
+
+        /// <summary>
+        /// Saves persistent game data stored in the database for the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public bool SavePlayerData(DBAccount account);
     }
 }

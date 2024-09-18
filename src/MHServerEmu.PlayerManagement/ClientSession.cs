@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 
@@ -48,22 +47,12 @@ namespace MHServerEmu.PlayerManagement
             CreationTime = DateTime.Now;
         }
 
-        /// <summary>
-        /// Updates <see cref="DBAccount"/> with the latest data from the database.
-        /// </summary>
-        public bool RefreshAccount()
+        public override string ToString()
         {
-            if (Account == null)
-                return Logger.WarnReturn(false, $"RefreshAccount(): Account == null");
-
-            if (AccountManager.DBManager.TryQueryAccountByEmail(Account.Email, out DBAccount freshAccount) == false)
-                return Logger.WarnReturn(false, $"RefreshAccount(): Failed to retrieve account data for {Account}");
-
-            Account = freshAccount;
-            return true;
+            return $"sessionId=0x{Id:X}";
         }
 
-        public override string ToString()
+        public string GetClientInfo()
         {
             StringBuilder sb = new();
             sb.AppendLine($"SessionId: 0x{Id:X}");

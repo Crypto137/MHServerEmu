@@ -64,11 +64,9 @@ namespace MHServerEmu.PlayerManagement
                     Logger.Warn($"TryCreateSessionFromLoginDataPB(): Invalid client downloader {loginDataPB.ClientDownloader}, defaulting to {downloaderEnum}");
                 }
 
+                session = new(_idGenerator.Generate(), account, downloaderEnum, loginDataPB.Locale);
                 lock (_sessionDict)
-                {
-                    session = new(_idGenerator.Generate(), account, downloaderEnum, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
-                }
             }
 
             return statusCode;
@@ -85,34 +83,42 @@ namespace MHServerEmu.PlayerManagement
             if (_sessionDict.TryGetValue(credentials.Sessionid, out ClientSession session) == false)
                 return Logger.WarnReturn (false, $"VerifyClientCredentials(): SessionId 0x{credentials.Sessionid:X} not found");
 
-            // Verify the token if auth is enabled
-            if (_playerManager.Config.BypassAuth == false)
+            // Verify the token if enabled
+            if (_playerManager.Config.UseJsonDBManager == false && _playerManager.Config.IgnoreSessionToken == false &&
+                session.Account.Flags.HasFlag(AccountFlags.LinuxCompatibilityMode) == false)
             {
                 // Try to decrypt the token (we avoid extra allocations and copying by accessing buffers directly with Unsafe.GetBuffer())
                 if (CryptographyHelper.TryDecryptToken(ByteString.Unsafe.GetBuffer(credentials.EncryptedToken), session.Key,
                     ByteString.Unsafe.GetBuffer(credentials.Iv), out byte[] decryptedToken) == false)
                 {
                     lock (_sessionDict) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for sessionId 0x{session.Id:X}"); ;
+                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to decrypt token for {session}");
                 }
 
                 // Verify the token
                 if (CryptographyHelper.VerifyToken(decryptedToken, session.Token) == false)
                 {
                     lock (_sessionDict) _sessionDict.Remove(session.Id);    // Invalidate the session after a failed login attempt
-                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to verify token for sessionId 0x{session.Id:X}"); ;
+                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to verify token for {session}");
                 }
             }
-
-            Logger.Info($"Verified client for sessionId 0x{session.Id:X} - account {session.Account}");
 
             // Assign the session to the client if the token is valid
             lock (_sessionDict)
             {
-                client.AssignSession(session);
-                _clientDict.Add(session.Id, client);
-                return true;
+                // Handle the case when someone hijacks another client's credentials and attempts to log in with them while the actual client is still logged in
+                if (_clientDict.TryAdd(session.Id, client) == false)
+                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): A client is attempting to use {session} that is already in use");
+
+                // Sessions cannot be reassigned
+                if (client.AssignSession(session) == false)
+                {
+                    _clientDict.Remove(session.Id);
+                    return Logger.WarnReturn(false, $"VerifyClientCredentials(): Failed to assign {session} to a client");
+                }
             }
+
+            return true;
         }
 
         /// <summary>
@@ -130,11 +136,17 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Retrieves the <see cref="ClientSession"/> for the specified session id. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionDict.TryGetValue(sessionId, out session);
+        public bool TryGetSession(ulong sessionId, out ClientSession session)
+        {
+            return _sessionDict.TryGetValue(sessionId, out session);
+        }
 
         /// <summary>
         /// Retrieves the <see cref="FrontendClient"/> for the specified session id. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _clientDict.TryGetValue(sessionId, out client);
+        public bool TryGetClient(ulong sessionId, out FrontendClient client)
+        {
+            return _clientDict.TryGetValue(sessionId, out client);
+        }
     }
 }

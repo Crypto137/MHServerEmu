@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Locales
             return entry.String;
         }
 
-        private bool LoadStringFile(string filePath)
+        public bool LoadStringFile(string filePath)
         {
             if (File.Exists(filePath) == false)
                 return false;

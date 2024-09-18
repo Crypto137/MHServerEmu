@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -259,12 +260,13 @@ namespace MHServerEmu.Games.Entities
         {
             if (Prototype.EvalOnCreate?.Length > 0)
             {
-                EvalContextData contextData = new(Game);
-                contextData.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
 
                 foreach (EvalPrototype evalProto in Prototype.EvalOnCreate)
                 {
-                    if (Eval.RunBool(evalProto, contextData) == false)
+                    if (Eval.RunBool(evalProto, evalContext) == false)
                         Logger.Warn($"OnPostInit(): Failed to run eval {evalProto.ExpressionString()}");
                 }
             }

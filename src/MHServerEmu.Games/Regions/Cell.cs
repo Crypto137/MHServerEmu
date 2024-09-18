@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common.SpatialPartitions;
@@ -265,7 +266,7 @@ namespace MHServerEmu.Games.Regions
                 return;
             }
 
-            EntitySettings settings = new();
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = entityProto.DataRef;
 
             if (entityMarker.OverrideSnapToFloor)
@@ -282,7 +283,8 @@ namespace MHServerEmu.Games.Regions
             if (entityProto.Bounds != null)
                 entityPosition.Z += entityProto.Bounds.GetBoundHalfHeight();
 
-            settings.Properties = new PropertyCollection();
+            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settings.Properties = settingsProperties;
             int level = Area.GetCharacterLevel(entityProto); 
             settings.Properties[PropertyEnum.CharacterLevel] = level;
             settings.Properties[PropertyEnum.CombatLevel] = level;
