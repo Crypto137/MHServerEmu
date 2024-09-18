@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool _isTeamUpPassivePowerWhileAway;
         private SituationalPowerComponent _situationalComponent;
-        private KeywordsMask _keywordsMask = new();
+        private KeywordsMask _keywordsMask;
 
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
         private PowerActivationSettings _lastActivationSettings;
@@ -61,6 +61,7 @@ namespace MHServerEmu.Games.Powers
 
         public WorldEntity Owner { get; private set; }
         public PropertyCollection Properties { get; } = new();
+        public KeywordsMask KeywordsMask { get => _keywordsMask; }
 
         public float AnimSpeedCache { get; private set; } = -1f;
         public bool WasLastActivateInterrupted { get; private set; }

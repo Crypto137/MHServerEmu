@@ -17,6 +17,8 @@ namespace MHServerEmu.Games.Powers
 
         public Game Game { get; private set; }
 
+        public PrototypeId PowerProtoRef { get; private set; }
+
         public Vector3 TargetPosition { get; private set; }
         public TimeSpan MovementTime { get; private set; }
         public TimeSpan VariableActivationTime { get; private set; }
@@ -29,10 +31,13 @@ namespace MHServerEmu.Games.Powers
         public int BeamSweepSlice { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
 
+        public KeywordsMask KeywordsMask { get; private set; }
+
         public bool Initialize(Power power, PowerApplication powerApplication)
         {
             Game = power.Game;
             PowerPrototype = power.Prototype;
+            PowerProtoRef = power.Prototype.DataRef;
 
             PowerOwnerId = powerApplication.UserEntityId;
             TargetId = powerApplication.TargetEntityId;
@@ -60,21 +65,21 @@ namespace MHServerEmu.Games.Powers
             Power.SerializeEntityPropertiesForPowerPayload(powerOwner, Properties);
             Power.SerializePowerPropertiesForPowerPayload(power, Properties);
 
-            Logger.Debug($"Initialize(): Properties for {power}:\n{Properties}");
-
             // Snapshot additional data used to determine targets
             Range = power.GetApplicationRange();
             RegionId = powerOwner.Region.Id;
             OwnerAlliance = powerOwner.Alliance;
             BeamSweepSlice = -1;        // TODO
             ExecutionTime = power.GetFullExecutionTime();
+            KeywordsMask = power.KeywordsMask.Copy<KeywordsMask>();
 
             return true;
         }
 
-        public void CalculateDamage(PropertyCollection powerProperties)
+        public bool CalculateDamage(PropertyCollection powerProperties)
         {
             PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateDamage(): powerProto == null");
 
             for (int damageType = 0; damageType < (int)DamageType.NumDamageTypes; damageType++)
             {
@@ -119,7 +124,107 @@ namespace MHServerEmu.Games.Powers
 
                 Properties[PropertyEnum.DamageBaseUnmodified, damageType] = damageBaseUnmodified;
             }
+
+            return true;
         }
+
+        public bool CalculateOwnerDamageBonuses()
+        {
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+            if (powerOwner == null) return Logger.WarnReturn(false, "CalculateUserDamageBonuses(): powerOwner == null");
+
+            PropertyCollection ownerProperties = powerOwner.Properties;
+
+            // Set base damage rating
+            Properties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any] = powerOwner.GetDamageRating();
+
+            // Calculate bonuses
+            Span<PropertyEnum> damageBonusProperties = stackalloc PropertyEnum[]
+            {
+                PropertyEnum.DamageMultForPower,
+                PropertyEnum.DamageMultForPowerKeyword,
+                PropertyEnum.DamagePctBonusForPower,
+                PropertyEnum.DamagePctBonusForPowerKeyword,
+                PropertyEnum.DamageRatingBonusForPower,
+                PropertyEnum.DamageRatingBonusForPowerKeyword,
+            };
+
+            float damageMultBonus = 0f;
+            float damagePctBonus = 0f;
+            float damageRatingBonus = 0f;
+
+            foreach (PropertyEnum propertyEnum in damageBonusProperties)
+            {
+                foreach (var kvp in ownerProperties.IteratePropertyRange(propertyEnum))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
+                    if (protoRefToCheck == PrototypeId.Invalid)
+                    {
+                        Logger.Warn($"CalculateOwnerDamageBonuses(): Invalid param proto ref for {propertyEnum}");
+                        continue;
+                    }
+
+                    // Filter power-specific bonuses
+                    if (propertyEnum == PropertyEnum.DamageMultForPower || propertyEnum == PropertyEnum.DamagePctBonusForPower ||
+                        propertyEnum == PropertyEnum.DamageRatingBonusForPower)
+                    {
+                        if (protoRefToCheck != PowerProtoRef)
+                            continue;
+                    }
+
+                    // Filter keyword-specific bonuses
+                    if (propertyEnum == PropertyEnum.DamageMultForPowerKeyword || propertyEnum == PropertyEnum.DamagePctBonusForPowerKeyword ||
+                        propertyEnum == PropertyEnum.DamageRatingBonusForPowerKeyword)
+                    {
+                        if (HasKeyword(protoRefToCheck.As<KeywordPrototype>()) == false)
+                            continue;
+                    }
+
+                    if (propertyEnum == PropertyEnum.DamageMultForPower || propertyEnum == PropertyEnum.DamageMultForPowerKeyword)
+                    {
+                        damageMultBonus += kvp.Value;
+                    }
+                    else if (propertyEnum == PropertyEnum.DamagePctBonusForPower || propertyEnum == PropertyEnum.DamagePctBonusForPowerKeyword)
+                    {
+                        damagePctBonus += kvp.Value;
+                    }
+                    else if (propertyEnum == PropertyEnum.DamageRatingBonusForPower || propertyEnum == PropertyEnum.DamageRatingBonusForPowerKeyword)
+                    {
+                        damageRatingBonus += kvp.Value;
+                    }
+                }
+            }
+
+            // TODO: PropertyEnum.DamageMultPowerCdKwd
+
+            Properties.AdjustProperty(damageMultBonus, new(PropertyEnum.PayloadDamageMultTotal, DamageType.Any));
+            Properties.AdjustProperty(damagePctBonus, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+            Properties.AdjustProperty(damageRatingBonus, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+
+            // Calculate pct weaken
+            float damagePctWeaken = 0f;
+            foreach (var kvp in ownerProperties.IteratePropertyRange(PropertyEnum.DamagePctWeaken))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                if (keywordProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"CalculateOwnerDamageBonuses(): Invalid param keyword proto ref for {keywordProtoRef}");
+                    continue;
+                }
+
+                if (HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
+                    continue;
+
+                damagePctWeaken += kvp.Value;
+            }
+
+            Properties.AdjustProperty(damagePctWeaken, new(PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any));
+
+            // TODO PropertyEnum.SecondaryResourceDmgBns, PropertyEnum.SecondaryResourceDmgBnsPct
+
+            return true;
+        }
+
 
         private SecondaryActivateOnReleasePrototype GetSecondaryActivateOnReleasePrototype()
         {
@@ -138,6 +243,11 @@ namespace MHServerEmu.Games.Powers
             }
 
             return secondaryActivateProto;
+        }
+
+        private bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
         }
 
         //

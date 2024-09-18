@@ -9,6 +9,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
@@ -78,6 +79,12 @@ namespace MHServerEmu.Games.Properties
         }
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyEnum param0]
+        {
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
+        }
+
+        public PropertyValue this[PropertyEnum propertyEnum, DamageType param0]
         {
             get => GetProperty(new(propertyEnum, param0));
             set => SetProperty(value, new(propertyEnum, param0));

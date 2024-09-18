@@ -1262,7 +1262,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public float GetDamageRating(DamageType damageType)
+        public float GetDamageRating(DamageType damageType = DamageType.Any)
         {
             CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
             if (combatGlobals == null) return Logger.WarnReturn(0f, "GetDamageRating(): combatGlobal == null");
