@@ -8,6 +8,10 @@
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Resources\Marvel_Logo.png" />
   </ItemGroup>
