@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Locales;
 
 namespace GameDatabaseBrowser.Models
 {
@@ -27,6 +28,7 @@ namespace GameDatabaseBrowser.Models
             return TypeName switch
             {
                 "AssetTypeId" => $"{prefix}{GetNameFromValue()} ({value})",
+                "LocaleStringId" => $"{prefix}{GetNameFromValue()} ({value})",
                 "CurveId" => $"{prefix}{GetNameFromValue()} ({value})",
                 "PrototypeId" => $"{prefix}{GetNameFromValue()} ({value})",
                 "AssetId" => $"{prefix}{GetNameFromValue()}" + DisplayPrototypeIdEquivalence(),
@@ -44,6 +46,10 @@ namespace GameDatabaseBrowser.Models
             {
                 case "AssetTypeId":
                     name = GameDatabase.GetAssetTypeName((AssetTypeId)ulong.Parse(Value));
+                    break;
+
+                case "LocaleStringId":
+                    name = LocaleManager.Instance.CurrentLocale.GetLocaleString((LocaleStringId)ulong.Parse(Value));
                     break;
 
                 case "CurveId":

@@ -6,6 +6,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.Locales;
 using MHServerEmu.Games.Properties;
 using System;
 using System.Collections;
@@ -118,11 +119,28 @@ namespace GameDatabaseBrowser
             DataDirectory dataDirectory = DataDirectory.Instance;
 
             int counter = 0;
+
+            var currentLocale = LocaleManager.Instance.CurrentLocale;
+            string[] filePaths = new string[]
+            {
+                "eng.all_FFFFFFFFFFFFFFFF.string",
+                "eng.all_BFFFFFFFFFFFFFFF.string",
+                "eng.all_7FFFFFFFFFFFFFFF.string",
+                "eng.all_3FFFFFFFFFFFFFFF.string"
+            };
+
+            foreach (var filePath in filePaths)
+            {
+                currentLocale.LoadStringFile("Data\\Game\\Loco\\" + filePath);
+                worker.ReportProgress(++counter * 100 / 4);
+            }
+
             InitPrototypesList(worker, ref counter);
             GeneratePrototypeReferencesCache(worker, ref counter);
 
+
             PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
-            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data" } });
+            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data"} });
 
             RefreshPrototypeTree(GetSearchDetails());
             worker.ReportProgress(100);
