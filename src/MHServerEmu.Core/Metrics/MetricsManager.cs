@@ -1,8 +1,14 @@
 ﻿using System.Collections.Concurrent;
-using System.Text;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Core.Metrics
 {
+    public enum MetricsReportFormat
+    {
+        PlainText,
+        Json
+    }
+
     public class MetricsManager
     {
         private const int UpdateIntervalMS = 1000;
@@ -42,24 +48,14 @@ namespace MHServerEmu.Core.Metrics
             _fixedUpdateTimeQueue.Enqueue((gameId, fixedUpdateTime));
         }
         
-        public string GenerateReport()
+        public string GeneratePerformanceReport(MetricsReportFormat format)
         {
-            StringBuilder sb = new();
+            using PerformanceReport report = ObjectPoolManager.Instance.Get<PerformanceReport>();
 
             lock (_gamePerformanceMetricsDict)
-            {
-                foreach (GamePerformanceMetrics metrics in _gamePerformanceMetricsDict.Values)
-                {
-                    double min = metrics.MinFixedUpdateTime.TotalMilliseconds;
-                    double max = metrics.MaxFixedUpdateTime.TotalMilliseconds;
-                    double avg = metrics.CalculateAverageFixedUpdateTime().TotalMilliseconds;
-                    double mdn = metrics.CalculateMedianFixedUpdateTime().TotalMilliseconds;
+                report.Initialize(_gamePerformanceMetricsDict.Values);
 
-                    sb.AppendLine($"[0x{metrics.GameId:X}] min={min} ms, max={max} ms, avg={avg} ms, mdn={mdn} ms");
-                }
-            }
-
-            return sb.ToString();
+            return report.ToString(format);
         }
 
         private async void UpdateAsync()

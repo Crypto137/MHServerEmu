@@ -199,7 +199,7 @@ namespace MHServerEmu.Core.Network
             }
 
             sb.AppendLine("Performance Metrics:");
-            sb.AppendLine(MetricsManager.Instance.GenerateReport());
+            sb.AppendLine(MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText));
 
             return sb.ToString();
         }

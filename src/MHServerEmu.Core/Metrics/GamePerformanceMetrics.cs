@@ -59,5 +59,31 @@ namespace MHServerEmu.Core.Metrics
                 MaxFixedUpdateTime = Clock.Max(MaxFixedUpdateTime, processTime);
             }
         }
+
+        public Report GetReport()
+        {
+            return new(this);
+        }
+
+        public readonly struct Report
+        {
+            public float Min { get; }
+            public float Max { get; }
+            public float Average { get; }
+            public float Median { get; }
+
+            public Report(GamePerformanceMetrics metrics)
+            {
+                Min = (float)metrics.MinFixedUpdateTime.TotalMilliseconds;
+                Max = (float)metrics.MaxFixedUpdateTime.TotalMilliseconds;
+                Average = (float)metrics.CalculateAverageFixedUpdateTime().TotalMilliseconds;
+                Median = (float)metrics.CalculateMedianFixedUpdateTime().TotalMilliseconds;
+            }
+
+            public override string ToString()
+            {
+                return $"min={Min} ms, max={Max} ms, avg={Average} ms, mdn={Median} ms";
+            }
+        }
     }
 }
