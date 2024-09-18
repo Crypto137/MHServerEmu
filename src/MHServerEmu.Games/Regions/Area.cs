@@ -72,12 +72,10 @@ namespace MHServerEmu.Games.Regions
         public int MinimapRevealGroupId { get; set; }
 
         public PropTable PropTable { get; set; }
-
         public Generator Generator { get; set; }
-
+        public SpawnMap SpawnMap { get; private set; }
         public float PlayableNavArea { get; set; }
         public float SpawnableNavArea { get; set; }
-
         public List<AreaConnectionPoint> AreaConnections { get; set; } = new();
         public List<RandomInstanceRegionPrototype> RandomInstances { get; } = new();
         public Dictionary<uint, Cell> Cells { get; } = new();
@@ -291,13 +289,8 @@ namespace MHServerEmu.Games.Regions
             var populationProto = PopulationArea.PopulationPrototype;
             if (populationProto?.UseSpawnMap == true)
             {
-                // TODO add SpawnMap
-                /*
-                populationProto.SpawnMapDensityMin
-                populationProto.SpawnMapDensityMax
-                populationProto.SpawnMapDensityStep
-                populationProto.SpawnMapCrowdSupression
-                populationProto.SpawnMapCrowdSupressionStart*/
+                SpawnMap = new(this);
+                SpawnMap.Initialize(populationProto);
             }
 
             BlackOutZonesRebuild();
