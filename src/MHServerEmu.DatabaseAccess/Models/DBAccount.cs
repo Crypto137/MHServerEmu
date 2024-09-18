@@ -5,11 +5,23 @@ using MHServerEmu.Core.System;
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
+    // NOTE: These enums are saved to the database, do not remove existing values
+
     public enum AccountUserLevel : byte
     {
-        User,
-        Moderator,
-        Admin
+        User = 0,
+        Moderator = 1,
+        Admin = 2
+    }
+
+    [Flags]
+    public enum AccountFlags
+    {
+        None                    = 0,
+        IsBanned                = 1 << 0,
+        IsArchived              = 1 << 1,
+        IsPasswordExpired       = 1 << 2,
+        LinuxCompatibilityMode  = 1 << 3,   // Disables session token verification
     }
 
     /// <summary>
@@ -18,85 +30,67 @@ namespace MHServerEmu.DatabaseAccess.Models
     public class DBAccount
     {
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
+        private static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
 
-        public static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
-
-        public ulong Id { get; set; }
+        public long Id { get; set; }
         public string Email { get; set; }
         public string PlayerName { get; set; }
         public byte[] PasswordHash { get; set; }
         public byte[] Salt { get; set; }
         public AccountUserLevel UserLevel { get; set; }
-        public bool IsBanned { get; set; }
-        public bool IsArchived { get; set; }
-        public bool IsPasswordExpired { get; set; }
+        public AccountFlags Flags { get; set; }
 
         public DBPlayer Player { get; set; }
-        public Dictionary<long, DBAvatar> Avatars { get; private set; } = new();
 
-        public DBAvatar CurrentAvatar { get => GetAvatar(Player.RawAvatar); }
+        // NOTE: init is required for collection properties to be compatible with JSON serialization
+        public DBEntityCollection Avatars { get; init; } = new();
+        public DBEntityCollection TeamUps { get; init; } = new();
+        public DBEntityCollection Items { get; init; } = new();
+        public DBEntityCollection ControlledEntities { get; init; } = new();
 
+        /// <summary>
+        /// Constructs an empty <see cref="DBAccount"/> instance.
+        /// </summary>
+        public DBAccount() { }
+
+        /// <summary>
+        /// Constructs a <see cref="DBAccount"/> instance with the provided data.
+        /// </summary>
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
-            Id = IdGenerator.Generate();
+            Id = (long)IdGenerator.Generate();
             Email = email;
             PlayerName = playerName;
             PasswordHash = CryptographyHelper.HashPassword(password, out byte[] salt);
             Salt = salt;
             UserLevel = userLevel;
-            IsBanned = false;
-            IsArchived = false;
-            IsPasswordExpired = false;
-
-            InitializeData();
         }
-
-        public DBAccount(string playerName, long region, long waypoint, long avatar, int volume)
-        {
-            // Default account for using with BypassAuth
-            Id = 0;
-            Email = "default@account.mh";
-            PlayerName = playerName;
-            UserLevel = AccountUserLevel.Admin;
-
-            InitializeData();
-
-            Player.RawRegion = region;
-            Player.RawWaypoint = waypoint;
-            Player.RawAvatar = avatar;
-            Player.AOIVolume = volume;
-        }
-
-        public DBAccount() { }
 
         /// <summary>
-        /// Retrieves the <see cref="DBAvatar"/> for the specified prototype id.
+        /// Constructs a default <see cref="DBAccount"/> instance with the provided data.
         /// </summary>
-        public DBAvatar GetAvatar(long prototypeId)
+        public DBAccount(string playerName)
         {
-            if (Avatars.TryGetValue(prototypeId, out DBAvatar avatar) == false)
-            {
-                avatar = new(Id, prototypeId);
-                Avatars.Add(prototypeId, avatar);
-            }
-
-            return avatar;
+            // Default account is used when BypassAuth is enabled
+            Id = 0x2000000000000001;
+            Email = "default@mhserveremu";
+            PlayerName = playerName;
+            PasswordHash = Array.Empty<byte>();
+            Salt = Array.Empty<byte>();
+            UserLevel = AccountUserLevel.Admin;
         }
 
         public override string ToString()
         {
-            if (HideSensitiveInformation)
-            {
-                string maskedEmail = $"{Email[0]}****{Email.Substring(Email.IndexOf('@') - 1)}";
-                return $"{PlayerName} ({maskedEmail})";
-            }
-
-            return $"{PlayerName} ({Email})";
+            return $"{PlayerName} (0x{Id:X})";
         }
 
-        private void InitializeData()
+        public void ClearEntities()
         {
-            Player = new(Id);
+            Avatars.Clear();
+            TeamUps.Clear();
+            Items.Clear();
+            ControlledEntities.Clear();
         }
     }
 }

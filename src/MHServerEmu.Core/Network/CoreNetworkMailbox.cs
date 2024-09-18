@@ -1,41 +1,63 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// Container for incoming <see cref="GameMessage"/> instances.
+    /// Deserializes <see cref="MessagePackage"/> instances and stores them as <see cref="MailboxMessage"/> until retrieval.
     /// </summary>
+    /// <remarks>
+    /// This class does asynchronous message handling and should be thread-safe.
+    /// </remarks>
     public class CoreNetworkMailbox<TClient> where TClient: ITcpClient
     {
-        // NOTE: The current implementation is just a wrapper around Queue.
-        // We should do deserialization when we receive a message rather than during game update.
+        // NOTE: This class combines the functionality of both the base IMessageSerializer and its derivative CoreNetworkMailbox class from the client.
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Queue<(TClient, GameMessage)> _messageQueue = new();
+        private readonly object _lock = new();
+        private readonly MessageList<TClient> _messageList = new();
 
         /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="CoreNetworkMailbox{TClient}"/> instance has any pending messages.
+        /// Deserializes the provided <see cref="MessagePackage"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
         /// </summary>
-        public bool HasMessages { get => _messageQueue.Any(); }
-
-        /// <summary>
-        /// Adds a new <see cref="GameMessage"/> to this <see cref="CoreNetworkMailbox{TClient}"/> instance.
-        /// </summary>
-        public void Post(TClient client, GameMessage message)
+        public bool Post(TClient client, MessagePackage messagePackage)
         {
-            _messageQueue.Enqueue((client, message));
+            IMessage message = messagePackage.Deserialize();
+            if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");
+
+            // CoreNetworkMailbox::OnDeserializeMessage()
+            MailboxMessage mailboxMessage = new(messagePackage.Id, message);
+
+            lock (_lock)
+            {
+                _messageList.Enqueue(client, mailboxMessage);
+            }
+
+            return true;
         }
 
         /// <summary>
-        /// Retrieves the next queued <see cref="GameMessage"/> instance.
+        /// Transfers all <see cref="MailboxMessage"/> instances contained in this <see cref="CoreNetworkMailbox{TClient}"/> to the provided <see cref="MessageList{TClient}"/>.
         /// </summary>
-        public (TClient, GameMessage) PopNextMessage()
+        public void GetAllMessages(MessageList<TClient> outputList)
         {
-            if (_messageQueue.TryDequeue(out var result) == false)
-                return Logger.WarnReturn<(TClient, GameMessage)>(default, $"PopNextMessage(): Failed to dequeue");
+            lock (_lock)
+            {
+                outputList.TransferFrom(_messageList);
+            }
+        }
 
-            return result;
+        /// <summary>
+        /// Clears all <see cref="MailboxMessage"/> instances from this <see cref="CoreNetworkMailbox{TClient}"/>.
+        /// </summary>
+        public void Clear()
+        {
+            lock (_lock)
+            {
+                _messageList.Clear();
+            }
         }
     }
 }

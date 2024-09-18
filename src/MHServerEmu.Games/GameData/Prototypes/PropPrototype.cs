@@ -19,13 +19,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int DefaultDensity { get; protected set; }
         public int GetPropDensity(PrototypeId marker)
         {
-            if (marker == 0) return 0;
+            if (marker == PrototypeId.Invalid) return 0;
             if (MarkerDensityOverrides.HasValue())
-            {
                 foreach (var densityEntry in MarkerDensityOverrides)
                     if (densityEntry != null && densityEntry.Marker == marker)
                         return densityEntry.OverrideDensity;
-            }
+
             return DefaultDensity;
         }
     }

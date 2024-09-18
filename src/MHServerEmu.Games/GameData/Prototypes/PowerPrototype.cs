@@ -1,242 +1,29 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)MoveIntoRange)]
-    public enum WhenOutOfRangeType
-    {
-        MoveIntoRange = 0,
-        DoNothing = 1,
-        ActivateInDirection = 2,
-        MoveIfTargetingMOB = 3,
-        ActivateComboMovementPower = 4,
-    }
-
-    [AssetEnum((int)None)]
-    public enum ActivationType
-    {
-        None = 0,
-        Passive = 1,
-        Instant = 2,
-        InstantTargeted = 3,
-        TwoStageTargeted = 4,
-    }
-
-    [AssetEnum((int)None)]
-    public enum PowerCategoryType
-    {
-        None = 0,
-        ComboEffect = 1,
-        EmotePower = 2,
-        GameFunctionPower = 3,
-        HiddenPassivePower = 4,
-        HotspotEffect = 5,
-        ItemPower = 6,
-        MissileEffect = 7,
-        NormalPower = 8,
-        ProcEffect = 9,
-        ThrowableCancelPower = 10,
-        ThrowablePower = 11,
-    }
-
-    [AssetEnum((int)AllowProcChanceMultiplier)]
-    public enum ProcChanceMultiplierBehaviorType
-    {
-        AllowProcChanceMultiplier = 0,
-        IgnoreProcChanceMultiplier = 1,
-        IgnoreProcChanceMultiplierUnlessZero = 2,
-    }
-
-    [AssetEnum((int)None)]
-    public enum TeleportMethodType
-    {
-        None = 0,
-        Teleport = 1,
-        Phase = 2,
-    }
-
-    [AssetEnum((int)None)]
-    public enum PowerEventType
-    {
-        None = 0,
-        OnContactTime = 1,
-        OnCriticalHit = 2,
-        OnHitKeyword = 3,
-        OnPowerApply = 4,
-        OnPowerStopped = 24,
-        OnPowerEnd = 5,
-        OnPowerLoopEnd = 26,
-        OnPowerHit = 6,
-        OnPowerStart = 7,
-        OnPowerToggleOn = 22,
-        OnPowerToggleOff = 23,
-        OnProjectileHit = 8,
-        OnStackCount = 9,
-        OnTargetKill = 10,
-        OnSummonEntity = 11,
-        OnHoldBegin = 12,
-        OnMissileHit = 13,
-        OnMissileKilled = 14,
-        OnHotspotNegated = 15,
-        OnHotspotNegatedByOther = 16,
-        OnHotspotOverlapBegin = 17,
-        OnHotspotOverlapEnd = 18,
-        OnRemoveCondition = 19,
-        OnRemoveNegStatusEffect = 20,
-        OnExtraActivationCooldown = 25,
-        OnPowerPivot = 21,
-        OnSpecializationPowerAssigned = 27,
-        OnSpecializationPowerUnassigned = 28,
-        OnEntityControlled = 29,
-        OnOutOfRangeActivateMovementPower = 30,
-    }
-
-    [AssetEnum((int)None)]
-    public enum PowerEventActionType
-    {
-        None = 0,
-        BodySlide = 1,
-        CancelScheduledActivation = 2,
-        CancelScheduledActivationOnTriggeredPower = 3,
-        ContextCallback = 4,
-        ControlAgentAI = 21,
-        CooldownEnd = 25,
-        CooldownModifySecs = 26,
-        CooldownModifyPct = 27,
-        CooldownStart = 24,
-        DespawnTarget = 5,
-        EndPower = 23,
-        ChargesIncrement = 6,
-        InteractFinish = 7,
-        RemoveAndKillControlledAgentsFromInv = 22,
-        RestoreThrowable = 9,
-        ScheduleActivationAtPercent = 10,
-        ScheduleActivationInSeconds = 11,
-        RescheduleActivationInSeconds = 8,
-        ShowBannerMessage = 12,
-        SpawnLootTable = 13,
-        SwitchAvatar = 14,
-        ToggleOnPower = 15,
-        ToggleOffPower = 16,
-        TeamUpAgentSummon = 28,
-        TeleportToPartyMember = 20,
-        TransformModeChange = 17,
-        TransformModeStart = 18,
-        UsePower = 19,
-        TeleportToRegion = 29,
-        StealPower = 30,
-        PetItemDonate = 31,
-        MapPowers = 32,
-        UnassignMappedPowers = 33,
-        RemoveSummonedAgentsWithKeywords = 34,
-        SpawnControlledAgentWithSummonDuration = 35,
-        LocalCoopEnd = 36,
-    }
-
-    [AssetEnum((int)Set)]
-    public enum BlackboardOperatorType
-    {
-        Add = 0,
-        Div = 1,
-        Mul = 2,
-        Set = 3,
-        Sub = 4,
-        SetTargetId = 5,
-        ClearTargetId = 6,
-    }
-
-    [AssetEnum((int)None)]
-    public enum TargetingShapeType
-    {
-        None = 0,
-        ArcArea = 1,
-        BeamSweep = 2,
-        CapsuleArea = 3,
-        CircleArea = 4,
-        RingArea = 5,
-        Self = 6,
-        TeamUp = 7,
-        SingleTarget = 8,
-        SingleTargetOwner = 9,
-        SingleTargetRandom = 10,
-        SkillShot = 11,
-        SkillShotAlongGround = 12,
-        WedgeArea = 13,
-    }
-
-    [AssetEnum((int)_0)]
-    public enum AOEAngleType
-    {
-        _0 = 0,
-        _1 = 1,
-        _10 = 2,
-        _30 = 3,
-        _45 = 4,
-        _60 = 5,
-        _90 = 6,
-        _120 = 7,
-        _180 = 8,
-        _240 = 9,
-        _300 = 10,
-        _360 = 11,
-        // Not found in client
-        _20 = 0
-    }
-
-    [AssetEnum((int)Alive)]
-    public enum EntityHealthState
-    {
-        Alive = 0,
-        Dead = 1,
-        AliveOrDead = 2,
-    }
-
-    [AssetEnum((int)All)]
-    public enum TargetingHeightType
-    {
-        All = 0,
-        GroundOnly = 1,
-        SameHeight = 2,
-        FlyingOnly = 3,
-    }
-
-    [AssetEnum((int)None)]
-    public enum SubsequentActivateType
-    {
-        None = 0,
-        DestroySummonedEntity = 1,
-        RepeatActivation = 2,
-    }
-
-    [AssetEnum((int)None)]
-    public enum TargetRestrictionType
-    {
-        None = 0,
-        HealthGreaterThanPercentage = 1,
-        HealthLessThanPercentage = 2,
-        EnduranceGreaterThanPercentage = 3,
-        EnduranceLessThanPercentage = 4,
-        HealthOrEnduranceGreaterThanPercentage = 5,
-        HealthOrEnduranceLessThanPercentage = 6,
-        SecondaryResourceLessThanPercentage = 7,
-        HasKeyword = 8,
-        DoesNotHaveKeyword = 9,
-        HasAI = 10,
-        IsPrototypeOf = 11,
-        HasProperty = 12,
-        DoesNotHaveProperty = 13,
-    }
-
-    #endregion
-
     public class PowerPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        // Local instance refs to speed up access
+        private TargetingReachPrototype _targetingReachPtr;
+        private TargetingStylePrototype _targetingStylePtr;
+
         public PrototypePropertyCollection Properties { get; protected set; }
         public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; protected set; }
-        public ActivationType Activation { get; protected set; }
+        public PowerActivationType Activation { get; protected set; }
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
         [ListMixin(typeof(ConditionPrototype))]
@@ -378,9 +165,356 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
+
+        [DoNotCopy]
+        public float DamageTuningScore { get; private set; }
+
+        [DoNotCopy]
+        public bool HasRescheduleActivationEventWithInvalidPowerRef { get; private set; }
+        [DoNotCopy]
+        public bool LooksAtMousePosition { get; private set; }
+        [DoNotCopy]
+        public bool IsControlPower { get; private set; }
+        [DoNotCopy]
+        public bool IsStealingPower { get; private set; }
+        [DoNotCopy]
+        public virtual bool IsHighFlyingPower { get => false; }
+
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+
+        [DoNotCopy]
+        public TimeSpan ChannelStartTime { get => TimeSpan.FromMilliseconds(ChannelStartTimeMS); }
+        [DoNotCopy]
+        public TimeSpan ChannelMinTime { get => TimeSpan.FromMilliseconds(ChannelMinTimeMS); }
+        [DoNotCopy]
+        public TimeSpan ChannelEndTime { get => TimeSpan.FromMilliseconds(ChannelEndTimeMS); }
+        [DoNotCopy]
+        public TimeSpan ChargeTime { get => TimeSpan.FromMilliseconds(ChargingTimeMS); }
+        [DoNotCopy]
+        public TimeSpan NoInterruptPreWindowTime { get => TimeSpan.FromMilliseconds(Math.Min(NoInterruptPreWindowMS, (int)(AnimationTimeMS * AnimationContactTimePercent))); }
+        [DoNotCopy]
+        public TimeSpan NoInterruptPostWindowTime { get => TimeSpan.FromMilliseconds(Math.Min(NoInterruptPostWindowMS, (int)(AnimationTimeMS * (1f - AnimationContactTimePercent)))); }
+
+        [DoNotCopy]
+        public int PowerPrototypeEnumValue { get; private set; }
+
+        public static PrototypeId RecursiveGetPowerRefOfPowerTypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
+        {
+            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "RecursiveGetPowerRefOfPowerTypeInCombo(): power == null");
+
+            if (powerProto is T)
+                return powerRef;
+
+            // for loop here
+
+            return PrototypeId.Invalid;
+        }
+
         public override bool ApprovedForUse()
         {
             return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // Skip abstract prototypes
+            if (DataDirectory.Instance.PrototypeIsAbstract(DataRef))
+                return;
+
+            DamageTuningScore = PostProcessTuningScore();
+
+            RangeActivationReduction = Math.Abs(RangeActivationReduction);
+
+            if (ActionsTriggeredOnPowerEvent.HasValue())
+            {
+                foreach (PowerEventActionPrototype triggeredAction in ActionsTriggeredOnPowerEvent)
+                {
+                    // TODO: Populate lookup for power event actions
+                    
+                    if (triggeredAction.EventAction == PowerEventActionType.RescheduleActivationInSeconds && triggeredAction.Power == PrototypeId.Invalid)
+                        HasRescheduleActivationEventWithInvalidPowerRef = true;
+                }
+            }
+
+            // Apply condition effect properties to their conditions
+            if (ConditionEffects != null)
+            {
+                // Condition effects are applied to mixin conditions of this power prototype.
+                // First, we need to trigger mixin condition copy from parent if it did not happen already.
+                var mixinFieldInfo = GameDatabase.PrototypeClassManager.GetMixinFieldInfo(typeof(PowerPrototype), typeof(ConditionPrototype), PrototypeFieldType.ListMixin);
+                PrototypeMixinList conditionList = CalligraphySerializer.AcquireOwnedMixinList(this, mixinFieldInfo, true);
+
+                // Post-process mixin conditions
+                foreach (PrototypeMixinListItem item in conditionList)
+                {
+                    // We are fairly certain this list is going to have only condition prototypes.
+                    // And if it doesn't, we will know straight away due to this crashing horribly
+                    // and be able to fix it.
+                    var conditionPrototype = (ConditionPrototype)item.Prototype;
+                    conditionPrototype.PostProcess();
+
+                    // Force property collection initialization, but get rid of all properties copied from the parent.
+                    // TODO: Do we even need GetPropertyCollectionField()? It would probably be faster to just create a collection directly.
+                    // It may break Calligraphy things somehow though.
+                    PrototypePropertyCollection conditionProperties = CalligraphySerializer.GetPropertyCollectionField(conditionPrototype);
+                    conditionProperties.Clear();
+                }
+
+                // Apply condition effects to conditions
+
+                foreach (PrototypeMixinListItem effectItem in ConditionEffects)
+                {
+                    var effectPrototype = (ConditionEffectPrototype)effectItem.Prototype;
+                    bool foundCondition = false;
+
+                    // Look for the condition specified in the effect prototype
+                    foreach (PrototypeMixinListItem conditionItem in conditionList)
+                    {
+                        if (conditionItem.BlueprintCopyNum != effectPrototype.ConditionNum)
+                            continue;
+
+                        // Copy effect properties to the condition
+                        PrototypePropertyCollection effectProperties = effectPrototype.Properties;
+                        var conditionPrototype = (ConditionPrototype)conditionItem.Prototype;
+
+                        PrototypePropertyCollection conditionProperties = conditionPrototype.Properties;
+                        conditionProperties.FlattenCopyFrom(effectProperties, false);
+                        foundCondition = true;
+
+                        // Set mouse position flag
+                        if (conditionPrototype.Scope == ConditionScopeType.User && conditionProperties[PropertyEnum.LookAtMousePosition])
+                            LooksAtMousePosition = true;
+
+                        break;
+                    }
+
+                    if (foundCondition == false)
+                        Logger.Warn($"PostProcess(): Effect found with no matching condition in power {this}");
+                }
+
+            }
+
+            // Add indexes to mixin conditions
+            if (AppliesConditions != null)
+            {
+                foreach (PrototypeMixinListItem item in AppliesConditions)
+                {
+                    if (item.Prototype is ConditionPrototype conditionProto)
+                        conditionProto.BlueprintCopyNum = item.BlueprintCopyNum;
+                }
+            }
+
+            // Initialize keywords
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            KeywordGlobalsPrototype keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
+            IsControlPower = HasKeyword(keywordGlobalsProto.ControlPowerKeywordPrototype.As<KeywordPrototype>());
+            IsStealingPower = HasKeyword(keywordGlobalsProto.StealingPowerKeyword.As<KeywordPrototype>());
+
+            PowerPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPowerBlueprintDataRef());
+
+            // We don't use prototype data ref pointers, so we need to go through the game database
+            // to get the prototype for the ref. This can be slow for lookups that happen often, so
+            // we cache instance references for often requested prototypes here.
+            _targetingReachPtr = TargetingReach.As<TargetingReachPrototype>();
+            _targetingStylePtr = TargetingStyle.As<TargetingStylePrototype>();
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return (keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto));
+        }
+
+        public TargetingReachPrototype GetTargetingReach()
+        {
+            return _targetingReachPtr;
+        }
+
+        public TargetingStylePrototype GetTargetingStyle()
+        {
+            return _targetingStylePtr;
+        }
+
+        public float GetRange(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            if (Range == null) return Logger.WarnReturn(0f, "GetRange(): Range == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? properties);
+
+            return Eval.RunFloat(Range, evalContext);            
+        }
+
+        public float GetProjectileSpeed(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties ?? properties);
+
+            return Eval.RunFloat(ProjectileSpeed, evalContext);
+        }
+
+        public TimeSpan GetChannelLoopTime(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            if (ChannelLoopTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetChannelLoopTime(): ChannelLoopTimeMS == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties);
+
+            int channelLoopTimeMS = Eval.RunInt(ChannelLoopTimeMS, evalContext);
+            return TimeSpan.FromMilliseconds(channelLoopTimeMS);
+        }
+
+        public TimeSpan GetAnimationTime(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            int animationTimeMS = AnimationTimeMS;
+
+            if (PowerUnrealOverrides.IsNullOrEmpty())
+                return TimeSpan.FromMilliseconds(animationTimeMS);
+
+            foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
+            {
+                if (unrealAssetOverrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                if (unrealAssetOverrideProto.AnimationTimeMS >= 0)
+                    animationTimeMS = unrealAssetOverrideProto.AnimationTimeMS;
+
+                if (unrealAssetOverrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    if (replacementProto.AnimationTimeMS >= 0)
+                        animationTimeMS = replacementProto.AnimationTimeMS;
+
+                    break;
+                }
+
+                break;
+            }
+
+            return TimeSpan.FromMilliseconds(animationTimeMS);
+        }
+
+        public float GetContactTimePercent(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            float contactTimePercent = AnimationContactTimePercent;
+
+            if (PowerUnrealOverrides.IsNullOrEmpty())
+                return contactTimePercent;
+
+            foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
+            {
+                if (unrealAssetOverrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                if (unrealAssetOverrideProto.AnimationContactTimePercent >= 0f)
+                    contactTimePercent = unrealAssetOverrideProto.AnimationContactTimePercent;
+
+                if (unrealAssetOverrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    if (replacementProto.AnimationContactTimePercent >= 0f)
+                        contactTimePercent = replacementProto.AnimationContactTimePercent;
+
+                    break;
+                }
+
+                break;
+            }
+
+            return contactTimePercent;
+        }
+
+        public TimeSpan GetOneOffAnimContactTime(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            TimeSpan animationTime = TimeSpan.FromMilliseconds(AnimationTimeMS);
+            float animationContactTimePercent = AnimationContactTimePercent;
+
+            if (PowerUnrealOverrides.IsNullOrEmpty())
+                return animationTime * animationContactTimePercent;
+
+            foreach (PowerUnrealOverridePrototype unrealAssetOverrideProto in PowerUnrealOverrides)
+            {
+                if (unrealAssetOverrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                if (unrealAssetOverrideProto.AnimationTimeMS >= 0)
+                    animationTime = TimeSpan.FromMilliseconds(unrealAssetOverrideProto.AnimationTimeMS);
+
+                if (unrealAssetOverrideProto.AnimationContactTimePercent >= 0f)
+                    animationContactTimePercent = unrealAssetOverrideProto.AnimationContactTimePercent;
+
+                if (unrealAssetOverrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in unrealAssetOverrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    if (replacementProto.AnimationTimeMS >= 0)
+                        animationTime = TimeSpan.FromMilliseconds(unrealAssetOverrideProto.AnimationTimeMS);
+
+                    if (replacementProto.AnimationContactTimePercent >= 0f)
+                        animationContactTimePercent = unrealAssetOverrideProto.AnimationContactTimePercent;
+
+                    break;
+                }
+
+                break;
+            }
+
+            return animationTime * animationContactTimePercent;
+        }
+
+        public TimeSpan GetCooldownDuration(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            if (CooldownTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownDuration(): CooldownTimeMS == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ownerProperties);
+
+            int cooldownTimeMS = Eval.RunInt(CooldownTimeMS, evalContext);
+            return TimeSpan.FromMilliseconds(cooldownTimeMS);
+        }
+
+        public virtual void OnEndPower(Power power, WorldEntity owner)
+        {
+            // Overriden in MovementPowerPrototype
+        }
+
+        private float PostProcessTuningScore()
+        {
+            float score = DamageTuningArea * DamageTuningBuff1 * DamageTuningBuff2 * DamageTuningBuff3
+                * DamageTuningCooldown * DamageTuningDebuff1 * DamageTuningDebuff2 * DamageTuningDebuff3
+                * DamageTuningDmgBonusFreq * DamageTuningHardCC * DamageTuningMultiHit * DamageTuningAnimationDelay
+                * DamageTuningPowerTag1 * DamageTuningPowerTag2 * DamageTuningPowerTag3 * DamageTuningRangeRisk
+                * DamageTuningSoftCC * DamageTuningSummon * DamageTuningDuration * DamageTuningTriggerDelay
+                * DamageTuningDoTHotspot * DamageTuningHeroSpecific;
+
+            score *= DamageBaseTuningEnduranceCost * DamageBaseTuningEnduranceRatio + (DamageBaseTuningAnimTimeMS / 1000f);
+            return score;
         }
     }
 
@@ -406,6 +540,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IgnoreTeleportBlockers { get; protected set; }
         public bool HighFlying { get; protected set; }
         public TeleportMethodType TeleportMethod { get; protected set; }
+
+        [DoNotCopy]
+        public override bool IsHighFlyingPower { get => HighFlying; }
+
+        [DoNotCopy]
+        public BlockingCheckFlags BlockingCheckFlags { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            BlockingCheckFlags = BlockingCheckFlags.CheckAllMovementPowers;
+
+            if (IsHighFlyingPower == false && MovementHeightBonus <= 0f)
+                BlockingCheckFlags |= BlockingCheckFlags.CheckGroundMovementPowers;
+        }
+
+        public override void OnEndPower(Power power, WorldEntity owner)
+        {
+            if (owner != null && CustomBehavior != null)
+            {
+                PowerActivationSettings settings = power.LastActivationSettings;
+                WorldEntity target = owner.Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                MovementBehaviorPrototype.Context context = new(power, owner, target, settings.TargetPosition);
+                CustomBehavior.OnEndPower(in context);
+            }
+        }
+
+        public bool HasCustomBehaviorOfType<T>() where T: MovementBehaviorPrototype
+        {
+            return CustomBehavior is T;
+        }
     }
 
     public class SpecializationPowerPrototype : PowerPrototype
@@ -480,6 +646,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AbilityAssignmentPrototype : Prototype
     {
         public PrototypeId Ability { get; protected set; }
+
+        [DoNotCopy]
+        public int StartingRank { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            StartingRank = 1;
+        }
     }
 
     public class AbilityAutoAssignmentSlotPrototype : Prototype
@@ -532,6 +707,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalEventTriggerChance { get; protected set; }
         public EvalPrototype EvalEventParam { get; protected set; }
         public bool ResetFXRandomSeed { get; protected set; }
+
+        [DoNotCopy]
+        public bool HasEvalEventTriggerChance { get => EvalEventTriggerChance != null; }
+
+        public float GetEventTriggerChance(PropertyCollection powerProperties, WorldEntity owner, WorldEntity target)
+        {
+            if (EvalEventTriggerChance == null)
+                return 1f;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, target);
+            Eval.InitTeamUpEvalContext(evalContext, owner);
+
+            return Eval.RunFloat(EvalEventTriggerChance, evalContext);
+        }
+
+        public float GetEventParam(PropertyCollection powerProperties, WorldEntity owner)
+        {
+            if (EvalEventParam == null)
+                return EventParam;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+
+            return Eval.RunFloat(EvalEventParam, evalContext);
+        }
+
+        public float GetEventParamNoEval()
+        {
+            return EventParam;
+        }
     }
 
     public class SituationalTriggerPrototype : Prototype
@@ -673,6 +884,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public Vector2Prototype PositionOffset { get; protected set; }
         public int RandomPositionRadius { get; protected set; }
         public bool DisableOrientationDuringPower { get; protected set; }
+
+        private Vector3 _positionOffset;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            _positionOffset = PositionOffset != null ? PositionOffset.ToVector3() : Vector3.Zero;
+        }
+
+        public bool TargetsAOE()
+        {
+            return TargetingShape switch
+            {
+                TargetingShapeType.ArcArea
+                or TargetingShapeType.BeamSweep
+                or TargetingShapeType.CapsuleArea
+                or TargetingShapeType.CircleArea
+                or TargetingShapeType.RingArea
+                or TargetingShapeType.WedgeArea => true,
+                _ => false,
+            };
+        }
+
+        public Vector3 GetOwnerOrientedPositionOffset(WorldEntity owner)
+        {
+            if (owner != null && owner.IsInWorld)
+                return Transform3.BuildTransform(Vector3.Zero, owner.Orientation) * _positionOffset;
+            return _positionOffset;
+        }
     }
 
     public class TargetingReachPrototype : Prototype
@@ -692,7 +932,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool TargetsDestructibles { get; protected set; }
         public bool LOSCheckAlongGround { get; protected set; }
         public EntityHealthState EntityHealthState { get; protected set; }
-        public ConvenienceLabel TargetsEntitiesInInventory { get; protected set; }
+        public InventoryConvenienceLabel TargetsEntitiesInInventory { get; protected set; }
         public bool TargetsFrontSideOnly { get; protected set; }
         public bool TargetsNonEnemies { get; protected set; }
         public bool WillTargetUltimateCreator { get; protected set; }
@@ -721,9 +961,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ExtraActivateOnSubsequentPrototype : ExtraActivatePrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public CurveId NumActivatesBeforeCooldown { get; protected set; }
         public CurveId TimeoutLengthMS { get; protected set; }
         public SubsequentActivateType ExtraActivateEffect { get; protected set; }
+
+        public int GetNumActivatesBeforeCooldown(int powerRank)
+        {
+            if (NumActivatesBeforeCooldown == CurveId.Invalid)
+                return 0;
+
+            if (powerRank < 0) return Logger.WarnReturn(0, "GetNumActivatesBeforeCooldown(): powerRank < 0");
+
+            Curve curve = CurveDirectory.Instance.GetCurve(NumActivatesBeforeCooldown);
+            if (curve == null) return Logger.WarnReturn(0, "GetNumActivatesBeforeCooldown(): curve == null");
+
+            return (int)MathF.Floor(curve.GetAt(powerRank));
+        }
+
+        public int GetTimeoutLengthMS(int powerRank)
+        {
+            if (TimeoutLengthMS == CurveId.Invalid)
+                return 0;
+
+            if (powerRank < 0) return Logger.WarnReturn(0, "GetTimeoutLengthMS(): powerRank < 0");
+
+            Curve curve = CurveDirectory.Instance.GetCurve(TimeoutLengthMS);
+            if (curve == null) return Logger.WarnReturn(0, "GetTimeoutLengthMS(): curve == null");
+
+            return (int)MathF.Floor(curve.GetAt(powerRank));
+        }
     }
 
     public class ExtraActivateCycleToPowerPrototype : ExtraActivatePrototype

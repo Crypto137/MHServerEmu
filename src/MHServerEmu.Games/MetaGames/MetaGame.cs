@@ -1,13 +1,13 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames
@@ -15,19 +15,39 @@ namespace MHServerEmu.Games.MetaGames
     public class MetaGame : Entity
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public ReplicatedVariable<string> Name { get; set; }
 
-        public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
+        protected RepString _name = new();
+        protected ulong _regionId;
 
-        public MetaGame(EntityBaseData baseData) : base(baseData) { }
+        public MetaGame(Game game) : base(game) { }
 
-        public MetaGame(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
-            ReplicatedVariable<string> name) : base(baseData)
+        public override bool Initialize(EntitySettings settings)
         {
-            ReplicationPolicy = replicationPolicy;
-            Properties = properties;
+            base.Initialize(settings);
 
-            Name = name;
+            //_name = new(0, "");
+            _regionId = settings.RegionId;
+
+            Region region = Game.RegionManager.GetRegion(_regionId);
+            if (region != null)
+            {
+                region.RegisterMetaGame(this);
+                // TODO: Other stuff
+            }
+            else
+            {
+                Logger.Warn("Initialize(): region == null");
+            }
+
+            return true;
+        }
+
+        public override bool Serialize(Archive archive)
+        {
+            bool success = base.Serialize(archive);
+            // if (archive.IsTransient)
+            success &= Serializer.Transfer(archive, ref _name);
+            return success;
         }
 
         public override void Destroy()
@@ -36,56 +56,84 @@ namespace MHServerEmu.Games.MetaGames
             base.Destroy();
         }
 
-        protected override void Decode(CodedInputStream stream)
+        public Region GetRegion()
         {
-            base.Decode(stream);
+            if (_regionId == 0)
+                return null;
 
-            Name = new(stream);
+            return Game.RegionManager.GetRegion(_regionId);
         }
 
-        public override void Encode(CodedOutputStream stream)
+        protected override void BindReplicatedFields()
         {
-            base.Encode(stream);
+            base.BindReplicatedFields();
 
-            Name.Encode(stream);
+            _name.Bind(this, AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _name.Unbind();
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"Name: {Name}");
+            sb.AppendLine($"{nameof(_name)}: {_name}");
         }
 
         // TODO event registry States
-        public void RegistyStates()
+        public void RegisterStates()
         {
-            Region region = Game.RegionManager.GetRegion(RegionId);           
+            Region region = Game.RegionManager.GetRegion(_regionId);           
             if (region == null) return;
-            var popManager = region.PopulationManager;
-            if (EntityPrototype is not MetaGamePrototype metaGameProto) return;
+
+            PopulationManager popManager = region.PopulationManager;
+            
+            if (Prototype is not MetaGamePrototype metaGameProto) return;
+            
             if (metaGameProto.GameModes.HasValue())
             {
                 var gameMode = metaGameProto.GameModes.First().As<MetaGameModePrototype>();
                 if (gameMode == null) return;
 
                 if (gameMode.ApplyStates.HasValue())
-                    foreach(var state in gameMode.ApplyStates)
-                        popManager.MetaStateRegisty(state);
+                {
+                    foreach (PrototypeId state in gameMode.ApplyStates)
+                        popManager.RegisterMetaState(state);
+                }
 
-                if (region.PrototypeId == RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
+                if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.HoloSimARegion1to60) // Hardcode for Holo-Sim
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
                     int wave = Game.Random.Next(0, stateMode.States.Length);
-                    popManager.MetaStateRegisty(stateMode.States[wave]);
+
+                    // HACK/REMOVEME: Skip laggy brood wave
+                    while (wave == 5)
+                        wave = Game.Random.Next(0, stateMode.States.Length);
+
+                    Logger.Trace($"RegisterStates(): Picked Holo-Sim wave [{wave}] [{stateMode.States[wave].GetName()}]");
+                    popManager.RegisterMetaState(stateMode.States[wave]);
                 } 
-                else if (region.PrototypeId == RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
+                else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.LimboRegionL60) // Hardcode for Limbo
                 {
                     MetaGameStateModePrototype stateMode = gameMode as MetaGameStateModePrototype;
-                    popManager.MetaStateRegisty(stateMode.States[0]);
+                    popManager.RegisterMetaState(stateMode.States[0]);
                 }
-                else if (region.PrototypeId == RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
-                    popManager.MetaStateRegisty((PrototypeId)7730041682554854878); // CH04UpperMoloids
+                else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.CH0402UpperEastRegion) // Hack for Moloids
+                {
+                    popManager.RegisterMetaState((PrototypeId)7730041682554854878); // CH04UpperMoloids
+                }
+                else if (region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.SurturRaidRegionGreen) // Hardcode for Surtur
+                {   
+                    var stateRef = (PrototypeId)5463286934959496963; // SurturMissionProgressionStateFiveMan
+                    var missionProgression = stateRef.As<MetaStateMissionProgressionPrototype>();
+                    foreach(PrototypeId state in missionProgression.StatesProgression)
+                        popManager.RegisterMetaState(state);
+                }
             }
         }
     }

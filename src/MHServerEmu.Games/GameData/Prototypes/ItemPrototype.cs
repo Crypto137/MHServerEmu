@@ -1,6 +1,12 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -79,7 +85,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalExpirationTimeMS { get; protected set; }
         public ItemTooltipPropertyBlockSettingsPrototype[] TooltipCustomPropertyBlocks { get; protected set; }
         public float LootDropWeightMultiplier { get; protected set; }
-        public ConvenienceLabel DestinationFromVendor { get; protected set; }
+        public InventoryConvenienceLabel DestinationFromVendor { get; protected set; }
         public EvalPrototype EvalDisplayLevel { get; protected set; }
         public bool CanBroadcast { get; protected set; }
         public EquipmentInvUISlot DefaultEquipmentSlot { get; protected set; }
@@ -89,6 +95,243 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SortSubCategory { get; protected set; }
         public ItemInstrumentedDropGroup InstrumentedDropGroup { get; protected set; }
         public bool IsContainer { get; protected set; }
+
+        // ---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        [DoNotCopy]
+        public bool IsPetItem { get => IsChildBlueprintOf(GameDatabase.GlobalsPrototype.PetItemBlueprint); }
+
+        [DoNotCopy]
+        public bool IsGem { get => IsChildBlueprintOf(GameDatabase.LootGlobalsPrototype.GemBlueprint); }
+
+        public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
+        {
+            // TODO
+        }
+
+        public TimeSpan GetExpirationTime(PrototypeId rarityProtoRef)
+        {
+            if (EvalExpirationTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetExpirationTime(): EvalExpirationTimeMS == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, rarityProtoRef);
+
+            int expirationTimeMS = Eval.RunInt(EvalExpirationTimeMS, evalContext);
+            return TimeSpan.FromMilliseconds(expirationTimeMS);
+        }
+
+        public virtual bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            if (EquipRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (EquipRestrictionPrototype equipRestrictionProto in EquipRestrictions)
+            {
+                if (equipRestrictionProto.IsEquippableByAgent(agentProto) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public virtual bool IsDroppableForAgent(AgentPrototype agentProto)
+        {
+            return IsUsableByAgent(agentProto);
+        }
+
+        public bool IsDroppableForRestrictions(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
+        {
+            if (LootDropRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)
+            {
+                if (dropRestrictionProto.Allow(filterArgs, restrictionFlags) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public EquipmentInvUISlot GetInventorySlotForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is not AvatarPrototype avatarProto)
+                return DefaultEquipmentSlot;
+
+            return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(this, avatarProto);
+        }
+
+        public virtual PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
+        {
+            return rollForAvatar;
+        }
+
+        public AffixLimitsPrototype GetAffixLimits(PrototypeId rarityProtoRef, LootContext lootContext)
+        {
+            if (AffixLimits.IsNullOrEmpty())
+                return null;
+
+            foreach (AffixLimitsPrototype limits in AffixLimits)
+            {
+                if (limits.Matches(rarityProtoRef, lootContext))
+                    return limits;
+            }
+
+            return null;
+        }
+
+        public int GetRank(LootContext lootContext)
+        {
+            if (LootDropRestrictions.IsNullOrEmpty())
+                return 0;
+
+            using DropFilterArguments args = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            DropFilterArguments.Initialize(args, lootContext);
+
+            RestrictionTestFlags flags = RestrictionTestFlags.None;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)
+                dropRestrictionProto.Adjust(args, ref flags, RestrictionTestFlags.Rank);
+
+            return args.Rank;
+        }
+
+        public IEnumerable<BuiltInAffixDetails> GenerateBuiltInAffixDetails(ItemSpec itemSpec)
+        {
+            IEnumerable<AffixEntryPrototype> builtInAffixEntries = GetBuiltInAffixEntries(itemSpec.RarityProtoRef);
+            if (builtInAffixEntries.Any() == false) yield break;    // Early break so that we don't create a dictionary instance when we don't have any affix entries
+
+            Dictionary<ulong, int> affixSeedDict = new();
+
+            foreach (AffixEntryPrototype affixEntryProto in builtInAffixEntries)
+            {
+                if (affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid)
+                {
+                    Logger.Warn("affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid");
+                    continue;
+                }
+
+                BuiltInAffixDetails builtInAffixDetails = new(affixEntryProto);
+
+                if (GeneratePowerModifierRefFromBuiltInAffix(affixEntryProto, itemSpec, ref builtInAffixDetails) == false)
+                    continue;
+
+                builtInAffixDetails.Seed = GenAffixRandomSeed(affixSeedDict, itemSpec.Seed, itemSpec.ItemProtoRef, affixEntryProto.Affix, affixEntryProto.Power);
+
+                yield return builtInAffixDetails;
+            }
+        }
+
+        public IEnumerable<AffixEntryPrototype> GetBuiltInAffixEntries(PrototypeId rarityProtoRef)
+        {
+            // This static function is under Item in the client, but it makes more sense for it to be here
+
+            if (rarityProtoRef == PrototypeId.Invalid)
+            {
+                Logger.Warn("GetBuiltInAffixEntries(): rarityProtoRef == PrototypeId.Invalid");
+                yield break;
+            }
+
+            RarityPrototype rarityProto = rarityProtoRef.As<RarityPrototype>();
+            if (rarityProto == null)
+            {
+                Logger.Warn("GetBuiltInAffixEntries(): rarityProto == null");
+                yield break;
+            }
+
+            if (AffixesBuiltIn.HasValue())
+            {
+                foreach (AffixEntryPrototype affixEntryProto in AffixesBuiltIn)
+                    yield return affixEntryProto;
+            }
+
+            if (rarityProto.AffixesBuiltIn.HasValue())
+            {
+                foreach (AffixEntryPrototype affixEntryProto in rarityProto.AffixesBuiltIn)
+                    yield return affixEntryProto;
+            }
+        }
+
+        public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)
+        {
+            if (agentProto == null)
+                return true;
+
+            if (agentProto is not AvatarPrototype avatarProto)
+                return false;
+
+            return GameDataTables.Instance.EquipmentSlotTable.EquipmentUISlotForAvatar(itemProto, avatarProto) != EquipmentInvUISlot.Invalid;
+        }
+
+        private bool IsChildBlueprintOf(PrototypeId protoRef)
+        {
+            BlueprintId blueprintRef = DataDirectory.Instance.GetPrototypeBlueprintDataRef(protoRef);
+            return DataDirectory.Instance.PrototypeIsChildOfBlueprint(DataRef, blueprintRef);
+        }
+
+        private static bool GeneratePowerModifierRefFromBuiltInAffix(AffixEntryPrototype affixEntryProto, ItemSpec itemSpec, ref BuiltInAffixDetails builtInAffixDetails)
+        {
+            if (affixEntryProto.Affix == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GeneratePowerModifierRefFromBuiltInAffix(): affixEntryProto.Affix == PrototypeId.Invalid");
+
+            builtInAffixDetails.LevelRequirement = affixEntryProto.LevelRequirement;
+            if (builtInAffixDetails.LevelRequirement < 0)
+            {
+                return Logger.WarnReturn(false, "GeneratePowerModifierRefFromBuiltInAffix(): Could not add a builtin Affix with a level requirement " +
+                    $"to an Item because of data errors: Item=[{itemSpec.ItemProtoRef.GetName()}], Affix=[{affixEntryProto.Affix.GetName()}]");
+            }
+
+            AffixPowerModifierPrototype affixPowerModifierProto = affixEntryProto.Affix.As<AffixPowerModifierPrototype>();
+            if (affixPowerModifierProto != null)
+            {
+                builtInAffixDetails.AvatarProtoRef = itemSpec.EquippableBy != PrototypeId.Invalid
+                    ? itemSpec.EquippableBy
+                    : affixEntryProto.Avatar;
+
+                if (affixEntryProto.Avatar != PrototypeId.Invalid && affixEntryProto.Avatar != itemSpec.EquippableBy)
+                {
+                    return Logger.WarnReturn(false, string.Format("GeneratePowerModifierRefFromBuiltInAffix(): An item has an ItemSpec.equippableBy that is different " +
+                        "than one of its built-in Affix entry Avatar settings!\nItem: {0}\nAffix: {1}\nEquippableBy: {2}\nRequired Avatar for Affix: {3}",
+                        itemSpec.ItemProtoRef.GetName(),
+                        affixEntryProto.Affix.GetName(),
+                        itemSpec.EquippableBy.GetName(),
+                        affixEntryProto.Avatar.GetName()));
+                }
+
+                if (affixPowerModifierProto.IsForSinglePowerOnly)
+                {
+                    builtInAffixDetails.ScopeProtoRef = affixEntryProto.Power;
+                }
+                else if (affixPowerModifierProto.PowerKeywordFilter != PrototypeId.Invalid)
+                {
+                    builtInAffixDetails.ScopeProtoRef = PrototypeId.Invalid;
+                }
+                else if (affixPowerModifierProto.PowerProgTableTabRef != PrototypeId.Invalid)
+                {
+                    builtInAffixDetails.ScopeProtoRef = builtInAffixDetails.AvatarProtoRef;
+                }
+            }
+
+            return true;
+        }
+
+        private static int GenAffixRandomSeed(Dictionary<ulong, int> affixSeedDict, int itemSeed, PrototypeId itemProtoRef, PrototypeId affixProtoRef, PrototypeId scopeProtoRef)
+        {
+            ulong affixSeed = (ulong)GameDatabase.GetPrototypeGuid(itemProtoRef);
+            affixSeed ^= (ulong)GameDatabase.GetPrototypeGuid(affixProtoRef);
+
+            if (scopeProtoRef != PrototypeId.Invalid)
+                affixSeed ^= (ulong)GameDatabase.GetPrototypeGuid(scopeProtoRef);
+
+            affixSeedDict.TryGetValue(affixSeed, out int count);
+            affixSeedDict[affixSeed] = count + 1;
+
+            affixSeed = (affixSeed >> count) & 0xFFFFFFFF;
+
+            return itemSeed ^ (int)affixSeed;
+        }
     }
 
     public class ItemAbilitySettingsPrototype : Prototype
@@ -227,20 +470,164 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float DamageRegionMobToPlayer { get; protected set; }
         public float DamageRegionPlayerToMob { get; protected set; }
         public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; protected set; }
+
+        // ---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private LootContext _lootContextFlags;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            short zero = 0;     // Use a variable to avoid casting all the time
+
+            MaxPrefixes = Math.Max(MaxPrefixes, zero);
+            MinPrefixes = Math.Clamp(MinPrefixes, zero, MaxPrefixes);
+            MaxSuffixes = Math.Max(MaxSuffixes, zero);
+            MinSuffixes = Math.Clamp(MinSuffixes, zero, MaxSuffixes);
+            MaxTeamUps = Math.Max(MaxTeamUps, zero);
+            MinTeamUps = Math.Clamp(MinTeamUps, zero, MaxTeamUps);
+
+            if (AllowedContexts.HasValue())
+            {
+                foreach (LootContext lootContext in AllowedContexts)
+                    _lootContextFlags |= lootContext;
+            }
+        }
+
+        public bool Matches(PrototypeId rarityProtoRef, LootContext lootContext)
+        {
+            return ItemRarity == rarityProtoRef && _lootContextFlags.HasFlag(lootContext);
+        }
+
+        public short GetMin(AffixPosition affixPosition, LootRollSettings settings)
+        {
+            return GetLimit(affixPosition, false, settings);
+        }
+
+        public short GetMax(AffixPosition affixPosition, LootRollSettings settings)
+        {
+            return GetLimit(affixPosition, true, settings);
+        }
+
+        public short GetMax(AffixCategoryPrototype affixCategoryProto, LootRollSettings settings)
+        {
+            if (CategorizedAffixes.IsNullOrEmpty())
+                return short.MaxValue;
+
+            PrototypeId affixCategoryProtoRef = affixCategoryProto.DataRef;
+
+            foreach (CategorizedAffixEntryPrototype entry in CategorizedAffixes)
+            {
+                if (entry.Category != affixCategoryProtoRef)
+                    continue;
+
+                short numAffixes = entry.MinAffixes;
+
+                if (settings != null && settings.AffixLimitByCategoryModifierDict.TryGetValue(affixCategoryProtoRef, out short mod))
+                    numAffixes += mod;
+
+                return numAffixes;
+            }
+
+            return short.MaxValue;
+        }
+
+        public short GetLimit(AffixPosition affixPosition, bool getMax, LootRollSettings settings)
+        {
+            short limit = 0;
+
+            switch (affixPosition)
+            {
+                case AffixPosition.Prefix:      limit = getMax ? MaxPrefixes : MinPrefixes; break;
+                case AffixPosition.Suffix:      limit = getMax ? MaxSuffixes : MinSuffixes; break;
+                case AffixPosition.Ultimate:    limit = NumUltimates; break;
+                case AffixPosition.Cosmic:      limit = NumCosmics; break;
+                case AffixPosition.Unique:      limit = getMax ? MaxUniques : MinUniques; break;
+                case AffixPosition.Blessing:    if (getMax) limit = MaxBlessings; break;
+                case AffixPosition.Runeword:    if (getMax) limit = MaxRunewords; break;
+                case AffixPosition.TeamUp:      limit = getMax ? MaxTeamUps : MinTeamUps; break;
+                case AffixPosition.RegionAffix: limit = getMax ? RegionAffixMax : RegionAffixMin; break;
+                case AffixPosition.Socket1:     limit = NumSocket1; break;
+                case AffixPosition.Socket2:     limit = NumSocket2; break;
+                case AffixPosition.Socket3:     limit = NumSocket3; break;
+
+                case AffixPosition.None:
+                case AffixPosition.Visual:
+                case AffixPosition.Metadata:
+                case AffixPosition.PetTech1:
+                case AffixPosition.PetTech2:
+                case AffixPosition.PetTech3:
+                case AffixPosition.PetTech4:
+                case AffixPosition.PetTech5:    break;  // Keep limit at 0
+
+                default:
+                    return Logger.WarnReturn<short>(0, $"GetLimit(): Unsupported AffixPosition [{affixPosition}]");
+            }
+
+            if (settings != null)
+            {
+                if (getMax)
+                {
+                    if (settings.AffixLimitMaxByPositionModifierDict.TryGetValue(affixPosition, out short maxMod))
+                        limit += maxMod;
+                }
+                else
+                {
+                    if (settings.AffixLimitMinByPositionModifierDict.TryGetValue(affixPosition, out short minMod))
+                        limit += minMod;
+                }
+            }
+
+            // Do not allow min to be over max
+            if (getMax == false)
+                limit = Math.Min(limit, GetMax(affixPosition, settings));
+
+            // Do not allow min or max to be negative
+            return Math.Max(limit, (short)0);
+        }
     }
 
     public class EquipRestrictionPrototype : Prototype
     {
+        public virtual bool IsEquippableByAgent(AgentPrototype agentProto)
+        {
+            return true;
+        }
     }
 
     public class EquipRestrictionSuperteamPrototype : EquipRestrictionPrototype
     {
         public PrototypeId SuperteamEquippableBy { get; protected set; }
+
+        public override bool IsEquippableByAgent(AgentPrototype agentProto)
+        {
+            if (base.IsEquippableByAgent(agentProto) == false)
+                return false;
+
+            if (agentProto is not AvatarPrototype avatarProto)
+                return true;
+
+            return avatarProto.IsMemberOfSuperteam(SuperteamEquippableBy);
+        }
     }
 
     public class EquipRestrictionAgentPrototype : EquipRestrictionPrototype
     {
         public PrototypeId Agent { get; protected set; }
+
+        public override bool IsEquippableByAgent(AgentPrototype agentProto)
+        {
+            if (base.IsEquippableByAgent(agentProto) == false)
+                return false;
+
+            if (agentProto == null || Agent == PrototypeId.Invalid)
+                return true;
+
+            return agentProto.DataRef == Agent;
+        }
     }
 
     public class ItemTooltipPropertyBlockSettingsPrototype : Prototype
@@ -256,6 +643,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ArmorPrototype : ItemPrototype
     {
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            return AvatarUsesEquipmentType(this, agentProto);
+        }
     }
 
     public class ArtifactPrototype : ItemPrototype
@@ -316,6 +707,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
         }
+
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            PrototypeId agentProtoRef = agentProto != null ? agentProto.DataRef : PrototypeId.Invalid;
+            return UsableBy == agentProtoRef;
+        }
     }
 
     public class LegendaryPrototype : ItemPrototype
@@ -324,6 +721,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MedalPrototype : ItemPrototype
     {
+        public override bool IsUsableByAgent(AgentPrototype agentProto)
+        {
+            return AvatarUsesEquipmentType(this, agentProto);
+        }
     }
 
     public class RelicPrototype : ItemPrototype
@@ -338,6 +739,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpGearPrototype : ItemPrototype
     {
+        public override bool IsDroppableForAgent(AgentPrototype agentProto)
+        {
+            if (agentProto is AvatarPrototype)
+                return true;
+
+            return base.IsDroppableForAgent(agentProto);
+        }
+
+        public override PrototypeId GetRollForAgent(PrototypeId rollForAvatar, AgentPrototype rollForTeamUp)
+        {
+            return rollForTeamUp == null ? rollForAvatar : rollForTeamUp.DataRef;
+        }
     }
 
     public class PermaBuffPrototype : Prototype

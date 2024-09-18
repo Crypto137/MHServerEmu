@@ -1,39 +1,62 @@
 ﻿using System.Reflection;
-using Gazillion;
-using MHServerEmu.Core.Config;
+using System.Text;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands
 {
-    public static class CommandManager
+    /// <summary>
+    /// A singleton that manages <see cref="CommandGroup"/> instances and parses commands.
+    /// </summary>
+    public class CommandManager
     {
         private const char CommandPrefix = '!';
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly Dictionary<CommandGroupAttribute, CommandGroup> CommandGroupDict = new();
 
-        static CommandManager()
+        private readonly Dictionary<CommandGroupAttribute, CommandGroup> _commandGroupDict = new();
+        private IClientOutput _clientOutput;
+
+        public static CommandManager Instance { get; } = new();
+
+        /// <summary>
+        /// Constructs the <see cref="CommandManager"/> instance.
+        /// </summary>
+        private CommandManager()
         {
-            // Register command groups
+            // Find and register command group classes using reflection
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
             {
+                // TODO: If we ever move the command system to Core, move command group registration to a separate method.
+
                 if (type.IsSubclassOf(typeof(CommandGroup)) == false) continue;
 
                 CommandGroupAttribute[] attributes = (CommandGroupAttribute[])type.GetCustomAttributes(typeof(CommandGroupAttribute), true);
                 if (attributes.Length == 0) continue;
 
                 CommandGroupAttribute groupAttribute = attributes[0];
-                if (CommandGroupDict.ContainsKey(groupAttribute)) Logger.Warn($"Command group {groupAttribute} is already registered");
+                if (_commandGroupDict.ContainsKey(groupAttribute))
+                    Logger.Warn($"Command group {groupAttribute} is already registered");
 
-                CommandGroup commandGroup = (CommandGroup)Activator.CreateInstance(type);
+                var commandGroup = (CommandGroup)Activator.CreateInstance(type);
                 commandGroup.Register(groupAttribute);
-                CommandGroupDict.Add(groupAttribute, commandGroup);
+                _commandGroupDict.Add(groupAttribute, commandGroup);
             }
         }
 
-        public static void Parse(string input)
+        /// <summary>
+        /// Sets the <see cref="IClientOutput"/> to use for outputting messages to clients.
+        /// </summary>
+        public void SetClientOutput(IClientOutput clientOutput)
+        {
+            _clientOutput = clientOutput;
+        }
+
+        /// <summary>
+        /// Parses a command from the provided input.
+        /// </summary>
+        public void Parse(string input)
         {
             string output = string.Empty;
             string command;
@@ -49,7 +72,7 @@ namespace MHServerEmu.Commands
                 return;
             }
 
-            foreach (var kvp in CommandGroupDict)
+            foreach (var kvp in _commandGroupDict)
             {
                 if (kvp.Key.Name != command) continue;
                 output = kvp.Value.Handle(parameters);
@@ -61,7 +84,10 @@ namespace MHServerEmu.Commands
             if (output != string.Empty) Logger.Info(output);
         }
 
-        public static bool TryParse(string input, FrontendClient client)
+        /// <summary>
+        /// Tries to parse the provided <see cref="FrontendClient"/> input as a command.
+        /// </summary>
+        public bool TryParse(string input, FrontendClient client)
         {
             string output = string.Empty;
             string command;
@@ -70,7 +96,7 @@ namespace MHServerEmu.Commands
 
             if (ExtractCommandAndParameters(input, out command, out parameters) == false) return false;
 
-            foreach (var kvp in CommandGroupDict)
+            foreach (var kvp in _commandGroupDict)
             {
                 if (kvp.Key.Name != command) continue;
                 output = kvp.Value.Handle(parameters, client);
@@ -86,22 +112,65 @@ namespace MHServerEmu.Commands
             return true;
         }
 
-        // We need commands and help groups inside CommandManager so that they can access CommandGroupDict
+        /// <summary>
+        /// Extracts the command and its parameters (if any) from the provided input <see cref="string"/>.
+        /// Returns <see langword="true"/> if successful.
+        /// </summary>
+        private bool ExtractCommandAndParameters(string input, out string command, out string parameters)
+        {
+            input = input.Trim();
+            command = string.Empty;
+            parameters = string.Empty;
+
+            // Only input that starts with our command prefix char followed by something else can be a command
+            if (input.Length < 2 || input[0] != CommandPrefix) return false;
+
+            // Remove the prefix
+            input = input.Substring(1);
+
+            // Get the command
+            command = input.Split(' ')[0].ToLower();
+
+            // Get parameters after the first space (if there are any)
+            if (input.Contains(' '))
+                parameters = input.Substring(input.IndexOf(' ') + 1).Trim();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Sends a response to the specified <see cref="FrontendClient"/> using the registered <see cref="IClientOutput"/>.
+        /// </summary>
+        private void SendClientResponse(string output, FrontendClient client)
+        {
+            _clientOutput?.Output(output, client);
+        }
+
+        #region Help Command Groups
+
+        // Help command groups are inside CommandManager so that they can access _commandGroupDict
+
         [CommandGroup("commands", "Lists available commands.")]
         public class CommandsCommandGroup : CommandGroup
         {
             public override string Fallback(string[] @params = null, FrontendClient client = null)
             {
-                string output = "Available commands: ";
+                StringBuilder sb = new("Available commands: ");
 
-                foreach (var kvp in CommandGroupDict)
+                foreach (var kvp in Instance._commandGroupDict)
                 {
-                    if (client != null && kvp.Key.MinUserLevel > client.Session.Account.UserLevel) continue;    // Skip commands that are not available for this account's user level
-                    output = $"{output}{kvp.Key.Name}, ";
+                    // Skip commands that are not available for this account's user level
+                    if (client != null && kvp.Key.MinUserLevel > client.Session.Account.UserLevel) continue;
+
+                    sb.Append($"{kvp.Key.Name}, ");
                 }
 
-                output = $"{output.Substring(0, output.Length - 2)}.\nType 'help [command]' to get help.";
-                return output;
+                // Replace the last comma / space with a period
+                sb.Length -= 2;
+                sb.Append('.');
+
+                sb.Append("\nType 'help [command]' to get help.");
+                return sb.ToString();
             }
         }
 
@@ -123,7 +192,7 @@ namespace MHServerEmu.Commands
                 string group = @params[0];
                 string command = @params.Length > 1 ? @params[1] : string.Empty;
 
-                foreach (var kvp in CommandGroupDict)
+                foreach (var kvp in Instance._commandGroupDict)
                 {
                     if (group != kvp.Key.Name) continue;
                     if (command == string.Empty) return kvp.Key.Help;
@@ -138,24 +207,6 @@ namespace MHServerEmu.Commands
             }
         }
 
-        private static bool ExtractCommandAndParameters(string input, out string command, out string parameters)
-        {
-            input = input.Trim();
-            command = string.Empty;
-            parameters = string.Empty;
-
-            if (input == string.Empty || input[0] != CommandPrefix) return false;                   // Filter empty strings and input that doesn't have the prefix
-
-            input = input.Substring(1);                                                             // Remove the prefix
-            command = input.Split(' ')[0].ToLower();                                                // Get the command
-            if (input.Contains(' ')) parameters = input.Substring(input.IndexOf(' ') + 1).Trim();   // Get parameters after the first space (if there's any)
-
-            return true;
-        }
-
-        private static void SendClientResponse(string output, FrontendClient client)
-        {
-            ChatHelper.SendMetagameMessage(client, output);
-        }
+        #endregion
     }
 }

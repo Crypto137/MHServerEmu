@@ -67,3 +67,7 @@ Information about how the client functions.
 - [Client Launch Parameters](./Client/ClientLaunchParameters.md) - a list of various launch parameters that you can use when running the client (such as enabling verbose logging).
 
 - [ClientConfig](./Client/ClientConfig.md) - ClientConfig.xml file structure.
+
+- [Client Chat Commands](./Client/ClientChatCommands.md) - a list of chat commands available in the client.
+
+- [Internal Console Commands](./Client/InternalConsoleCommands.md) - a list of console commands available in internal builds of the game.

@@ -1,9 +1,9 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -21,105 +21,183 @@ namespace MHServerEmu.Games.Missions
         Failed = 5,
     }
 
-    public class Mission
+    public class Mission : ISerialize
     {
-        public MissionState State { get; set; }
-        public TimeSpan TimeExpireCurrentState { get; set; }
-        public PrototypeId PrototypeId { get; set; }
-        public int Random { get; set; }
-        public Objective[] Objectives { get; set; }
-        public ulong[] Participants { get; set; }
-        public bool Suspended { get; set; }
+        // Relevant protobuf: NetMessageMissionUpdate
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private MissionState _state;
+        private TimeSpan _timeExpireCurrentState;
+        private PrototypeId _prototypeDataRef;
+        private int _lootSeed;
+        private SortedDictionary<byte, MissionObjective> _objectiveDict = new();
+        private SortedSet<ulong> _participants = new();
+        private bool _isSuspended;
+
+        public MissionState State { get => _state; }
+        public TimeSpan TimeExpireCurrentState { get => _timeExpireCurrentState; }
+        public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Clock.GameTime; }
+        public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
+        public MissionPrototype Prototype { get; }
+        public int LootSeed { get => _lootSeed; }
+        public SortedSet<ulong> Participants { get => _participants; }
+        public bool IsSuspended { get => _isSuspended; }
 
         public MissionManager MissionManager { get; }
         public Game Game { get; }
-
-        public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
-        {            
-            State = (MissionState)stream.ReadRawInt32();
-            TimeExpireCurrentState = Clock.GameTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
-            PrototypeId = stream.ReadPrototypeRef<Prototype>();
-            Random = stream.ReadRawInt32();
-
-            Objectives = new Objective[stream.ReadRawVarint64()];
-            for (int i = 0; i < Objectives.Length; i++)
-                Objectives[i] = new(stream);
-
-            Participants = new ulong[stream.ReadRawVarint64()];
-            for (int i = 0; i < Participants.Length; i++)
-                Participants[i] = stream.ReadRawVarint64();
-
-            Suspended = boolDecoder.ReadBool(stream);
-        }
-
-        public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeId,
-            int random, Objective[] objectives, ulong[] participants, bool suspended)
-        {
-            State = state;
-            TimeExpireCurrentState = timeExpireCurrentState;
-            PrototypeId = prototypeId;
-            Random = random;
-            Objectives = objectives;
-            Participants = participants;
-            Suspended = suspended;
-        }
-
-        public Mission(PrototypeId prototypeId, int random)
-        {
-            State = MissionState.Active;
-            TimeExpireCurrentState = TimeSpan.Zero;
-            PrototypeId = prototypeId;
-            Random = random;
-            Objectives = new Objective[] { new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) };
-            Participants = Array.Empty<ulong>();
-            Suspended = false;
-        }
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
             MissionManager = missionManager;
             Game = MissionManager.Game;
-            PrototypeId = missionRef;
-
-            // TODO other fields
+            _prototypeDataRef = missionRef;
+            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
         }
 
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {            
-            stream.WriteRawInt32((int)State);
-            stream.WriteRawInt64(TimeExpireCurrentState.Ticks / 10);
-            stream.WritePrototypeRef<Prototype>(PrototypeId);
-            stream.WriteRawInt32(Random);
+        public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeDataRef,
+            int lootSeed, IEnumerable<MissionObjective> objectives, IEnumerable<ulong> participants, bool isSuspended)
+        {
+            _state = state;
+            _timeExpireCurrentState = timeExpireCurrentState;
+            _prototypeDataRef = prototypeDataRef;
+            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
+            _lootSeed = lootSeed;
 
-            stream.WriteRawVarint64((ulong)Objectives.Length);
-            foreach (Objective objective in Objectives) objective.Encode(stream);
+            foreach (MissionObjective objective in objectives)
+                _objectiveDict.Add(objective.PrototypeIndex, objective);
 
-            stream.WriteRawVarint64((ulong)Participants.Length);
-            foreach (ulong Participant in Participants) stream.WriteRawVarint64(Participant);
+            _participants.UnionWith(participants);
+            _isSuspended = isSuspended;
+        }
 
-            boolEncoder.WriteBuffer(stream);   // Suspended
+        public Mission(PrototypeId prototypeDataRef, int lootSeed)
+        {
+            _state = MissionState.Active;
+            _timeExpireCurrentState = TimeSpan.Zero;
+            _prototypeDataRef = prototypeDataRef;
+            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
+            _lootSeed = lootSeed;
+
+            _objectiveDict.Add(0, new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0));
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            int state = (int)_state;
+            success &= Serializer.Transfer(archive, ref state);
+            _state = (MissionState)state;
+
+            success &= Serializer.Transfer(archive, ref _timeExpireCurrentState);
+            success &= Serializer.Transfer(archive, ref _prototypeDataRef);
+            // old versions contain an ItemSpec map here
+            success &= Serializer.Transfer(archive, ref _lootSeed);
+
+            // Objectives, participants, and suspension status are serialized only for replication
+            success &= SerializeObjectives(archive);
+            success &= Serializer.Transfer(archive, ref _participants);
+            success &= Serializer.Transfer(archive, ref _isSuspended);
+
+            return success;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"State: {State}");
+            sb.AppendLine($"{nameof(_state)}: {_state}");
             string expireTime = TimeExpireCurrentState != TimeSpan.Zero ? Clock.GameTimeToDateTime(TimeExpireCurrentState).ToString() : "0";
-            sb.AppendLine($"TimeExpireCurrentState: {expireTime}");
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
-            sb.AppendLine($"Random: 0x{Random:X}");
+            sb.AppendLine($"{nameof(_timeExpireCurrentState)}: {expireTime}");
+            sb.AppendLine($"{nameof(_prototypeDataRef)}: {GameDatabase.GetPrototypeName(_prototypeDataRef)}");
+            sb.AppendLine($"{nameof(_lootSeed)}: {_lootSeed}");
 
-            for (int i = 0; i < Objectives.Length; i++)
-                sb.AppendLine($"Objectives[{i}]: {Objectives[i]}");
+            foreach (var kvp in _objectiveDict)
+                sb.AppendLine($"{nameof(_objectiveDict)}[{kvp.Key}]: {kvp.Value}");
 
-            sb.Append("Participants: ");
-            for (int i = 0; i < Participants.Length; i++)
-                sb.Append($"{Participants[i]} ");
+            sb.Append($"{nameof(_participants)}: ");
+            foreach (ulong participantId in _participants)
+                sb.Append($"{participantId} ");
             sb.AppendLine();
 
-            sb.AppendLine($"Suspended: {Suspended}");
+            sb.AppendLine($"{nameof(_isSuspended)}: {_isSuspended}");
             return sb.ToString();
         }
+        
+        public void SetState(MissionState newState)
+        {
+            _state = newState;
+        }
 
+        public MissionObjective GetObjectiveByObjectiveIndex(byte objectiveIndex)
+        {
+            if (_objectiveDict.TryGetValue(objectiveIndex, out MissionObjective objective) == false)
+                return Logger.WarnReturn<MissionObjective>(null, $"GetObjectiveByObjectiveIndex(): Objective index {objectiveIndex} is not valid");
+
+            return objective;
+        }
+
+        public MissionObjective CreateObjective(byte objectiveIndex)
+        {
+            return new(this, objectiveIndex);
+        }
+
+        public MissionObjective InsertObjective(byte objectiveIndex, MissionObjective objective)
+        {
+            if (_objectiveDict.TryAdd(objectiveIndex, objective) == false)
+                return Logger.WarnReturn<MissionObjective>(null, $"InsertObjective(): Failed to insert objective with index {objectiveIndex}");
+
+            return objective;
+        }
+
+        public bool AddParticipant(Player player)
+        {
+            return _participants.Add(player.Id);
+        }
+
+        private bool SerializeObjectives(Archive archive)
+        {
+            bool success = true;
+
+            ulong numObjectives = (ulong)_objectiveDict.Count;
+            success &= Serializer.Transfer(archive, ref numObjectives);
+
+            if (archive.IsPacking)
+            {
+                foreach (var kvp in _objectiveDict)
+                {
+                    byte index = kvp.Key;
+                    MissionObjective objective = kvp.Value;
+                    success &= Serializer.Transfer(archive, ref index);
+                    success &= Serializer.Transfer(archive, ref objective);
+                }
+            }
+            else
+            {
+                for (uint i = 0; i < numObjectives; i++)
+                {
+                    byte index = 0;
+                    success &= Serializer.Transfer(archive, ref index);
+
+                    MissionObjective objective = CreateObjective(index);
+                    success &= Serializer.Transfer(archive, ref objective);
+
+                    InsertObjective(index, objective);
+                }
+            }
+
+            return success;
+        }
+
+        public bool HasParticipant(Player player)
+        {
+            return Participants.Contains(player.Id);
+        }
+
+        public bool ShouldShowInteractIndicators()
+        {
+            if (Prototype == null) return false;
+            return Prototype.ShowInteractIndicators;
+        }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Games.Achievements
 {

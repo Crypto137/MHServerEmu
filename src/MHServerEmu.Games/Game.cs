@@ -3,51 +3,85 @@ using System.Globalization;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Random;
-using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games
 {
+    public enum GameShutdownReason
+    {
+        ServerShuttingDown,
+        GameInstanceCrash
+    }
+
     public partial class Game
     {
         public const string Version = "1.52.0.1700";
 
+        [ThreadStatic]
+        internal static Game Current;
+
+        private const int TargetFrameRate = 20;
+        public static readonly TimeSpan StartTime = TimeSpan.FromMilliseconds(1);
+        public readonly NetStructGameOptions GameOptions;
+        public readonly CustomGameOptionsConfig CustomGameOptions;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public const int TickRate = 20;                 // Ticks per second based on client behavior
-        public const long TickTime = 1000 / TickRate;   // ms per tick
+        private readonly Stopwatch _gameTimer = new();
+        private FixedQuantumGameTime _realGameTime = new(TimeSpan.FromMilliseconds(1));
+        private TimeSpan _currentGameTime = TimeSpan.FromMilliseconds(1);   // Current time in the game simulation
+        private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
+        private int _frameCount;
 
-        private readonly NetStructGameOptions _gameOptions;
-        private readonly object _gameLock = new();
-        private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
-        private readonly Stopwatch _tickWatch = new();
+        private int _liveTuningChangeNum;
 
-        private int _tickCount;
+        private Thread _gameThread;
+
         private ulong _currentRepId;
 
+        // Dumped ids: 0xF9E00000FA2B3EA (Lobby), 0xFF800000FA23AE9 (Tower), 0xF4A00000FA2B47D (Danger Room), 0xFCC00000FA29FE7 (Midtown)
         public ulong Id { get; }
+        public bool IsRunning { get; private set; } = false;
+        public bool HasBeenShutDown { get; private set; } = false;
+
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
-        public EventManager EventManager { get; }
+        public EventScheduler GameEventScheduler { get; private set; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
+        public AdminCommandManager AdminCommandManager { get; }
+        public LootManager LootManager { get; }
+
+        public LiveTuningData LiveTuningData { get; private set; } = new();
+
+        public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
+        public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }
+        public TimeSpan CurrentTime { get => GameEventScheduler != null ? GameEventScheduler.CurrentTime : _currentGameTime; }
+        public ulong NumQuantumFixedTimeUpdates { get => (ulong)CurrentTime.CalcNumTimeQuantums(FixedTimeBetweenUpdates); }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
-        // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
-        
+
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
         public Game(ulong id)
@@ -56,136 +90,102 @@ namespace MHServerEmu.Games
 
             // Initialize game options
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
-            _gameOptions = config.ToProtobuf();
+            GameOptions = config.ToProtobuf();
+
+            CustomGameOptions = ConfigManager.Instance.GetConfig<CustomGameOptionsConfig>();
 
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id
             _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
-            Logger.Debug($"Initial repId: {_currentRepId}");
 
+            AdminCommandManager = new(this);
             NetworkManager = new(this);
-            EventManager = new(this);
+            RegionManager = new();
             EntityManager = new(this);
-            RegionManager = new(EntityManager);
-            RegionManager.Initialize(this);
+            LootManager = new(this);
 
             Random = new();
-            // Run a task that cleans up unused regions periodically
-            Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
 
-            // Start main game loop
-            Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            gameThread.Start();
+            Initialize();
         }
 
-        public void Update()
+        public bool Initialize()
         {
-            while (true)
-            {
-                _tickWatch.Restart();
-                Interlocked.Increment(ref _tickCount);
+            bool success = true;
 
-                lock (_gameLock)     // lock to prevent state from being modified mid-update
-                {
-                    // Handle all queued messages
-                    while (_mailbox.HasMessages)
-                    {
-                        var message = _mailbox.PopNextMessage();
-                        PlayerConnection connection = NetworkManager.GetPlayerConnection(message.Item1);
-                        connection.ReceiveMessage(message.Item2);
-                    }
+            _realGameTime.SetQuantumSize(FixedTimeBetweenUpdates);
+            _realGameTime.UpdateToNow();
+            _currentGameTime = RealGameTime;
 
-                    // Update event manager
-                    EventManager.Update();
+            GameEventScheduler = new(RealGameTime, FixedTimeBetweenUpdates);
 
-                    // Send responses to all clients
-                    NetworkManager.SendAllPendingMessages();
-                }
+            success &= RegionManager.Initialize(this);
+            success &= EntityManager.Initialize();
 
-                _tickWatch.Stop();
+            LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);
+            LiveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
+            _liveTuningChangeNum = LiveTuningData.ChangeNum;
 
-                if (_tickWatch.ElapsedMilliseconds > TickTime)
-                    Logger.Warn($"Game update took longer ({_tickWatch.ElapsedMilliseconds} ms) than target tick time ({TickTime} ms)");
-                else
-                    Thread.Sleep((int)(TickTime - _tickWatch.ElapsedMilliseconds));
-            }
+            return success;
         }
 
-        public void Handle(FrontendClient client, GameMessage message)
+        public void Run()
         {
-            lock (_gameLock)
-            {
-                _mailbox.Post(client, message);
-            }
+            // NOTE: This is now separate from the constructor so that we can have
+            // a dummy game with no simulation running that we use to parse messages.
+            if (IsRunning) throw new InvalidOperationException();
+            IsRunning = true;
+
+            // Initialize and start game thread
+            _gameThread = new(GameLoop) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            _gameThread.Start();
+
+            Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
         }
 
-        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
+        public void Shutdown(GameShutdownReason reason)
         {
-            foreach (GameMessage message in messages) Handle(client, message);
+            if (IsRunning == false || HasBeenShutDown)
+                return;
+
+            Logger.Info($"Game shutdown requested. Game={this}, Reason={reason}");
+
+            // Cancel all events
+            GameEventScheduler.CancelAllEvents();
+
+            // Clean up network manager
+            NetworkManager.SendAllPendingMessages();
+            foreach (PlayerConnection playerConnection in NetworkManager)
+                playerConnection.Disconnect();
+            NetworkManager.Update();        // We need this to process player saves (for now)
+
+            // Clean up regions
+            RegionManager.DestroyAllRegions();
+
+            // Mark this game as shut down for the player manager
+            HasBeenShutDown = true;
         }
 
-        public void AddPlayer(FrontendClient client)
+        public void RequestShutdown()
         {
-            lock (_gameLock)
-            {
-                client.GameId = Id;
-                PlayerConnection playerConnection = NetworkManager.AddPlayer(client);
-                foreach (IMessage message in GetBeginLoadingMessages(playerConnection))
-                    SendMessage(playerConnection, message);
+            if (IsRunning == false || HasBeenShutDown)
+                return;
 
-                Logger.Trace($"Player {client.Session.Account} added to {this}");
-            }
+            IsRunning = false;
         }
 
-        public void RemovePlayer(FrontendClient client)
+        public void AddClient(FrontendClient client)
         {
-            lock (_gameLock)
-            {
-                NetworkManager.RemovePlayer(client);
-                Logger.Trace($"Player {client.Session.Account} removed from {this}");
-            }
+            NetworkManager.AsyncAddClient(client);
         }
 
-        public void MovePlayerToRegion(PlayerConnection playerConnetion, PrototypeId regionDataRef, PrototypeId waypointDataRef)
+        public void RemoveClient(FrontendClient client)
         {
-            lock (_gameLock)
-            {
-                foreach (IMessage message in GetExitGameMessages())
-                    SendMessage(playerConnetion, message);
-
-                playerConnetion.RegionDataRef = regionDataRef;
-                playerConnetion.WaypointDataRef = waypointDataRef;
-
-                foreach (IMessage message in GetBeginLoadingMessages(playerConnetion))
-                    SendMessage(playerConnetion, message);
-            }
+            NetworkManager.AsyncRemoveClient(client);
         }
 
-        public void MovePlayerToEntity(PlayerConnection playerConnection, ulong entityId)
-        {   
-            // TODO change Reload without exit of region
-            lock (_gameLock)
-            {
-                var entityManager = playerConnection.Game.EntityManager;
-                var targetEntity = entityManager.GetEntityById(entityId);
-                if (targetEntity is not WorldEntity worldEntity) return;
-
-                foreach (IMessage message in GetExitGameMessages())
-                    SendMessage(playerConnection, message);
-
-                playerConnection.RegionDataRef = (PrototypeId)worldEntity.Region.PrototypeId;
-                playerConnection.EntityToTeleport = worldEntity;
-
-                foreach (IMessage message in GetBeginLoadingMessages(playerConnection))
-                    SendMessage(playerConnection, message);
-            }
-        }
-
-        public void FinishLoading(PlayerConnection playerConnection)
+        public void PostMessage(FrontendClient client, MessagePackage message)
         {
-            foreach (IMessage message in GetFinishLoadingMessages(playerConnection))
-                SendMessage(playerConnection, message);
-
-            playerConnection.IsLoading = false;
+            NetworkManager.AsyncPostMessage(client, message);
         }
 
         /// <summary>
@@ -204,89 +204,212 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
-        private List<IMessage> GetBeginLoadingMessages(PlayerConnection playerConnection)
+        public Entity AllocateEntity(PrototypeId entityRef)
         {
-            List<IMessage> messageList = new();
+            var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);
 
-            // Add server info messages
-            messageList.Add(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
-                .SetCurrentservergameid(1150669705055451881)
-                .SetGamestarttime(1)
-                .Build());
+            Entity entity;
+            if (proto is SpawnerPrototype)
+                entity = new Spawner(this);
+            else if (proto is TransitionPrototype)
+                entity = new Transition(this);
+            else if (proto is AvatarPrototype)
+                entity = new Avatar(this);
+            else if (proto is MissilePrototype)
+                entity = new Missile(this);
+            else if (proto is PropPrototype) // DestructiblePropPrototype
+                entity = new WorldEntity(this);
+            else if (proto is AgentPrototype) // AgentTeamUpPrototype OrbPrototype SmartPropPrototype
+                entity = new Agent(this);
+            else if (proto is ItemPrototype) // CharacterTokenPrototype BagItemPrototype CostumePrototype CraftingIngredientPrototype
+                                             // CostumeCorePrototype CraftingRecipePrototype ArmorPrototype ArtifactPrototype
+                                             // LegendaryPrototype MedalPrototype RelicPrototype TeamUpGearPrototype
+                                             // InventoryStashTokenPrototype EmoteTokenPrototype
+                entity = new Item(this);
+            else if (proto is KismetSequenceEntityPrototype)
+                entity = new KismetSequenceEntity(this);
+            else if (proto is HotspotPrototype)
+                entity = new Hotspot(this);
+            else if (proto is WorldEntityPrototype)
+                entity = new WorldEntity(this);
+            else if (proto is MissionMetaGamePrototype)
+                entity = new MissionMetaGame(this);
+            else if (proto is PvPPrototype)
+                entity = new PvP(this);
+            else if (proto is MetaGamePrototype) // MatchMetaGamePrototype
+                entity = new MetaGame(this);
+            else if (proto is PlayerPrototype)
+                entity = new Player(this);
+            else
+                entity = new Entity(this);
 
-            messageList.Add(NetMessageServerVersion.CreateBuilder().SetVersion(Version).Build());
-            messageList.Add(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate());
-            messageList.Add(NetMessageReadyForTimeSync.DefaultInstance);
-
-            // Load local player data
-            messageList.Add(NetMessageLocalPlayer.CreateBuilder()
-                .SetLocalPlayerEntityId(playerConnection.Player.BaseData.EntityId)
-                .SetGameOptions(_gameOptions)
-                .Build());
-
-            messageList.Add(playerConnection.Player.ToNetMessageEntityCreate());
-
-            messageList.AddRange(playerConnection.Player.AvatarList.Select(avatar => avatar.ToNetMessageEntityCreate()));
-
-            messageList.Add(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
-
-            // Before changing to the actual destination region the game seems to first change into a transitional region
-            messageList.Add(NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build());
-
-            messageList.Add(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)playerConnection.RegionDataRef)
-                .Build());
-
-            // Run region generation as a task
-            Task.Run(() => GetRegionAsync(playerConnection));
-            playerConnection.AOI.LoadedCellCount = 0;
-            playerConnection.IsLoading = true;
-            return messageList;
+            return entity;
         }
 
-        private void GetRegionAsync(PlayerConnection playerConnection)
+        public Power AllocatePower(PrototypeId powerProtoRef)
         {
-            Region region = RegionManager.GetRegion((RegionPrototypeId)playerConnection.RegionDataRef);
-            EventManager.AddEvent(playerConnection, EventEnum.GetRegion, 0, region);
+            Type powerClassType = GameDatabase.DataDirectory.GetPrototypeClassType(powerProtoRef);
+
+            if (powerClassType == typeof(MissilePowerPrototype))
+                return new MissilePower(this, powerProtoRef);
+            else if (powerClassType == typeof(SummonPowerPrototype))
+                return new SummonPower(this, powerProtoRef);
+            else
+                return new Power(this, powerProtoRef);
         }
 
-        private List<IMessage> GetFinishLoadingMessages(PlayerConnection playerConnection)
-        {
-            List<IMessage> messageList = new();
-
-            Vector3 entrancePosition = new(playerConnection.StartPositon);
-            Orientation entranceOrientation = new(playerConnection.StartOrientation);
-            entrancePosition.Z += 42; // TODO project to floor
-
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)playerConnection.Player.CurrentAvatar.BaseData.EntityId, entrancePosition, entranceOrientation.Yaw, 350f);
-            messageList.Add(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
-                .Build());
-
-            playerConnection.AOI.Update(entrancePosition);
-            messageList.AddRange(playerConnection.AOI.Messages);
-
-            // Load power collection
-            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(playerConnection));
-
-            // Dequeue loading screen
-            messageList.Add(NetMessageDequeueLoadingScreen.DefaultInstance);
-
-            return messageList;
+        public IEnumerable<Region> RegionIterator()
+        {            
+            foreach (Region region in RegionManager.AllRegions) 
+                yield return region;
         }
 
-        public IMessage[] GetExitGameMessages()
+        // StartTime is always a TimeSpan of 1 ms, so we can make both Game::GetTimeFromStart() and Game::GetTimeFromDelta() static
+
+        public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
+        public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
+
+        private void GameLoop()
         {
-            return new IMessage[]
+            Current = this;
+            _gameTimer.Start();
+
+            try
             {
-                NetMessageBeginExitGame.DefaultInstance,
-                NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build()
-            };
+                while (IsRunning)
+                {
+                    Update();
+                }
+
+                Shutdown(GameShutdownReason.ServerShuttingDown);
+            }
+            catch (Exception e)
+            {
+                HandleGameInstanceCrash(e);
+                Shutdown(GameShutdownReason.GameInstanceCrash);
+            }
+        }
+
+        private void Update()
+        {
+            // NOTE: We process input in NetworkManager.ReceiveAllPendingMessages() outside of UpdateFixedTime(), same as the client.
+
+            NetworkManager.Update();                            // Add / remove clients
+            NetworkManager.ReceiveAllPendingMessages();         // Process input
+            NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
+
+            RegionManager.Update();                             // Clean up old regions
+
+            UpdateLiveTuning();                                 // Check if live tuning data is out of date
+
+            UpdateFixedTime();                                  // Update simulation state
+        }
+
+        private void UpdateFixedTime()
+        {
+            // First we make sure enough time has passed to do another fixed time update
+            _realGameTime.UpdateToNow();
+
+            if (_currentGameTime + FixedTimeBetweenUpdates > RealGameTime)
+            {
+                // Thread.Sleep() can sleep for longer than specified, so rather than sleeping
+                // for the entire time window between fixed updates, we do it in 1 ms intervals.
+                Thread.Sleep(1);
+                return;
+            }
+
+            int timesUpdated = 0;
+
+            TimeSpan updateStartTime = _gameTimer.Elapsed;
+            while (_currentGameTime + FixedTimeBetweenUpdates <= RealGameTime)
+            {
+                _currentGameTime += FixedTimeBetweenUpdates;
+
+                TimeSpan stepStartTime = _gameTimer.Elapsed;
+
+                DoFixedTimeUpdate();
+                _frameCount++;
+                timesUpdated++;
+
+                _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - stepStartTime;
+                MetricsManager.Instance.RecordFixedUpdateTime(Id, _lastFixedTimeUpdateProcessTime);
+
+                if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
+                    Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+
+                // Bail out if we have fallen behind more exceeded frame budget
+                if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
+                    break;
+            }
+
+            // Skip time if we have fallen behind
+            _currentGameTime = RealGameTime;
+
+            if (timesUpdated > 1)
+                Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
+        }
+
+        private void DoFixedTimeUpdate()
+        {
+            GameEventScheduler.TriggerEvents(_currentGameTime);
+
+            // Re-enable locomotion and physics when we get rid of multithreading issues
+            EntityManager.LocomoteEntities();
+            EntityManager.PhysicsResolveEntities();
+            EntityManager.ProcessDeferredLists();
+
+            // Send responses to all clients
+            NetworkManager.SendAllPendingMessages();
+        }
+
+        private void UpdateLiveTuning()
+        {
+            // This won't do anything unless this game's live tuning data is out of date
+            LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);  
+
+            if (_liveTuningChangeNum != LiveTuningData.ChangeNum)
+            {
+                NetworkManager.BroadcastMessage(LiveTuningData.GetLiveTuningUpdate());
+                _liveTuningChangeNum = LiveTuningData.ChangeNum;
+            }
+        }
+
+        private void HandleGameInstanceCrash(Exception exception)
+        {
+#if DEBUG
+            const string buildConfiguration = "Debug";
+#elif RELEASE
+            const string buildConfiguration = "Release";
+#endif
+
+            DateTime now = DateTime.Now;
+
+            string crashReportDir = Path.Combine(FileHelper.ServerRoot, "CrashReports");
+            if (Directory.Exists(crashReportDir) == false)
+                Directory.CreateDirectory(crashReportDir);
+
+            string crashReportFilePath = Path.Combine(crashReportDir, $"GameInstanceCrash_{now.ToString(FileHelper.FileNameDateFormat)}.txt");
+
+            using (StreamWriter writer = new(crashReportFilePath))
+            {
+                writer.WriteLine(string.Format("Assembly Version: {0} | {1} UTC | {2}\n",
+                    AssemblyHelper.GetAssemblyInformationalVersion(),
+                    AssemblyHelper.ParseAssemblyBuildTime().ToString("yyyy.MM.dd HH:mm:ss"),
+                    buildConfiguration));
+
+                writer.WriteLine($"Local Server Time: {now:yyyy.MM.dd HH:mm:ss.fff}\n");
+
+                writer.WriteLine($"Active Regions:");
+                foreach (Region region in RegionIterator())
+                    writer.WriteLine(region.ToString());
+                writer.WriteLine();
+
+                writer.WriteLine($"Exception:\n{exception}\n");
+
+                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus()}\n");
+            }
+
+            Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");
         }
     }
 }

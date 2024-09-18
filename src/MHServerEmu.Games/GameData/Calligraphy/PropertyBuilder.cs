@@ -32,6 +32,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             _propertyEnum = propertyEnum;
             _propertyInfoTable = propertyInfoTable;
             _isInitializing = isInitializing;
+
+            if (isInitializing == false)
+            {
+                PropertyInfo info = propertyInfoTable.LookupPropertyInfo(propertyEnum);
+                PropertyValue = info.DefaultValue;
+                ParamCount = info.ParamCount;
+                Array.Copy(info.DefaultParamValues, ParamValues, ParamValues.Length);
+            }
         }
 
         public PropertyId GetPropertyId()

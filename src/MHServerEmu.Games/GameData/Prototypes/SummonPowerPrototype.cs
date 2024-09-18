@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿
+using MHServerEmu.Core.Extensions;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class SummonPowerPrototype : PowerPrototype
     {
@@ -18,6 +21,38 @@
         public bool UseTargetAsSource { get; protected set; }
         public bool KillPreviousSummons { get; protected set; }
         public bool SummonAsPopulation { get; protected set; }
+
+        public bool IsPetSummoningPower()
+        {
+            var keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
+            if (keywordGlobalsProto != null)
+                return HasKeyword(keywordGlobalsProto.PetPowerKeyword.As<KeywordPrototype>());
+            return false;
+        }
+
+        public WorldEntityPrototype GetSummonEntity(int contextIndex, AssetId entityRef)
+        {
+            var context = GetSummonEntityContext(contextIndex);
+            if (context == null || context.SummonEntity == PrototypeId.Invalid) return null;
+            if (PowerUnrealOverrides.HasValue())
+                foreach (var powerOverride in PowerUnrealOverrides)
+                    if (powerOverride is SummonPowerOverridePrototype summonPowerOverride && summonPowerOverride.EntityArt == entityRef)
+                    {
+                        var summonEntity = summonPowerOverride.SummonEntity.As<WorldEntityPrototype>();
+                        if (summonEntity != null)
+                            return summonEntity;
+                    }
+
+            return context.SummonEntity.As<WorldEntityPrototype>();
+        }
+
+        public SummonEntityContextPrototype GetSummonEntityContext(int contextIndex)
+        {
+            if (SummonEntityContexts.IsNullOrEmpty()) return null;
+            if (contextIndex < 0 || contextIndex >= SummonEntityContexts.Length) return null;
+            var context = SummonEntityContexts[contextIndex];
+            return context;
+        }
     }
 
     public class SummonPowerOverridePrototype : PowerUnrealOverridePrototype

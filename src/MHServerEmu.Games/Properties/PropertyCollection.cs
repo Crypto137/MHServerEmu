@@ -1,23 +1,23 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
 {
     /// <summary>
     /// An aggregatable collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/>.
     /// </summary>
-    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
+    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize, IPoolable, IDisposable
     {
-        // TODO: Eval
-        // TODO: PropertyChangeWatcher API: AttachWatcher(), RemoveWatcher(), RemoveAllWatchers()
-        // TODO: Consider implementing IDisposable for optimization
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly PropertyList _baseList = new();
@@ -25,10 +25,13 @@ namespace MHServerEmu.Games.Properties
         private readonly Dictionary<PropertyId, CurveProperty> _curveList = new();
 
         // Parent and child collections
-        // NOTE: The client uses a tabletree structure to store those with PropertyCollection as key and an empty struct called EmptyDummyValue as value.
+        // NOTE: The client uses a tabletree structure to store these with PropertyCollection as key and an empty struct called EmptyDummyValue as value.
         // I'm not sure what the intention there was, but it makes zero sense for us to do it the same way.
         private readonly HashSet<PropertyCollection> _parentCollections = new();
         private readonly HashSet<PropertyCollection> _childCollections = new();
+
+        // A collection of registered watchers
+        private readonly HashSet<IPropertyChangeWatcher> _watchers = new();
 
         #region Value Indexers
 
@@ -64,14 +67,20 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyValue this[PropertyEnum propertyEnum, AssetId param0]
         {
-            get => GetProperty(new(propertyEnum, Property.ToParam(param0)));
-            set => SetProperty(value, new(propertyEnum, Property.ToParam(param0)));
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
         }
 
         public PropertyValue this[PropertyEnum propertyEnum, PrototypeId param0]
         {
-            get => GetProperty(new(propertyEnum, Property.ToParam(propertyEnum, 0, param0)));
-            set => SetProperty(value, new(propertyEnum, Property.ToParam(propertyEnum, 0, param0)));
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
+        }
+
+        public PropertyValue this[PropertyEnum propertyEnum, PropertyEnum param0]
+        {
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
         }
 
         // 2 params
@@ -82,10 +91,22 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum, param0, param1));
         }
 
+        public PropertyValue this[PropertyEnum propertyEnum, AssetId param0, AssetId param1]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1));
+            set => SetProperty(value, new(propertyEnum, param0, param1));
+        }
+
+        public PropertyValue this[PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1));
+            set => SetProperty(value, new(propertyEnum, param0, param1));
+        }
+
         public PropertyValue this[PropertyEnum propertyEnum, int param0, PrototypeId param1]
         {
-            get => GetProperty(new(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)));
-            set => SetProperty(value, new(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)));
+            get => GetProperty(new(propertyEnum, param0, param1));
+            set => SetProperty(value, new(propertyEnum, param0, param1));
         }
 
         // 3 params
@@ -105,6 +126,8 @@ namespace MHServerEmu.Games.Properties
         }
 
         #endregion
+
+        public PropertyCollection() { }
 
         // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
         // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
@@ -150,9 +173,37 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Adds the specified <see cref="int"/> delta to the <see cref="PropertyValue"/> with the provided <see cref="PropertyId"/>.
+        /// </summary>
+        public void AdjustProperty(int delta, PropertyId propertyId)
+        {
+            if (delta == 0) return;
+
+            if (GetBaseValue(propertyId, out PropertyValue value) == false)
+                value = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum).DefaultValue;
+
+            value += delta;
+            SetProperty(value, propertyId);
+        }
+
+        /// <summary>
+        /// Adds the specified <see cref="float"/> delta to the <see cref="PropertyValue"/> with the provided <see cref="PropertyId"/>.
+        /// </summary>
+        public void AdjustProperty(float delta, PropertyId propertyId)
+        {
+            if (Segment.EpsilonTest(delta, 0f)) return;
+
+            if (GetBaseValue(propertyId, out PropertyValue value) == false)
+                value = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum).DefaultValue;
+
+            value += delta;
+            SetProperty(value, propertyId);
+        }
+
+        /// <summary>
         /// Removes the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// </summary>
-        public bool RemoveProperty(PropertyId id)
+        public virtual bool RemoveProperty(PropertyId id)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
@@ -174,19 +225,54 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool RemovePropertyRange(PropertyEnum propertyEnum)
         {
-            List<PropertyId> toRemoveList = new();
+            // NOTE: Our current PropertyList implementation supports removal during iteration.
+            // If that ever changes, use a temporary id stack here like the client does.
+            bool removedAny = false;
+
             foreach (var kvp in this)
             {
-                if (kvp.Key.Enum == propertyEnum)
-                    toRemoveList.Add(kvp.Key);
+                if (kvp.Key.Enum != propertyEnum)
+                    continue;
+
+                RemoveProperty(kvp.Key);
+                removedAny = true;
             }
 
-            if (toRemoveList.Count == 0) return false;
+            return removedAny;
+        }
 
-            foreach (var propertyId in toRemoveList)
-                RemoveProperty(propertyId);
+        /// <summary>
+        /// Copies the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/> from the provided <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void CopyProperty(PropertyCollection source, PropertyId id)
+        {
+            if (source._aggregateList.GetPropertyValue(id, out PropertyValue value))
+                SetPropertyValue(id, value);
+        }
 
-            return true;
+        /// <summary>
+        /// Copies all properties with the specified <see cref="PropertyEnum"/> from the provided <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void CopyPropertyRange(PropertyCollection source, PropertyEnum propertyEnum)
+        {
+            foreach (var kvp in source.IteratePropertyRange(propertyEnum))
+                SetPropertyValue(kvp.Key, kvp.Value);
+        }
+
+        /// <summary>
+        /// Returns the number of properties with non-default values in this <see cref="PropertyCollection"/> that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public int NumPropertiesInRange(PropertyEnum propertyEnum)
+        {
+            int numProperties = 0;
+
+            if (propertyEnum != PropertyEnum.Invalid)
+            {
+                foreach (var kvp in IteratePropertyRange(propertyEnum))
+                    numProperties++;
+            }
+
+            return numProperties;
         }
 
         /// <summary>
@@ -227,8 +313,6 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
-            // TODO: Implement as an event that entities can register to?
-            
             // Update curve properties that rely on this property as an index property
             foreach (var kvp in IterateCurveProperties())
             {
@@ -236,9 +320,31 @@ namespace MHServerEmu.Games.Properties
                     UpdateCurvePropertyValue(kvp.Value, flags, null);
             }
 
-            // TODO: Update evals
+            // Run eval if needed
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            if (info.HasDependentEvals)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game.Current;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
 
-            // TODO: Notify watchers
+                foreach (PropertyId dependentEvalId in info.DependentEvals)
+                {
+                    PropertyInfo dependentEvalInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(dependentEvalId.Enum);
+                    PropertyValue oldDependentValue = GetPropertyValue(dependentEvalId);
+                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, evalContext);
+
+                    if (newDependentValue.RawLong != oldDependentValue.RawLong)
+                    {
+                        _aggregateList.SetPropertyValue(dependentEvalId, newDependentValue);
+                        OnPropertyChange(dependentEvalId, newDependentValue, oldDependentValue, flags);
+                    }
+                }
+            }
+
+            // Notify watchers
+            foreach (IPropertyChangeWatcher watcher in _watchers)
+                watcher.OnPropertyChange(id, newValue, oldValue, flags);
         }
 
         /// <summary>
@@ -352,7 +458,7 @@ namespace MHServerEmu.Games.Properties
             // Cache property info lookups for copying multiple properties of the same type in a row
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
-            foreach (var kvp in childCollection)
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;
@@ -389,105 +495,214 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
 
-        public override string ToString() => _aggregateList.ToString();
-
-        #region IEnumerable Implementation
-
-        // This should iterate over aggregated value list rather than base
-        public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _aggregateList.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        #endregion
-
-        // TODO: PropertyCollection::serializeWithDefault
-
         /// <summary>
-        /// Decodes <see cref="PropertyCollection"/> data from a <see cref="CodedInputStream"/>.
+        /// Subscribes the provided <see cref="IPropertyChangeWatcher"/> for property changes happening in this <see cref="PropertyCollection"/>.
         /// </summary>
-        public virtual void Decode(CodedInputStream stream)
+        public bool AttachWatcher(IPropertyChangeWatcher watcher)
         {
-            uint propertyCount = stream.ReadRawUInt32();
-            for (int i = 0; i < propertyCount; i++)
-            {
-                PropertyId id = new(stream.ReadRawVarint64().ReverseBytes());   // Id is reversed so that it can be efficiently encoded into varint when all params are 0
-                PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
-                PropertyValue value = ConvertBitsToValue(stream.ReadRawVarint64(), info.DataType);
-                SetPropertyValue(id, value, SetPropertyFlags.Flag0);
-            }
-        }
+            // VERIFY: m_isDeallocating == false
 
-        /// <summary>
-        /// Encodes <see cref="PropertyCollection"/> data to a <see cref="CodedOutputStream"/>.
-        /// </summary>
-        public virtual void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawUInt32((uint)_baseList.Count);
-            foreach (var kvp in _baseList)
-                SerializePropertyForPacking(kvp, stream);
-        }
+            if (_watchers.Add(watcher) == false)
+                return Logger.WarnReturn(false, $"AttachWatcher(): Failed to attach property change watcher {watcher}");
 
-        /// <summary>
-        /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
-        /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
-        /// </summary>
-        protected PropertyValue GetPropertyValue(PropertyId id)
-        {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            foreach (var kvp in this)
+                watcher.OnPropertyChange(kvp.Key, kvp.Value, kvp.Value, SetPropertyFlags.Refresh);
 
-            // TODO: EvalPropertyValue()
-
-            if (_aggregateList.GetPropertyValue(id, out PropertyValue value) == false)
-                return info.DefaultValue;
-
-            return value;
-        }
-
-        /// <summary>
-        /// Sets the <see cref="PropertyValue"/> for the <see cref="PropertyId"/>.
-        /// </summary>
-        protected bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
-        {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
-
-            if (info.TruncatePropertyValueToInt && info.DataType == PropertyDataType.Real)
-                value = MathF.Floor(value.RawFloat);
-
-            ClampPropertyValue(info.Prototype, ref value);
-
-            bool hasChanged;
-
-            // Setting a property to its default value actually removes the value from the list,
-            // because the collection automatically falls back to the default value if nothing is stored.
-            if (value.RawLong == info.DefaultValue.RawLong)
-            {
-                hasChanged = _baseList.RemoveProperty(id);
-                if (hasChanged)
-                    UpdateAggregateValueFromBase(id, info, flags, false, new());
-            }
-            else
-            {
-                hasChanged = _baseList.SetPropertyValue(id, value);
-                if (hasChanged)
-                    UpdateAggregateValueFromBase(id, info, flags, true, value);
-            }
-
-            return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
-        }
-
-        /// <summary>
-        /// Serializes a key/value pair of <see cref="PropertyId"/> and <see cref="PropertyValue"/> to a <see cref="CodedOutputStream"/>.
-        /// </summary>
-        protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
-        {
-            // TODO: Serialize only properties that are different from the base collection for replication 
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-            ulong valueBits = ConvertValueToBits(kvp.Value, info.DataType);
-            stream.WriteRawVarint64(kvp.Key.Raw.ReverseBytes());    // Id is reversed so that it can be efficiently encoded into varint when all params are 0
-            stream.WriteRawVarint64(valueBits);
             return true;
         }
 
-        // TODO: make value <-> bits conversion protected once we no longer need it for hacks
+        /// <summary>
+        /// Unsubscribes the provided <see cref="IPropertyChangeWatcher"/> from property changes happening in this <see cref="PropertyCollection"/>.
+        /// </summary>
+        public bool DetachWatcher(IPropertyChangeWatcher watcher)
+        {
+            if (watcher == null)
+                return Logger.WarnReturn(false, "DetachWatcher(): watcher == null");
+
+            if (_watchers.Remove(watcher) == false)
+                return Logger.WarnReturn(false, $"DetachWatcher(): Failed to detach property change watcher {watcher}");
+
+            watcher.Detach(false);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes all subscribed <see cref="IPropertyChangeWatcher"/> instances.
+        /// </summary>
+        public void RemoveAllWatchers()
+        {
+            while (_watchers.Count > 0)
+                DetachWatcher(_watchers.First());
+        }
+
+        public override string ToString() => _aggregateList.ToString();
+
+        #region Iteration
+
+        // NOTE: In the client this is the functionality of PropertyCollection::ConstIterator and NewPropertyList::ConstIterator
+        // TODO: If iteration is too slow, switch PropertyList to Dictionary<PropertyEnum, List<KeyValuePair<PropertyId, PropertyValue>>
+        // or group KVPs by property enum in some other way.
+
+        // IEnumerable implementation, iterates over _aggregateList
+        public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _aggregateList.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
+        {
+            return _aggregateList.IteratePropertyRange(propertyEnum);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use any of the specified <see cref="PropertyEnum"/> values.
+        /// Count specifies how many <see cref="PropertyEnum"/> elements to get from the provided <see cref="IEnumerable"/>.
+        /// </summary>
+        /// /// <remarks>
+        /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this is checked
+        /// against every key/value pair rather than once per enum.
+        /// </remarks>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum[] enums)
+        {
+            return _aggregateList.IteratePropertyRange(enums);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="int"/> value as param0.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, int param0)
+        {
+            return _aggregateList.IteratePropertyRange(propertyEnum, param0);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
+        {
+            return _aggregateList.IteratePropertyRange(propertyEnum, param0);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0 and param1.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+        {
+            return _aggregateList.IteratePropertyRange(propertyEnum, param0, param1);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that match the provided <see cref="PropertyEnumFilter"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
+        /// on every key/value pair rather than once per enum.
+        /// </remarks>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
+        {
+            return _aggregateList.IteratePropertyRange(filterFunc);
+        }
+
+        #endregion
+
+        public virtual void ResetForPool()
+        {
+            Clear();
+        }
+
+        public virtual void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
+        }
+
+        public virtual bool Serialize(Archive archive)
+        {
+            return SerializeWithDefault(archive, null);
+        }
+
+        public virtual bool SerializeWithDefault(Archive archive, PropertyCollection defaultCollection)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
+                // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
+                // and updates the number.
+
+                // Remember current offset and reserve 4 bytes
+                long numPropertiesOffset = archive.CurrentOffset;
+                archive.WriteUnencodedStream(0u);
+
+                uint numProperties = 0;
+
+                foreach (var kvp in _baseList)
+                    success &= SerializePropertyForPacking(kvp, ref numProperties, archive, defaultCollection);
+
+                // Write the number of serialized properties to the reserved bytes
+                archive.WriteUnencodedStream(numProperties, numPropertiesOffset);                    
+            }
+            else
+            {
+                SetPropertyFlags flags = SetPropertyFlags.Deserialized;
+                if (archive.IsPersistent)
+                    flags |= SetPropertyFlags.Persistent;
+
+                uint numProperties = 0;
+                success &= archive.ReadUnencodedStream(ref numProperties);
+
+                for (uint i = 0; i < numProperties; i++)
+                {
+                    PropertyId id = new();
+                    PropertyValue value = new();
+                    bool isValid = false;
+
+                    if (archive.IsPersistent)
+                    {
+                        // TODO: Deprecated property handling
+                        PropertyStore propertyStore = new();
+                        success &= propertyStore.Serialize(ref id, ref value, this, archive);
+                        if (success)
+                            isValid = success;
+                    }
+                    else
+                    {
+                        success &= Serializer.Transfer(archive, ref id);
+
+                        PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+
+                        if (archive.IsMigration)
+                        {
+                            // Migration archives serialize all values as int64
+                            // This is also true for replication in older versions of the game (e.g. 1.10)
+                            success &= Serializer.Transfer(archive, ref value.RawLong);
+                            isValid = true;
+                        }
+                        else
+                        {
+                            ulong bits = 0;
+                            success &= Serializer.Transfer(archive, ref bits);
+
+                            if (success)
+                            {
+                                value = ConvertBitsToValue(bits, info.DataType);
+                                isValid = true;
+                            }
+                        }
+                    }
+
+                    if (isValid)
+                        SetPropertyValue(id, value, flags);
+                }
+            }
+
+            return success;
+        }
 
         /// <summary>
         /// Converts a <see cref="PropertyValue"/> to a <see cref="ulong"/> bit representation.
@@ -519,6 +734,135 @@ namespace MHServerEmu.Games.Properties
                 case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
                 default:                            return new((long)bits);
             }
+        }
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyId"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        public static PropertyValue EvalProperty(PropertyId id, EvalContextData contextData)
+        {
+            // NOTE: This function isn't really needed because we use implicit casting for PropertyValue,
+            // but we are keeping it anyway to match the client API.
+            return EvalPropertyValue(id, contextData);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
+        /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
+        /// </summary>
+        protected PropertyValue GetPropertyValue(PropertyId id)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+
+            // First try running eval
+            if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
+                return EvalPropertyValue(info, evalContext);
+            }
+
+            // Fall back to the default value if no value is specified in the aggregate list
+            if (_aggregateList.GetPropertyValue(id, out PropertyValue value) == false)
+                return info.DefaultValue;
+
+            // Return the value from the aggregate list
+            return value;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="PropertyValue"/> for the <see cref="PropertyId"/>.
+        /// </summary>
+        protected virtual bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+
+            if (info.TruncatePropertyValueToInt && info.DataType == PropertyDataType.Real)
+                value = MathF.Floor(value.RawFloat);
+
+            ClampPropertyValue(info.Prototype, ref value);
+
+            bool hasChanged;
+
+            // Setting a property to its default value actually removes the value from the list,
+            // because the collection automatically falls back to the default value if nothing is stored.
+            if (value.RawLong == info.DefaultValue.RawLong)
+            {
+                hasChanged = _baseList.RemoveProperty(id);
+                if (hasChanged)
+                    UpdateAggregateValueFromBase(id, info, flags, false, new());
+            }
+            else
+            {
+                hasChanged = _baseList.SetPropertyValue(id, value);
+                if (hasChanged)
+                    UpdateAggregateValueFromBase(id, info, flags, true, value);
+            }
+
+            return hasChanged || flags.HasFlag(SetPropertyFlags.Refresh);  // Some kind of flag that forces property value update
+        }
+
+        protected bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, ref uint numProperties, Archive archive, PropertyCollection defaultCollection)
+        {
+            bool success = true;
+
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+            PropertyInfoPrototype infoProto = info.Prototype;
+
+            // Filter out properties based on archive serialization mode
+            if (archive.IsPersistent)       
+            {
+                if (infoProto.ReplicateToDatabase == DatabasePolicy.None || info.IsCurveProperty)
+                    return true;
+            }
+            else if (archive.IsMigration)
+            {
+                if (infoProto.ReplicateForTransfer == false)
+                    return true;
+            }
+            else if (archive.IsReplication)
+            {
+                // Skip properties that don't match AOI channels for this archive
+                if ((infoProto.RepNetwork & archive.GetReplicationPolicyEnum()) == Network.AOINetworkPolicyValues.AOIChannelNone)
+                    return true;
+
+                // Skip properties that have the same value as the provided default collection (if there is one)
+                if (defaultCollection != null && defaultCollection.GetBaseValue(kvp.Key, out PropertyValue baseValue) && kvp.Value.RawLong == baseValue.RawLong)
+                    return true;
+            }
+
+            // Serialize
+            PropertyId id = kvp.Key;
+            PropertyValue value = kvp.Value;
+
+            if (archive.IsPersistent)
+            {
+                PropertyStore propertyStore = new();
+                success &= propertyStore.Serialize(ref id, ref value, this, archive);
+
+                //Logger.Debug($"SerializePropertyForPacking(): Packed {id} for persistent storage");
+            }
+            else
+            {
+                success &= Serializer.Transfer(archive, ref id);
+
+                if (archive.IsMigration)
+                {
+                    // Migration archives serialize all values as int64
+                    // This is also true for replication in older versions of the game (e.g. 1.10)
+                    success &= Serializer.Transfer(archive, ref value.RawLong);
+                }
+                else
+                {
+                    ulong valueBits = ConvertValueToBits(kvp.Value, info.DataType);
+                    success &= Serializer.Transfer(archive, ref valueBits);
+                }
+            }
+
+            numProperties++;        // Increment the number of properties that will be written when we finish iterating
+
+            return success;
         }
 
         /// <summary>
@@ -641,7 +985,7 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
 
-            foreach (var kvp in childCollection)
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;
@@ -739,7 +1083,7 @@ namespace MHServerEmu.Games.Properties
             if (hasValue)
             {
                 _aggregateList.GetSetPropertyValue(id, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
-                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Flag2))
+                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Refresh))
                 {
                     if (wasAdded) oldValue = info.DefaultValue;
                     OnPropertyChange(id, aggregateValue, oldValue, flags);
@@ -862,6 +1206,50 @@ namespace MHServerEmu.Games.Properties
             ClampPropertyValue(info.Prototype, ref output);
             return true;
         }
+
+        #region Eval Calculation
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyId"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        private static PropertyValue EvalPropertyValue(PropertyId id, EvalContextData contextData)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+            return EvalPropertyValue(info, contextData);
+        }
+
+        /// <summary>
+        /// Evaluates a <see cref="PropertyValue"/> given the provided <see cref="PropertyInfo"/> and <see cref="EvalContextData"/>.
+        /// </summary>
+        private static PropertyValue EvalPropertyValue(PropertyInfo info, EvalContextData contextData)
+        {
+            if (info.IsEvalProperty == false)
+                return Logger.WarnReturn(new PropertyValue(), "EvalPropertyValue(): info.IsEvalProperty == false");
+
+            PropertyValue value;
+            switch (info.DataType)
+            {
+                case PropertyDataType.Boolean:
+                    value = Eval.RunBool(info.Eval, contextData);                    
+                    break;
+
+                case PropertyDataType.Real:
+                    value = Eval.RunFloat(info.Eval, contextData);
+                    break;
+
+                case PropertyDataType.Integer:
+                    value = Eval.RunLong(info.Eval, contextData);
+                    break;
+
+                default:
+                    return Logger.WarnReturn(new PropertyValue(), $"EvalPropertyValue(): Unsupported eval property data type {info.DataType}");
+            }
+
+            ClampPropertyValue(info.Prototype, ref value);
+            return value;
+        }
+
+        #endregion
 
         #region Protection Implementation
 

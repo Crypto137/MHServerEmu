@@ -1,15 +1,13 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Core.VectorMath
 {
-    public class Orientation
+    public struct Orientation : IEquatable<Orientation>
     {
-        public float Yaw { get; set; }
-        public float Pitch { get; set; }
-        public float Roll { get; set; }
+        public float Yaw;
+        public float Pitch;
+        public float Roll;
 
         public Orientation()
         {
@@ -25,28 +23,7 @@ namespace MHServerEmu.Core.VectorMath
             Roll = roll;
         }
 
-        public static Orientation Zero => new();
-
-        public Orientation(Orientation rot)
-        {
-            Yaw = rot.Yaw;
-            Pitch = rot.Pitch;
-            Roll = rot.Roll;
-        }
-
-        public void Set(Orientation rot)
-        {
-            Yaw = rot.Yaw;
-            Pitch = rot.Pitch;
-            Roll = rot.Roll;
-        }
-
-        public void Set(float yaw, float pich, float roll)
-        {
-            Yaw = yaw;
-            Pitch = pich;
-            Roll = roll;
-        }
+        public static Orientation Zero { get; } = new(0.0f, 0.0f, 0.0f);
 
         public float this[int index]
         {
@@ -67,23 +44,25 @@ namespace MHServerEmu.Core.VectorMath
             }
         }
 
-        public Orientation(CodedInputStream stream, int precision = 6)
-        {
-            Yaw = stream.ReadRawZigZagFloat(precision);
-            Pitch = stream.ReadRawZigZagFloat(precision);
-            Roll = stream.ReadRawZigZagFloat(precision);
-        }
-
-        public void Encode(CodedOutputStream stream, int precision = 6)
-        {
-            stream.WriteRawZigZagFloat(Yaw, precision);
-            stream.WriteRawZigZagFloat(Pitch, precision);
-            stream.WriteRawZigZagFloat(Roll, precision);
-        }
         public NetStructPoint3 ToNetStructPoint3() => NetStructPoint3.CreateBuilder().SetX(Yaw).SetY(Pitch).SetZ(Roll).Build();
 
         public static Orientation operator +(Orientation a, Orientation b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch, a.Roll + b.Roll);
         public static Orientation operator -(Orientation a, Orientation b) => new(a.Yaw - b.Yaw, a.Pitch - b.Pitch, a.Roll - b.Roll);
+        public static bool operator ==(Orientation left, Orientation right) => left.Equals(right);
+        public static bool operator !=(Orientation left, Orientation right) => !left.Equals(right);
+
+        public override int GetHashCode() => (Yaw, Pitch, Roll).GetHashCode();
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not Orientation other) return false;
+            return Equals(other);
+        }
+
+        public bool Equals(Orientation other)
+        {
+            return Yaw == other.Yaw && Pitch == other.Pitch && Roll == other.Roll;
+        }
 
         public static bool IsFinite(Orientation v)
         {
@@ -95,12 +74,12 @@ namespace MHServerEmu.Core.VectorMath
             return new(MathF.Atan2(delta.Y, delta.X), 0.0f, 0.0f);
         }
 
-        public static Orientation FromTransform3(Transform3 transform)
+        public static Orientation FromTransform3(in Transform3 transform)
         {
             return FromDeltaVector2D(transform.Col0);
         }
 
-        public static Orientation FromDeltaVector(Vector3 delta)
+        public static Orientation FromDeltaVector(in Vector3 delta)
         {
             return new(MathF.Atan2(delta.Y, delta.X), MathF.Atan2(delta.Z, MathF.Sqrt(delta.X * delta.X + delta.Y * delta.Y)), 0.0f);
         }

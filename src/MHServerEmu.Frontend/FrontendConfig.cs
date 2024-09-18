@@ -2,6 +2,9 @@
 
 namespace MHServerEmu.Frontend
 {
+    /// <summary>
+    /// Contains configuration for the <see cref="FrontendServer"/>.
+    /// </summary>
     public class FrontendConfig : ConfigContainer
     {
         public string BindIP { get; private set; } = "127.0.0.1";

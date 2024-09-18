@@ -1,8 +1,8 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Random;
-using MHServerEmu.Games.Generators;
-using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -77,32 +77,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
 
             Max = new(-1, -1);
-
             if (Entries.HasValue())
-            {
                 foreach (SuperCellEntryPrototype superCellEntry in Entries)
-                {
                     if (superCellEntry != null)
-                    {
-                        Max.X = Math.Max(Max.X, superCellEntry.X);
-                        Max.Y = Math.Max(Max.Y, superCellEntry.Y);
-                    }
-                }
-            }
+                        Max = new( Math.Max(Max.X, superCellEntry.X), Math.Max(Max.Y, superCellEntry.Y));
         }
 
         public bool ContainsCell(PrototypeId cellRef)
         {
             if (Entries.HasValue())
-            {
                 foreach (var entryProto in Entries)
-                {
                     if (entryProto != null && GameDatabase.GetDataRefByAsset(entryProto.Cell) == cellRef)
-                    {
                         return true;
-                    }
-                }
-            }
             return false;
         }
 

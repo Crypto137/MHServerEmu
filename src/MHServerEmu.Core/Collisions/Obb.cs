@@ -3,14 +3,12 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Obb
+    public struct Obb
     {
-        public Vector3 Center { get; private set; }
-        public Vector3 Extents { get; private set; }
-        public Orientation Orientation { get; private set; }
-
-        public Matrix3 InverseRotationMatrix { get; private set; }
-
+        public Vector3 Center;
+        public Vector3 Extents;
+        public Orientation Orientation;
+        public Matrix3 InverseRotationMatrix;
         public Matrix3 RotationMatrix => Orientation.GetMatrix3();
 
         public Obb(Vector3 center, Vector3 extents, Orientation orientation)
@@ -18,7 +16,7 @@ namespace MHServerEmu.Core.Collisions
             Center = center;
             Extents = extents;
             Orientation = orientation;
-            InverseRotationMatrix = Matrix3.Inverse(RotationMatrix);
+            InverseRotationMatrix = Matrix3.Inverse(orientation.GetMatrix3());
         }
 
         public Vector3 TransformPoint(Vector3 point)
@@ -37,29 +35,36 @@ namespace MHServerEmu.Core.Collisions
             return new Aabb(Center - oobVector, Center + oobVector);
         }
 
-        public bool Intersects(Aabb aabb)
+        public ContainmentType Contains(in Vector3 point)
+        {
+            Aabb aabb = new(Center - Extents, Center + Extents);
+            Vector3 transformPoint = TransformPoint(point);
+            return aabb.Contains(transformPoint);
+        }
+
+        public bool Intersects(in Aabb aabb)
         {
             return ToAabb().Intersects(aabb);
         }
 
-        public bool Intersects(Capsule capsule)
+        public bool Intersects(in Capsule capsule)
         {
             return capsule.Intersects(this);
         }
 
-        public bool Intersects(Obb obb)
+        public bool Intersects(in Obb obb)
         {
             return ToAabb().Intersects(obb.ToAabb());
         }
 
-        public bool Intersects(Sphere sphere)
+        public bool Intersects(in Sphere sphere)
         {
             Aabb aabb = new(Center - Extents, Center + Extents);
             Vector3 center = TransformPoint(sphere.Center);
             return aabb.Intersects(new Sphere(center, sphere.Radius));
         }
 
-        public bool Intersects(Triangle triangle)
+        public bool Intersects(in Triangle triangle)
         {
             Aabb aabb = new(Center - Extents, Center + Extents);
             var otherTriangle = new Triangle(
@@ -68,6 +73,13 @@ namespace MHServerEmu.Core.Collisions
                 TransformPoint(triangle.Points[2])
                 );
             return aabb.Intersects(otherTriangle);
+        }
+
+        public bool Intersects(Segment segment, ref float intersection)
+        {
+            Aabb aabb = new(Center - Extents, Center + Extents);
+            Segment transformSegment = new(TransformPoint(segment.Start), TransformPoint(segment.End));
+            return aabb.Intersects(transformSegment, ref intersection);
         }
 
         public override string ToString()

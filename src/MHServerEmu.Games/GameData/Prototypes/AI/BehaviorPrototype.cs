@@ -1,5 +1,15 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Games.Behavior.ProceduralAI;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -118,6 +128,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Run,
     }
 
+    [AssetEnum((int)Set)]
+    public enum BlackboardOperatorType
+    {
+        Add = 0,
+        Div = 1,
+        Mul = 2,
+        Set = 3,
+        Sub = 4,
+        SetTargetId = 5,
+        ClearTargetId = 6,
+    }
+
     #endregion
 
     public class BrainPrototype : Prototype
@@ -164,6 +186,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId WhileConfused { get; protected set; }
         public PrototypeId WhileControlled { get; protected set; }
 
+        [DoNotCopy]
+        public int EnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            BlueprintId blueprintRef = GameDatabase.DataDirectory.GetPrototypeBlueprintDataRef(DataRef);
+            EnumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue(DataRef, blueprintRef);
+        }
+
         public static bool IsHostileToPlayerAlliance(AlliancePrototype allianceProto)
         {
             if (allianceProto == null
@@ -175,11 +208,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return playerAlliance.IsHostileTo(allianceProto);
         }
 
+        public bool IsFriendlyTo(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null) return false;
+            return GameDataTables.Instance.AllianceTable.IsFriendlyTo(this, allianceProto);
+        }
+
         public bool IsHostileTo(AlliancePrototype allianceProto)
         {
             if (allianceProto == null) return false;
-            // TODO GameDataTables.GetAllianceTable().IsHostileTo(this, allianceProto);
-            return true;
+            return GameDataTables.Instance.AllianceTable.IsHostileTo(this, allianceProto);
         }
     }
 
@@ -198,111 +236,362 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AIEntityAttributePrototype : Prototype
     {
         public ComparisonOperatorType OperatorType { get; protected set; }
+
+        public virtual bool Check(Agent agent, Entity target)
+        {
+            return ProceduralAI.Logger.WarnReturn(false, "Found an AIEntityAttributePrototype that does not override Check()!");
+        }
     }
 
     public class AIEntityAttributeHasKeywordPrototype : AIEntityAttributePrototype
     {
         public PrototypeId Keyword { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not WorldEntity targetWorldEntity) return false;
+
+            bool hasKeyword = targetWorldEntity.HasKeyword(Keyword);
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => hasKeyword,
+                ComparisonOperatorType.NotEqualTo => !hasKeyword,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeHasConditionKeywordPrototype : AIEntityAttributePrototype
     {
         public PrototypeId ConditionKeyword { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not WorldEntity targetWorldEntity) return false;
+
+            bool hasConditionKeyword = targetWorldEntity.HasConditionWithKeyword(ConditionKeyword);
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => hasConditionKeyword,
+                ComparisonOperatorType.NotEqualTo => !hasConditionKeyword,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsHostilePrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not WorldEntity targetWorldEntity) return false;
+
+            bool isHostile = agent.IsHostileTo(targetWorldEntity);
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isHostile,
+                ComparisonOperatorType.NotEqualTo => !isHostile,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsMeleePrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not WorldEntity targetWorldEntity) return false;
+
+            bool isMelle = targetWorldEntity.IsMelee();
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isMelle,
+                ComparisonOperatorType.NotEqualTo => !isMelle,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsAvatarPrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            bool isAvatar = target is Avatar;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isAvatar,
+                ComparisonOperatorType.NotEqualTo => !isAvatar,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsAISummonedByAvatarPrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            bool summonedByAvatar = false;
+
+            if (target is Agent targetAgent && targetAgent.AIController != null)            
+            {
+                ulong ownerId = target.Properties[PropertyEnum.PowerUserOverrideID];
+                Avatar avatar = target.Game.EntityManager.GetEntity<Avatar>(ownerId);
+                summonedByAvatar = avatar != null;
+            }
+
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => summonedByAvatar,
+                ComparisonOperatorType.NotEqualTo => !summonedByAvatar,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsPrototypeRefPrototype : AIEntityAttributePrototype
     {
         public PrototypeId ProtoRef { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            bool isProtoRef = target.PrototypeDataRef == ProtoRef;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isProtoRef,
+                ComparisonOperatorType.NotEqualTo => !isProtoRef,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsPrototypePrototype : AIEntityAttributePrototype
     {
         public PrototypeId RefToPrototype { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {            
+            bool isPrototype = GameDatabase.DataDirectory.PrototypeIsAPrototype(target.PrototypeDataRef, RefToPrototype);
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isPrototype,
+                ComparisonOperatorType.NotEqualTo => !isPrototype,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsSimulatedPrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            bool isSimulated = target.IsSimulated;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isSimulated,
+                ComparisonOperatorType.NotEqualTo => !isSimulated,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsCurrentTargetEntityPrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            var currentTarget = agent.AIController?.TargetEntity;
+            if (currentTarget == null || currentTarget.IsInWorld == false) return false;
+
+            bool isCurrentTarget = currentTarget.Id == target.Id;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isCurrentTarget,
+                ComparisonOperatorType.NotEqualTo => !isCurrentTarget,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsCurrentTargetEntityOfAgentOfTypePrototype : AIEntityAttributePrototype
     {
         public PrototypeId OtherAgentProtoRef { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not Agent targetAgent) return false;
+            Game game = targetAgent.Game;
+            if (game == null) return false;
+            Region region = targetAgent.Region;
+            if (region == null) return false;
+            Cell cell = targetAgent.Cell;
+            if (cell == null) return false;
+            List<WorldEntity> entities = new(); 
+            region.GetEntitiesInVolume(entities, cell.RegionBounds, new(EntityRegionSPContextFlags.ActivePartition));
+
+            Agent otherAgent = null;
+            foreach (var entity in entities)
+                if (entity.PrototypeDataRef == OtherAgentProtoRef)
+                {
+                    otherAgent = entity as Agent;
+                    break;
+                }
+
+            var otherAgentController = otherAgent?.AIController;
+            if (otherAgentController == null) ProceduralAI.Logger.WarnReturn(false, $"This entity {otherAgent} does not have AI");
+            var currentTarget = otherAgentController.TargetEntity;
+            if (currentTarget == null || currentTarget.IsInWorld == false) return false;
+
+            bool isCurrentTarget = currentTarget.Id == target.Id;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isCurrentTarget,
+                ComparisonOperatorType.NotEqualTo => !isCurrentTarget,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsSummonedByPowerPrototype : AIEntityAttributePrototype
     {
         public PrototypeId Power { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (Power == PrototypeId.Invalid) return false;
+
+            bool summonedByPower = target.Properties[PropertyEnum.PowerUserOverrideID] == Power;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => summonedByPower,
+                ComparisonOperatorType.NotEqualTo => !summonedByPower,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeCanBePlayerOwnedPrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            bool canBePlayerOwned = target.CanBePlayerOwned();
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => canBePlayerOwned,
+                ComparisonOperatorType.NotEqualTo => !canBePlayerOwned,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeHasBlackboardPropertyValuePrototype : AIEntityAttributePrototype
     {
         public PrototypeId PropertyInfoRef { get; protected set; }
         public int Value { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        { 
+            if (target is not Agent targetAgent) return false;
+            var controller = targetAgent.AIController;
+            if (controller != null)
+            {
+                var index = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(PropertyInfoRef);
+                if (index == PropertyEnum.Invalid) return false;
+
+                int indexValue = controller.Blackboard.PropertyCollection.GetProperty(index);
+                return OperatorType switch
+                {
+                    ComparisonOperatorType.EqualTo => indexValue == Value,
+                    ComparisonOperatorType.NotEqualTo => indexValue != Value,
+                    ComparisonOperatorType.LessThanEqualTo => indexValue <= Value,
+                    ComparisonOperatorType.GreaterThanEqualTo => indexValue >= Value,
+                    ComparisonOperatorType.LessThan => indexValue < Value,
+                    ComparisonOperatorType.GreaterThan => indexValue > Value,
+                    _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+                };
+            }
+            else if (OperatorType == ComparisonOperatorType.NotEqualTo)
+                return true;
+
+            return false;
+        }
     }
 
     public class AIEntityAttributeHasPropertyPrototype : AIEntityAttributePrototype
     {
         public PrototypeId PropertyInfoRef { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            var index = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(PropertyInfoRef);
+            if (index == PropertyEnum.Invalid) return false;
+
+            bool hasProperty = target.Properties.HasProperty(index);
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => hasProperty,
+                ComparisonOperatorType.NotEqualTo => !hasProperty,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeHasHealthValuePercentPrototype : AIEntityAttributePrototype
     {
         public float Value { get; protected set; }
+
+        public override bool Check(Agent agent, Entity target)
+        {
+            long health = target.Properties[PropertyEnum.Health];
+            long healthMax = target.Properties[PropertyEnum.HealthMax];
+
+            float healthValuePct = 0.0f;
+            if (healthMax != 0) healthValuePct = MathHelper.Ratio(health, healthMax);
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => healthValuePct == Value,
+                ComparisonOperatorType.NotEqualTo => healthValuePct != Value,
+                ComparisonOperatorType.LessThanEqualTo => healthValuePct <= Value,
+                ComparisonOperatorType.GreaterThanEqualTo => healthValuePct >= Value,
+                ComparisonOperatorType.LessThan => healthValuePct < Value,
+                ComparisonOperatorType.GreaterThan => healthValuePct > Value,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeIsDestructiblePrototype : AIEntityAttributePrototype
     {
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not WorldEntity targetWorldEntity) return false;
+
+            bool isDestructible = targetWorldEntity.IsDestructible;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => isDestructible,
+                ComparisonOperatorType.NotEqualTo => !isDestructible,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class AIEntityAttributeCanPathToPrototype : AIEntityAttributePrototype
     {
         public LocomotorMethod LocomotorMethod { get; protected set; }
-    }
 
-    public class MovementBehaviorPrototype : Prototype
-    {
-    }
+        public override bool Check(Agent agent, Entity target)
+        {
+            if (target is not WorldEntity targetWorldEntity) return false;
+            Region region = agent.Region;
+            if (region == null) return false;
+            var pathResult = agent.CheckCanPathTo(targetWorldEntity.RegionLocation.Position, Locomotor.GetPathFlags(LocomotorMethod));
 
-    public class StrafeTargetPrototype : MovementBehaviorPrototype
-    {
-        public float StrafeDistanceMult { get; protected set; }
-    }
-
-    public class RandomPositionAroundTargetPrototype : MovementBehaviorPrototype
-    {
-        public float StrafeAngle { get; protected set; }
-    }
-
-    public class FixedRotationPrototype : MovementBehaviorPrototype
-    {
-        public float RotationSpeed { get; protected set; }
-        public float PivotAngle { get; protected set; }
-        public int MaxPivotTimeMS { get; protected set; }
-        public float PostPivotAcceleration { get; protected set; }
+            bool canPathTo = pathResult == NaviPathResult.Success || pathResult == NaviPathResult.IncompletedPath;
+            return OperatorType switch
+            {
+                ComparisonOperatorType.EqualTo => canPathTo,
+                ComparisonOperatorType.NotEqualTo => !canPathTo,
+                _ => ProceduralAI.Logger.WarnReturn(false, $"Unsupported operator type in {ToString()}"),
+            };
+        }
     }
 
     public class StackingBehaviorPrototype : Prototype
@@ -412,6 +701,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float MaxDistanceToTarget { get; protected set; }
         public bool IgnoreOutOfPositionFailure { get; protected set; }
         public PrototypeId[] DifficultyTierRestrictions { get; protected set; }
+
+        public bool HasDifficultyTierRestriction(PrototypeId difficultyRef)
+        {
+            if (DifficultyTierRestrictions.HasValue() && DifficultyTierRestrictions.Contains(difficultyRef))
+                return true;
+            return false;
+        }
     }
 
     public class MoveToContextPrototype : Prototype

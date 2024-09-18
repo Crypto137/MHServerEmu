@@ -3,18 +3,19 @@ using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Triangle
+    public struct Triangle
     {
-        public Vector3[] Points { get; set; } = new Vector3[3];
+        public Vector3[] Points;
 
         public Triangle(Vector3 p0, Vector3 p1, Vector3 p2)
         {
+            Points = new Vector3[3];
             Points[0] = p0;
             Points[1] = p1;
             Points[2] = p2;
         }
 
-        public static Triangle Zero => new(Vector3.Zero, Vector3.Zero, Vector3.Zero);
+        public static Triangle Zero { get; } = new(Vector3.Zero, Vector3.Zero, Vector3.Zero);
 
         public Vector3 this[int index]
         {
@@ -44,7 +45,23 @@ namespace MHServerEmu.Core.Collisions
             return Vector3.Normalize(Vector3.Cross(edge1, edge2));
         }
 
-        public bool Intersects(Aabb other)
+        public bool Intersects(in Vector3 point)
+        {
+            Vector3 v0 = Points[0] - point;
+            Vector3 v1 = Points[1] - point;
+            Vector3 v2 = Points[2] - point;
+
+            Vector3 c0 = Vector3.Cross(v1, v2);
+            Vector3 c1 = Vector3.Cross(v2, v0);
+            if (Vector3.Dot(c0, c1) < 0.0f) return false;
+
+            Vector3 c2 = Vector3.Cross(v0, v1);
+            if (Vector3.Dot(c0, c2) < 0.0f) return false;
+
+            return true;
+        }
+
+        public bool Intersects(in Aabb other)
         {
             Vector3 c = other.Center;
             Vector3 e = other.Extents;
@@ -139,22 +156,22 @@ namespace MHServerEmu.Core.Collisions
             return ToPlane().Intersects(other) == Plane.IntersectionType.Intersect;
         }
 
-        public bool Intersects(Obb obb)
+        public bool Intersects(in Obb obb)
         {
             return obb.Intersects(this);
         }
 
-        public bool Intersects(Sphere sphere)
+        public bool Intersects(in Sphere sphere)
         {
             return TriangleIntersectsCircle2D(sphere.Center, sphere.Radius);
         }
 
-        public bool Intersects(Capsule capsule)
+        public bool Intersects(in Capsule capsule)
         {
             return capsule.Intersects(this);
         }
 
-        public bool Intersects(Triangle triangle)
+        public bool Intersects(in Triangle triangle)
         {
             throw new NotImplementedException("We don't want Triangle-Triangle bounds intersection happening right now...");
         }
@@ -163,10 +180,10 @@ namespace MHServerEmu.Core.Collisions
         {
             if (TriangleContainsPoint2D(center)) return true;
 
-            Vector3 p0 = new(Points[0].X, Points[0].Y, 0.0f);
-            Vector3 p2 = new(Points[1].X, Points[1].Y, 0.0f);
-            Vector3 p3 = new(Points[2].X, Points[2].Y, 0.0f);
-            Vector3 center2D = new(center.X, center.Y, 0.0f);
+            Vector3 p0 = Points[0].To2D();
+            Vector3 p2 = Points[1].To2D();
+            Vector3 p3 = Points[2].To2D();
+            Vector3 center2D = center.To2D();
 
             float radiusSq = radius * radius;
             if (Segment.SegmentPointDistanceSq(p0, p2, center2D) < radiusSq) return true;

@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
@@ -18,7 +19,7 @@ namespace MHServerEmu.Core.Network
     }
 
     /// <summary>
-    /// Manages <see cref="IGameService"/> instances and routes <see cref="GameMessage"/> instances between them.
+    /// Manages <see cref="IGameService"/> instances and routes <see cref="MessagePackage"/> instances between them.
     /// </summary>
     public class ServerManager
     {
@@ -94,9 +95,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="GameMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <see cref="MessagePackage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessage(ITcpClient client, GameMessage message, ServerType serverType)
+        public bool RouteMessage(ITcpClient client, MessagePackage message, ServerType serverType)
         {
             int index = (int)serverType;
 
@@ -111,9 +112,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="IEnumerable{T}"/> of <see cref="GameMessage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <see cref="IEnumerable{T}"/> of <see cref="MessagePackage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessages(ITcpClient client, IEnumerable<GameMessage> messages, ServerType serverType)
+        public bool RouteMessages(ITcpClient client, IEnumerable<MessagePackage> messages, ServerType serverType)
         {
             int index = (int)serverType;
 
@@ -124,6 +125,23 @@ namespace MHServerEmu.Core.Network
                 return Logger.WarnReturn(false, $"RouteMessages(): No service is registered for server type {serverType}");
 
             _services[index].Handle(client, messages);
+            return true;
+        }
+
+        /// <summary>
+        /// Routes the provided <see cref="MailboxMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// </summary>
+        public bool RouteMessage(ITcpClient client, MailboxMessage message, ServerType serverType)
+        {
+            int index = (int)serverType;
+
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn(false, $"RouteMessage(): Invalid server type {serverType}");
+
+            if (_services[index] == null)
+                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
+
+            _services[index].Handle(client, message);
             return true;
         }
 
@@ -166,9 +184,9 @@ namespace MHServerEmu.Core.Network
         {
             StringBuilder sb = new();
 
-            sb.AppendLine("Server Status");
             sb.AppendLine($"Uptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}");
 
+            sb.AppendLine("Service Status:");
             for (int i = 0; i < _services.Length; i++)
             {
                 if (_services[i] == null) continue;
@@ -179,6 +197,9 @@ namespace MHServerEmu.Core.Network
                 else
                     sb.AppendLine("Not running");
             }
+
+            sb.AppendLine("Performance Metrics:");
+            sb.AppendLine(MetricsManager.Instance.GenerateReport());
 
             return sb.ToString();
         }

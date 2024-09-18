@@ -1,41 +1,48 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        public ReplicatedVariable<int> Team1 { get; set; }
-        public ReplicatedVariable<int> Team2 { get; set; }
+        private RepInt _team1;
+        private RepInt _team2;
 
-        public PvP(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
+        public PvP(Game game) : base(game) { }
 
-        public PvP(EntityBaseData baseData) : base(baseData) { }
-
-        protected override void Decode(CodedInputStream stream)
+        public override bool Serialize(Archive archive)
         {
-            base.Decode(stream);
-
-            Team1 = new(stream);
-            Team2 = new(stream);
+            bool success = base.Serialize(archive);
+            // if (archive.IsTransient)
+            success &= Serializer.Transfer(archive, ref _team1);
+            success &= Serializer.Transfer(archive, ref _team2);
+            return success;
         }
 
-        public override void Encode(CodedOutputStream stream)
+        protected override void BindReplicatedFields()
         {
-            base.Encode(stream);
+            base.BindReplicatedFields();
 
-            Team1.Encode(stream);
-            Team2.Encode(stream);
+            _team1.Bind(this, AOINetworkPolicyValues.AOIChannelProximity);
+            _team2.Bind(this, AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        protected override void UnbindReplicatedFields()
+        {
+            base.UnbindReplicatedFields();
+
+            _team1.Unbind();
+            _team2.Unbind();
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"Team1: {Team1}");
-            sb.AppendLine($"Team2: {Team2}");
+            sb.AppendLine($"{nameof(_team1)}: {_team1}");
+            sb.AppendLine($"{nameof(_team2)}: {_team2}");
         }
     }
 }

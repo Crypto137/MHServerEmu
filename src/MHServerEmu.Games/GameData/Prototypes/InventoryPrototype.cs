@@ -1,38 +1,9 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)None)]
-    public enum InventoryCategory   // Entity/Inventory/Category.type
-    {
-        None = 0,
-        AvatarEquipment = 1,
-        BagItem = 2,
-        PlayerAdmin = 3,
-        PlayerAvatars = 4,
-        PlayerCraftingRecipes = 12,
-        PlayerGeneral = 5,
-        PlayerGeneralExtra = 6,
-        PlayerStashAvatarSpecific = 7,
-        PlayerStashGeneral = 8,
-        PlayerTrade = 10,
-        PlayerVendor = 11,
-        TeamUpEquipment = 13,
-        PlayerStashTeamUpGear = 9,
-    }
-
-    [AssetEnum((int)Invalid)]
-    public enum InventoryEvent
-    {
-        Invalid,
-        RegionChange,
-    }
-
-    #endregion
-
     public class InventoryPrototype : Prototype
     {
         public short Capacity { get; protected set; }
@@ -48,7 +19,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool VisibleToParty { get; protected set; }
         public bool VisibleToProximity { get; protected set; }
         public bool AvatarTeam { get; protected set; }
-        public ConvenienceLabel ConvenienceLabel { get; protected set; }
+        public InventoryConvenienceLabel ConvenienceLabel { get; protected set; }
         public bool PlaySoundOnAdd { get; protected set; }
         public bool CapacityUnlimited { get; protected set; }
         public bool VendorInvContentsCanBeBought { get; protected set; }
@@ -67,9 +38,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SoftCapacityDefaultSlotsConsole { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
 
-        public bool IsPlayerStashInventory()
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for a player stash inventory.
+        /// </summary>
+        [DoNotCopy]
+        public bool IsPlayerStashInventory { get => Category == InventoryCategory.PlayerStashAvatarSpecific || Category == InventoryCategory.PlayerStashGeneral; }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="InventoryPrototype"/> is for avatar or team-up equipment.
+        /// </summary>
+        [DoNotCopy]
+        public bool IsEquipmentInventory { get => Category == InventoryCategory.AvatarEquipment || Category == InventoryCategory.TeamUpEquipment; }
+
+        [DoNotCopy]
+        public bool IsPlayerGeneralInventory { get => Category == InventoryCategory.PlayerGeneral; }
+
+        [DoNotCopy]
+        public bool IsPlayerGeneralExtraInventory { get => Category == InventoryCategory.PlayerGeneralExtra; }
+
+        [DoNotCopy]
+        public bool IsPlayerCraftingRecipeInventory { get => Category == InventoryCategory.PlayerCraftingRecipes; }
+
+        [DoNotCopy]
+        public bool IsPlayerVendorInventory { get => Category == InventoryCategory.PlayerVendor; }
+
+        [DoNotCopy]
+        public bool IsPlayerVendorBuybackInventory { get => ConvenienceLabel == InventoryConvenienceLabel.VendorBuyback; }
+
+        [DoNotCopy]
+        public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; } 
+
+        /// <summary>
+        /// Returns <see langword="true"/> if entities that use the provided <see cref="EntityPrototype"/> are allowed to be stored in inventories that use this <see cref="InventoryPrototype"/>.
+        /// </summary>
+        public bool AllowEntity(EntityPrototype entityPrototype)
         {
-            return Category == InventoryCategory.PlayerStashAvatarSpecific || Category == InventoryCategory.PlayerStashGeneral;
+            if (EntityTypeFilter == null || EntityTypeFilter.Length == 0) return false;
+
+            foreach (PrototypeId entityTypeRef in EntityTypeFilter)
+            {
+                BlueprintId entityTypeBlueprintRef = GameDatabase.DataDirectory.GetPrototypeBlueprintDataRef(entityTypeRef);
+                if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(entityPrototype.DataRef, entityTypeBlueprintRef))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public int GetSoftCapacityDefaultSlots()
+        {
+            // TODO: consoles
+            return SoftCapacityDefaultSlotsPC;
+        }
+
+        public IEnumerable<PrototypeId> GetSoftCapacitySlotGroups()
+        {
+            // TODO: consoles
+            return SoftCapacitySlotGroupsPC;
+        }
+
+        public bool InventoryRequiresFlaggedVisibility()
+        {
+            return IsEquipmentInventory || IsPlayerStashInventory || IsPlayerCraftingRecipeInventory || IsPlayerVendorInventory || IsPlayerVendorInventory;
         }
     }
 

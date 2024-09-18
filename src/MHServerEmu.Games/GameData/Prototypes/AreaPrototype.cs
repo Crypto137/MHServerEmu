@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -32,12 +33,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MinimapRevealGroupId { get; protected set; }
         public PrototypeId RespawnOverride { get; protected set; }
         public PrototypeId PlayerCameraSettings { get; protected set; }
-        public FootstepTraceBehaviorAsset FootstepTraceOverride { get; protected set; }
-        public RegionMusicBehaviorAsset MusicBehavior { get; protected set; }
+        public FootstepTraceBehavior FootstepTraceOverride { get; protected set; }
+        public RegionMusicBehavior MusicBehavior { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
         public int LevelOffset { get; protected set; }
         public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
+
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+
+        [DoNotCopy]
+        public int AreaPrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            AreaPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAreaBlueprintDataRef());
+
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
+        }
     }
 
     public class AreaTransitionPrototype : Prototype

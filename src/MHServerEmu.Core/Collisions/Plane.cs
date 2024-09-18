@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Core.Collisions
 {
-    public class Plane
+    public struct Plane
     {
         public enum IntersectionType
         {
@@ -11,9 +11,8 @@ namespace MHServerEmu.Core.Collisions
             Intersect
         }
 
-        public Vector3 Normal { get; set; }
-        public float D { get; set; }
-
+        public Vector3 Normal;
+        public float D;
 
         public Plane(Vector3 normal, float d)
         {
@@ -21,7 +20,19 @@ namespace MHServerEmu.Core.Collisions
             D = d;
         }
 
-        public IntersectionType Intersects(Aabb bound)
+        public Plane(Vector3 p0, Vector3 p1, Vector3 p2)
+        {
+            Normal = Vector3.Cross(p1 - p0, p2 - p0);
+            D = Vector3.Dot(Normal, p0);
+        }
+
+        public Plane(Vector3 normal, Vector3 point)
+        {
+            Normal = normal;
+            D = Vector3.Dot(Normal, point);
+        }
+
+        public IntersectionType Intersects(in Aabb bound)
         {
             IntersectionType[] intersection = new IntersectionType[8];
             Vector3[] corners = bound.GetCorners();
@@ -37,7 +48,7 @@ namespace MHServerEmu.Core.Collisions
             return intersection[0];
         }
 
-        public IntersectionType Intersects(Vector3 point)
+        public IntersectionType Intersects(in Vector3 point)
         {
             float distance = SignedDistanceToPoint(point);
             if (distance > 0.0f)
@@ -48,9 +59,17 @@ namespace MHServerEmu.Core.Collisions
                 return IntersectionType.Intersect;
         }
 
-        public float SignedDistanceToPoint(Vector3 point)
+        public float SignedDistanceToPoint(in Vector3 point)
         {
             return Vector3.Dot(point, Normal) - D;
+        }
+
+        public float SolveForZ(float x, float y)
+        {
+            if (Normal.Z != 0.0f)
+                return (D - (Normal.X * x + Normal.Y * y)) / Normal.Z;
+            else
+                return 0.0f;
         }
 
     }

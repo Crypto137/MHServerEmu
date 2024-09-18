@@ -1,10 +1,14 @@
 ﻿namespace MHServerEmu.Games.GameData.Calligraphy
 {
-    public class ReplacementDirectory
+    public sealed class ReplacementDirectory
     {
         private readonly Dictionary<ulong, ReplacementRecord> _replacementDict = new();
 
+        public static ReplacementDirectory Instance { get; } = new();
+
         public int RecordCount { get => _replacementDict.Count; }
+
+        private ReplacementDirectory() { }
 
         public void AddReplacementRecord(ulong oldGuid, ulong newGuid, string name)
         {

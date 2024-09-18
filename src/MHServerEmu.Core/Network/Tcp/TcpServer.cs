@@ -20,6 +20,10 @@ namespace MHServerEmu.Core.Network.Tcp
         private bool _isListening;
         private bool _isDisposed;
 
+        protected bool _isRunning;
+
+        public int ConnectionCount { get => _connectionDict.Count; }
+
         /// <summary>
         /// Runs the server. This method should generally be executed by its own <see cref="Thread"/>.
         /// </summary>
@@ -61,7 +65,9 @@ namespace MHServerEmu.Core.Network.Tcp
             _isListening = true;
 
             // Start accepting connections
-            Task.Run(async () => await AcceptConnections());
+            Task.Run(async () => await AcceptConnectionsAsync());
+
+            _isRunning = true;
 
             return true;
         }
@@ -84,6 +90,8 @@ namespace MHServerEmu.Core.Network.Tcp
 
             // Disconnect all clients
             DisconnectAllClients();
+
+            _isRunning = false;
         }
 
         /// <summary>
@@ -118,15 +126,23 @@ namespace MHServerEmu.Core.Network.Tcp
         }
 
         /// <summary>
-        /// Sends a data buffer over the provided client connection.
+        /// Sends data over the provided <see cref="TcpClientConnection">.
         /// </summary>
         public int Send(TcpClientConnection connection, byte[] buffer, SocketFlags flags)
+        {
+            return Send(connection, buffer, buffer.Length, flags);
+        }
+
+        /// <summary>
+        /// Sends data over the provided <see cref="TcpClientConnection">.
+        /// </summary>
+        public int Send(TcpClientConnection connection, byte[] buffer, int size, SocketFlags flags)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             int bytesSentTotal = 0;
-            int bytesRemaining = buffer.Length;
+            int bytesRemaining = size;
 
             try
             {
@@ -158,7 +174,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Raised when the server receives data from a client connection.
         /// </summary>
-        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] data);
+        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length);
 
         #endregion
 
@@ -175,9 +191,9 @@ namespace MHServerEmu.Core.Network.Tcp
         }
 
         /// <summary>
-        /// Accepts incoming client connections.
+        /// Accepts incoming client connections asynchronously.
         /// </summary>
-        private async Task AcceptConnections()
+        private async Task AcceptConnectionsAsync()
         {
             while (true)
             {
@@ -192,17 +208,17 @@ namespace MHServerEmu.Core.Network.Tcp
                     OnClientConnected(connection);
 
                     // Begin receiving data from our new connection
-                    _ = Task.Run(async () => await ReceiveData(connection));
+                    _ = Task.Run(async () => await ReceiveDataAsync(connection));
                 }
                 catch (TaskCanceledException) { return; }
-                catch (Exception e) { Logger.DebugException(e, nameof(AcceptConnections)); }
+                catch (Exception e) { Logger.DebugException(e, nameof(AcceptConnectionsAsync)); }
             }
         }
 
         /// <summary>
-        /// Receives data from a client connection.
+        /// Receives data from a <see cref="TcpClientConnection"/> asynchronously.
         /// </summary>
-        private async Task ReceiveData(TcpClientConnection connection)
+        private async Task ReceiveDataAsync(TcpClientConnection connection)
         {
             while (true)
             {
@@ -216,10 +232,10 @@ namespace MHServerEmu.Core.Network.Tcp
                         return;
                     }
 
-                    // Copy the data we received from the buffer to a new array
-                    byte[] data = new byte[bytesReceived];
-                    Array.Copy(connection.ReceiveBuffer, data, bytesReceived);
-                    OnDataReceived(connection, data);
+                    // Parse received data straight from the connection's buffer.
+                    // NOTE: We do it in a somewhat awkward way because we used to copy
+                    // data to a new array and pass it around, maybe we should refactor this more.
+                    OnDataReceived(connection, connection.ReceiveBuffer, bytesReceived);
 
                     if (connection.Connected == false)  // Stop receiving if no longer connected
                     {
@@ -235,7 +251,7 @@ namespace MHServerEmu.Core.Network.Tcp
                 catch (TaskCanceledException) { return; }
                 catch (Exception e)
                 {
-                    Logger.DebugException(e, nameof(ReceiveData));
+                    Logger.DebugException(e, nameof(ReceiveDataAsync));
                     return;
                 }
             }

@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.Navi;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class NaviFragmentPrototype : Prototype
     {

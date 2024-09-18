@@ -1,66 +1,86 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
+    public enum PlayerReadyStateValue
+    {
+        Pending,
+        Ready
+    }
+
     public class UIWidgetReadyCheck : UISyncData
     {
-        public PlayerReadyState[] PlayerReadyStates { get; set; }
+        private Dictionary<ulong, PlayerReadyState> _playerReadyStateDict = new();
 
-        public UIWidgetReadyCheck(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
+        public UIWidgetReadyCheck(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef) { }
+
+        public override bool Serialize(Archive archive)
         {
-            PlayerReadyStates = new PlayerReadyState[stream.ReadRawVarint64()];
-            for (int i = 0; i < PlayerReadyStates.Length; i++)
-                PlayerReadyStates[i] = new(stream);
-        }
+            bool success = base.Serialize(archive);
 
-        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
-        {
-            base.Encode(stream, boolEncoder);
-
-            stream.WriteRawVarint64((ulong)PlayerReadyStates.Length);
-            for (int i = 0; i < PlayerReadyStates.Length; i++)
-                PlayerReadyStates[i].Encode(stream);
+            success &= Serializer.Transfer(archive, ref _playerReadyStateDict);
+            
+            // UIWidgetReadyCheck::calculateNumberReady()
+            
+            return success;
         }
 
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
 
-            for (int i = 0; i < PlayerReadyStates.Length; i++) sb.AppendLine($"PlayerReadyState{i}: {PlayerReadyStates[i]}");
-        }
-    }
-
-    public class PlayerReadyState
-    {
-        public ulong Index { get; set; }
-        public string PlayerName { get; set; }
-        public int ReadyCheck { get; set; }
-
-        public PlayerReadyState(CodedInputStream stream)
-        {
-            Index = stream.ReadRawVarint64();
-            PlayerName = stream.ReadRawString();
-            ReadyCheck = stream.ReadRawInt32();
+            foreach (var kvp in _playerReadyStateDict)
+                sb.AppendLine($"{nameof(_playerReadyStateDict)}[{kvp.Key}]: {kvp.Value}");
         }
 
-        public void Encode(CodedOutputStream stream)
+        public void SetPlayerReadyState(ulong key, string playerName, PlayerReadyStateValue stateValue)
         {
-            stream.WriteRawVarint64(Index);
-            stream.WriteRawString(PlayerName);
-            stream.WriteRawInt32(ReadyCheck);
+            if (_playerReadyStateDict.TryGetValue(key, out PlayerReadyState playerReadyState) == false)
+            {
+                playerReadyState = new();
+                _playerReadyStateDict.Add(key, playerReadyState);
+            }
+
+            playerReadyState.PlayerName = playerName;
+            playerReadyState.StateValue = stateValue;
+            UpdateUI();
         }
 
-        public override string ToString()
+        class PlayerReadyState : ISerialize
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"Index: {Index}");
-            sb.AppendLine($"PlayerName: {PlayerName}");
-            sb.AppendLine($"ReadyCheck: {ReadyCheck}");
-            return sb.ToString();
+            public string PlayerName;
+            public PlayerReadyStateValue StateValue;
+
+            public PlayerReadyState() { }
+
+            public bool Serialize(Archive archive)
+            {
+                bool success = true;
+
+                success &= Serializer.Transfer(archive, ref PlayerName);
+
+                if (archive.IsPacking)
+                {
+                    int stateValue = (int)StateValue;
+                    success &= Serializer.Transfer(archive, ref stateValue);
+                }
+                else
+                {
+                    int stateValue = 0;
+                    success &= Serializer.Transfer(archive, ref stateValue);
+                    StateValue = (PlayerReadyStateValue)stateValue;
+                }
+
+                return success;
+            }
+
+            public override string ToString()
+            {
+                return $"{PlayerName}={StateValue}";
+            }
         }
     }
 }

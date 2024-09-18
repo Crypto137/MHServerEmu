@@ -1,9 +1,25 @@
-﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    using KeywordsMask = BitList;
+    public class KeywordsMask : BitList
+    {
+        public static KeywordsMask operator &(KeywordsMask left, KeywordsMask right)
+        {
+            return And(left, right);
+        }
+
+        public static KeywordsMask operator |(KeywordsMask left, KeywordsMask right)
+        {
+            return Or(left, right);
+        }
+
+        public static KeywordsMask operator ^(KeywordsMask left, KeywordsMask right)
+        {
+            return Xor(left, right);
+        }
+    }
 
     public class KeywordPrototype : Prototype
     {
@@ -14,20 +30,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static KeywordsMask GetBitMaskForKeywordList(PrototypeId[] keywordsList)
         {
-            KeywordsMask rusult = new();
+            KeywordsMask result = new();
 
             if (keywordsList.HasValue())
             {
-                foreach (var kerwordRef in keywordsList)
+                foreach (PrototypeId keywordRef in keywordsList)
                 {
-                    KeywordPrototype keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(kerwordRef);
-                    keywordProto?.GetBitMask(ref rusult);
+                    KeywordPrototype keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+                    keywordProto?.GetBitMask(ref result);
                 }
             }
-            return rusult;
+            return result;
         }
 
-        private void GetBitMask(ref KeywordsMask keywordMask)
+        public static KeywordsMask GetBitMaskForKeywordList(IEnumerable<PrototypeId> keywordsList)
+        {
+            KeywordsMask result = new();
+
+            foreach (PrototypeId keywordRef in keywordsList)
+            {
+                KeywordPrototype keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+                keywordProto?.GetBitMask(ref result);
+            }
+
+            return result;
+        }
+
+        public void GetBitMask(ref KeywordsMask keywordMask)
         {
             if (_bitIndex == -1)
             {
@@ -38,7 +67,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             keywordMask |= _bitMask;
         }
 
-        private int GetBitIndex()
+        public int GetBitIndex()
         {
             if (_bitIndex == -1)
             {

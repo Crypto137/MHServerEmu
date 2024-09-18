@@ -6,17 +6,16 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Network;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Billing
 {
     public class BillingService : IGameService
     {
-        private const ushort MuxChannel = 1;
-
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string BillingDataDirectory = Path.Combine(FileHelper.DataDirectory, "Billing");
 
@@ -63,110 +62,110 @@ namespace MHServerEmu.Billing
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, GameMessage message)
+        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        {
+            Logger.Warn($"Handle(): Unhandled MessagePackage");
+        }
+
+        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
+        {
+            foreach (MessagePackage message in messages)
+                Handle(client, message);
+        }
+
+        public void Handle(ITcpClient tcpClient, MailboxMessage message)
         {
             var client = (FrontendClient)tcpClient;
 
+            // This is pretty rough, we need a better way of handling this
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageGetCatalog:
-                    if (message.TryDeserialize<NetMessageGetCatalog>(out var getCatalog))
-                        OnGetCatalog(client, getCatalog);
-                    break;
+                case ClientToGameServerMessage.NetMessageGetCatalog:            OnGetCatalog(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:    OnGetCurrencyBalance(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:    OnBuyItemFromCatalog(playerConnection, message); break;
 
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
-                    OnGetCurrencyBalance(client);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
-                    if (message.TryDeserialize<NetMessageBuyItemFromCatalog>(out var buyItemFromCatalog))
-                        OnBuyItemFromCatalog(client, buyItemFromCatalog);
-                    break;
-
-                default:
-                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
-                    break;
+                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
-        {
-            foreach (GameMessage message in messages)
-                Handle(client, message);
         }
 
         public string GetStatus()
         {
-            return $"Running";
+            return $"Catalog Entries: {_catalog.Entries.Length}";
         }
 
         #endregion
 
-        private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)
+        private bool OnGetCatalog(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var getCatalog = message.As<NetMessageGetCatalog>();
+            if (getCatalog == null) return Logger.WarnReturn(false, $"OnGetCatalog(): Failed to retrieve message");
+
             // Bail out if the client already has an up to date catalog
             if (getCatalog.TimestampSeconds == _catalog.TimestampSeconds && getCatalog.TimestampMicroseconds == _catalog.TimestampMicroseconds)
-                return;
+                return true;
 
             // Send the current catalog
-            client.SendMessage(MuxChannel, _catalog.ToNetMessageCatalogItems(false));
+            playerConnection.SendMessage(_catalog.ToNetMessageCatalogItems(false));
+            return true;
         }
 
-        private void OnGetCurrencyBalance(FrontendClient client)
+        private void OnGetCurrencyBalance(PlayerConnection playerConnection, MailboxMessage message)
         {
-            client.SendMessage(MuxChannel, NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(_currencyBalance)
                 .Build());
         }
 
-        private void OnBuyItemFromCatalog(FrontendClient client, NetMessageBuyItemFromCatalog buyItemFromCatalog)
+        private bool OnBuyItemFromCatalog(PlayerConnection playerConnection, MailboxMessage message)
         {
+            var buyItemFromCatalog = message.As<NetMessageBuyItemFromCatalog>();
+            if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
+
             Logger.Info($"Received NetMessageBuyItemFromCatalog");
             Logger.Trace(buyItemFromCatalog.ToString());
 
-            // HACK: change costume when a player "buys" a costume
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
-            var player = playerConnection.Player;
-            var avatar = player.CurrentAvatar;
+            Player player = playerConnection.Player;
 
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
             if (entry == null || entry.GuidItems.Length == 0)
             {
-                SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                return;
+                SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
+                return true;
             }
 
-            var costumePrototype = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<CostumePrototype>();
-            if (costumePrototype == null || costumePrototype.UsableBy != avatar.BaseData.PrototypeId)
+            Prototype catalogItemProto = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<Prototype>();
+
+            switch (catalogItemProto)
             {
-                SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                return;
+                case ItemPrototype itemProto:
+                    // Give the player the item they are trying to "buy"
+                    player.Game.LootManager.GiveItem(player, itemProto.DataRef);
+                    break;
+
+                case PlayerStashInventoryPrototype playerStashInventoryProto:
+                    // Unlock the stash tab
+                    player.UnlockInventory(playerStashInventoryProto.DataRef);
+                    break;
+
+                default:
+                    // Return error for unhandled SKU types
+                    Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}");
+                    SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
+                    return true;
             }
-
-            // Update player and avatar properties
-            avatar.Properties[PropertyEnum.CostumeCurrent] = costumePrototype.DataRef;
-            player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatar.BaseData.PrototypeId] = costumePrototype.DataRef;
-
-            // Send client property updates (TODO: Remove this when we have those generated automatically)
-            // Avatar entity
-            client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
-                avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient));
-
-            // Player entity
-            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
-
-            client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
-                player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef));
 
             // Send buy response
-            SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
+            SendBuyItemResponse(playerConnection, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
+            return true;
         }
 
-        private void SendBuyItemResponse(FrontendClient client, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
+        private void SendBuyItemResponse(PlayerConnection playerConnection, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
         {
-            client.SendMessage(MuxChannel, NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(didSucceed)
                 .SetCurrentCurrencyBalance(_currencyBalance)
                 .SetErrorcode(errorCode)

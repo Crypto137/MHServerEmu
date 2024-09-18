@@ -1,102 +1,101 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using Google.ProtocolBuffers;
+using Google.ProtocolBuffers.Descriptors;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// A helper class for protobuf message serialization and deserialization.
+    /// A helper singleton for <see cref="IMessage"/> serialization.
     /// </summary>
-    public static class ProtocolDispatchTable
+    public class ProtocolDispatchTable
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly Assembly LibGazillionAssembly = typeof(NetMessageReadyAndLoggedIn).Assembly;
         private static readonly Type[] ParseMethodArgumentTypes = new Type[] { typeof(byte[]) };
 
         // Lookups
-        private static readonly Dictionary<(string, string), byte> DescriptorToIdDict = new();      // Proto file name + message name -> Id
-        private static readonly Dictionary<Type, ParseMessage> TypeToParseDelegateDict = new();     // Class type -> ParseMessage delegate
-        private static readonly Dictionary<(Type, byte), string> IdToNameDict = new();              // Protocol enum type + id -> message name
-        private static readonly Dictionary<string, Type> NameToTypeDict = new();                    // Message name -> class type 
+        private readonly Dictionary<MessageDescriptor, (Type, uint)> _messageDescriptorToProtocolIdDict = new();  // MessageDescriptor -> protocol enum type, id
+        private readonly Dictionary<(Type, uint), Type> _protocolIdToMessageTypeDict = new();                     // Protocol enum type, id -> Message type
+        private readonly Dictionary<Type, ParseMessage> _messageTypeToParseDelegateDict = new();                  // Message type -> ParseMessage delegate
 
-        public static bool IsInitialized { get; }
+        private bool _isInitialized;
 
         public delegate IMessage ParseMessage(byte[] data);
 
-        static ProtocolDispatchTable()
-        {
-            // Preprocess all messages on startup to speed up (de)serialization
-            ParseMessageEnum(typeof(AuthMessage), "AuthMessages.proto");
-            ParseMessageEnum(typeof(BillingCommonMessage), "BillingCommon.proto");
-            ParseMessageEnum(typeof(ChatCommonMessage), "ChatCommon.proto");
-            ParseMessageEnum(typeof(ClientToGameServerMessage), "ClientToGameServer.proto");
-            ParseMessageEnum(typeof(ClientToGroupingManagerMessage), "ClientToGroupingManager.proto");
-            ParseMessageEnum(typeof(CommonMessage), "CommonMessages.proto");
-            ParseMessageEnum(typeof(FrontendProtocolMessage), "FrontendProtocol.proto");
-            ParseMessageEnum(typeof(GameServerToClientMessage), "GameServerToClient.proto");
-            ParseMessageEnum(typeof(GroupingManagerMessage), "GroupingManager.proto");
-            ParseMessageEnum(typeof(GuildMessage), "Guild.proto");
-            ParseMessageEnum(typeof(MatchCommonMessage), "MatchCommon.proto");
-            ParseMessageEnum(typeof(PubSubProtocolMessage), "PubSubProtocol.proto");
+        public static ProtocolDispatchTable Instance { get; } = new();
 
-            IsInitialized = true;
+        private ProtocolDispatchTable() { }
+
+        /// <summary>
+        /// Initializes the <see cref="ProtocolDispatchTable"/> instance.
+        /// </summary>
+        public bool Initialize()
+        {
+            if (_isInitialized) return false;
+
+            var stopwatch = Stopwatch.StartNew();
+
+            // Preprocess all messages on startup to speed up serialization
+            ParseMessageEnum(typeof(AuthMessage));
+            ParseMessageEnum(typeof(BillingCommonMessage));
+            ParseMessageEnum(typeof(ChatCommonMessage));
+            ParseMessageEnum(typeof(ClientToGameServerMessage));
+            ParseMessageEnum(typeof(ClientToGroupingManagerMessage));
+            ParseMessageEnum(typeof(CommonMessage));
+            ParseMessageEnum(typeof(FrontendProtocolMessage));
+            ParseMessageEnum(typeof(GameServerToClientMessage));
+            ParseMessageEnum(typeof(GroupingManagerMessage));
+            ParseMessageEnum(typeof(GuildMessage));
+            ParseMessageEnum(typeof(MatchCommonMessage));
+            ParseMessageEnum(typeof(PubSubProtocolMessage));
+
+            Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
+
+            _isInitialized = true;
+            return true;
         }
 
         /// <summary>
-        /// Returns the id of the provided <see cref="IMessage"/>.
+        /// Returns the protocol enum <see cref="Type"/> and <see cref="uint"/> id of the provided <see cref="IMessage"/>.
         /// </summary>
-        public static byte GetMessageId(IMessage message)
+        public (Type, uint) GetMessageProtocolId(IMessage message)
         {
-            return DescriptorToIdDict[(message.DescriptorForType.File.Name, message.DescriptorForType.Name)];
-        }
-
-        /// <summary>
-        /// Returns a delegate for parsing an <see cref="IMessage"/> of the provided type.
-        /// </summary>
-        public static ParseMessage GetParseMessageDelegate(Type messageType)
-        {
-            return TypeToParseDelegateDict[messageType];
-        }
-
-        /// <summary>
-        /// Returns a delegate for parsing <typeparamref name="T"/>.
-        /// </summary>
-        public static ParseMessage GetParseMessageDelegate<T>() where T : IMessage
-        {
-            return GetParseMessageDelegate(typeof(T));
+            return _messageDescriptorToProtocolIdDict[message.DescriptorForType];
         }
 
         /// <summary>
         /// Returns a delegate for parsing an <see cref="IMessage"/> of the specified id and protocol.
         /// </summary>
-        public static ParseMessage GetParseMessageDelegate(Type protocolEnumType, byte id)
+        public ParseMessage GetParseMessageDelegate(Type protocolEnumType, uint id)
         {
-            string messageName = IdToNameDict[(protocolEnumType, id)];
-            Type messageType = NameToTypeDict[messageName];
-            return GetParseMessageDelegate(messageType);
+            Type messageType = _protocolIdToMessageTypeDict[(protocolEnumType, id)];
+            return _messageTypeToParseDelegateDict[messageType];
         }
 
         /// <summary>
         /// Parses a message enum to generate lookups and cache parse delegates.
         /// </summary>
-        private static void ParseMessageEnum(Type protocolEnumType, string protoFileName)
+        private void ParseMessageEnum(Type protocolEnumType)
         {
             string[] names = Enum.GetNames(protocolEnumType);
-            if (names.Length > 255) throw new OverflowException("Message enum contains more than 255 values.");
 
             // Iterate through message ids
-            for (byte i = 0; i < names.Length; i++)
+            for (uint i = 0; i < names.Length; i++)
             {
                 // Use reflection to get message type and ParseFrom MethodInfo
                 Type messageType = LibGazillionAssembly.GetType($"Gazillion.{names[i]}") ?? throw new("Message type is null.");
+                var messageDescriptor = (MessageDescriptor)messageType.GetProperty("Descriptor").GetValue(null);
                 MethodInfo parseMethod = messageType.GetMethod("ParseFrom", ParseMethodArgumentTypes) ?? throw new("Message ParseFrom method is null.");
 
                 // Add lookups
-                DescriptorToIdDict[(protoFileName, names[i])] = i;
-                IdToNameDict.Add((protocolEnumType, i), names[i]);
-                NameToTypeDict.Add(names[i], messageType);
+                _messageDescriptorToProtocolIdDict[messageDescriptor] = (protocolEnumType, i);
+                _protocolIdToMessageTypeDict[(protocolEnumType, i)] = messageType;
 
                 // Create a delegate from MethodInfo to speed up deserialization
-                TypeToParseDelegateDict.Add(messageType, parseMethod.CreateDelegate<ParseMessage>());
+                _messageTypeToParseDelegateDict.Add(messageType, parseMethod.CreateDelegate<ParseMessage>());
             }
         }
     }

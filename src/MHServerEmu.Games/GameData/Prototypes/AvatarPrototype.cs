@@ -1,37 +1,15 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    #region Enums
-
-    [AssetEnum((int)Invalid)]
-    public enum AvatarStat
-    {
-        Invalid = 0,
-        Durability = 1,
-        Energy = 2,
-        Fighting = 3,
-        Intelligence = 4,
-        Speed = 5,
-        Strength = 6,
-    }
-
-    [AssetEnum((int)Invalid)]
-    public enum AvatarMode
-    {
-        Invalid = -1,
-        Normal = 0,
-        Hardcore = 1,
-        Ladder = 2,
-    }
-
-    #endregion
-
     public class AvatarPrototype : AgentPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public LocaleStringId BioText { get; protected set; }
         public AbilityAssignmentPrototype[] HiddenPassivePowers { get; protected set; }
         public AssetId PortraitPath { get; protected set; }
@@ -75,6 +53,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
 
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        [DoNotCopy]
+        public PrototypeId UltimatePowerRef { get; private set; } = PrototypeId.Invalid;
+
+        [DoNotCopy]
+        public int AvatarPrototypeEnumValue { get; private set; }
+
         public override bool ApprovedForUse()
         {
             if (base.ApprovedForUse() == false) return false;
@@ -86,6 +74,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Add settings for PS4 and Xbox One here if we end up supporting console clients
             PrototypeId startingCostumeId = GetStartingCostumeForPlatform(Platforms.PC);
             return CostumeApprovedForUse(startingCostumeId);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            UIGlobalsPrototype uiGlobals = GameDatabase.UIGlobalsPrototype;
+
+            if (PowerProgressionTables != null)
+            {
+                for (int i = 0; i < PowerProgressionTables.Length; i++)
+                {
+                    PowerProgressionTablePrototype powerProgTableProto = PowerProgressionTables[i];
+
+                    // Assign tab references to power progression tables
+                    if (i >= 3) Logger.Warn("PostProcess(): PowerProgressionTables.Length >= 3");
+                    switch (i)
+                    {
+                        case 0: powerProgTableProto.PowerProgTableTabRef = uiGlobals.PowerProgTableTabRefTab1; break;
+                        case 1: powerProgTableProto.PowerProgTableTabRef = uiGlobals.PowerProgTableTabRefTab2; break;
+                        case 2: powerProgTableProto.PowerProgTableTabRef = uiGlobals.PowerProgTableTabRefTab3; break;
+                    }
+
+                    // Find the ultimate power
+                    foreach (PowerProgressionEntryPrototype entryProto in powerProgTableProto.PowerProgressionEntries)
+                    {
+                        PowerPrototype powerProto = entryProto.PowerAssignment.Ability.As<PowerPrototype>();
+
+                        if (Power.IsUltimatePower(powerProto))
+                        {
+                            if (UltimatePowerRef != PrototypeId.Invalid) Logger.Warn($"PostProcess(): Avatar has more than one ultimate power defined ({this})");
+                            UltimatePowerRef = entryProto.PowerAssignment.Ability;
+                        }
+                    }
+                }
+            }
+
+            // TODO: SynergyTable
+            // TODO: StealablePowersAllowed
+
+            AvatarPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAvatarBlueprintDataRef());
         }
 
         /// <summary>
@@ -152,6 +181,72 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
+        public PowerProgressionTablePrototype GetPowerProgressionTableAtIndex(int index)
+        {
+            if (PowerProgressionTables == null) return null;
+
+            if (index < 0)
+                return Logger.WarnReturn<PowerProgressionTablePrototype>(null, "GetPowerProgressionTableAtIndex(): index < 0");
+
+            if (index >= PowerProgressionTables.Length)
+                return Logger.WarnReturn<PowerProgressionTablePrototype>(null, "GetPowerProgressionTableAtIndex(): index >= PowerProgressionTables.Length");
+
+            return PowerProgressionTables[index];
+        }
+
+        public int GetPowerProgressionTableIndexForPower(PrototypeId powerProtoRef)
+        {
+            if (PowerProgressionTables == null) return -1;
+
+            int index = 0;
+
+            foreach (PowerProgressionTablePrototype powerProgTableProto in PowerProgressionTables)
+            {
+                foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgTableProto.PowerProgressionEntries)
+                {
+                    AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
+                    if (abilityAssignmentProto?.Ability == powerProtoRef)
+                        return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        public PrototypeId GetPowerProgressionTableTabRefForPower(PrototypeId powerProtoRef)
+        {
+            int tableIndex = GetPowerProgressionTableIndexForPower(powerProtoRef);
+            if (tableIndex < 0) return PrototypeId.Invalid;
+
+            PowerProgressionTablePrototype powerProgTableProto = GetPowerProgressionTableAtIndex(tableIndex);
+            if (powerProgTableProto == null)
+                return Logger.WarnReturn(PrototypeId.Invalid, "GetPowerProgressionTableTabRefForPower(): powerProgTableProto == null");
+
+            return powerProgTableProto.PowerProgTableTabRef;
+        }
+
+        public PowerProgressionEntryPrototype GetPowerProgressionEntryForPower(PrototypeId powerProtoRef)
+        {
+            if (PowerProgressionTables.IsNullOrEmpty())
+                return null;
+
+            foreach (PowerProgressionTablePrototype powerProgTableProto in PowerProgressionTables)
+            {
+                if (powerProgTableProto.PowerProgressionEntries.IsNullOrEmpty())
+                    continue;
+
+                foreach (PowerProgressionEntryPrototype powerProgEntryProto in powerProgTableProto.PowerProgressionEntries)
+                {
+                    if (powerProgEntryProto.PowerAssignment.Ability == powerProtoRef)
+                        return powerProgEntryProto;
+                }    
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided costume is approved for use.
         /// </summary>
@@ -161,6 +256,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var costume = GameDatabase.GetPrototype<CostumePrototype>(costumeId);
             return costume != null && GameDatabase.DesignStateOk(costume.DesignState);
         }
+
+        public bool IsMemberOfSuperteam(PrototypeId superteamProtoRef)
+        {
+            if (superteamProtoRef == PrototypeId.Invalid) return false;
+            if (SuperteamMemberships != null)
+                return SuperteamMemberships.Contains(superteamProtoRef);
+            return false;
+        }
+
     }
 
     public class ItemAssignmentPrototype : Prototype
@@ -219,7 +323,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AvatarModePrototype : Prototype
     {
         public AvatarMode AvatarModeEnum { get; protected set; }
-        public ConvenienceLabel Inventory { get; protected set; }
+        public InventoryConvenienceLabel Inventory { get; protected set; }
     }
 
     public class StatProgressionEntryPrototype : Prototype
@@ -245,12 +349,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UIFanTier { get; protected set; }
         public PrototypeId[] Antirequisites { get; protected set; }
         public bool IsTrait { get; protected set; }
+
+        public override int GetRequiredLevel() => Level;
+        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.StartingRank : 0;
+
+        public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
+        public override PrototypeId[] GetPrerequisites() => Prerequisites;
+        public override PrototypeId[] GetAntirequisites() => Antirequisites;
     }
 
     public class PowerProgressionTablePrototype : Prototype
     {
         public LocaleStringId DisplayName { get; protected set; }
         public PowerProgressionEntryPrototype[] PowerProgressionEntries { get; protected set; }
+
+        [DoNotCopy]
+        public PrototypeId PowerProgTableTabRef { get; set; } = PrototypeId.Invalid;
     }
 
     public class PowerProgTableTabRefPrototype : Prototype

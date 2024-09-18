@@ -1,5 +1,8 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -168,6 +171,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayName { get; protected set; }
         public int UrgentTimeMS { get; protected set; }
         public AssetId IconPathHiRes { get; protected set; }
+
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+        [DoNotCopy]
+        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
+        [DoNotCopy]
+        public ConditionCancelOnFlags CancelOnFlags { get; private set; } = ConditionCancelOnFlags.None;
+        [DoNotCopy]
+        public bool IsHitReactCondition { get => Properties != null && Properties.HasProperty(PropertyEnum.HitReact); }
+
+        [DoNotCopy]
+        public int BlueprintCopyNum { get; set; }
+
+        [DoNotCopy]
+        public int ConditionPrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            // TODO: stuff
+
+            // Combine cancel flags into a single bit field (TODO: flag enum)
+            if (CancelOnHit)                    CancelOnFlags |= ConditionCancelOnFlags.OnHit;
+            if (CancelOnKilled)                 CancelOnFlags |= ConditionCancelOnFlags.OnKilled;
+            if (CancelOnPowerUse)               CancelOnFlags |= ConditionCancelOnFlags.OnPowerUse;
+            if (CancelOnPowerUsePost)           CancelOnFlags |= ConditionCancelOnFlags.OnPowerUsePost;
+            if (CancelOnTransfer)               CancelOnFlags |= ConditionCancelOnFlags.OnTransfer;
+            if (CancelOnIntraRegionTeleport)    CancelOnFlags |= ConditionCancelOnFlags.OnIntraRegionTeleport;
+
+            ConditionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetConditionBlueprintDataRef());
+
+            // TODO: more stuff
+        }
     }
 
     public class ConditionEffectPrototype : Prototype

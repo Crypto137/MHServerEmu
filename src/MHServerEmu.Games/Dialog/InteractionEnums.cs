@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Dialog
 {
@@ -21,62 +23,81 @@ namespace MHServerEmu.Games.Dialog
     [Flags]
     public enum InteractionMethod : ulong
     {
-        None = 0L,
-        Attack = 1L << 0,
-        Converse = 1L << 1,
-        PickUp = 1L << 2,
-        Throw = 1L << 3,
-        Use = 1L << 4,
-        Equip = 1L << 5,
-        Destroy = 1L << 6,
-        Buy = 1L << 7,
-        Sell = 1L << 8,
-        Donate = 1L << 9,
-        DonatePetTech = 1L << 10,
-        Teleport = 1L << 11,
-        MakeLeader = 1L << 12,
-        GroupChangeTypeToRaid = 1L << 13,
-        GroupChangeTypeToParty = 1L << 14,
-        PartyShareLegendaryQuest = 1L << 15,
-        Social = 1L << 16,
-        Resurrect = 1L << 17,
-        Chat = 1L << 18,
-        PartyInvite = 1L << 19,
-        Friend = 1L << 20,
-        Inspect = 1L << 21,
-        Trade = 1L << 22,
-        ViewPSNProfile = 1L << 23,
-        GuildInvite = 1L << 24,
-        GuildPromote = 1L << 25,
-        Heal = 1L << 26,
-        Flag27 = 1L << 27,
-        Flag28 = 1L << 28,
-        Follow = 1L << 29,
-        Duel = 1L << 30,
-        Flag31 = 1L << 31,
-        PartyLeave = 1L << 32,
-        PartyBoot = 1L << 33,
-        Unfriend = 1L << 34,
-        Ignore = 1L << 35,
-        Unignore = 1L << 36,
-        Report = 1L << 37,
-        ReportAsSpam = 1L << 38,
-        GuildDemote = 1L << 39,
-        GuildKick = 1L << 40,
-        GuildLeave = 1L << 41,
-        Mute = 1L << 42,
-        MoveToGeneralInventory = 1L << 43,
-        MoveToStash = 1L << 44,
-        SlotCraftingIngredient = 1L << 45,
-        MoveToTradeInventory = 1L << 46,
-        MoveToTeamUp = 1L << 47,
-        LinkItemInChat = 1L << 48,
+        None                    = 0ul,
+        Attack                  = 1ul << 0,
+        Converse                = 1ul << 1,
+        PickUp                  = 1ul << 2,
+        Throw                   = 1ul << 3,
+        Use                     = 1ul << 4,
+        Equip                   = 1ul << 5,
+        Destroy                 = 1ul << 6,
+        Buy                     = 1ul << 7,
+        Sell                    = 1ul << 8,
+        Donate                  = 1ul << 9,
+        DonatePetTech           = 1ul << 10,
+        Teleport                = 1ul << 11,
+        MakeLeader              = 1ul << 12,
+        GroupChangeTypeToRaid   = 1ul << 13,
+        GroupChangeTypeToParty  = 1ul << 14,
+        PartyShareLegendaryQuest= 1ul << 15,
+        Social                  = 1ul << 16,
+        Resurrect               = 1ul << 17,
+        Chat                    = 1ul << 18,
+        PartyInvite             = 1ul << 19,
+        Friend                  = 1ul << 20,
+        Inspect                 = 1ul << 21,
+        Trade                   = 1ul << 22,
+        ViewPSNProfile          = 1ul << 23,
+        GuildInvite             = 1ul << 24,
+        GuildPromote            = 1ul << 25,
+        Heal                    = 1ul << 26,
+        Flag27                  = 1ul << 27,
+        StoryWarp               = 1ul << 28,
+        Follow                  = 1ul << 29,
+        Duel                    = 1ul << 30,
+        Neutral                 = 1ul << 31,
+        PartyLeave              = 1ul << 32,
+        PartyBoot               = 1ul << 33,
+        Unfriend                = 1ul << 34,
+        Ignore                  = 1ul << 35,
+        Unignore                = 1ul << 36,
+        Report                  = 1ul << 37,
+        ReportAsSpam            = 1ul << 38,
+        GuildDemote             = 1ul << 39,
+        GuildKick               = 1ul << 40,
+        GuildLeave              = 1ul << 41,
+        Mute                    = 1ul << 42,
+        MoveToGeneralInventory  = 1ul << 43,
+        MoveToStash             = 1ul << 44,
+        SlotCraftingIngredient  = 1ul << 45,
+        MoveToTradeInventory    = 1ul << 46,
+        MoveToTeamUp            = 1ul << 47,
+        LinkItemInChat          = 1ul << 48,
+        OpenMTXStore            = 1ul << 49,
+        All                     = ulong.MaxValue
+    }
+
+    public enum InteractionResult
+    {
+        Success,
+        Failure,
+        OutOfRange,
+        AttackFail,
+        ExecutingPower,
     }
 
     [Flags]
     public enum InteractionFlags
     {
-        None = 0,
+        None                        = 0,
+        Flag0                       = 1 << 0,
+        Default                     = 1 << 1,
+        Flag2                       = 1 << 2,
+        Flag3                       = 1 << 3,
+        StopMove                    = 1 << 4,
+        DeadInteractor              = 1 << 5,
+        DormanInvisibleInteractee   = 1 << 6,
+        EvaluateInteraction         = 1 << 7,
     }
 
     [Flags]
@@ -181,5 +202,62 @@ namespace MHServerEmu.Games.Dialog
             if(spawnedByMission.HasValue())
                 foreach (var mission in spawnedByMission) _missionRefs.Add(mission);
         }
+
+        public bool EvaluateEntity(WorldEntity entity)
+        {
+            if (entity == null) return false;
+
+            if (_regionRefs.Any())
+            {
+                Region region = entity.Region;
+                if (region == null)
+                {
+                    RegionLocation ownerLocation = entity.GetOwnerLocation();
+                    if (ownerLocation != null)
+                        region = ownerLocation.Region;
+                    else
+                        region = entity.ExitWorldRegionLocation.GetRegion();
+                }
+
+                if (region == null) return false;
+
+                bool found = false;
+                foreach (var regionRef in _regionRefs)
+                    if (RegionPrototype.Equivalent(regionRef.As<RegionPrototype>(), region.Prototype))
+                    {
+                        found = true;
+                        break;
+                    }
+
+                if (found == false) return false;
+            }
+
+            if (_encounterRefs.Any())
+            {
+                var ecounterRef = entity.EncounterResourcePrototype;
+                if (ecounterRef == PrototypeId.Invalid || _encounterRefs.Contains(ecounterRef) == false) return false;
+            }
+
+            if (_missionRefs.Any())
+            {
+                PrototypeId missionRef = entity.MissionPrototype;
+                if (missionRef == PrototypeId.Invalid || _missionRefs.Contains(missionRef) == false) return false;
+            }
+
+            if (_clusterRefs.Any())
+            {
+                PrototypeId clusterRef = entity.ClusterPrototype;
+                if (clusterRef == PrototypeId.Invalid || _clusterRefs.Contains(clusterRef) == false) return false;
+            }
+
+            if (_entityFilters.Any())
+            {
+                foreach (var filter in _entityFilters)
+                    if (filter.Evaluate(entity, new (FilterContextMissionRef)) == false) return false;
+            }
+
+            return true;
+        }
+
     }
 }

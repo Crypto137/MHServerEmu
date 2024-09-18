@@ -47,6 +47,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapDistributeDistance { get; protected set; }
         public int SpawnMapDistributeSpread { get; protected set; }
         public bool SpawnMapEnabled { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            SpawnMapDensityMin = Math.Clamp(SpawnMapDensityMin, 0.0f, 0.8f);
+            SpawnMapDensityMax = Math.Clamp(SpawnMapDensityMax, 0.0f, 0.8f);
+            SpawnMapHeatBleed = Math.Clamp(SpawnMapHeatBleed, 0.0f, 0.8f);
+        }
+
+        public float GetEncounterDensity(PrototypeId markerRef)
+        {
+            if (EncounterDensityOverrides.HasValue())
+                foreach (var entry in EncounterDensityOverrides)
+                    if (entry.MarkerType == markerRef) return entry.Density;            
+            return EncounterDensityBase;
+        }
     }
 
     public class SpawnMarkerPrototype : Prototype

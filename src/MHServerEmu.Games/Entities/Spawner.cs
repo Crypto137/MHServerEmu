@@ -1,11 +1,8 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Random;
-using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -16,30 +13,30 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
         public bool DebugLog;
 
-        private GRandom _random;
-        public SpawnerPrototype SpawnerPrototype => EntityPrototype as SpawnerPrototype;
-        public Spawner(EntityBaseData baseData) : base(baseData)
+        public SpawnerPrototype SpawnerPrototype => Prototype as SpawnerPrototype;
+
+        // New
+        public Spawner(Game game) : base(game) { }
+
+        public override bool Initialize(EntitySettings settings)
         {
+            base.Initialize(settings);
+
+            // old
+            SetFlag(EntityFlags.NoCollide, true);
+
+            return true;
         }
 
-        public Spawner(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData)
+        public override void OnEnteredWorld(EntitySettings settings)
         {
-        }
-
-        public Spawner(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties) : 
-            base(baseData, replicationPolicy, properties)
-        {           
-        }
-
-        public override void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
-        {
-            base.EnterWorld(cell, position, orientation);
-            _flags |= EntityFlags.NoCollide;
+            base.OnEnteredWorld(settings);            
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
-            if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
-            if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
-            _random = Game.Random; //new(cell.Seed);
+            if (DebugLog) Logger.Debug($"[{Id}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}]");
+            if (EntityHelper.InvSpawners.Contains((EntityHelper.InvSpawner)PrototypeDataRef)) return;
+            if (spawnerProto.DataRef == (PrototypeId)12390588549200814321) // SurturBossSpawner = 12390588549200814321, 
+                RegionLocation.Orientation = new(-2.356194f, 0f, 0f); // Fix for SurturBoss
             // if (spawnerProto.StartEnabled)
             Spawn();
         }
@@ -75,16 +72,27 @@ namespace MHServerEmu.Games.Entities
 
         private void SpawnObject(PopulationObjectPrototype popObject)
         {
-            var region = Location.Region;
-            var random = _random;
+            var populationManager = Region.PopulationManager;
             var spawnerProto = SpawnerPrototype;
-            ClusterGroup clusterGroup = new(region, random, popObject, null, Properties, SpawnFlags.None);
-            clusterGroup.Initialize();
-            Vector3 pos = new(Location.GetPosition());
-            var rot = Location.GetOrientation();
-            clusterGroup.PickPositionInSector(pos, rot, spawnerProto.SpawnDistanceMin, spawnerProto.SpawnDistanceMax);
-            // spawn Entity from Group
-            clusterGroup.Spawn();
+            SpawnFlags spawnFlags = SpawnFlags.None;
+            if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout)
+                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
+                spawnFlags |= SpawnFlags.IgnoreBlackout;
+            PropertyCollection properties = new();
+            if (spawnerProto.SpawnsInheritMissionPrototype)
+                properties[PropertyEnum.MissionPrototype] = Properties[PropertyEnum.MissionPrototype];
+
+            populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
+        }
+
+        public void Trigger(EntityTriggerEnum trigger)
+        {
+            Logger.Debug($"Trigger(): {this}");
+        }
+
+        public void KillSummonedInventory()
+        {
+            Logger.Debug($"KillSummonedInventory(): {this}");
         }
     }
 }

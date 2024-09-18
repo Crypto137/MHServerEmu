@@ -1,0 +1,16 @@
+protogen --proto_path=./proto ./proto/AuthMessages.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/BillingCommon.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/ChatCommon.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/ClientToGameServer.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/ClientToGroupingManager.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/CommonMessages.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/google/protobuf/descriptor.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/FrontendProtocol.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/GameServerToClient.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/GazillionCommon.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/GlobalEventsCommon.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/GroupingManager.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/Guild.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/MatchCommon.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+protogen --proto_path=./proto ./proto/PubSubProtocol.proto --include_imports -ignore_google_protobuf=true -cls_compliance=false -expand_namespace_directories=true -service_generator_type=GENERIC -output_directory=./out
+pause

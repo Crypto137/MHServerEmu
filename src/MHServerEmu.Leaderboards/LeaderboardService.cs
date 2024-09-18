@@ -24,43 +24,42 @@ namespace MHServerEmu.Leaderboards
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, GameMessage message)
+        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        {
+            Logger.Warn($"Handle(): Unhandled MessagePackage");
+        }
+
+        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
+        {
+            foreach (MessagePackage message in messages)
+                Handle(client, message);
+        }
+
+        public void Handle(ITcpClient tcpClient, MailboxMessage message)
         {
             var client = (FrontendClient)tcpClient;
 
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
-                    if (message.TryDeserialize<NetMessageLeaderboardInitializeRequest>(out var initializeRequest))
-                        OnInitializeRequest(client, initializeRequest);
-                    break;
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(client, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(client, message); break;
 
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
-                    if (message.TryDeserialize<NetMessageLeaderboardRequest>(out var request))
-                        OnRequest(client, request);
-                    break;
-
-                default:
-                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
-                    break;
+                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
-        {
-            foreach (GameMessage message in messages)
-                Handle(client, message);
         }
 
         public string GetStatus()
         {
-            return "Running";
+            return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
         }
 
         #endregion
 
-        private void OnInitializeRequest(FrontendClient client, NetMessageLeaderboardInitializeRequest initializeRequest)
+        private bool OnInitializeRequest(FrontendClient client, MailboxMessage message)
         {
+            var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
+            if (initializeRequest == null) return Logger.WarnReturn(false, $"OnInitializeRequest(): Failed to retrieve message");
+
             Logger.Trace("Received NetMessageLeaderboardInitializeRequest");
 
             var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
@@ -69,15 +68,17 @@ namespace MHServerEmu.Leaderboards
                 response.AddLeaderboardInitDataList(_leaderboardManager.GetLeaderboardInitData(guid));
 
             client.SendMessage(MuxChannel, response.Build());
+
+            return true;
         }
 
-        private void OnRequest(FrontendClient client, NetMessageLeaderboardRequest request)
+        private bool OnRequest(FrontendClient client, MailboxMessage message)
         {
+            var request = message.As<NetMessageLeaderboardRequest>();
+            if (request == null) return Logger.WarnReturn(false, $"OnRequest(): Failed to retrieve message");
+
             if (request.HasDataQuery == false)
-            {
-                Logger.Warn("OnRequest(): HasDataQuery == false");
-                return;
-            }
+                Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
 
             Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
 
@@ -86,6 +87,8 @@ namespace MHServerEmu.Leaderboards
             client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
                 .SetReport(leaderboard.GetReport(request, client.Session.Account.PlayerName))
                 .Build());
+
+            return true;
         }
     }
 }

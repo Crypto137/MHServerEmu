@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Text;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Properties
@@ -9,6 +10,8 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public class PropertyList : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         // When iterating, properties that use the same enum need to be grouped together to reduce the number of PropertyInfo lookups.
         // Our current implementation is a wrapper around the regular unsorted Dictionary that we store key/value pairs in.
         // Doing it this way and sorting only when we need to iterate is overall faster than a SortedDictionary.
@@ -94,10 +97,116 @@ namespace MHServerEmu.Games.Properties
         public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator()
         {
             // Sort by key before iterating
-            var list = _dict.ToList().OrderBy(kvp => kvp.Key);
-            return list.GetEnumerator();
+            return _dict.OrderBy(kvp => kvp.Key).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
+        {
+            return this.Where(kvp => kvp.Key.Enum == propertyEnum);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use any of the specified <see cref="PropertyEnum"/> values.
+        /// Count specifies how many <see cref="PropertyEnum"/> elements to get from the provided <see cref="IEnumerable"/>.
+        /// </summary>
+        /// /// <remarks>
+        /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this is checked
+        /// against every key/value pair rather than once per enum.
+        /// </remarks>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum[] enums)
+        {
+            // TODO: Confirm if this is working as intended
+            foreach (var kvp in this)
+            {
+                if (enums.Contains(kvp.Key.Enum) == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="int"/> value as param0.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, int param0)
+        {
+            foreach (var kvp in this.Where(kvp => kvp.Key.Enum == propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out int itParam0);
+
+                bool match = true;
+                match &= kvp.Key.Enum == propertyEnum;
+                match &= itParam0 == param0;
+
+                if (match == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
+        {
+            foreach (var kvp in this.Where(kvp => kvp.Key.Enum == propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
+
+                bool match = true;
+                match &= kvp.Key.Enum == propertyEnum;
+                match &= itParam0 == param0;
+
+                if (match == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0 and param1.
+        /// </summary>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+        {
+            foreach (var kvp in this.Where(kvp => kvp.Key.Enum == propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId itParam0);
+                Property.FromParam(kvp.Key, 1, out PrototypeId itParam1);
+
+                bool match = true;
+                match &= kvp.Key.Enum == propertyEnum;
+                match &= itParam0 == param0;
+                match &= itParam1 == param1;
+
+                if (match == false) continue;
+                yield return kvp;
+            }
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that match the provided <see cref="PropertyEnumFilter"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
+        /// on every key/value pair rather than once per enum.
+        /// </remarks>
+        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
+        {
+            if (filterFunc == null)
+            {
+                Logger.Warn("IteratePropertyRange(): filterFunc == null");
+                yield break;
+            }
+
+            foreach (var kvp in this)
+            {
+                if (filterFunc(kvp.Key.Enum) == false) continue;
+                yield return kvp;
+            }
+        }
     }
 }

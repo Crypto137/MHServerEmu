@@ -1,12 +1,10 @@
 ﻿using System.Text;
 using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Regions.MatchQueues
 {
@@ -15,7 +13,7 @@ namespace MHServerEmu.Games.Regions.MatchQueues
     /// <summary>
     /// Manages queue statuses for region / difficulty tier combinations.
     /// </summary>
-    public class MatchQueueStatus
+    public class MatchQueueStatus : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -23,52 +21,77 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
         private Player _owner;
 
-        public MatchQueueStatus() { }
-
         /// <summary>
         /// Constructs a new <see cref="MatchQueueStatus"/> instance.
         /// </summary>
-        public MatchQueueStatus(CodedInputStream stream)
+        public MatchQueueStatus() { }
+
+        public bool Serialize(Archive archive)
         {
-            ulong numRegionStatuses = stream.ReadRawVarint64();
+            bool success = true;
 
-            for (ulong i = 0; i < numRegionStatuses; i++)
+            uint numRegionStatuses = (uint)_regionStatusDict.Count;
+            success &= Serializer.Transfer(archive, ref numRegionStatuses);
+
+            if (archive.IsPacking)
             {
-                PrototypeId regionRef = stream.ReadPrototypeRef<Prototype>();
-                PrototypeId difficultyTierRef = stream.ReadPrototypeRef<Prototype>();
-                ulong regionRequestGroupId = stream.ReadRawVarint64();
-                uint playersInQueue = stream.ReadRawVarint32();
-
-                if (regionRef == PrototypeId.Invalid) continue;
-
-                for (uint j = 0; j < playersInQueue; j++)
+                foreach (var kvp in _regionStatusDict)
                 {
-                    ulong playerGuid = stream.ReadRawVarint64();
-                    string playerName = stream.ReadRawString();
-                    var status = (RegionRequestQueueUpdateVar)stream.ReadRawVarint32();
+                    PrototypeId regionRef = kvp.Key.Item1;
+                    PrototypeId difficultyTierRef = kvp.Key.Item2;
+                    ulong regionRequestGroupId = kvp.Value.RegionRequestGroupId;
+                    uint numPlayers = (uint)kvp.Value.PlayerInfoDict.Count;
 
-                    UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, regionRequestGroupId, status, playerName);
+                    success &= Serializer.Transfer(archive, ref regionRef);
+                    success &= Serializer.Transfer(archive, ref difficultyTierRef);
+                    success &= Serializer.Transfer(archive, ref regionRequestGroupId);
+                    success &= Serializer.Transfer(archive, ref numPlayers);
+
+                    foreach (var playerInfoKvp in kvp.Value.PlayerInfoDict)
+                    {
+                        ulong playerGuid = playerInfoKvp.Key;
+                        string playerName = playerInfoKvp.Value.PlayerName;
+                        uint status = (uint)playerInfoKvp.Value.Status;
+
+                        success &= Serializer.Transfer(archive, ref playerGuid);
+                        success &= Serializer.Transfer(archive, ref playerName);
+                        success &= Serializer.Transfer(archive, ref status);
+                    }
                 }
             }
-        }
-
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64((ulong)_regionStatusDict.Count);
-            foreach (var kvp in _regionStatusDict)
+            else
             {
-                stream.WritePrototypeRef<Prototype>(kvp.Key.Item1);
-                stream.WritePrototypeRef<Prototype>(kvp.Key.Item2);
-                stream.WriteRawVarint64(kvp.Value.RegionRequestGroupId);
-                stream.WriteRawVarint32((uint)kvp.Value.PlayerInfoDict.Count);
-
-                foreach (var entry in kvp.Value.PlayerInfoDict)
+                for (uint i = 0; i < numRegionStatuses; i++)
                 {
-                    stream.WriteRawVarint64(entry.Key);
-                    stream.WriteRawString(entry.Value.PlayerName);
-                    stream.WriteRawVarint32((uint)entry.Value.Status);
+                    PrototypeId regionRef = PrototypeId.Invalid;
+                    PrototypeId difficultyTierRef = PrototypeId.Invalid;
+                    ulong regionRequestGroupId = 0;
+                    uint numPlayers = 0;
+
+                    success &= Serializer.Transfer(archive, ref regionRef);
+                    success &= Serializer.Transfer(archive, ref difficultyTierRef);
+                    success &= Serializer.Transfer(archive, ref regionRequestGroupId);
+                    success &= Serializer.Transfer(archive, ref numPlayers);
+
+                    if (regionRef == PrototypeId.Invalid) continue;
+
+                    for (uint j = 0; j < numPlayers; j++)
+                    {
+                        ulong playerGuid = 0;
+                        string playerName = string.Empty;
+                        uint status = 0;
+
+                        success &= Serializer.Transfer(archive, ref playerGuid);
+                        success &= Serializer.Transfer(archive, ref playerName);
+                        success &= Serializer.Transfer(archive, ref status);
+
+                        UpdatePlayerState(playerGuid, regionRef, difficultyTierRef, regionRequestGroupId,
+                            (RegionRequestQueueUpdateVar)status, playerName);
+                    }
                 }
             }
+
+            return success;
         }
 
         /// <summary>

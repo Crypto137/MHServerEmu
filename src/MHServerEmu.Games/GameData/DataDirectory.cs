@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.GameData
     /// <summary>
     /// A singleton that manages all static game data.
     /// </summary>
-    public class DataDirectory
+    public sealed class DataDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -44,9 +44,9 @@ namespace MHServerEmu.Games.GameData
         public static DataDirectory Instance { get; } = new();
 
         // Subdirectories
-        public CurveDirectory CurveDirectory { get; } = new();
-        public AssetDirectory AssetDirectory { get; } = new();
-        public ReplacementDirectory ReplacementDirectory { get; } = new();
+        public CurveDirectory CurveDirectory { get; } = CurveDirectory.Instance;
+        public AssetDirectory AssetDirectory { get; } = AssetDirectory.Instance;
+        public ReplacementDirectory ReplacementDirectory { get; } = ReplacementDirectory.Instance;
 
         // Quick access for blueprints
         public BlueprintId KeywordBlueprint { get; private set; } = BlueprintId.Invalid;
@@ -352,6 +352,33 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns the <see cref="BlueprintId"/> of the <see cref="Blueprint"/> that the specified <see cref="BlueprintGuid"/> refers to.
+        /// </summary>
+        public BlueprintId GetBlueprintDataRefByGuid(BlueprintGuid blueprintGuid)
+        {
+            if (blueprintGuid == BlueprintGuid.Invalid)
+                return BlueprintId.Invalid;
+
+            // Guid found
+            if (_blueprintGuidToDataRefDict.TryGetValue(blueprintGuid, out BlueprintId blueprintId))
+                return blueprintId;
+
+            // Guid not found, we need a replacement
+            ulong oldGuid = (ulong)blueprintGuid;
+            ulong newGuid = 0;
+
+            // Loop until we get all potential replacements (if a replacement was replaced)
+            while (GetGuidReplacement(oldGuid, ref newGuid))
+                oldGuid = newGuid;
+
+            if (_blueprintGuidToDataRefDict.TryGetValue((BlueprintGuid)newGuid, out blueprintId))
+                return blueprintId;
+
+            // Replacement didn't work either
+            return BlueprintId.Invalid;
+        }
+
+        /// <summary>
         /// Returns the <see cref="BlueprintId"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
         /// </summary>
         public BlueprintId GetPrototypeBlueprintDataRef(PrototypeId prototypeId)
@@ -415,12 +442,7 @@ namespace MHServerEmu.Games.GameData
                     }
                 }
 
-                // Make sure the requested type is valid for this prototype
-                var typedPrototype = record.Prototype as T;
-                if (typedPrototype == null)
-                    Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
-
-                return typedPrototype;
+                return record.Prototype as T;
             }
         }
 
@@ -512,23 +534,31 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Returns an iterator for prototypes belonging to the specified class.
+        /// Returns a <see cref="PrototypeIterator"/> for specified class <see cref="Type"/>.
         /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
-                return Logger.WarnReturn(new PrototypeIterator(), $"Failed to get iterated prototype list for class {prototypeClassType.Name}");
+                return Logger.WarnReturn(new PrototypeIterator(), $"IteratePrototypesInHierarchy(): Failed to get iterated prototype list for class {prototypeClassType.Name}");
 
             return new(node.PrototypeRecordList, flags);
         }
 
         /// <summary>
-        /// Returns an iterator for prototypes belonging to the specified blueprint.
+        /// Returns a <see cref="PrototypeIterator"/> for <typeparamref name="T"/>.
+        /// </summary>
+        public PrototypeIterator IteratePrototypesInHierarchy<T>(PrototypeIterateFlags flags = PrototypeIterateFlags.None) where T: Prototype
+        {
+            return IteratePrototypesInHierarchy(typeof(T), flags);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="PrototypeIterator"/> for prototypes belonging to the specified blueprint.
         /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
-                return Logger.WarnReturn(new PrototypeIterator(), $"Failed to get iterated prototype list for blueprint id {blueprintId}");
+                return Logger.WarnReturn(new PrototypeIterator(), $"IteratePrototypesInHierarchy(): Failed to get iterated prototype list for blueprint id {blueprintId}");
 
             return new(record.Blueprint.PrototypeRecordList, flags);
         }
@@ -628,6 +658,26 @@ namespace MHServerEmu.Games.GameData
                 return Logger.WarnReturn<PrototypeDataRefRecord>(null, $"PrototypeId {prototypeId} has no data ref record in the data directory");
 
             return record;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the specified <see cref="PrototypeId"/> is bound to <typeparamref name="T"/>.
+        /// </summary>
+        public bool PrototypeIsA<T>(PrototypeId prototypeId) where T: Prototype
+        {
+            Type typeToFind = typeof(T);
+            Type prototypeType = GetPrototypeClassType(prototypeId);
+            if (prototypeType == null) return false;
+
+            do
+            {
+                if (prototypeType == typeToFind)
+                    return true;
+
+                prototypeType = prototypeType.BaseType;
+            } while (prototypeType != typeof(Prototype));
+
+            return false;
         }
 
         /// <summary>

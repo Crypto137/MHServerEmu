@@ -9,13 +9,15 @@ namespace MHServerEmu.Games.GameData
         //Flag0         = 1 << 0,   // Does nothing
         NoAbstract      = 1 << 1,
         ApprovedOnly    = 1 << 2,
-        WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
+        WithEditorOnly  = 1 << 3,   // Records that have EditorOnly set are skipped if this is not set
+
+        NoAbstractApprovedOnly = NoAbstract | ApprovedOnly
     }
 
     /// <summary>
     /// Iterates through prototype records using specified filters.
     /// </summary>
-    public class PrototypeIterator : IEnumerable<PrototypeId>
+    public readonly struct PrototypeIterator : IEnumerable<PrototypeId>
     {
         private readonly IEnumerable<PrototypeDataRefRecord> _prototypeRecords;
         private readonly PrototypeIterateFlags _flags;
@@ -62,9 +64,6 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

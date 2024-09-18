@@ -5,6 +5,7 @@ using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Locales;
 using MHServerEmu.Games.Properties;
 
@@ -141,13 +142,11 @@ namespace MHServerEmu.Games.GameData
 
             AchievementDatabase.Instance.Initialize();
 
-            // Verify
-            if (VerifyData() == false)
-            {
-                Logger.Fatal("Failed to initialize game database");
-                IsInitialized = false;
-                return;
-            }
+            // Initialize game data tables
+            var tablesWatch = Stopwatch.StartNew();
+            var tables = GameDataTables.Instance;
+            tablesWatch.Stop();
+            Logger.Info($"Initialized GameDataTables in {tablesWatch.ElapsedMilliseconds} ms");
 
             // Finish game database initialization
             stopwatch.Stop();
@@ -194,6 +193,18 @@ namespace MHServerEmu.Games.GameData
 
             string assetName = GetAssetName(assetId);
             return GetPrototypeRefByName(assetName);
+        }
+
+        public static AssetGuid GetAssetGuid(AssetId assetId)
+        {
+            AssetType assetType = DataDirectory.AssetDirectory.GetAssetType(assetId);
+            if (assetType == null) return AssetGuid.Invalid;
+            return assetType.GetAssetGuid(assetId);
+        }
+
+        public static AssetId GetAssetRefFromGuid(AssetGuid assetGuid)
+        {
+            return DataDirectory.AssetDirectory.GetAssetRef(assetGuid);
         }
 
         #endregion
@@ -358,12 +369,6 @@ namespace MHServerEmu.Games.GameData
         public static bool DesignStateOk(DesignWorkflowState designState)
         {
             return designState >= ApprovalThreshold;
-        }
-
-        private static bool VerifyData()
-        {
-            return DataDirectory.Verify()
-                && PropertyInfoTable.Verify();
         }
     }
 }

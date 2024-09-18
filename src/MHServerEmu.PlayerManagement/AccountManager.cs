@@ -1,52 +1,35 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
-using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.PlayerManagement.Configs;
 
 namespace MHServerEmu.PlayerManagement
 {
+    /// <summary>
+    /// Provides <see cref="DBAccount"/> management functions.
+    /// </summary>
     public static class AccountManager
     {
-        public static bool IsInitialized { get; }
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static DBAccount DefaultAccount { get; }
+        public static IDBManager DBManager { get; private set; }
 
-        static AccountManager()
+        /// <summary>
+        /// Initializes <see cref="AccountManager"/>.
+        /// </summary>
+        public static bool Initialize(IDBManager dbManager)
         {
-            // Initialize default account from config
-            var config = ConfigManager.Instance.GetConfig<DefaultPlayerDataConfig>();
-
-            // Region
-            if (Enum.TryParse(config.StartingRegion, out RegionPrototypeId startingRegion) == false)
-                startingRegion = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-
-            // Waypoint
-            PrototypeId startingWaypoint = GameDatabase.GetPrototypeRefByName(config.StartingWaypoint);
-            if (startingWaypoint == PrototypeId.Invalid)
-                startingWaypoint = (PrototypeId)WaypointPrototypeId.NPEAvengersTowerHub;
-
-            // Avatar
-            if (Enum.TryParse(config.StartingAvatar, out AvatarPrototypeId startingAvatar) == false)
-                startingAvatar = AvatarPrototypeId.BlackCat;
-
-            DefaultAccount = new(config.PlayerName,
-                (long)startingRegion,
-                (long)startingWaypoint,
-                (long)startingAvatar,
-                config.AOIVolume
-            );
-
-            IsInitialized = DBManager.IsInitialized;
+            DBManager = dbManager;
+            return DBManager.Initialize();
         }
 
+        /// <summary>
+        /// Queries a <see cref="DBAccount"/> using the provided <see cref="LoginDataPB"/> instance.
+        /// <see cref="AuthStatusCode"/> indicates the outcome of the query.
+        /// </summary>
         public static AuthStatusCode TryGetAccountByLoginDataPB(LoginDataPB loginDataPB, out DBAccount account)
         {
             account = null;
@@ -56,185 +39,202 @@ namespace MHServerEmu.PlayerManagement
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
-            // Check the account we queried
-            if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
-                return AuthStatusCode.IncorrectUsernameOrPassword403;
+            // Check the account we queried if our DB manager requires it
+            if (DBManager.VerifyAccounts)
+            {
+                if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
+                    return AuthStatusCode.IncorrectUsernameOrPassword403;
 
-            if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
-            if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;
-            if (accountToCheck.IsPasswordExpired) return AuthStatusCode.PasswordExpired;
+                if (accountToCheck.Flags.HasFlag(AccountFlags.IsBanned))
+                    return AuthStatusCode.AccountBanned;
+                
+                if (accountToCheck.Flags.HasFlag(AccountFlags.IsArchived))
+                    return AuthStatusCode.AccountArchived;
+                
+                if (accountToCheck.Flags.HasFlag(AccountFlags.IsPasswordExpired))
+                    return AuthStatusCode.PasswordExpired;
+            }
 
             // Output the account and return success if everything is okay
             account = accountToCheck;
             return AuthStatusCode.Success;
         }
 
-        public static bool TryGetAccountByEmail(string email, out DBAccount account) => DBManager.TryQueryAccountByEmail(email, out account);
+        /// <summary>
+        /// Queries a <see cref="DBAccount"/> using the provided email. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public static bool TryGetAccountByEmail(string email, out DBAccount account)
+        {
+            return DBManager.TryQueryAccountByEmail(email, out account);
+        }
 
-        public static bool CreateAccount(string email, string playerName, string password, out string message)
+        public static bool LoadPlayerDataForAccount(DBAccount account)
+        {
+            return DBManager.LoadPlayerData(account);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="DBAccount"/> and inserts it into the database. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public static (bool, string) CreateAccount(string email, string playerName, string password)
         {
             // Validate input before doing database queries
             if (ValidateEmail(email) == false)
-            {
-                message = "Failed to create account: email must not be longer than 320 characters.";
-                return false;
-            }
+                return (false, "Failed to create account: email must not be longer than 320 characters.");
 
             if (ValidatePlayerName(playerName) == false)
-            {
-                message = "Failed to create account: names may contain only up to 16 alphanumeric characters.";
-                return false;
-            }
+                return (false, "Failed to create account: names may contain only up to 16 alphanumeric characters.");
 
             if (ValidatePassword(password) == false)
-            {
-                message = "Failed to create account: password must between 3 and 64 characters long.";
-                return false;
-            }
+                return (false, "Failed to create account: password must between 3 and 64 characters long.");
 
             if (DBManager.TryQueryAccountByEmail(email, out _))
-            {
-                message = $"Failed to create account: email {email} is already used by another account.";
-                return false;
-            }
+                return (false, $"Failed to create account: email {email} is already used by another account.");
 
             if (DBManager.QueryIsPlayerNameTaken(playerName))
-            {
-                message = $"Failed to create account: name {playerName} is already used by another account.";
-                return false;
-            }
+                return (false, $"Failed to create account: name {playerName} is already used by another account.");
 
             // Create a new account and insert it into the database
             DBAccount account = new(email, playerName, password);
 
             if (DBManager.InsertAccount(account) == false)
-            {
-                message = "Failed to create account: database error.";
-                return false;
-            }
+                return (false, "Failed to create account: database error.");
 
-            message = $"Created a new account: {email} ({playerName}).";
-            return true;
+            return (true, $"Created a new account: {email} ({playerName}).");
         }
 
-        // TODO bool ChangeAccountEmail(string oldEmail, string newEmail, out string message)
+        // TODO (bool, string) ChangeAccountEmail(string oldEmail, string newEmail)
 
-        public static bool ChangeAccountPlayerName(string email, string playerName, out string message)
+        /// <summary>
+        /// Changes the player name of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public static (bool, string) ChangeAccountPlayerName(string email, string playerName)
         {
             // Validate input before doing database queries
             if (ValidatePlayerName(playerName) == false)
-            {
-                message = "Failed to change player name: names may contain only up to 16 alphanumeric characters.";
-                return false;
-            }
+                return (false, "Failed to change player name: names may contain only up to 16 alphanumeric characters.");
 
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-            {
-                message = $"Failed to change player name: account {email} not found.";
-                return false;
-            }
+                return (false, $"Failed to change player name: account {email} not found.");
 
             if (DBManager.QueryIsPlayerNameTaken(playerName))
-            {
-                message = $"Failed to change player name: name {playerName} is already used by another account.";
-                return false;
-            }
+                return (false, $"Failed to change player name: name {playerName} is already used by another account.");
 
-            // Update player name
+            // Write the new name to the database
             account.PlayerName = playerName;
             DBManager.UpdateAccount(account);
-            message = $"Successfully changed player name for account {email} to {playerName}.";
-            return true;
+            return (true, $"Successfully changed player name for account {email} to {playerName}.");
         }
 
-        public static bool ChangeAccountPassword(string email, string newPassword, out string message)
+        /// <summary>
+        /// Changes the password of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public static (bool, string) ChangeAccountPassword(string email, string newPassword)
         {
             // Validate input before doing database queries
             if (ValidatePassword(newPassword) == false)
-            {
-                message = "Failed to change password: password must between 3 and 64 characters long.";
-                return false;
-            }
+                return (false, "Failed to change password: password must between 3 and 64 characters long.");
 
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-            {
-                message = $"Failed to change password: account {email} not found.";
-                return false;
-            }
+                return (false, $"Failed to change password: account {email} not found.");
 
-            // Update password
+            // Update the password and write the new hash/salt to the database
             account.PasswordHash = CryptographyHelper.HashPassword(newPassword, out byte[] salt);
             account.Salt = salt;
-            account.IsPasswordExpired = false;
+            account.Flags &= ~AccountFlags.IsPasswordExpired;
             DBManager.UpdateAccount(account);
-            message = $"Successfully changed password for account {email}.";
-            return true;
+            return (true, $"Successfully changed password for account {email}.");
         }
 
-        public static bool SetAccountUserLevel(string email, AccountUserLevel userLevel, out string message)
+        /// <summary>
+        /// Changes the <see cref="AccountUserLevel"/> of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public static (bool, string) SetAccountUserLevel(string email, AccountUserLevel userLevel)
         {
             // Make sure the specified account exists
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-            {
-                message = $"Failed to set user level: account {email} not found.";
-                return false;
-            }
+                return (false, $"Failed to set user level: account {email} not found.");
 
-            // Update user level
+            // Write the new user level to the database
             account.UserLevel = userLevel;
             DBManager.UpdateAccount(account);
-            message = $"Successfully set user level for account {email} to {userLevel}.";
-            return true;
+            return (true, $"Successfully set user level for account {email} to {userLevel}.");
         }
 
-        // Ban and unban are separate methods to make sure we don't accidentally ban or unban someone we didn't intend to.
-
-        public static bool BanAccount(string email, out string message)
+        /// <summary>
+        /// Sets the specified <see cref="AccountFlags"/> for the <see cref="DBAccount"/> with the provided email.
+        /// </summary>
+        public static (bool, string) SetFlag(string email, AccountFlags flag)
         {
-            // Checks to make sure we can ban the specified account
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-            {
-                message = $"Failed to ban: account {email} not found.";
-                return false;
-            }
+                return (false, $"Failed to set flag: account with email {email} not found.");
 
-            if (account.IsBanned)
-            {
-                message = $"Failed to ban: account {email} is already banned.";
-                return false;
-            }
-
-            // Ban the account
-            account.IsBanned = true;
-            DBManager.UpdateAccount(account);
-            message = $"Successfully banned account {email}.";
-            return true;
+            return SetFlag(account, flag);
         }
 
-        public static bool UnbanAccount(string email, out string message)
+        /// <summary>
+        /// Sets the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public static (bool, string) SetFlag(DBAccount account, AccountFlags flag)
         {
-            // Checks to make sure we can ban the specified account
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
-            {
-                message = $"Failed to unban: account {email} not found.";
-                return false;
-            }
+            if (account.Flags.HasFlag(flag))
+                return (false, $"Failed to set flag: account {account} already has flag {flag}.");
 
-            if (account.IsBanned == false)
-            {
-                message = $"Failed to unban: account {email} is not banned.";
-                return false;
-            }
-
-            // Unban the account
-            account.IsBanned = false;
+            // Update flags and write to the database
+            Logger.Trace($"Setting flag {flag} for account {account}");
+            account.Flags |= flag;
             DBManager.UpdateAccount(account);
-            message = $"Successfully unbanned account {email}.";
-            return true;
+            return (true, $"Successfully set flag {flag} for account {account}.");
         }
 
-        private static bool ValidateEmail(string email) => email.Length.IsWithin(1, 320);  // todo: add regex for email
-        private static bool ValidatePlayerName(string playerName) => Regex.Match(playerName, "^[a-zA-Z0-9]{1,16}$").Success;    // 1-16 alphanumeric characters
-        private static bool ValidatePassword(string password) => password.Length.IsWithin(3, 64);
+        /// <summary>
+        /// Clears the specified <see cref="AccountFlags"/> for the <see cref="DBAccount"/> with the provided email.
+        /// </summary>
+        public static (bool, string) ClearFlag(string email, AccountFlags flag)
+        {
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return (false, $"Failed to clear flag: account with email {email} not found.");
+
+            return ClearFlag(account, flag);
+        }
+
+        /// <summary>
+        /// Clears the specified <see cref="AccountFlags"/> for the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public static (bool, string) ClearFlag(DBAccount account, AccountFlags flag)
+        {
+            if (account.Flags.HasFlag(flag) == false)
+                return (false, $"Failed to clear flag: {flag} is not set for account {account}.");
+
+            // Update flags and write to the database
+            Logger.Trace($"Clearing flag {flag} for account {account}");
+            account.Flags &= ~flag;
+            DBManager.UpdateAccount(account);
+            return (true, $"Successfully cleared flag {flag} from account {account}.");
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided email <see cref="string"/> is valid.
+        /// </summary>
+        private static bool ValidateEmail(string email)
+        {
+            return email.Length.IsWithin(1, 320);  // todo: add regex for email
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided player name <see cref="string"/> is valid.
+        /// </summary>
+        private static bool ValidatePlayerName(string playerName)
+        {
+            return Regex.Match(playerName, "^[a-zA-Z0-9]{1,16}$").Success;    // 1-16 alphanumeric characters
+        }
+        
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided password <see cref="string"/> is valid.
+        /// </summary>
+        private static bool ValidatePassword(string password)
+        {
+            return password.Length.IsWithin(3, 64);
+        }
     }
 }

@@ -5,6 +5,6 @@
     /// </summary>
     public interface ITcpClient
     {
-        public TcpClientConnection Connection { get; set; }
+        public TcpClientConnection Connection { get; }
     }
 }

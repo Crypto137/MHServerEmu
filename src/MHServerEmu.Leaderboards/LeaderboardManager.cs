@@ -1,6 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Leaderboards
@@ -13,6 +13,8 @@ namespace MHServerEmu.Leaderboards
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<(PrototypeGuid, ulong), Leaderboard> _leaderboardDict = new();
+
+        public int LeaderboardCount { get => _leaderboardDict.Count; }
 
         /// <summary>
         /// Returns the specified <see cref="Leaderboard"/> instance.

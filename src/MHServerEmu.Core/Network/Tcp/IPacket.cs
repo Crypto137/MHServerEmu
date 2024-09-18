@@ -1,10 +1,11 @@
 ﻿namespace MHServerEmu.Core.Network.Tcp
 {
     /// <summary>
-    /// Exposes a packet's data.
+    /// Exposes a packet's serialization routine.
     /// </summary>
     public interface IPacket
     {
-        public byte[] Data { get; }
+        public int Serialize(byte[] buffer);
+        public int Serialize(Stream stream);
     }
 }

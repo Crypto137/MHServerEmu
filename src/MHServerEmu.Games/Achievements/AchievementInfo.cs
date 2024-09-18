@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
 using Gazillion;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Locales;
 
@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Achievements
             Threshold = info.Threshold;
             DependentAchievementId = info.DependentAchievementId;
             UIProgressDisplayOption = (AchievementUIProgressDisplayOption)info.UiProgressDisplayOption;
-            PublishedDateUS = Clock.UnixTimeMicrosecondsToTimeSpan((long)info.PublishedDateUS * Clock.MicrosecondsPerSecond);
+            PublishedDateUS = new((long)info.PublishedDateUS * TimeSpan.TicksPerSecond);
             IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;

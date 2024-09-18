@@ -1,5 +1,9 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -107,6 +111,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Or = 1,
     }
 
+    [AssetEnum((int)All)]
+    public enum Weekday
+    {
+        Sunday = 0,
+        Monday = 1,
+        Tuesday = 2,
+        Wednesday = 3,
+        Thursday = 4,
+        Friday = 5,
+        Saturday = 6,
+        All = 7,
+    }
+
     #endregion
 
     public class GlobalsPrototype : Prototype
@@ -148,9 +165,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MobLOSVisUpdatePeriodMS { get; protected set; }
         public int MobLOSVisStayVisibleDelayMS { get; protected set; }
         public bool MobLOSVisEnabled { get; protected set; }
-        public AssetId[] BeginPlayAssetTypes { get; protected set; }
-        public AssetId[] CachedAssetTypes { get; protected set; }
-        public AssetId[] FileVerificationAssetTypes { get; protected set; }
+        public AssetTypeId[] BeginPlayAssetTypes { get; protected set; }
+        public AssetTypeId[] CachedAssetTypes { get; protected set; }
+        public AssetTypeId[] FileVerificationAssetTypes { get; protected set; }
         public AssetId LoadingMusic { get; protected set; }
         public LocaleStringId SystemLocalized { get; protected set; }
         public PrototypeId PopulationGlobals { get; protected set; }
@@ -159,11 +176,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DownloadChunks { get; protected set; }
         public PrototypeId UIItemInventory { get; protected set; }
         public PrototypeId AIGlobals { get; protected set; }
-        public AssetId MusicAssetType { get; protected set; }
+        public AssetTypeId MusicAssetType { get; protected set; }
         public PrototypeId ResurrectionDefaultInfo { get; protected set; }
         public PrototypeId PartyJoinPortal { get; protected set; }
         public PrototypeId MatchJoinPortal { get; protected set; }
-        public AssetId MovieAssetType { get; protected set; }
+        public AssetTypeId MovieAssetType { get; protected set; }
         public PrototypeId WaypointGraph { get; protected set; }
         public PrototypeId WaypointHotspot { get; protected set; }
         public float MouseHoldDeadZoneRadius { get; protected set; }
@@ -177,7 +194,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId AreaPrototype { get; protected set; }
         public PrototypeId PopulationObjectPrototype { get; protected set; }
         public PrototypeId RegionPrototype { get; protected set; }
-        public AssetId AmbientSfxType { get; protected set; }
+        public AssetTypeId AmbientSfxType { get; protected set; }
         public PrototypeId CombatGlobals { get; protected set; }
         public float OrientForPowerMaxTimeSecs { get; protected set; }
         public PrototypeId KismetSequenceEntityPrototype { get; protected set; }
@@ -287,6 +304,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancementGlobalsPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public CurveId LevelingCurve { get; protected set; }
         public CurveId DeathPenaltyCost { get; protected set; }
         public CurveId ItemEquipRequirementOffset { get; protected set; }
@@ -323,6 +342,85 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int TravelPowerUnlockLevel { get; protected set; }
         public float ExperienceBonusCoop { get; protected set; }
         public CurveId CoopInactivityExperienceScalar { get; protected set; }
+
+        // ---
+
+        public const long InvalidXPRequirement = -1;
+
+        [DoNotCopy]
+        public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
+
+        public int GetAvatarLevelCap()
+        {
+            Curve levelingCurve = GetAvatarLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(0, "GetAvatarLevelCap(): levelingCurve == null");
+
+            return levelingCurve.MaxPosition;
+        }
+
+        public int GetTeamUpLevelCap()
+        {
+            Curve levelingCurve = GetTeamUpLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(0, "GetTeamUpLevelCap(): levelingCurve == null");
+
+            return levelingCurve.MaxPosition;
+        }
+
+        public int GetPrestigeLevelIndex(PrestigeLevelPrototype prestigeLevelProto)
+        {
+            return GetPrestigeLevelIndex(prestigeLevelProto.DataRef);
+        }
+
+        public int GetPrestigeLevelIndex(PrototypeId prestigeLevel)
+        {
+            if (PrestigeLevels.IsNullOrEmpty()) return 0;
+
+            for (int i = 0; i < MaxPrestigeLevel; i++)
+            {
+                if (PrestigeLevels[i] == prestigeLevel)
+                    return i + 1;
+            }
+
+            return 0;
+        }
+
+        public long GetAvatarLevelUpXPRequirement(int level)
+        {
+            if (level < 1) return InvalidXPRequirement;
+
+            Curve levelingCurve = GetAvatarLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetAvatarLevelUpXPRequirement(): levelingCurve == null");
+
+            return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+
+        public long GetTeamUpLevelUpXPRequirement(int level)
+        {
+            if (level < 1) return InvalidXPRequirement;
+
+            Curve levelingCurve = GetTeamUpLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetTeamUpLevelUpXPRequirement(): levelingCurve == null");
+
+            return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+
+        private static long GetLevelUpXPRequirementFromCurve(int level, Curve curve)
+        {
+            if (level < curve.MinPosition || level > curve.MaxPosition)
+                return InvalidXPRequirement;
+
+            return curve.GetInt64At(level);
+        }
+
+        private Curve GetAvatarLevelingCurve()
+        {
+            return CurveDirectory.Instance.GetCurve(LevelingCurve);
+        }
+
+        private Curve GetTeamUpLevelingCurve()
+        {
+            return CurveDirectory.Instance.GetCurve(TeamUpLevelingCurve);
+        }
     }
 
     public class AIGlobalsPrototype : Prototype
@@ -673,6 +771,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetricsFrequencyPrototype : Prototype
     {
         public float SampleRate { get; protected set; }
+
+        [DoNotCopy]
+        public int MetricsFrequencyPrototypeEnumValue { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            MetricsFrequencyPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetMetricsFrequencyBlueprintDataRef());
+        }
     }
 
     public class CameraSettingPrototype : Prototype
@@ -797,6 +904,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float TravelPowerMaxSpeed { get; protected set; }
         public PrototypeId TUSynergyBonusPerLvl { get; protected set; }
         public PrototypeId TUSynergyBonusPerMaxLvlTU { get; protected set; }
+
+        public float GetHardcoreAttenuationFactor(PropertyCollection properties)
+        {
+            int numberOfDeaths = properties[PropertyEnum.NumberOfDeaths];
+            return Math.Clamp(1f - (PowerDmgBonusHardcoreAttenuation * numberOfDeaths), 0f, 1f);
+        }
     }
 
     public class VendorXPCapInfoPrototype : Prototype

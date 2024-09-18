@@ -1,6 +1,5 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Entities.Options
@@ -17,29 +16,33 @@ namespace MHServerEmu.Games.Entities.Options
         Yellow
     }
 
-    public class StashTabOptions
+    public class StashTabOptions : ISerialize
     {
-        public string DisplayName { get; set; } = string.Empty;
-        public AssetId IconPathAssetId { get; set; } = AssetId.Invalid;
-        public int SortOrder { get; set; } = 0;
-        public StashTabColor Color { get; set; } = StashTabColor.White;
+        private string _displayName = string.Empty;
+        private AssetId _iconPathAssetId = AssetId.Invalid;
+        private int _sortOrder = 0;
+        private StashTabColor _color = StashTabColor.White;
+
+        public string DisplayName { get => _displayName; set => _displayName = value; }
+        public AssetId IconPathAssetId { get => _iconPathAssetId; set => _iconPathAssetId = value; }
+        public int SortOrder { get => _sortOrder; set => _sortOrder = value; }
+        public StashTabColor Color { get => _color; set => _color = value; }
 
         public StashTabOptions() { }
 
-        public StashTabOptions(CodedInputStream stream)
+        public bool Serialize(Archive archive)
         {
-            DisplayName = stream.ReadRawString();
-            IconPathAssetId = (AssetId)stream.ReadRawVarint64();
-            SortOrder = stream.ReadRawInt32();
-            Color = (StashTabColor)stream.ReadRawInt32();            
-        }
+            bool success = true;
 
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawString(DisplayName);
-            stream.WriteRawVarint64((ulong)IconPathAssetId);
-            stream.WriteRawInt32(SortOrder);
-            stream.WriteRawInt32((int)Color);
+            success &= Serializer.Transfer(archive, ref _displayName);
+            success &= Serializer.Transfer(archive, ref _iconPathAssetId);
+            success &= Serializer.Transfer(archive, ref _sortOrder);
+
+            int color = (int)_color;
+            success &= Serializer.Transfer(archive, ref color);
+            _color = (StashTabColor)color;
+
+            return success;
         }
 
         public override string ToString()

@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     /// <summary>
     /// Manages loaded <see cref="AssetType"/> instances.
     /// </summary>
-    public class AssetDirectory
+    public sealed class AssetDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -15,8 +15,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private readonly Dictionary<AssetId, int> _assetIdToEnumValueDict = new();                     // AssetId => EnumValue
 
+        public static AssetDirectory Instance { get; } = new();
+
         public int AssetTypeCount { get => _assetTypeRecordDict.Count; }
         public int AssetCount { get => _assetGuidToIdDict.Count; }
+
+        private AssetDirectory() { }
 
         /// <summary>
         /// Creates a new <see cref="LoadedAssetTypeRecord"/> that can hold a loaded <see cref="AssetType"/>.
@@ -80,6 +84,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 return AssetTypeId.Invalid;
 
             return assetTypeId;
+        }
+
+        public AssetId GetAssetRef(AssetGuid assetGuid)
+        {
+            bool found = _assetGuidToIdDict.TryGetValue(assetGuid, out AssetId assetId);
+            
+            while (found == false)
+            {
+                ulong guidReplacement = 0;
+                
+                if (DataDirectory.Instance.GetGuidReplacement((ulong)assetGuid, ref guidReplacement) && guidReplacement != 0)
+                    found = _assetGuidToIdDict.TryGetValue((AssetGuid)guidReplacement, out assetId);
+                else
+                    return AssetId.Invalid;
+            }
+
+            return assetId;
         }
 
         /// <summary>

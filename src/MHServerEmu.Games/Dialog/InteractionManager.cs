@@ -1,7 +1,13 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
+using System.Diagnostics;
 
 namespace MHServerEmu.Games.Dialog
 {
@@ -21,8 +27,7 @@ namespace MHServerEmu.Games.Dialog
 
         public void Initialize()
         {
-            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), 
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                 if (missionProto == null) continue;
@@ -52,15 +57,13 @@ namespace MHServerEmu.Games.Dialog
                 }
             }
 
-            foreach (var uiWidgetRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MetaGameDataPrototype), 
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var uiWidgetRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MetaGameDataPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (uiWidgetRef == PrototypeId.Invalid) continue;
                 GetInteractionDataFromUIWidgetPrototype(uiWidgetRef);
             }
 
-            foreach (var metaStateRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MetaStatePrototype), 
-                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            foreach (var metaStateRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MetaStatePrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 if (metaStateRef == PrototypeId.Invalid) continue;
                 GetInteractionDataFromMetaStatePrototype(metaStateRef);
@@ -131,7 +134,7 @@ namespace MHServerEmu.Games.Dialog
             }
         }
 
-        private ExtraMissionData GetMissionData(PrototypeId missionRef)
+        public ExtraMissionData GetMissionData(PrototypeId missionRef)
         {
             ExtraMissionData missionData = null;
             if (missionRef != PrototypeId.Invalid && _missionMap.TryGetValue(missionRef, out missionData) == false)
@@ -333,10 +336,17 @@ namespace MHServerEmu.Games.Dialog
             }
         }
 
-        private T CreateOption<T>() where T: InteractionOption
+        private T CreateOption<T>() where T: InteractionOption, new ()
         {
-            T option = Activator.CreateInstance<T>();
-            _options.Add(option);
+            T option = new();
+            _options.Add(option); // CreateOptionInList(_options)
+            return option;
+        }
+
+        private static T CreateOptionInList<T>(List<InteractionOption> optionsList) where T : InteractionOption, new()
+        {
+            T option = new(); // InteractionOptions.AllocateOption<T>()
+            if (option != null) optionsList.Add(option);
             return option;
         }
 
@@ -487,10 +497,10 @@ namespace MHServerEmu.Games.Dialog
             {
                 if (_interaсtionMap.TryGetValue(entityRef, out var data))
                 {
-                    var option = data.StartPowerOption(missionProto);
-                    if (option != null && option.Proto is MissionActionEntityPerformPowerPrototype actionEntityPerformPowerProto)
+                    var actionPower = data.GetStartPower(missionProto);
+                    if (actionPower != null)
                     {
-                        action = actionEntityPerformPowerProto;
+                        action = actionPower;
                         return true;
                     }
                 }
@@ -501,16 +511,738 @@ namespace MHServerEmu.Games.Dialog
                 {
                     if (_interaсtionMap.TryGetValue(targetRef, out var targetData))
                     {
-                        var option = entityData.StartPowerOptionIntersect(targetData);
-                        if (option != null && option.Proto is MissionActionEntityPerformPowerPrototype actionEntityPerformPowerProto)
+                        var actionPower = entityData.GetStartPowerIntersect(targetData);
+                        if (actionPower != null)
                         {
-                            action = actionEntityPerformPowerProto;
+                            action = actionPower;
                             return true;
                         }
                     }
                 }
             }
             return false;
+        }
+
+        public bool GetEntityContextInvolvement(WorldEntity entity, EntityTrackingContextMap map)
+        {
+            if (entity == null) return false;
+
+            map.Clear();
+
+            var worldEntityProto = entity.WorldEntityPrototype;
+
+            if (entity is Transition transition)
+            {
+                foreach (Destination destination in transition.Destinations)
+                {
+                    var regionRef = destination.RegionRef;
+                    if (regionRef != PrototypeId.Invalid)
+                    {
+                        map.Insert(regionRef, EntityTrackingFlag.TransitionRegion);
+                        if (_interaсtionMap.TryGetValue(regionRef, out var data))
+                        {
+                            if (data == null) continue;
+                            foreach (var currentOption in data.Options)
+                            {
+                                if (currentOption == null) continue;
+                                currentOption.InterestedInEntity(map, entity, new());
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (entity is KismetSequenceEntity)
+            {
+                var globalsProto = GameDatabase.GlobalsPrototype;
+                if (globalsProto == null) return false;
+                if (globalsProto.KismetSequenceEntityPrototype != PrototypeId.Invalid)
+                    map.Insert(globalsProto.KismetSequenceEntityPrototype, EntityTrackingFlag.KismetSequenceTracking);
+            }
+
+            var missionRef = entity.MissionPrototype;
+            if (missionRef != PrototypeId.Invalid)
+                map.Insert(missionRef, EntityTrackingFlag.SpawnedByMission);
+
+            InteractionData interactionData = worldEntityProto.GetInteractionData();
+            if (interactionData != null && interactionData.HasAnyOptionFlags())
+                foreach (var option in interactionData.Options)
+                    option.InterestedInEntity(map, entity, new());
+
+            List<InteractionData> keywordsInteractionData = worldEntityProto.GetKeywordsInteractionData();
+            foreach (var interKeyData in keywordsInteractionData)
+                if (interKeyData != null && interKeyData.HasAnyOptionFlags())
+                    foreach (var option in interKeyData.Options)
+                        option.InterestedInEntity(map, entity, new());
+
+            return map.Count > 0;
+        }
+
+        public void BuildEntityPrototypeCachedData(WorldEntityPrototype entityProto)
+        {
+            if (entityProto == null) return;
+
+            if (_interaсtionMap.ContainsKey(entityProto.DataRef) && _interaсtionMap[entityProto.DataRef] != null)
+                entityProto.InteractionData = _interaсtionMap[entityProto.DataRef];
+
+            if (entityProto.Keywords.HasValue())
+                foreach (var keywordRef in entityProto.Keywords)
+                    if (_interaсtionMap.ContainsKey(keywordRef) && _interaсtionMap[keywordRef] != null)
+                        entityProto.KeywordsInteractionData.Add(_interaсtionMap[keywordRef]);
+        }
+
+        public static InteractionMethod CallGetInteractionStatus(EntityDesc interacteeDesc, WorldEntity interactor, 
+            InteractionOptimizationFlags optimizationFlags, InteractionFlags flags, ref InteractData interactData)
+        {
+            if (interactor == null) return InteractionMethod.None;
+            var manager = GameDatabase.InteractionManager;
+            if (manager == null) return InteractionMethod.None;
+            interactData ??= new InteractData();
+            return manager.GetInteractionStatus(interacteeDesc, interactor, optimizationFlags, flags, ref interactData);
+        }
+
+        private InteractionMethod GetInteractionStatus(EntityDesc interacteeDesc, WorldEntity interactor, 
+            InteractionOptimizationFlags optimizationFlags, InteractionFlags flags, ref InteractData interactData)
+        {
+            var interactee = interacteeDesc.GetEntity<WorldEntity>(interactor.Game);
+            if (interactee != null)
+                return GetInteractionsForLocalEntity(interactee, interactor, optimizationFlags, flags, ref interactData);
+            return InteractionMethod.None;
+        }
+
+        private InteractionMethod GetInteractionsForLocalEntity(WorldEntity interactee, WorldEntity interactor, 
+            InteractionOptimizationFlags optimizationFlags, InteractionFlags interactionFlags, ref InteractData interactData)
+        {
+            var interactionsResult = InteractionMethod.None;
+            if (CheckEntityPrerequisites(interactee, interactor, interactionFlags))
+            {
+                interactionsResult = EvaluateInteractionOptions(interactee, interactor, optimizationFlags, interactionFlags, ref interactData);
+                interactionsResult = CheckAndApplyLegacyInteractableProperties(interactionsResult, interactee);
+                interactionsResult = CheckAndApplyInteractData(interactionsResult, interactData);
+
+                Player player = interactor.GetOwnerOfType<Player>();
+                if (player != null)
+                    interactData.Visible = GetVisibilityStatus(interactee, interactData.VisibleOverride);
+
+                if (interactee is Transition transition)
+                {
+                    TransitionPrototype transitionProto = transition.TransitionPrototype;
+                    if (transitionProto == null)
+                        return interactionsResult;
+
+                    PrototypeId? none = null;
+                    if ((transitionProto.Type == RegionTransitionType.Transition || transitionProto.Type == RegionTransitionType.TransitionDirectReturn) 
+                        && transitionProto.ShowIndicator 
+                        && (interactData.Interactable == TriBool.True || interactee.Properties[PropertyEnum.Interactable] == (int)TriBool.True))
+                        TrySetIndicatorTypeAndMapOverrideWithPriority(interactee, ref interactData.IndicatorType, ref none, HUDEntityOverheadIcon.Transporter);
+                }
+
+                if (interactData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.HasObjectives | PlayerHUDEnum.ShowObjs | PlayerHUDEnum.ShowObjsOnMap))
+                {
+                    if (interactData.MapIconOverrideRef == PrototypeId.Invalid)
+                    {
+                        UIGlobalsPrototype uiGlobals = GameDatabase.UIGlobalsPrototype;
+                        if (uiGlobals == null)
+                            return InteractionMethod.None;
+
+                        if (interactee.IsHostileTo(interactor))
+                            interactData.MapIconOverrideRef = uiGlobals.MapInfoMissionObjectiveMob;
+                        else
+                            interactData.MapIconOverrideRef = uiGlobals.MapInfoMissionObjectiveUse;
+                    }
+
+                    TriBool interactable = (TriBool)(int)interactee.Properties[PropertyEnum.Interactable];
+                    if (interactable == TriBool.False)
+                    {
+                        interactData.PlayerHUDFlags = PlayerHUDEnum.None;
+                        interactData.MissionObjectives?.Clear();
+                    }
+                }
+            }
+
+            return interactionsResult;
+        }
+
+        public static void TrySetIndicatorTypeAndMapOverrideWithPriority(WorldEntity target, ref HUDEntityOverheadIcon? setIndicatorType, 
+            ref PrototypeId? mapOverrideRef, HUDEntityOverheadIcon indicatorType)
+        {
+            if (setIndicatorType.HasValue && setIndicatorType < indicatorType)
+                setIndicatorType = indicatorType;
+
+            if (mapOverrideRef.HasValue)
+            {
+                UIGlobalsPrototype uiGlobalsProto = GameDatabase.UIGlobalsPrototype;
+                if (indicatorType == HUDEntityOverheadIcon.MissionBestower)
+                    mapOverrideRef = uiGlobalsProto.MapInfoMissionGiver;
+                else if (indicatorType == HUDEntityOverheadIcon.MissionAdvancer && mapOverrideRef != uiGlobalsProto.MapInfoMissionGiver)
+                {
+                    if (target is Agent)
+                        mapOverrideRef = uiGlobalsProto.MapInfoMissionObjectiveTalk;
+                    else
+                        mapOverrideRef = uiGlobalsProto.MapInfoMissionObjectiveUse;
+                }
+            }
+        }
+
+        private static bool GetVisibilityStatus(WorldEntity interactee, TriBool visibilityOverride)
+        {
+            bool visibility = false;
+            switch (visibilityOverride)
+            {
+                case TriBool.Undefined:
+                    visibility = interactee.DefaultRuntimeVisibility;
+                    break;
+                case TriBool.True:
+                    visibility = true;
+                    break;
+                case TriBool.False:
+                    visibility = false;
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+            return visibility;
+        }
+
+        private static InteractionMethod CheckAndApplyInteractData(InteractionMethod interactions, InteractData interactData)
+        {
+            var interactionsResult = interactions;
+            TriBool dataInteractable = interactData.Interactable;
+            if (dataInteractable == TriBool.True)
+                interactionsResult |= InteractionMethod.Use;
+            else if (dataInteractable == TriBool.False)
+                interactionsResult = InteractionMethod.None;
+
+            return interactionsResult;
+        }
+
+        private static InteractionMethod CheckAndApplyLegacyInteractableProperties(InteractionMethod interactions, WorldEntity interactee)
+        {
+            var interactionsResult = interactions;
+            TriBool legacyInteractable = (TriBool)(int)interactee.Properties[PropertyEnum.Interactable];
+            if (legacyInteractable == TriBool.True)
+                if (interactee.Properties[PropertyEnum.InteractableUsesLeft] == 0)
+                    legacyInteractable = TriBool.False;
+
+            if (legacyInteractable == TriBool.True)
+                interactionsResult |= InteractionMethod.Use;
+            else if (legacyInteractable == TriBool.False)
+                interactionsResult = InteractionMethod.None;
+
+            return interactionsResult;
+        }
+
+        private InteractionMethod EvaluateInteractionOptions(WorldEntity interactee, WorldEntity interactor, InteractionOptimizationFlags optimizationFlags, InteractionFlags interactionFlags, ref InteractData outInteractData)
+        {
+            var interactionsResult = InteractionMethod.None;
+            const int startingPriority = int.MaxValue;
+            int lastAvailableOptionPriority = startingPriority;
+
+            List<InteractionOption> optionsList = new ();
+            if (optimizationFlags == InteractionOptimizationFlags.None)
+            {
+                GetInteractionDataFromWorldEntityPrototype(optionsList, interactee.PrototypeDataRef);
+                if (interactee.Properties[PropertyEnum.EntSelActHasInteractOption])
+                    CreateOptionInList<EntitySelectorActionOption>(optionsList);
+            }
+
+            var worldEntityProto = interactee.WorldEntityPrototype;
+            if (worldEntityProto == null)
+                return InteractionMethod.None;
+
+            var interactionData = worldEntityProto.InteractionData;
+            bool hasInteractionData = interactionData != null;
+            bool hasKeywords = worldEntityProto.Keywords != null;
+
+            if (optionsList.Count > 0 || hasInteractionData || hasKeywords)
+            {
+                SortedSet<InteractionOption> sortedOptions = new ();
+                if (hasInteractionData)
+                    if (optimizationFlags == InteractionOptimizationFlags.None || interactionData.HasOptionFlags(optimizationFlags))
+                        foreach (var option in interactionData.Options)
+                            sortedOptions.Add(option);
+
+                if (hasKeywords)
+                    foreach (var keyword in worldEntityProto.Keywords)
+                        if (_interaсtionMap.TryGetValue(keyword, out var keywordInteractionData))
+                            if (optimizationFlags == InteractionOptimizationFlags.None || keywordInteractionData.HasOptionFlags(optimizationFlags))
+                                foreach (var option in keywordInteractionData.Options)
+                                    sortedOptions.Add(option);
+
+                foreach (var option in optionsList)
+                    sortedOptions.Add(option);
+
+                bool before = false;
+                bool after = false;
+
+                foreach (var currentOption in sortedOptions)
+                    if (CheckOptionFilters(interactee, interactor, currentOption))
+                    {
+                        int currentOptionPriority = currentOption.Priority;
+                        if (!(lastAvailableOptionPriority == startingPriority || currentOptionPriority >= lastAvailableOptionPriority))
+                        {
+                            optionsList.Clear();
+                            Logger.Warn($"InteractionManager's options for '{interactee.PrototypeName}' must be sorted in ascending order of priority, but the following option isn't!\n{currentOption}");
+                            return InteractionMethod.None;
+                        }
+
+                        if (interactionFlags.HasFlag(InteractionFlags.EvaluateInteraction) || currentOptionPriority <= lastAvailableOptionPriority)
+                        {
+                            if (EvaluateInteractionOption(interactee, interactor, currentOption, interactionFlags, ref interactionsResult, ref outInteractData))
+                            {
+                                lastAvailableOptionPriority = currentOptionPriority;
+                                if (currentOption.MethodEnum < InteractionMethod.Neutral)
+                                    before = true;
+                                else if (currentOption.MethodEnum > InteractionMethod.Neutral)
+                                    after = true;
+                            }
+                        }
+                        else
+                            break;
+                    }
+
+                if (before && after)
+                    interactionsResult |= InteractionMethod.Neutral;
+            }
+
+            optionsList.Clear();
+
+            return interactionsResult;
+        }
+
+        private bool EvaluateInteractionOption(WorldEntity interactee, WorldEntity interactor, InteractionOption option, InteractionFlags interactionFlags,
+            ref InteractionMethod outInteractions, ref InteractData outInteractData)
+        {
+            bool result;
+            if (option is BaseMissionOption baseMissionOption)
+            {
+                List<BaseMissionOption> checkList = new ();
+                var missionResult = ParseBaseMissionOption(interactee, interactor, baseMissionOption, ref outInteractData, interactionFlags, null, checkList);
+                result = missionResult != InteractionMethod.None;
+                if (result)
+                    outInteractions |= missionResult;
+            }
+            else
+                result = option.Evaluate( new EntityDesc(interactee), interactor, interactionFlags, ref outInteractions, ref outInteractData);
+            return result;
+        }
+
+        private InteractionMethod ParseBaseMissionOption(WorldEntity interactee, WorldEntity interactor, BaseMissionOption baseMissionOption, ref InteractData outInteractData, 
+            InteractionFlags interactionFlags, BaseMissionOption completeOption, List<BaseMissionOption> checkList)
+        {
+            var resultNoneMethod = InteractionMethod.None;
+            if (interactee == null || interactor == null || baseMissionOption == null) return resultNoneMethod;
+
+            if (checkList.Contains(baseMissionOption))
+                return resultNoneMethod;
+            else
+                checkList.Add(baseMissionOption);
+
+            // Player part
+            Player player = interactor.GetOwnerOfType<Player>();
+            if (player == null) return resultNoneMethod;
+
+            if (baseMissionOption is MissionActionEntityTargetOption || baseMissionOption is MissionConditionRegionOption)
+                return resultNoneMethod;
+
+            MissionPrototype missionProto = baseMissionOption.MissionProto;
+            if (missionProto == null) return resultNoneMethod;
+
+            var missionResult = resultNoneMethod;
+            Mission mission = baseMissionOption.GetMission(player);
+            if (mission != null && mission.IsSuspended == false)
+            {
+                if (baseMissionOption is MissionConditionEntityInteractOption interactOption)
+                {
+                    if (interactOption.IsActiveForMissionAndEntity(mission, interactee))
+                    {
+                        var indicatorType = HUDEntityOverheadIcon.None;
+                        if (interactOption.HasObjective() == false)
+                        {
+                            if (interactee is Agent)
+                                indicatorType = mission.ShouldShowInteractIndicators() ? HUDEntityOverheadIcon.MissionBestower : HUDEntityOverheadIcon.DiscoveryBestower;
+                        }
+                        else
+                        {
+                            MissionObjective objective = interactOption.GetObjective(mission);
+                            if (objective != null && objective.State == MissionObjectiveState.Available)
+                            {
+                                if (interactOption.Proto is MissionConditionEntityInteractPrototype interactProto && interactProto.IsTurnInNPC)
+                                    indicatorType = HUDEntityOverheadIcon.MissionAdvancerDisabled;
+                            }
+                            else
+                            {
+                                if (interactee is Agent)
+                                    indicatorType = mission.ShouldShowInteractIndicators() ? HUDEntityOverheadIcon.MissionAdvancer : HUDEntityOverheadIcon.DiscoveryAdvancer;                                
+                            }
+                        }
+
+                        missionResult = ParseMissionConditionEntityInteractPrototype(interactOption, mission, indicatorType, player, interactor, interactee, ref outInteractData, completeOption);
+                    }
+                }
+                else if (baseMissionOption is MissionVisibilityOption visibilityOption)
+                {
+                    TriBool visibilityResult = EvaluateVisibilityOption(visibilityOption, player, interactee);
+                    outInteractData.VisibleOverride = TriBoolTrueBias(outInteractData.VisibleOverride, visibilityResult);
+                }
+                else if (baseMissionOption is MissionDialogOption dialogOption)
+                {
+                    if (dialogOption.IsActiveForMissionAndEntity(mission, interactee))
+                        missionResult = ParseMissionDialogTextPrototype(mission, interactor, interactee, dialogOption.Proto, -1, ref outInteractData);
+                }
+                else if (baseMissionOption is MissionAppearanceOption appearanceOption)
+                {
+                    if (appearanceOption.IsActiveForMissionAndEntity(mission, interactee))
+                        missionResult = ParseEntityAppearanceSpecPrototype(mission, true, interactee, appearanceOption.Proto, ref outInteractData);
+                }
+                else if (baseMissionOption is MissionConditionMissionCompleteOption missionCompleteOption)
+                {
+                    if (missionCompleteOption.IsActiveForMissionAndEntity(mission, interactee))
+                        foreach (PrototypeId completeMissionRef in missionCompleteOption.CompleteMissionRefs)
+                        {
+                            var missionData = GetMissionData(completeMissionRef);
+                            if (missionData == null) continue;
+
+                            foreach (var subOption in missionData.Options)
+                            {
+                                if (subOption == null) continue;
+                                ParseBaseMissionOption(interactee, interactor, subOption, ref outInteractData, interactionFlags, missionCompleteOption, checkList);
+                            }
+                        }
+                }
+                else if (baseMissionOption is MissionHintOption hintOption)
+                {
+                    if (hintOption.IsActiveForMissionAndEntity(mission, interactee))
+                    {
+                        var hintProto = hintOption.Proto;
+                        if (hintProto != null)
+                        {
+                            bool hintEntity = hintProto.TargetEntity?.Evaluate(interactee, new (missionProto.DataRef)) ?? false;
+                            bool hintPlayer = hintProto.PlayerStateFilter?.Evaluate(interactor, new (missionProto.DataRef)) ?? true;
+                            if (hintEntity && hintPlayer)
+                                hintOption.SetInteractDataObjectiveFlags(player, ref outInteractData, mission, completeOption);
+                        }
+                    }
+                }
+                else
+                {
+                    if (baseMissionOption.ObjectiveFlagsAllowed() && baseMissionOption.IsActiveForMissionAndEntity(mission, interactee))
+                        baseMissionOption.SetInteractDataObjectiveFlags(player, ref outInteractData, mission, completeOption);
+                }
+            }
+
+            return missionResult;
+        }
+
+        public static TriBool TriBoolTrueBias(TriBool value, TriBool newValue)
+        {
+            if (value == TriBool.Undefined)
+                return newValue;
+            else if (value == TriBool.False && newValue == TriBool.True)
+                return newValue;
+            return value;
+        }
+
+        private static TriBool EvaluateVisibilityOption(InteractionOption option, Player interactingPlayer, WorldEntity interactee)
+        {
+            if (option == null) return TriBool.Undefined;
+            TriBool retVal = TriBool.Undefined;
+            if (option is MissionVisibilityOption visibilityOption)
+            {
+                var visibilityProto = visibilityOption.Proto;
+                if (visibilityProto == null) return TriBool.Undefined;
+                var MissionProto = visibilityOption.MissionProto;
+                if (MissionProto == null) return TriBool.Undefined;
+
+                if (CheckOptionFilters(interactee, interactingPlayer.PrimaryAvatar, visibilityOption))
+                {
+                    var missionManager = MissionManager.FindMissionManagerForMission(interactingPlayer, interactingPlayer.GetRegion(), MissionProto.DataRef);
+                    var mission = missionManager?.FindMissionByDataRef(MissionProto.DataRef);
+                    if (mission != null)
+                        if (visibilityOption.IsActiveForMissionAndEntity(mission, interactee))
+                            retVal = visibilityProto.Visible ? TriBool.True : TriBool.False;
+                }
+            }
+            return retVal;
+        }
+
+        private static InteractionMethod ParseEntityAppearanceSpecPrototype(Mission mission, bool state, WorldEntity interactEntity, EntityAppearanceSpecPrototype prototype, ref InteractData outInteractData)
+        {
+            var missionResult = InteractionMethod.None;
+            if (mission == null || interactEntity == null || prototype == null)
+                return missionResult;
+
+            var appearanceProto = GameDatabase.GetPrototype<EntityAppearancePrototype>(prototype.Appearance);
+
+            if (state)
+            {
+                if (outInteractData.AppearanceEnum != null && appearanceProto != null)
+                    outInteractData.AppearanceEnum = appearanceProto.AppearanceEnum;
+
+                if (prototype.InteractionEnabled == TriBool.True)
+                {
+                    if (outInteractData.Interactable == TriBool.False)
+                        Logger.Warn($"Trying to set ambiguous interactability state for entity [{interactEntity}]. Overriding with true.");
+                    outInteractData.Interactable = TriBool.True;
+                    missionResult = InteractionMethod.Use;
+                }
+                else if (prototype.InteractionEnabled == TriBool.False)
+                {
+                    if (outInteractData.Interactable == TriBool.True)
+                        Logger.Warn($"Trying to set ambiguous interactability state for entity [{interactEntity}].");
+                    outInteractData.Interactable = TriBool.False;
+                }
+            }
+            else if (prototype.FailureReasonText != LocaleStringId.Blank)
+            {
+                if (prototype.InteractionEnabled == TriBool.True)
+                    outInteractData.FailureReasonText = prototype.FailureReasonText;
+            }
+
+            return missionResult;
+        }
+
+        private static InteractionMethod ParseMissionDialogTextPrototype(Mission mission, WorldEntity interactor, WorldEntity interactEntity, MissionDialogTextPrototype prototype, sbyte objectiveIndex, ref InteractData outInteractData)        
+        {
+            var missionResult = InteractionMethod.None;
+            if (mission == null || interactor == null || interactEntity == null || prototype == null)
+                return missionResult;
+
+            if (prototype.Text != LocaleStringId.Blank)
+            {
+                missionResult = InteractionMethod.Converse;
+                DialogStyle dialogStyle = prototype.DialogStyle;
+                if (dialogStyle == DialogStyle.None)
+                    dialogStyle = ((WorldEntityPrototype)interactEntity.Prototype).DialogStyle;
+
+                if (outInteractData.DialogDataCollection != null)
+                    mission.MissionManager.AttachDialogDataFromMission(outInteractData.DialogDataCollection, mission, dialogStyle,
+                        prototype.Text, VOCategory.MissionInProgress, interactor.Id, PrototypeId.Invalid, interactEntity.Id, 
+                        objectiveIndex, -1, false, false, false, LocaleStringId.Blank);
+
+                /* useless code
+                if (outInteractData.MapIconOverrideRef != null && outInteractData.MapIconOverrideRef == PrototypeId.Invalid)
+                {
+                    UIGlobalsPrototype uiGlobals = GameDatabase.UIGlobalsPrototype;
+                    if (uiGlobals == null)
+                        return missionResult;
+                }
+                */
+            }
+
+            return missionResult;
+        }
+
+        private static InteractionMethod ParseMissionConditionEntityInteractPrototype(MissionConditionEntityInteractOption option, Mission mission, 
+            HUDEntityOverheadIcon indicatorType, Player player, WorldEntity interactor, WorldEntity interactEntity, 
+            ref InteractData outInteractData, BaseMissionOption completeOption)
+        {
+            var missionResult = InteractionMethod.None;
+            if (option.Proto is not MissionConditionEntityInteractPrototype interactProto) return missionResult;
+            var missionProto = mission.Prototype;
+            if (missionProto == null) return missionResult;
+
+            int avatarCharacterLevel = player.CurrentAvatarCharacterLevel;
+            if (missionProto.Level - avatarCharacterLevel >= MissionManager.MissionLevelUpperBoundsOffset())
+            {
+                if (indicatorType == HUDEntityOverheadIcon.MissionBestower)
+                    TrySetIndicatorTypeAndMapOverrideWithPriority(interactEntity, ref outInteractData.IndicatorType, 
+                        ref outInteractData.MapIconOverrideRef, HUDEntityOverheadIcon.MissionBestowerDisabled);
+                return missionResult;
+            }
+
+            if (interactProto.RequiredItems.HasValue() && MissionManager.MatchItemsToRemove(player, interactProto.RequiredItems) == false)
+                return missionResult;
+
+            if (interactProto.DialogText != LocaleStringId.Blank || interactProto.DialogTextList.HasValue())
+                missionResult |= InteractionMethod.Converse;
+            else
+                missionResult |= InteractionMethod.Use;
+
+            TrySetIndicatorTypeAndMapOverrideWithPriority(interactEntity, ref outInteractData.IndicatorType, ref outInteractData.MapIconOverrideRef, indicatorType);
+            option.SetInteractDataObjectiveFlags(player, ref outInteractData, mission, completeOption);
+
+            if (outInteractData.DialogDataCollection != null)
+            {
+                LocaleStringId textDialog = DialogData.PickDialog(player.Game, interactProto);
+                DialogStyle dialogStyle = interactProto.DialogStyle;
+                if (dialogStyle == DialogStyle.None)
+                    dialogStyle = ((WorldEntityPrototype)interactEntity.Prototype).DialogStyle;
+
+                bool showRewards = interactProto.ShowRewards;
+                bool showGiveItems = interactProto.GiveItems.HasValue() || interactProto.IsTurnInNPC;
+                var objectiveIndex = option.ObjectiveIndex;
+                sbyte conditionIndex = (sbyte)interactProto.Index;
+
+                if (option.HasObjective() == false && mission.State != MissionState.Active)
+                    if (missionProto.Rewards.HasValue())
+                        showRewards = true;
+
+                var voCategory = interactProto.VoiceoverCategory;
+                if (voCategory == VOCategory.Invalid) 
+                {
+                    voCategory = VOCategory.MissionBestow;
+                    if (mission.State == MissionState.Active) 
+                    {
+                        voCategory = VOCategory.MissionInProgress;
+                        if (interactProto.IsTurnInNPC)
+                            voCategory = VOCategory.MissionCompleted;
+                    }                   
+                }
+
+                mission.MissionManager.AttachDialogDataFromMission( outInteractData.DialogDataCollection,
+                    mission, dialogStyle, textDialog, voCategory, interactor.Id, interactProto.Cinematic,
+                    interactEntity.Id, objectiveIndex, conditionIndex, interactProto.IsTurnInNPC,
+                    showRewards, showGiveItems, interactProto.DialogTextWhenInventoryFull);
+            }
+
+            return missionResult;
+        }
+
+
+        private static bool CheckOptionFilters(WorldEntity interactee, WorldEntity interactor, InteractionOption option)
+        {
+            if (option.EntityFilterWrapper.EvaluateEntity(interactee) == false) return false;
+
+            // This part never used
+            if (option.RegionFilterRef != PrototypeId.Invalid)
+            {
+                if (interactor == null) return false;
+                Region region = interactor.RegionLocation.Region;
+                if (region == null || region.PrototypeDataRef != option.RegionFilterRef)
+                    return false;
+            }
+
+            if (option.AreaFilterRef != PrototypeId.Invalid)
+            {
+                if (interactor == null) return false;
+                Area area = interactor.RegionLocation.Area;
+                if (area == null || area.PrototypeDataRef != option.AreaFilterRef)
+                    return false;
+            }
+
+            if (option.MissionFilterRef != PrototypeId.Invalid)
+            {
+                PrototypeId missionDataRef = interactee.MissionPrototype;
+                if (missionDataRef != option.MissionFilterRef)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static void GetInteractionDataFromWorldEntityPrototype(List<InteractionOption> optionsList, PrototypeId entityDataRef)
+        {
+            WorldEntityPrototype entityPrototype = GameDatabase.GetPrototype<WorldEntityPrototype>(entityDataRef);
+            if (entityPrototype == null) return;
+
+            if (entityPrototype is not ItemPrototype 
+                && entityPrototype is not MissilePrototype 
+                && entityPrototype is not OrbPrototype 
+                && entityPrototype is not TransitionPrototype)
+                CreateOptionInList<AttackOption>(optionsList);
+
+            PropertyCollection properties = entityPrototype.Properties;
+            if (properties != null)
+            {
+                if (properties[PropertyEnum.VendorType] != PrototypeId.Invalid)
+                    CreateOptionInList<VendorOption>(optionsList);
+                if (properties[PropertyEnum.OpenPlayerStash])
+                    CreateOptionInList<StashOption>(optionsList);
+                if (properties.HasProperty(PropertyEnum.OpenMTXStore))
+                    CreateOptionInList<OpenMTXStoreOption>(optionsList);
+                if (properties[PropertyEnum.ThrowablePower] != PrototypeId.Invalid)
+                    CreateOptionInList<ThrowOption>(optionsList);
+                if (properties[PropertyEnum.Trainer])
+                    CreateOptionInList<TrainerOption>(optionsList);
+                if (properties[PropertyEnum.HealerNPC])
+                    CreateOptionInList<HealOption>(optionsList);
+                if (properties[PropertyEnum.OpenStoryWarpPanel])
+                    CreateOptionInList<StoryWarpOption>(optionsList);
+            }
+
+            if (entityPrototype.DialogText != 0 || entityPrototype.DialogTextList.HasValue())
+                CreateOptionInList<DialogOption>(optionsList);
+
+            if (entityPrototype is TransitionPrototype)
+                CreateOptionInList<TransitionOption>(optionsList);
+
+            if (entityPrototype is ItemPrototype)
+            {
+                CreateOptionInList<ItemPickupOption>(optionsList);
+                CreateOptionInList<ItemBuyOption>(optionsList);
+                CreateOptionInList<ItemSellOption>(optionsList);
+                CreateOptionInList<ItemDonateOption>(optionsList);
+                CreateOptionInList<ItemDonatePetTechOption>(optionsList);
+                CreateOptionInList<ItemMoveToGeneralInventoryOption>(optionsList);
+                CreateOptionInList<ItemMoveToStashOption>(optionsList);
+                CreateOptionInList<ItemMoveToTeamUpOption>(optionsList);
+                CreateOptionInList<ItemMoveToTradeInventoryOption>(optionsList);
+                CreateOptionInList<ItemUseOption>(optionsList);
+                CreateOptionInList<ItemEquipOption>(optionsList);
+                CreateOptionInList<ItemSlotCraftingIngredientOption>(optionsList);
+                CreateOptionInList<ItemLinkInChatOption>(optionsList);
+            }
+
+            if (entityPrototype.PostInteractState != null)
+                CreateOptionInList<PostInteractStateOption>(optionsList);
+
+            if (entityPrototype is AvatarPrototype)
+            {
+                CreateOptionInList<ResurrectOption>(optionsList);
+                CreateOptionInList<PartyBootOption>(optionsList);
+                CreateOptionInList<GroupChangeTypeOption>(optionsList);
+                CreateOptionInList<PartyInviteOption>(optionsList);
+                CreateOptionInList<PartyLeaveOption>(optionsList);
+                CreateOptionInList<PartyShareLegendaryQuestOption>(optionsList);
+                CreateOptionInList<PlayerMuteOption>(optionsList);
+                CreateOptionInList<GuildInviteOption>(optionsList);
+                CreateOptionInList<ChatOption>(optionsList);
+                CreateOptionInList<TeleportOption>(optionsList);
+                CreateOptionInList<ReportOption>(optionsList);
+                CreateOptionInList<ReportAsSpamOption>(optionsList);
+                CreateOptionInList<FriendOption>(optionsList);
+                CreateOptionInList<UnfriendOption>(optionsList);
+                CreateOptionInList<IgnoreOption>(optionsList);
+                CreateOptionInList<UnignoreOption>(optionsList);
+                CreateOptionInList<InspectOption>(optionsList);
+                CreateOptionInList<MakeLeaderOption>(optionsList);
+
+                if (Player.IsPlayerTradeEnabled)
+                    CreateOptionInList<TradeOption>(optionsList);
+            }
+        }
+
+        private static bool CheckEntityPrerequisites(WorldEntity interactee, WorldEntity interactor, InteractionFlags interactionFlags)
+        {
+            if (interactionFlags.HasFlag(InteractionFlags.DeadInteractor) == false)
+                if (interactor.IsDead) return false;
+            if (interactionFlags.HasFlag(InteractionFlags.DormanInvisibleInteractee) == false)
+                if (interactee.Properties[PropertyEnum.Dormant] || interactee.Properties[PropertyEnum.Visible] == false)
+                    return false;
+            return true;
+        }
+    }
+
+    public class InteractData
+    {
+        public bool Visible;
+        public TriBool Interactable;
+        public TriBool VisibleOverride;
+        public PrototypeId? MapIconOverrideRef;
+        public HUDEntityOverheadIcon? IndicatorType;
+        public PlayerHUDEnum PlayerHUDFlags;
+        public LocaleStringId FailureReasonText;
+        public EntityAppearanceEnum? AppearanceEnum;
+        public HashSet<EntityObjectiveInfo> MissionObjectives { get; set; } // client only
+        public DialogDataCollection DialogDataCollection { get; set; } // client only
+
+        public InteractData()
+        {
+            Visible = true;
+            Interactable = TriBool.Undefined;
+            VisibleOverride = TriBool.Undefined;
         }
     }
 
@@ -534,26 +1266,33 @@ namespace MHServerEmu.Games.Dialog
             _optionFlags |= option.OptimizationFlags;
         }
 
-        public MissionActionEntityTargetOption StartPowerOption(MissionPrototype missionProto)
+        public MissionActionEntityPerformPowerPrototype GetStartPower(MissionPrototype missionProto)
         {            
             foreach(var option in Options)
             {
                 if (option is not MissionActionEntityTargetOption targetOption) continue;
                 if (targetOption.MissionProto != missionProto) continue;
-                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart)) return targetOption;
+                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart) == false) continue;
+                if (targetOption.Proto is MissionActionEntityPerformPowerPrototype performPower) return performPower;
             }
             return null;
         }
 
-        public MissionActionEntityTargetOption StartPowerOptionIntersect(InteractionData targetData)
+        public MissionActionEntityPerformPowerPrototype GetStartPowerIntersect(InteractionData targetData)
         {
             var intersectingOptions = Options.Intersect(targetData.Options);
             foreach (var option in intersectingOptions)
             {
                 if (option is not MissionActionEntityTargetOption targetOption) continue;
-                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart)) return targetOption;
+                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart) == false) continue;
+                if (targetOption.Proto is MissionActionEntityPerformPowerPrototype performPower) return performPower;
             }
             return null;
+        }
+
+        public bool HasOptionFlags(InteractionOptimizationFlags optimizationFlags)
+        {
+            return _optionFlags.HasFlag(optimizationFlags);
         }
 
         public InteractionData()

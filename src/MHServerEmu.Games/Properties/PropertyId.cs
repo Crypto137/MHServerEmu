@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.Properties
     /// <summary>
     /// Identifies a <see cref="PropertyValue"/>.
     /// </summary>
-    public struct PropertyId : IComparable
+    public struct PropertyId : IComparable<PropertyId>, IEquatable<PropertyId>
     {
         public static readonly PropertyId Invalid = new();
 
@@ -40,6 +40,15 @@ namespace MHServerEmu.Games.Properties
         public PropertyId(PropertyEnum propertyEnum, PropertyParam[] @params)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, @params.AsSpan()).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, in ReadOnlySpan<PropertyParam> @params)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, @params).Raw;
         }
 
@@ -55,10 +64,77 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, AssetId param0)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(param0)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0, PropertyParam param1)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0), param1).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PrototypeId param1)
+        {
+            Raw = new PropertyId(propertyEnum, param0, Property.ToParam(propertyEnum, 1, param1)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, AssetId param0, AssetId param1)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(param0), Property.ToParam(param1)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PropertyEnum param0)
+        {
+            // This is for properties that have enums for other properties as their params (example: Requirement)
+            PropertyInfo paramInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(param0);
+            PrototypeId paramProtoRef = paramInfo.Prototype.DataRef;
+            Raw = new PropertyId(propertyEnum, paramProtoRef).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
         public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, param0, param1).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0), Property.ToParam(propertyEnum, 1, param1)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int param0, PrototypeId param1)
+        {
+            Raw = new PropertyId(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)).Raw;
         }
 
         /// <summary>
@@ -87,17 +163,20 @@ namespace MHServerEmu.Games.Properties
             Raw = raw;
         }
 
-        public int CompareTo(object obj)
+        public static implicit operator PropertyId(PropertyEnum propertyEnum) => new(propertyEnum);
+
+        public int CompareTo(PropertyId other)
         {
-            if (obj is not PropertyId propertyId) throw new ArgumentException("Object is not a PropertyId.");
-            return Raw.CompareTo(propertyId.Raw);
+            return Raw.CompareTo(other.Raw);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is not PropertyId) return false;
-            return Raw == ((PropertyId)obj).Raw;
+            if (obj is not PropertyId other) return false;
+            return Raw == other.Raw;
         }
+
+        public bool Equals(PropertyId other) => Raw == other.Raw;
 
         public static bool operator ==(PropertyId left, PropertyId right) => left.Equals(right);
         public static bool operator !=(PropertyId left, PropertyId right) => left.Equals(right) == false;
@@ -110,16 +189,18 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public PropertyParam GetParam(int index)
         {
-            return GetParams()[index];
+            Span<PropertyParam> @params = stackalloc PropertyParam[Property.MaxParamCount];
+            GetParams(ref @params);
+            return @params[index];
         }
 
         /// <summary>
-        /// Decodes and returns encoded param values.
+        /// Decodes encoded param values to a <see cref="Span{T}"/>.
         /// </summary>
-        public PropertyParam[] GetParams()
+        public void GetParams(ref Span<PropertyParam> @params)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Enum);
-            return info.DecodeParameters(this);
+            info.DecodeParameters(this, ref @params);
         }
     }
 }

@@ -1,15 +1,14 @@
 ﻿using System.Text;
-using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.System;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Achievements
 {
     /// <summary>
     /// Manages the state of all achievements for a given player.
     /// </summary>
-    public class AchievementState
+    public class AchievementState : ISerialize
     {
         public Dictionary<uint, AchievementProgress> AchievementProgressMap { get; } = new();
 
@@ -18,34 +17,52 @@ namespace MHServerEmu.Games.Achievements
         /// </summary>
         public AchievementState() { }
 
-        /// <summary>
-        /// Constructs an <see cref="AchievementState"/> from the provided <see cref="CodedInputStream"/>.
-        /// </summary>
-        public AchievementState(CodedInputStream stream)
+        public bool Serialize(Archive archive)
         {
-            ulong numProgress = stream.ReadRawVarint64();
-            for (ulong i = 0; i < numProgress; i++)
-            {
-                uint id = stream.ReadRawVarint32();
-                uint count = stream.ReadRawVarint32();
-                long completedDate = stream.ReadRawInt64();
+            bool success = true;
+            //if (archive.IsTransient) return success;
 
-                AchievementProgressMap[id] = new(count, Clock.UnixTimeMicrosecondsToTimeSpan(completedDate), false);
-            }
-        }
+            uint achievementCount = (uint)AchievementProgressMap.Count;
+            success &= Serializer.Transfer(archive, ref achievementCount);
 
-        /// <summary>
-        /// Encodes this <see cref="AchievementState"/> instance to the provided <see cref="CodedOutputStream"/>.
-        /// </summary>
-        public void Encode(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint64((ulong)AchievementProgressMap.Count);
-            foreach (var kvp in AchievementProgressMap)
+            if (archive.IsPacking)
             {
-                stream.WriteRawVarint32(kvp.Key);
-                stream.WriteRawVarint32(kvp.Value.Count);
-                stream.WriteRawInt64(kvp.Value.CompletedDate.Ticks / 10);
+                foreach (var kvp in AchievementProgressMap)
+                {
+                    uint achievementId = kvp.Key;
+                    uint count = kvp.Value.Count;
+                    TimeSpan completedDate = kvp.Value.CompletedDate;
+
+                    success &= Serializer.Transfer(archive, ref achievementId);
+                    success &= Serializer.Transfer(archive, ref count);
+                    success &= Serializer.Transfer(archive, ref completedDate);
+                    // IsMigration => progress.modifiedSinceCheckpoint
+                }
+
+                // IsMigration => m_migrationStamp, m_lastFullWriteTime
             }
+            else
+            {
+                AchievementProgressMap.Clear();
+
+                for (uint i = 0; i < achievementCount; i++)
+                {
+                    uint achievementId = 0;
+                    uint count = 0;
+                    TimeSpan completedDate = TimeSpan.Zero;
+
+                    success &= Serializer.Transfer(archive, ref achievementId);
+                    success &= Serializer.Transfer(archive, ref count);
+                    success &= Serializer.Transfer(archive, ref completedDate);
+                    // IsMigration => progress.modifiedSinceCheckpoint
+
+                    AchievementProgressMap.Add(achievementId, new(count, completedDate, false));
+                }
+
+                // IsMigration => progress.modifiedSinceCheckpoint
+            }
+
+            return success;
         }
 
         /// <summary>

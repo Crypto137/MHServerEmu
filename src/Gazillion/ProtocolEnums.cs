@@ -1,6 +1,6 @@
 ﻿namespace Gazillion
 {
-    public enum AuthMessage : byte
+    public enum AuthMessage : uint
     {
         AuthRequiredDoc,
         AuthTicket,
@@ -11,7 +11,7 @@
         MHLocalizedNewsEntry
     }
 
-    public enum BillingCommonMessage : byte
+    public enum BillingCommonMessage : uint
     {
         MHCatalogEntryType,
         MHCatalogEntryTypeModifier,
@@ -46,13 +46,13 @@
         BillingAcquireUnfulfilledOrders
     }
 
-    public enum ChatCommonMessage : byte
+    public enum ChatCommonMessage : uint
     {
         ChatMessageAttachments,
         ChatMessage
     }
 
-    public enum ClientToGameServerMessage : byte
+    public enum ClientToGameServerMessage : uint
     {
         NetMessageReadyForGameJoin,
         NetMessagePlayerSystemMetrics,
@@ -228,12 +228,12 @@
         NetMessageLookForParty
     }
 
-    public enum ClientToGroupingManagerMessage : byte
+    public enum ClientToGroupingManagerMessage : uint
     {
         GetPlayerInfoByName
     }
 
-    public enum CommonMessage : byte
+    public enum CommonMessage : uint
     {
         NetStructPoint3,
         NetStructIPoint3,
@@ -284,7 +284,7 @@
         PSNNotification
     }
 
-    public enum FrontendProtocolMessage : byte
+    public enum FrontendProtocolMessage : uint
     {
         LoginDataPB,
         ConsoleServiceEntitlement,
@@ -302,7 +302,7 @@
         NewsRequest
     }
 
-    public enum GameServerToClientMessage : byte
+    public enum GameServerToClientMessage : uint
     {
         NetMessageReadyAndLoggedIn,
         NetMessageReadyAndLoadedOnGameServer,
@@ -559,7 +559,7 @@
         NetMessageSuggestedPlayerForParty
     }
 
-    public enum GroupingManagerMessage : byte
+    public enum GroupingManagerMessage : uint
     {
         ChatResponseToExternalLogin,
         ChatNormalMessage,
@@ -574,7 +574,7 @@
         ChatClientIsLoggedIn
     }
 
-    public enum GuildMessage : byte
+    public enum GuildMessage : uint
     {
         GuildForm,
         GuildFormResult,
@@ -601,7 +601,7 @@
         GuildMessageSetToPlayerManager
     }
 
-    public enum MatchCommonMessage : byte
+    public enum MatchCommonMessage : uint
     {
         MatchTeamDescription,
         MatchGameDescription,
@@ -611,7 +611,7 @@
         MatchPlayerStatisticsSummary
     }
 
-    public enum PubSubProtocolMessage : byte
+    public enum PubSubProtocolMessage : uint
     {
         PubSubPublish,
         PubSubSubscribe,
