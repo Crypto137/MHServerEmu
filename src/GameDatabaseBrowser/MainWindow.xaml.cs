@@ -140,7 +140,7 @@ namespace GameDatabaseBrowser
 
 
             PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
-            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data"} });
+            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data"}});
 
             RefreshPrototypeTree(GetSearchDetails());
             worker.ReportProgress(100);

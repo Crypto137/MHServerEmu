@@ -26,4 +26,10 @@
     <ProjectReference Include="..\MHServerEmu.Games\MHServerEmu.Games.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\Game\Loco\IMPORTANT.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

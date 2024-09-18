@@ -1,0 +1,1 @@
+Copy eng.all_*FFFFFFFFFFFFFFF.string files from Marvel Heroes\Data\Game\loco to here
