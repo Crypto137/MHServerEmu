@@ -191,8 +191,10 @@ namespace MHServerEmu.PlayerManagement
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] already has a pending save task");
 
                 _pendingSaveDict.Add(playerDbId, Task.Run(async () => await SavePlayerDataAsync(client)));
-            } 
-            
+            }
+
+            TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
+            Logger.Info($"Removed client [{client}] (SessionLength={sessionLength:hh\\:mm\\:ss})");
             return true;
         }
 

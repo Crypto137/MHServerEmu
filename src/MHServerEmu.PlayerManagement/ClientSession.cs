@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 
@@ -29,7 +30,9 @@ namespace MHServerEmu.PlayerManagement
 
         public byte[] Key { get; set; }
         public byte[] Token { get; }
-        public DateTime CreationTime { get; }
+        public TimeSpan CreationTime { get; }
+
+        public TimeSpan SessionLength { get => Clock.UnixTime - CreationTime; }
 
         /// <summary>
         /// Constructs a new <see cref="ClientSession"/> with the provided data.
@@ -44,12 +47,12 @@ namespace MHServerEmu.PlayerManagement
 
             Key = CryptographyHelper.GenerateAesKey();
             Token = CryptographyHelper.GenerateToken();
-            CreationTime = DateTime.Now;
+            CreationTime = Clock.UnixTime;
         }
 
         public override string ToString()
         {
-            return $"sessionId=0x{Id:X}";
+            return $"SessionId=0x{Id:X}";
         }
 
         public string GetClientInfo()
@@ -59,7 +62,7 @@ namespace MHServerEmu.PlayerManagement
             sb.AppendLine($"Account: {Account}");
             sb.AppendLine($"Downloader: {Downloader}");
             sb.AppendLine($"Locale: {Locale}");
-            sb.AppendLine($"Online Time: {DateTime.Now - CreationTime:hh\\:mm\\:ss}");
+            sb.AppendLine($"Session Length: {SessionLength:hh\\:mm\\:ss}");
             return sb.ToString();
         }
     }
