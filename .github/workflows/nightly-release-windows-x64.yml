@@ -25,6 +25,7 @@ jobs:
       with:
         name: GameDatabaseBrowser-nightly-${{ env.DATE }}-Release-windows-x64
         path: |
-          ./src/GameDatabaseBrowser/bin/Release/net6.0-windows
-          !./src/GameDatabaseBrowser/bin/Release/net6.0-windows/*.pdb
-          !./src/GameDatabaseBrowser/bin/Release/net6.0-windows/*.xml
+          ./src/GameDatabaseBrowser/bin/x64/Release/net6.0-windows
+          !./src/GameDatabaseBrowser/bin/x64/Release/net6.0-windows/*.pdb
+          !./src/GameDatabaseBrowser/bin/x64/Release/net6.0-windows/*.xml
+		  x64\Release\net6.0-windows
