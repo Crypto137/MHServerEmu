@@ -11,6 +11,9 @@ using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Powers
 {
+    /// <summary>
+    /// Snapshots the state of a <see cref="Power"/> and its owner and calculates effects to be applied as <see cref="PowerResults"/>.
+    /// </summary>
     public class PowerPayload : PowerEffectsPacket
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -33,6 +36,10 @@ namespace MHServerEmu.Games.Powers
 
         public KeywordsMask KeywordsMask { get; private set; }
 
+        /// <summary>
+        /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
+        /// the state of the <see cref="Power"/> and its owner.
+        /// </summary>
         public bool Initialize(Power power, PowerApplication powerApplication)
         {
             Game = power.Game;
@@ -76,6 +83,12 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        /// <summary>
+        /// Calculates base damage properties for this <see cref="PowerPayload"/>.
+        /// </summary>
+        /// <remarks>
+        /// Affected properties: Damage, DamageBaseUnmodified.
+        /// </remarks>
         public bool CalculateDamage(PropertyCollection powerProperties)
         {
             PowerPrototype powerProto = PowerPrototype;
@@ -128,17 +141,38 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool CalculateOwnerDamageBonuses()
+        /// <summary>
+        /// Calculates damage bonus properties for this <see cref="PowerPayload"/> from its owner.
+        /// </summary>
+        /// <remarks>
+        /// Affected properties: PayloadDamageMultTotal, PayloadDamagePctModifierTotal, and PayloadDamageRatingTotal.
+        /// </remarks>
+        public bool CalculateOwnerDamageBonuses(Power power)
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
             if (powerOwner == null) return Logger.WarnReturn(false, "CalculateUserDamageBonuses(): powerOwner == null");
 
             PropertyCollection ownerProperties = powerOwner.Properties;
 
-            // Set base damage rating
-            Properties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any] = powerOwner.GetDamageRating();
+            // DamageMult
+            float damageMult = Properties[PropertyEnum.DamageMult];
 
-            // Calculate bonuses
+            // Apply bonus damage mult from attack speed
+            float powerDmgBonusFromAtkSpdPct = Properties[PropertyEnum.PowerDmgBonusFromAtkSpdPct];
+            if (powerDmgBonusFromAtkSpdPct > 0f)
+                damageMult += powerDmgBonusFromAtkSpdPct * (power.GetAnimSpeed() - 1f);
+
+            // For some weird reason this is not copied from power on initialization
+            damageMult += power.Properties[PropertyEnum.DamageMultOnPower];
+
+            // DamagePct
+            float damagePct = Properties[PropertyEnum.DamagePctBonus];
+            damagePct += Properties[PropertyEnum.DamagePctBonus];
+
+            // DamageRating
+            float damageRating = powerOwner.GetDamageRating();
+
+            // Power / keyword specific bonuses
             Span<PropertyEnum> damageBonusProperties = stackalloc PropertyEnum[]
             {
                 PropertyEnum.DamageMultForPower,
@@ -148,10 +182,6 @@ namespace MHServerEmu.Games.Powers
                 PropertyEnum.DamageRatingBonusForPower,
                 PropertyEnum.DamageRatingBonusForPowerKeyword,
             };
-
-            float damageMultBonus = 0f;
-            float damagePctBonus = 0f;
-            float damageRatingBonus = 0f;
 
             foreach (PropertyEnum propertyEnum in damageBonusProperties)
             {
@@ -182,33 +212,98 @@ namespace MHServerEmu.Games.Powers
 
                     if (propertyEnum == PropertyEnum.DamageMultForPower || propertyEnum == PropertyEnum.DamageMultForPowerKeyword)
                     {
-                        damageMultBonus += kvp.Value;
+                        damageMult += kvp.Value;
                     }
                     else if (propertyEnum == PropertyEnum.DamagePctBonusForPower || propertyEnum == PropertyEnum.DamagePctBonusForPowerKeyword)
                     {
-                        damagePctBonus += kvp.Value;
+                        damagePct += kvp.Value;
                     }
                     else if (propertyEnum == PropertyEnum.DamageRatingBonusForPower || propertyEnum == PropertyEnum.DamageRatingBonusForPowerKeyword)
                     {
-                        damageRatingBonus += kvp.Value;
+                        damageRating += kvp.Value;
                     }
                 }
             }
 
-            // TODO: PropertyEnum.DamageMultPowerCdKwd
+            // Secondary resource bonuses
+            if (power.CanUseSecondaryResourceEffects())
+            {
+                damagePct += power.Properties[PropertyEnum.SecondaryResourceDmgBnsPct];
+                damageRating += power.Properties[PropertyEnum.SecondaryResourceDmgBns];
+            }
 
-            Properties.AdjustProperty(damageMultBonus, new(PropertyEnum.PayloadDamageMultTotal, DamageType.Any));
-            Properties.AdjustProperty(damagePctBonus, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
-            Properties.AdjustProperty(damageRatingBonus, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+            // Apply damage bonus for the number of powers on cooldown if needed.
+            if (ownerProperties.HasProperty(PropertyEnum.DamageMultPowerCdKwd))
+            {
+                // Get the number of cooldowns from the most responsible power user because
+                // this may be a missile / hotspot / summon power.
+                WorldEntity mostResponsiblePowerUser = powerOwner.GetMostResponsiblePowerUser<WorldEntity>();
 
-            // Calculate pct weaken
-            float damagePctWeaken = 0f;
-            foreach (var kvp in ownerProperties.IteratePropertyRange(PropertyEnum.DamagePctWeaken))
+                foreach (var kvp in ownerProperties.IteratePropertyRange(PropertyEnum.DamageMultPowerCdKwd))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                    if (keywordProtoRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn($"CalculateOwnerDamageBonuses(): Invalid keyword param proto ref for {kvp.Key.Enum}");
+                        continue;
+                    }
+
+                    KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+
+                    int numPowersOnCooldown = 0;
+
+                    foreach (var recordKvp in mostResponsiblePowerUser.PowerCollection)
+                    {
+                        Power recordPower = recordKvp.Value.Power;
+                        if (recordPower.HasKeyword(keywordProto) && recordPower.IsOnCooldown())
+                            numPowersOnCooldown++;
+                    }
+
+                    if (numPowersOnCooldown > 0)
+                        damageMult += (float)kvp.Value * numPowersOnCooldown;
+
+                }
+            }
+
+            // Set all damage bonus properties
+            Properties[PropertyEnum.PayloadDamageMultTotal, DamageType.Any] = damageMult;
+            Properties[PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any] = damagePct;
+            Properties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any] = damageRating;
+
+            // Apply damage type-specific bonuses
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+            {
+                float damagePctBonusByType = powerOwner.Properties[PropertyEnum.DamagePctBonusByType, damageType];
+                float damageRatingBonusByType = powerOwner.Properties[PropertyEnum.DamageRatingBonusByType, damageType];
+
+                Properties[PropertyEnum.PayloadDamagePctModifierTotal, damageType] = damagePctBonusByType;
+                Properties[PropertyEnum.PayloadDamageRatingTotal, damageType] = damageRatingBonusByType;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Calculates damage penalty (weaken) properties for this <see cref="PowerPayload"/> from its owner.
+        /// </summary>
+        /// <remarks>
+        /// Affected properties: PayloadDamagePctWeakenTotal.
+        /// </remarks>
+        public bool CalculateOwnerDamagePenalties()
+        {
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+            if (powerOwner == null) return Logger.WarnReturn(false, "CalculateOwnerDamagePenalties(): powerOwner == null");
+
+            // Apply weaken pct (maybe we should a separate CalculateOwnerDamagePenalties method for this?)
+
+            float damagePctWeaken = powerOwner.Properties[PropertyEnum.DamagePctWeaken];
+
+            foreach (var kvp in powerOwner.Properties.IteratePropertyRange(PropertyEnum.DamagePctWeaken))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid)
                 {
-                    Logger.Warn($"CalculateOwnerDamageBonuses(): Invalid param keyword proto ref for {keywordProtoRef}");
+                    Logger.Warn($"CalculateOwnerDamagePenalties(): Invalid param keyword proto ref for {keywordProtoRef}");
                     continue;
                 }
 
@@ -218,13 +313,9 @@ namespace MHServerEmu.Games.Powers
                 damagePctWeaken += kvp.Value;
             }
 
-            Properties.AdjustProperty(damagePctWeaken, new(PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any));
-
-            // TODO PropertyEnum.SecondaryResourceDmgBns, PropertyEnum.SecondaryResourceDmgBnsPct
-
+            Properties[PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any] = damagePctWeaken;
             return true;
         }
-
 
         private SecondaryActivateOnReleasePrototype GetSecondaryActivateOnReleasePrototype()
         {
