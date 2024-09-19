@@ -74,7 +74,8 @@ namespace MHServerEmu.Games.Populations
             population.GetContainedEntities(entities);
             if (entities.Count > 0) 
                 Logger.Debug($"SpawnMarker[{GameDatabase.GetFormattedPrototypeName(entities.First())}][{population.IgnoreBlackout}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");*/
-            GRandom random = Game.Random;
+
+            var random = Game.Random;
             PropertyCollection properties = null;
             if (missionRef != PrototypeId.Invalid)
             {
@@ -321,17 +322,17 @@ namespace MHServerEmu.Games.Populations
     
     public class MetaStateSpawnEvent : SpawnEvent
     {
-        public MetaState MetaState;
+        public PrototypeId ContextRef;
 
-        public MetaStateSpawnEvent(MetaState metaState, Region region) : base(region)
+        public MetaStateSpawnEvent(PrototypeId contextRef, Region region) : base(region)
         {
-            MetaState = metaState;
+            ContextRef = contextRef;
         }
 
-        public void AddRequiredObjects(PopulationRequiredObjectPrototype[] populationObjects, SpawnLocation spawnLocation, bool removeOnSpawnFail)
+        public void AddRequiredObjects(PopulationRequiredObjectPrototype[] populationObjects, SpawnLocation spawnLocation, PrototypeId missionRef, 
+            bool spawnCleanup, bool removeOnSpawnFail, TimeSpan time = default)
         {
             float spawnableArea = spawnLocation.CalcSpawnableArea();
-            var random = Game.Random;
 
             foreach (var reqObject in populationObjects)
             {
@@ -349,7 +350,7 @@ namespace MHServerEmu.Games.Populations
                 for (int i = 0; i < count; i++)
                 {
                     AddPopulationObject(objectProto.UsePopulationMarker, objectProto, reqObject.Critical, spawnLocationReq,
-                        PrototypeId.Invalid, true, TimeSpan.FromMilliseconds(random.Next(0, 1000)), removeOnSpawnFail);
+                        missionRef, spawnCleanup, time, removeOnSpawnFail);
                 }
             }
         }

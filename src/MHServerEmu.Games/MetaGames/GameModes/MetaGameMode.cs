@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public Game Game { get; }
         public Region Region { get; }
         public MetaGameModePrototype Prototype { get; }
+        public PrototypeId PrototypeDataRef { get; }
 
         private TimeSpan _startTime;
         private EventGroup _timedGroup = new();
@@ -32,6 +33,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             Game = metaGame.Game;
             Region = metaGame.Region;
             Prototype = proto;
+            PrototypeDataRef = proto.DataRef;
 
             _entityEnteredWorldAction = OnEntityEnteredWorld;
         }
@@ -72,6 +74,14 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             MetaGame.RemoveGroups(proto.RemoveGroups);
             MetaGame.RemoveStates(proto.RemoveStates);
             MetaGame.ApplyStates(proto.ApplyStates);
+        }
+
+        public virtual void OnAddPlayer(Player player)
+        {
+            var proto = Prototype;
+            SendAvatarOnKilledInfoOverride(proto.AvatarOnKilledInfoOverride, player);
+            SendUINotification(proto.UINotificationOnActivate);
+            SendMetaGameInfoNotifications(proto.PlayerEnterNotifications, player);
         }
 
         private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)

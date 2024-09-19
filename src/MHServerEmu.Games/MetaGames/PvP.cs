@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.MetaGames
 {
@@ -72,6 +73,36 @@ namespace MHServerEmu.Games.MetaGames
         {
             base.OnPostInit(settings);
             if (GameModes.Count > 0) ActivateGameMode(0);
+        }
+
+        public override bool AddPlayer(Player player)
+        {
+            if (base.AddPlayer(player) == false) return false;
+
+
+            var mode = CurrentMode;
+            if (mode == null) return false;
+            mode.OnAddPlayer(player);
+
+            foreach (var state in MetaStates)
+                state.OnAddPlayer(player);
+
+            // TODO MiniMap update
+
+            player.Properties[PropertyEnum.PvPMode] = mode.PrototypeDataRef;
+
+            return true;
+        }
+
+        public override bool RemovePlayer(Player player)
+        {
+            if (base.RemovePlayer(player) == false) return false;
+
+            var mode = CurrentMode;
+            if (mode == null) return false;
+            player.Properties[PropertyEnum.PvPMode] = PrototypeId.Invalid;
+
+            return true;
         }
     }
 }

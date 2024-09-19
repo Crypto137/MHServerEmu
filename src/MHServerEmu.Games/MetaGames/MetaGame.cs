@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.MetaGames
         private readonly Queue<PrototypeId> _removeStateStack = new();
         private readonly EventPointer<ApplyStateEvent> _scheduledApplyState = new();
 
-        private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnMap;
+        private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnEvents;
         private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
         private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
         private Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.MetaGames
             var region = Game.RegionManager?.GetRegion(settings.RegionId);
             if (region != null)
             {
-                _metaStateSpawnMap = new();
+                _metaStateSpawnEvents = new();
                 _regionId = region.Id;
                 region.RegisterMetaGame(this);
                 region.PlayerEnteredRegionEvent.AddActionBack(_playerEnteredRegionAction);
@@ -337,6 +337,7 @@ namespace MHServerEmu.Games.MetaGames
             foreach (var removeState in removeStates)
                 RemoveState(removeState);
         }
+
         public void RemoveGroups(AssetId[] removeGroups)
         {
             if (removeGroups.IsNullOrEmpty()) return;
@@ -361,6 +362,23 @@ namespace MHServerEmu.Games.MetaGames
             foreach (var state in MetaStates)
                 if (state.HasGroup(removeGroup))
                     RemoveState(state.PrototypeDataRef);
+        }
+
+        public bool RemoveSpawnEvent(PrototypeId contextRef)
+        {
+            return _metaStateSpawnEvents.Remove(contextRef);
+        }
+
+        public MetaStateSpawnEvent GetSpawnEvent(PrototypeId contextRef)
+        {
+            if (_metaStateSpawnEvents.TryGetValue(contextRef, out MetaStateSpawnEvent spawnEvent))
+                return spawnEvent;
+            else
+            {
+                spawnEvent = new(contextRef, Region);
+                _metaStateSpawnEvents[contextRef] = spawnEvent;
+                return spawnEvent;
+            }
         }
 
         #region Player
@@ -428,14 +446,16 @@ namespace MHServerEmu.Games.MetaGames
             return null;
         }
 
-        public bool AddPlayer(Player player)
+        public virtual bool AddPlayer(Player player)
         {
+            if (player == null) return false;
+
             // TODO add in chat
 
             return true;
         }
 
-        public bool RemovePlayer(Player player)
+        public virtual bool RemovePlayer(Player player)
         {
             if (player == null) return false;
 

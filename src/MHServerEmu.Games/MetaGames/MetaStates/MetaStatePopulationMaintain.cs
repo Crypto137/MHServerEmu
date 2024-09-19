@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
 
@@ -12,7 +13,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         public MetaStatePopulationMaintain(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
             _proto = prototype as MetaStatePopulationMaintainPrototype; 
-            _spawnEvent = new MetaStateSpawnEvent(this, metaGame.Region);
+            _spawnEvent = new MetaStateSpawnEvent(PrototypeDataRef, metaGame.Region);
         }
 
         public override void OnApply()
@@ -25,10 +26,14 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 _spawnEvent.RespawnDelayMS = _proto.RespawnDelayMS;
 
                 var areas = _proto.RestrictToAreas;
-                //if (_proto.DataRef == (PrototypeId)7730041682554854878
-                //&& region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.CH0402UpperEastRegion) areas = null; // Hack for Moloids
+
+                // Hack for Moloids
+                // if (_proto.DataRef == (PrototypeId)7730041682554854878 && region.PrototypeDataRef == (PrototypeId)RegionPrototypeId.CH0402UpperEastRegion) areas = null;
+
                 var spawnLocation = new SpawnLocation(region, areas, _proto.RestrictToCells);
-                _spawnEvent.AddRequiredObjects(_proto.PopulationObjects, spawnLocation, _proto.RemovePopObjectsOnSpawnFail);
+                var time = TimeSpan.FromMilliseconds(Game.Random.Next(0, 1000));
+
+                _spawnEvent.AddRequiredObjects(_proto.PopulationObjects, spawnLocation, PrototypeId.Invalid, true, _proto.RemovePopObjectsOnSpawnFail, time);
                 _spawnEvent.Schedule();
             }
         }

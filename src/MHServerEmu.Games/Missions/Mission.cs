@@ -112,6 +112,7 @@ namespace MHServerEmu.Games.Missions
         public int LootSeed { get => _lootSeed; set => _lootSeed = value; } // AvatarMissionLootSeed
         public SortedSet<ulong> Participants { get => _participants; }
         public bool IsSuspended { get => _isSuspended; }
+        public List<MissionObjective> Objectives { get => _objectiveDict.Values.ToList(); }
         public EventGroup EventGroup { get; } = new();
         public MissionManager MissionManager { get; }
         public Game Game { get; }

@@ -39,6 +39,11 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             return Prototype.Groups.Any(stateGroup => stateGroup == group);
         }
 
+        protected void PlayerMetaStateComplete()
+        {
+            // TODO achievement
+        }
+
         public virtual void OnApply() { }
 
         public virtual void OnRemove() 
@@ -47,6 +52,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         }
 
         public virtual void OnRemovedState(PrototypeId removedStateRef) { }
+        public virtual void OnAddPlayer(Player player) { }
         public virtual void OnRemovedPlayer(Player player) { }
     }
 }
