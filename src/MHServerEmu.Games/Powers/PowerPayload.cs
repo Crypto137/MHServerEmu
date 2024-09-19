@@ -88,20 +88,28 @@ namespace MHServerEmu.Games.Powers
         /// </summary>
         public void CalculateInitialProperties(Power power)
         {
-            CalculateDamage(power.Properties);
-            CalculateOwnerDamageBonuses(power);
-            CalculateOwnerDamagePenalties();
-            CalculateHealing(power.Properties);
-            CalculateResourceChange(power.Properties);
+            CalculateInitialDamage(power.Properties);
+            CalculateInitialDamageBonuses(power);
+            CalculateInitialDamagePenalties();
+            CalculateInitialHealing(power.Properties);
+            CalculateInitialResourceChange(power.Properties);
         }
 
         /// <summary>
-        /// Calculates base damage properties for this <see cref="PowerPayload"/>.
+        /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
+        /// </summary>
+        public void CalculatePowerResults(PowerResults results, WorldEntity target)
+        {
+            // TODO
+        }
+
+        /// <summary>
+        /// Calculates damage properties for this <see cref="PowerPayload"/> that do not require a target.
         /// </summary>
         /// <remarks>
         /// Affected properties: Damage, DamageBaseUnmodified.
         /// </remarks>
-        private bool CalculateDamage(PropertyCollection powerProperties)
+        private bool CalculateInitialDamage(PropertyCollection powerProperties)
         {
             PowerPrototype powerProto = PowerPrototype;
             if (powerProto == null) return Logger.WarnReturn(false, "CalculateDamage(): powerProto == null");
@@ -154,12 +162,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
-        /// Calculates damage bonus properties for this <see cref="PowerPayload"/> from its owner.
+        /// Calculates damage bonus properties for this <see cref="PowerPayload"/> that do not require a target.
         /// </summary>
         /// <remarks>
         /// Affected properties: PayloadDamageMultTotal, PayloadDamagePctModifierTotal, and PayloadDamageRatingTotal.
         /// </remarks>
-        private bool CalculateOwnerDamageBonuses(Power power)
+        private bool CalculateInitialDamageBonuses(Power power)
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
             if (powerOwner == null) return Logger.WarnReturn(false, "CalculateUserDamageBonuses(): powerOwner == null");
@@ -296,12 +304,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
-        /// Calculates damage penalty (weaken) properties for this <see cref="PowerPayload"/> from its owner.
+        /// Calculates damage penalty (weaken) properties for this <see cref="PowerPayload"/> that do not require a target.
         /// </summary>
         /// <remarks>
         /// Affected properties: PayloadDamagePctWeakenTotal.
         /// </remarks>
-        private bool CalculateOwnerDamagePenalties()
+        private bool CalculateInitialDamagePenalties()
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
             if (powerOwner == null) return Logger.WarnReturn(false, "CalculateOwnerDamagePenalties(): powerOwner == null");
@@ -330,12 +338,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
-        /// Calculates healing properties for this <see cref="PowerPayload"/>.
+        /// Calculates healing properties for this <see cref="PowerPayload"/> that do not require a target.
         /// </summary>
         /// <remarks>
         /// Affected properties: Healing, HealingBasePct.
         /// </remarks>
-        private bool CalculateHealing(PropertyCollection powerProperties)
+        private bool CalculateInitialHealing(PropertyCollection powerProperties)
         {
             // Calculate healing
             float healingBase = powerProperties[PropertyEnum.HealingBase];
@@ -359,12 +367,12 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
-        /// Calculates resource change properties for this <see cref="PowerPayload"/>.
+        /// Calculates resource change properties for this <see cref="PowerPayload"/> that do not require a target.
         /// </summary>
         /// <remarks>
         /// Affected properties: EnduranceChange, SecondaryResourceChange.
         /// </remarks>
-        private bool CalculateResourceChange(PropertyCollection powerProperties)
+        private bool CalculateInitialResourceChange(PropertyCollection powerProperties)
         {
             // Primary resource / endurance (spirit, etc.)
             foreach (var kvp in powerProperties.IteratePropertyRange(PropertyEnum.EnduranceChangeBase))
@@ -379,6 +387,10 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        /// <summary>
+        /// Returns the <see cref="SecondaryActivateOnReleasePrototype"/> for this <see cref="PowerPayload"/>.
+        /// Returns <see langword="null"/> if it does not have one.
+        /// </summary>
         private SecondaryActivateOnReleasePrototype GetSecondaryActivateOnReleasePrototype()
         {
             if (PowerPrototype == null) return null;
@@ -398,6 +410,9 @@ namespace MHServerEmu.Games.Powers
             return secondaryActivateProto;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PowerPayload"/> has the specified keyword.
+        /// </summary>
         private bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
