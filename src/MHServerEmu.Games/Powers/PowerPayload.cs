@@ -84,12 +84,24 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
+        /// Calculates properties for this <see cref="PowerPayload"/> that do not require a target.
+        /// </summary>
+        public void CalculateInitialProperties(Power power)
+        {
+            CalculateDamage(power.Properties);
+            CalculateOwnerDamageBonuses(power);
+            CalculateOwnerDamagePenalties();
+            CalculateHealing(power.Properties);
+            CalculateResourceChange(power.Properties);
+        }
+
+        /// <summary>
         /// Calculates base damage properties for this <see cref="PowerPayload"/>.
         /// </summary>
         /// <remarks>
         /// Affected properties: Damage, DamageBaseUnmodified.
         /// </remarks>
-        public bool CalculateDamage(PropertyCollection powerProperties)
+        private bool CalculateDamage(PropertyCollection powerProperties)
         {
             PowerPrototype powerProto = PowerPrototype;
             if (powerProto == null) return Logger.WarnReturn(false, "CalculateDamage(): powerProto == null");
@@ -147,7 +159,7 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: PayloadDamageMultTotal, PayloadDamagePctModifierTotal, and PayloadDamageRatingTotal.
         /// </remarks>
-        public bool CalculateOwnerDamageBonuses(Power power)
+        private bool CalculateOwnerDamageBonuses(Power power)
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
             if (powerOwner == null) return Logger.WarnReturn(false, "CalculateUserDamageBonuses(): powerOwner == null");
@@ -289,7 +301,7 @@ namespace MHServerEmu.Games.Powers
         /// <remarks>
         /// Affected properties: PayloadDamagePctWeakenTotal.
         /// </remarks>
-        public bool CalculateOwnerDamagePenalties()
+        private bool CalculateOwnerDamagePenalties()
         {
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
             if (powerOwner == null) return Logger.WarnReturn(false, "CalculateOwnerDamagePenalties(): powerOwner == null");
@@ -314,6 +326,56 @@ namespace MHServerEmu.Games.Powers
             }
 
             Properties[PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any] = damagePctWeaken;
+            return true;
+        }
+
+        /// <summary>
+        /// Calculates healing properties for this <see cref="PowerPayload"/>.
+        /// </summary>
+        /// <remarks>
+        /// Affected properties: Healing, HealingBasePct.
+        /// </remarks>
+        private bool CalculateHealing(PropertyCollection powerProperties)
+        {
+            // Calculate healing
+            float healingBase = powerProperties[PropertyEnum.HealingBase];
+            healingBase += powerProperties[PropertyEnum.HealingBaseCurve];
+
+            float healingMagnitude = powerProperties[PropertyEnum.HealingMagnitude];
+
+            float healingVariance = powerProperties[PropertyEnum.DamageVariance];
+            float healingVarianceMult = (1f - healingVariance) + (healingVariance * 2f * Game.Random.NextFloat());
+
+            float healing = healingBase * healingMagnitude * healingVariance;
+
+            // HACK: Increase healing to compensate for the lack of healing over time
+            healing *= 3f;
+
+            // Set properties
+            Properties[PropertyEnum.Healing] = healing;
+            Properties.CopyProperty(powerProperties, PropertyEnum.HealingBasePct);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Calculates resource change properties for this <see cref="PowerPayload"/>.
+        /// </summary>
+        /// <remarks>
+        /// Affected properties: EnduranceChange, SecondaryResourceChange.
+        /// </remarks>
+        private bool CalculateResourceChange(PropertyCollection powerProperties)
+        {
+            // Primary resource / endurance (spirit, etc.)
+            foreach (var kvp in powerProperties.IteratePropertyRange(PropertyEnum.EnduranceChangeBase))
+            {
+                Property.FromParam(kvp.Key, 0, out int manaType);
+                Properties[PropertyEnum.EnduranceChange, manaType] = kvp.Value;
+            }
+
+            // Secondary resource
+            Properties[PropertyEnum.SecondaryResourceChange] = powerProperties[PropertyEnum.SecondaryResourceChangeBase];
+
             return true;
         }
 

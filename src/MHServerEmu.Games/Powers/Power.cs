@@ -2662,6 +2662,7 @@ namespace MHServerEmu.Games.Powers
             // Create a payload
             PowerPayload payload = new();
             payload.Initialize(this, powerApplication);     // Payload stores a snapshot of the state of this power and its owner at the moment of application
+            payload.CalculateInitialProperties(this);
 
             // Pay costs (TODO: mana costs)
             if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
