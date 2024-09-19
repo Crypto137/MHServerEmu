@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.MetaGames
         public List<MetaState> MetaStates { get; }
         protected List<MetaGameTeam> Teams { get; }
         protected List<MetaGameMode> GameModes { get; }
-        protected GRandom Random { get; }
+        public GRandom Random { get; }
         public MetaGameMode CurrentMode => (_modeIndex > -1 && _modeIndex < GameModes.Count) ? GameModes[_modeIndex] : null;
 
         private readonly HashSet<ulong> _discoveredEntities = new();
@@ -107,8 +107,8 @@ namespace MHServerEmu.Games.MetaGames
 
         public override void Destroy()
         {
-            foreach (var mode in GameModes)
-                mode.OnDestroy();
+            foreach (var mode in GameModes) mode.OnDestroy();
+            foreach (var state in MetaStates) state.OnRemove();
 
             var region = Region;
             if (region != null)
