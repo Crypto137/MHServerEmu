@@ -22,7 +22,7 @@ jobs:
     - name: Run tests
       run: dotnet test MHServerEmu.sln --no-restore --no-build --configuration Release
     - name: Get current date
-      run: echo "DATE=$(date +'%Y%m%d')" >> $env:GITHUB_ENV
+      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
