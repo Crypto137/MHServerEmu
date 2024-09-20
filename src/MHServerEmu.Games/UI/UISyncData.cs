@@ -19,8 +19,10 @@ namespace MHServerEmu.Games.UI
         protected readonly UIDataProvider _uiDataProvider;
         protected readonly PrototypeId _widgetRef;
         protected readonly PrototypeId _contextRef;
-
         protected readonly HashSet<PrototypeId> _areaList = new();
+
+        public PrototypeId WidgetRef { get => _widgetRef; }
+        public PrototypeId ContextRef { get => _contextRef; }
 
         // Although these time fields are in the base UISyncData class, they seem to be used only in UIWidgetGenericFraction.
         // Potential TODO: Although it wouldn't be client-accurate, consider moving these and related methods to UIWidgetGenericFraction.
@@ -65,7 +67,10 @@ namespace MHServerEmu.Games.UI
             return success;
         }
 
-        public virtual void UpdateUI() { }
+        public virtual void UpdateUI() 
+        { 
+            _uiDataProvider.OnUpdateUI(this); 
+        }
 
         public override string ToString()
         {
