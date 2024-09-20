@@ -662,6 +662,28 @@ namespace MHServerEmu.Games.Powers
             return success;
         }
 
+        public static bool DeliverPayload(PowerPayload payload)
+        {
+            // Find targets for this power application
+            List<WorldEntity> targetList = new();
+            GetTargets(targetList, payload);
+
+            // Calculate and apply results for each target
+            for (int i = 0; i < targetList.Count; i++)
+            {
+                WorldEntity target = targetList[i];
+
+                PowerResults results = new();
+
+                payload.InitPowerResultsForTarget(results, target);
+                payload.CalculatePowerResults(results, target);
+
+                target.ApplyPowerResults(results);
+            }
+
+            return true;
+        }
+
         public bool EndPower(EndPowerFlags flags)
         {
             //Logger.Trace($"EndPower(): {Prototype} (flags={flags})");
@@ -1114,11 +1136,11 @@ namespace MHServerEmu.Games.Powers
                 GetApplicationRange(), Owner.Region.Id, Owner.Id, Owner.Id, Owner.Alliance, beamSweepSlice, GetFullExecutionTime(), randomSeed);
         }
 
-        public bool GetTargets(List<WorldEntity> targetList, PowerPayload payload)
+        public static bool GetTargets(List<WorldEntity> targetList, PowerPayload payload)
         {
-            WorldEntity primaryTarget = Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
+            WorldEntity primaryTarget = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
 
-            return GetTargets(targetList, Game, Prototype, payload.Properties, primaryTarget, payload.TargetPosition, payload.PowerOwnerPosition,
+            return GetTargets(targetList, payload.Game, payload.PowerPrototype, payload.Properties, primaryTarget, payload.TargetPosition, payload.PowerOwnerPosition,
                 payload.Range, payload.RegionId, payload.PowerOwnerId, payload.UltimateOwnerId, payload.OwnerAlliance, payload.BeamSweepSlice,
                 payload.ExecutionTime, (int)payload.PowerRandomSeed);
         }
@@ -2044,6 +2066,30 @@ namespace MHServerEmu.Games.Powers
             return standardExecutionTime;
         }
 
+        public TimeSpan GetPayloadDeliveryDelay(PowerPayload payload)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetPayloadDeliveryTime(): powerProto == null");
+
+            TimeSpan delay = TimeSpan.FromMilliseconds(powerProto.PostContactDelayMS);
+
+            if (powerProto is not MissilePowerPrototype)
+            {
+                Vector3 userPosition = payload.PowerOwnerPosition;
+                Vector3 targetPosition = payload.TargetPosition;
+
+                float projectileSpeed = GetProjectileSpeed(userPosition, targetPosition);
+                if (projectileSpeed > 0f)
+                {
+                    float distance = Vector3.Length(targetPosition - userPosition);
+                    if (distance > 0f)
+                        delay += TimeSpan.FromSeconds(distance / projectileSpeed);
+                }
+            }
+
+            return delay;
+        }
+
         public TimeSpan GetCooldownDuration()
         {
             if (Owner == null) return Logger.WarnReturn(TimeSpan.Zero, "GetCooldownDuration(): Owner == null");
@@ -2661,7 +2707,7 @@ namespace MHServerEmu.Games.Powers
 
             // Create a payload
             PowerPayload payload = new();
-            payload.Initialize(this, powerApplication);     // Payload stores a snapshot of the state of this power and its owner at the moment of application
+            payload.Init(this, powerApplication);     // Payload stores a snapshot of the state of this power and its owner at the moment of application
             payload.CalculateInitialProperties(this);
 
             // Pay costs (TODO: mana costs)
@@ -2672,20 +2718,12 @@ namespace MHServerEmu.Games.Powers
                     Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
             }
 
-            // Deliver payload
-            // TODO: Delivery delay (e.g. when throwing throwables)
-            // Find targets for this power application
-            List<WorldEntity> targetList = new();
-            GetTargets(targetList, payload);
-
-            for (int i = 0; i < targetList.Count; i++)
-            {
-                WorldEntity target = targetList[i];
-
-                // Apply results to the target
-                PowerResults results = payload.GenerateResults(this, Owner, target);
-                target.ApplyPowerResults(results);
-            }
+            // Deliver payload now or schedule it for later
+            TimeSpan deliveryDelay = GetPayloadDeliveryDelay(payload);
+            if (Prototype.ApplyResultsImmediately && deliveryDelay == TimeSpan.Zero)
+                DeliverPayload(payload);
+            else
+                SchedulePayloadDelivery(payload, deliveryDelay);
 
             // HACK: Old conditions hacks
             // TODO: Proper power condition implementation
@@ -3782,6 +3820,20 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool SchedulePayloadDelivery(PowerPayload payload, TimeSpan deliveryDelay)
+        {
+            if (payload == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): payload == null");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): scheduler == null");
+
+            EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();
+            scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents);
+            deliverPayloadEvent.Get().Initialize(payload);
+
+            return true;
+        }
+
         private bool ScheduleExtraActivationTimeout(ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
         {
             Logger.Debug("ScheduleExtraActivationTimeout()");
@@ -4030,6 +4082,21 @@ namespace MHServerEmu.Games.Powers
                     _power.ApplyPower(_powerApplication);
 
                 return true;
+            }
+        }
+
+        private class DeliverPayloadEvent : ScheduledEvent
+        {
+            private PowerPayload _payload;
+
+            public void Initialize(PowerPayload payload)
+            {
+                _payload = payload;
+            }
+
+            public override bool OnTriggered()
+            {
+                return DeliverPayload(_payload);
             }
         }
 

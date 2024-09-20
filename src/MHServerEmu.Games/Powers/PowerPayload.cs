@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -21,6 +22,7 @@ namespace MHServerEmu.Games.Powers
         public Game Game { get; private set; }
 
         public PrototypeId PowerProtoRef { get; private set; }
+        public AssetId PowerAssetRefOverride { get; private set; }
 
         public Vector3 TargetPosition { get; private set; }
         public TimeSpan MovementTime { get; private set; }
@@ -36,11 +38,13 @@ namespace MHServerEmu.Games.Powers
 
         public KeywordsMask KeywordsMask { get; private set; }
 
+        public EventGroup PendingEvents { get; } = new();
+
         /// <summary>
         /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
         /// the state of the <see cref="Power"/> and its owner.
         /// </summary>
-        public bool Initialize(Power power, PowerApplication powerApplication)
+        public bool Init(Power power, PowerApplication powerApplication)
         {
             Game = power.Game;
             PowerPrototype = power.Prototype;
@@ -80,6 +84,9 @@ namespace MHServerEmu.Games.Powers
             ExecutionTime = power.GetFullExecutionTime();
             KeywordsMask = power.KeywordsMask.Copy<KeywordsMask>();
 
+            // TODO: visuals override
+            PowerAssetRefOverride = AssetId.Invalid;
+
             return true;
         }
 
@@ -95,12 +102,27 @@ namespace MHServerEmu.Games.Powers
             CalculateInitialResourceChange(power.Properties);
         }
 
+        public void InitPowerResultsForTarget(PowerResults results, WorldEntity target)
+        {
+            bool isHostile = OwnerAlliance != null && OwnerAlliance.IsHostileTo(target.Alliance);
+
+            results.Init(PowerOwnerId, UltimateOwnerId, target.Id, PowerOwnerPosition, PowerPrototype,
+                PowerAssetRefOverride, isHostile);
+        }
+
         /// <summary>
         /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
         /// </summary>
         public void CalculatePowerResults(PowerResults results, WorldEntity target)
         {
-            // TODO
+            // Placeholder implementation for testing
+            results.Properties.CopyPropertyRange(Properties, PropertyEnum.Damage);
+            results.Properties.CopyPropertyRange(Properties, PropertyEnum.Healing);
+
+            results.SetDamageForClient(DamageType.Physical, Properties[PropertyEnum.Damage, DamageType.Physical]);
+            results.SetDamageForClient(DamageType.Energy, Properties[PropertyEnum.Damage, DamageType.Energy]);
+            results.SetDamageForClient(DamageType.Mental, Properties[PropertyEnum.Damage, DamageType.Mental]);
+            results.HealingForClient = Properties[PropertyEnum.Healing];
         }
 
         /// <summary>
