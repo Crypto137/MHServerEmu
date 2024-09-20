@@ -96,6 +96,8 @@ namespace MHServerEmu.Grouping
 
                 _playerDict.Add(playerName, client);
                 client.SendMessage(MuxChannel, ChatHelper.Motd);
+
+                Logger.Info($"Added client [{client}]");
                 return true;
             }
         }
@@ -109,6 +111,7 @@ namespace MHServerEmu.Grouping
                 if (_playerDict.Remove(playerName) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client.Session.Account.PlayerName} not found");
 
+                Logger.Info($"Removed client [{client}]");
                 return true;
             }
         }

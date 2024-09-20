@@ -1,0 +1,33 @@
+name: Nightly Release (Linux x64)
+
+on:
+  schedule:
+    - cron: '15 7 * * *'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore MHServerEmu.sln
+    - name: Build
+      run: dotnet build MHServerEmu.sln --no-restore --configuration Release
+    - name: Run tests
+      run: dotnet test MHServerEmu.sln --no-restore --no-build --configuration Release
+    - name: Get current date
+      run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MHServerEmu-nightly-${{ env.DATE }}-Release-linux-x64
+        path: |
+          ./src/MHServerEmu/bin/x64/Release/net6.0
+          !./src/MHServerEmu/bin/x64/Release/net6.0/*.pdb
+          !./src/MHServerEmu/bin/x64/Release/net6.0/*.xml
