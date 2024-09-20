@@ -669,7 +669,7 @@ namespace MHServerEmu.Games.Powers
             GetTargets(targetList, payload);
 
             // Calculate and apply results for each target
-            int payloadCombatLevel = payload.Properties[PropertyEnum.CombatLevel];
+            int payloadCombatLevel = payload.CombatLevel;
 
             for (int i = 0; i < targetList.Count; i++)
             {

@@ -41,6 +41,8 @@ namespace MHServerEmu.Games.Powers
 
         public EventGroup PendingEvents { get; } = new();
 
+        public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
+
         /// <summary>
         /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
         /// the state of the <see cref="Power"/> and its owner.
@@ -144,15 +146,11 @@ namespace MHServerEmu.Games.Powers
         /// </summary>
         public void CalculatePowerResults(PowerResults results, WorldEntity target)
         {
-            // Placeholder implementation for testing
-            results.Properties.CopyPropertyRange(Properties, PropertyEnum.Damage);
-            results.Properties.CopyPropertyRange(Properties, PropertyEnum.Healing);
-
-            results.SetDamageForClient(DamageType.Physical, Properties[PropertyEnum.Damage, DamageType.Physical]);
-            results.SetDamageForClient(DamageType.Energy, Properties[PropertyEnum.Damage, DamageType.Energy]);
-            results.SetDamageForClient(DamageType.Mental, Properties[PropertyEnum.Damage, DamageType.Mental]);
-            results.HealingForClient = Properties[PropertyEnum.Healing];
+            CalculateResultDamage(results, target);
+            CalculateResultHealing(results, target);
         }
+
+        #region Initial Calculations
 
         /// <summary>
         /// Calculates damage properties for this <see cref="PowerPayload"/> that do not require a target.
@@ -405,10 +403,7 @@ namespace MHServerEmu.Games.Powers
             float healingVariance = powerProperties[PropertyEnum.DamageVariance];
             float healingVarianceMult = (1f - healingVariance) + (healingVariance * 2f * Game.Random.NextFloat());
 
-            float healing = healingBase * healingMagnitude * healingVariance;
-
-            // HACK: Increase healing to compensate for the lack of healing over time
-            healing *= 3f;
+            float healing = healingBase * healingMagnitude * healingVarianceMult;
 
             // Set properties
             Properties[PropertyEnum.Healing] = healing;
@@ -437,6 +432,170 @@ namespace MHServerEmu.Games.Powers
 
             return true;
         }
+
+        #endregion
+
+        #region Result Calculations
+
+        private bool CalculateResultDamage(PowerResults results, WorldEntity target)
+        {
+            // Placeholder implementation for testing
+            Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
+            damage.Clear();
+
+            // Check crit / brutal strike chance
+            if (CheckCritChance(target))
+            {
+                if (CheckSuperCritChance(target))
+                    results.SetFlag(PowerResultFlags.SuperCritical, true);
+                else
+                    results.SetFlag(PowerResultFlags.Critical, true);
+            }
+
+            // Boss-specific bonuses (TODO: clean this up)
+            RankPrototype targetRankProto = target.GetRankPrototype();
+            float damagePctBonusVsBosses = 0f;
+            float damageRatingBonusVsBosses = 0f;
+
+            if (targetRankProto.IsRankBossOrMiniBoss)
+            {
+                damagePctBonusVsBosses += Properties[PropertyEnum.DamagePctBonusVsBosses];
+                damageRatingBonusVsBosses += Properties[PropertyEnum.DamageRatingBonusVsBosses];
+            }
+
+            // TODO: team up damage scalar
+            float teamUpDamageScalar = 1f;
+
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+            {
+                damage[(int)damageType] = Properties[PropertyEnum.Damage, damageType];
+
+                // DamageMult
+                float damageMult = 1f;
+                damageMult += Properties[PropertyEnum.PayloadDamageMultTotal, DamageType.Any];
+                damageMult += Properties[PropertyEnum.PayloadDamageMultTotal, damageType];
+                damageMult = MathF.Max(damageMult, 0f);
+
+                damage[(int)damageType] *= damageMult;
+
+                // DamagePct + DamageRating
+                float damagePct = 1f;
+                damagePct += Properties[PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any];
+                damagePct += Properties[PropertyEnum.PayloadDamagePctModifierTotal, damageType];
+                damagePct += damagePctBonusVsBosses;
+                
+                float damageRating = Properties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any];
+                damageRating += Properties[PropertyEnum.PayloadDamageRatingTotal, damageType];
+                damageRating += damageRatingBonusVsBosses;
+
+                damagePct += Power.GetDamageRatingMult(damageRating, Properties, target);
+                damagePct = MathF.Max(damagePct, 0f);
+
+                damage[(int)damageType] *= damagePct;
+
+                // DamagePctWeaken
+                float damagePctWeaken = 1f;
+                damagePctWeaken -= Properties[PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any];
+                damagePctWeaken -= Properties[PropertyEnum.PayloadDamagePctWeakenTotal, damageType];
+                damagePctWeaken = MathF.Max(damagePctWeaken, 0f);
+
+                damage[(int)damageType] *= damagePctWeaken;
+
+                // Team-up damage scaling
+                damage[(int)damageType] *= teamUpDamageScalar;
+
+                // Add flat damage bonuses not affected by modifiers
+                damage[(int)damageType] += Properties[PropertyEnum.DamageBaseUnmodified, damageType];
+
+                results.Properties[PropertyEnum.Damage, damageType] = damage[(int)damageType];
+            }
+
+            CalculateResultDamageCriticalModifier(results, target);
+
+            CalculateResultDamageLevelScaling(results, target);
+
+            return true;
+        }
+
+        private bool CalculateResultDamageCriticalModifier(PowerResults results, WorldEntity target)
+        {
+            // Not critical
+            if (results.TestFlag(PowerResultFlags.Critical) == false && results.TestFlag(PowerResultFlags.SuperCritical) == false)
+                return true;
+
+            float critDamageMult = Power.GetCritDamageMult(Properties, target, results.TestFlag(PowerResultFlags.SuperCritical));
+
+            // Store damage values in a temporary span so that we don't modify the results' collection while iterating
+            // Remove this if our future optimized implementation does not require this.
+            Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
+
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                Property.FromParam(PropertyEnum.Damage, 0, out int damageType);
+                if (damageType < (int)DamageType.NumDamageTypes)
+                    damage[damageType] = kvp.Value;
+            }
+
+            for (int i = 0; i < (int)DamageType.NumDamageTypes; i++)
+                results.Properties[PropertyEnum.Damage, i] = damage[i] * critDamageMult;
+
+            return true;
+        }
+
+        private bool CalculateResultDamageLevelScaling(PowerResults results, WorldEntity target)
+        {
+            // Apply player->enemy damage scaling
+            float levelScalingMult = 1f;
+            if (CombatLevel != target.CombatLevel && IsPlayerPayload && target.CanBePlayerOwned() == false)
+            {
+                long unscaledTargetHealthMax = target.Properties[PropertyEnum.HealthMax];
+                long scaledTargetHealthMax = CalculateTargetHealthMaxForCombatLevel(target, CombatLevel);
+                levelScalingMult = MathHelper.Ratio(unscaledTargetHealthMax, scaledTargetHealthMax);
+            }
+
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                Property.FromParam(kvp.Key, 0, out int damageType);
+                float damage = kvp.Value;
+
+                if (levelScalingMult != 1f)
+                    results.Properties[PropertyEnum.Damage, damageType] = damage * levelScalingMult;
+
+                // Show unscaled damage numbers to the client
+                // TODO: Hide region difficulty multipliers using this as well
+                results.SetDamageForClient((DamageType)damageType, damage);
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultHealing(PowerResults results, WorldEntity target)
+        {
+            float healing = Properties[PropertyEnum.Healing];
+
+            // HACK: Increase healing to compensate for the lack of healing over time
+            healing *= 3f;
+
+            // Pct healing
+            float healingBasePct = Properties[PropertyEnum.HealingBasePct];
+            if (healingBasePct > 0f)
+            {
+                long targetHealthMax = target.Properties[PropertyEnum.HealthMax];
+                healing += targetHealthMax * healingBasePct;
+            }
+
+            if (healing > 0f)
+            {
+                results.Properties[PropertyEnum.Healing] = healing;
+                results.HealingForClient = healing;
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Helper Methods
 
         /// <summary>
         /// Returns the <see cref="SecondaryActivateOnReleasePrototype"/> for this <see cref="PowerPayload"/>.
@@ -491,304 +650,22 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        //
-        // OLD CODE BELOW
-        //
-
-        public PowerResults GenerateResults(Power power, WorldEntity owner, WorldEntity target)
+        private bool CheckCritChance(WorldEntity target)
         {
-            // TODO: Use snapshotted data for calculations
+            // TODO: level scaling for crit rating
 
-            bool isHostile = target != null && owner.IsHostileTo(target);
-
-            PowerResults results = new();
-            results.Init(PowerOwnerId, UltimateOwnerId, target.Id, PowerOwnerPosition, PowerPrototype, AssetId.Invalid, isHostile);
-
-            float physicalDamage = CalculateDamage(power, DamageType.Physical, owner, target);
-            float energyDamage = CalculateDamage(power, DamageType.Energy, owner, target);
-            float mentalDamage = CalculateDamage(power, DamageType.Mental, owner, target);
-
-            // Check crit chance / super crit chance and apply damage multiplier if needed
-            if (CheckCritChance(power.Prototype, owner, target))
-            {
-                if (CheckSuperCritChance(power.Prototype, owner, target))
-                    results.SetFlag(PowerResultFlags.SuperCritical, true);
-                else
-                    results.SetFlag(PowerResultFlags.Critical, true);
-
-                float critDamageMult = Power.GetCritDamageMult(owner.Properties, target, results.TestFlag(PowerResultFlags.SuperCritical));
-
-                physicalDamage *= critDamageMult;
-                energyDamage *= critDamageMult;
-                mentalDamage *= critDamageMult;
-            }
-
-            // Apply level scaling
-
-            // Show unscaled damage client-side
-            results.SetDamageForClient(DamageType.Physical, physicalDamage);
-            results.SetDamageForClient(DamageType.Energy, energyDamage);
-            results.SetDamageForClient(DamageType.Mental, mentalDamage);
-
-            float levelScalingMult = 1f;
-            if (owner.CombatLevel != target.CombatLevel)
-            {
-                if (owner.CanBePlayerOwned())   
-                {
-                    long unscaledTargetHealthMax = target.Properties[PropertyEnum.HealthMax];
-                    long scaledTargetHealthMax = CalculateTargetHealthMaxForCombatLevel(target, owner.CombatLevel);
-                    levelScalingMult = MathHelper.Ratio(unscaledTargetHealthMax, scaledTargetHealthMax);
-                    Logger.Debug($"Scaling {unscaledTargetHealthMax} => {scaledTargetHealthMax} ({levelScalingMult} ratio)");
-                }
-                else if (target.CanBePlayerOwned()) // Enemy => Player
-                {
-                    // Effectively disable damage to players for now
-                    physicalDamage = 1f;
-                    energyDamage = 1f;
-                    mentalDamage = 1f;
-                }
-            }
-
-            physicalDamage *= levelScalingMult;
-            energyDamage *= levelScalingMult;
-            mentalDamage *= levelScalingMult;
-
-            // Set damage
-            results.Properties[PropertyEnum.Damage, (int)DamageType.Physical] = physicalDamage;
-            results.Properties[PropertyEnum.Damage, (int)DamageType.Energy] = energyDamage;
-            results.Properties[PropertyEnum.Damage, (int)DamageType.Mental] = mentalDamage;
-
-            // Calculate and set healing
-            float healing = CalculateHealing(power, target);
-            results.Properties[PropertyEnum.Healing] = healing;
-            results.HealingForClient = healing;
-
-            return results;
-        }
-
-        #region Calculations
-
-        private static float CalculateDamage(Power power, DamageType damageType, WorldEntity user, WorldEntity target)
-        {
-            // Current implementation is based on the DamageStats class from the client
-
-            PropertyCollection powerProperties = power.Properties;
-
-            // Calculate base damage
-            float damageBase = powerProperties[PropertyEnum.DamageBase, (int)damageType];
-            damageBase += powerProperties[PropertyEnum.DamageBaseBonus, (int)damageType];
-
-            // Manually get DamageBasePerLevel and CombatLevel to make sure C# does not implicitly cast to the wrong type
-            float damageBasePerLevel = powerProperties[PropertyEnum.DamageBasePerLevel, (int)damageType];
-            int combatLevel = powerProperties[PropertyEnum.CombatLevel];
-            damageBase += damageBasePerLevel * combatLevel;
-
-            // Apply variance and damage tuning score
-            float variance = powerProperties[PropertyEnum.DamageVariance];
-            float damageTuningScore = power.Prototype.DamageTuningScore;
-
-            float minDamage = damageBase * damageTuningScore * (1f - variance);
-            float maxDamage = damageBase * damageTuningScore * (1f + variance);
-
-            // No need to run bonus calculations if base damage is 0
-            if (maxDamage == 0f)
-                return 0f;
-
-            // Calculate damage multiplier
-            float damageMult = CalculateDamageMultiplier(power, damageType, user, target);
-
-            // Apply scaling to base damage
-            minDamage = MathF.Max(0f, minDamage * damageMult);
-            maxDamage = MathF.Max(0f, maxDamage * damageMult);
-
-            // Apply base damage bonuses not affected by multipliers
-            float damageBaseUnmodified = powerProperties[PropertyEnum.DamageBaseUnmodified];
-
-            // Manually get DamageBaseUnmodifiedPerRank and PowerRank to make sure C# does not implicitly cast to the wrong type
-            float damageBaseUnmodifiedPerRank = powerProperties[PropertyEnum.DamageBaseUnmodifiedPerRank];
-            int powerRank = powerProperties[PropertyEnum.PowerRank];
-            damageBaseUnmodified += damageBaseUnmodifiedPerRank * powerRank;
-
-            minDamage += damageBaseUnmodified;
-            maxDamage += damageBaseUnmodified;
-
-            // Get damage value within range and apply additional modifiers to it (e.g. crit and mitigation)
-            float damage = power.Game.Random.NextFloat(minDamage, maxDamage);
-
-            return damage;
-        }
-
-        private static float CalculateDamageMultiplier(Power power, DamageType damageType, WorldEntity user, WorldEntity target)
-        {
-            PowerPrototype powerProto = power.Prototype;
-            PropertyCollection powerProperties = power.Properties;
-
-            // TODO: team up damage scalar
-            float teamUpDamageScalar = 1f;
-
-            // Calculate additive and multiplicative damage bonuses
-            float damageMult = 1f + powerProperties[PropertyEnum.DamageMult];
-
-            if (user is Agent agentUser)
-            {
-                PropertyCollection userProperties = agentUser.Properties;
-
-                // Owner bonuses
-                float damageRating = agentUser.GetDamageRating(damageType);
-
-                damageMult += userProperties[PropertyEnum.DamagePctBonus];
-                damageMult += userProperties[PropertyEnum.DamagePctBonusByType, (int)damageType];
-                damageMult += userProperties[PropertyEnum.DamageMult];
-
-                // Power bonuses
-                damageMult += powerProperties[PropertyEnum.DamageMultOnPower];
-
-                float powerDmgBonusFromAtkSpdPct = powerProperties[PropertyEnum.PowerDmgBonusFromAtkSpdPct];
-                if (powerDmgBonusFromAtkSpdPct > 0f)
-                    damageMult += (power.GetAnimSpeed() - 1f) * powerDmgBonusFromAtkSpdPct;
-
-                // Power specific bonuses
-                foreach (var kvp in userProperties.IteratePropertyRange(PropertyEnum.DamageRatingBonusForPower))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("CalculateDamage(): protoRefToCheck == PrototypeId.Invalid");
-                        continue;
-                    }
-
-                    if (power.PrototypeDataRef == protoRefToCheck)
-                        damageRating += kvp.Value;
-                }
-
-                foreach (var kvp in userProperties.IteratePropertyRange(PropertyEnum.DamagePctBonusForPower))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("CalculateDamage(): protoRefToCheck == PrototypeId.Invalid");
-                        continue;
-                    }
-
-                    if (power.PrototypeDataRef == protoRefToCheck)
-                        damageMult += kvp.Value;
-                }
-
-                foreach (var kvp in userProperties.IteratePropertyRange(PropertyEnum.DamageMultForPower))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("CalculateDamage(): protoRefToCheck == PrototypeId.Invalid");
-                        continue;
-                    }
-
-                    if (power.PrototypeDataRef == protoRefToCheck)
-                        damageMult += kvp.Value;
-                }
-
-                // Keyword-specific bonuses
-
-                foreach (var kvp in userProperties.IteratePropertyRange(PropertyEnum.DamageRatingBonusForPowerKeyword))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("CalculateDamage(): protoRefToCheck == PrototypeId.Invalid");
-                        continue;
-                    }
-
-                    if (agentUser.HasPowerWithKeyword(powerProto, protoRefToCheck))
-                        damageRating += kvp.Value;
-                }
-
-                foreach (var kvp in userProperties.IteratePropertyRange(PropertyEnum.DamagePctBonusForPowerKeyword))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("CalculateDamage(): protoRefToCheck == PrototypeId.Invalid");
-                        continue;
-                    }
-
-                    if (agentUser.HasPowerWithKeyword(powerProto, protoRefToCheck))
-                        damageMult += kvp.Value;
-                }
-
-                foreach (var kvp in userProperties.IteratePropertyRange(PropertyEnum.DamageMultForPowerKeyword))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
-                    if (protoRefToCheck == PrototypeId.Invalid)
-                    {
-                        Logger.Warn("CalculateDamage(): protoRefToCheck == PrototypeId.Invalid");
-                        continue;
-                    }
-
-                    if (agentUser.HasPowerWithKeyword(powerProto, protoRefToCheck))
-                        damageMult += kvp.Value;
-                }
-
-                // Boss-specific bonuses
-                RankPrototype targetRankProto = target.GetRankPrototype();
-                if (targetRankProto.Rank == Rank.MiniBoss || targetRankProto.Rank == Rank.Boss || targetRankProto.Rank == Rank.GroupBoss)
-                {
-                    damageRating += userProperties[PropertyEnum.DamageRatingBonusVsBosses];
-                    damageMult += userProperties[PropertyEnum.DamagePctBonusVsBosses];
-                }
-
-                // Calculate and apply multiplier from damage rating
-                damageMult += Power.GetDamageRatingMult(damageRating, userProperties, target);
-            }
-
-            return damageMult * teamUpDamageScalar;
-        }
-
-        private static bool CheckCritChance(PowerPrototype powerProto, WorldEntity user, WorldEntity target)
-        {
             // Skip power that can't crit
-            if (powerProto.CanCrit == false || powerProto.Activation == PowerActivationType.Passive)
+            if (PowerPrototype.CanCrit == false || PowerPrototype.Activation == PowerActivationType.Passive)
                 return false;
 
-            float critChance = Power.GetCritChance(powerProto, user.Properties, target, user.Id);
-            return user.Game.Random.NextFloat() < critChance;
+            float critChance = Power.GetCritChance(PowerPrototype, Properties, target, PowerOwnerId);
+            return Game.Random.NextFloat() < critChance;
         }
 
-        private static bool CheckSuperCritChance(PowerPrototype powerProto, WorldEntity user, WorldEntity target)
+        private bool CheckSuperCritChance(WorldEntity target)
         {
-            float superCritChance = Power.GetSuperCritChance(powerProto, user.Properties, target);
-            return user.Game.Random.NextFloat() < superCritChance;
-        }
-
-        private static float CalculateHealing(Power power, WorldEntity target)
-        {
-            // Based on Rule_healing::GetValue()
-            PropertyCollection powerProperties = power.Properties;
-            PropertyCollection targetProperties = target.Properties;
-
-            // Calculate flat healing
-            float healingBase = powerProperties[PropertyEnum.HealingBase];
-            healingBase += powerProperties[PropertyEnum.HealingBaseCurve];
-
-            float healingMagnitude = powerProperties[PropertyEnum.HealingMagnitude];
-            float healingVariance = powerProperties[PropertyEnum.HealingVariance];
-
-            float minHealing = healingBase * healingMagnitude * (1f - healingVariance);
-            float maxHealing = healingBase * healingMagnitude * (1f + healingVariance);
-
-            float healing = power.Game.Random.NextFloat(minHealing, maxHealing);
-
-            // Apply percentage healing
-            float healingBasePct = powerProperties[PropertyEnum.HealingBasePct];
-            if (healingBasePct > 0)
-            {
-                long targetHealthMax = targetProperties[PropertyEnum.HealthMaxOther];
-                healing += targetHealthMax * healingBasePct;
-            }
-
-            // HACK: Increase healing to compensate for the lack of avatar stats
-            healing *= 3f;
-
-            return healing;
+            float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
+            return Game.Random.NextFloat() < superCritChance;
         }
 
         private static long CalculateTargetHealthMaxForCombatLevel(WorldEntity target, int combatLevel)

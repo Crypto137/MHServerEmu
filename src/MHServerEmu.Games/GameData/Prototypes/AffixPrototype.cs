@@ -481,10 +481,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Keywords { get; protected set; }
         public int BonusItemFindPoints { get; protected set; }
 
-        public bool IsRankBoss()
-        {
-            return Rank == Rank.Boss || Rank == Rank.GroupBoss;
-        }
+        //--
+
+        [DoNotCopy]
+        public bool IsRankBoss { get => Rank == Rank.Boss || Rank == Rank.GroupBoss; }
+
+        [DoNotCopy]
+        public bool IsRankBossOrMiniBoss { get => IsRankBoss || Rank == Rank.MiniBoss; }
     }
 
     public class EnemyBoostSetPrototype : Prototype
