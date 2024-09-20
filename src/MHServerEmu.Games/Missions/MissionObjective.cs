@@ -12,6 +12,8 @@ using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.UI;
+using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -77,6 +79,7 @@ namespace MHServerEmu.Games.Missions
         public TimeSpan TimeRemainingForObjective { get => _objectiveStateExpireTime - Clock.GameTime; }
         public bool IsChangingState { get; private set; }
         public EventGroup EventGroup { get; } = new();
+        public bool IsTimed { get => Prototype.TimeLimitSeconds > 0; }
 
         public MissionObjective(Mission mission, byte prototypeIndex)
         {
@@ -408,7 +411,7 @@ namespace MHServerEmu.Games.Missions
                 }
 
                 UpdateCompletionCount();
-                UpdateMetaGameWidget();
+                UpdateMetaGameWidgets();
             }
 
             return true;
@@ -460,7 +463,7 @@ namespace MHServerEmu.Games.Missions
 
             _interactedEntityList.Clear();
             CancelTimeLimitEvent();
-            RemoveMetaGameWidget(); 
+            RemoveMetaGameWidgets(); 
 
             var region = Region;
             if (region != null)
@@ -494,7 +497,7 @@ namespace MHServerEmu.Games.Missions
                             .Invoke(new(activity.Player, missionRef, objectiveId, activity.Participant, activity.Contributor || isOpenMission == false));
                 }
 
-                UpdateMetaGameWidget();
+                UpdateMetaGameWidgets();
             }
 
             return true;
@@ -579,7 +582,7 @@ namespace MHServerEmu.Games.Missions
         {
             UpdateCompletionCount();
             Mission.OnUpdateObjectiveCondition(this, condition);
-            UpdateMetaGameWidget();
+            UpdateMetaGameWidgets();
         }
 
         private bool UpdateConditionsCount(ref ushort currentCountField, ref ushort requiredCountField, PrototypeId widgetRef,
@@ -630,14 +633,101 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private void UpdateMetaGameWidget()
+        private void UpdateMetaGameWidgets()
         {
-            // TODO NetMessageUISyncDataUpdate objetiveProto.MetaGameWidget
+            if (State != MissionObjectiveState.Active) return;
+
+            var objetiveProto = Prototype;
+            if (objetiveProto == null) return;
+
+            UpdateMetaGameWidget(objetiveProto.MetaGameWidget, false);
+            UpdateMetaGameWidget(objetiveProto.MetaGameWidgetFail, true);
         }
 
-        private void RemoveMetaGameWidget()
+        private void UpdateMetaGameWidget(PrototypeId widgetRef, bool fail)
         {
-            // TODO NetMessageUISyncDataRemove objetiveProto.MetaGameWidget
+            if (widgetRef == PrototypeId.Invalid) return;
+            var objetiveProto = Prototype;
+            var missionProto = Mission.Prototype;
+            var missionRef = missionProto.DataRef;
+            var uiDataProvider = Region?.UIDataProvider;
+            if (uiDataProvider == null) return;
+
+            var metaDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(widgetRef);
+            if (metaDataProto == null) return;
+
+            if (metaDataProto.DisplayMissionName)
+            {
+                var uiGlobals = GameDatabase.UIGlobalsPrototype;
+                var textWidget = uiDataProvider.GetWidget<UIWidgetMissionText>(uiGlobals.MetaGameWidgetMissionName, missionRef);
+                textWidget?.SetText(missionProto.Name, LocaleStringId.Blank);
+            }
+
+            var widget = uiDataProvider.GetWidget<UISyncData>(widgetRef, missionRef);
+            if (widget == null) return;
+
+            bool update = false;
+
+            if (widget is UIWidgetGenericFraction genericFraction)
+            {
+                if (metaDataProto is not UIWidgetGenericFractionPrototype) return;
+
+                if (Mission.GetWidgetCompletionCount(widgetRef, out int currentCount, out int requiredCount, fail))
+                {
+                    if (fail) currentCount = requiredCount - currentCount;
+                    genericFraction.SetCount(currentCount, requiredCount);
+
+                    var timeResult = fail ? MissionTimeExpiredResult.Fail : MissionTimeExpiredResult.Complete;
+
+                    if (IsTimed && objetiveProto.TimeExpiredResult == timeResult)
+                        widget.SetTimeRemaining((long)TimeRemainingForObjective.TotalMilliseconds);
+
+                    update = true;
+                }
+            }
+            else if (widget is UIWidgetMissionText missionText)
+            {
+                missionText.SetText(LocaleStringId.Blank, objetiveProto.Name);
+                update = true;
+            }
+            else if (widget is UIWidgetEntityIconsSyncData)
+            {
+                update = true;
+            }
+
+            if (update) widget.SetAreaContext(missionRef);
+        }
+
+        private void RemoveMetaGameWidgets()
+        {
+            var objetiveProto = Prototype;
+            var missionRef = Mission.PrototypeDataRef;
+            var uiDataProvider = Region?.UIDataProvider;
+            if (uiDataProvider == null) return;
+
+            bool displayName = false;
+
+            if (objetiveProto.MetaGameWidget != PrototypeId.Invalid)
+            {
+                uiDataProvider.DeleteWidget(objetiveProto.MetaGameWidget, missionRef);
+                var metaDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(objetiveProto.MetaGameWidget);
+                if (metaDataProto == null) return;
+                displayName |= metaDataProto.DisplayMissionName;
+            }
+
+            if (objetiveProto.MetaGameWidgetFail != PrototypeId.Invalid)
+            {
+                uiDataProvider.DeleteWidget(objetiveProto.MetaGameWidgetFail, missionRef);
+                var metaDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(objetiveProto.MetaGameWidgetFail);
+                if (metaDataProto == null) return;
+                displayName |= metaDataProto.DisplayMissionName;
+            }
+
+            if (displayName)
+            {
+                var uiGlobals = GameDatabase.UIGlobalsPrototype;
+                uiDataProvider.DeleteWidget(uiGlobals.MetaGameWidgetMissionName, missionRef);
+            }
         }
 
         public void SendToParticipants(MissionObjectiveUpdateFlags objectiveFlags)

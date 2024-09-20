@@ -1812,6 +1812,56 @@ namespace MHServerEmu.Games.Missions
             return objectiveProto;
         }
 
+        public bool GetWidgetCompletionCount(PrototypeId widgetRef, out int currentCount, out int requiredCount, bool fail)
+        {
+            currentCount = 0;
+            requiredCount = 0;
+            bool found = false;
+
+            var objectiveSeq = CurrentObjectiveSequence;
+
+            foreach (var objective in _objectiveDict.Values)
+            {
+                var objectiveProto = objective.Prototype;
+                if (objectiveProto.Order != objectiveSeq) continue;
+
+                var widget = fail ? objectiveProto.MetaGameWidgetFail : objectiveProto.MetaGameWidget;
+                if (widget != widgetRef) continue;
+
+                var state = objective.State;
+                if (state == MissionObjectiveState.Active 
+                    || state == MissionObjectiveState.Completed
+                    || state == MissionObjectiveState.Failed)
+                {
+                    ushort current = 0;
+                    ushort required = 0;
+
+                    if (fail)
+                    {
+                        if (objective.GetFailCount(ref current, ref required) == false)
+                        {
+                            if (state == MissionObjectiveState.Failed) current = 1;
+                            required = 1;
+                        }
+                    }
+                    else
+                    {
+                        if (objective.GetCompletionCount(ref current, ref required) == false)
+                        {
+                            if (state == MissionObjectiveState.Completed) current = 1;
+                            required = 1;
+                        }
+                    }
+
+                    currentCount += current;
+                    requiredCount += required;
+                    found = true;
+                }
+                return false;
+            }
+            return found;
+        }
+
         public void OnPlayerEnteredMission(Player player)
         {
             // if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
