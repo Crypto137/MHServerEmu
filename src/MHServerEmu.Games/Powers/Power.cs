@@ -669,12 +669,21 @@ namespace MHServerEmu.Games.Powers
             GetTargets(targetList, payload);
 
             // Calculate and apply results for each target
+            int payloadCombatLevel = payload.Properties[PropertyEnum.CombatLevel];
+
             for (int i = 0; i < targetList.Count; i++)
             {
                 WorldEntity target = targetList[i];
+                int targetCombatLevel = target.CombatLevel;
+
+                // Recalculate initial damage for each enemy -> player result
+                if (payloadCombatLevel != targetCombatLevel && payload.IsPlayerPayload == false && target.CanBePlayerOwned())
+                {
+                    payload.RecalculateInitialDamageForCombatLevel(targetCombatLevel);
+                    payloadCombatLevel = targetCombatLevel;
+                }
 
                 PowerResults results = new();
-
                 payload.InitPowerResultsForTarget(results, target);
                 payload.CalculatePowerResults(results, target);
 
@@ -2544,6 +2553,12 @@ namespace MHServerEmu.Games.Powers
         #region Payload
         
         // Payload Serialization is the term the game uses for the snapshotting of properties that happens when a power is applied
+
+        public WorldEntity GetPayloadPropertySourceEntity()
+        {
+            // TODO: team-up when away powers
+            return Owner;
+        }
 
         public static void SerializeEntityPropertiesForPowerPayload(WorldEntity worldEntity, PropertyCollection destinationProperties)
         {

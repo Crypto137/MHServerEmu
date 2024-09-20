@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Powers
 
         public Game Game { get; private set; }
 
+        public bool IsPlayerPayload { get; private set; }
         public PrototypeId PowerProtoRef { get; private set; }
         public AssetId PowerAssetRefOverride { get; private set; }
 
@@ -64,7 +65,16 @@ namespace MHServerEmu.Games.Powers
             if (powerOwner == null) return Logger.WarnReturn(false, "powerOwner == null");
 
             WorldEntity ultimateOwner = power.GetUltimateOwner();
-            UltimateOwnerId = ultimateOwner != null ? ultimateOwner.Id : power.Owner.Id;
+            if (ultimateOwner != null)
+            {
+                UltimateOwnerId = ultimateOwner.Id;
+                IsPlayerPayload = ultimateOwner.CanBePlayerOwned();
+            }
+            else
+            {
+                UltimateOwnerId = powerOwner.Id;
+                IsPlayerPayload = powerOwner.CanBePlayerOwned();
+            }
 
             // NOTE: Due to how physics work, user may no longer be where they were when collision / combo / proc activated.
             // In these cases we use application position for validation checks to work.
@@ -73,7 +83,7 @@ namespace MHServerEmu.Games.Powers
                 : powerOwner.RegionLocation.Position;
 
             // Snapshot properties of the power and its owner
-            Power.SerializeEntityPropertiesForPowerPayload(powerOwner, Properties);
+            Power.SerializeEntityPropertiesForPowerPayload(power.GetPayloadPropertySourceEntity(), Properties);
             Power.SerializePowerPropertiesForPowerPayload(power, Properties);
 
             // Snapshot additional data used to determine targets
@@ -86,6 +96,19 @@ namespace MHServerEmu.Games.Powers
 
             // TODO: visuals override
             PowerAssetRefOverride = AssetId.Invalid;
+
+            // Snapshot additional properties to recalculate initial damage for enemy DCL scaling
+            if (IsPlayerPayload == false)
+            {
+                CopyCurvePropertyRange(power.Properties, PropertyEnum.DamageBase);
+                CopyCurvePropertyRange(power.Properties, PropertyEnum.DamageBasePerLevel);
+
+                Properties.CopyPropertyRange(power.Properties, PropertyEnum.DamageBaseBonus);
+                Properties.CopyProperty(power.Properties, PropertyEnum.DamageMagnitude);
+                Properties.CopyProperty(power.Properties, PropertyEnum.DamageVariance);
+                Properties.CopyPropertyRange(power.Properties, PropertyEnum.DamageBaseUnmodified);
+                Properties.CopyPropertyRange(power.Properties, PropertyEnum.DamageBaseUnmodifiedPerRank);
+            }
 
             return true;
         }
@@ -108,6 +131,12 @@ namespace MHServerEmu.Games.Powers
 
             results.Init(PowerOwnerId, UltimateOwnerId, target.Id, PowerOwnerPosition, PowerPrototype,
                 PowerAssetRefOverride, isHostile);
+        }
+
+        public void RecalculateInitialDamageForCombatLevel(int combatLevel)
+        {
+            Properties[PropertyEnum.CombatLevel] = combatLevel;
+            CalculateInitialDamage(Properties);
         }
 
         /// <summary>
@@ -438,6 +467,28 @@ namespace MHServerEmu.Games.Powers
         private bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
+        }
+
+        /// <summary>
+        /// Copies all curve properties that use the specified <see cref="PropertyEnum"/> from the provided <see cref="PropertyCollection"/>.
+        /// </summary>
+        private bool CopyCurvePropertyRange(PropertyCollection source, PropertyEnum propertyEnum)
+        {
+            // Move this to PropertyCollection if it's used somewhere else as well
+
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            if (propertyInfo.IsCurveProperty == false)
+                return Logger.WarnReturn(false, $"CopyCurvePropertyRange(): {propertyEnum} is not a curve property");
+
+            foreach (var kvp in source.IteratePropertyRange(propertyEnum))
+            {
+                CurveId curveId = source.GetCurveIdForCurveProperty(kvp.Key);
+                PropertyId indexProperty = source.GetIndexPropertyIdForCurveProperty(kvp.Key);
+
+                Properties.SetCurveProperty(kvp.Key, curveId, indexProperty, propertyInfo, SetPropertyFlags.None, true);
+            }
+
+            return true;
         }
 
         //
