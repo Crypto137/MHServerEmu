@@ -941,6 +941,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             SendLevelUpMessage();
+
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return false;
+            Region?.AvatarLeveledUpEvent.Invoke(new(player, PrototypeDataRef, newLevel));
+
             return true;
         }
 
