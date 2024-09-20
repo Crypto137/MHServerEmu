@@ -1643,6 +1643,12 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        public void SendRegionDifficultyChange(int dificultyIndex)
+        {
+            var message = NetMessageRegionDifficultyChange.CreateBuilder().SetDifficultyIndex((ulong)dificultyIndex).Build();
+            SendMessage(message);
+        }
+
         public void SendHUDTutorial(HUDTutorialPrototype hudTutorialProto)
         {
             var hudTutorialRef = PrototypeId.Invalid;
