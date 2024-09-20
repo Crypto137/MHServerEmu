@@ -13,6 +13,8 @@ namespace MHServerEmu.Games.Regions
         private TuningPrototype _tuningProto;
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
+        private int _difficultyIndex;
+        public int DifficultyIndex { get => _difficultyIndex > 0 ? _difficultyIndex : 0; set => SetDifficultyIndex(value, true); }
 
         public TuningPrototype Prototype { get => _tuningProto; }
 
@@ -45,6 +47,19 @@ namespace MHServerEmu.Games.Regions
         internal RankPrototype RollRank(List<RankPrototype> ranks, HashSet<PrototypeId> overrides)
         {
             throw new NotImplementedException();
+        }
+
+        public void SetDifficultyIndex(int difficultyIndex, bool broadcast)
+        {
+            int oldIndex = DifficultyIndex;
+            _difficultyIndex = Math.Clamp(difficultyIndex, _difficultyIndexMin, _difficultyIndexMax);
+            if (oldIndex != _difficultyIndex && broadcast)
+                BroadcastChange(oldIndex, _difficultyIndex);
+        }
+
+        private void BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
+        {
+            // TODO
         }
     }
 }

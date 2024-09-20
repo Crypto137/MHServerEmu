@@ -262,9 +262,8 @@ namespace MHServerEmu.Games.Regions
             {
                 TuningTable.SetTuningTable(difficultySettings.TuningTable);
 
-                /* if (HasProperty(PropertyEnum.DifficultyIndex))
-                       TuningTable.SetDifficultyIndex(GetProperty<int>(PropertyEnum.DifficultyIndex), false);
-                */
+                if (Properties.HasProperty(PropertyEnum.DifficultyIndex))
+                       TuningTable.SetDifficultyIndex(Properties[PropertyEnum.DifficultyIndex], false);                
             }
 
             // NOTE: Divided start locations are used only in the Age of Ultron game mode
@@ -1467,7 +1466,7 @@ namespace MHServerEmu.Games.Regions
             foreach(var metagameId in MetaGames)
             {
                 var metagame = manager.GetEntity<MetaGame>(metagameId);
-                metagame?.OnRemovedPlayer(player);
+                metagame?.OnRemovePlayer(player);
             }
 
             player.MissionManager.Shutdown(this);
