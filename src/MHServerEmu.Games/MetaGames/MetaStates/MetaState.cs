@@ -39,6 +39,16 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             return Prototype.Groups.Any(stateGroup => stateGroup == group);
         }
 
+        protected void ActivateMission(PrototypeId missionRef)
+        {
+            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+            if (missionProto is not OpenMissionPrototype) return;
+
+            var manager = Region?.MissionManager;
+            if (manager?.ShouldCreateMission(missionProto) == true)
+                manager.ActivateMission(missionRef);
+        }
+
         protected void PlayerMetaStateComplete()
         {
             // TODO achievement

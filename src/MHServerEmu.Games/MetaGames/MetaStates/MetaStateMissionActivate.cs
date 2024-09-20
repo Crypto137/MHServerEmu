@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             if (hasMission)
             {
-                var popManager = Region.PopulationManager;
+                var popManager = region.PopulationManager;
                 popManager.DespawnSpawnGroups(missionRef);
                 popManager.ResetEncounterSpawnPhase(missionRef);
             }
@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             if (_proto.RemovePopulationOnDeactivate)
             {
                 MetaGame.RemoveSpawnEvent(PrototypeDataRef);
-                var popManager = Region.PopulationManager;
+                var popManager = region.PopulationManager;
                 popManager.DespawnSpawnGroups(missionRef);
                 popManager.ResetEncounterSpawnPhase(missionRef);
             }
@@ -121,16 +121,6 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 }
 
             }
-        }
-
-        private void ActivateMission(PrototypeId missionRef)
-        {
-            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-            if (missionProto is not OpenMissionPrototype) return;
-
-            var manager = Region?.MissionManager;
-            if (manager?.ShouldCreateMission(missionProto) == true)
-                manager.ActivateMission(missionRef);
         }
 
         private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)

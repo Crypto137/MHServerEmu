@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.MetaGames
         private readonly Queue<ApplyStateRecord> _applyStateStack = new();
         private readonly Queue<PrototypeId> _removeStateStack = new();
         private readonly EventPointer<ApplyStateEvent> _scheduledApplyState = new();
+        private readonly EventPointer<ActivateGameModeEvent> _scheduledActivateGameMode = new();
 
         private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnEvents;
         private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
@@ -189,6 +190,8 @@ namespace MHServerEmu.Games.MetaGames
             sb.AppendLine($"{nameof(_name)}: {_name}");
         }
 
+        #region GameMode
+
         protected void CreateGameModes(PrototypeId[] gameModes)
         {
             if (gameModes.HasValue())
@@ -225,6 +228,29 @@ namespace MHServerEmu.Games.MetaGames
             foreach (var player in new PlayerIterator(region))
                 player.Properties[PropertyEnum.PvPMode] = modeProto.DataRef;
         }
+
+        public void ScheduleActivateGameMode(PrototypeId modeRef)
+        {
+            if (modeRef == PrototypeId.Invalid) return;
+            var index = GameModes.FindIndex(mode => mode.PrototypeDataRef == modeRef);
+            if (index != -1) ScheduleActivateGameMode(index);
+        }
+
+        public void ScheduleActivateGameMode(int index)
+        {
+            if (index < 0 || index >= GameModes.Count || _modeIndex == index) return;
+            if (_scheduledActivateGameMode.IsValid == false)
+                ScheduleEntityEvent(_scheduledActivateGameMode, TimeSpan.Zero, index);
+        }
+
+        private void OnActivateGameMode(int index)
+        {
+            if (_modeIndex != index) ActivateGameMode(index);
+        }
+
+        #endregion
+
+        #region MetaState
 
         public void ApplyStates(PrototypeId[] states)
         {
@@ -352,7 +378,7 @@ namespace MHServerEmu.Games.MetaGames
             RemoveStates(stateProto.SubStates);
             _removeStateStack.Enqueue(stateRef);
             if (_scheduledApplyState.IsValid == false)
-                ScheduleEntityEvent(_scheduledApplyState, TimeSpan.FromMilliseconds(0));
+                ScheduleEntityEvent(_scheduledApplyState, TimeSpan.Zero);
             Properties[PropertyEnum.MetaGameTimeStateRemovedMS, stateRef] = Game.CurrentTime;
         }
 
@@ -363,6 +389,8 @@ namespace MHServerEmu.Games.MetaGames
                 if (state.HasGroup(removeGroup))
                     RemoveState(state.PrototypeDataRef);
         }
+
+        #endregion
 
         public bool RemoveSpawnEvent(PrototypeId contextRef)
         {
@@ -526,6 +554,11 @@ namespace MHServerEmu.Games.MetaGames
         }
 
         #endregion
+
+        protected class ActivateGameModeEvent : CallMethodEventParam1<Entity, int>
+        {
+            protected override CallbackDelegate GetCallback() => (t, index) => (t as MetaGame)?.OnActivateGameMode(index);
+        }
 
         protected class ApplyStateEvent : CallMethodEvent<Entity>
         {

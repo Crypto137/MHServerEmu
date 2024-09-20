@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Populations
             AddCellAssets(restrictToCells);
         }
 
-        private void AddAreaRefs(PrototypeId[] restrictToAreas)
+        public void AddAreaRefs(PrototypeId[] restrictToAreas)
         {
             foreach (var areaRef in restrictToAreas)
                 AddAreaRef(areaRef);
