@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 
@@ -8,8 +9,9 @@ namespace MHServerEmu.Games.MetaGames
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public MetaGame MetaGame { get; }
-        public PrototypeId ProtoRef {  get; }
+        public PrototypeId ProtoRef { get; }
         public int MaxPlayers { get; }
+        public int TeamSize { get => _players.Count; }
         private List<Player> _players {  get; }
 
         public MetaGameTeam(MetaGame metaGame, PrototypeId protoRef, int maxPlayers)
@@ -41,17 +43,28 @@ namespace MHServerEmu.Games.MetaGames
         }
 
         public bool Contains(Player player) => IndexOf(player) > -1;
+        public int IndexOf(Player player) => _players.FindIndex(found => found == player);
 
-        public int IndexOf(Player player)
+        public void Destroy()
         {
-            for (int i = 0; i < _players.Count; i++)
-                if (_players[i] == player) return i;
-            return -1;
+            // TODO destroy chat
         }
 
-        internal void Destroy()
+        public void SendTeamRoster(Player player)
         {
-            throw new NotImplementedException();
+            var message = NetMessageMatchTeamSizeNotification.CreateBuilder()
+                .SetMetaGameEntityId(MetaGame.Id)
+                .SetTeamSize((uint)TeamSize).Build();
+            player.SendMessage(message);
+
+            var rosterMessage = NetMessageMatchTeamRosterNotification.CreateBuilder()
+                .SetMetaGameEntityId(MetaGame.Id)
+                .SetTeamPrototypeId((ulong)ProtoRef);
+
+            foreach (var teamPlayer in _players)
+                rosterMessage.AddPlayerDbGuids(teamPlayer.DatabaseUniqueId);
+
+            player.SendMessage(rosterMessage.Build());
         }
     }
 }
