@@ -739,6 +739,10 @@ namespace MHServerEmu.Games.Network
             if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != Player.DatabaseUniqueId)
                 return Logger.WarnReturn(false, $"OnPickupInteraction(): Player {Player} is attempting to pick up item {item} restricted to player 0x{restrictedToPlayerGuid:X}");
 
+            // Invoke pickup Event
+            var region = Player.GetRegion();
+            region?.PlayerPreItemPickupEvent.Invoke(new(Player, item));
+
             // Add item to the player's inventory
             Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
             if (inventory == null) return Logger.WarnReturn(false, "OnPickupInteraction(): inventory == null");
