@@ -610,6 +610,24 @@ namespace MHServerEmu.Games.Entities
             Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
         }
 
+        protected override void SetCharacterLevel(int characterLevel)
+        {
+            int oldCharacterLevel = CharacterLevel;
+            base.SetCharacterLevel(characterLevel);
+
+            if (characterLevel != oldCharacterLevel && CanBePlayerOwned())
+                PowerCollection?.OnOwnerLevelChange();
+        }
+
+        protected override void SetCombatLevel(int combatLevel)
+        {
+            int oldCombatLevel = CombatLevel;
+            base.SetCombatLevel(combatLevel);
+
+            if (combatLevel != oldCombatLevel && CanBePlayerOwned())
+                PowerCollection?.OnOwnerLevelChange();
+        }
+
         #endregion
 
         #region Interaction

@@ -50,6 +50,7 @@ namespace MHServerEmu.Games.Powers
         private readonly EventPointer<EndCooldownEvent> _endCooldownEvent = new();
         private readonly EventPointer<PowerSubsequentActivationTimeoutEvent> _subsequentActivationTimeoutEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
+        private readonly EventPointer<ReapplyIndexPropertiesEvent> _reapplyIndexPropertiesEvent = new();
 
         private List<EventPointer<ScheduledActivateEvent>> _scheduledActivateEventList;     // Initialized on demand
 
@@ -182,6 +183,14 @@ namespace MHServerEmu.Games.Powers
             AnimSpeedCache = -1f;
         }
 
+        public void OnOwnerLevelChange()
+        {
+            Properties[PropertyEnum.CharacterLevel] = Owner.CharacterLevel;
+            Properties[PropertyEnum.CombatLevel] = Owner.CombatLevel;
+
+            ReapplyIndexProperties(PowerIndexPropertyFlags.CharacterLevel | PowerIndexPropertyFlags.CombatLevel);
+        }
+
         public virtual void OnDeallocate()
         {
             if (_activationPhase != PowerActivationPhase.Inactive)
@@ -225,7 +234,6 @@ namespace MHServerEmu.Games.Powers
                     if (Eval.RunBool(evalProto, evalContext) == false)
                         Logger.Warn($"GeneratePowerProperties(): The following EvalOnCreate Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
                 }
-
             }
 
             if (powerProto.EvalPowerSynergies != null)
@@ -269,6 +277,97 @@ namespace MHServerEmu.Games.Powers
             Properties[PropertyEnum.CombatLevel] = indexProps.CombatLevel;
             Properties[PropertyEnum.ItemLevel] = indexProps.ItemLevel;
             Properties[PropertyEnum.ItemVariation] = indexProps.ItemVariation;
+        }
+
+        public void ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags indexPropertyFlags)
+        {
+            // If the owner is not simulated there will not be any activation in progress
+            if (Owner.IsSimulated)
+            {
+                if (_reapplyIndexPropertiesEvent.IsValid)
+                {
+                    _reapplyIndexPropertiesEvent.Get().Flags |= indexPropertyFlags;
+                }
+                else
+                {
+                    EventScheduler scheduler = Game.GameEventScheduler;
+                    scheduler.ScheduleEvent(_reapplyIndexPropertiesEvent, TimeSpan.Zero, _pendingEvents);
+                    _reapplyIndexPropertiesEvent.Get().Initialize(this, indexPropertyFlags);
+                }
+            }
+
+            // Check triggered powers
+            if (Prototype.ActionsTriggeredOnPowerEvent.HasValue())
+            {
+                foreach (PowerEventActionPrototype actionProto in Prototype.ActionsTriggeredOnPowerEvent)
+                {
+                    if (actionProto.EventAction != PowerEventActionType.UsePower || actionProto.Power == PrototypeId.Invalid)
+                        continue;
+
+                    Power triggeredPower = Owner.GetPower(actionProto.Power);
+                    if (triggeredPower == null)
+                    {
+                        Logger.Warn("ScheduleIndexPropertiesReapplication(): triggeredPower == null");
+                        continue;
+                    }
+                    
+                    if (triggeredPower == this)
+                    {
+                        Logger.Warn($"ScheduleIndexPropertiesReapplication(): Recursion detected for {this}");
+                        continue;
+                    }
+
+                    triggeredPower.Properties[PropertyEnum.PowerRank] = Properties[PropertyEnum.PowerRank];
+                    triggeredPower.ScheduleIndexPropertiesReapplication(indexPropertyFlags | PowerIndexPropertyFlags.PowerRank);
+                }
+            }
+        }
+
+        public void ReapplyIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
+        {
+            Logger.Debug($"ReapplyIndexProperties(): {this} - {indexPropertyFlags}");
+
+            // Rerun creation evals
+            if (Prototype.EvalOnCreate.HasValue())
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, Owner);
+
+                Eval.InitTeamUpEvalContext(evalContext, Owner);
+
+                foreach (EvalPrototype evalProto in Prototype.EvalOnCreate)
+                {
+                    if (Eval.RunBool(evalProto, evalContext) == false)
+                        Logger.Warn($"ReapplyIndexProperties(): The following EvalOnCreate Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{Prototype}]");
+                }
+            }
+
+            Player owner = Owner.GetOwnerOfType<Player>();
+            if (owner != null)
+            {
+                PowerIndexProperties indexProperties = GetIndexProperties();
+
+                var updatePropsMessage = NetMessageUpdatePowerIndexProps.CreateBuilder()
+                    .SetEntityId(Owner.Id)
+                    .SetPowerProtoId((ulong)PrototypeDataRef)
+                    .SetPowerRank(indexProperties.CombatLevel)
+                    .SetCharacterLevel(indexProperties.CharacterLevel)
+                    .SetCombatLevel(indexProperties.CombatLevel)
+                    .SetItemLevel(indexProperties.ItemLevel)
+                    .SetItemVariation(indexProperties.ItemVariation)
+                    .Build();
+
+                owner.SendMessage(updatePropsMessage);
+            }
+            else
+            {
+                Logger.Warn("ReapplyIndexProperties(): owner == null");
+            }
+
+            // TODO: Everything that needs to happen to a power on level up
         }
 
         #region Keywords
@@ -4175,6 +4274,12 @@ namespace MHServerEmu.Games.Powers
         {
             public EndPowerFlags Flags { get => _param1; set => _param1 = value; }
             protected override CallbackDelegate GetCallback() => (t, p1) => t.EndPower(p1);
+        }
+
+        private class ReapplyIndexPropertiesEvent : CallMethodEventParam1<Power, PowerIndexPropertyFlags>
+        {
+            public PowerIndexPropertyFlags Flags { get => _param1; set => _param1 = value; }
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.ReapplyIndexProperties(p1);
         }
 
         #endregion

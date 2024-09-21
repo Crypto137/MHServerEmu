@@ -122,6 +122,17 @@ namespace MHServerEmu.Games.Powers
         Power
     }
 
+    [Flags]
+    public enum PowerIndexPropertyFlags
+    {
+        None            = 0,
+        PowerRank       = 1 << 0,
+        CharacterLevel  = 1 << 1,
+        CombatLevel     = 1 << 2,
+        ItemLevel       = 1 << 3,
+        ItemVariation   = 1 << 4
+    }
+
     [AssetEnum((int)Physical)]
     public enum DamageType
     {
