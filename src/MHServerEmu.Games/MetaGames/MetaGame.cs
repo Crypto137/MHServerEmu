@@ -358,6 +358,11 @@ namespace MHServerEmu.Games.MetaGames
             return MetaStates.Any(state => state.PrototypeDataRef == stateRef);
         }
 
+        public MetaState GetState(PrototypeId stateRef)
+        {
+            return MetaStates.FirstOrDefault(state => state.PrototypeDataRef == stateRef);
+        }
+
         public void RemoveStates(PrototypeId[] removeStates)
         {
             if (removeStates.IsNullOrEmpty()) return;

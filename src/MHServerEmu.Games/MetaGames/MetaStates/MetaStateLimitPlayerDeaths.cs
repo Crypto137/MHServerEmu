@@ -16,5 +16,12 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         {
             // TODO _proto.FailOnAllPlayersDead
         }
+
+        public bool DeathLimit()
+        {
+            // TODO
+
+            return false;
+        }
     }
 }

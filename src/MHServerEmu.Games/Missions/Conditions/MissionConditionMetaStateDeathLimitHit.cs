@@ -1,6 +1,7 @@
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
@@ -31,9 +32,9 @@ namespace MHServerEmu.Games.Missions.Conditions
                 var metaGame = manager.GetEntity<MetaGame>(metaGameId);
                 if (metaGame != null)
                 {
-                    // TODO metaState
-                    // var metaState = metaGame.GetMetaState(_proto.MetaState);
-                    // If (metaState.DeathLimit) SetCompleted();
+                    var metaState = metaGame.GetState(_proto.MetaState);
+                    if (metaState is MetaStateLimitPlayerDeaths deathState && deathState.DeathLimit()) 
+                        SetCompleted();
                 }
             }
             return true;
