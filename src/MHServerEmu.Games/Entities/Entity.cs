@@ -664,7 +664,7 @@ namespace MHServerEmu.Games.Entities
         public void AttachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index,
             PropertyCollection properties, PropertyCollection indexProperties, int rank = 1, bool overwrite = false)
         {
-            Logger.Debug($"AttachProperties(): [modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}] to [{this}]");
+            //Logger.Debug($"AttachProperties(): [modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}] to [{this}]");
 
             // Create the list on demand
             if (_attachedProperties == null)

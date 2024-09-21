@@ -325,7 +325,7 @@ namespace MHServerEmu.Games.Powers
 
         public void ReapplyIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
         {
-            Logger.Debug($"ReapplyIndexProperties(): {this} - {indexPropertyFlags}");
+            //Logger.Debug($"ReapplyIndexProperties(): {this} - {indexPropertyFlags}");
 
             // Rerun creation evals
             if (Prototype.EvalOnCreate.HasValue())
