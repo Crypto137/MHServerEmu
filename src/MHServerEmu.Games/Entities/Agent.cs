@@ -53,9 +53,11 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Initialize(EntitySettings settings)
         {
-            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
-            if (agentProto == null) return false;
-            if (agentProto.Locomotion.Immobile == false) Locomotor = new();
+            AgentPrototype agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
+            if (agentProto == null) return Logger.WarnReturn(false, "Initialize(): agentProto == null");
+            
+            if (agentProto.Locomotion.Immobile == false)
+                Locomotor = new();
 
             // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
@@ -63,6 +65,22 @@ namespace MHServerEmu.Games.Entities
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
 
+            // When Gazillion implemented DCL, it looks like they made it switchable at first (based on Eval::runIsDynamicCombatLevelEnabled),
+            // so all agents need to have their default non-DCL health base curves overriden with new DCL ones.
+            if (CanBePlayerOwned() == false)
+            {
+                CurveId healthBaseCurveDcl = agentProto.MobHealthBaseCurveDCL;
+                if (healthBaseCurveDcl == CurveId.Invalid) return Logger.WarnReturn(false, "Initialize(): healthBaseCurveDcl == CurveId.Invalid");
+
+                PropertyId indexPropertyId = Properties.GetIndexPropertyIdForCurveProperty(PropertyEnum.HealthBase);
+                if (indexPropertyId == PropertyId.Invalid) return Logger.WarnReturn(false, "Initialize(): curveIndexPropertyId == PropertyId.Invalid");
+
+                PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);
+
+                Properties.SetCurveProperty(PropertyEnum.HealthBase, healthBaseCurveDcl, indexPropertyId,
+                    healthBasePropertyInfo, SetPropertyFlags.None, true);
+            }
+ 
             return true;
         }
 
@@ -590,6 +608,24 @@ namespace MHServerEmu.Games.Entities
         {
             var levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
             Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        protected override void SetCharacterLevel(int characterLevel)
+        {
+            int oldCharacterLevel = CharacterLevel;
+            base.SetCharacterLevel(characterLevel);
+
+            if (characterLevel != oldCharacterLevel && CanBePlayerOwned())
+                PowerCollection?.OnOwnerLevelChange();
+        }
+
+        protected override void SetCombatLevel(int combatLevel)
+        {
+            int oldCombatLevel = CombatLevel;
+            base.SetCombatLevel(combatLevel);
+
+            if (combatLevel != oldCombatLevel && CanBePlayerOwned())
+                PowerCollection?.OnOwnerLevelChange();
         }
 
         #endregion

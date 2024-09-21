@@ -9,6 +9,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
@@ -78,6 +79,12 @@ namespace MHServerEmu.Games.Properties
         }
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyEnum param0]
+        {
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
+        }
+
+        public PropertyValue this[PropertyEnum propertyEnum, DamageType param0]
         {
             get => GetProperty(new(propertyEnum, param0));
             set => SetProperty(value, new(propertyEnum, param0));
@@ -170,6 +177,30 @@ namespace MHServerEmu.Games.Properties
 
             if (updateValue)
                 UpdateCurvePropertyValue(curveProp, flags, info);
+        }
+
+        public CurveId GetCurveIdForCurveProperty(PropertyId curvePropertyId)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
+            if (propertyInfo.IsCurveProperty == false)
+                return Logger.WarnReturn(CurveId.Invalid, $"GetCurveForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+
+            if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
+                return propertyInfo.DefaultValue;
+
+            return curveProperty.CurveId;
+        }
+
+        public PropertyId GetIndexPropertyIdForCurveProperty(PropertyId curvePropertyId)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
+            if (propertyInfo.IsCurveProperty == false)
+                return Logger.WarnReturn(PropertyId.Invalid, $"GetIndexPropertyIdForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+
+            if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
+                return PropertyId.Invalid;
+
+            return curveProperty.IndexPropertyId;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -75,6 +76,15 @@ namespace MHServerEmu.Games.Properties
         public PropertyId(PropertyEnum propertyEnum, PrototypeId param0)
         {
             Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, DamageType param0)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, (PropertyParam)param0).Raw;
         }
 
         /// <summary>

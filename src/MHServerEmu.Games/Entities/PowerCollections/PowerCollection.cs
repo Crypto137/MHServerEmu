@@ -280,6 +280,12 @@ namespace MHServerEmu.Games.Entities.PowerCollections
                 record.Power?.OnOwnerCastSpeedChange();
         }
 
+        public void OnOwnerLevelChange()
+        {
+            foreach (PowerCollectionRecord record in _powerDict.Values)
+                record.Power?.OnOwnerLevelChange();
+        }
+
         public void OnOwnerDeallocate()
         {
             foreach (var kvp in _powerDict)

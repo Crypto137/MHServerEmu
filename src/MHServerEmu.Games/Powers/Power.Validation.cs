@@ -232,6 +232,9 @@ namespace MHServerEmu.Games.Powers
             return _situationalComponent != null;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the owner has enough secondary resource to activate this <see cref="Power"/>'s secondary effect.
+        /// </summary>
         public bool CanUseSecondaryResourceEffects()
         {
             WorldEntity ultimateOwner = GetUltimateOwner();
