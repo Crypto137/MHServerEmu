@@ -61,5 +61,80 @@ namespace MHServerEmu.Games.Regions
         {
             // TODO
         }
+
+        public void GetUIIntArgs(List<long> intArgs)
+        {
+            float damage = GetIndexEnemyDamageBonus();
+            float resistance = GetIndexEnemyDamageResistance();
+            float xpBonus = GetIndexXPBonus();
+            float lootBonus = GetIndexLootBonus();
+
+            if (damage > 1.0f)
+                intArgs.Add((long)((damage - 1.0f) * 100.0f));
+            else
+                intArgs.Add(0);
+
+            if (resistance < 1.0f)
+                intArgs.Add((long)((resistance > 0.0f) ? ((1.0f / resistance) - 1.0f) * 100.0f : 0.0f));
+            else
+                intArgs.Add(0);
+
+            if (xpBonus > 1.0f)
+                intArgs.Add((long)((xpBonus - 1.0f) * 100.0f));
+            else
+                intArgs.Add(0);
+
+            if (lootBonus > 1.0f)
+                intArgs.Add((long)((lootBonus - 1.0f) * 100.0f));
+            else
+                intArgs.Add(0);
+        }
+
+        public float GetIndexEnemyDamageBonus()
+        {
+            var difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            if (difficultyGlobals == null) return 0.0f;
+
+            var difficultyIndexDamageCurve = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultMtoP);
+            if (difficultyIndexDamageCurve == null) return 0.0f;
+
+            return difficultyIndexDamageCurve.GetAt(DifficultyIndex);
+        }
+
+        public float GetIndexEnemyDamageResistance()
+        {
+            var difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            if (difficultyGlobals == null) return 0.0f;
+
+            var difficultyIndexDamageCurve = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);
+            if (difficultyIndexDamageCurve == null) return 0.0f;
+
+            return difficultyIndexDamageCurve.GetAt(DifficultyIndex);
+        }
+
+        public float GetIndexXPBonus()
+        {
+            if (Prototype == null) return 0.0f;
+
+            var modifierCurveR = Prototype.PlayerXPByDifficultyIndexCurve;
+            var modifierCurve = GameDatabase.GetCurve(modifierCurveR);
+            if (modifierCurve == null) return 0.0f;
+
+            int difficultyIndex = Math.Clamp(DifficultyIndex, modifierCurve.MinPosition, modifierCurve.MaxPosition);
+            return modifierCurve.GetAt(difficultyIndex);
+        }
+
+        public float GetIndexLootBonus()
+        {
+            if (Prototype == null) return 0.0f;
+
+            var modifierCurveR = Prototype.LootFindByDifficultyIndexCurve;
+            var modifierCurve = GameDatabase.GetCurve(modifierCurveR);
+            if (modifierCurve == null) return 0.0f;
+
+            int difficultyIndex = Math.Clamp(DifficultyIndex, modifierCurve.MinPosition, modifierCurve.MaxPosition);
+            return modifierCurve.GetAt(difficultyIndex);
+        }
+
     }
 }
