@@ -2725,6 +2725,30 @@ namespace MHServerEmu.Games.Powers
             payload.Init(this, powerApplication);     // Payload stores a snapshot of the state of this power and its owner at the moment of application
             payload.CalculateInitialProperties(this);
 
+            // Run pre-apply eval
+            if (Prototype.EvalOnPreApply.HasValue())
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, payload.Properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, Properties);
+                
+                Eval.InitTeamUpEvalContext(evalContext, Owner);
+
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
+                if (target == null)
+                {
+                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, properties);
+                    RunPreApplyEval(evalContext);
+                }
+                else
+                {
+                    evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+                    RunPreApplyEval(evalContext);
+                }
+            }
+
             // Pay costs (TODO: mana costs)
             if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
             {
@@ -3774,7 +3798,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool RunActivateEval(EvalContextData contextData)
+        private bool RunActivateEval(EvalContextData evalContext)
         {
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "RunActivateEval(): powerProto == null");
@@ -3783,10 +3807,32 @@ namespace MHServerEmu.Games.Powers
 
             foreach (EvalPrototype evalProto in powerProto.EvalOnActivate)
             {
-                bool evalSuccess = Eval.RunBool(evalProto, contextData);
+                bool evalSuccess = Eval.RunBool(evalProto, evalContext);
                 success &= evalSuccess;
                 if (evalSuccess == false)
                     Logger.Warn($"RunActivateEval(): The following EvalOnActivate Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
+            }
+
+            return success;
+        }
+
+        private bool RunPreApplyEval(EvalContextData evalContext)
+        {
+            // TODO: Merge this with RunActivateEval?
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "RunPreApplyEval(): powerProto == null");
+
+            bool success = true;
+
+            foreach (EvalPrototype evalProto in powerProto.EvalOnPreApply)
+            {
+                Logger.Debug($"RunPreApplyEval(): Eval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
+
+                bool evalSuccess = Eval.RunBool(evalProto, evalContext);
+                success &= evalSuccess;
+                if (evalSuccess == false)
+                    Logger.Warn($"RunPreApplyEval(): The following EvalOnPreApply Eval in a power failed:\nEval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
             }
 
             return success;
