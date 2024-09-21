@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             if (scheduler == null || timeOffset <= TimeSpan.Zero) return;
             if (_pickIntervalEvent.IsValid) return;
 
-            SendPvPTimer(timeOffset, TimeSpan.Zero, timeOffset * 0.25f, timeOffset * 0.1f, null, labelOverride);
+            SendStartPvPTimer(timeOffset, TimeSpan.Zero, timeOffset * 0.25f, timeOffset * 0.1f, null, labelOverride);
             MetaGame.SetUIWidgetGenericFraction(_proto.UIStatePickIntervalWidget, PropertyEnum.MetaGameWaveCount, timeOffset);
 
             scheduler.ScheduleEvent(_pickIntervalEvent, timeOffset, _pendingEvents);

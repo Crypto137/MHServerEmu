@@ -268,7 +268,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
         }
 
-        protected void SendPvPTimer(TimeSpan startTime, TimeSpan endTime, TimeSpan lowTime, TimeSpan criticalTime, 
+        protected void SendStartPvPTimer(TimeSpan startTime, TimeSpan endTime, TimeSpan lowTime, TimeSpan criticalTime, 
             Player player = null, LocaleStringId labelOverride = LocaleStringId.Blank)
         {
             var message = NetMessageStartPvPTimer.CreateBuilder()
@@ -281,6 +281,19 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 .Build();
 
             SendMessage(message, player);
+        }
+
+        protected void SendStopPvPTimer(Player player = null)
+        {
+            var message = NetMessageStopPvPTimer.CreateBuilder().SetMetaGameId(MetaGame.Id).Build();
+            SendMessage(message, player);
+        }
+
+        protected void SendPlayKismetSeq(PrototypeId kismetSeqRef)
+        {
+            if (kismetSeqRef == PrototypeId.Invalid) return;
+            var message = NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build();
+            SendMessage(message);
         }
 
         #endregion
