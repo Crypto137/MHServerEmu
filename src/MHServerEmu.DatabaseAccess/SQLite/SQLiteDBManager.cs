@@ -13,8 +13,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 2;     // Increment this when making changes to the database schema
-        private const int NumTestAccounts = 5;          // Number of test accounts to create for new database files
+        private const int CurrentSchemaVersion = 2;         // Increment this when making changes to the database schema
+        private const int NumTestAccounts = 5;              // Number of test accounts to create for new database files
+        private const int NumPlayerDataWriteAttempts = 3;   // Number of write attempts to do when saving player data
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -159,58 +160,15 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool SavePlayerData(DBAccount account)
         {
-            // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
-            lock (_writeLock)
+            for (int i = 0; i < NumPlayerDataWriteAttempts; i++)
             {
-                using SQLiteConnection connection = GetConnection();
+                if (DoSavePlayerData(account))
+                    return Logger.InfoReturn(true, $"Successfully written player data for account [{account}]");
 
-                // Use a transaction to make sure all data is saved
-                using SQLiteTransaction transaction = connection.BeginTransaction();
-
-                try
-                {
-                    // Update player entity
-                    if (account.Player != null)
-                    {
-                        connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
-                        connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
-                                            StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
-                                            account.Player, transaction);
-                    }
-                    else
-                    {
-                        Logger.Warn($"SavePlayerData(): Attempted to save null player entity data for account {account}");
-                    }
-
-                    // Update inventory entities
-                    UpdateEntityTable(connection, transaction, "Avatar", account.Id, account.Avatars);
-                    UpdateEntityTable(connection, transaction, "TeamUp", account.Id, account.TeamUps);
-                    UpdateEntityTable(connection, transaction, "Item", account.Id, account.Items);
-
-                    foreach (DBEntity avatar in account.Avatars)
-                    {
-                        UpdateEntityTable(connection, transaction, "Item", avatar.DbGuid, account.Items);
-                        UpdateEntityTable(connection, transaction, "ControlledEntity", avatar.DbGuid, account.ControlledEntities);
-                    }
-
-                    foreach (DBEntity teamUp in account.TeamUps)
-                    {
-                        UpdateEntityTable(connection, transaction, "Item", teamUp.DbGuid, account.Items);
-                    }
-
-                    transaction.Commit();
-
-                    TryCreateBackup();
-
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorException(e, nameof(SavePlayerData));
-                    transaction.Rollback();
-                    return false;
-                }
+                // Maybe we should add a delay here
             }
+
+            return Logger.WarnReturn(false, $"SavePlayerData(): Failed to write player data for account [{account}]");
         }
 
         /// <summary>
@@ -317,11 +275,68 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return true;
         }
 
+        private bool DoSavePlayerData(DBAccount account)
+        {
+            // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
+            lock (_writeLock)
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                // Use a transaction to make sure all data is saved
+                using SQLiteTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    // Update player entity
+                    if (account.Player != null)
+                    {
+                        connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
+                        connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
+                                            StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
+                                            account.Player, transaction);
+                    }
+                    else
+                    {
+                        Logger.Warn($"DoSavePlayerData(): Attempted to save null player entity data for account {account}");
+                    }
+
+                    // Update inventory entities
+                    UpdateEntityTable(connection, transaction, "Avatar", account.Id, account.Avatars);
+                    UpdateEntityTable(connection, transaction, "TeamUp", account.Id, account.TeamUps);
+                    UpdateEntityTable(connection, transaction, "Item", account.Id, account.Items);
+
+                    foreach (DBEntity avatar in account.Avatars)
+                    {
+                        UpdateEntityTable(connection, transaction, "Item", avatar.DbGuid, account.Items);
+                        UpdateEntityTable(connection, transaction, "ControlledEntity", avatar.DbGuid, account.ControlledEntities);
+                    }
+
+                    foreach (DBEntity teamUp in account.TeamUps)
+                    {
+                        UpdateEntityTable(connection, transaction, "Item", teamUp.DbGuid, account.Items);
+                    }
+
+                    transaction.Commit();
+
+                    TryCreateBackup();
+
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn($"DoSavePlayerData(): SQLite error for account [{account}]: {e.Message}");
+                    transaction.Rollback();
+                    return false;
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a backup of the database file if enough time has passed since the last one.
         /// </summary>
         private void TryCreateBackup()
         {
+            // TODO: Use SQLite backup functionality for this
             TimeSpan now = Clock.GameTime;
 
             if ((now - _lastBackupTime) < _backupInterval)
