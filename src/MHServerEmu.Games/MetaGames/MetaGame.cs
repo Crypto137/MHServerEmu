@@ -11,6 +11,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames.GameModes;
 using MHServerEmu.Games.MetaGames.MetaStates;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
@@ -301,7 +302,7 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (CanApplyState(stateRef, skipCooldown) == false) return false;
             var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
-
+            if (MissionManager.Debug) Logger.Trace($"ApplyMetaState {GameDatabase.GetFormattedPrototypeName(stateProto.DataRef)} in {GameDatabase.GetFormattedPrototypeName(PrototypeDataRef)}");
             RemoveGroups(stateProto.RemoveGroups);
             RemoveStates(stateProto.RemoveStates);
 
@@ -581,7 +582,7 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (widgetRef == PrototypeId.Invalid) return;
 
-            var widget = Region.UIDataProvider.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            var widget = Region?.UIDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
             if (widget != null)
             {
                 int count = Properties[countPropId];
@@ -594,8 +595,8 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (widgetRef == PrototypeId.Invalid) return;
 
-            var uiDataProvider = Region.UIDataProvider;
-            var widget = uiDataProvider.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            var uiDataProvider = Region?.UIDataProvider;
+            var widget = uiDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
             if (widget != null)
                 uiDataProvider.DeleteWidget(widgetRef);
         }
