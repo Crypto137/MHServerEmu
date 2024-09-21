@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
@@ -650,24 +651,56 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PowerPayload"/>'s hit should be critical.
+        /// </summary>
         private bool CheckCritChance(WorldEntity target)
         {
-            // TODO: level scaling for crit rating
-
             // Skip power that can't crit
             if (PowerPrototype.CanCrit == false || PowerPrototype.Activation == PowerActivationType.Passive)
                 return false;
 
-            float critChance = Power.GetCritChance(PowerPrototype, Properties, target, PowerOwnerId);
+            // Check if the crit is guaranteed by a keyword
+            if (PowerPrototype.Keywords.HasValue())
+            {
+                foreach (PrototypeId keywordProtoRef in PowerPrototype.Keywords)
+                {
+                    if (Properties[PropertyEnum.CritAlwaysOnKeywordAttack, keywordProtoRef])
+                        return true;
+
+                    if (target.Properties[PropertyEnum.CritAlwaysOnGotHitKeyword, keywordProtoRef])
+                        return true;
+                }
+            }
+
+            // Override target level if needed
+            int targetLevelOverride = -1;
+            if (IsPlayerPayload && target.CanBePlayerOwned() == false)
+                targetLevelOverride = CombatLevel;
+
+            // Calculate and check crit chance
+            float critChance = Power.GetCritChance(PowerPrototype, Properties, target, PowerOwnerId, PrototypeId.Invalid, targetLevelOverride);            
             return Game.Random.NextFloat() < critChance;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PowerPayload"/>'s hit should be super critical (brutal strike).
+        /// </summary>
         private bool CheckSuperCritChance(WorldEntity target)
         {
+            // Override target level if needed
+            int targetLevelOverride = -1;
+            if (IsPlayerPayload && target.CanBePlayerOwned() == false)
+                targetLevelOverride = CombatLevel;
+
+            // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
             return Game.Random.NextFloat() < superCritChance;
         }
 
+        /// <summary>
+        /// Returns the HealthMax value of the provided <see cref="WorldEntity"/> adjusted for the specified combat level.
+        /// </summary>
         private static long CalculateTargetHealthMaxForCombatLevel(WorldEntity target, int combatLevel)
         {
             using PropertyCollection healthMaxProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
