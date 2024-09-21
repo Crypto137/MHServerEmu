@@ -12,8 +12,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         public MetaStatePopulationMaintain(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
-            _proto = prototype as MetaStatePopulationMaintainPrototype; 
-            _spawnEvent = new MetaStateSpawnEvent(PrototypeDataRef, metaGame.Region);
+            _proto = prototype as MetaStatePopulationMaintainPrototype;
+            if (metaGame.Region != null)
+                _spawnEvent = new MetaStateSpawnEvent(PrototypeDataRef, metaGame.Region);
         }
 
         public override void OnApply()
