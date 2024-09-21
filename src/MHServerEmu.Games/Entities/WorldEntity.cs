@@ -190,7 +190,7 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnPostInit(settings);
 
-            if (this is not Avatar && this is not Missile) // REMOVEME
+            if (CanBePlayerOwned() == false && this is not Missile) // REMOVEME
             {
                 Properties[PropertyEnum.CharacterLevel] = 60;
                 Properties[PropertyEnum.CombatLevel] = 60;
