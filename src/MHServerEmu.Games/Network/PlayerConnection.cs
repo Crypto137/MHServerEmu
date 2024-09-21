@@ -204,17 +204,22 @@ namespace MHServerEmu.Games.Network
         {
             if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
 
-            using (Archive archive = new(ArchiveSerializeType.Database))
+            // NOTE: We are locking on the account instance to prevent account data from being modified while
+            // it is being written to the database. This could potentially cause deadlocks if not used correctly.
+            lock (_dbAccount)
             {
-                Player.Serialize(archive);
-                _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+                using (Archive archive = new(ArchiveSerializeType.Database))
+                {
+                    Player.Serialize(archive);
+                    _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+                }
+
+                _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
+                _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+                _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
+
+                PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
             }
-
-            _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
-            _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
-            _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
-
-            PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");
             return true;

@@ -20,11 +20,11 @@ namespace MHServerEmu.Frontend
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
 
-        // Set game id atomically using Interlocked because this is used asynchronously to determine whether the client is in a game.
-        public ulong GameId { get => _gameId; set => Interlocked.Exchange(ref _gameId, value); }
+        // Access game id atomically using Interlocked because this is used by multiple threads to determine whether the client is in a game.
+        public ulong GameId { get => Interlocked.Read(ref _gameId); set => Interlocked.Exchange(ref _gameId, value); }
 
         public bool IsConnected { get => Connection.Connected; }
-        public bool IsInGame { get => _gameId != 0; }
+        public bool IsInGame { get => GameId != 0; }
 
         /// <summary>
         /// Constructs a new <see cref="FrontendClient"/> instance for the provided <see cref="TcpClientConnection"/>.
@@ -37,9 +37,9 @@ namespace MHServerEmu.Frontend
         public override string ToString()
         {
             if (Session == null)
-                return $"SessionId=NONE, Account=NONE";
+                return "Account=NONE, SessionId=NONE";
 
-            return $"SessionId=0x{Session?.Id:X}, Account={Session?.Account}";
+            return $"Account={Session?.Account}, SessionId=0x{Session?.Id:X}";
         }
 
         /// <summary>

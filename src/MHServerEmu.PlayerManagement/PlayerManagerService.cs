@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 
@@ -162,6 +163,8 @@ namespace MHServerEmu.PlayerManagement
                 _playerDict.Add(playerDbId, client);
             }
 
+            Logger.Info($"Added client [{client}]");
+
             // Player is added to a game asynchronously as a task because their data may be pending a save after a previous session.
             Task.Run(async () => await AddPlayerToGameAsync(client));
             
@@ -188,9 +191,18 @@ namespace MHServerEmu.PlayerManagement
             lock (_pendingSaveDict)
             {
                 if (_pendingSaveDict.ContainsKey(playerDbId))
-                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] already has a pending save task");
-
-                _pendingSaveDict.Add(playerDbId, Task.Run(async () => await SavePlayerDataAsync(client)));
+                {
+                    Logger.Warn($"RemoveFrontendClient(): Client [{client}] already has a pending save task");
+                }
+                else if (client.IsInGame == false)
+                {
+                    // We skip saving here to avoid overwriting player data with empty data from an account that hasn't been fully loaded yet.
+                    Logger.Warn($"RemoveFrontendClient(): Client [{client}] is not in a game, skipping saving");
+                }
+                else
+                {
+                    _pendingSaveDict.Add(playerDbId, Task.Run(async () => await SavePlayerDataAsync(client)));
+                }
             }
 
             TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
@@ -251,7 +263,7 @@ namespace MHServerEmu.PlayerManagement
             while (numAttempts < AsyncRetryNumAttemptsAddPlayer)
             {
                 numAttempts++;
-                Logger.Info($"Adding client [{client}] to a game (attempt {numAttempts}/{AsyncRetryNumAttemptsAddPlayer})...");
+                Logger.Info($"Adding client [{client}] to a game ({numAttempts}/{AsyncRetryNumAttemptsAddPlayer})...");
 
                 int numTicks = 0;
 
@@ -262,9 +274,9 @@ namespace MHServerEmu.PlayerManagement
                     lock (_pendingSaveDict)
                         hasSavePending = _pendingSaveDict.ContainsKey(playerDbId);
 
+                    // Wait a little if we have a pending save
                     if (hasSavePending)
                     {
-                        // Flag existing data as out of date and wait a little
                         await Task.Delay(AsyncRetryTickIntervalMS);
                         continue;
                     }
@@ -299,18 +311,15 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private async Task SavePlayerDataAsync(FrontendClient client)
         {
-            ulong playerDbId = (ulong)client.Session.Account.Id;
-
-            // Wait for the player to leave the game while checking in short bursts
-            // [check x10] - [wait 10 sec] - [check x10] - [wait 10 sec], and so on
-            // Time out after a few long pauses.
+            // Wait for the player to leave the game while checking in short bursts.
+            // [check x10] - [wait 10 sec] - [check x10] - [wait 10 sec], and so on.
 
             int numAttempts = 0;
 
             while (numAttempts < AsyncRetryNumAttemptsSavePlayer)
             {
                 numAttempts++;
-                Logger.Info($"Saving player data for client [{client}] (attempt {numAttempts}/{AsyncRetryNumAttemptsSavePlayer})...");
+                Logger.Info($"Waiting for client [{client}] to leave game ({numAttempts}/{AsyncRetryNumAttemptsSavePlayer})...");
 
                 int numTicks = 0;
 
@@ -325,13 +334,8 @@ namespace MHServerEmu.PlayerManagement
                         continue;
                     }
 
-                    // Save data and remove pending save
-                    if (AccountManager.DBManager.SavePlayerData(client.Session.Account))
-                        Logger.Info($"Saved player data for client [{client}]");
-                    else
-                        Logger.Warn($"SavePlayerDataAsync(): Failed to save player data for client [{client}]");
-
-                    lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
+                    // The player was removed from its game, save the latest data
+                    DoSavePlayerData(client);
                     return;
                 }
 
@@ -339,8 +343,28 @@ namespace MHServerEmu.PlayerManagement
                 await Task.Delay(AsyncRetryAttemptIntervalMS);
             }
 
-            Logger.Warn($"SavePlayerDataAsync(): Timed out trying to save player data for client [{client}] after {numAttempts} attempts");
-            lock (_pendingSaveDict) _pendingSaveDict.Remove(playerDbId);
+            // Timeout, just save whatever data was there and move on.
+            Logger.Warn($"SavePlayerDataAsync(): Timed out waiting for client [{client}] to leave game 0x{client.GameId:X} after {numAttempts} attempts");
+            DoSavePlayerData(client);
+        }
+
+        private void DoSavePlayerData(FrontendClient client)
+        {
+            // Save data and remove pending save
+            Logger.Info($"Saving player data for client [{client}]...");
+            DBAccount account = client.Session.Account;
+
+            // NOTE: We are locking on the account instance to prevent account data from being modified while
+            // it is being written to the database. This could potentially cause deadlocks if not used correctly.
+            lock (account)
+            {
+                if (AccountManager.DBManager.SavePlayerData(account))
+                    Logger.Info($"Saved player data for client [{client}]");
+                else
+                    Logger.Error($"SavePlayerDataAsync(): Failed to save player data for client [{client}]");
+            }
+
+            lock (_pendingSaveDict) _pendingSaveDict.Remove((ulong)account.Id);
         }
 
         #endregion
