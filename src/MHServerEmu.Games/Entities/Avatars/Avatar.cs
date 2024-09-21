@@ -871,6 +871,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             owner?.OnAvatarCharacterLevelChanged(this);
         }
 
+        protected override void SetCombatLevel(int combatLevel)
+        {
+            base.SetCombatLevel(combatLevel);
+
+            Agent teamUpAgent = CurrentTeamUpAgent;
+            if (teamUpAgent != null)
+                teamUpAgent.CombatLevel = combatLevel;
+        }
+
         #endregion
 
         #region Interaction
@@ -1097,6 +1106,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             Agent teamUp = CurrentTeamUpAgent;
             if (teamUp == null) return;
+
+            teamUp.CombatLevel = CombatLevel;
 
             if (teamUp.IsDead)
                 teamUp.Resurrect();
