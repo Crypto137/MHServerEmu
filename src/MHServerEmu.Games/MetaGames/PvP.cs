@@ -100,6 +100,7 @@ namespace MHServerEmu.Games.MetaGames
 
             var mode = CurrentMode;
             if (mode == null) return false;
+            mode.OnRemovePlayer(player);
             player.Properties[PropertyEnum.PvPMode] = PrototypeId.Invalid;
 
             return true;

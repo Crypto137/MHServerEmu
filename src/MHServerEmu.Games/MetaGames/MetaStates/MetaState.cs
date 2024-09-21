@@ -63,6 +63,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         public virtual void OnRemovedState(PrototypeId removedStateRef) { }
         public virtual void OnAddPlayer(Player player) { }
-        public virtual void OnRemovedPlayer(Player player) { }
+        public virtual void OnRemovePlayer(Player player) { }
+        public virtual void OnUpdatePlayerNotification(Player player) { }
     }
 }

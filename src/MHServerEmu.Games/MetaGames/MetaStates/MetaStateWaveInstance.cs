@@ -5,7 +5,6 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
 {
@@ -47,16 +46,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             if (scheduler == null || interval <= TimeSpan.Zero) return;
             if (_statePickIntervalEvent.IsValid) return;
 
-            if (_proto.UIWidget != PrototypeId.Invalid) 
-            {
-                var widget = Region.UIDataProvider.GetWidget<UIWidgetGenericFraction>(_proto.UIWidget, PrototypeId.Invalid);
-                if (widget != null)
-                {
-                    int count = MetaGame.Properties[PropertyEnum.MetaStateWaveCount];
-                    widget.SetCount(count, count + 1);
-                    widget.SetTimeRemaining((long)interval.TotalMilliseconds);
-                }
-            }
+            MetaGame.SetUIWidgetGenericFraction(_proto.UIWidget, PropertyEnum.MetaStateWaveCount, interval);
 
             scheduler.ScheduleEvent(_statePickIntervalEvent, interval, _pendingEvents);
             _statePickIntervalEvent.Get().Initialize(this);
@@ -65,7 +55,6 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         private void OnStatePickInterval()
         {
             var wavePropId = new PropertyId(PropertyEnum.MetaStateWaveCount, PrototypeDataRef);
-
             MetaGame.Properties.AdjustProperty(1, wavePropId);
 
             bool applyState = false;
@@ -99,13 +88,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     ScheduleStatePickInterval(TimeSpan.FromMilliseconds(_proto.StatePickIntervalMS));
             }
 
-            if (_proto.UIWidget != PrototypeId.Invalid)
-            {
-                var uiDataProvider = Region.UIDataProvider;
-                var widget = uiDataProvider.GetWidget<UIWidgetGenericFraction>(_proto.UIWidget, PrototypeId.Invalid);
-                if (widget != null)
-                    uiDataProvider.DeleteWidget(_proto.UIWidget, PrototypeId.Invalid);
-            }
+            MetaGame.ResetUIWidgetGenericFraction(_proto.UIWidget);
         }
 
         private bool PickState()

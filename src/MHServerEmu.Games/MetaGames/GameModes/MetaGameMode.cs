@@ -7,7 +7,6 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
@@ -26,6 +25,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         protected EventGroup _pendingEvents = new();
         private EventPointer<ActiveGoalRepeatEvent> _activeGoalRepeatEvent = new();
         private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
+        private LocaleStringId _modeText;
 
         public MetaGameMode(MetaGame metaGame, MetaGameModePrototype proto)
         {
@@ -43,6 +43,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             var gamemodeProto = GameDatabase.GetPrototype<MetaGameModePrototype>(modeRef);
             return gamemodeProto.AllocateGameMode(metaGame);
         }
+
+        #region Virtual
 
         public virtual void OnDestroy()
         {
@@ -84,6 +86,41 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendMetaGameInfoNotifications(proto.PlayerEnterNotifications, player);
         }
 
+        public virtual void OnDeactivate()
+        {
+            var proto = Prototype;
+
+            SendAvatarOnKilledInfoOverride(PrototypeId.Invalid);
+            SendUINotification(proto.UINotificationOnDeactivate);
+
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler != null)
+            {
+                scheduler.CancelEvent(_activeGoalRepeatEvent);
+                scheduler.CancelAllEvents(_pendingEvents);
+                scheduler.CancelAllEvents(_timedGroup);
+            }
+
+            var region = Region;
+            if (region == null) return;
+
+            // TODO achievement
+            if (proto.PlayerEnterNotifications.HasValue())
+                SendClearMetaGameInfoNotification();
+
+            region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
+        }
+
+        public virtual void OnRemovePlayer(Player player) { }
+        public virtual void OnRemoveState(PrototypeId removeStateRef) { }
+        public virtual void OnUpdatePlayerNotification(Player player)
+        {
+            SendSetModeText(player);
+        }
+        public virtual TimeSpan GetDurationTime() => TimeSpan.Zero;
+
+        #endregion
+
         private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
         {
             var proto = Prototype;
@@ -95,11 +132,12 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendPlayUISoundTheme(proto.PlayerEnterAudioTheme, player);
         }
 
-        private void SendPlayUISoundTheme(AssetId soundThemeAssetRef, Player player = null)
+        public void SetModeText(LocaleStringId modeText)
         {
-            if (soundThemeAssetRef == AssetId.Invalid) return;
-            var message = NetMessagePlayUISoundTheme.CreateBuilder().SetSoundThemeAssetId((ulong)soundThemeAssetRef).Build();
-            SendMessage(message, player);
+            if (_modeText == modeText) return;
+
+            _modeText = modeText;
+            SendSetModeText();
         }
 
         public List<PlayerConnection> GetInterestedClients(Player player = null)
@@ -117,13 +155,30 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             return interestedClients;
         }
 
+        #region SendMessage
+
+        private void SendMessage(IMessage message, Player player = null)
+        {
+            if (player == null)
+                Game.NetworkManager.BroadcastMessage(message);
+            else
+                player.SendMessage(message);
+        }
+
+        private void SendPlayUISoundTheme(AssetId soundThemeAssetRef, Player player = null)
+        {
+            if (soundThemeAssetRef == AssetId.Invalid) return;
+            var message = NetMessagePlayUISoundTheme.CreateBuilder().SetSoundThemeAssetId((ulong)soundThemeAssetRef).Build();
+            SendMessage(message, player);
+        }
+
         private void SendMetaGameInfoNotifications(MetaGameNotificationDataPrototype[] notifications, Player player = null)
         {
             if (notifications.IsNullOrEmpty()) return;
 
             var interestedClients = GetInterestedClients(player);
 
-            foreach(var notificationData in notifications)
+            foreach (var notificationData in notifications)
             {
                 var entityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(notificationData.WorldEntityPrototype);
                 if (entityProto == null) continue;
@@ -137,68 +192,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
         }
 
-        private void ScheduleActiveGoalRepeat(int timeMs)
-        {
-            var scheduler = Game.GameEventScheduler;
-            if (scheduler == null) return;
-            TimeSpan timeOffset = TimeSpan.FromMilliseconds(timeMs);
-            if (_activeGoalRepeatEvent.IsValid) return;
-            scheduler.ScheduleEvent(_activeGoalRepeatEvent, timeOffset, _pendingEvents);
-            _activeGoalRepeatEvent.Get().Initialize(this);
-        }
-
-        private void ScheduledActiveGoalRepeat()
-        {
-            var proto = Prototype;
-            SendUINotification(proto.UINotificationActiveGoalRepeat);
-            ScheduleActiveGoalRepeat(proto.ActiveGoalRepeatTimeMS);
-        }
-
-        private void ScheduleTimedBanners(MetaGameBannerTimeDataPrototype[] uiTimedBanners)
-        {
-            if (uiTimedBanners.IsNullOrEmpty()) return;
-            var scheduler = Game.GameEventScheduler;
-            if (scheduler == null) return;
-
-            foreach(var timeBannerProto in uiTimedBanners)
-            {
-                if (timeBannerProto == null) continue;
-                int time = timeBannerProto.TimerValueMS;
-                if (timeBannerProto.TimerModeType == MetaGameModeTimerBannerType.Interval && time <= 0) continue;
-                EventPointer<BannerTimeEvent> bannerPointer = new();
-                var timeOffset = TimeSpan.FromMilliseconds(time);
-                scheduler.ScheduleEvent(bannerPointer, timeOffset, _timedGroup);
-                bannerPointer.Get().Initialize(this, timeBannerProto);
-            }
-        }
-
-        private void ScheduledBannerTime(MetaGameBannerTimeDataPrototype bannerProto)
-        {
-            var interestedClients = GetInterestedClients();
-
-            List<long> intArgs = new();
-            var runTime = Game.CurrentTime - _startTime;
-            TimeSpan durationTime = GetDurationTime();
-
-            intArgs.Add((long)runTime.TotalSeconds);
-            intArgs.Add((long)durationTime.TotalSeconds);
-
-            SendMetaGameBanner(interestedClients, bannerProto.BannerText, intArgs);
-
-            if (bannerProto.TimerModeType == MetaGameModeTimerBannerType.Once) return;
-
-            // Reschedule event
-            var scheduler = Game.GameEventScheduler;
-            if (scheduler == null) return;
-            EventPointer<BannerTimeEvent> bannerPointer = new();
-            var timeOffset = TimeSpan.FromMilliseconds(bannerProto.TimerValueMS);
-            scheduler.ScheduleEvent(bannerPointer, timeOffset, _timedGroup);
-            bannerPointer.Get().Initialize(this, bannerProto);
-        }
-
-        public virtual TimeSpan GetDurationTime() => TimeSpan.Zero;
-
-        private void SendMetaGameBanner(List<PlayerConnection> interestedClients, LocaleStringId bannerText, List<long> intArgs = null,
+        protected void SendMetaGameBanner(List<PlayerConnection> interestedClients, LocaleStringId bannerText, List<long> intArgs = null,
             string playerName1 = "", string playerName2 = "",
             LocaleStringId arg1 = LocaleStringId.Blank, LocaleStringId arg2 = LocaleStringId.Blank)
         {
@@ -237,39 +231,6 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendMessage(message, player);
         }
 
-        private void SendMessage(IMessage message, Player player = null)
-        {
-            if (player == null)
-                Game.NetworkManager.BroadcastMessage(message);
-            else
-                player.SendMessage(message);
-        }
-
-        public virtual void OnDeactivate()
-        {
-            var proto = Prototype;
-
-            SendAvatarOnKilledInfoOverride(PrototypeId.Invalid);
-            SendUINotification(proto.UINotificationOnDeactivate);
-
-            var scheduler = Game.GameEventScheduler;
-            if (scheduler != null)
-            {
-                scheduler.CancelEvent(_activeGoalRepeatEvent);
-                scheduler.CancelAllEvents(_pendingEvents);
-                scheduler.CancelAllEvents(_timedGroup);
-            }
-
-            var region = Region;
-            if (region == null) return;
-
-            // TODO achievement
-            if (proto.PlayerEnterNotifications.HasValue())
-                SendClearMetaGameInfoNotification();
-
-            region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
-        }
-
         private void SendClearMetaGameInfoNotification()
         {
             var interestedClients = GetInterestedClients();
@@ -277,7 +238,115 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             Game.NetworkManager.SendMessageToMultiple(interestedClients, message);
         }
 
-        public virtual void OnRemoveState(MetaState state) { }
+        public void SendSetModeText(Player player = null)
+        {
+            if (_modeText == LocaleStringId.Blank) return;
+
+            var message = NetMessageSetModeText.CreateBuilder()
+                .SetMetaGameId(MetaGame.Id)
+                .SetModeRef((ulong)PrototypeDataRef)
+                .SetModeTextId((ulong)_modeText)
+                .Build();
+
+            SendMessage(message, player);
+        }
+
+        public void SendDifficultyChange(Player player)
+        {
+            var region = Region;
+            if (region == null) return;
+
+            int dificultyIndex = region.TuningTable.DifficultyIndex;
+            if (player != null)
+            {
+                player.SendRegionDifficultyChange(dificultyIndex);
+            }
+            else
+            {
+                foreach (var regionPlayer in new PlayerIterator(region))
+                    regionPlayer.SendRegionDifficultyChange(dificultyIndex);
+            }
+        }
+
+        protected void SendPvPTimer(TimeSpan startTime, TimeSpan endTime, TimeSpan lowTime, TimeSpan criticalTime, 
+            Player player = null, LocaleStringId labelOverride = LocaleStringId.Blank)
+        {
+            var message = NetMessageStartPvPTimer.CreateBuilder()
+                .SetMetaGameId(MetaGame.Id)
+                .SetStartTime((uint)startTime.TotalMilliseconds)
+                .SetEndTime((uint)endTime.TotalMilliseconds)
+                .SetLowTimeWarning((uint)lowTime.TotalMilliseconds)
+                .SetCriticalTimeWarning((uint)criticalTime.TotalMilliseconds)
+                .SetLabelOverrideTextId((ulong)labelOverride)
+                .Build();
+
+            SendMessage(message, player);
+        }
+
+        #endregion
+
+        #region Schedule
+
+        private void ScheduleActiveGoalRepeat(int timeMs)
+        {
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+            TimeSpan timeOffset = TimeSpan.FromMilliseconds(timeMs);
+            if (_activeGoalRepeatEvent.IsValid) return;
+            scheduler.ScheduleEvent(_activeGoalRepeatEvent, timeOffset, _pendingEvents);
+            _activeGoalRepeatEvent.Get().Initialize(this);
+        }
+
+        private void ScheduledActiveGoalRepeat()
+        {
+            var proto = Prototype;
+            SendUINotification(proto.UINotificationActiveGoalRepeat);
+            ScheduleActiveGoalRepeat(proto.ActiveGoalRepeatTimeMS);
+        }
+
+        private void ScheduleTimedBanners(MetaGameBannerTimeDataPrototype[] uiTimedBanners)
+        {
+            if (uiTimedBanners.IsNullOrEmpty()) return;
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+
+            foreach (var timeBannerProto in uiTimedBanners)
+            {
+                if (timeBannerProto == null) continue;
+                int time = timeBannerProto.TimerValueMS;
+                if (timeBannerProto.TimerModeType == MetaGameModeTimerBannerType.Interval && time <= 0) continue;
+                EventPointer<BannerTimeEvent> bannerPointer = new();
+                var timeOffset = TimeSpan.FromMilliseconds(time);
+                scheduler.ScheduleEvent(bannerPointer, timeOffset, _timedGroup);
+                bannerPointer.Get().Initialize(this, timeBannerProto);
+            }
+        }
+
+        private void ScheduledBannerTime(MetaGameBannerTimeDataPrototype bannerProto)
+        {
+            var interestedClients = GetInterestedClients();
+
+            List<long> intArgs = new();
+            var runTime = Game.CurrentTime - _startTime;
+            TimeSpan durationTime = GetDurationTime();
+
+            intArgs.Add((long)runTime.TotalSeconds);
+            intArgs.Add((long)durationTime.TotalSeconds);
+
+            SendMetaGameBanner(interestedClients, bannerProto.BannerText, intArgs);
+
+            if (bannerProto.TimerModeType == MetaGameModeTimerBannerType.Once) return;
+
+            // Reschedule event
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+            EventPointer<BannerTimeEvent> bannerPointer = new();
+            var timeOffset = TimeSpan.FromMilliseconds(bannerProto.TimerValueMS);
+            scheduler.ScheduleEvent(bannerPointer, timeOffset, _timedGroup);
+            bannerPointer.Get().Initialize(this, bannerProto);
+        }
+
+        #endregion
 
         public class ActiveGoalRepeatEvent : CallMethodEvent<MetaGameMode>
         {
@@ -289,5 +358,4 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             protected override CallbackDelegate GetCallback() => (gameMode, bannerProto) => gameMode.ScheduledBannerTime(bannerProto);
         }
     }
-
 }

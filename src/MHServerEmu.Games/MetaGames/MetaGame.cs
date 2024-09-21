@@ -16,6 +16,7 @@ using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.UI.Widgets;
 using System.Text;
 
 namespace MHServerEmu.Games.MetaGames
@@ -329,7 +330,7 @@ namespace MHServerEmu.Games.MetaGames
                     {
                         Properties[PropertyEnum.MetaGameTimeStateRemovedMS, removeState] = Game.CurrentTime;
                         state.OnRemove();
-                        CurrentMode?.OnRemoveState(state);
+                        CurrentMode?.OnRemoveState(removeState);
                         removed.Add(removeState);
                         MetaStates.Remove(state);
                     }
@@ -373,6 +374,7 @@ namespace MHServerEmu.Games.MetaGames
 
         public void RemoveState(PrototypeId stateRef)
         {
+            if (stateRef == PrototypeId.Invalid) return;
             var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
             if (stateProto == null) return;
             RemoveStates(stateProto.SubStates);
@@ -418,7 +420,7 @@ namespace MHServerEmu.Games.MetaGames
             InitializePlayer(player);
         }
 
-        public void OnRemovedPlayer(Player player)
+        public void OnRemovePlayer(Player player)
         {
             RemovePlayer(player);
 
@@ -433,7 +435,7 @@ namespace MHServerEmu.Games.MetaGames
             }
 
             foreach (MetaState state in MetaStates)
-                state.OnRemovedPlayer(player);
+                state.OnRemovePlayer(player);
         }
 
         private void OnDestroyEntity(Entity entity)
@@ -553,7 +555,45 @@ namespace MHServerEmu.Games.MetaGames
                 aoi.ConsiderEntity(player);
         }
 
+        public void UpdatePlayerNotification(Player player)
+        {
+            var metaProto = MetaGamePrototype;
+
+            if (metaProto.Teams.HasValue())
+                foreach (var team in Teams)
+                    team.SendTeamRoster(player);
+
+            if (_modeIndex != -1 && _modeIndex < GameModes.Count)
+                GameModes[_modeIndex].OnUpdatePlayerNotification(player);
+
+            foreach (var state in MetaStates)
+                state.OnUpdatePlayerNotification(player);
+        }
+
         #endregion
+
+        public void SetUIWidgetGenericFraction(PrototypeId widgetRef, PropertyId countPropId, TimeSpan timeOffset)
+        {
+            if (widgetRef == PrototypeId.Invalid) return;
+
+            var widget = Region.UIDataProvider.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            if (widget != null)
+            {
+                int count = Properties[countPropId];
+                widget.SetCount(count, count + 1);
+                widget.SetTimeRemaining((long)timeOffset.TotalMilliseconds);
+            }
+        }
+
+        public void ResetUIWidgetGenericFraction(PrototypeId widgetRef)
+        {
+            if (widgetRef == PrototypeId.Invalid) return;
+
+            var uiDataProvider = Region.UIDataProvider;
+            var widget = uiDataProvider.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            if (widget != null)
+                uiDataProvider.DeleteWidget(widgetRef);
+        }
 
         protected class ActivateGameModeEvent : CallMethodEventParam1<Entity, int>
         {

@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             _proto = prototype as MetaStateShutdownPrototype;
         }
 
-        public override void OnRemovedPlayer(Player player)
+        public override void OnRemovePlayer(Player player)
         {
             // TODO
         }
