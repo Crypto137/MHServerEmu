@@ -15,6 +15,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Events.Templates;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -1059,6 +1060,30 @@ namespace MHServerEmu.Games.Missions
             var player = Game.EntityManager.GetEntity<Player>(playerId);
             if (player == null || targetId == Entity.InvalidId) return;
             player.SendMissionInteract(targetId);
+        }
+
+        public static bool GetDropLootsForEnemy(WorldEntity enemy, Player player, List<MissionLootTable> dropLoots)
+        {
+            var missionManager = player.MissionManager;
+            bool hasLoot = missionManager.GetDropLootsForEnemy(enemy, dropLoots);
+            missionManager = player.CurrentAvatar?.Region?.MissionManager;
+            if (missionManager != null)
+                hasLoot |= missionManager.GetDropLootsForEnemy(enemy, dropLoots);
+
+            return hasLoot;
+        }
+
+        private bool GetDropLootsForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
+        {
+            bool hasLoot = false;
+            foreach (var missionRef in ActiveMissions)
+            {
+                var mission = FindMissionByDataRef(missionRef);
+                if (mission == null || mission.HasItemDrops == false) continue;
+                if (mission.State == MissionState.Active)
+                    hasLoot |= mission.GetDropLootsForEnemy(enemy, dropLoots);
+            }
+            return hasLoot;
         }
 
         public class PlayerInteractEvent : CallMethodEventParam2<MissionManager, ulong, ulong>

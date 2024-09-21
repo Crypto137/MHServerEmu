@@ -141,6 +141,7 @@ namespace MHServerEmu.Games.Missions
         public bool RestartingMission { get; private set; }
         public bool EventsRegistered { get; set; }
         public bool ReSuspended { get; set; }
+        public bool HasItemDrops { get => Prototype.HasItemDrops; }
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
@@ -2359,6 +2360,17 @@ namespace MHServerEmu.Games.Missions
             _partipantEvents[player.Id] = removePartipantEvent;
 
             return true;
+        }
+
+        public bool GetDropLootsForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
+        {
+            bool hasLoot = false;
+            if (HasItemDrops == false) return false;
+            foreach (var objective in _objectiveDict.Values)
+                if (objective.State == MissionObjectiveState.Active)
+                    hasLoot |= objective.GetDropLootsForEnemy(enemy, dropLoots);
+
+            return hasLoot;
         }
 
         protected class RemovePartipantEvent : CallMethodEventParam1<Mission, Player>

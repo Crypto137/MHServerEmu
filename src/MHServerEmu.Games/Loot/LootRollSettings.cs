@@ -35,6 +35,7 @@ namespace MHServerEmu.Games.Loot
         public Dictionary<AffixPosition, short> AffixLimitMinByPositionModifierDict { get; } = new();   // Modifies the minimum number of affixes for position
         public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifierDict { get; } = new();   // Modifies the maximum number of affixes for position
         public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
+        public PrototypeId MissionRef { get; set; }
 
         public LootRollSettings() { }
 

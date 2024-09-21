@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -138,11 +139,29 @@ namespace MHServerEmu.Games.Loot
             _resolver.SetContext(LootContext.Drop, player);
 
             lootTableProto.RollLootTable(settings, _resolver);
+            DropLootFromMissions(settings, source, _resolver);
             
             float maxDistanceFromSource = MathF.Min(75f + 25f * _resolver.ProcessedItemCount, 300f);
 
             foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
                 DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
+        }        
+
+        private void DropLootFromMissions(LootRollSettings settings, WorldEntity enemy, ItemResolver resolver)
+        {
+            var player = settings.Player;
+            List<MissionLootTable> lootList = new();
+            if (MissionManager.GetDropLootsForEnemy(enemy, player, lootList))
+            {
+                foreach (var missionLoot in lootList)
+                {
+                    var lootTableProto = missionLoot.LootTableRef.As<LootTablePrototype>();
+                    if (lootTableProto == null) continue;
+                    LootRollSettings dropSettings = new(settings);
+                    dropSettings.MissionRef = missionLoot.MissionRef;
+                    lootTableProto.RollLootTable(dropSettings, resolver);
+                }
+            }
         }
 
         public void TestLootTable(PrototypeId lootTableProtoRef, Player player)
@@ -166,6 +185,18 @@ namespace MHServerEmu.Games.Loot
                 Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
 
             Logger.Info("--- Loot Table Test Over ---");
+        }
+    }
+
+    public struct MissionLootTable
+    {
+        public PrototypeId MissionRef;
+        public PrototypeId LootTableRef;
+
+        public MissionLootTable(PrototypeId missionRef, PrototypeId lootTableRef)
+        {
+            MissionRef = missionRef;
+            LootTableRef = lootTableRef;
         }
     }
 }

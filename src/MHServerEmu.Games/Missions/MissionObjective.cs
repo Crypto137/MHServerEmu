@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
@@ -8,6 +9,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
 using MHServerEmu.Games.Properties.Evals;
@@ -832,6 +834,27 @@ namespace MHServerEmu.Games.Missions
             _timeLimitEvent.Get().Initialize(this);
 
             return true;
+        }
+
+        public bool GetDropLootsForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
+        {
+            var objectiveProto = Prototype;
+            if (objectiveProto.ItemDrops.IsNullOrEmpty()) return false;
+
+            var missionRef = Mission.PrototypeDataRef;
+            bool hasLoot = false;
+
+            foreach (var itemDrop in objectiveProto.ItemDrops)
+            {
+                if (itemDrop.EntityFilter == null) continue;
+                if (itemDrop.EntityFilter.Evaluate(enemy, new(missionRef)) && itemDrop.LootTablePrototype != PrototypeId.Invalid)
+                {
+                    dropLoots.Add(new(missionRef, itemDrop.LootTablePrototype));
+                    hasLoot = true;
+                }
+            }
+
+            return hasLoot;
         }
 
         protected class TimeLimitEvent : CallMethodEvent<MissionObjective>
