@@ -590,9 +590,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO
-            //Logger.Warn("Apply(): Not implemented");
-            settings.DropChanceModifiers |= LootDropChanceModifiers.MissionRestricted;
+            var player = settings.Player;
+            if (player == null) 
+            { 
+                Logger.Warn("Apply(): player == null");
+                return; 
+            };
+
+            if (Missions.HasValue())
+                foreach (var missionRef in Missions)
+                {
+                    var mission = MissionManager.FindMissionForPlayer(player, missionRef);
+                    var state = mission != null ? mission.State : MissionState.Invalid;
+                    if (state != RequiredState)
+                    {
+                        settings.DropChanceModifiers |= LootDropChanceModifiers.MissionRestricted;
+                        break;
+                    }
+                }
         }
     }
 }
