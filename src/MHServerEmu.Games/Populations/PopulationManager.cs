@@ -179,13 +179,18 @@ namespace MHServerEmu.Games.Populations
                 && Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) > 0)
             {
                 var currentTime = Game.CurrentTime;
+                bool normal = true;
                 foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
                     if (scheduler.CanSpawn(currentTime, true))
+                    {
                         scheduler.ScheduleMarkerObject(true);
+                        normal = false;
+                    }
 
-                foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                    if (scheduler.CanSpawn(currentTime, false))
-                        scheduler.ScheduleMarkerObject(false);
+                if (normal)
+                    foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
+                        if (scheduler.CanSpawn(currentTime, false))
+                            scheduler.ScheduleMarkerObject(false);
             }
 
             MarkerSchedule(markerRef);
