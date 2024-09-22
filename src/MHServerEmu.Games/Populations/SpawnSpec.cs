@@ -161,13 +161,13 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        public void OnDefeat(WorldEntity killer)
+        public void OnDefeat(WorldEntity killer, bool cleanUp = false)
         {
             if (State == SpawnState.Respawning) return;
-            if (Defeat(killer)) Group?.ScheduleClearCluster(ActiveEntity, killer);
+            if (Defeat(killer, cleanUp)) Group?.ScheduleClearCluster(ActiveEntity, killer);
         }
 
-        private bool Defeat(WorldEntity killer = null)
+        private bool Defeat(WorldEntity killer = null, bool cleanUp = false)
         {
             if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return false;
             State = SpawnState.Defeated;
@@ -187,26 +187,43 @@ namespace MHServerEmu.Games.Populations
                     }
                 }
             }
+
+            if (cleanUp)
+            {
+                ActiveEntity.ClearSpawnSpec();
+                ActiveEntity = null;
+            }
+
             return true;
         }
 
         public void Destroy()
         {
             if (State == SpawnState.Destroyed || State == SpawnState.Respawning) return;
-            if (State == SpawnState.Live || State == SpawnState.Pending) Defeat();
+            bool destroyGroup = false;
+            if (State == SpawnState.Live || State == SpawnState.Pending)
+            {
+                Defeat();
+                destroyGroup = true;
+            }
             State = SpawnState.Destroyed;
+
             var entity = ActiveEntity;
-            if (entity == null) return;
-            
-            var proto = entity.WorldEntityPrototype;
-            entity.ClearSpawnSpec();
-            TimeSpan time = TimeSpan.Zero;
-            if (entity.IsSimulated && entity.IsDead && proto.RemoveFromWorldTimerMS > 0)
-                time = TimeSpan.FromMilliseconds(proto.RemoveFromWorldTimerMS);
-            entity.ScheduleDestroyEvent(time);
-            ActiveEntity = null;
+            if (ActiveEntity != null)
+            {
+                var proto = entity.WorldEntityPrototype;
+                entity.ClearSpawnSpec();
+                TimeSpan time = TimeSpan.Zero;
+                if (entity.IsSimulated && entity.IsDead && proto.RemoveFromWorldTimerMS > 0)
+                    time = TimeSpan.FromMilliseconds(proto.RemoveFromWorldTimerMS);
+                entity.ScheduleDestroyEvent(time);
+                ActiveEntity = null;
+            }
 
             EntitySelectorProto?.SetUniqueEntity(EntityRef, entity.Region, false);
+
+            if (destroyGroup)
+                Group?.ScheduleClearCluster(entity, null);
         }
 
         public void Respawn()
@@ -215,6 +232,7 @@ namespace MHServerEmu.Games.Populations
             State = SpawnState.Respawning;
             if (ActiveEntity != null) 
             {
+                ActiveEntity.ClearSpawnSpec();
                 ActiveEntity.ScheduleDestroyEvent(TimeSpan.Zero);
                 ActiveEntity = null;
             }

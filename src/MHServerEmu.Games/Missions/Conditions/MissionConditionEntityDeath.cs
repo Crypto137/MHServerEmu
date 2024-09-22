@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             if (entity != null)
             {
-                Logger.Warn($"[{Mission.PrototypeName}] EntityDeath OnDeath entity [{entity.PrototypeName}]");
+                Logger.Warn($"[{Mission.PrototypeName}] EntityDeath OnDeath entity [{entity.PrototypeName}] [{Count + 1}/{RequiredCount}]");
                 if (_proto.OpenMissionContribValueDamage != 0.0f)
                     SetContributions(entity.TankingContributors, _proto.OpenMissionContribValueDamage);
                 if (_proto.OpenMissionContribValueTanking != 0.0f)
