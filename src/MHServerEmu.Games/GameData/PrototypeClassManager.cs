@@ -19,8 +19,8 @@ namespace MHServerEmu.Games.GameData
         private readonly Dictionary<Type, Func<Prototype>> _prototypeConstructorDict;
         private readonly Dictionary<System.Reflection.PropertyInfo, PrototypeFieldType> _prototypeFieldTypeDict = new();
 
-        private readonly Dictionary<Type, List<CachedPrototypeField>> _copyableFieldDict = new();
-        private readonly Dictionary<Type, List<CachedPrototypeField>> _postProcessableFieldDict = new();
+        private readonly Dictionary<Type, CachedPrototypeField[]> _copyableFieldDict = new();
+        private readonly Dictionary<Type, CachedPrototypeField[]> _postProcessableFieldDict = new();
 
         private static readonly Dictionary<Type, PrototypeFieldType> TypeToPrototypeFieldTypeEnumDict = new()
         {
@@ -241,13 +241,12 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns copyable fields for a given prototype type.
         /// </summary>
-        public IEnumerable<CachedPrototypeField> GetCopyablePrototypeFields(Type type)
+        public CachedPrototypeField[] GetCopyablePrototypeFields(Type type)
         {
             // Cache copyable fields for reuse
-            if (_copyableFieldDict.TryGetValue(type, out List<CachedPrototypeField> copyableFieldList) == false)
+            if (_copyableFieldDict.TryGetValue(type, out CachedPrototypeField[] copyableFields) == false)
             {
-                copyableFieldList = new();
-                _copyableFieldDict.Add(type, copyableFieldList);
+                List<CachedPrototypeField> copyableFieldList = new();
 
                 // Populate the the new list
                 foreach (var fieldInfo in type.GetProperties())
@@ -263,9 +262,13 @@ namespace MHServerEmu.Games.GameData
 
                     copyableFieldList.Add(new(fieldInfo, fieldType));
                 }
+
+                // Convert to array to avoid boxing while iterating
+                copyableFields = copyableFieldList.ToArray();
+                _copyableFieldDict.Add(type, copyableFields);
             }
 
-            return copyableFieldList;
+            return copyableFields;
         }
 
         /// <summary>
@@ -308,13 +311,12 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        private IEnumerable<CachedPrototypeField> GetPostProcessablePrototypeFields(Type type)
+        private CachedPrototypeField[] GetPostProcessablePrototypeFields(Type type)
         {
             // Cache post-processable fields for reuse
-            if (_postProcessableFieldDict.TryGetValue(type, out List<CachedPrototypeField> postProcessableFieldList) == false)
+            if (_postProcessableFieldDict.TryGetValue(type, out CachedPrototypeField[] postProcessableFields) == false)
             {
-                postProcessableFieldList = new();
-                _postProcessableFieldDict.Add(type, postProcessableFieldList);
+                List<CachedPrototypeField> postProcessableFieldList = new();
 
                 // Populate the the new list
                 foreach (var fieldInfo in type.GetProperties())
@@ -336,9 +338,13 @@ namespace MHServerEmu.Games.GameData
                             break;
                     }
                 }
+
+                // Convert to array to avoid boxing while iterating
+                postProcessableFields = postProcessableFieldList.ToArray();
+                _postProcessableFieldDict.Add(type, postProcessableFields);
             }
 
-            return postProcessableFieldList;
+            return postProcessableFields;
         }
 
         /// <summary>
