@@ -486,8 +486,9 @@ namespace MHServerEmu.Games.Populations
             Defeat(true, entityId, killerId);
             if (State != SpawnState.Defeated) return;
 
-            foreach (var spec in Specs)
+            foreach (var spec in Specs.ToArray())
             {
+                if (spec == null) continue;
                 bool alive = false;
                 if ((spec.State == SpawnState.Live || spec.State == SpawnState.Pending) && spec.ActiveEntity != null)
                 {

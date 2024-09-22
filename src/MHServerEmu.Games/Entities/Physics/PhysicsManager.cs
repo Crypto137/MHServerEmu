@@ -83,11 +83,11 @@ namespace MHServerEmu.Games.Entities.Physics
             if (worldEntity != null && worldEntity.IsInWorld)
             {
                 var entityPhysics = worldEntity.Physics;
-                var overlappedEntries = entityPhysics.OverlappedEntities.ToList();
-                foreach (var overlappedEntry in overlappedEntries)
+                var manager = _game.EntityManager;
+                foreach (var overlappedEntry in entityPhysics.OverlappedEntities.ToArray())
                     if (overlappedEntry.Value.Frame != _physicsFrames)
                     {
-                        var overlappedEntity = _game.EntityManager.GetEntity<WorldEntity>(overlappedEntry.Key);
+                        var overlappedEntity = manager.GetEntity<WorldEntity>(overlappedEntry.Key);
                         if (overlappedEntity != null)
                             overlapEvents.Enqueue(new (OverlapEventType.Remove, worldEntity, overlappedEntity));
                         else
@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Entities.Physics
         private void UpdateAttachedEntityPositions(PhysicsContext physicsContext, WorldEntity parentEntity)
         {
             if (parentEntity == null) return;
-            if (parentEntity.Physics.GetAttachedEntities(out List<ulong> attachedEntities))
+            if (parentEntity.Physics.GetAttachedEntities(out ulong[] attachedEntities))
             {
                 Vector3 parentEntityPosition = parentEntity.RegionLocation.Position;
                 Orientation parentEntityOrientation = parentEntity.Orientation;

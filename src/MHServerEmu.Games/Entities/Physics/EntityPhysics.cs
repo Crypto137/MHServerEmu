@@ -77,14 +77,14 @@ namespace MHServerEmu.Games.Entities.Physics
             _hasExternalForces[index] = false;
         }
 
-        public bool GetAttachedEntities(out List<ulong> attachedEntities)
+        public bool GetAttachedEntities(out ulong[] attachedEntities)
         {            
             if (AttachedEntities == null) {
                 attachedEntities = null;
                 return false; 
             }
-            attachedEntities = AttachedEntities.ToList();
-            return attachedEntities.Count > 0;
+            attachedEntities = AttachedEntities.ToArray();
+            return attachedEntities.Length > 0;
         }
 
         public void AddRepulsionForce(Vector3 force)

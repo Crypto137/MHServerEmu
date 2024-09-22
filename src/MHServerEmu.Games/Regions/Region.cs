@@ -567,13 +567,9 @@ namespace MHServerEmu.Games.Regions
 
         public IEnumerable<Area> IterateAreas(Aabb? bound = null)
         {
-            List<Area> areasList = Areas.Values.ToList();   // TODO: Change this to ToArray()
-            foreach (Area area in areasList)
-            {
-                //Area area = enumerator.Current.Value;
+            foreach (var area in Areas.Values.ToArray())
                 if (bound == null || area.RegionBounds.Intersects(bound.Value))
                     yield return area;
-            }
         }
 
         public void RebuildBlackOutZone(BlackOutZone zone)
