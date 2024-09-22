@@ -335,8 +335,8 @@ namespace MHServerEmu.Games.Navi
             var p2 = triangle.PointCW(2);
             NaviPoint[] points = { p0, p1, p2 };
 
-            bool[] degenerates = new bool[3];
-            bool[] splits = new bool[3];
+            Span<bool> degenerates = stackalloc bool[3];
+            Span<bool> splits = stackalloc bool[3];
 
             for (int i = 0; i < 3; i++)
             {

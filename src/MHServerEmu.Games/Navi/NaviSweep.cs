@@ -584,11 +584,12 @@ namespace MHServerEmu.Games.Navi
 
             float distanceToIntersect = 0.0f;
             float minDistance = float.MaxValue;
+            Span<bool> testIndex = stackalloc bool[3];
 
             while (triStack.Count > 0)
             {
                 NaviTriangle triangle = triStack.Pop();
-                bool[] testIndex = new bool[3];
+                testIndex.Clear();
 
                 for (int i = 0; i < 3; i++)
                 {
