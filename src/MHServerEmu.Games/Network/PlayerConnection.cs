@@ -279,9 +279,6 @@ namespace MHServerEmu.Games.Network
         {
             var oldRegion = AOI.Region;
 
-            // Simulate exiting and re-entering the game on a real GIS
-            ExitGame();
-
             // Update our target
             TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
 
@@ -292,6 +289,9 @@ namespace MHServerEmu.Games.Network
             Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
 
             oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
+
+            // Simulate exiting and re-entering the game on a real GIS
+            ExitGame();
 
             Game.NetworkManager.SetPlayerConnectionPending(this);
         }
