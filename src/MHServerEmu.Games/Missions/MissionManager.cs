@@ -1097,10 +1097,7 @@ namespace MHServerEmu.Games.Missions
 
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
         {
-            MissionPrototypeId.CH00TrainingPathingController,
-            MissionPrototypeId.CH00NPETrainingRoom,
-
-            MissionPrototypeId.CivilWarDailyCapOM01DefeatSpiderman,
+         /*   MissionPrototypeId.CivilWarDailyCapOM01DefeatSpiderman,
             MissionPrototypeId.CivilWarDailyCapOM02DestroyCrates,
             MissionPrototypeId.CivilWarDailyCapOM03DefeatThor,
             MissionPrototypeId.CivilWarDailyCapOM04SaveDumDum,
@@ -1113,9 +1110,9 @@ namespace MHServerEmu.Games.Missions
             MissionPrototypeId.CivilWarDailyIronmanOM04DestroyCrates,
             MissionPrototypeId.CivilWarDailyIronmanOM05HydraZoo,
             MissionPrototypeId.CivilWarDailyIronmanOM06TeamUpDefeatAIM,
-            MissionPrototypeId.CivilWarDailyIronmanOM07InteractDefeatHand,
+            MissionPrototypeId.CivilWarDailyIronmanOM07InteractDefeatHand,*/
 
-            MissionPrototypeId.Ch09ActivateSiegeDoorDefense,
+            MissionPrototypeId.SiegeMissionGiverController,
         };
 
         // TODO replace this mission to MetaStates
@@ -1253,6 +1250,7 @@ namespace MHServerEmu.Games.Missions
             CH9HYDRAMediumV5 = 9668348228504001684,
             CH9HYDRAMediumV6 = 2291973203088448661,
             // Siege
+            SiegeMissionGiverController = 1084743840769385009,
             Ch09ActivateSiegeDoorDefense = 17270497231078564226,
             OMSiegeDropshipAssault = 12090724917985880814,
             OMSiegeRescue = 3946739667481535280,

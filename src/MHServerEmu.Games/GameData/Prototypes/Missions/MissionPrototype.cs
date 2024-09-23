@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
+using static MHServerEmu.Games.Missions.MissionManager;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -360,9 +361,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override bool ApprovedForUse()
         {
             // TODO: console support
-            /*        
+                   
             if (DisabledMissions.Contains((MissionPrototypeId)DataRef)) return false;
-            if (EventMissions.Contains((MissionPrototypeId)DataRef)) return true; */       
+           //  if (EventMissions.Contains((MissionPrototypeId)DataRef)) return true;    
             return GameDatabase.DesignStateOk(DesignState);
         }
 
