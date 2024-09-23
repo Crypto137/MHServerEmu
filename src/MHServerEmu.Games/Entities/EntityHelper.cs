@@ -53,6 +53,31 @@ namespace MHServerEmu.Games.Entities
             return orb;
         }
 
+        public static void OnDeathSummonFromPowerPrototype(WorldEntity entity, SummonPowerPrototype summonPowerProto)
+        {
+            AssetId creatorAsset = entity.GetEntityWorldAsset();
+            if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
+            PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
+            var summonerProto = entity.WorldEntityPrototype;
+
+            var settings = new EntitySettings
+            {
+                EntityRef = summonerRef,
+                Properties = new PropertyCollection
+                {
+                    [PropertyEnum.NoMissileCollide] = true, // EvalOnCreate
+                    [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
+                    [PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset,
+                    [PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef,
+                    [PropertyEnum.SummonedByPower] = true,
+                    [PropertyEnum.Rank] = summonerProto.Rank,
+                }
+            };
+            Agent summoner = (Agent)entity.Game.EntityManager.CreateEntity(settings);
+            EntitySettings setting = new() { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer };
+            summoner.EnterWorld(entity.Region, entity.RegionLocation.Position, entity.RegionLocation.Orientation, setting);
+        }
+
         public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto)
         {
             AssetId creatorAsset = avatar.GetEntityWorldAsset();
