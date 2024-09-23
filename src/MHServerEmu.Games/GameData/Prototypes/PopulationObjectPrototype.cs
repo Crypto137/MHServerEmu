@@ -363,7 +363,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (markerSet == null) return;
                     
             group.Flags |= ClusterObjectFlag.SkipFormation;
-            // group.Properties.SetProperty<PrototypeId>(encounterResourceRef, PropertyEnum.EncounterResource);
+            group.Properties[PropertyEnum.EncounterResource] = encounterResourceRef;
 
             foreach (var marker in markerSet.Markers)
             {
