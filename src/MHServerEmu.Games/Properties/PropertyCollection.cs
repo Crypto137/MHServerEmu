@@ -345,7 +345,7 @@ namespace MHServerEmu.Games.Properties
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
             // Update curve properties that rely on this property as an index property
-            foreach (var kvp in IterateCurveProperties())
+            foreach (var kvp in _curveList)
             {
                 if (kvp.Value.IndexPropertyId == id)
                     UpdateCurvePropertyValue(kvp.Value, flags, null);
@@ -396,7 +396,7 @@ namespace MHServerEmu.Games.Properties
                 SetPropertyValue(kvp.Key, kvp.Value, SetPropertyFlags.None);
 
             // Transfer curve properties
-            foreach (var kvp in other.IterateCurveProperties())
+            foreach (var kvp in other._curveList)
             {
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
                 SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, SetPropertyFlags.None, cleanCopy);
@@ -405,7 +405,7 @@ namespace MHServerEmu.Games.Properties
             // Update curve property values if this is a combination of two different collections rather than a clean copy
             if (cleanCopy == false)
             {
-                foreach (var kvp in IterateCurveProperties())
+                foreach (var kvp in _curveList)
                 {
                     PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
                     UpdateCurvePropertyValue(kvp.Value, SetPropertyFlags.None, info);
@@ -905,15 +905,6 @@ namespace MHServerEmu.Games.Properties
                 return null;
 
             return curveProp;
-        }
-
-        /// <summary>
-        /// Returns an <see cref="IEnumerable"/> of curve property key/value pairs contained in this <see cref="PropertyCollection"/>.
-        /// </summary>
-        protected IEnumerable<KeyValuePair<PropertyId, CurveProperty>> IterateCurveProperties()
-        {
-            foreach (var kvp in _curveList)
-                yield return kvp;
         }
 
         /// <summary>
