@@ -1,6 +1,6 @@
 ﻿namespace MHServerEmu.Core.Collections
 {
-    public class Range<T> where T : IComparable<T>
+    public struct Range<T> where T : IComparable<T>
     {
         public T Min { get; private set; }
         public T Max { get; private set; }
