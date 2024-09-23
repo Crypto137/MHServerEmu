@@ -467,7 +467,7 @@ namespace MHServerEmu.Games.Populations
         {
             var scheduler = Game.GameEventScheduler;
             var timeOffset = TimeSpan.Zero;
-            if (entity.SpawnSpec != null)
+            if (entity?.SpawnSpec != null)
                 timeOffset = entity.SpawnSpec.PostContactDelayMS;
 
             if (_clearClusterEvent.IsValid)
