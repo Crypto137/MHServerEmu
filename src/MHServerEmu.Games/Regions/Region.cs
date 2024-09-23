@@ -1582,7 +1582,7 @@ namespace MHServerEmu.Games.Regions
             do
             {
                 index = (index + 1) % size;
-                if ((mask & (1UL << index)) == 0) return;
+                if (MathHelper.EBitTest(mask, index) == false) return;
             }
             while (index != start);
         }

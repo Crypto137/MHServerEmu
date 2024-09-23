@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
@@ -29,7 +30,7 @@ namespace MHServerEmu.Games.Populations
         private readonly EventPointer<LocationSpawnEvent> _locationSpawnEvent = new();
 
         private BlackOutSpatialPartition _blackOutSpatialPartition;
-        private readonly Dictionary<KeyValuePair<PrototypeId, PrototypeId>, ulong> _encounterSpawnPhases = new();
+        private readonly Dictionary<(PrototypeId, PrototypeId), ulong> _encounterSpawnPhases = new();
 
         private ulong _nextBlackOutId;
         private ulong NextBlackOutId() => _nextBlackOutId++;
@@ -343,9 +344,9 @@ namespace MHServerEmu.Games.Populations
 
         public void ResetEncounterSpawnPhase(PrototypeId missionRef)
         {
-            List<KeyValuePair<PrototypeId, PrototypeId>> keysToRemove = new ();
+            List<(PrototypeId, PrototypeId)> keysToRemove = new ();
             foreach (var pair in _encounterSpawnPhases)
-                if (pair.Key.Value == missionRef)
+                if (pair.Key.Item2 == missionRef)
                     keysToRemove.Add(pair.Key);
 
             foreach (var key in keysToRemove)
@@ -355,9 +356,13 @@ namespace MHServerEmu.Games.Populations
         public void SpawnEncounterPhase(int encounterPhase, PrototypeId encounterRef, PrototypeId missionRef)
         {
             if (encounterRef == PrototypeId.Invalid || encounterPhase == 0) return;
-            KeyValuePair<PrototypeId, PrototypeId> key = new(encounterRef, missionRef);
-            if (_encounterSpawnPhases.TryGetValue(key, out var _)) return;
+
+            var key = (encounterRef, missionRef);
+            if (_encounterSpawnPhases.TryGetValue(key, out ulong foundPhase) 
+                && MathHelper.EBitTest(foundPhase, encounterPhase)) return;
+
             _encounterSpawnPhases[key] = 1ul << encounterPhase;
+
             foreach(var group in _spawnGroups.Values)
             {
                 if (group == null) continue;
@@ -367,7 +372,7 @@ namespace MHServerEmu.Games.Populations
                         {
                             if (spec == null) continue;
                             spec.Properties[PropertyEnum.EncounterResource] = encounterRef;
-                            if (spec.EncounterSpawnPhase == encounterPhase)
+                            if (spec.EncounterSpawnPhase == encounterPhase && spec.ActiveEntity == null)                                
                                 spec.Spawn();
                         }
             }
@@ -376,14 +381,14 @@ namespace MHServerEmu.Games.Populations
         public bool CheckEncounterPhase(int encounterPhase, PrototypeId encounterRef, PrototypeId missionRef)
         {
             if (encounterPhase == 0) return true;
-            KeyValuePair<PrototypeId, PrototypeId> key = new(encounterRef, missionRef);
 
+            var key = (encounterRef, missionRef);
             if (_encounterSpawnPhases.TryGetValue(key, out var foundPhase)) 
-                if ((foundPhase & (1ul << encounterPhase)) != 0 ) return true;
+                if (MathHelper.EBitTest(foundPhase, encounterPhase)) return true;
 
-            key = new(encounterRef, PrototypeId.Invalid);
+            key = (encounterRef, PrototypeId.Invalid);
             if (_encounterSpawnPhases.TryGetValue(key, out var noMissionPhase))
-                if ((noMissionPhase & (1ul << encounterPhase)) != 0) return true;
+                if (MathHelper.EBitTest(noMissionPhase, encounterPhase)) return true;
 
             return false;
         }

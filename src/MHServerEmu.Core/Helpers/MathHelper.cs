@@ -37,6 +37,26 @@
             value |= bitMask;
         }
 
+        public static void BitSet(ref ulong value, ulong bitMask)
+        {
+            value |= bitMask;
+        }
+
+        public static void EBitSet(ref ulong value, int bit)
+        {
+            BitSet(ref value, 1UL << bit);
+        }
+
+        public static bool EBitTest(ulong value, int bit)
+        {
+            return BitTest(value, 1UL << bit);
+        }
+
+        public static bool BitTest(ulong value, ulong bitMask)
+        {
+            return (value & bitMask) != 0;
+        }
+
         public static bool BitTest(int value, int bitMask)
         {
             return (value & bitMask) != 0;
