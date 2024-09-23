@@ -90,20 +90,6 @@ namespace MHServerEmu.Games.Missions
             Prototype = mission.GetObjectivePrototypeByIndex(prototypeIndex);
         }
 
-        public MissionObjective(byte prototypeIndex, MissionObjectiveState objectiveState, TimeSpan objectiveStateExpireTime,
-            IEnumerable<InteractionTag> interactedEntities, ushort currentCount, ushort requiredCount, ushort failCurrentCount, 
-            ushort failRequiredCount)
-        {
-            _prototypeIndex = prototypeIndex;            
-            _objectiveState = objectiveState;
-            _objectiveStateExpireTime = objectiveStateExpireTime;
-            _interactedEntityList.AddRange(interactedEntities);
-            _currentCount = currentCount;
-            _requiredCount = requiredCount;
-            _failCurrentCount = failCurrentCount;
-            _failRequiredCount = failRequiredCount;
-        }
-
         public void Destroy()
         {
             Game.GameEventScheduler?.CancelAllEvents(EventGroup);

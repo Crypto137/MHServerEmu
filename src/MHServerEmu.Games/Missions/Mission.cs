@@ -168,34 +168,6 @@ namespace MHServerEmu.Games.Missions
             _currentObjectiveSequence = -1;
         }
 
-        // OLD
-        public Mission(MissionState state, TimeSpan timeExpireCurrentState, PrototypeId prototypeDataRef,
-            int lootSeed, IEnumerable<MissionObjective> objectives, IEnumerable<ulong> participants, bool isSuspended)
-        {
-            _state = state;
-            _timeExpireCurrentState = timeExpireCurrentState;
-            _prototypeDataRef = prototypeDataRef;
-            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
-            _lootSeed = lootSeed;
-
-            foreach (MissionObjective objective in objectives)
-                _objectiveDict.Add(objective.PrototypeIndex, objective);
-
-            _participants.UnionWith(participants);
-            _isSuspended = isSuspended;
-        }
-
-        public Mission(PrototypeId prototypeDataRef, int lootSeed)
-        {
-            _state = MissionState.Active;
-            _timeExpireCurrentState = TimeSpan.Zero;
-            _prototypeDataRef = prototypeDataRef;
-            Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
-            _lootSeed = lootSeed;
-
-            _objectiveDict.Add(0, new(0x0, MissionObjectiveState.Active, TimeSpan.Zero, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0));
-        }
-
         public void Destroy()
         {
             foreach (var objective in _objectiveDict.Values)

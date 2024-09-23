@@ -52,9 +52,38 @@ namespace MHServerEmu.Games.Missions
         private HashSet<ulong> _missionInterestEntities = new();
         private InteractionOptimizationFlags _optimizationFlag;
 
-        public MissionManager()
+        public MissionManager(Game game, IMissionManagerOwner owner)
         {
+            Game = game;
+            Owner = owner;
             _optimizationFlag = InteractionOptimizationFlags.Hint | InteractionOptimizationFlags.Visibility;
+            AreaCreatedAction = OnAreaCreated;
+            CellCreatedAction = OnCellCreated;
+            EntityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
+            EntityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;
+            PlayerLeftRegionAction = OnPlayerLeftRegion;
+            PlayerInteractAction = OnPlayerInteract;
+            PlayerCompletedMissionAction = OnPlayerCompletedMission;
+            PlayerFailedMissionAction = OnPlayerFailedMission;
+        }
+
+        public void Deallocate()
+        {
+            _missionInterestEntities.Clear();
+
+            foreach (var mission in _missionDict.Values)
+                mission.Destroy();
+
+            _missionDict.Clear();
+            _legendaryMissionBlacklist.Clear();
+        }
+
+        public void Shutdown(Region region)
+        {
+            IsInitialized = false;
+            Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
+            if (EventsRegistred && region != null)
+                UnRegisterEvents(region);
         }
 
         public bool Serialize(Archive archive)
@@ -82,21 +111,6 @@ namespace MHServerEmu.Games.Missions
             }
 
             return sb.ToString();
-        }
-
-        public MissionManager(Game game, IMissionManagerOwner owner)
-        {
-            Game = game;
-            Owner = owner;
-            _optimizationFlag = InteractionOptimizationFlags.Hint | InteractionOptimizationFlags.Visibility;
-            AreaCreatedAction = OnAreaCreated;
-            CellCreatedAction = OnCellCreated;
-            EntityEnteredMissionHotspotAction = OnEntityEnteredMissionHotspot;
-            EntityLeftMissionHotspotAction = OnEntityLeftMissionHotspot;
-            PlayerLeftRegionAction = OnPlayerLeftRegion;
-            PlayerInteractAction = OnPlayerInteract;
-            PlayerCompletedMissionAction = OnPlayerCompletedMission;
-            PlayerFailedMissionAction = OnPlayerFailedMission;
         }
 
         public bool InitializeForPlayer(Player player, Region region)
@@ -494,25 +508,6 @@ namespace MHServerEmu.Games.Missions
             if (_missionDict.TryGetValue(missionRef, out Mission mission) == false) return;
             mission.Destroy();
             _missionDict.Remove(missionRef);
-        }
-
-        public void Deallocate()
-        {
-            _missionInterestEntities.Clear();
-
-            foreach (var mission in _missionDict.Values)
-                mission.Destroy();
-
-            _missionDict.Clear();
-            _legendaryMissionBlacklist.Clear();
-        }
-
-        public void Shutdown(Region region)
-        {
-            IsInitialized = false;
-            Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
-            if (EventsRegistred && region != null)
-                UnRegisterEvents(region);
         }
 
         public bool GenerateMissionPopulation()

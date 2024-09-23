@@ -58,7 +58,6 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly EventGroup _pendingEvents = new();
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
 
@@ -874,7 +873,7 @@ namespace MHServerEmu.Games.Entities
         public void ScheduleSwitchAvatarEvent()
         {
             // Schedule avatar switch at the end of the current frame to let switch power application finish first
-            SchedulePlayerEvent(_switchAvatarEvent, TimeSpan.Zero);
+            ScheduleEntityEvent(_switchAvatarEvent, TimeSpan.Zero);
         }
 
         public bool SwitchAvatar()
@@ -1756,7 +1755,7 @@ namespace MHServerEmu.Games.Entities
 
                     CancelScheduledHUDTutorialEvent();
                     if (hudTutorialProto.DisplayDurationMS > 0)
-                        SchedulePlayerEvent(_hudTutorialResetEvent, TimeSpan.FromMilliseconds(hudTutorialProto.DisplayDurationMS));
+                        ScheduleEntityEvent(_hudTutorialResetEvent, TimeSpan.FromMilliseconds(hudTutorialProto.DisplayDurationMS));
                 }
             }
         }
@@ -1776,15 +1775,6 @@ namespace MHServerEmu.Games.Entities
             ShowHUDTutorial(null);
         }
 
-        public void SchedulePlayerEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
-            where TEvent : CallMethodEvent<Player>, new()
-        {
-            var scheduler = Game?.GameEventScheduler;
-            if (scheduler == null) return;
-            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
-            eventPointer.Get().Initialize(this);
-        }
-
         public void MissionInteractRelease(WorldEntity entity, PrototypeId missionRef)
         {
             if (missionRef == PrototypeId.Invalid) return;                 
@@ -1792,14 +1782,14 @@ namespace MHServerEmu.Games.Entities
                 SendMessage(NetMessageMissionInteractRelease.DefaultInstance);            
         }
 
-        private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Player>
+        private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
         {
-            protected override CallbackDelegate GetCallback() => (t) => t.ResetHUDTutorial();
+            protected override CallbackDelegate GetCallback() => (t) => (t as Player).ResetHUDTutorial();
         }
 
-        private class SwitchAvatarEvent : CallMethodEvent<Player>
+        private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
-            protected override CallbackDelegate GetCallback() => (t) => t.SwitchAvatar();
+            protected override CallbackDelegate GetCallback() => (t) => (t as Player).SwitchAvatar();
         }
 
         private struct TeleportData
