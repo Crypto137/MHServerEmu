@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
@@ -58,12 +59,11 @@ namespace MHServerEmu.Games.Entities
             if (hotspotRef != PrototypeId.Invalid)
             {
                 if (Region == null) return;
-                EntitySettings hotspotSettings = new()
-                {
-                    EntityRef = hotspotRef,
-                    RegionId = Region.Id,
-                    Position = RegionLocation.Position,
-                };
+
+                using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                hotspotSettings.EntityRef = hotspotRef;
+                hotspotSettings.RegionId = Region.Id;
+                hotspotSettings.Position = RegionLocation.Position;
 
                 var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
                 if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -54,12 +55,11 @@ namespace MHServerEmu.Games.Entities
             {
                 var waypointHotspotRef = GameDatabase.GlobalsPrototype.WaypointHotspot;
 
-                var hotspotSettings = new EntitySettings()
-                {
-                    EntityRef = waypointHotspotRef,
-                    RegionId = Region.Id,
-                    Position = RegionLocation.Position
-                };
+                using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                hotspotSettings.EntityRef = waypointHotspotRef;
+                hotspotSettings.RegionId = Region.Id;
+                hotspotSettings.Position = RegionLocation.Position;
+
                 var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
                 if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
 

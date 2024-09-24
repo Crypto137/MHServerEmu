@@ -384,7 +384,7 @@ namespace MHServerEmu.Games.Regions
             // MetaGames create
             if (regionProto.MetaGames.HasValue())
             {
-                PropertyCollection metaCollection = new();
+                using PropertyCollection metaCollection = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 var entryProto = regionProto.GetRegionQueueStateEntry(settings.GameStateId);
                 if (entryProto != null && entryProto.State != PrototypeId.Invalid && entryProto.StateParent != PrototypeId.Invalid)
                 {
@@ -398,12 +398,11 @@ namespace MHServerEmu.Games.Regions
 
                 foreach (var metaGameRef in regionProto.MetaGames)
                 {
-                    EntitySettings metaSettings = new()
-                    {
-                        RegionId = Id,
-                        EntityRef = metaGameRef,
-                        Properties = metaCollection
-                    };
+                    using EntitySettings metaSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    metaSettings.RegionId = Id;
+                    metaSettings.EntityRef = metaGameRef;
+                    metaSettings.Properties = metaCollection;
+
                     var metagame = Game.EntityManager.CreateEntity(metaSettings);
                     if (metagame == null) Logger.Warn($"Initialize(): metagame [{metaGameRef}] == null");
                 }

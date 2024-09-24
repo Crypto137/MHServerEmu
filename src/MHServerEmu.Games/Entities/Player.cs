@@ -837,11 +837,9 @@ namespace MHServerEmu.Games.Entities
             var inventory = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
             if (inventory == null) return;
 
-            EntitySettings settings = new()
-            {
-                InventoryLocation = new(Id, inventory.PrototypeDataRef),
-                EntityRef = teamUpRef
-            };
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+            settings.EntityRef = teamUpRef;
 
             var teamUp = manager.CreateEntity(settings) as Agent;
             if (teamUp == null) return;
