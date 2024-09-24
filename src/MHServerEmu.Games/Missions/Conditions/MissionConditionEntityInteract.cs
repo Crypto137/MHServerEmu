@@ -1,5 +1,6 @@
 using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -226,7 +227,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             {
                 var brain = GameDatabase.GetPrototype<BrainPrototype>(brainOverride);
                 if (brain is not ProceduralAIProfilePrototype profile) return;
-                var collection = new PropertyCollection();
+                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 collection[PropertyEnum.AIAssistedEntityID] = player.Id;
                 agent.InitAIOverride(profile, collection);
             }

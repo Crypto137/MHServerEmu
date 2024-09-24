@@ -80,7 +80,8 @@ namespace MHServerEmu.Games.Missions.Actions
             {
                 var brain = GameDatabase.GetPrototype<BrainPrototype>(brainOverride);
                 if (brain is not ProceduralAIProfilePrototype profile) return false;
-                agent.InitAIOverride(profile, new());
+                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                agent.InitAIOverride(profile, collection);
             }
             return true;
         }
