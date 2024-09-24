@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -53,7 +54,8 @@ namespace MHServerEmu.Games.Missions.Actions
 
                 if (_proto.EvalProperties != null)
                 {
-                    EvalContextData evalContext = new(agent.Game);
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.Game = agent.Game;
                     evalContext.SetVar_EntityPtr(EvalContext.Default, agent);
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Other, agent.Region.Properties);
                     Eval.RunBool(_proto.EvalProperties, evalContext);

@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
@@ -289,7 +290,8 @@ namespace MHServerEmu.Games.MetaGames
 
             if (stateProto.EvalCanActivate != null)
             {
-                EvalContextData contextData = new(Game);
+                using EvalContextData contextData = ObjectPoolManager.Instance.Get<EvalContextData>();
+                contextData.Game = Game;
                 contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Region.Properties);
                 contextData.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
                 if (Eval.RunBool(stateProto.EvalCanActivate, contextData) == false) return false;

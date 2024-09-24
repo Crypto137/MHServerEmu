@@ -106,7 +106,6 @@ namespace MHServerEmu.Games.Entities
             Properties = null;
             Cell = null;
             Actions = null;
-            ActionsTarget = PrototypeId.Invalid;
             SpawnSpec = null;
             LocomotorHeightOverride = 0f;
 

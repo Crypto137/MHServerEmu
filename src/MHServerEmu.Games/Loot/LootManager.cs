@@ -155,7 +155,8 @@ namespace MHServerEmu.Games.Loot
                 {
                     var lootTableProto = missionLoot.LootTableRef.As<LootTablePrototype>();
                     if (lootTableProto == null) continue;
-                    LootRollSettings dropSettings = new(settings);
+                    using LootRollSettings dropSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                    dropSettings.Set(settings);
                     dropSettings.MissionRef = missionLoot.MissionRef;
                     lootTableProto.RollLootTable(dropSettings, resolver);
                 }

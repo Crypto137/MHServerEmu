@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
@@ -422,7 +423,8 @@ namespace MHServerEmu.Games.Missions
                     var region = Region;
                     if (region != null)
                     {
-                        EvalContextData evalContext = new(Game);
+                        using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                        evalContext.Game = Game;
                         evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
                         if (region.MetaGames.Count > 0)
                         {

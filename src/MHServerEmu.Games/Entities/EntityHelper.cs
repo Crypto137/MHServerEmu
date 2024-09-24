@@ -62,22 +62,28 @@ namespace MHServerEmu.Games.Entities
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
             var summonerProto = entity.WorldEntityPrototype;
 
-            var settings = new EntitySettings
+            Agent summoner;
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
             {
-                EntityRef = summonerRef,
-                Properties = new PropertyCollection
-                {
-                    [PropertyEnum.NoMissileCollide] = true, // EvalOnCreate
-                    [PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset,
-                    [PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset,
-                    [PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef,
-                    [PropertyEnum.SummonedByPower] = true,
-                    [PropertyEnum.Rank] = summonerProto.Rank,
-                }
-            };
-            Agent summoner = (Agent)entity.Game.EntityManager.CreateEntity(settings);
-            EntitySettings setting = new() { OptionFlags = EntitySettingsOptionFlags.IsNewOnServer };
-            summoner.EnterWorld(entity.Region, entity.RegionLocation.Position, entity.RegionLocation.Orientation, setting);
+                settings.EntityRef = summonerRef;
+
+                properties[PropertyEnum.NoMissileCollide] = true; // EvalOnCreate
+                properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
+                properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
+                properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
+                properties[PropertyEnum.SummonedByPower] = true;
+                properties[PropertyEnum.Rank] = summonerProto.Rank;
+                settings.Properties = properties;
+
+                summoner = (Agent)entity.Game.EntityManager.CreateEntity(settings);
+            }
+
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            {
+                settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer;
+                summoner.EnterWorld(entity.Region, entity.RegionLocation.Position, entity.RegionLocation.Orientation, settings);
+            }
         }
 
         public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto)

@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
@@ -537,7 +538,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             if (EvalSpawnProperties == null) return;
-            EvalContextData evalContext = new(region.Game);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = region.Game;
             evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, metaGame);
