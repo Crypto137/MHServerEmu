@@ -8,7 +8,6 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
@@ -44,7 +43,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public static MetaGameMode CreateGameMode(MetaGame metaGame, PrototypeId modeRef)
         {
             var gamemodeProto = GameDatabase.GetPrototype<MetaGameModePrototype>(modeRef);
-            if (MissionManager.Debug) Logger.Debug($"CreateGameMode {GameDatabase.GetFormattedPrototypeName(modeRef)} {gamemodeProto.GetType().Name}");
+            if (MetaGame.Debug) Logger.Debug($"CreateGameMode {GameDatabase.GetFormattedPrototypeName(modeRef)} {gamemodeProto.GetType().Name}");
             return gamemodeProto.AllocateGameMode(metaGame);
         }
 
@@ -61,7 +60,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public virtual void OnActivate()
         {
             var proto = Prototype;
-            if (MissionManager.Debug) Logger.Debug($"OnActivate {GameDatabase.GetFormattedPrototypeName(proto.DataRef)} {proto.GetType().Name}");
+            if (MetaGame.Debug) Logger.Debug($"OnActivate {GameDatabase.GetFormattedPrototypeName(proto.DataRef)} {proto.GetType().Name}");
 
             _startTime = Game.CurrentTime;
             Region.EntityEnteredWorldEvent.AddActionBack(_entityEnteredWorldAction);

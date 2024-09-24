@@ -26,6 +26,7 @@ namespace MHServerEmu.Games.MetaGames
     public class MetaGame : Entity
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
+        public static bool Debug = true;
 
         protected RepString _name;
         protected ulong _regionId;
@@ -304,7 +305,7 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (CanApplyState(stateRef, skipCooldown) == false) return false;
             var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
-            if (MissionManager.Debug) Logger.Trace($"ApplyMetaState {GameDatabase.GetFormattedPrototypeName(stateProto.DataRef)} in {GameDatabase.GetFormattedPrototypeName(PrototypeDataRef)}");
+            if (Debug) Logger.Trace($"ApplyMetaState {GameDatabase.GetFormattedPrototypeName(stateProto.DataRef)} in {GameDatabase.GetFormattedPrototypeName(PrototypeDataRef)}");
             RemoveGroups(stateProto.RemoveGroups);
             RemoveStates(stateProto.RemoveStates);
 

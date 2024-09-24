@@ -4,7 +4,6 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -33,7 +32,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         public static MetaState CreateMetaState(MetaGame metaGame, PrototypeId stateRef)
         {
             var stateProto = GameDatabase.GetPrototype<MetaStatePrototype>(stateRef);
-            if (MissionManager.Debug) Logger.Debug($"CreateMetaState {GameDatabase.GetFormattedPrototypeName(stateRef)} {stateProto.GetType().Name}");
+            if (MetaGame.Debug) Logger.Debug($"CreateMetaState {GameDatabase.GetFormattedPrototypeName(stateRef)} {stateProto.GetType().Name}");
             return stateProto.AllocateState(metaGame);
         }
 
@@ -46,7 +45,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         protected void ActivateMission(PrototypeId missionRef)
         {
             var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-            if (MissionManager.Debug) Logger.Debug($"ActivateMission {GameDatabase.GetFormattedPrototypeName(missionRef)} {Prototype.GetType().Name}");
+            if (MetaGame.Debug) Logger.Debug($"ActivateMission {GameDatabase.GetFormattedPrototypeName(missionRef)} {Prototype.GetType().Name}");
             if (missionProto is not OpenMissionPrototype) return;
 
             var manager = Region?.MissionManager;

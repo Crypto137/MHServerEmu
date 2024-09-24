@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Missions
     public class MissionManager : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public static bool Debug = true;
+        public static bool Debug = false;
 
         private EventGroup _pendingEvents = new();
         private PrototypeId _avatarPrototypeRef;
