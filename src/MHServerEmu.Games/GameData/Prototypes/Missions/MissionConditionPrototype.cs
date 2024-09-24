@@ -943,6 +943,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
+            if (mission.PrototypeDataRef == (PrototypeId)15661355948139159329) // Hardfix CH04TR07Basement
+            {   
+                Region = (PrototypeId)3901343846271426331; // CH04TR07Basement
+                if (TargetFilter is EntityFilterFilterListPrototype filterList)
+                {
+                    var filter = filterList.Filters[0] as EntityFilterHasKeywordPrototype;
+                    if (filter?.Keyword == (PrototypeId)11166669287029412303) // Maggia
+                        filter.SetKeyword((PrototypeId)6870096780498112679); // Mob
+                }
+            }
+
             return new MissionConditionRegionContains(mission, owner, this);
         }
     }

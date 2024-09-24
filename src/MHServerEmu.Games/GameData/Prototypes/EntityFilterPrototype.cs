@@ -116,6 +116,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (entity == null) return false;
             return entity.HasKeyword(Keyword);
         }
+
+        public void SetKeyword(PrototypeId keyword)
+        {
+            Keyword = keyword; // For Hardfix
+        }
     }
 
     public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
