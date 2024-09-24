@@ -1549,7 +1549,12 @@ namespace MHServerEmu.Games.Entities
         public override void OnChangePlayerAOI(Player player, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
             base.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
-            //UpdateSimulationState();      // We do simulation updates per-cell now
+
+            // We need to update our simulation state when we lose proximity because when a player's AOI is cleared,
+            // cells are removed before entities, and at that point entities still have the proximity policy.
+            AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
+            if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                UpdateSimulationState();
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
@@ -1765,6 +1770,10 @@ namespace MHServerEmu.Games.Entities
 
             if (newCell != null)
                 Properties[PropertyEnum.MapCellId] = newCell.Id;
+
+            // Simulation updates for entering world happen in OnEnteredWorld()
+            if (flags.HasFlag(ChangePositionFlags.EnterWorld) == false)
+                UpdateSimulationState();
 
             // TODO other events
         }
